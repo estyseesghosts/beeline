@@ -6,11 +6,11 @@
 
 **Last reviewed:** 2026-09-15.
 
-**Source baseline:** `b629a2c` (assessment). C-01 through C-11, C-12a through C-12d4, and C-13 status refreshed against `c9e06c8`. Gate slices P-01 through P-06 refreshed against their slice commits in `docs/agents/tasks/plan03-gate-partials.md`.
+**Source baseline:** `b629a2c` (assessment). C-01 through C-11, C-12a through C-12d4, and C-13 status refreshed against `c9e06c8`. Gate slices P-01 through P-06 refreshed against their slice commits in `docs/archive/agents/plan03-gate-partials.md`.
 
 **Stale when:** A listed exit condition changes, or a slice in
-`docs/agents/tasks/decomposition-01-02-completion.md` or
-`docs/agents/tasks/plan03-gate-partials.md` moves the status.
+`docs/archive/agents/decomposition-01-02-completion.md` or
+`docs/archive/agents/plan03-gate-partials.md` moves the status.
 
 **Evidence:** source verified for every path in this page. Test files were inspected. The C-01, C-02,
 C-03, C-04, C-05, C-06a, C-06b, C-06c, C-07, C-08, C-09, C-10, C-11, C-12a through C-12c,
@@ -32,7 +32,7 @@ Use one of these statuses.
 | Assigned to a later plan | Plan 03 or Plan 04 owns the condition. |
 
 The completion slice column names the work in
-`docs/agents/tasks/decomposition-01-02-completion.md` that changes the status.
+`docs/archive/agents/decomposition-01-02-completion.md` that changes the status.
 
 ## 2. Plan 01 Exit Conditions
 
@@ -206,4 +206,4 @@ Plans 01 and 02 are complete only when all of these statements are true.
 - Required tests execute successfully.
 - Maintained documentation matches source.
 
-Track the remaining work in `docs/agents/tasks/decomposition-01-02-completion.md`.
+Track the remaining work in `docs/archive/agents/decomposition-01-02-completion.md`.

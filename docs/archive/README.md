@@ -14,12 +14,27 @@ tests, `AGENTS.md`, `docs/wiki/`, and `docs/agents/` instead.
 
 ## Archived On 2026-09-19
 
-The owner ditched Plan 04. The task file moved unchanged from the
-active tasks folder.
+The owner ditched Plan 04 and emptied the active tasks folder. Every
+task file moved unchanged. The active folder keeps only `_template.md`.
 
 | File | Reason | Replacement or owner |
 | --- | --- | --- |
-| `agents/plan04-utility-retention.md` | Ditched plan. Slices 04-A through 04-D and 04-E1 through 04-E3 are committed. Slices 04-F through 04-K will not run. | `docs/agents/tasks/docs-archive.md` |
+| `agents/plan04-utility-retention.md` | Ditched plan. Slices 04-A through 04-D and 04-E1 through 04-E3 are committed. Slices 04-F through 04-K will not run. | `docs/archive/agents/docs-archive.md` |
+| `agents/decomposition-01-02-completion.md` | Finished task state. | `docs/agents/decomposition-01-02-acceptance-matrix.md` |
+| `agents/plan03-gate-partials.md` | Finished task state. | `docs/archive/agents/plan03-protocol-notifications.md` |
+| `agents/plan03-protocol-notifications.md` | Finished task state. | `data/notifications/` |
+| `agents/palustrisapp-decomposition.md` | Finished task state. | `docs/agents/app-shell-ownership.md` |
+| `agents/ui-package-migration.md` | Finished task state. | Feature packages under `ui/` |
+| `agents/q1-static-analysis.md` | Finished task state. | Current ktlint baseline |
+| `agents/t1-test-mirror.md` | Finished task state. | Mirrored test packages |
+| `agents/localization-string-extraction.md` | Paused record through slice 4. Resume needs a new task. | Current locale resources |
+| `agents/gradle-no-daemon.md` | Complete wrapper record. The commit-on-request step never ran and is dropped. | `AGENTS.md`, `build-debug.bat`, `build-release.bat` |
+| `agents/profile-liked-tab.md` | Finished task state. | `ui/profile/` |
+| `agents/profile-featured-tab.md` | Finished task state. | `ui/profile/` |
+| `agents/wide-detail-interaction-fix.md` | Finished task state. | `ui/thread/` |
+| `agents/wide-detail-photo-sizing.md` | Finished task state. | `ui/photogrid/`, `ui/SinglePostScreen.kt` |
+| `agents/svg-icon-replacement.md` | Implemented icon task. | `ui/BeelineSvgPaths.kt` |
+| `agents/docs-archive.md` | Finished archive task. | `docs/agents/tasks/_template.md` |
 
 ## Archived On 2026-09-15
 
@@ -57,7 +72,7 @@ work that current source already implements, or a plan that a later plan replace
 | File | Reason | Replacement or owner |
 | --- | --- | --- |
 | `roadmaps/notifications.md` | Implementation plan. Implemented. | `data/notifications/` |
-| `roadmaps/notifications_progress.md` | Progress record. Superseded. | `docs/agents/tasks/plan03-protocol-notifications.md` |
+| `roadmaps/notifications_progress.md` | Progress record. Superseded. | `docs/archive/agents/plan03-protocol-notifications.md` |
 | `roadmaps/profile_timeline_roadmap.md` | Implementation plan. Implemented. Its file manifest is stale. | `ui/profile/` |
 
 ### Finished Agent Task States
@@ -65,11 +80,11 @@ work that current source already implements, or a plan that a later plan replace
 | File | Reason | Replacement or owner |
 | --- | --- | --- |
 | `agents/cleanup-progress-report.md` | Historical report. Superseded. | `docs/agents/decomposition-01-02-acceptance-matrix.md` |
-| `agents/app-shell-decomposition.md` | Finished task state. | `docs/agents/tasks/decomposition-01-02-completion.md` |
-| `agents/state-and-lifecycle-repair.md` | Finished task state. | `docs/agents/tasks/decomposition-01-02-completion.md` |
-| `agents/cancellation-and-shell-continuation.md` | Finished task state. | `docs/agents/tasks/decomposition-01-02-completion.md` |
+| `agents/app-shell-decomposition.md` | Finished task state. | `docs/archive/agents/decomposition-01-02-completion.md` |
+| `agents/state-and-lifecycle-repair.md` | Finished task state. | `docs/archive/agents/decomposition-01-02-completion.md` |
+| `agents/cancellation-and-shell-continuation.md` | Finished task state. | `docs/archive/agents/decomposition-01-02-completion.md` |
 | `agents/reference-localization.md` | Finished localization task. | Current locale resources |
-| `agents/plan04-utility-retention.md` | Ditched plan. 04-A through 04-E3 are committed. 04-F through 04-K will not run. | `docs/agents/tasks/docs-archive.md` |
+| `agents/plan04-utility-retention.md` | Ditched plan. 04-A through 04-E3 are committed. 04-F through 04-K will not run. | `docs/archive/agents/docs-archive.md` |
 
 ## Dangling References
 

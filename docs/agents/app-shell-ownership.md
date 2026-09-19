@@ -14,7 +14,7 @@ report are complete. No dead scaffolding remains.
 **Evidence:** source verified. Device and live-server behavior remain unverified. No test ran during
 this documentation pass.
 
-**Completion owner:** `docs/agents/tasks/decomposition-01-02-completion.md`.
+**Completion owner:** `docs/archive/agents/decomposition-01-02-completion.md`.
 
 ## Present Boundary
 

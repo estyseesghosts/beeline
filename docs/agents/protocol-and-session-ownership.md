@@ -14,7 +14,7 @@ the verified-only server mark-read.
 **Evidence:** source verified. Test files were inspected, not executed in this review.
 Device and live-server behavior remain unverified.
 
-**Completion owner:** `docs/agents/tasks/decomposition-01-02-completion.md`.
+**Completion owner:** `docs/archive/agents/decomposition-01-02-completion.md`.
 
 ## Source Ownership
 

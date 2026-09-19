@@ -45,16 +45,27 @@ Rebuild the TODO list from these items.
 
 ## Current tasks
 
-- [Docs archive](tasks/docs-archive.md) is in progress. Plan 04 is ditched. Slice 1 is complete.
-- [Localization string extraction](tasks/localization-string-extraction.md) is complete through slice 4.
-- [Profile Liked tab](tasks/profile-liked-tab.md) is in progress. The tab is done; the global Likes page removal remains.
+None. The active `tasks/` folder keeps only
+[tasks/_template.md](tasks/_template.md). Start the next task from it.
 
 ## Historical tasks
 
-- [Plan 03 protocol and notification persistence](tasks/plan03-protocol-notifications.md)
-- [Plan 03 gate partials](tasks/plan03-gate-partials.md)
-- [Decomposition 01 and 02 completion](tasks/decomposition-01-02-completion.md)
+- [Docs archive](../archive/agents/docs-archive.md)
 - [Plan 04 utility ownership and retention](../archive/agents/plan04-utility-retention.md) (ditched; 04-A through 04-E3 complete, 04-F through 04-K will not run)
+- [Plan 03 protocol and notification persistence](../archive/agents/plan03-protocol-notifications.md)
+- [Plan 03 gate partials](../archive/agents/plan03-gate-partials.md)
+- [Decomposition 01 and 02 completion](../archive/agents/decomposition-01-02-completion.md)
+- [S1 shell split](../archive/agents/palustrisapp-decomposition.md)
+- [P1 package migration](../archive/agents/ui-package-migration.md)
+- [Q1 static analysis](../archive/agents/q1-static-analysis.md)
+- [T1 test mirror](../archive/agents/t1-test-mirror.md)
+- [Localization string extraction](../archive/agents/localization-string-extraction.md) (slices 1 through 4; resume needs a new task)
+- [Gradle no-daemon](../archive/agents/gradle-no-daemon.md)
+- [Profile Liked tab](../archive/agents/profile-liked-tab.md)
+- [Profile Featured tab](../archive/agents/profile-featured-tab.md)
+- [Wide detail interaction fix](../archive/agents/wide-detail-interaction-fix.md)
+- [Wide detail photo sizing](../archive/agents/wide-detail-photo-sizing.md)
+- [SVG icon replacement](../archive/agents/svg-icon-replacement.md)
 - [Archive index](../archive/README.md). It holds the app-shell decomposition, state and
   lifecycle repair, cancellation and shell continuation, and reference localization task
   states.

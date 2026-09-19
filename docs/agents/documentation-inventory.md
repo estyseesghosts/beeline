@@ -28,19 +28,29 @@ This page classifies every reviewed document. Use one of these classes: `current
 | `docs/agents/protocol-and-session-ownership.md` | current | Current source and session ownership. |
 | `docs/agents/decomposition-01-02-acceptance-matrix.md` | current | Status for every 01 and 02 exit condition. |
 | `docs/agents/handoff.md` | current | Short pointer to the active task. |
-| `docs/agents/tasks/_template.md` | current | Task-state template. |
-| `docs/agents/tasks/plan03-protocol-notifications.md` | historical | Completed Plan 03 task. Kept as the durable record. |
-| `docs/agents/tasks/plan03-gate-partials.md` | historical | Completed gate task. Kept as the slice record. |
-| `docs/agents/tasks/decomposition-01-02-completion.md` | historical | Completed 01/02 task. Kept as the durable record. |
-| `docs/agents/tasks/gradle-no-daemon.md` | current | Uncommitted Gradle wrapper task. Its config files are in the worktree. |
-| `docs/agents/tasks/docs-archive.md` | current | Active docs archive task. Plan 04 is ditched. |
+| `docs/agents/tasks/_template.md` | current | Task-state template. The active folder keeps only this file. |
+| `docs/archive/agents/decomposition-01-02-completion.md` | historical | Completed 01/02 task. Kept as the durable record. |
+| `docs/archive/agents/plan03-gate-partials.md` | historical | Completed gate task. Kept as the slice record. |
+| `docs/archive/agents/plan03-protocol-notifications.md` | historical | Completed Plan 03 task. Kept as the durable record. |
+| `docs/archive/agents/plan04-utility-retention.md` | historical | Ditched Plan 04. 04-A through 04-E3 are committed. 04-F through 04-K will not run. |
+| `docs/archive/agents/palustrisapp-decomposition.md` | historical | Completed S1 task. Kept as the durable record. |
+| `docs/archive/agents/ui-package-migration.md` | historical | Completed P1 task. Kept as the durable record. |
+| `docs/archive/agents/q1-static-analysis.md` | historical | Completed Q1 task. Kept as the durable record. |
+| `docs/archive/agents/t1-test-mirror.md` | historical | Completed T1 task. Kept as the durable record. |
+| `docs/archive/agents/localization-string-extraction.md` | historical | Localization record through slice 4. Resume needs a new task. |
+| `docs/archive/agents/gradle-no-daemon.md` | historical | Complete Gradle wrapper record. The tree files are the authority. |
+| `docs/archive/agents/profile-liked-tab.md` | historical | Completed Liked tab task. Kept as the durable record. |
+| `docs/archive/agents/profile-featured-tab.md` | historical | Completed Featured tab task. Kept as the durable record. |
+| `docs/archive/agents/wide-detail-interaction-fix.md` | historical | Completed wide-detail fix. Kept as the durable record. |
+| `docs/archive/agents/wide-detail-photo-sizing.md` | historical | Completed photo-sizing task. Kept as the durable record. |
+| `docs/archive/agents/svg-icon-replacement.md` | historical | Implemented icon task. Kept as the durable record. |
+| `docs/archive/agents/docs-archive.md` | historical | Completed archive task. Kept as the durable record. |
 | `docs/archive/README.md` | current | Archive index for superseded material. |
 
-The former task files `app-shell-decomposition.md`, `state-and-lifecycle-repair.md`,
-`cancellation-and-shell-continuation.md`, and `reference-localization.md`, plus
-`cleanup-progress-report.md` and `plan04-utility-retention.md`, now live in
-`docs/archive/agents/`. The Plan 04 file is ditched, not complete: 04-A through
-04-E3 are committed, and 04-F through 04-K will not run.
+Every former task file now lives in `docs/archive/agents/`. The Plan 04
+file is ditched, not complete: 04-A through 04-E3 are committed, and
+04-F through 04-K will not run. The localization file covers slices 1
+through 4 only.
 
 ## Decomposition Plans
 

@@ -1,21 +1,21 @@
 # Handoff
 
 **Status:** current pointer. The durable record for the completed wide detail interaction fix is
-`docs/agents/tasks/wide-detail-interaction-fix.md`. The durable record for the completed 01/02 series is
-`docs/agents/tasks/decomposition-01-02-completion.md`. The durable record for the completed
-Plan 03 work is `docs/agents/tasks/plan03-protocol-notifications.md`. The corrected audit of
+`docs/archive/agents/wide-detail-interaction-fix.md`. The durable record for the completed 01/02 series is
+`docs/archive/agents/decomposition-01-02-completion.md`. The durable record for the completed
+Plan 03 work is `docs/archive/agents/plan03-protocol-notifications.md`. The corrected audit of
 Plans 01, 02, and 03 is `docs/decomposition_3/03_corrected.md` (git-ignored planning material,
 do not force-add). The durable record for the completed S1 work is
-`docs/agents/tasks/palustrisapp-decomposition.md`. The durable record for
-the completed P1 work is `docs/agents/tasks/ui-package-migration.md`. The
+`docs/archive/agents/palustrisapp-decomposition.md`. The durable record for
+the completed P1 work is `docs/archive/agents/ui-package-migration.md`. The
 durable record for the completed Q1 work is
-`docs/agents/tasks/q1-static-analysis.md`. The durable record for the
-completed T1 work is `docs/agents/tasks/t1-test-mirror.md`. Plan 04 is ditched.
+`docs/archive/agents/q1-static-analysis.md`. The durable record for the
+completed T1 work is `docs/archive/agents/t1-test-mirror.md`. Plan 04 is ditched.
 Slices 04-A through 04-D and 04-E1 through 04-E3 are complete and
 committed. Slices 04-F through 04-K will not run. The ditched
 task file lives at `docs/archive/agents/plan04-utility-retention.md`
-(unchanged, historical). The active docs archive work is
-`docs/agents/tasks/docs-archive.md`. The Plan 04 source is
+(unchanged, historical). The completed docs archive work is
+`docs/archive/agents/docs-archive.md`. The Plan 04 source is
 `docs/decomposition_3/04.md` (git-ignored planning material, do not force-add).
 
 ## Where To Start
@@ -23,7 +23,7 @@ task file lives at `docs/archive/agents/plan04-utility-retention.md`
 Read these in order. Treat the repository as the authority.
 
 1. `AGENTS.md`.
-2. `docs/agents/tasks/docs-archive.md`.
+2. `docs/archive/agents/docs-archive.md`.
 3. `docs/decomposition_3/03_corrected.md`.
 4. `docs/agents/app-shell-ownership.md` and `docs/agents/protocol-and-session-ownership.md`.
 5. `docs/agents/decomposition-01-02-acceptance-matrix.md`.
@@ -60,7 +60,7 @@ Read these in order. Treat the repository as the authority.
 - P1 (finish the `ui/` package migration and group the destination
   callbacks) is complete. Every slice P1a through P1f is committed and
   test verified. The durable record is
-  `docs/agents/tasks/ui-package-migration.md`.
+  `docs/archive/agents/ui-package-migration.md`.
 - CI is green on run `35053164957`: unit/lint/build plus the API 29 smoke
   job, 10 of 10 instrumented tests pass. Fixes: fresh AVD, 3-attempt
   single-line retry loop, KVM hardware acceleration, default system
@@ -88,7 +88,7 @@ Read these in order. Treat the repository as the authority.
   confirmation), `99bc0ed` (main wildcard imports), `37d8cac` (test
   wildcard imports). The baseline holds zero `no-wildcard-imports`
   entries. `ktlintCheck`, `test assembleRelease`, and `lintDebug` pass.
-  The durable record is `docs/agents/tasks/q1-static-analysis.md`.
+  The durable record is `docs/archive/agents/q1-static-analysis.md`.
 - Plan 01 and Plan 02 exit conditions are met except blocked device
   verification.
 - T1a (merge the duplicate test classes into mirrored packages) is
@@ -201,7 +201,7 @@ Read these in order. Treat the repository as the authority.
 - Localization string extraction is complete through slice 4 (data layer error
   messages). `data/AppMessages.kt` is the Context-backed resolver for data-layer
   owners. `ui/SourceErrorMessage.kt` localizes feature identifiers. The durable
-  record is `docs/agents/tasks/localization-string-extraction.md`. Its slice and
+  record is `docs/archive/agents/localization-string-extraction.md`. Its slice and
   this record share one commit.
 - The Profile Liked tab is committed and test verified. `ProfileTimelineTab.Liked`
   and `ProfileCategory.Liked` exist. The category order is Posts, Replies, Media,
@@ -211,20 +211,19 @@ Read these in order. Treat the repository as the authority.
   `LikesContract`, `SavedPostsCollection`, the liked `SavedPostsViewModel`
   instance, `LargePostOrigin.Liked`, and `SocialSource.likedPosts` are gone.
   `SavedPostsViewModel` owns bookmarks only. The durable record is
-  `docs/agents/tasks/profile-liked-tab.md`.
+  `docs/archive/agents/profile-liked-tab.md`.
 - The Profile Featured tab is committed and test verified. `ProfileCategory.Featured`
   leads the category row only when the profile has more than one pinned post. A
   single pinned post shows at the top of the Posts feed with no Featured tab.
   Pinned posts stay out of every other profile feed. Featured renders the pinned
   posts the profile already loaded, so it adds no request and no pager tab. The
-  durable record is `docs/agents/tasks/profile-featured-tab.md`.
+  durable record is `docs/archive/agents/profile-featured-tab.md`.
 
 ## Next Slice
 
-1. Run docs archive slice 2. Move the completed profile, wide-detail,
-   and icon task files to `docs/archive/agents/`. Update the inventory,
-   the agent index, and the archive index in the same commit. The durable
-   record is `docs/agents/tasks/docs-archive.md`.
+No docs work is open. The docs archive is complete. The owner picks
+the next feature task. Start it from `docs/agents/tasks/_template.md`.
+The completion record is `docs/archive/agents/docs-archive.md`.
 
 The wide detail interaction fix is complete in the current slice. Photo Grid wide detail routes
 focal mutations through `PostThreadViewModel` and synchronizes the matching navigator snapshot after
@@ -243,7 +242,7 @@ viewports clamp to the available height. Unknown dimensions use the square to
 limited viewport, missing dimensions, invalid dimensions, and shared height.
 `SinglePostScreenTest` (23 tests), `ktlintCheck`, and `test assembleRelease`
 pass. The durable record is
-`docs/agents/tasks/wide-detail-photo-sizing.md`. Device rendering remains
+`docs/archive/agents/wide-detail-photo-sizing.md`. Device rendering remains
 unverified.
 
 V1 stays device-blocked: repair `RoomNotificationStoreInstrumentedTest` and
@@ -275,8 +274,9 @@ verification.
    at `633cd7a`, 04-D at `f0735df`, 04-E1 at `b04b2e8`, and 04-E2/04-E3
    with their record. Slices 04-F through 04-K will not run. Their
    unbounded owners stay open. A later task claims them when an owner
-   needs them. The active work is the docs archive at
-   `docs/agents/tasks/docs-archive.md`.
+   needs them. The docs archive at
+   `docs/archive/agents/docs-archive.md` is complete. The active
+   `tasks/` folder keeps only `_template.md`.
 5. Device, live-server, and signed-release verification when a device and
    signing inputs exist.
 
@@ -306,8 +306,8 @@ verification.
   ditched Plan 04 task file lives in `docs/archive/agents/plan04-utility-retention.md`.
 - The worktree holds the untracked `appsvg/` directory. Do not commit it.
 - Plan 04 is ditched. No Plan 04 slice is in progress. The
-  localization task has slices 1 through 4 complete and is paused. The last safe
-  commit is the current `HEAD` (`git log -1`).
+  localization record through slice 4 is archived. Resume needs a new
+  task. The last safe commit is the current `HEAD` (`git log -1`).
 - All non-English string catalogs are removed from the app for now. Two
   localization tests were relaxed to tolerate missing catalogs and must be
   tightened again when the catalogs return:
