@@ -4,7 +4,7 @@
 
 **Owner:** Maintainers.
 
-**Last reviewed:** 2026-09-15.
+**Last reviewed:** 2026-09-19.
 
 **Stale when:** A document is added, removed, moved, or reclassified.
 
@@ -33,11 +33,14 @@ This page classifies every reviewed document. Use one of these classes: `current
 | `docs/agents/tasks/plan03-gate-partials.md` | historical | Completed gate task. Kept as the slice record. |
 | `docs/agents/tasks/decomposition-01-02-completion.md` | historical | Completed 01/02 task. Kept as the durable record. |
 | `docs/agents/tasks/gradle-no-daemon.md` | current | Uncommitted Gradle wrapper task. Its config files are in the worktree. |
+| `docs/agents/tasks/docs-archive.md` | current | Active docs archive task. Plan 04 is ditched. |
 | `docs/archive/README.md` | current | Archive index for superseded material. |
 
 The former task files `app-shell-decomposition.md`, `state-and-lifecycle-repair.md`,
 `cancellation-and-shell-continuation.md`, and `reference-localization.md`, plus
-`cleanup-progress-report.md`, now live in `docs/archive/agents/`.
+`cleanup-progress-report.md` and `plan04-utility-retention.md`, now live in
+`docs/archive/agents/`. The Plan 04 file is ditched, not complete: 04-A through
+04-E3 are committed, and 04-F through 04-K will not run.
 
 ## Decomposition Plans
 

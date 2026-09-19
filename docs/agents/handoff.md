@@ -10,11 +10,12 @@ do not force-add). The durable record for the completed S1 work is
 the completed P1 work is `docs/agents/tasks/ui-package-migration.md`. The
 durable record for the completed Q1 work is
 `docs/agents/tasks/q1-static-analysis.md`. The durable record for the
-completed T1 work is `docs/agents/tasks/t1-test-mirror.md`. The active Plan 04
-work is `docs/agents/tasks/plan04-utility-retention.md` (04-A through 04-D and
-04-E1 through 04-E3 are complete; 04-F through 04-K remain). A
-cleanup-window audit added 04-K and prerequisites to 04-E, 04-H, and 04-J. The
-Plan 04 source is
+completed T1 work is `docs/agents/tasks/t1-test-mirror.md`. Plan 04 is ditched.
+Slices 04-A through 04-D and 04-E1 through 04-E3 are complete and
+committed. Slices 04-F through 04-K will not run. The ditched
+task file lives at `docs/archive/agents/plan04-utility-retention.md`
+(unchanged, historical). The active docs archive work is
+`docs/agents/tasks/docs-archive.md`. The Plan 04 source is
 `docs/decomposition_3/04.md` (git-ignored planning material, do not force-add).
 
 ## Where To Start
@@ -22,7 +23,7 @@ Plan 04 source is
 Read these in order. Treat the repository as the authority.
 
 1. `AGENTS.md`.
-2. `docs/agents/tasks/plan04-utility-retention.md`.
+2. `docs/agents/tasks/docs-archive.md`.
 3. `docs/decomposition_3/03_corrected.md`.
 4. `docs/agents/app-shell-ownership.md` and `docs/agents/protocol-and-session-ownership.md`.
 5. `docs/agents/decomposition-01-02-acceptance-matrix.md`.
@@ -220,11 +221,10 @@ Read these in order. Treat the repository as the authority.
 
 ## Next Slice
 
-1. Resume Plan 04 at 04-F (bound idle Misskey thread continuations). Then
-   implement 04-G through 04-K in the recorded order. 04-K removes the dead
-   profile paging authority and bounds the cursor sets. 04-J runs last and
-   depends on 04-F through 04-I and 04-K. The durable record is
-   `docs/agents/tasks/plan04-utility-retention.md`.
+1. Run docs archive slice 2. Move the completed profile, wide-detail,
+   and icon task files to `docs/archive/agents/`. Update the inventory,
+   the agent index, and the archive index in the same commit. The durable
+   record is `docs/agents/tasks/docs-archive.md`.
 
 The wide detail interaction fix is complete in the current slice. Photo Grid wide detail routes
 focal mutations through `PostThreadViewModel` and synchronizes the matching navigator snapshot after
@@ -269,16 +269,14 @@ verification.
    `RoomNotificationStoreInstrumentedTest` and de-flake the two known timing
    tests. The `Api29StartupInstrumentedTest` repair is already done in
    `b62f8c6`. Record blocked device checks honestly.
-4. Plan 04 — In progress. Rebase recorded as a slice plan in
-   `docs/agents/tasks/plan04-utility-retention.md`. 04-A is complete at
-   `ee52ba9`, 04-B at `6a87c76`, 04-C at `633cd7a`, 04-D at `f0735df`,
-   04-E1 at `b04b2e8`, 04-E2 at `92490d1`, and 04-E3 with this handoff. A
-   cleanup-window audit added 04-K and prerequisites to 04-E, 04-H, and 04-J:
-   private DM write-authority construction, private registration-cache
-   construction, unreleased authority maps, an unremoved `writeLocks` map, and
-   dead profile paging members. 04-E1 corrected the write-authority finding:
-   production already shared the singleton. Implement slices 04-F through 04-K
-   in the recorded order. Decisions gate 04-H, 04-J, and 04-K.
+4. Plan 04 — Ditched on 2026-09-19. The task file lives at
+   `docs/archive/agents/plan04-utility-retention.md` (unchanged,
+   historical). 04-A is complete at `ee52ba9`, 04-B at `6a87c76`, 04-C
+   at `633cd7a`, 04-D at `f0735df`, 04-E1 at `b04b2e8`, and 04-E2/04-E3
+   with their record. Slices 04-F through 04-K will not run. Their
+   unbounded owners stay open. A later task claims them when an owner
+   needs them. The active work is the docs archive at
+   `docs/agents/tasks/docs-archive.md`.
 5. Device, live-server, and signed-release verification when a device and
    signing inputs exist.
 
@@ -304,10 +302,10 @@ verification.
 - Live-server and signed-release behavior stay unverified.
 - The Android 15 system-bar instrumentation failure stays in `logs/BUGS.txt`.
 - The planning material under `docs/decomposition_3/` is git-ignored. Do not
-  force-add `01.md`, `02.md`, `03.md`, `03_corrected.md`, or `04.md`. The Plan
-  04 slice plan lives in the tracked `docs/agents/tasks/plan04-utility-retention.md`.
+  force-add `01.md`, `02.md`, `03.md`, `03_corrected.md`, or `04.md`. The
+  ditched Plan 04 task file lives in `docs/archive/agents/plan04-utility-retention.md`.
 - The worktree holds the untracked `appsvg/` directory. Do not commit it.
-- The last Plan 04 slice is 04-E3, and no Plan 04 slice is in progress. The
+- Plan 04 is ditched. No Plan 04 slice is in progress. The
   localization task has slices 1 through 4 complete and is paused. The last safe
   commit is the current `HEAD` (`git log -1`).
 - All non-English string catalogs are removed from the app for now. Two

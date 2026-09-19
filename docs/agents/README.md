@@ -45,7 +45,7 @@ Rebuild the TODO list from these items.
 
 ## Current tasks
 
-- [Plan 04 utility ownership and retention](tasks/plan04-utility-retention.md) is in progress. 04-A through 04-D and 04-E1 through 04-E3 are complete.
+- [Docs archive](tasks/docs-archive.md) is in progress. Plan 04 is ditched. Slice 1 is complete.
 - [Localization string extraction](tasks/localization-string-extraction.md) is complete through slice 4.
 - [Profile Liked tab](tasks/profile-liked-tab.md) is in progress. The tab is done; the global Likes page removal remains.
 
@@ -54,6 +54,7 @@ Rebuild the TODO list from these items.
 - [Plan 03 protocol and notification persistence](tasks/plan03-protocol-notifications.md)
 - [Plan 03 gate partials](tasks/plan03-gate-partials.md)
 - [Decomposition 01 and 02 completion](tasks/decomposition-01-02-completion.md)
+- [Plan 04 utility ownership and retention](../archive/agents/plan04-utility-retention.md) (ditched; 04-A through 04-E3 complete, 04-F through 04-K will not run)
 - [Archive index](../archive/README.md). It holds the app-shell decomposition, state and
   lifecycle repair, cancellation and shell continuation, and reference localization task
   states.

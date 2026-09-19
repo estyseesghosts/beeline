@@ -2,7 +2,7 @@
 
 Status: historical
 Owner: Maintainers
-Last reviewed: 2026-09-15
+Last reviewed: 2026-09-19
 Stale when: An archived item gains a current requirement that no maintained page records.
 
 This directory holds superseded plans, exploration reports, roadmaps, and finished task
@@ -11,6 +11,15 @@ record.
 
 Do not cite an archived item as proof of current behavior. Use the current source, current
 tests, `AGENTS.md`, `docs/wiki/`, and `docs/agents/` instead.
+
+## Archived On 2026-09-19
+
+The owner ditched Plan 04. The task file moved unchanged from the
+active tasks folder.
+
+| File | Reason | Replacement or owner |
+| --- | --- | --- |
+| `agents/plan04-utility-retention.md` | Ditched plan. Slices 04-A through 04-D and 04-E1 through 04-E3 are committed. Slices 04-F through 04-K will not run. | `docs/agents/tasks/docs-archive.md` |
 
 ## Archived On 2026-09-15
 
@@ -60,6 +69,7 @@ work that current source already implements, or a plan that a later plan replace
 | `agents/state-and-lifecycle-repair.md` | Finished task state. | `docs/agents/tasks/decomposition-01-02-completion.md` |
 | `agents/cancellation-and-shell-continuation.md` | Finished task state. | `docs/agents/tasks/decomposition-01-02-completion.md` |
 | `agents/reference-localization.md` | Finished localization task. | Current locale resources |
+| `agents/plan04-utility-retention.md` | Ditched plan. 04-A through 04-E3 are committed. 04-F through 04-K will not run. | `docs/agents/tasks/docs-archive.md` |
 
 ## Dangling References
 
