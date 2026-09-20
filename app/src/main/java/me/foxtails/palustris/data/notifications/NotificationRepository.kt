@@ -123,7 +123,7 @@ class NotificationRepository @Inject constructor(
      * therefore carry a strictly newer generation; stale activation never materializes state.
      */
     fun activate(token: NotificationSyncToken) {
-        val record = acquireWrite(token.accountId)
+        val record = acquireWrite(token.accountId, token, allowNewerActivation = true) ?: return
         try {
             synchronized(record) {
                 synchronized(this) {
@@ -398,7 +398,7 @@ class NotificationRepository @Inject constructor(
      * retryable without ever becoming server acknowledgement.
      */
     suspend fun markAndroidDismissed(accountId: AccountId, id: EntityId): Boolean {
-        val record = acquireWrite(accountId)
+        val record = acquireWrite(accountId, rejectRetired = true) ?: return false
         return try {
             record.mutex.withLock {
                 val next = synchronized(this@NotificationRepository) {
@@ -559,7 +559,7 @@ class NotificationRepository @Inject constructor(
      * removal or resurrects the account. Callers revoke writers before this call.
      */
     suspend fun remove(accountId: AccountId) {
-        val record = acquireWrite(accountId)
+        val record = acquireWrite(accountId)!!
         try {
             record.mutex.withLock {
                 val current = synchronized(this@NotificationRepository) {
@@ -613,7 +613,7 @@ class NotificationRepository @Inject constructor(
         compute: (NotificationRepositoryState) -> Pair<NotificationRepositoryState, T>?,
     ): T? {
         val accountId = token.accountId
-        val record = acquireWrite(accountId)
+        val record = acquireWrite(accountId, token) ?: return null
         return try {
             record.mutex.withLock {
                 val prepared = synchronized(this@NotificationRepository) {
@@ -643,7 +643,21 @@ class NotificationRepository @Inject constructor(
         }
     }
 
-    private fun acquireWrite(accountId: AccountId): WriteRecord = synchronized(this) {
+    private fun acquireWrite(
+        accountId: AccountId,
+        token: NotificationSyncToken? = null,
+        rejectRetired: Boolean = false,
+        allowNewerActivation: Boolean = false,
+    ): WriteRecord? = synchronized(this) {
+        val tokenRejected = token != null && if (allowNewerActivation) {
+            val retiredGeneration = retiredGenerations[accountId]
+            if (retiredGeneration != null) token.generation <= retiredGeneration else !isCurrentLocked(token)
+        } else {
+            !isCurrentLocked(token)
+        }
+        if (tokenRejected ||
+            (rejectRetired && accountId in retiredGenerations)
+        ) return@synchronized null
         val record = writeLocks.getOrPut(accountId) { WriteRecord() }
         record.users++
         record

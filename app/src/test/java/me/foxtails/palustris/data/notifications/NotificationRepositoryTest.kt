@@ -146,6 +146,10 @@ class NotificationRepositoryTest {
             NotificationPage(listOf(notification("late", NotificationActivity.Follow))),
         ))
         assertTrue(repository.observe(account).value.items.isEmpty())
+        val writeLocks = NotificationRepository::class.java.getDeclaredField("writeLocks").apply {
+            isAccessible = true
+        }.get(repository) as Map<*, *>
+        assertFalse(writeLocks.containsKey(account))
     }
 
     @Test
