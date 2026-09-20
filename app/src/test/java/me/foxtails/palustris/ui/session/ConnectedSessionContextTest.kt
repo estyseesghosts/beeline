@@ -25,6 +25,7 @@ import me.foxtails.palustris.data.auth.SessionStore
 import me.foxtails.palustris.data.directmessages.DirectMessageWriteAuthority
 import me.foxtails.palustris.data.directmessages.InMemoryDirectMessageStore
 import me.foxtails.palustris.data.emoji.InMemoryEmojiCatalogRepository
+import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.HttpClientPool
 import me.foxtails.palustris.data.notifications.NoOpNotificationStreamController
 import me.foxtails.palustris.data.notifications.NotificationSyncController
@@ -138,6 +139,7 @@ class ConnectedSessionContextTest {
         notificationSync = controller,
         pushRegistrationManager = NoOpPushRegistrationManager(),
         notificationStreamController = NoOpNotificationStreamController(),
+        capabilityCache = CapabilityCache(),
         postPreferencesRepository = InMemoryPostPreferencesRepository(),
         photoGridPreferencesRepository = InMemoryPhotoGridPreferencesRepository(),
         directMessageStore = InMemoryDirectMessageStore(),
