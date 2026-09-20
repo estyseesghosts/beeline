@@ -3,8 +3,8 @@ package me.foxtails.palustris.data.misskey
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities

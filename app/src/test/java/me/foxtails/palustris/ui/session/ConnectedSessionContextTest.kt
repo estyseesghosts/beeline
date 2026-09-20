@@ -36,9 +36,7 @@ import me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesReposi
 import me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
-import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.NotificationSyncToken
-import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Session
 import me.foxtails.palustris.domain.SocialSource

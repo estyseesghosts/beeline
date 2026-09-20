@@ -166,5 +166,4 @@ class ProfileTimelinePagerTest {
             return Page(emptyList(), next)
         }
     }
-
 }
