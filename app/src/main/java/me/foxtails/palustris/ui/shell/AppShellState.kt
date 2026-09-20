@@ -3,6 +3,7 @@ package me.foxtails.palustris.ui.shell
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.AppIcons
@@ -66,4 +67,36 @@ internal fun timelineDescriptionRes(timeline: Timeline): Int = when (timeline) {
     Timeline.Social -> R.string.timeline_description_social
     Timeline.Bubble -> R.string.timeline_description_bubble
     Timeline.Federated -> R.string.timeline_description_federated
+}
+
+/** Resolves the selected post from the collection that owns its current snapshot. */
+internal fun resolveSelectedPost(
+    selected: OwnedPost?,
+    origin: LargePostOrigin,
+    home: HomeContract?,
+    photoGrid: PhotoGridContract,
+    bookmarks: BookmarksContract,
+    profile: ProfileContract,
+): OwnedPost? {
+    selected ?: return null
+    // Resolve through the origin first. Unrelated collections stay as fallback
+    // sources only, so the origin snapshot wins when several collections hold
+    // the same post. Ownership still filters every candidate below.
+    val homePosts = home?.state?.ownedPosts.orEmpty()
+    val photoGridPosts = photoGrid.state.posts
+    val savedPosts = bookmarks.state?.posts.orEmpty()
+    val profilePosts = profile.state.pinnedPosts +
+        profile.state.pages.values.flatMap { it.posts }
+    val candidates = when (origin) {
+        LargePostOrigin.Home -> homePosts + photoGridPosts + savedPosts + profilePosts
+        LargePostOrigin.PhotoGrid -> photoGridPosts + homePosts + savedPosts + profilePosts
+        LargePostOrigin.Saved -> savedPosts + homePosts + photoGridPosts + profilePosts
+        LargePostOrigin.Profile -> profilePosts + homePosts + photoGridPosts + savedPosts
+        else -> homePosts + photoGridPosts + savedPosts + profilePosts
+    }
+    return candidates.firstOrNull {
+        it.fetchedBy == selected.fetchedBy &&
+            it.sessionRevision == selected.sessionRevision &&
+            it.post.id == selected.post.id
+    } ?: selected
 }

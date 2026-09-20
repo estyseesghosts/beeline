@@ -38,52 +38,21 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import kotlinx.coroutines.launch
-import me.foxtails.palustris.data.auth.toAccount
 import me.foxtails.palustris.domain.Account
-import me.foxtails.palustris.domain.EditableProfilePatch
-import me.foxtails.palustris.domain.Notification
-import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.effectiveTargetId
-import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.navigation.AppRoute
-import me.foxtails.palustris.ui.notifications.NotificationSettingsScreen
-import me.foxtails.palustris.ui.notifications.NotificationsScreen
-import me.foxtails.palustris.ui.profile.ProfileCategory
-import me.foxtails.palustris.ui.profile.ProfileUiState
-import me.foxtails.palustris.ui.profile.editableProfilePatch
 import me.foxtails.palustris.ui.navigation.NavigationMode
 import me.foxtails.palustris.ui.navigation.NavigationModeObserver
 import me.foxtails.palustris.ui.navigation.ShellBackState
@@ -115,6 +84,7 @@ import me.foxtails.palustris.ui.shell.SearchContract
 import me.foxtails.palustris.ui.shell.ShellBubbleHost
 import me.foxtails.palustris.ui.shell.ShellDestinationContent
 import me.foxtails.palustris.ui.shell.ShellOverlayHost
+import me.foxtails.palustris.ui.shell.ShellEffects
 import me.foxtails.palustris.ui.shell.ThreadContract
 import me.foxtails.palustris.ui.shell.rememberShellOverlayPresenter
 import me.foxtails.palustris.ui.shell.Destination
@@ -126,6 +96,7 @@ import me.foxtails.palustris.ui.shell.largeTargetFor
 import me.foxtails.palustris.ui.shell.savedCollectionTitle
 import me.foxtails.palustris.ui.shell.singlePostPresentation
 import me.foxtails.palustris.ui.shell.supportsComments
+import me.foxtails.palustris.ui.shell.resolveSelectedPost
 import me.foxtails.palustris.ui.posts.SinglePostScreen
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.compactFloatingEnter
@@ -168,7 +139,6 @@ fun PalustrisApp(
 ) {
     val mediaTransitionRegistry = remember { MediaTransitionRegistry() }
     val repostConfirmationOwner = remember(account?.id, sessionGeneration, sessionRevision) { PostRepostConfirmationState() }
-    val scope = rememberCoroutineScope()
     val postActionOwner = LocalPostPopupOwner.current
     CompositionLocalProvider(
         LocalMediaTransitionRegistry provides mediaTransitionRegistry,
@@ -224,58 +194,20 @@ fun PalustrisApp(
     )
     val hasDraftChanges = composerOwner.hasChanges
 
-    LaunchedEffect(composerOwner.navigation) {
-        if (composerOwner.navigation != null) {
-            navigator.openComposerOverlay()
-            composerOwner.consumeNavigation()
-        }
-    }
-
-    LaunchedEffect(account?.id) {
-        mediaTransitionRegistry.endActive()
-        overlay.clearForAccountChange()
-        repostConfirmationOwner.dismiss()
-        thread.actions.deactivate()
-    }
-    // A same-account reauthentication changes the durable revision but not the account id.
-    // Rebind the popup authority so a stale handler cannot run a later reaction selection.
-    LaunchedEffect(sessionGeneration, sessionRevision) {
-        overlay.clearForSessionChange()
-    }
-    LaunchedEffect(navigator.destination, navigator.searchPanel, account?.id, sessionGeneration) {
-        if (navigator.destination == Destination.Search && navigator.searchPanel == SearchPanel.PhotoGrid) {
-            photoGrid.actions.ensureLoaded()
-        }
-    }
-    LaunchedEffect(photoGrid.state.selectedFeed, account?.id, sessionGeneration) {
-        photoGridScrollState.scrollToItem(0)
-        if (navigator.singlePostOrigin == LargePostOrigin.PhotoGrid) navigator.clearSelectedPost()
-    }
-    LaunchedEffect(navigator.singlePost?.post?.id, navigator.singlePostOrigin, navigator.singlePostOrigin.supportsComments()) {
-        thread.actions.activate(navigator.singlePost, navigator.singlePostOrigin.supportsComments())
-    }
-    LaunchedEffect(navigator.singlePostOrigin, navigator.singlePost?.post?.id, thread.state?.focal) {
-        if (navigator.singlePostOrigin != LargePostOrigin.PhotoGrid) return@LaunchedEffect
-        val selected = navigator.singlePost ?: return@LaunchedEffect
-        val focal = thread.state?.focal ?: return@LaunchedEffect
-        if (focal.fetchedBy == selected.fetchedBy &&
-            focal.sessionRevision == selected.sessionRevision &&
-            focal.effectiveTargetId() == selected.effectiveTargetId()
-        ) {
-            // Keep the wide Photo Grid detail snapshot aligned with the thread owner after an
-            // optimistic mutation. Without this, the navigator can keep rendering stale fields.
-            navigator.singlePost = focal
-        }
-    }
-    LaunchedEffect(navigator.destination, navigator.page, navigator.overlayKey, navigator.sheet, overlay.profileDialog, overlay.signOutDialog, overlay.mediaRequest, navigator.singlePost, navigator.notificationRoute) {
-        overlay.clearPostActionBubble()
-        postActionOwner?.dismiss()
-        repostConfirmationOwner.dismiss()
-        postActionOwner?.dismiss()
-    }
-    LaunchedEffect(overlay.pendingExpandedReactionTarget, overlay.postActionBubbleTarget) {
-        overlay.promotePendingExpansion()
-    }
+    ShellEffects(
+        accountId = account?.id,
+        sessionGeneration = sessionGeneration,
+        sessionRevision = sessionRevision,
+        composerOwner = composerOwner,
+        navigator = navigator,
+        mediaTransitionRegistry = mediaTransitionRegistry,
+        overlay = overlay,
+        repostConfirmationOwner = repostConfirmationOwner,
+        thread = thread,
+        photoGrid = photoGrid,
+        photoGridScrollState = photoGridScrollState,
+        postActionOwner = postActionOwner,
+    )
 
     val handleReply: (OwnedPost) -> Unit = { target ->
         overlay.clearPostActionBubble()
@@ -328,30 +260,6 @@ fun PalustrisApp(
     fun openSinglePost(post: OwnedPost, origin: LargePostOrigin = LargePostOrigin.Other) {
         overlay.mediaRequest = null
         navigator.openSinglePost(post, origin)
-    }
-
-    fun latestSelectedPost(): OwnedPost? {
-        val selected = navigator.singlePost ?: return null
-        // Resolve through the origin first. Unrelated collections stay as fallback
-        // sources only, so the origin snapshot wins when several collections hold
-        // the same post. Ownership still filters every candidate below.
-        val homePosts = home?.state?.ownedPosts.orEmpty()
-        val photoGridPosts = photoGrid.state.posts
-        val savedPosts = bookmarks.state?.posts.orEmpty()
-        val profilePosts = profile.state.pinnedPosts +
-            profile.state.pages.values.flatMap { it.posts }
-        val candidates = when (navigator.singlePostOrigin) {
-            LargePostOrigin.Home -> homePosts + photoGridPosts + savedPosts + profilePosts
-            LargePostOrigin.PhotoGrid -> photoGridPosts + homePosts + savedPosts + profilePosts
-            LargePostOrigin.Saved -> savedPosts + homePosts + photoGridPosts + profilePosts
-            LargePostOrigin.Profile -> profilePosts + homePosts + photoGridPosts + savedPosts
-            else -> homePosts + photoGridPosts + savedPosts + profilePosts
-        }
-        return candidates.firstOrNull {
-            it.fetchedBy == selected.fetchedBy &&
-                it.sessionRevision == selected.sessionRevision &&
-                it.post.id == selected.post.id
-        } ?: selected
     }
 
     val selectedThreadState = thread.state?.takeIf { state ->
@@ -478,7 +386,14 @@ fun PalustrisApp(
                                   },
                               )
                              AppLargeDetailPane(
-                                 selected = selectedThreadState?.focal ?: latestSelectedPost(),
+                                  selected = selectedThreadState?.focal ?: resolveSelectedPost(
+                                      selected = navigator.singlePost,
+                                      origin = navigator.singlePostOrigin,
+                                      home = home,
+                                      photoGrid = photoGrid,
+                                      bookmarks = bookmarks,
+                                      profile = profile,
+                                  ),
                                  origin = navigator.singlePostOrigin,
                                  availableActions = availableActions,
                                  threadState = selectedThreadState,
