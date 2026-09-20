@@ -90,7 +90,7 @@ class DraftWriteAuthorityTest {
     }
 
     @Test
-    fun activationAfterQuiescenceCreatesNewAuthority() = runTest {
+    fun activationAfterRemovalKeepsGenerationMonotonic() = runTest {
         val authority = DraftWriteAuthority()
         val oldGeneration = authority.activate(account)
         authority.invalidateAndDelete(account) {}
@@ -98,6 +98,8 @@ class DraftWriteAuthorityTest {
         val newGeneration = authority.activate(account)
 
         assertFalse(authority.isCurrent(account, oldGeneration))
+        assertTrue(newGeneration > oldGeneration)
+        assertNull(authority.commitIfCurrent(account, oldGeneration) { Unit })
         assertTrue(authority.isCurrent(account, newGeneration))
     }
 

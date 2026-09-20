@@ -24,12 +24,17 @@ import me.foxtails.palustris.domain.AccountId
 @Singleton
 class DirectMessageWriteAuthority @Inject constructor() {
     private class Record {
-        val generation = AtomicLong(0L)
+        val generation: AtomicLong
         val mutex = Mutex()
         var users = 0
         var retiring = false
+
+        constructor(generation: AtomicLong) {
+            this.generation = generation
+        }
     }
 
+    private val allocators = ConcurrentHashMap<AccountId, AtomicLong>()
     private val records = ConcurrentHashMap<AccountId, Record>()
 
     /** Issues the writer generation for a session activation. Revokes the previous writer. */
@@ -87,7 +92,8 @@ class DirectMessageWriteAuthority @Inject constructor() {
     }
 
     private fun acquire(accountId: AccountId): Record = synchronized(this) {
-        val record = records.getOrPut(accountId) { Record() }
+        val allocator = allocators.getOrPut(accountId) { AtomicLong(0L) }
+        val record = records.getOrPut(accountId) { Record(allocator) }
         record.users++
         record
     }
