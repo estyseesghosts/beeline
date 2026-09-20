@@ -16,6 +16,7 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
+import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.shell.PostProjectionCoordinator
 import me.foxtails.palustris.ui.shell.ThreadContract
 
@@ -31,13 +32,14 @@ fun ThreadHost(
     sessionGeneration: Long,
     sessionRevision: Long,
     source: SocialSource,
+    executionAuthority: PostInteractionExecutionAuthority,
     coordinator: PostProjectionCoordinator,
     lifecycleOwner: LifecycleOwner,
     entryStore: ConnectedEntryStore,
 ): ThreadContract {
     val model = hiltViewModel<PostThreadViewModel, PostThreadViewModel.Factory>(
         key = "thread-$accountId-$sessionGeneration",
-        creationCallback = { factory -> factory.create(accountId, source, sessionRevision) },
+        creationCallback = { factory -> factory.create(accountId, source, sessionRevision, executionAuthority) },
     )
     LaunchedEffect(entryStore, sessionGeneration, model) {
         entryStore.register(sessionGeneration, "thread-$accountId-$sessionGeneration") { model.stop() }

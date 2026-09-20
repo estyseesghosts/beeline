@@ -45,8 +45,8 @@ import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.media.PostMediaCarousel
 import me.foxtails.palustris.ui.motion.ExpandableContent
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
-import me.foxtails.palustris.ui.posts.LocalPostActionOwner
-import me.foxtails.palustris.ui.posts.LocalPostRepostConfirmationOwner
+import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
+import me.foxtails.palustris.ui.posts.LocalPostRepostConfirmationState
 import me.foxtails.palustris.ui.AppIcons
 
 private val PostMetadataVerticalPadding = 2.dp * 1.06f
@@ -82,14 +82,14 @@ internal fun PostRow(
     val interactionPresentation = presentation.interactionPresentation
     val post = ownedPost.post
     val context = LocalContext.current
-    val repostConfirmationOwner = LocalPostRepostConfirmationOwner.current
+    val repostConfirmationOwner = LocalPostRepostConfirmationState.current
     var expanded by rememberSaveable(post.id.connection, post.id.value) { mutableStateOf(false) }
     val displayPresentation = remember(post.text, post.emoji) { parseHashtagBlocks(post.text, post.emoji) }
     val hashtags = remember(post.text, post.emoji) { postHashtags(post.text, post.emoji) }
     val warningDecision = remember(post.contentWarning, hashtags, contentWarningRules) {
         ContentWarningPolicy.decide(post.contentWarning, hashtags, contentWarningRules, bodyText = post.text)
     }
-    val postActionOwner = LocalPostActionOwner.current
+    val postActionOwner = LocalPostPopupOwner.current
     LaunchedEffect(ownedPost.fetchedBy, post.id, ownedPost.sessionRevision, post.reposted) {
         repostConfirmationOwner.reconcile(ownedPost)
     }

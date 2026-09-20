@@ -42,7 +42,7 @@ Plan 01 section 9 defines slices 01-A through 01-H. This table maps each exit co
 | --- | --- | --- | --- | --- | --- |
 | 01-A | Tests protect the behavior being moved. Plan 02 failures stay separate. | `AppShellFixtures.kt`, `ShellCharacterizationTest.kt` | those tests | Implemented, test verified | — |
 | 01-B | One feature action change does not change unrelated contracts. | `ui/shell/*.kt` contracts | contract tests, `AppShellFixtures.kt` | Implemented, source verified | — |
-| 01-C | No storage selection, repository call, or `SocialSource` remains in `PalustrisApp`. | `LocalPostActionOwner`; composer fields moved to `ui/composer/ComposerOwner.kt` | `ComposerOwnerTest.kt`, `ReplyComposerTest.kt` | Implemented, test verified | — |
+| 01-C | No storage selection, repository call, or `SocialSource` remains in `PalustrisApp`. | `PostPopupOwner`; composer fields moved to `ui/composer/ComposerOwner.kt` | `ComposerOwnerTest.kt`, `ReplyComposerTest.kt` | Implemented, test verified | — |
 | 01-D | One reviewed path owns fan-out. No duplicate listener, cycle, stale sink, or double increment. | `ui/shell/PostProjectionCoordinator.kt` | `PostProjectionCoordinatorTest.kt` | Implemented, test verified | — |
 | 01-E | Recomposition does not construct replacement sources. Session replacement cannot invoke old owners. | `ui/session/ConnectedSessionContext.kt`, `ui/session/ConnectedEntryStore.kt`, `ConnectedSessionHost.kt`, `AccountManager.kt` | `ConnectedSessionContextTest.kt`, `ConnectedEntryStoreTest.kt`, `SessionViewModelTest.kt` | Implemented, test verified. | — |
 | 01-F | `ConnectedApp` composes root hosts. It does not write settings, assemble actions, or own fan-out. | `ui/ConnectedApp.kt` (root composition only), `SettingsOverlayHost`, `NotificationLaunchHost` | `SettingsViewModelTest.kt`, `NotificationLaunchRouterTest.kt`, `NotificationLaunchHostTest.kt` | Implemented, test verified | — |
@@ -77,7 +77,7 @@ Plan 01 section 9 defines slices 01-A through 01-H. This table maps each exit co
   callback without recreating the owner. The coordinator and the popup owner retire with the
   connected entry. Repeated publication deliveries are rejected by created-post identity.
   Family slots are typed with operation tokens. P-02 finished the narrow popup extraction:
-  `LocalPostActionOwner` provides `PostPopupPresentation`, and generic leaves never receive
+  `PostPopupOwner` provides `PostPopupPresentation`, and generic leaves never receive
   the service-backed owner, its source, or its scope.
 - C-10 bound post commands to the validated account set the shell publishes. A command for a
   removed account reports an unavailable error at call time. A queued command writes nothing after
@@ -108,7 +108,7 @@ Plan 02 section 14 defines slices 02-A through 02-L. This table maps each exit c
 | 02-D | Rejected pages leave memory and persistent state unchanged. Synchronization reports rejection. | `NotificationSynchronizer`, `NotificationRepository` caller query, `NotificationsViewModel` request epoch | `NotificationSynchronizerTest.kt`, `NotificationRepositoryTest.kt`, `NotificationsViewModelTest.kt` | Implemented, test verified | — |
 | 02-E | Refresh, removal, retry, and replacement cannot leave stuck or misowned moderation state. | `ModerationViewModel`, removal tokens, connected entry store | `ModerationViewModelTest.kt` | Implemented, test verified | — |
 | 02-F | One failed action cannot restore unrelated fields or undo another family's result. | `PostInteractionMutationOwner`, `PostActionFamily` | `PostInteractionMutationOwnerTest.kt`, `PostInteractionExecutionAuthorityTest.kt` | Implemented, test verified | — |
-| 02-G | Refresh cannot revive removed reactions. Stale jobs cannot modify a replacement thread or popup. | `PostThreadViewModel` overlays and projection, retired `PostActionOwner` | `PostThreadViewModelTest.kt`, `PostProjectionTest.kt`, `PostActionOwnerTest.kt` | Implemented, test verified | — |
+| 02-G | Refresh cannot revive removed reactions. Stale jobs cannot modify a replacement thread or popup. | `PostThreadViewModel` overlays and projection, retired `PostPopupOwner` | `PostThreadViewModelTest.kt`, `PostProjectionTest.kt`, `PostPopupOwnerTest.kt` | Implemented, test verified | — |
 | 02-H | Home reaches older visible content without unbounded requests or hidden continuation. | `HomeFeed.kt`, `HomePagingDemand.kt` | `HomePagingDemandTest.kt`, `HomeFeedTest.kt` | Implemented, test verified | — |
 | 02-I | Settings changes cannot overwrite newer fields or reopen under the wrong account or page. | `SettingsViewModel` validity gate and retry, `SettingsRoute` saver | `SettingsViewModelTest.kt`, `SettingsRouteRestorationTest.kt` | Implemented, test verified | — |
 | 02-J | All 17 resource locales are listed and selectable. System default stays separate. | `AppLanguage`, `locales_config.xml`, `LanguageSettingsScreen` | `LocalizationResourceTest.kt`, `LanguageSettingsScreenTest.kt` | Implemented, test verified | — |

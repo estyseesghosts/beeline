@@ -7,11 +7,13 @@ test verified. C-01 closed the connected-identity gap. C-03 closed the direct-me
 C-06c closed the draft removal gap. Slice 04-E3 added the direct-message conversation identity and
 the verified-only server mark-read.
 
-**Last reviewed:** 2026-09-16.
+**Last reviewed:** 2026-09-20.
 
-**Source baseline:** `b629a2c` (planning). Status refreshed against `c9e06c8`.
+**Source baseline:** Slice 16: `SessionLifecycle.kt` owns durable session transitions, and
+`AccountManager.kt` owns session presentation and authentication UI state.
 
-**Evidence:** source verified. Test files were inspected, not executed in this review.
+**Evidence:** source verified. Slice 16 focused session, connected-session, and notification tests
+passed, as did `compileDebugKotlin` and the unit-test compile during implementation.
 Device and live-server behavior remain unverified.
 
 **Completion owner:** `docs/archive/agents/decomposition-01-02-completion.md`.
@@ -27,8 +29,12 @@ Device and live-server behavior remain unverified.
   the generation. `isCurrent` compares identity.
 - `NotificationSyncController.register` registers a source and returns the `NotificationSyncToken`
   that owns it.
-- `AccountManager` registers the active source for notification sync when a session becomes active.
-  It publishes one `ConnectedSessionContext` for that registered source.
+- `SessionLifecycle` owns restoration, durable session transitions, source registration, push
+  activation, account cleanup, and direct-message and draft writer generations.
+- `AccountManager` owns authentication-screen state and publishes one `ConnectedSessionContext`
+  for each accepted activation returned by `SessionLifecycle`.
+- `AccountManager` receives only authentication, lifecycle, and UI-string dependencies. Unit tests
+  use the test-only `AccountManagerFixtures.kt` factory with explicit lifecycle dependencies.
 - Unsupported operations throw `SourceError.Unsupported` through the `unsupported` helper.
 
 ## Identity Invariants
@@ -46,13 +52,12 @@ interchangeable.
 
 ### Connected Identity
 
-`AccountManager.connect` creates the source, registers it for notification sync, and publishes one
-`ConnectedSessionContext`. The context joins the account identity, the visible account, the durable
-session revision, the runtime presentation generation, and the registered source. The shell reads
-that context. It does not join separate session flows.
+`SessionLifecycle` creates the source and registers it for notification sync. `AccountManager` then
+publishes one `ConnectedSessionContext` for the accepted activation. The context joins the account
+identity, visible account, durable revision, presentation generation, and registered source.
 
 `ConnectedSessionHost` reads `connectedContext.source`. The unregistered
-`sourceFactory.create(session)` fallback is removed. `AccountManager` owns source construction.
+`sourceFactory.create(session)` fallback is removed. `SessionLifecycle` owns source construction.
 
 `ui/session/ConnectedSessionContext.kt` owns the context type. `ConnectedSessionContextTest` covers
 account switching, same-account replacement, profile updates, and retired registrations.
@@ -226,9 +231,8 @@ Hilt singleton as a required constructor argument and passes that same instance 
 singleton, so the ViewModel, the repository, and `AccountManager` share the instance that account
 removal invalidates. Slice 04-E1 removed the private defaults.
 
-`AccountManager.removeAccount` calls `invalidateAndDelete` before it deletes the store rows
-(`AccountManager.kt:332-334`). It revokes the draft writer and calls `deleteAll` in one serialized
-boundary (`AccountManager.kt:336-338`).
+`SessionLifecycle.remove` stops delivery before cleanup. It revokes each writer before deleting
+its rows, then commits the session index. A later activation receives new writer generations.
 
 C-03 closed the direct-message gap. `DirectMessageRepository.markRead` routes its local write
 through `commitIfCurrent` (commit `bfbd7ed`). Activation, revocation, deletion, and accepted writes

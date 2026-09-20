@@ -30,8 +30,9 @@ import me.foxtails.palustris.ui.feed.FeedHost
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.notifications.NotificationSettingsHost
 import me.foxtails.palustris.ui.notifications.NotificationsHost
-import me.foxtails.palustris.ui.posts.LocalPostActionOwner
-import me.foxtails.palustris.ui.posts.PostActionOwner
+import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
+import me.foxtails.palustris.ui.posts.PostPopupOwner
+import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.profile.ProfileHost
 import me.foxtails.palustris.ui.saved.SavedCollectionsHost
 import me.foxtails.palustris.ui.shell.AccountSwitcher
@@ -67,6 +68,9 @@ fun ConnectedSessionHost(
     // The registered source comes from the accepted context. Recomposition cannot create a
     // replacement source, and an unregistered fallback does not exist.
     val sharedSource = connectedContext.source
+    val postInteractionAuthority = remember(accountId, sessionRevision) {
+        ConnectedSessionPostInteractionAuthority(accountId, sessionRevision, PostInteractionExecutionAuthority()).authority
+    }
 
     val settingsScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -114,6 +118,7 @@ fun ConnectedSessionHost(
         sessionGeneration = sessionGeneration,
         sessionRevision = sessionRevision,
         source = sharedSource,
+        executionAuthority = postInteractionAuthority,
         coordinator = projectionCoordinator,
         entryStore = entryStore,
     )
@@ -122,6 +127,7 @@ fun ConnectedSessionHost(
         sessionGeneration = sessionGeneration,
         sessionRevision = sessionRevision,
         source = sharedSource,
+        executionAuthority = postInteractionAuthority,
         account = account,
         accountManager = accountManager,
         coordinator = projectionCoordinator,
@@ -132,6 +138,7 @@ fun ConnectedSessionHost(
         sessionGeneration = sessionGeneration,
         sessionRevision = sessionRevision,
         source = sharedSource,
+        executionAuthority = postInteractionAuthority,
         accountManager = accountManager,
         coordinator = projectionCoordinator,
         entryStore = entryStore,
@@ -141,6 +148,7 @@ fun ConnectedSessionHost(
         sessionGeneration = sessionGeneration,
         sessionRevision = sessionRevision,
         source = sharedSource,
+        executionAuthority = postInteractionAuthority,
         coordinator = projectionCoordinator,
         lifecycleOwner = lifecycleOwner,
         entryStore = entryStore,
@@ -191,7 +199,7 @@ fun ConnectedSessionHost(
     // so a retired popup has no authority.
     val latestProfileActions by rememberUpdatedState(profile.actions)
     val postActionOwner = remember(accountId, sessionRevision, sharedSource) {
-        PostActionOwner(
+        PostPopupOwner(
             accountId = accountId,
             sessionRevision = sessionRevision,
             source = sharedSource,
@@ -223,7 +231,7 @@ fun ConnectedSessionHost(
         )
     }
 
-    CompositionLocalProvider(LocalPostActionOwner provides postActionOwner) {
+    CompositionLocalProvider(LocalPostPopupOwner provides postActionOwner) {
         PalustrisApp(
             account = account,
             sessionGeneration = sessionGeneration,

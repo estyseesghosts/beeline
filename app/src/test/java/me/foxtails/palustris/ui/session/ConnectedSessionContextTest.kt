@@ -13,34 +13,20 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import me.foxtails.palustris.data.AccountSourceRegistry
-import me.foxtails.palustris.data.SocialSourceFactory
 import me.foxtails.palustris.data.auth.AccountIndex
 import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.data.auth.AuthGateway
-import me.foxtails.palustris.data.auth.DraftWriteAuthority
-import me.foxtails.palustris.data.auth.InMemoryDraftStore
 import me.foxtails.palustris.data.auth.LoginSession
 import me.foxtails.palustris.data.auth.PendingLogin
 import me.foxtails.palustris.data.auth.SessionStore
-import me.foxtails.palustris.data.directmessages.DirectMessageWriteAuthority
-import me.foxtails.palustris.data.directmessages.InMemoryDirectMessageStore
-import me.foxtails.palustris.data.emoji.InMemoryEmojiCatalogRepository
-import me.foxtails.palustris.data.misskey.CapabilityCache
-import me.foxtails.palustris.data.misskey.HttpClientPool
-import me.foxtails.palustris.data.notifications.NoOpNotificationStreamController
 import me.foxtails.palustris.data.notifications.NotificationSyncController
 import me.foxtails.palustris.data.notifications.NotificationSyncState
-import me.foxtails.palustris.data.notifications.push.NoOpPushRegistrationManager
-import me.foxtails.palustris.data.preferences.InMemoryEmojiPickerPreferencesRepository
-import me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository
-import me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.NotificationSyncToken
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Session
 import me.foxtails.palustris.domain.SocialSource
-import me.foxtails.palustris.ui.session.AccountManager
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
@@ -129,23 +115,11 @@ class ConnectedSessionContextTest {
         auth: AuthGateway,
         controller: NotificationSyncController,
         dispatcher: CoroutineDispatcher,
-    ) = AccountManager(
+    ) = accountManagerFixture(
         store = store,
         auth = auth,
         ioDispatcher = dispatcher,
-        sourceFactory = SocialSourceFactory(HttpClientPool()),
         notificationSync = controller,
-        pushRegistrationManager = NoOpPushRegistrationManager(),
-        notificationStreamController = NoOpNotificationStreamController(),
-        capabilityCache = CapabilityCache(),
-        postPreferencesRepository = InMemoryPostPreferencesRepository(),
-        photoGridPreferencesRepository = InMemoryPhotoGridPreferencesRepository(),
-        directMessageStore = InMemoryDirectMessageStore(),
-        directMessageWriteAuthority = DirectMessageWriteAuthority(),
-        emojiCatalogRepository = InMemoryEmojiCatalogRepository(),
-        emojiPickerPreferencesRepository = InMemoryEmojiPickerPreferencesRepository(),
-        draftStore = InMemoryDraftStore(),
-        draftWriteAuthority = DraftWriteAuthority(),
     )
 
     private fun auth(result: LoginSession) = object : AuthGateway {

@@ -13,7 +13,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-class PostRepostConfirmationOwnerTest {
+class PostRepostConfirmationStateTest {
     private val account = Account(
         AccountId(Connection("https://example.org", Protocol.MISSKEY), "owner"),
         "Owner",
@@ -28,7 +28,7 @@ class PostRepostConfirmationOwnerTest {
 
     @Test
     fun confirmationUsesTheLatestMatchingStateAndClearsPendingState() {
-        val owner = PostRepostConfirmationOwner()
+        val owner = PostRepostConfirmationState()
         var result: OwnedPost? = null
         val target = post()
         owner.request(target, Rect(0f, 0f, 48f, 48f))
@@ -41,7 +41,7 @@ class PostRepostConfirmationOwnerTest {
 
     @Test
     fun projectedStateChangeMakesConfirmationStale() {
-        val owner = PostRepostConfirmationOwner()
+        val owner = PostRepostConfirmationState()
         var called = false
         val target = post()
         owner.request(target, Rect.Zero)
@@ -55,7 +55,7 @@ class PostRepostConfirmationOwnerTest {
 
     @Test
     fun undoConfirmationUsesTheRepostedState() {
-        val owner = PostRepostConfirmationOwner()
+        val owner = PostRepostConfirmationState()
         var result: OwnedPost? = null
         val target = post(reposted = true)
         owner.request(target, Rect.Zero)

@@ -58,7 +58,7 @@ internal fun AppLocalPageContent(
                 onOpenReactionPicker = onOpenReactionPicker,
                 onOpenMedia = onOpenMedia,
                 onOpenPost = { post -> onOpenPost(post, LargePostOrigin.Saved) },
-                availableActions = availableActions + PostAction.Bookmark,
+                availableActions = availableActions,
                 onOpenProfile = onOpenProfile,
                 onSearchHashtag = onSearchHashtag,
                 onOpenHashtagBubble = onOpenHashtagBubble,

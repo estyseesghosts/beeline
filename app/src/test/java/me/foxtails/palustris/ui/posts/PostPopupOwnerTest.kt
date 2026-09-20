@@ -18,13 +18,15 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.ui.UiStrings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class PostActionOwnerTest {
+class PostPopupOwnerTest {
+    private val uiStrings = UiStrings.Default
     private val sessionConnection = Connection("https://example.org", Protocol.MISSKEY)
     private val sessionOwnerId = AccountId(sessionConnection, "owner")
     private val sessionAuthorId = AccountId(sessionConnection, "author")
@@ -37,7 +39,7 @@ class PostActionOwnerTest {
 
     @Test
     fun openRejectsAStaleAccountSession() = runTest {
-        val owner = PostActionOwner(sessionOwnerId, 2L, FakeSource(), this)
+        val owner = PostPopupOwner(sessionOwnerId, 2L, FakeSource(), this, uiStrings = uiStrings)
 
         owner.open(post(OwnedPost(sessionOwnerId, post())), Rect(0f, 0f, 1f, 1f))
         owner.open(post(OwnedPost(sessionOwnerId, post(), sessionRevision = 3L)), Rect.Zero)
@@ -50,7 +52,7 @@ class PostActionOwnerTest {
     fun mutationUsesTheEffectivePostAuthorAndPublishesTheConfirmedState() = runTest {
         var changed = 0
         val source = FakeSource()
-        val owner = PostActionOwner(sessionOwnerId, 2L, source, this, onRelationshipChanged = { changed++ })
+        val owner = PostPopupOwner(sessionOwnerId, 2L, source, this, onRelationshipChanged = { changed++ }, uiStrings = uiStrings)
         val owned = OwnedPost(sessionOwnerId, post(), sessionRevision = 2L)
 
         owner.open(owned, Rect.Zero)
@@ -70,7 +72,7 @@ class PostActionOwnerTest {
 
     @Test
     fun retireDismissesTheOpenPopup() = runTest {
-        val owner = PostActionOwner(popupAccountId, 7L, RelationshipSource(), this)
+        val owner = PostPopupOwner(popupAccountId, 7L, RelationshipSource(), this, uiStrings = uiStrings)
         owner.open(popupOwned(), Rect.Zero)
         advanceUntilIdle()
         assertNotNull(owner.target)
@@ -82,7 +84,7 @@ class PostActionOwnerTest {
 
     @Test
     fun retiredOwnerRejectsOpen() = runTest {
-        val owner = PostActionOwner(popupAccountId, 7L, RelationshipSource(), this)
+        val owner = PostPopupOwner(popupAccountId, 7L, RelationshipSource(), this, uiStrings = uiStrings)
         owner.retire()
 
         owner.open(popupOwned(), Rect.Zero)
@@ -93,7 +95,7 @@ class PostActionOwnerTest {
 
     @Test
     fun retiredOwnerRejectsMutationsAndReports() = runTest {
-        val owner = PostActionOwner(popupAccountId, 7L, RelationshipSource(), this)
+        val owner = PostPopupOwner(popupAccountId, 7L, RelationshipSource(), this, uiStrings = uiStrings)
         owner.open(popupOwned(), Rect.Zero)
         advanceUntilIdle()
         assertNotNull(owner.relationship.relationship)

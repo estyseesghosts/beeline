@@ -46,7 +46,7 @@ data class PostReportState(
  * Narrow presentation contract for the post-action popup.
  *
  * Generic leaves open, dismiss, and drive the popup through this interface.
- * They never receive the service-backed [PostActionOwner], its [SocialSource],
+ * They never receive the service-backed [PostPopupOwner], its [SocialSource],
  * or its coroutine scope.
  */
 interface PostPopupPresentation {
@@ -59,7 +59,7 @@ interface PostPopupPresentation {
     fun submitReport(comment: String)
 }
 
-internal val LocalPostActionOwner = staticCompositionLocalOf<PostPopupPresentation?> { null }
+internal val LocalPostPopupOwner = staticCompositionLocalOf<PostPopupPresentation?> { null }
 
 /**
  * Owns one post-action popup and its account-scoped relationship requests.
@@ -68,13 +68,13 @@ internal val LocalPostActionOwner = staticCompositionLocalOf<PostPopupPresentati
  * it with the connected entry. A retired owner dismisses its popup and rejects later opens,
  * mutations, and reports, so a retired popup has no authority.
  */
-class PostActionOwner(
+class PostPopupOwner(
     private val accountId: AccountId,
     private val sessionRevision: Long,
     private val source: SocialSource?,
     private val scope: CoroutineScope,
     private val onRelationshipChanged: () -> Unit = {},
-    private val uiStrings: UiStrings = UiStrings.Default,
+    private val uiStrings: UiStrings,
 ) : PostPopupPresentation {
     override var target by mutableStateOf<PostActionTarget?>(null)
         private set

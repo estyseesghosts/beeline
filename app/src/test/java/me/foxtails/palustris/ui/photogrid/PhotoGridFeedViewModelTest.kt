@@ -108,6 +108,7 @@ class PhotoGridFeedViewModelTest {
         InMemoryPostPreferencesRepository(),
         InMemoryPhotoGridPreferencesRepository(),
         7L,
+        me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority(),
     )
 
     private fun post(id: String) = Post(

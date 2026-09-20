@@ -16,6 +16,7 @@ import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.DEFAULT_FAVOURITE_EMOJI
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
@@ -32,7 +33,7 @@ class SavedPostsViewModel @AssistedInject constructor(
     @Assisted val accountId: AccountId,
     @Assisted private val source: SocialSource,
     @Assisted private val sessionRevision: Long = 0L,
-    private val executionAuthority: PostInteractionExecutionAuthority = PostInteractionExecutionAuthority(),
+    @Assisted private val executionAuthority: PostInteractionExecutionAuthority,
     private val uiStrings: UiStrings = UiStrings.Default,
 ) : ViewModel() {
     private val _state = MutableStateFlow(SavedPostsUiState())
@@ -57,7 +58,10 @@ class SavedPostsViewModel @AssistedInject constructor(
         source = source,
         sessionRevision = sessionRevision,
         scope = viewModelScope,
-        isActionAvailable = { true },
+        isActionAvailable = { action ->
+            action != PostAction.Bookmark ||
+                source.capabilities.savedPosts?.status == CapabilityStatus.Supported
+        },
         // Collections have no preference owner. The feed path keeps the real emoji.
         favouriteEmoji = { DEFAULT_FAVOURITE_EMOJI },
         updatePost = { _, target, transform -> updatePostByTarget(target, transform) },
@@ -253,6 +257,7 @@ class SavedPostsViewModel @AssistedInject constructor(
             accountId: AccountId,
             source: SocialSource,
             sessionRevision: Long,
+            executionAuthority: PostInteractionExecutionAuthority,
         ): SavedPostsViewModel
     }
 }

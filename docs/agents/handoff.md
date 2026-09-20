@@ -93,7 +93,7 @@ Read these in order. Treat the repository as the authority.
   verification.
 - T1a (merge the duplicate test classes into mirrored packages) is
   committed and test verified. `ui/emoji/EmojiCatalogViewModelTest`
-  holds 8 tests and `ui/posts/PostActionOwnerTest` holds 5 tests. The
+  holds 8 tests and `ui/posts/PostPopupOwnerTest` holds 5 tests. The
   two root copies and the misplaced `ui/EmojiCatalogViewModelTest` are
   gone. Focused tests, `test assembleRelease`, and `ktlintCheck` pass.
   The slice commit is `7018105`.
@@ -260,7 +260,7 @@ verification.
 1. Q1 — Done. ktlint gate with a baseline. Wildcard imports are gone.
 2. T1 — Done. T1a through T1f are complete. Merge of the two
     duplicate-named test classes (`EmojiCatalogViewModelTest`,
-    `PostActionOwnerTest`) is in `7018105`. Data and domain owner moves
+    `PostPopupOwnerTest`) is in `7018105`. Data and domain owner moves
     are in `f65a10a`. UI feature moves are in `42e85e7`. Fixture moves
     are in `404b356`. Single-owner root test moves are in `00a49ff`.
     Adapter-specific source test moves are in `aecab82`.
@@ -305,9 +305,11 @@ verification.
   force-add `01.md`, `02.md`, `03.md`, `03_corrected.md`, or `04.md`. The
   ditched Plan 04 task file lives in `docs/archive/agents/plan04-utility-retention.md`.
 - The worktree holds the untracked `appsvg/` directory. Do not commit it.
-- Plan 04 is ditched. No Plan 04 slice is in progress. The
-  localization record through slice 4 is archived. Resume needs a new
-  task. The last safe commit is the current `HEAD` (`git log -1`).
+- Slice 15 is complete: the secondary `AccountManager` constructor was removed, and the shared
+  `AccountManagerFixtures` factory migrated 12 test sites.
+- Slice 15 verification passed: focused session, connected-session, and notification tests, plus
+  `compileDebugKotlin`/UnitTest, passed during implementation.
+- The full Gradle gate remains pending for the final release gate.
 - All non-English string catalogs are removed from the app for now. Two
   localization tests were relaxed to tolerate missing catalogs and must be
   tightened again when the catalogs return:

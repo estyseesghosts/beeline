@@ -115,7 +115,7 @@ class ProfileViewModelTest {
         val protocol = me.foxtails.palustris.domain.Protocol.MISSKEY
         val misskeySelf = Account(AccountId(Connection(origin, protocol), "self"), "Self", "@self@example.org")
         val misskeyRemote = Account(AccountId(Connection(origin, protocol), "remote"), "Remote", "@remote@example.org")
-        val model = ProfileViewModel(misskeySelf.id, FakeSource())
+        val model = ProfileViewModel(misskeySelf.id, FakeSource(), executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.open(misskeyRemote)
         advanceUntilIdle()
@@ -607,7 +607,7 @@ class ProfileViewModelTest {
         assertTrue(model.state.value.detailLoading)
     }
 
-    private fun model(source: FakeSource): ProfileViewModel = ProfileViewModel(self.id, source)
+    private fun model(source: FakeSource): ProfileViewModel = ProfileViewModel(self.id, source, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
     private fun runProfileTest(block: suspend TestScope.() -> Unit) = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))

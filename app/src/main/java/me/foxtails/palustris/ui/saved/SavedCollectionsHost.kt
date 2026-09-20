@@ -14,6 +14,7 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.ui.session.AccountManager
+import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.feed.Feed
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.shell.BookmarksContract
@@ -37,6 +38,7 @@ fun SavedCollectionsHost(
     sessionGeneration: Long,
     sessionRevision: Long,
     source: SocialSource,
+    executionAuthority: PostInteractionExecutionAuthority,
     account: Account,
     accountManager: AccountManager,
     coordinator: PostProjectionCoordinator,
@@ -45,7 +47,7 @@ fun SavedCollectionsHost(
     val savedPostsModel = hiltViewModel<SavedPostsViewModel, SavedPostsViewModel.Factory>(
         key = "saved-posts-$accountId-$sessionGeneration",
         creationCallback = { factory ->
-            factory.create(accountId, source, sessionRevision)
+            factory.create(accountId, source, sessionRevision, executionAuthority)
         },
     )
     LaunchedEffect(entryStore, sessionGeneration, savedPostsModel) {

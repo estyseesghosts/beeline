@@ -5,52 +5,20 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import me.foxtails.palustris.data.SocialSourceFactory
 import me.foxtails.palustris.data.auth.AccountIndex
-import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.data.auth.AuthCallback
 import me.foxtails.palustris.data.auth.AuthGateway
-import me.foxtails.palustris.data.auth.DraftStore
-import me.foxtails.palustris.data.auth.DraftWriteAuthority
-import me.foxtails.palustris.data.auth.InMemoryDraftStore
 import me.foxtails.palustris.data.auth.PendingLogin
-import me.foxtails.palustris.data.auth.SessionStore
-import me.foxtails.palustris.data.auth.toAccount
-import me.foxtails.palustris.data.directmessages.DirectMessageStore
-import me.foxtails.palustris.data.directmessages.DirectMessageWriteAuthority
-import me.foxtails.palustris.data.directmessages.InMemoryDirectMessageStore
-import me.foxtails.palustris.data.emoji.InMemoryEmojiCatalogRepository
-import me.foxtails.palustris.data.misskey.CapabilityCache
-import me.foxtails.palustris.data.misskey.HttpClientPool
-import me.foxtails.palustris.data.notifications.NoOpNotificationStreamController
-import me.foxtails.palustris.data.notifications.NoOpNotificationSyncController
-import me.foxtails.palustris.data.notifications.NotificationStreamController
-import me.foxtails.palustris.data.notifications.NotificationSyncController
-import me.foxtails.palustris.data.notifications.push.NoOpPushRegistrationManager
-import me.foxtails.palustris.data.notifications.push.PushRegistrationManager
-import me.foxtails.palustris.data.preferences.InMemoryEmojiPickerPreferencesRepository
-import me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository
-import me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository
-import me.foxtails.palustris.di.IoDispatcher
+import me.foxtails.palustris.data.auth.SessionLifecycle
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
-import me.foxtails.palustris.domain.EmojiCatalogRepository
-import me.foxtails.palustris.domain.EmojiPickerPreferencesRepository
-import me.foxtails.palustris.domain.NotificationSyncToken
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
-import me.foxtails.palustris.domain.PostPreferencesRepository
-import me.foxtails.palustris.domain.PushSessionState
 import me.foxtails.palustris.domain.Session
-import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.ui.UiStrings
-import org.json.JSONObject
 
 data class SessionUi(
     val starting: Boolean = true,
@@ -66,51 +34,10 @@ data class SessionUi(
 
 @HiltViewModel
 class AccountManager @Inject constructor(
-    private val store: SessionStore,
     private val auth: AuthGateway,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    private val sourceFactory: SocialSourceFactory,
-    private val notificationSync: NotificationSyncController,
-    private val pushRegistrationManager: PushRegistrationManager,
-    private val notificationStreamController: NotificationStreamController,
-    private val postPreferencesRepository: PostPreferencesRepository,
-    private val photoGridPreferencesRepository: PhotoGridPreferencesRepository,
-    private val directMessageStore: DirectMessageStore,
-    private val directMessageWriteAuthority: DirectMessageWriteAuthority,
-    private val emojiCatalogRepository: EmojiCatalogRepository,
-    private val emojiPickerPreferencesRepository: EmojiPickerPreferencesRepository,
-    private val draftStore: DraftStore,
-    private val draftWriteAuthority: DraftWriteAuthority,
-    private val uiStrings: UiStrings = UiStrings.Default,
-    private val capabilityCache: CapabilityCache,
+    private val lifecycle: SessionLifecycle,
+    private val uiStrings: UiStrings,
 ) : ViewModel() {
-    constructor(
-        store: SessionStore,
-        auth: AuthGateway,
-        ioDispatcher: CoroutineDispatcher,
-        draftStore: DraftStore = InMemoryDraftStore(),
-        draftWriteAuthority: DraftWriteAuthority = DraftWriteAuthority(),
-        uiStrings: UiStrings = UiStrings.Default,
-        capabilityCache: CapabilityCache = CapabilityCache(),
-    ) : this(
-        store,
-        auth,
-        ioDispatcher,
-        SocialSourceFactory(HttpClientPool()),
-        NoOpNotificationSyncController(),
-        NoOpPushRegistrationManager(),
-        NoOpNotificationStreamController(),
-        InMemoryPostPreferencesRepository(),
-        InMemoryPhotoGridPreferencesRepository(),
-        InMemoryDirectMessageStore(),
-        DirectMessageWriteAuthority(),
-        InMemoryEmojiCatalogRepository(),
-        InMemoryEmojiPickerPreferencesRepository(),
-        draftStore,
-        draftWriteAuthority,
-        uiStrings,
-        capabilityCache,
-    )
     private val _session = MutableStateFlow(SessionUi())
     val session = _session.asStateFlow()
     private val _accountIndex = MutableStateFlow(AccountIndex())
@@ -126,27 +53,11 @@ class AccountManager @Inject constructor(
     init {
         viewModelScope.launch {
             try {
-                val restored = withContext(ioDispatcher) {
-                    val index = store.readIndex()
-                    val activeAccountId = index.activeAccountId ?: index.accounts.firstOrNull()?.accountId
-                    val sessions = index.accounts.mapNotNull { ref -> store.read(ref.accountId) }
-                    val active = activeAccountId?.let { accountId ->
-                        sessions.firstOrNull { it.accountId == accountId }?.let { session ->
-                            session to index.accounts.firstOrNull { it.accountId == accountId }?.toAccount()
-                        }
-                    }
-                    RestoredAccounts(index.copy(activeAccountId = activeAccountId), sessions, active)
-                }
-                pending = withContext(ioDispatcher) {
-                    store.readPending()?.takeIf { it.isFresh(System.currentTimeMillis()) }
-                }
+                val restored = lifecycle.restore()
+                pending = restored.pending
                 _accountIndex.value = restored.index
-                val registrations = restored.sessions.associate { session ->
-                    session.accountId to startNotificationSync(session)
-                }
                 if (restored.active != null) {
-                    val (session, account) = restored.active
-                    connect(session, account ?: fallbackAccount(session), registrations.getValue(session.accountId))
+                    connect(restored.active)
                     if (pending != null) {
                         _session.value = _session.value.copy(
                             addingAccount = true,
@@ -172,7 +83,7 @@ class AccountManager @Inject constructor(
             _session.value = _session.value.copy(busy = true, error = null, addingAccount = activeSessionValue != null)
             try {
                 val next = auth.prepare(input).copy(replacingAccountId = replacingAccountId)
-                withContext(ioDispatcher) { store.writePending(next) }
+                lifecycle.writePending(next)
                 pending = next
                 _session.value = SessionUi(
                     starting = false,
@@ -220,7 +131,7 @@ class AccountManager @Inject constructor(
         pending = null
         deferredCallback = null
         viewModelScope.launch {
-            withContext(ioDispatcher) { store.clearPending() }
+            lifecycle.clearPending()
             val active = _connectedContext.value
             if (active == null) {
                 _session.value = SessionUi(starting = false)
@@ -259,61 +170,26 @@ class AccountManager @Inject constructor(
                 request.replacingAccountId?.let { expected ->
                     if (account.id != expected) throw SourceError.AccountMismatch
                 }
-                val session = withContext(ioDispatcher) {
-                    store.transaction {
-                    val previous = store.read(account.id)
-                    val session = Session(
-                        accountId = account.id,
-                        token = result.token,
-                        capabilities = result.capabilities.copy(
-                            canPublish = result.capabilities.canPublish || result.canPublish,
-                        ),
-                        access = result.access,
-                        pushInstanceName = previous?.pushInstanceName,
-                        sessionRevision = (previous?.sessionRevision ?: 0L) + 1L,
-                        pushState = previous?.pushState ?: PushSessionState(),
-                    )
-                    store.write(account.id, session)
-                    store.writeProfile(account.id, result.user)
-                    val index = store.readIndex()
-                    val updatedIndex = index.withAccount(account).copy(activeAccountId = account.id)
-                    store.writeIndex(updatedIndex)
-                    store.clearPending()
-                    _accountIndex.value = updatedIndex
-                        session
-                    }
-                }
+                val saved = lifecycle.login(result)
+                _accountIndex.value = saved.index
                 pending = null
-                connect(session, account, startNotificationSync(session))
+                connect(saved.activation)
             } catch (e: Exception) {
                 failAuth(e)
             }
         }
     }
 
-    fun switchAccount(accountId: me.foxtails.palustris.domain.AccountId) {
+    fun switchAccount(accountId: AccountId) {
         if (_session.value.busy) return
         viewModelScope.launch {
             try {
-                val switched = withContext(ioDispatcher) {
-                    store.transaction {
-                    val session = store.read(accountId) ?: return@transaction null
-                    val index = store.readIndex().copy(activeAccountId = accountId)
-                    store.writeIndex(index)
-                        index to session
-                    }
-                }
+                val switched = lifecycle.switch(accountId)
                 if (switched == null) {
                     _session.value = _session.value.copy(error = uiStrings.sessionAccountUnavailable())
                 } else {
-                    val (index, session) = switched
-                    _accountIndex.value = index
-                    connect(
-                        session,
-                        index.accounts.firstOrNull { it.accountId == accountId }?.toAccount()
-                            ?: fallbackAccount(session),
-                        startNotificationSync(session),
-                    )
+                    _accountIndex.value = switched.index
+                    connect(switched.activation)
                 }
             } catch (e: Exception) {
                 failAuth(e)
@@ -326,49 +202,19 @@ class AccountManager @Inject constructor(
      * Writers are revoked before their rows are deleted. Storage commits before the
      * in-memory index moves, so a late write cannot resurrect deleted data.
      */
-    fun removeAccount(accountId: me.foxtails.palustris.domain.AccountId) {
+    fun removeAccount(accountId: AccountId) {
         viewModelScope.launch {
             try {
-                notificationStreamController.stop(accountId)
-                pushRegistrationManager.disable(accountId)
-                notificationSync.removeAccount(accountId)
-                capabilityCache.invalidate(accountId)
-                val replacement = withContext(ioDispatcher) {
-                    postPreferencesRepository.remove(accountId)
-                    photoGridPreferencesRepository.remove(accountId)
-                    // Revoke DM writers before deleting rows. Late writes stay deleted.
-                    directMessageWriteAuthority.invalidateAndDelete(accountId) {
-                        directMessageStore.delete(accountId)
-                    }
-                    // Revoke draft writers before deleting rows. A late save stays deleted.
-                    draftWriteAuthority.invalidateAndDelete(accountId) {
-                        draftStore.deleteAll(accountId)
-                    }
-                    emojiCatalogRepository.remove(accountId)
-                    emojiPickerPreferencesRepository.remove(accountId)
-                    store.transaction {
-                        store.delete(accountId)
-                    val index = store.readIndex()
-                    val accounts = index.accounts.filterNot { it.accountId == accountId }
-                    val nextId = if (index.activeAccountId == accountId) accounts.firstOrNull()?.accountId else index.activeAccountId
-                    val updated = index.copy(accounts = accounts, activeAccountId = nextId)
-                    store.writeIndex(updated)
-                        nextId?.let { store.read(it) }?.let { it to updated } ?: (null to updated)
-                    }
-                }
-                _accountIndex.value = replacement.second
+                val replacement = lifecycle.remove(accountId)
+                _accountIndex.value = replacement.index
                 if (loginAccountId() == accountId) {
-                    val nextSession = replacement.first
+                    val nextSession = replacement.next
                     if (nextSession == null) {
                         activeSessionValue = null
                         _connectedContext.value = null
                         _session.value = SessionUi(starting = false)
                     } else {
-                        connect(
-                            nextSession,
-                            replacement.second.accounts.first { it.accountId == nextSession.accountId }.toAccount(),
-                            startNotificationSync(nextSession),
-                        )
+                        connect(nextSession)
                     }
                 }
             } catch (e: Exception) {
@@ -381,7 +227,7 @@ class AccountManager @Inject constructor(
         authJob?.cancel()
         val accountId = loginAccountId()
         if (accountId != null) removeAccount(accountId) else viewModelScope.launch {
-            withContext(ioDispatcher) { store.clearPending() }
+            lifecycle.clearPending()
             pending = null
             _session.value = SessionUi(starting = false)
         }
@@ -391,12 +237,8 @@ class AccountManager @Inject constructor(
         if (_connectedContext.value?.accountId != account.id) return
         viewModelScope.launch {
             try {
-                withContext(ioDispatcher) {
-                    val index = store.readIndex()
-                    store.writeIndex(index.withAccount(account))
-                    store.writeProfile(account.id, account.toProfileJson())
-                    _accountIndex.value = index.withAccount(account)
-                }
+                val result = lifecycle.updateProfile(account) ?: return@launch
+                _accountIndex.value = result.index
                 _session.value = _session.value.copy(account = account)
                 _connectedContext.value = _connectedContext.value
                     ?.takeIf { it.accountId == account.id }
@@ -417,11 +259,9 @@ class AccountManager @Inject constructor(
         }
     }
 
-    private suspend fun connect(value: Session, account: Account, registration: RegisteredSource) {
-        // The account lifecycle issues the writer generation. The session replacement revokes old
-        // writers before the new generation activates. Stale sessions cannot write afterwards.
-        val directMessageGeneration = directMessageWriteAuthority.activate(value.accountId)
-        val draftGeneration = draftWriteAuthority.activate(value.accountId)
+    private fun connect(activation: SessionLifecycle.Activation) {
+        val value = activation.session
+        val account = activation.account
         sessionGeneration += 1L
         activeSessionValue = value
         // Publish one accepted context. The shell never joins a separate account emission
@@ -430,10 +270,10 @@ class AccountManager @Inject constructor(
             account = account,
             sessionRevision = value.sessionRevision,
             presentationGeneration = sessionGeneration,
-            source = registration.source,
-            registryToken = registration.token,
-            directMessageGeneration = directMessageGeneration,
-            draftGeneration = draftGeneration,
+            source = activation.source,
+            registryToken = activation.registryToken,
+            directMessageGeneration = activation.directMessageGeneration,
+            draftGeneration = activation.draftGeneration,
         )
         _session.value = SessionUi(
             starting = false,
@@ -443,20 +283,7 @@ class AccountManager @Inject constructor(
         )
     }
 
-    private fun startNotificationSync(session: Session): RegisteredSource {
-        val source = sourceFactory.create(session)
-        val token = notificationSync.register(session.accountId, source)
-        pushRegistrationManager.onSessionAvailable(session.accountId)
-        return RegisteredSource(source, token)
-    }
-
-    private fun loginAccountId(): me.foxtails.palustris.domain.AccountId? = activeSessionValue?.accountId
-
-    private fun fallbackAccount(session: Session): Account = Account(
-        session.accountId,
-        session.accountId.localId,
-        session.accountId.localId,
-    )
+    private fun loginAccountId(): AccountId? = activeSessionValue?.accountId
 
     private fun failAuth(e: Exception) {
         if (e is CancellationException) throw e
@@ -464,45 +291,4 @@ class AccountManager @Inject constructor(
     }
 
     private fun message(e: Exception): String = uiStrings.sourceError(e)
-}
-
-private data class RestoredAccounts(
-    val index: AccountIndex,
-    val sessions: List<Session>,
-    val active: Pair<Session, Account?>?,
-)
-
-private data class RegisteredSource(
-    val source: SocialSource,
-    val token: NotificationSyncToken,
-)
-
-private fun AccountIndex.withAccount(account: Account): AccountIndex {
-    val ref = AccountRef(account.id, account.handle, account.avatarUrl, account.displayName,
-        biography = account.biography, profileFields = account.profileFields,
-        bannerUrl = account.bannerUrl, followersCount = account.followersCount,
-        followingCount = account.followingCount, postsCount = account.postsCount,
-        locked = account.locked, bot = account.bot)
-    return copy(accounts = accounts.filterNot { it.accountId == account.id } + ref)
-}
-
-private fun Account.toProfileJson(): JSONObject = JSONObject().apply {
-    put("id", id.localId)
-    put("username", handle.removePrefix("@").substringBefore('@'))
-    put("host", handle.removePrefix("@").substringAfter('@', id.connection.origin.removePrefix("https://")))
-    put("name", displayName)
-    put("display_name", displayName)
-    put("description", biography)
-    put("note", biography)
-    put("bannerUrl", bannerUrl)
-    put("followersCount", followersCount)
-    put("followingCount", followingCount)
-    put("notesCount", postsCount)
-    put("statuses_count", postsCount)
-    put("isLocked", locked)
-    put("isBot", bot)
-    put("fields", org.json.JSONArray(profileFields.map { field ->
-        JSONObject().put("name", field.name).put("value", field.value)
-    }))
-    avatarUrl?.let { put("avatarUrl", it); put("avatar", it) }
 }

@@ -40,22 +40,16 @@ import me.foxtails.palustris.domain.normalizeFavouriteEmoji
 import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.ui.posts.PostActionFamily
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
+import me.foxtails.palustris.ui.posts.PostInteractionMutationOwner
 
 @HiltViewModel(assistedFactory = PostThreadViewModel.Factory::class)
 class PostThreadViewModel @AssistedInject constructor(
     @Assisted val accountId: AccountId,
     @Assisted private val source: SocialSource,
     @Assisted private val sessionRevision: Long,
-    private val preferences: PostPreferencesRepository,
-    private val executionAuthority: PostInteractionExecutionAuthority = PostInteractionExecutionAuthority(),
+    private val preferences: PostPreferencesRepository = InMemoryPostPreferencesRepository(),
+    @Assisted private val executionAuthority: PostInteractionExecutionAuthority,
 ) : ViewModel() {
-    constructor(accountId: AccountId, source: SocialSource, sessionRevision: Long = 0L) : this(
-        accountId,
-        source,
-        sessionRevision,
-        InMemoryPostPreferencesRepository(),
-        PostInteractionExecutionAuthority(),
-    )
 
     private val _state = MutableStateFlow(PostThreadUiState())
     val state = _state.asStateFlow()
@@ -72,6 +66,24 @@ class PostThreadViewModel @AssistedInject constructor(
     private var stopped = false
     private var foreground = true
     private var postUpdateListener: ((OwnedPost) -> Unit)? = null
+    private val interactionMutations = PostInteractionMutationOwner(
+        accountId = accountId,
+        source = source,
+        sessionRevision = sessionRevision,
+        scope = viewModelScope,
+        isActionAvailable = { action ->
+            when (action) {
+                PostAction.Favorite -> source.capabilities.primaryFavourite.status == CapabilityStatus.Supported
+                PostAction.Bookmark -> source.capabilities.savedPosts?.status == CapabilityStatus.Supported
+                PostAction.React -> source.capabilities.emoji.reactionMutation == CapabilityStatus.Supported
+                else -> action in source.capabilities.actions
+            }
+        },
+        favouriteEmoji = { favouriteEmoji },
+        updatePost = { _, target, transform -> updateMatching(target, transform = transform) },
+        onFailure = {},
+        executionAuthority = executionAuthority,
+    )
 
     init {
         viewModelScope.launch {
@@ -225,76 +237,26 @@ class PostThreadViewModel @AssistedInject constructor(
     }
 
     fun favorite(ownedPost: OwnedPost) {
-        val selected = !ownedPost.post.favourited
-        val target = ownedPost.effectiveTargetId()
-        val reactionFavourite = source.capabilities.primaryFavourite.mode == PrimaryFavouriteMode.Reaction
-        runAction(ownedPost, PostAction.Favorite, target, { post ->
-            if (reactionFavourite) {
-                PostReactionReducer.apply(
-                    post,
-                    EmojiChoice(favouriteEmoji, favouriteEmoji),
-                    selected,
-                    source.capabilities.emoji.selectionMode,
-                    favouriteEmoji,
-                )
-            } else {
-                post.copy(
-                    favourited = selected,
-                    interactionCounts = post.interactionCounts.copy(
-                        favouriteCount = post.interactionCounts.favouriteCount.adjustedBy(if (selected) 1 else -1),
-                    ),
-                )
-            }
-        }) {
-            if (selected && source.capabilities.primaryFavourite.mode == PrimaryFavouriteMode.Reaction) {
-                ownedPost.post.myReaction?.takeIf { it != favouriteEmoji }?.let { source.removeReaction(target, it) }
-            }
-            source.setPrimaryFavourite(target, favouriteEmoji, selected)
+        interactionMutations.favorite(ownedPost) {
+            recordConfirmedMutation(ownedPost.effectiveTargetId(), PostAction.Favorite)
         }
     }
 
     fun reshare(ownedPost: OwnedPost) {
-        val selected = !ownedPost.post.reposted
-        val target = ownedPost.effectiveTargetId()
-        runAction(ownedPost, PostAction.Reshare, target, { post ->
-            post.copy(
-                reposted = selected,
-                interactionCounts = post.interactionCounts.copy(
-                    repostCount = post.interactionCounts.repostCount.adjustedBy(if (selected) 1 else -1),
-                ),
-            )
-        }) { source.setReshared(target, selected, ownedPost.post.ownRepostId) }
+        interactionMutations.reshare(ownedPost) {
+            recordConfirmedMutation(ownedPost.effectiveTargetId(), PostAction.Reshare)
+        }
     }
 
     fun react(ownedPost: OwnedPost, choice: EmojiChoice) {
-        val mode = source.capabilities.emoji.selectionMode
-        val selected = ownedPost.post.selectedReactions.any { it.submissionValue == choice.submissionValue } ||
-            ownedPost.post.myReaction == choice.submissionValue
-        val primary = favouriteEmoji.takeIf { source.capabilities.primaryFavourite.mode == PrimaryFavouriteMode.Reaction }
-        val target = ownedPost.effectiveTargetId()
-        runAction(ownedPost, PostAction.React, target, { post ->
-            PostReactionReducer.apply(post, choice, !selected, mode, primary)
-        }) {
-            val previous = ownedPost.post.selectedReactions.ifEmpty {
-                ownedPost.post.myReaction?.let { listOf(EmojiChoice(it, it)) }.orEmpty()
-            }
-            if (selected) source.removeReaction(target, choice)
-            else {
-                if (mode != ReactionSelectionMode.Independent) {
-                    previous.filterNot { it.submissionValue == choice.submissionValue }
-                        .forEach { source.removeReaction(target, it) }
-                }
-                source.react(target, choice)
-            }
-            PostActionResult(selected = !selected)
+        interactionMutations.react(ownedPost, choice) {
+            recordConfirmedMutation(ownedPost.effectiveTargetId(), PostAction.React)
         }
     }
 
     fun bookmark(ownedPost: OwnedPost) {
-        val selected = !ownedPost.post.saved
-        val target = ownedPost.effectiveTargetId()
-        runAction(ownedPost, PostAction.Bookmark, target, { it.copy(saved = selected) }) {
-            source.setSaved(target, selected)
+        interactionMutations.bookmark(ownedPost) {
+            recordConfirmedMutation(ownedPost.effectiveTargetId(), PostAction.Bookmark)
         }
     }
 
@@ -307,6 +269,7 @@ class PostThreadViewModel @AssistedInject constructor(
         stopAcquisition()
         actionJobs.values.forEach { it.cancel() }
         actionJobs.clear()
+        interactionMutations.stop()
     }
 
     private fun loadFresh(allowAutomaticRefresh: Boolean = true) {
@@ -421,10 +384,11 @@ class PostThreadViewModel @AssistedInject constructor(
     ) {
         if (stopped || ownedPost.fetchedBy != accountId || ownedPost.sessionRevision != sessionRevision) return
         val capabilities = source.capabilities
-        val actionAllowed = action in capabilities.actions || when (action) {
+        val actionAllowed = when (action) {
             PostAction.Favorite -> capabilities.primaryFavourite.status == CapabilityStatus.Supported
             PostAction.Bookmark -> capabilities.savedPosts?.status == CapabilityStatus.Supported
-            else -> false
+            PostAction.React -> capabilities.emoji.reactionMutation == CapabilityStatus.Supported
+            else -> action in capabilities.actions
         }
         if (!actionAllowed) return
         if (ownedPost.post.contentVisibility != me.foxtails.palustris.domain.PostContentVisibility.Visible) return
@@ -483,6 +447,16 @@ class PostThreadViewModel @AssistedInject constructor(
             }
         }
         rebuildState()
+    }
+
+    /** Keeps confirmed mutation state across a refresh without making the mutation owner a UI owner. */
+    private fun recordConfirmedMutation(target: me.foxtails.palustris.domain.EntityId, action: PostAction) {
+        val post = posts.values.firstOrNull { it.post.id == target || it.effectiveTargetId() == target }?.post ?: return
+        overlays[target] = overlays[target].orEmpty().with(
+            action,
+            post,
+            action == PostAction.Favorite && source.capabilities.primaryFavourite.mode == PrimaryFavouriteMode.Reaction,
+        )
     }
 
     private fun reconcile(action: PostAction, current: Post, result: PostActionResult): Post {
@@ -693,7 +667,7 @@ class PostThreadViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(accountId: AccountId, source: SocialSource, sessionRevision: Long): PostThreadViewModel
+        fun create(accountId: AccountId, source: SocialSource, sessionRevision: Long, executionAuthority: PostInteractionExecutionAuthority): PostThreadViewModel
     }
 
     private companion object {

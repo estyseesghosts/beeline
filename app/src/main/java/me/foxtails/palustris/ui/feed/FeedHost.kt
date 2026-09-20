@@ -16,6 +16,7 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.photogrid.PhotoGridFeed
+import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.shell.HomeContract
 import me.foxtails.palustris.ui.shell.HomeFeedUiState
@@ -55,13 +56,14 @@ fun FeedHost(
     sessionGeneration: Long,
     sessionRevision: Long,
     source: SocialSource,
+    executionAuthority: PostInteractionExecutionAuthority,
     coordinator: PostProjectionCoordinator,
     entryStore: ConnectedEntryStore,
 ): Feed {
     val feedModel = hiltViewModel<FeedViewModel, FeedViewModel.Factory>(
         key = "feed-$accountId-$sessionGeneration",
         creationCallback = { factory ->
-            factory.create(accountId, source, sessionRevision)
+            factory.create(accountId, source, sessionRevision, executionAuthority)
         },
     )
     val modelKey = "feed-$accountId-$sessionGeneration"

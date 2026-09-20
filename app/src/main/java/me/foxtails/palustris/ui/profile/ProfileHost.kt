@@ -17,6 +17,7 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.ui.session.AccountManager
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
+import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.shell.PostProjectionCoordinator
 import me.foxtails.palustris.ui.shell.ProfileContract
 
@@ -32,13 +33,14 @@ fun ProfileHost(
     sessionGeneration: Long,
     sessionRevision: Long,
     source: SocialSource,
+    executionAuthority: PostInteractionExecutionAuthority,
     accountManager: AccountManager,
     coordinator: PostProjectionCoordinator,
     entryStore: ConnectedEntryStore,
 ): ProfileContract {
     val model = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory>(
         key = "profile-$accountId-$sessionGeneration",
-        creationCallback = { factory -> factory.create(accountId, source, sessionRevision) },
+        creationCallback = { factory -> factory.create(accountId, source, sessionRevision, executionAuthority) },
     )
     LaunchedEffect(entryStore, sessionGeneration, model) {
         entryStore.register(sessionGeneration, "profile-$accountId-$sessionGeneration") { model.stop() }

@@ -66,7 +66,7 @@ import me.foxtails.palustris.ui.media.MediaPage
 import me.foxtails.palustris.ui.media.PostMediaCarousel
 import me.foxtails.palustris.ui.photogrid.resolveSharedPhotoPagerHeight
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
-import me.foxtails.palustris.ui.posts.LocalPostActionOwner
+import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
 import me.foxtails.palustris.ui.thread.PostThreadPhase
 import me.foxtails.palustris.ui.thread.PostThreadUiState
 import me.foxtails.palustris.ui.thread.ThreadedReplyRow
@@ -103,8 +103,8 @@ internal fun SinglePostScreen(
 ) {
     val post = ownedPost.post
     val context = LocalContext.current
-    val postActionOwner = LocalPostActionOwner.current
-    val repostConfirmationOwner = LocalPostRepostConfirmationOwner.current
+    val postActionOwner = LocalPostPopupOwner.current
+    val repostConfirmationOwner = LocalPostRepostConfirmationState.current
     val photos = post.attachments.filter { it.kind == MediaKind.Image || it.kind == MediaKind.AnimatedImage }
 
     key(ownedPost.fetchedBy, post.id.connection, post.id.value, presentation) {

@@ -18,7 +18,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Session
-import me.foxtails.palustris.ui.session.AccountManager
+import me.foxtails.palustris.ui.session.accountManagerFixture
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.notifications.NotificationLaunch
 import me.foxtails.palustris.ui.notifications.NotificationLaunchHost
@@ -99,7 +99,7 @@ class NotificationLaunchHostTest {
     private fun launchFor(login: LoginSession, event: String) =
         NotificationLaunch(login.account.id, EntityId(login.account.id.connection.origin, event))
 
-    private fun manager(store: MemoryStore) = AccountManager(store, auth, mainDispatcher)
+    private fun manager(store: MemoryStore) = accountManagerFixture(store, auth, mainDispatcher)
 
     @Test
     fun deliveredLaunchIsAcknowledgedWhenAccepted() {

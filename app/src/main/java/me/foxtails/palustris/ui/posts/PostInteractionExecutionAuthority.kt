@@ -1,7 +1,5 @@
 package me.foxtails.palustris.ui.posts
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EntityId
 
@@ -27,8 +25,7 @@ enum class PostActionFamily {
  * Each accepted acquisition returns the token that owns the slot. Only that token releases
  * the slot. A foreign or repeated release changes nothing.
  */
-@Singleton
-class PostInteractionExecutionAuthority @Inject constructor() {
+class PostInteractionExecutionAuthority {
     /** Opaque ownership of one reserved family slot. Only this token releases the slot. */
     class OperationToken internal constructor(
         internal val accountId: AccountId,

@@ -15,6 +15,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SavedPostsKind
@@ -38,7 +39,7 @@ class SavedPostsViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
             val source = SavedSource(account, author)
-            val viewModel = SavedPostsViewModel(account, source)
+             val viewModel = SavedPostsViewModel(account, source, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             assertEquals(listOf("first"), viewModel.state.value.posts.map { it.post.id.value })
 
@@ -60,7 +61,7 @@ class SavedPostsViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
             val source = SavedSource(account, author, failOlderPage = false)
-            val viewModel = SavedPostsViewModel(account, source)
+             val viewModel = SavedPostsViewModel(account, source, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             viewModel.unsave(viewModel.state.value.posts[0])
             viewModel.unsave(viewModel.state.value.posts[1])
@@ -77,7 +78,7 @@ class SavedPostsViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
             val source = GatedCollectionSource()
-            val viewModel = SavedPostsViewModel(account, source)
+             val viewModel = SavedPostsViewModel(account, source, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             viewModel.refresh()
             advanceUntilIdle()
@@ -103,7 +104,7 @@ class SavedPostsViewModelTest {
                 paged = true,
                 repeatFirstOnOlderPage = true,
             )
-            val viewModel = SavedPostsViewModel(account, source)
+             val viewModel = SavedPostsViewModel(account, source, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
             viewModel.unsave(viewModel.state.value.posts.single())
@@ -124,7 +125,7 @@ class SavedPostsViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
             val source = GatedCollectionSource()
-            val viewModel = SavedPostsViewModel(account, source)
+             val viewModel = SavedPostsViewModel(account, source, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             source.completeSavedPage(0, Page(listOf(post("first")), null))
             advanceUntilIdle()
@@ -146,7 +147,7 @@ class SavedPostsViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
             val source = GatedCollectionSource()
-            val viewModel = SavedPostsViewModel(account, source)
+             val viewModel = SavedPostsViewModel(account, source, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             viewModel.stop()
             source.completeSavedPage(0, Page(listOf(post("late")), null))
@@ -164,7 +165,7 @@ class SavedPostsViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
             val source = GatedCollectionSource()
-            val viewModel = SavedPostsViewModel(account, source)
+             val viewModel = SavedPostsViewModel(account, source, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             source.completeSavedPage(0, Page(listOf(post("a")), "c1"))
             advanceUntilIdle()
@@ -181,6 +182,39 @@ class SavedPostsViewModelTest {
 
             assertEquals(listOf("a", "b"), viewModel.state.value.posts.map { it.post.id.value })
             assertEquals(false, viewModel.state.value.loadingMore)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun savedCapabilityStatusControlsUnsaveMutation() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            listOf(
+                me.foxtails.palustris.domain.CapabilityStatus.Unsupported,
+                me.foxtails.palustris.domain.CapabilityStatus.Denied,
+                null,
+                me.foxtails.palustris.domain.CapabilityStatus.Supported,
+            ).forEach { status ->
+                val source = SavedSource(account, author, savedCapabilityStatus = status)
+                val viewModel = SavedPostsViewModel(
+                    account,
+                    source,
+                    executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority(),
+                )
+                advanceUntilIdle()
+
+                viewModel.unsave(OwnedPost(account, post("mutation").copy(saved = true)))
+                advanceUntilIdle()
+
+                if (status == me.foxtails.palustris.domain.CapabilityStatus.Supported) {
+                    assertEquals(setOf("mutation"), source.unsavedIds)
+                } else {
+                    assertTrue(source.unsavedIds.isEmpty())
+                }
+                viewModel.stop()
+            }
         } finally {
             Dispatchers.resetMain()
         }
@@ -231,12 +265,13 @@ class SavedPostsViewModelTest {
         private val failOlderPage: Boolean = true,
         private val paged: Boolean = false,
         private val repeatFirstOnOlderPage: Boolean = false,
+        private val savedCapabilityStatus: me.foxtails.palustris.domain.CapabilityStatus? =
+            me.foxtails.palustris.domain.CapabilityStatus.Supported,
     ) : SocialSource {
         override val capabilities = ServerCapabilities(
-            savedPosts = me.foxtails.palustris.domain.SavedPostsCapability(
-                me.foxtails.palustris.domain.CapabilityStatus.Supported,
-                SavedPostsKind.Bookmarks,
-            ),
+            savedPosts = savedCapabilityStatus?.let {
+                me.foxtails.palustris.domain.SavedPostsCapability(it, SavedPostsKind.Bookmarks)
+            },
             likedPosts = me.foxtails.palustris.domain.CapabilityStatus.Supported,
         )
         var olderAttempts = 0

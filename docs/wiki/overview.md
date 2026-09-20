@@ -33,7 +33,7 @@ Beeline is one Android module in `:app`. Beeline uses Kotlin, Jetpack Compose, a
 | Area | Status | Source owner |
 | --- | --- | --- |
 | Timelines | Available | [`FeedViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/FeedViewModel.kt) |
-| Profiles and relationships | Available. Includes follow, block, mute, and report. | [`ProfileViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt), [`PostActionOwner.kt`](../../app/src/main/java/me/foxtails/palustris/ui/posts/PostActionOwner.kt) |
+| Profiles and relationships | Available. Includes follow, block, mute, and report. | [`ProfileViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt), [`PostPopupOwner.kt`](../../app/src/main/java/me/foxtails/palustris/ui/posts/PostPopupOwner.kt) |
 | Threads | Available | [`PostThreadViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/thread/PostThreadViewModel.kt) |
 | Notifications | Available | [`NotificationRepository.kt`](../../app/src/main/java/me/foxtails/palustris/data/notifications/NotificationRepository.kt) |
 | Direct messages | Available. Federated direct posts, not encrypted. | [`DirectMessageViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/directmessages/DirectMessageViewModel.kt) |

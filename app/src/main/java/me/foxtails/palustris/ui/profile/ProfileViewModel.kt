@@ -33,8 +33,8 @@ import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.mergeExternalActionFields
 import me.foxtails.palustris.domain.mergeInto
 import me.foxtails.palustris.ui.UiStrings
-import me.foxtails.palustris.ui.posts.PostActionFamily
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
+import me.foxtails.palustris.ui.posts.PostInteractionMutationOwner
 import me.foxtails.palustris.ui.requiresSignIn
 
 @HiltViewModel(assistedFactory = ProfileViewModel.Factory::class)
@@ -42,7 +42,7 @@ class ProfileViewModel @AssistedInject constructor(
     @Assisted val accountId: AccountId,
     @Assisted private val source: SocialSource,
     @Assisted private val sessionRevision: Long = 0L,
-    private val executionAuthority: PostInteractionExecutionAuthority = PostInteractionExecutionAuthority(),
+    @Assisted private val executionAuthority: PostInteractionExecutionAuthority,
     private val uiStrings: UiStrings = UiStrings.Default,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ProfileUiState())
@@ -63,7 +63,24 @@ class ProfileViewModel @AssistedInject constructor(
     private var relationshipJob: Job? = null
     private var pinnedJob: Job? = null
     private var editJob: Job? = null
-    private val reactionJobs = mutableMapOf<EntityId, Job>()
+    private val interactionMutations = PostInteractionMutationOwner(
+        accountId = accountId,
+        source = source,
+        sessionRevision = sessionRevision,
+        scope = viewModelScope,
+        isActionAvailable = { action ->
+            when (action) {
+                PostAction.Favorite -> source.capabilities.primaryFavourite.status == CapabilityStatus.Supported
+                PostAction.Bookmark -> source.capabilities.savedPosts?.status == CapabilityStatus.Supported
+                PostAction.React -> source.capabilities.emoji.reactionMutation == CapabilityStatus.Supported
+                else -> action in source.capabilities.actions
+            }
+        },
+        favouriteEmoji = { me.foxtails.palustris.domain.DEFAULT_FAVOURITE_EMOJI },
+        updatePost = { _, target, transform -> updateOwnedPost(target, transform) },
+        onFailure = {},
+        executionAuthority = executionAuthority,
+    )
 
     fun open(seed: Account) {
         if (stopped) return
@@ -213,61 +230,7 @@ class ProfileViewModel @AssistedInject constructor(
     }
 
     fun react(ownedPost: OwnedPost, choice: EmojiChoice) {
-        if (stopped || ownedPost.fetchedBy != accountId || ownedPost.sessionRevision != sessionRevision) return
-        val emojiCapabilities = source.capabilities.emoji
-        if (emojiCapabilities.reactionMutation != CapabilityStatus.Supported ||
-            PostAction.React !in source.capabilities.actions
-        ) {
-            return
-        }
-        val postId = ownedPost.post.id
-        val actionTargetId = ownedPost.effectiveTargetId()
-        val family = if (source.capabilities.primaryFavourite.mode == me.foxtails.palustris.domain.PrimaryFavouriteMode.Reaction) {
-            PostActionFamily.FavoriteReaction
-        } else {
-            PostActionFamily.Reaction
-        }
-        if (reactionJobs[actionTargetId]?.isActive == true) return
-        val token = executionAuthority.acquire(accountId, sessionRevision, family, actionTargetId) ?: return
-        val before = ownedPost.post
-        val targetGeneration = generation
-        val selected = before.selectedReactions.any { it.submissionValue == choice.submissionValue } ||
-            (before.myReaction != null && before.myReaction == choice.submissionValue)
-        val optimistic = PostReactionReducer.apply(
-            post = before,
-            choice = choice,
-            selected = !selected,
-            selectionMode = emojiCapabilities.selectionMode,
-        )
-        updateOwnedPost(postId) { optimistic }
-        val job = viewModelScope.launch {
-            try {
-                if (selected) {
-                    source.removeReaction(actionTargetId, choice)
-                    if (stopped || generation != targetGeneration) return@launch
-                } else {
-                    if (emojiCapabilities.selectionMode == ReactionSelectionMode.Single) {
-                        val previous = before.selectedReactions
-                            .firstOrNull { it.submissionValue != choice.submissionValue }
-                            ?: before.myReaction?.takeIf { it != choice.submissionValue }
-                                ?.let { EmojiChoice(it, it, null) }
-                        previous?.let {
-                            source.removeReaction(actionTargetId, it)
-                            if (stopped || generation != targetGeneration) return@launch
-                        }
-                    }
-                    source.react(actionTargetId, choice)
-                }
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                if (!stopped && generation == targetGeneration) updateOwnedPost(postId) { before }
-            } finally {
-                if (reactionJobs[actionTargetId] === currentCoroutineContext()[Job]) reactionJobs.remove(actionTargetId)
-                executionAuthority.release(token)
-            }
-        }
-        reactionJobs[actionTargetId] = job
+        interactionMutations.react(ownedPost, choice)
     }
 
     fun applyExternalPost(updated: OwnedPost) {
@@ -295,8 +258,7 @@ class ProfileViewModel @AssistedInject constructor(
         timelinePager.stop()
         generation += 1
         cancelProfileRequests()
-        reactionJobs.values.forEach(Job::cancel)
-        reactionJobs.clear()
+        interactionMutations.stop()
     }
 
     private fun loadEditor(targetEditorGeneration: Long) {
@@ -543,7 +505,7 @@ class ProfileViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(accountId: AccountId, source: SocialSource, sessionRevision: Long): ProfileViewModel
+        fun create(accountId: AccountId, source: SocialSource, sessionRevision: Long, executionAuthority: PostInteractionExecutionAuthority): ProfileViewModel
     }
 }
 

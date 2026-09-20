@@ -48,22 +48,9 @@ class FeedViewModel @AssistedInject constructor(
     private val postPreferencesRepository: PostPreferencesRepository,
     private val photoGridPreferencesRepository: PhotoGridPreferencesRepository,
     @Assisted private val sessionRevision: Long,
-    private val executionAuthority: PostInteractionExecutionAuthority = PostInteractionExecutionAuthority(),
+    @Assisted private val executionAuthority: PostInteractionExecutionAuthority,
     private val uiStrings: UiStrings = UiStrings.Default,
 ) : ViewModel() {
-    constructor(
-        accountId: AccountId,
-        source: SocialSource,
-        syncCoordinator: NotificationSyncOrchestrator,
-    ) : this(
-        accountId,
-        source,
-        syncCoordinator,
-        InMemoryPostPreferencesRepository(),
-        InMemoryPhotoGridPreferencesRepository(),
-        0L,
-    )
-
     private val _feed = MutableStateFlow(FeedState())
     val feed = _feed.asStateFlow()
     val sync = syncCoordinator.observeAccount(accountId)
@@ -480,6 +467,6 @@ class FeedViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(accountId: AccountId, source: SocialSource, sessionRevision: Long): FeedViewModel
+        fun create(accountId: AccountId, source: SocialSource, sessionRevision: Long, executionAuthority: PostInteractionExecutionAuthority): FeedViewModel
     }
 }

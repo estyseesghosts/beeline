@@ -34,7 +34,7 @@ class PostInteractionMutationOwner(
     private val favouriteEmoji: () -> String,
     private val updatePost: (ownedPost: OwnedPost, target: me.foxtails.palustris.domain.EntityId, transform: (Post) -> Post) -> Unit,
     private val onFailure: (Exception) -> Unit,
-    private val executionAuthority: PostInteractionExecutionAuthority = PostInteractionExecutionAuthority(),
+    private val executionAuthority: PostInteractionExecutionAuthority,
 ) {
     private val jobs = mutableMapOf<ActionKey, Job>()
     private var stopped = false

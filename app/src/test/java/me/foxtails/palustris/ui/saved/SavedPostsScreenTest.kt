@@ -2,10 +2,12 @@ package me.foxtails.palustris.ui.saved
 
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -14,11 +16,13 @@ import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostInteractionCounts
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.ui.saved.SavedPostsScreen
 import me.foxtails.palustris.ui.saved.SavedPostsUiState
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -95,5 +99,72 @@ class SavedPostsScreenTest {
         compose.onNodeWithTag("reaction_chip_🎉", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("reaction_count_🎉", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("interaction_summary", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun unavailableBookmarkActionIsDisabledAndNotTriggered() {
+        val account = Account(
+            AccountId(Connection("https://example.org", Protocol.MASTODON), "person"),
+            "Saved author",
+            "@person@example.org",
+        )
+        val post = Post(
+            EntityId("https://example.org", "saved-gated"),
+            account,
+            "Saved gated post",
+            0,
+            Audience.Public,
+        )
+        var bookmarks = 0
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SavedPostsScreen(
+                    state = SavedPostsUiState(posts = listOf(OwnedPost(account.id, post))),
+                    onRefresh = {},
+                    onLoadMore = {},
+                    onUnsave = {},
+                    onBookmark = { bookmarks++ },
+                    availableActions = emptySet(),
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithContentDescription("Bookmark").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("Remove bookmark").assertDoesNotExist()
+        assertEquals(0, bookmarks)
+    }
+
+    @Test
+    fun supportedBookmarkActionIsPresentedAndTriggered() {
+        val account = Account(
+            AccountId(Connection("https://example.org", Protocol.MASTODON), "person"),
+            "Saved author",
+            "@person@example.org",
+        )
+        val post = Post(
+            EntityId("https://example.org", "saved-supported"),
+            account,
+            "Saved supported post",
+            0,
+            Audience.Public,
+        )
+        var bookmarks = 0
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SavedPostsScreen(
+                    state = SavedPostsUiState(posts = listOf(OwnedPost(account.id, post))),
+                    onRefresh = {},
+                    onLoadMore = {},
+                    onUnsave = {},
+                    onBookmark = { bookmarks++ },
+                    availableActions = setOf(PostAction.Bookmark),
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithContentDescription("Bookmark").assertIsDisplayed().performClick()
+        assertEquals(1, bookmarks)
     }
 }

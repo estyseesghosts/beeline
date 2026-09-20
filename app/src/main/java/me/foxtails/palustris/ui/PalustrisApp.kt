@@ -133,9 +133,9 @@ import me.foxtails.palustris.ui.motion.compactFloatingExit
 import me.foxtails.palustris.ui.large.LargeScreenShell
 import me.foxtails.palustris.ui.large.largeLayoutMode
 import me.foxtails.palustris.ui.large.LargeLayoutMode
-import me.foxtails.palustris.ui.posts.LocalPostRepostConfirmationOwner
-import me.foxtails.palustris.ui.posts.PostRepostConfirmationOwner
-import me.foxtails.palustris.ui.posts.LocalPostActionOwner
+import me.foxtails.palustris.ui.posts.LocalPostRepostConfirmationState
+import me.foxtails.palustris.ui.posts.PostRepostConfirmationState
+import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
 import me.foxtails.palustris.ui.layout.CompactHomeTimelineSpacing
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.CompactOverlayVerticalPadding
@@ -167,12 +167,12 @@ fun PalustrisApp(
     notificationSettings: NotificationSettingsContract,
 ) {
     val mediaTransitionRegistry = remember { MediaTransitionRegistry() }
-    val repostConfirmationOwner = remember(account?.id, sessionGeneration, sessionRevision) { PostRepostConfirmationOwner() }
+    val repostConfirmationOwner = remember(account?.id, sessionGeneration, sessionRevision) { PostRepostConfirmationState() }
     val scope = rememberCoroutineScope()
-    val postActionOwner = LocalPostActionOwner.current
+    val postActionOwner = LocalPostPopupOwner.current
     CompositionLocalProvider(
         LocalMediaTransitionRegistry provides mediaTransitionRegistry,
-        LocalPostRepostConfirmationOwner provides repostConfirmationOwner,
+        LocalPostRepostConfirmationState provides repostConfirmationOwner,
     ) {
     val onReact = postInteractions.actions::favorite
     val onReshare = postInteractions.actions::repost

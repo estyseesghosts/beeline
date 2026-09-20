@@ -51,7 +51,7 @@ feed owner. Wide detail passes the active thread owner for the full single-post 
 initial thread acquisition, because that owner renders the focal post.
 
 `ui/posts/PostRow.kt` owns the shared `InteractionRow` behavior. Its default repost confirmation
-uses `PostRepostConfirmationOwner`, so detail callers do not implement a second forwarding path.
+uses `PostRepostConfirmationState`, so detail callers do not implement a second forwarding path.
 
 `SettingsOverlayHost` in `ui/settings/` owns the settings route, settings models, and settings
 commands. It publishes the validated account set and delays account models until the restored
@@ -114,7 +114,7 @@ acceptance matrix records the status.
 
 | Gap | Source evidence | Completion slice |
 | --- | --- | --- |
-| Post-action ownership | Closed by C-07. The popup owner is built from the stable connected identity and reads the latest refresh callback without recreation. P-02 narrowed the leaf contract: `LocalPostActionOwner` provides `PostPopupPresentation`. | — |
+| Post-action ownership | Closed by C-07. The popup owner is built from the stable connected identity and reads the latest refresh callback without recreation. P-02 narrowed the leaf contract: `LocalPostPopupOwner` provides `PostPopupPresentation`. Post mutations use one `PostInteractionExecutionAuthority` per connected session. | — |
 | Composer completion | Closed by C-06a. `ComposerOwner.publish` reserves the submission and rejects obsolete save callbacks. | — |
 | Draft storage boundary | Closed by C-06b. `data/auth/DraftActions.kt` owns storage and binds to one account. `ui/shell/DraftsContract.kt` carries no storage type. | — |
 | Draft removal coordination | Closed by C-06c. `AccountManager.removeAccount` revokes draft writers and deletes rows in one serialized boundary. A revoked `DraftActions` writer writes nothing and reports no success. | — |

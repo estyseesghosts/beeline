@@ -16,7 +16,7 @@ internal data class PendingRepostConfirmation(
     val selected: Boolean,
 )
 
-internal class PostRepostConfirmationOwner {
+internal class PostRepostConfirmationState {
     var pending by mutableStateOf<PendingRepostConfirmation?>(null)
         private set
 
