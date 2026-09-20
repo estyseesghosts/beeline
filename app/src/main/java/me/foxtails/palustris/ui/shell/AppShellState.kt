@@ -3,10 +3,6 @@ package me.foxtails.palustris.ui.shell
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
 import me.foxtails.palustris.R
-import me.foxtails.palustris.domain.Account
-import me.foxtails.palustris.domain.AccountId
-import me.foxtails.palustris.domain.EditableProfile
-import me.foxtails.palustris.domain.EditableProfilePatch
 import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.AppIcons

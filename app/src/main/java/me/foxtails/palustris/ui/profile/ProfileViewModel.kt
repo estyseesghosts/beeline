@@ -23,7 +23,6 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostReactionReducer
-import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ReactionSelectionMode
 import me.foxtails.palustris.domain.ServerCapabilities
