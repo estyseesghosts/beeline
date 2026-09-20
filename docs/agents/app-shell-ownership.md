@@ -46,9 +46,10 @@ Focused feature hosts own their model, state, actions, and projection registrati
 | `ui/directmessages/DirectMessagesHost.kt` | `DirectMessageViewModel` | `DirectMessagesContract` |
 | `ui/emoji/EmojiHost.kt` | `EmojiCatalogViewModel` | `EmojiPresentation` |
 
-`ui/DetailActionPolicy.kt` resolves the origin-based post-action handlers. Compact detail uses its
-feed owner. Wide detail passes the active thread owner for the full single-post lifetime, including
-initial thread acquisition, because that owner renders the focal post.
+`ui/shell/ShellContent.kt` owns compact and large shell presentation. `ui/shell/DetailActionPolicy.kt`
+resolves the origin-based post-action handlers. Compact detail uses its feed owner. Wide detail passes
+the active thread owner for the full single-post lifetime, including initial thread acquisition,
+because that owner renders the focal post. `ShellDetailCallbacks` is the shared detail callback bundle.
 
 `ui/posts/PostRow.kt` owns the shared `InteractionRow` behavior. Its default repost confirmation
 uses `PostRepostConfirmationState`, so detail callers do not implement a second forwarding path.
@@ -60,8 +61,9 @@ a launch only when the receiving shell accepts its route. A missing account rout
 recoverable unavailable state. The inbox carries a request epoch, so rejected pages change no
 state.
 
-`PalustrisApp` owns navigation, adaptive layout, and surface placement. It accepts narrow feature
-contracts in `ui/shell/`. Back precedence is a pure policy in `ui/navigation/ShellBackPolicy.kt`.
+`PalustrisApp` is the composition root. It owns navigation and surface placement, but not adaptive
+layout. `ui/shell/ShellContent.kt` owns compact and large shell presentation. It accepts narrow
+feature contracts in `ui/shell/`. Back precedence is a pure policy in `ui/navigation/ShellBackPolicy.kt`.
 The shell keeps the back state and the guarded dismissal, and routes dismissal plus the back and
 edge-swipe conditions through the policy. Completion slice C-12c reduces the remaining assembly.
 `ui/shell/ShellOverlayPresenter.kt` owns transient overlay state behind one boundary: the

@@ -5,9 +5,9 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
-import me.foxtails.palustris.ui.DetailActions
-import me.foxtails.palustris.ui.detailActionsFor
 import me.foxtails.palustris.ui.shell.AppShellFixtures
+import me.foxtails.palustris.ui.shell.DetailActions
+import me.foxtails.palustris.ui.shell.detailActionsFor
 import me.foxtails.palustris.ui.shell.LargePostOrigin
 import me.foxtails.palustris.ui.shell.ThreadContract
 import org.junit.Assert.assertEquals
