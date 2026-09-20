@@ -4,8 +4,8 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostDraft
-import me.foxtails.palustris.ui.shell.LargePostOrigin
 import me.foxtails.palustris.ui.navigation.AppRoute
+import me.foxtails.palustris.ui.shell.LargePostOrigin
 
 /**
  * Post interaction data and callbacks shared by every destination branch.

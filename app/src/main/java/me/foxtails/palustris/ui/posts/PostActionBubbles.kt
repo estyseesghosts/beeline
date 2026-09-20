@@ -33,9 +33,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
@@ -53,8 +51,8 @@ import me.foxtails.palustris.ui.emoji.EmojiCatalogState
 import me.foxtails.palustris.ui.emoji.EmojiChoiceGrid
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 
-private const val BubbleDismissDurationMillis = 150L
-private const val ReactionFlickThreshold = 36f
+private const val BUBBLE_DISMISS_DURATION_MILLIS = 150L
+private const val REACTION_FLICK_THRESHOLD = 36f
 
 enum class ReactionBubbleMode { Compact, Expanded }
 
@@ -111,7 +109,7 @@ fun PostActionBubbleHost(
             visible = true
         } else if (renderedTarget != null) {
             visible = false
-            delay(BubbleDismissDurationMillis)
+            delay(BUBBLE_DISMISS_DURATION_MILLIS)
             renderedTarget = null
         }
     }
@@ -233,7 +231,7 @@ private fun ReactionBubble(
 
                                 val deltaX = change.position.x - down.position.x
                                 val deltaY = change.position.y - down.position.y
-                                if (abs(deltaY) >= ReactionFlickThreshold && abs(deltaY) > abs(deltaX)) {
+                                if (abs(deltaY) >= REACTION_FLICK_THRESHOLD && abs(deltaY) > abs(deltaX)) {
                                     change.consume()
                                     expandedFromGesture = true
                                     onExpanded()

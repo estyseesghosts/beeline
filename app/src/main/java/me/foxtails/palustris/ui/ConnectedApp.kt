@@ -90,8 +90,11 @@ fun ConnectedApp(
     LaunchedEffect(state.browserUrl) {
         state.browserUrl?.let { url ->
             accountManager.browserOpened()
-            try { context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) }
-            catch (_: android.content.ActivityNotFoundException) { accountManager.browserFailed() }
+            try {
+                context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+            } catch (_: android.content.ActivityNotFoundException) {
+                accountManager.browserFailed()
+            }
         }
     }
     NotificationLaunchHost(

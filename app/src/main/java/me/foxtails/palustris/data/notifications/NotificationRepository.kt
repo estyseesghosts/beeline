@@ -51,6 +51,7 @@ class NotificationRepository @Inject constructor(
     private val states = mutableMapOf<AccountId, MutableStateFlow<NotificationRepositoryState>>()
     private val storageHealth = mutableMapOf<AccountId, MutableStateFlow<NotificationStorageHealth>>()
     private val generations = mutableMapOf<AccountId, Long>()
+
     /**
      * Retired accounts stay tombstoned after their write record is released. The generation is
      * retained so a late token cannot clear the tombstone; only a strictly newer owner can do so.
@@ -462,9 +463,8 @@ class NotificationRepository @Inject constructor(
         acknowledgement: NotificationAcknowledgement,
     ): Boolean = acknowledge(token, acknowledgement)
 
-    suspend fun dismiss(token: NotificationSyncToken, id: EntityId): Boolean {
-        return dismissFromInbox(token, id, remoteApplied = false)
-    }
+    suspend fun dismiss(token: NotificationSyncToken, id: EntityId): Boolean =
+        dismissFromInbox(token, id, remoteApplied = false)
 
     suspend fun dismissFromInbox(token: NotificationSyncToken, id: EntityId, remoteApplied: Boolean): Boolean {
         return commitWrite(token) { current ->

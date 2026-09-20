@@ -1,8 +1,8 @@
 package me.foxtails.palustris.ui.media
 
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.lerp
 import coil.request.ImageRequest
@@ -59,6 +59,7 @@ data class MediaTransitionFrame(
 /** A shared root-coordinate registry used by the feed and media overlay. */
 class MediaTransitionRegistry {
     private val sources = mutableStateMapOf<MediaTransitionKey, MediaTransitionSource>()
+
     /** Retains only the active source key while the active viewer keeps its source hidden. */
     private val hiddenSources = mutableStateSetOf<MediaTransitionKey>()
     private val activeKey = mutableStateOf<MediaTransitionKey?>(null)

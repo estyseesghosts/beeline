@@ -1,11 +1,11 @@
 package me.foxtails.palustris.ui.profile
 
 import androidx.annotation.VisibleForTesting
+import java.util.LinkedHashSet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.util.LinkedHashSet
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.OwnedPost

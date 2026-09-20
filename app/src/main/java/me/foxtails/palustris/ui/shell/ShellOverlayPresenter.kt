@@ -13,12 +13,12 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.ui.posts.PostActionBubbleTarget
-import me.foxtails.palustris.ui.posts.ReactionBubbleMode
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.emoji.EmojiPickerTarget
 import me.foxtails.palustris.ui.media.ImageViewerContent
 import me.foxtails.palustris.ui.media.MediaOpenRequest
+import me.foxtails.palustris.ui.posts.PostActionBubbleTarget
+import me.foxtails.palustris.ui.posts.ReactionBubbleMode
 
 /**
  * Transient overlay state holder for the application shell.

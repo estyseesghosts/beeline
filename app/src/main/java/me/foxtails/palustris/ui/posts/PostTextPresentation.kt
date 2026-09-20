@@ -12,7 +12,7 @@ internal data class PostTextPresentation(
     val filteredRanges: List<IntRange>,
 )
 
-internal const val PostBodyCharacterLimit = 350
+internal const val POST_BODY_CHARACTER_LIMIT = 350
 
 internal fun postBodyCharacterCount(
     text: String,
@@ -28,10 +28,10 @@ internal fun truncatedPostBody(
 ): String {
     val model = EmojiTextParser.parse(text, emoji)
     val displayText = richTextDisplayText(model.segments)
-    if (displayText.codePointCount(0, displayText.length) <= PostBodyCharacterLimit) return text
+    if (displayText.codePointCount(0, displayText.length) <= POST_BODY_CHARACTER_LIMIT) return text
 
     val result = StringBuilder()
-    var remaining = PostBodyCharacterLimit
+    var remaining = POST_BODY_CHARACTER_LIMIT
     for (segment in model.segments) {
         if (remaining == 0) break
         val displaySegment = richTextDisplayText(segment)
@@ -61,14 +61,14 @@ private data class RemovalRange(
     val detachedLine: Boolean,
 )
 
-private val hashtagToken = Regex("#[\\p{L}\\p{N}_](?:[\\p{L}\\p{N}\\p{M}_])*")
-private val markdownHashtagLink = Regex("""\[([^\]\r\n]*)\]\(\s*(?:<)?(https?://[^)\s>]+)(?:>)?\s*\)""")
+private val HASHTAG_TOKEN = Regex("#[\\p{L}\\p{N}_](?:[\\p{L}\\p{N}\\p{M}_])*")
+private val MARKDOWN_HASHTAG_LINK = Regex("""\[([^\]\r\n]*)\]\(\s*(?:<)?(https?://[^)\s>]+)(?:>)?\s*\)""")
 
 /** Removes only instance tag-search Markdown wrappers; ordinary links remain Markdown. */
-internal fun normalizeMarkdownHashtagLinks(text: String): String = markdownHashtagLink.replace(text) { match ->
+internal fun normalizeMarkdownHashtagLinks(text: String): String = MARKDOWN_HASHTAG_LINK.replace(text) { match ->
     val label = match.groupValues[1]
     val url = match.groupValues[2]
-    if (hashtagToken.matches(label) && isInstanceTagSearchUrl(url)) label else match.value
+    if (HASHTAG_TOKEN.matches(label) && isInstanceTagSearchUrl(url)) label else match.value
 }
 
 /**
@@ -128,7 +128,7 @@ private fun findHashtagTokens(text: String, emojiRanges: List<IntRange>): List<H
         val hash = text.indexOf('#', searchStart)
         if (hash < 0) break
 
-        val match = hashtagToken.matchAt(text, hash)
+        val match = HASHTAG_TOKEN.matchAt(text, hash)
         if (match != null) {
             if (hashtagBoundaryIsValid(text, match.range, emojiRanges)) {
                 tokens += HashtagToken(match.range, match.value)

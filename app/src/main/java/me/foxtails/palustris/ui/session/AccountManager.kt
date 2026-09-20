@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.foxtails.palustris.data.SocialSourceFactory
-import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.auth.AccountIndex
 import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.data.auth.AuthCallback
@@ -27,6 +26,7 @@ import me.foxtails.palustris.data.directmessages.DirectMessageStore
 import me.foxtails.palustris.data.directmessages.DirectMessageWriteAuthority
 import me.foxtails.palustris.data.directmessages.InMemoryDirectMessageStore
 import me.foxtails.palustris.data.emoji.InMemoryEmojiCatalogRepository
+import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.HttpClientPool
 import me.foxtails.palustris.data.notifications.NoOpNotificationStreamController
 import me.foxtails.palustris.data.notifications.NoOpNotificationSyncController

@@ -61,6 +61,7 @@ interface NotificationSyncController {
 class NoOpNotificationSyncController : NotificationSyncController {
     private val states = mutableMapOf<AccountId, MutableStateFlow<NotificationSyncState>>()
     private val generations = mutableMapOf<AccountId, Long>()
+
     /** Allocates non-persisted generations for this controller lifetime; active entries are not history. */
     private val generationAllocator = AtomicLong()
 
@@ -120,6 +121,7 @@ class NotificationSyncOrchestrator @Inject constructor(
     private val jobs = mutableMapOf<AccountId, Job>()
     private val accountLocks = mutableMapOf<AccountId, Mutex>()
     private val generations = mutableMapOf<AccountId, Long>()
+
     /** Allocates non-persisted generations for this controller lifetime; active entries are not history. */
     private val generationAllocator = AtomicLong()
 

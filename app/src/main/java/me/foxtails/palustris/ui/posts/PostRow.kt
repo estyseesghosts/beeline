@@ -51,6 +51,7 @@ import me.foxtails.palustris.ui.AppIcons
 
 private val PostMetadataVerticalPadding = 2.dp * 1.06f
 private val PostChromeHeight = 44.dp + (PostMetadataVerticalPadding * 2f)
+
 @Composable
 internal fun PostRow(
     ownedPost: OwnedPost,

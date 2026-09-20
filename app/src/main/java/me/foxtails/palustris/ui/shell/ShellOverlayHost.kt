@@ -9,11 +9,6 @@ import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.ui.shell.AppDialogs
-import me.foxtails.palustris.ui.shell.AppSelectionSheet
-import me.foxtails.palustris.ui.shell.Destination
-import me.foxtails.palustris.ui.shell.Overlay
-import me.foxtails.palustris.ui.posts.PostActionBubbleHost
 import me.foxtails.palustris.ui.composer.ComposerOverlayHost
 import me.foxtails.palustris.ui.composer.ComposerOwner
 import me.foxtails.palustris.ui.emoji.EmojiPickerHost
@@ -26,11 +21,16 @@ import me.foxtails.palustris.ui.media.ImageViewerContentScreen
 import me.foxtails.palustris.ui.media.MediaViewerScreen
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.notifications.NotificationSettingsSheet
+import me.foxtails.palustris.ui.posts.PostActionBubbleHost
 import me.foxtails.palustris.ui.posts.PostPopupPresentation
 import me.foxtails.palustris.ui.posts.PostShareSheet
 import me.foxtails.palustris.ui.posts.copyPostShareContent
-import me.foxtails.palustris.ui.profile.EditProfileSheet
 import me.foxtails.palustris.ui.posts.sharePost
+import me.foxtails.palustris.ui.profile.EditProfileSheet
+import me.foxtails.palustris.ui.shell.AppDialogs
+import me.foxtails.palustris.ui.shell.AppSelectionSheet
+import me.foxtails.palustris.ui.shell.Destination
+import me.foxtails.palustris.ui.shell.Overlay
 
 /**
  * Bubble and share-sheet hosting for the application shell.

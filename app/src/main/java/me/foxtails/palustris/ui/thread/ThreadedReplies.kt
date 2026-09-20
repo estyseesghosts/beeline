@@ -15,11 +15,11 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.posts.PostRow
 import me.foxtails.palustris.ui.posts.PostRowEvents
 import me.foxtails.palustris.ui.posts.PostRowPresentation
 import me.foxtails.palustris.ui.posts.actionsForPost
-import me.foxtails.palustris.ui.media.MediaOpenRequest
 
 @Composable
 internal fun ThreadedReplyRow(

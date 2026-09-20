@@ -1,12 +1,11 @@
 package me.foxtails.palustris.ui
 
-import me.foxtails.palustris.ui.shell.timelineLabelRes
-
 import android.content.Context
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.ui.shell.timelineLabelRes
 
 /** Maps a normalized source failure to a localized message. */
 internal fun sourceErrorMessage(context: Context, error: Exception): String = when (error) {
