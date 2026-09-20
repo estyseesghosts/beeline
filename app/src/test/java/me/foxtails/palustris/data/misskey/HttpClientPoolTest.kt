@@ -79,13 +79,13 @@ class HttpClientPoolTest {
                 pool.clientFor(Connection("https://eviction-$it.example", Protocol.MISSKEY))
             }
 
-            assertEquals(3_000L, borrowed.connectTimeoutMillis)
-            assertEquals(4_000L, borrowed.readTimeoutMillis)
-            assertEquals(5_000L, borrowed.callTimeoutMillis)
+            assertEquals(3_000, borrowed.connectTimeoutMillis)
+            assertEquals(4_000, borrowed.readTimeoutMillis)
+            assertEquals(5_000, borrowed.callTimeoutMillis)
             assertTrue(!borrowed.followRedirects)
             assertTrue(!borrowed.followSslRedirects)
             val response = borrowed.newCall(Request.Builder().url(server.url("/")).build()).execute()
-            assertEquals("ok", response.use { it.body.string() })
+            assertEquals("ok", response.use { requireNotNull(it.body).string() })
         }
     }
 }
