@@ -23,47 +23,77 @@ import me.foxtails.palustris.domain.AccountId
  */
 @Singleton
 class DirectMessageWriteAuthority @Inject constructor() {
-    private val generations = ConcurrentHashMap<AccountId, AtomicLong>()
-    private val locks = ConcurrentHashMap<AccountId, Mutex>()
+    private class Record {
+        val generation = AtomicLong(0L)
+        val mutex = Mutex()
+        var users = 0
+        var retiring = false
+    }
+
+    private val records = ConcurrentHashMap<AccountId, Record>()
 
     /** Issues the writer generation for a session activation. Revokes the previous writer. */
     suspend fun activate(accountId: AccountId): Long {
-        val lock = lockFor(accountId)
-        return lock.withLock {
-            generations.getOrPut(accountId) { AtomicLong(0L) }.incrementAndGet()
+        while (true) {
+            val record = acquire(accountId)
+            val generation = record.mutex.withLock {
+                if (record.retiring) null else record.generation.incrementAndGet()
+            }
+            release(accountId, record)
+            if (generation != null) return generation
         }
     }
 
     fun isCurrent(accountId: AccountId, generation: Long): Boolean =
-        (generations[accountId]?.get() ?: 0L) == generation
+        records[accountId]?.let { !it.retiring && it.generation.get() == generation } == true
 
     /**
      * Runs [block] under the account lock when [generation] is still current.
      * Returns null when a removal or session replacement revoked the writer first.
      */
     suspend fun <T> commitIfCurrent(accountId: AccountId, generation: Long, block: suspend () -> T): T? {
-        val lock = lockFor(accountId)
-        return lock.withLock {
-            if (!isCurrent(accountId, generation)) null else block()
+        val record = acquire(accountId)
+        return try {
+            record.mutex.withLock {
+                if (record.retiring || record.generation.get() != generation) null else block()
+            }
+        } finally {
+            release(accountId, record)
         }
     }
 
     /** Revokes writers without deleting rows. Serialized with accepted writes. */
     suspend fun invalidate(accountId: AccountId) {
-        val lock = lockFor(accountId)
-        lock.withLock {
-            generations.getOrPut(accountId) { AtomicLong(0L) }.incrementAndGet()
+        val record = acquire(accountId)
+        try {
+            record.mutex.withLock { record.generation.incrementAndGet() }
+        } finally {
+            release(accountId, record)
         }
     }
 
     /** Revokes writers, then deletes rows in the same serialized boundary. */
     suspend fun invalidateAndDelete(accountId: AccountId, delete: suspend () -> Unit) {
-        val lock = lockFor(accountId)
-        lock.withLock {
-            generations.getOrPut(accountId) { AtomicLong(0L) }.incrementAndGet()
-            delete()
+        val record = acquire(accountId)
+        try {
+            record.mutex.withLock {
+                record.retiring = true
+                record.generation.incrementAndGet()
+                delete()
+            }
+        } finally {
+            release(accountId, record)
         }
     }
 
-    private fun lockFor(accountId: AccountId): Mutex = locks.getOrPut(accountId) { Mutex() }
+    private fun acquire(accountId: AccountId): Record = synchronized(this) {
+        val record = records.getOrPut(accountId) { Record() }
+        record.users++
+        record
+    }
+
+    private fun release(accountId: AccountId, record: Record) = synchronized(this) {
+        record.users--
+        if (record.retiring && record.users == 0) records.remove(accountId, record)
+    }
 }

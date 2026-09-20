@@ -1,6 +1,7 @@
 package me.foxtails.palustris.ui.media
 
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.lerp
@@ -58,7 +59,8 @@ data class MediaTransitionFrame(
 /** A shared root-coordinate registry used by the feed and media overlay. */
 class MediaTransitionRegistry {
     private val sources = mutableStateMapOf<MediaTransitionKey, MediaTransitionSource>()
-    private val hiddenSources = mutableStateMapOf<MediaTransitionKey, Boolean>()
+    /** Retains only the active source key while the active viewer keeps its source hidden. */
+    private val hiddenSources = mutableStateSetOf<MediaTransitionKey>()
     private val activeKey = mutableStateOf<MediaTransitionKey?>(null)
     private val activeOwner = mutableStateOf<MediaTransitionOwner?>(null)
     private var nextOwnerId = 0L
@@ -97,11 +99,11 @@ class MediaTransitionRegistry {
     fun sourceFor(key: MediaTransitionKey): MediaTransitionSource? = sources[key]
 
     fun begin(key: MediaTransitionKey): MediaTransitionOwner {
-        activeKey.value?.takeIf { it != key }?.let { hiddenSources[it] = false }
+        hiddenSources.clear()
         val owner = MediaTransitionOwner(key, ++nextOwnerId)
         activeOwner.value = owner
         activeKey.value = key
-        hiddenSources[key] = true
+        hiddenSources.add(key)
         return owner
     }
 
@@ -119,16 +121,19 @@ class MediaTransitionRegistry {
     fun isActive(key: MediaTransitionKey): Boolean = activeKey.value == key
 
     fun markSourceReady(key: MediaTransitionKey) {
-        if (activeKey.value == key) hiddenSources[key] = true
+        if (activeKey.value == key) {
+            hiddenSources.clear()
+            hiddenSources.add(key)
+        }
     }
 
     fun prepareHandoff(owner: MediaTransitionOwner) {
-        if (activeOwner.value == owner) hiddenSources[owner.key] = false
+        if (activeOwner.value == owner) hiddenSources.remove(owner.key)
     }
 
     fun isOwnerActive(owner: MediaTransitionOwner): Boolean = activeOwner.value == owner
 
-    fun isSourceHidden(key: MediaTransitionKey): Boolean = hiddenSources[key] == true
+    fun isSourceHidden(key: MediaTransitionKey): Boolean = key in hiddenSources
 }
 
 val LocalMediaTransitionRegistry = androidx.compose.runtime.compositionLocalOf { MediaTransitionRegistry() }

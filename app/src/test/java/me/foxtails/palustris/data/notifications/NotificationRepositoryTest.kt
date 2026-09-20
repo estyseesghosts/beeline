@@ -1,7 +1,13 @@
 package me.foxtails.palustris.data.notifications
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.yield
 import me.foxtails.palustris.data.notifications.InMemoryNotificationStore
 import me.foxtails.palustris.data.notifications.NotificationIngestRequest
 import me.foxtails.palustris.data.notifications.NotificationRepository
@@ -80,6 +86,185 @@ class NotificationRepositoryTest {
         val late = NotificationPage(listOf(notification("late", NotificationActivity.Follow)))
         assertFalse(repository.establishBaseline(token, ingestRequest(late), late))
         assertTrue(repository.observe(account).value.items.isEmpty())
+    }
+
+    @Test
+    fun generationZeroWriterCannotRecreateAfterRemoval() = runBlocking {
+        val store = InMemoryNotificationStore()
+        val repository = NotificationRepository(store)
+        val initial = NotificationSyncToken(account, 0)
+        val page = NotificationPage(listOf(notification("before-remove", NotificationActivity.Follow)))
+
+        assertTrue(repository.establishBaseline(initial, ingestRequest(page), page))
+        repository.remove(account)
+
+        val late = NotificationPage(listOf(notification("after-remove", NotificationActivity.Follow)))
+        assertFalse(repository.establishBaseline(initial, ingestRequest(late), late))
+        assertTrue(store.read(account) is NotificationStoreRead.Absent)
+    }
+
+    @Test
+    fun generationZeroWriterIsValidBeforeFirstRemovalAndRejectedAfterward() = runBlocking {
+        val repository = NotificationRepository(InMemoryNotificationStore())
+        val token = NotificationSyncToken(account, 0)
+
+        assertTrue(repository.updateUnreadState(token, NotificationUnreadState.Exact(1)))
+        repository.remove(account)
+
+        assertFalse(repository.updateUnreadState(token, NotificationUnreadState.Exact(2)))
+        assertTrue(repository.observe(account).value.items.isEmpty())
+    }
+
+    @Test
+    fun removalWaitsForInFlightNotificationWriteAndDeletesCommittedState() = runBlocking {
+        val store = GatedNotificationStore()
+        val repository = NotificationRepository(store)
+        val token = NotificationSyncToken(account, 1)
+        repository.activate(token)
+
+        val writer = async {
+            repository.establishBaseline(
+                token,
+                baselineRequest(),
+                NotificationPage(listOf(notification("in-flight", NotificationActivity.Follow))),
+            )
+        }
+        store.writeEntered.await()
+
+        val removal = async { repository.remove(account) }
+        yield()
+        assertFalse(removal.isCompleted)
+
+        store.releaseWrite.complete(Unit)
+        assertTrue(writer.await())
+        removal.await()
+
+        assertTrue(store.read(account) is NotificationStoreRead.Absent)
+        assertFalse(repository.establishBaseline(
+            token,
+            baselineRequest(),
+            NotificationPage(listOf(notification("late", NotificationActivity.Follow))),
+        ))
+        assertTrue(repository.observe(account).value.items.isEmpty())
+    }
+
+    @Test
+    fun cancelledNotificationLockWaiterDoesNotResurrectAfterRemoval() = runBlocking {
+        val store = GatedNotificationStore()
+        val repository = NotificationRepository(store)
+        val token = NotificationSyncToken(account, 1)
+        repository.activate(token)
+
+        val writer = async {
+            repository.updateUnreadState(token, NotificationUnreadState.Exact(1))
+        }
+        store.writeEntered.await()
+
+        val waiter = launch {
+            repository.updateUnreadState(token, NotificationUnreadState.Exact(2))
+        }
+        yield()
+        waiter.cancelAndJoin()
+        store.releaseWrite.complete(Unit)
+        assertTrue(writer.await())
+
+        repository.remove(account)
+        assertFalse(repository.updateUnreadState(token, NotificationUnreadState.Exact(3)))
+        assertTrue(store.read(account) is NotificationStoreRead.Absent)
+    }
+
+    @Test
+    fun notificationRemovalDoesNotBlockWritesForAnotherAccount() = runBlocking {
+        val other = account.copy(localId = "other")
+        val store = GatedNotificationStore()
+        val repository = NotificationRepository(store)
+        val token = NotificationSyncToken(account, 1)
+        val otherToken = NotificationSyncToken(other, 1)
+        repository.activate(token)
+        repository.activate(otherToken)
+
+        val writer = async {
+            repository.updateUnreadState(token, NotificationUnreadState.Exact(1))
+        }
+        store.writeEntered.await()
+        val removal = async { repository.remove(account) }
+        yield()
+
+        assertTrue(repository.updateUnreadState(otherToken, NotificationUnreadState.Exact(1)))
+        store.releaseWrite.complete(Unit)
+        assertTrue(writer.await())
+        removal.await()
+        assertEquals(NotificationUnreadState.Exact(1), repository.observe(other).value.unreadState)
+    }
+
+    @Test
+    fun cancellationDuringRemovalPropagatesAndLeavesTheAccountInvalidated() = runBlocking {
+        val store = object : NotificationStore {
+            override fun read(accountId: AccountId): NotificationStoreRead = NotificationStoreRead.Absent
+            override fun write(accountId: AccountId, state: NotificationRepositoryState) = Unit
+            override fun delete(accountId: AccountId) {
+                throw CancellationException("cancel delete")
+            }
+        }
+        val repository = NotificationRepository(store)
+        val token = NotificationSyncToken(account, 1)
+        repository.activate(token)
+
+        var cancelled = false
+        try {
+            repository.remove(account)
+        } catch (_: CancellationException) {
+            cancelled = true
+        }
+
+        assertTrue(cancelled)
+        assertFalse(repository.establishBaseline(token, ingestRequest(NotificationPage(
+            listOf(notification("late", NotificationActivity.Follow)),
+        )), NotificationPage(listOf(notification("late", NotificationActivity.Follow)))))
+    }
+
+    @Test
+    fun positiveActivationClearsRetiredAccountTombstone() = runBlocking {
+        val repository = NotificationRepository(InMemoryNotificationStore())
+        val old = NotificationSyncToken(account, 1)
+        repository.activate(old)
+        repository.remove(account)
+
+        val replacement = NotificationSyncToken(account, 2)
+        repository.activate(replacement)
+
+        assertTrue(repository.establishBaseline(
+            replacement,
+            ingestRequest(NotificationPage(listOf(notification("replacement", NotificationActivity.Follow)))),
+            NotificationPage(listOf(notification("replacement", NotificationActivity.Follow))),
+        ))
+    }
+
+    @Test
+    fun reactivationAfterRemovalUsesTheNewGeneration() = runBlocking {
+        val repository = NotificationRepository(InMemoryNotificationStore())
+        val old = NotificationSyncToken(account, 1)
+        repository.activate(old)
+        repository.remove(account)
+
+        val replacement = NotificationSyncToken(account, 2)
+        repository.activate(replacement)
+
+        assertTrue(repository.updateUnreadState(replacement, NotificationUnreadState.Exact(1)))
+        assertEquals(NotificationUnreadState.Exact(1), repository.observe(account).value.unreadState)
+    }
+
+    @Test
+    fun stalePositiveActivationCannotClearRetiredAccountTombstone() = runBlocking {
+        val repository = NotificationRepository(InMemoryNotificationStore())
+        val old = NotificationSyncToken(account, 1)
+        repository.activate(old)
+        repository.remove(account)
+
+        repository.activate(old)
+
+        assertFalse(repository.updateUnreadState(old, NotificationUnreadState.Exact(1)))
+        assertEquals(null, repository.currentToken(account))
     }
 
     @Test
@@ -645,4 +830,27 @@ class NotificationRepositoryTest {
         post = post,
         rawType = id,
     )
+}
+
+/** Blocks one durable write so account-lock ordering can be tested without timing assumptions. */
+private class GatedNotificationStore : NotificationStore {
+    private val delegate = InMemoryNotificationStore()
+    val writeEntered = CompletableDeferred<Unit>()
+    val releaseWrite = CompletableDeferred<Unit>()
+    private var gateNextWrite = true
+
+    override fun read(accountId: AccountId): NotificationStoreRead = delegate.read(accountId)
+
+    override fun write(accountId: AccountId, state: NotificationRepositoryState) {
+        if (gateNextWrite) {
+            gateNextWrite = false
+            runBlocking {
+                writeEntered.complete(Unit)
+                releaseWrite.await()
+            }
+        }
+        delegate.write(accountId, state)
+    }
+
+    override fun delete(accountId: AccountId) = delegate.delete(accountId)
 }

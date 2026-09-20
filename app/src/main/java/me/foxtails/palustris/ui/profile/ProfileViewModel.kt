@@ -23,7 +23,6 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostReactionReducer
-import me.foxtails.palustris.domain.ProfileTimelineQuery
 import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ReactionSelectionMode
@@ -65,8 +64,6 @@ class ProfileViewModel @AssistedInject constructor(
     private var relationshipJob: Job? = null
     private var pinnedJob: Job? = null
     private var editJob: Job? = null
-    private val pageJobs = mutableMapOf<ProfileTimelineTab, Job>()
-    private val requestedCursors = mutableMapOf<ProfileTimelineTab, MutableSet<String>>()
     private val reactionJobs = mutableMapOf<EntityId, Job>()
 
     fun open(seed: Account) {
@@ -88,7 +85,6 @@ class ProfileViewModel @AssistedInject constructor(
 
         generation += 1
         cancelProfileRequests()
-        requestedCursors.clear()
         val targetGeneration = generation
         _state.value = ProfileUiState(
             targetId = seed.id,
@@ -477,92 +473,6 @@ class ProfileViewModel @AssistedInject constructor(
         }
     }
 
-    private fun loadPage(
-        target: AccountId,
-        tab: ProfileTimelineTab,
-        cursor: String?,
-        targetGeneration: Long,
-        refreshing: Boolean,
-    ) {
-        val cursorSet = requestedCursors.getOrPut(tab) { mutableSetOf() }
-        if (cursor != null && !cursorSet.add(cursor)) {
-            val page = _state.value.pages[tab] ?: return
-            if (isCurrent(targetGeneration, target)) {
-                _state.value = _state.value.copy(
-                    pages = _state.value.pages + (tab to page.copy(
-                        loadingMore = false,
-                        terminal = true,
-                        nextCursor = null,
-                    )),
-                )
-            }
-            return
-        }
-        if (source.capabilities.profile.timelines == me.foxtails.palustris.domain.CapabilityStatus.Unsupported) {
-            publishPageFailure(target, tab, targetGeneration, refreshing, SourceError.Unsupported("profile.timeline"))
-            return
-        }
-        pageJobs[tab]?.cancel()
-        val job = viewModelScope.launch {
-            try {
-                val page = source.profileTimeline(ProfileTimelineQuery(target, tab), cursor)
-                if (!isCurrent(targetGeneration, target)) return@launch
-                val current = _state.value.pages[tab] ?: ProfilePageState()
-                val owned = page.items.map { OwnedPost(accountId, it, sessionRevision) }
-                val merged = (if (refreshing) owned else current.posts + owned).distinctBy { it.post.id }
-                val repeatedCursor = page.nextCursor != null && page.nextCursor in cursorSet
-                val nextCursor = page.nextCursor?.takeUnless { repeatedCursor }
-                _state.value = _state.value.copy(
-                    pages = _state.value.pages + (tab to current.copy(
-                        posts = merged,
-                        initialLoading = false,
-                        refreshing = false,
-                        loadingMore = false,
-                        nextCursor = nextCursor,
-                        error = null,
-                        needsSignIn = false,
-                        terminal = nextCursor == null,
-                        consecutiveEmptyPages = if (page.items.isEmpty()) {
-                            if (refreshing) 1 else current.consecutiveEmptyPages + 1
-                        } else {
-                            0
-                        },
-                    )),
-                )
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                if (cursor != null) cursorSet.remove(cursor)
-                publishPageFailure(target, tab, targetGeneration, refreshing, error)
-            } finally {
-                if (pageJobs[tab] === coroutineContext[Job]) pageJobs.remove(tab)
-            }
-        }
-        pageJobs[tab] = job
-    }
-
-    private fun publishPageFailure(
-        target: AccountId,
-        tab: ProfileTimelineTab,
-        targetGeneration: Long,
-        refreshing: Boolean,
-        error: Exception,
-    ) {
-        if (!isCurrent(targetGeneration, target)) return
-        val current = _state.value.pages[tab] ?: ProfilePageState()
-        _state.value = _state.value.copy(
-            pages = _state.value.pages + (tab to current.copy(
-                initialLoading = false,
-                refreshing = false,
-                loadingMore = false,
-                error = uiStrings.sourceError(error),
-                needsSignIn = requiresSignIn(error),
-                // Refresh failures keep the existing rows and cursor usable.
-                nextCursor = current.nextCursor,
-            )),
-        )
-    }
-
     private fun mutateRelationship(operation: suspend (AccountId) -> me.foxtails.palustris.domain.ProfileRelationship) {
         if (stopped) return
         val current = _state.value
@@ -602,12 +512,10 @@ class ProfileViewModel @AssistedInject constructor(
         relationshipJob?.cancel()
         pinnedJob?.cancel()
         editJob?.cancel()
-        pageJobs.values.forEach(Job::cancel)
         detailJob = null
         relationshipJob = null
         pinnedJob = null
         editJob = null
-        pageJobs.clear()
         timelinePager.cancel()
     }
 

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.foxtails.palustris.data.SocialSourceFactory
+import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.auth.AccountIndex
 import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.data.auth.AuthCallback
@@ -81,6 +82,7 @@ class AccountManager @Inject constructor(
     private val draftStore: DraftStore,
     private val draftWriteAuthority: DraftWriteAuthority,
     private val uiStrings: UiStrings = UiStrings.Default,
+    private val capabilityCache: CapabilityCache,
 ) : ViewModel() {
     constructor(
         store: SessionStore,
@@ -89,6 +91,7 @@ class AccountManager @Inject constructor(
         draftStore: DraftStore = InMemoryDraftStore(),
         draftWriteAuthority: DraftWriteAuthority = DraftWriteAuthority(),
         uiStrings: UiStrings = UiStrings.Default,
+        capabilityCache: CapabilityCache = CapabilityCache(),
     ) : this(
         store,
         auth,
@@ -106,6 +109,7 @@ class AccountManager @Inject constructor(
         draftStore,
         draftWriteAuthority,
         uiStrings,
+        capabilityCache,
     )
     private val _session = MutableStateFlow(SessionUi())
     val session = _session.asStateFlow()
@@ -328,6 +332,7 @@ class AccountManager @Inject constructor(
                 notificationStreamController.stop(accountId)
                 pushRegistrationManager.disable(accountId)
                 notificationSync.removeAccount(accountId)
+                capabilityCache.invalidate(accountId)
                 val replacement = withContext(ioDispatcher) {
                     postPreferencesRepository.remove(accountId)
                     photoGridPreferencesRepository.remove(accountId)

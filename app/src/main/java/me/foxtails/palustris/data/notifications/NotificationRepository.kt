@@ -51,7 +51,20 @@ class NotificationRepository @Inject constructor(
     private val states = mutableMapOf<AccountId, MutableStateFlow<NotificationRepositoryState>>()
     private val storageHealth = mutableMapOf<AccountId, MutableStateFlow<NotificationStorageHealth>>()
     private val generations = mutableMapOf<AccountId, Long>()
-    private val writeLocks = mutableMapOf<AccountId, Mutex>()
+    /**
+     * Retired accounts stay tombstoned after their write record is released. The generation is
+     * retained so a late token cannot clear the tombstone; only a strictly newer owner can do so.
+     * This also prevents the generation-zero compatibility path from treating a removed account
+     * as a never-activated account.
+     */
+    private val retiredGenerations = mutableMapOf<AccountId, Long>()
+    private class WriteRecord {
+        val mutex = Mutex()
+        var users = 0
+        var retiring = false
+        var pendingActivation: NotificationSyncToken? = null
+    }
+    private val writeLocks = mutableMapOf<AccountId, WriteRecord>()
 
     @Synchronized
     fun observe(accountId: AccountId): StateFlow<NotificationRepositoryState> =
@@ -105,11 +118,31 @@ class NotificationRepository @Inject constructor(
             ?.takeIf { it.query == query && it.accountId == accountId }
             ?: state.checkpoint?.takeIf { it.query == query && it.accountId == accountId }
 
-    @Synchronized
+    /**
+     * Activates an owner unless its token is at or below a removal tombstone. A replacement must
+     * therefore carry a strictly newer generation; stale activation never materializes state.
+     */
     fun activate(token: NotificationSyncToken) {
-        val current = generations[token.accountId]
-        if (current == null || token.generation >= current) generations[token.accountId] = token.generation
-        stateForLocked(token.accountId)
+        val record = acquireWrite(token.accountId)
+        try {
+            synchronized(record) {
+                synchronized(this) {
+                    if (record.retiring) {
+                        val retiredGeneration = retiredGenerations[token.accountId]
+                        if (retiredGeneration == null || token.generation > retiredGeneration) {
+                            val pending = record.pendingActivation
+                            if (pending == null || token.generation > pending.generation) {
+                                record.pendingActivation = token
+                            }
+                        }
+                        return
+                    }
+                    activateLocked(token)
+                }
+            }
+        } finally {
+            releaseWrite(token.accountId, record)
+        }
     }
 
     @Synchronized
@@ -365,32 +398,36 @@ class NotificationRepository @Inject constructor(
      * retryable without ever becoming server acknowledgement.
      */
     suspend fun markAndroidDismissed(accountId: AccountId, id: EntityId): Boolean {
-        val lock = lockFor(accountId)
-        return lock.withLock {
-            val next = synchronized(this@NotificationRepository) {
-                val state = states[accountId]?.value ?: return@withLock false
-                if (healthForLocked(accountId).value != NotificationStorageHealth.Healthy) return@withLock false
-                if (state.items.none { it.id == id }) return@withLock false
-                state.copy(items = state.items.map { item ->
-                    if (item.id == id) item.copy(readState = item.readState.copy(androidDismissed = true)) else item
-                })
-            }
-            try {
-                withContext(ioDispatcher) { store.write(accountId, next) }
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (error: Exception) {
-                synchronized(this@NotificationRepository) {
-                    healthForLocked(accountId).value = NotificationStorageHealth.Unavailable
+        val record = acquireWrite(accountId)
+        return try {
+            record.mutex.withLock {
+                val next = synchronized(this@NotificationRepository) {
+                    val state = states[accountId]?.value ?: return@withLock false
+                    if (healthForLocked(accountId).value != NotificationStorageHealth.Healthy) return@withLock false
+                    if (state.items.none { it.id == id }) return@withLock false
+                    state.copy(items = state.items.map { item ->
+                        if (item.id == id) item.copy(readState = item.readState.copy(androidDismissed = true)) else item
+                    })
                 }
-                return@withLock false
+                try {
+                    withContext(ioDispatcher) { store.write(accountId, next) }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (error: Exception) {
+                    synchronized(this@NotificationRepository) {
+                        healthForLocked(accountId).value = NotificationStorageHealth.Unavailable
+                    }
+                    return@withLock false
+                }
+                return@withLock synchronized(this@NotificationRepository) {
+                    val holder = states[accountId] ?: return@synchronized false
+                    if (healthForLocked(accountId).value != NotificationStorageHealth.Healthy) return@synchronized false
+                    holder.value = next
+                    true
+                }
             }
-            return@withLock synchronized(this@NotificationRepository) {
-                val holder = states[accountId] ?: return@synchronized false
-                if (healthForLocked(accountId).value != NotificationStorageHealth.Healthy) return@synchronized false
-                holder.value = next
-                true
-            }
+        } finally {
+            releaseWrite(accountId, record)
         }
     }
 
@@ -521,15 +558,43 @@ class NotificationRepository @Inject constructor(
      * revocation and memory removal are authoritative, so a disk failure never blocks local
      * removal or resurrects the account. Callers revoke writers before this call.
      */
-    @Synchronized
-    fun remove(accountId: AccountId) {
-        states.remove(accountId)
-        storageHealth.remove(accountId)
-        generations.remove(accountId)
+    suspend fun remove(accountId: AccountId) {
+        val record = acquireWrite(accountId)
         try {
-            store.delete(accountId)
-        } catch (error: Exception) {
-            // Best effort. Memory already revoked the account.
+            record.mutex.withLock {
+                val current = synchronized(this@NotificationRepository) {
+                    val current = generations[accountId] ?: 0L
+                    generations[accountId] = current + 1L
+                    retiredGenerations[accountId] = current
+                    record.retiring = true
+                    current
+                }
+                try {
+                    try {
+                        withContext(ioDispatcher) { store.delete(accountId) }
+                    } catch (cancelled: CancellationException) {
+                        // Keep the tombstone. The caller must retry removal before reactivation
+                        // when durable cleanup did not complete.
+                        throw cancelled
+                    } catch (error: Exception) {
+                        // Invalidation and memory removal remain authoritative.
+                    }
+                } finally {
+                    synchronized(this@NotificationRepository) {
+                        states.remove(accountId)
+                        storageHealth.remove(accountId)
+                        generations.remove(accountId)
+                        val pending = record.pendingActivation
+                        if (pending != null && pending.generation > current) {
+                            record.pendingActivation = null
+                            record.retiring = false
+                            activateLocked(pending)
+                        }
+                    }
+                }
+            }
+        } finally {
+            releaseWrite(accountId, record)
         }
     }
 
@@ -548,43 +613,69 @@ class NotificationRepository @Inject constructor(
         compute: (NotificationRepositoryState) -> Pair<NotificationRepositoryState, T>?,
     ): T? {
         val accountId = token.accountId
-        val lock = lockFor(accountId)
-        return lock.withLock {
-            val prepared = synchronized(this@NotificationRepository) {
-                if (!mutationAllowedLocked(token)) return@withLock null
-                compute(stateForLocked(accountId).value)
-            } ?: return@withLock null
-            val (next, result) = prepared
-            if (!synchronized(this@NotificationRepository) { isCurrentLocked(token) }) return@withLock null
-            try {
-                withContext(ioDispatcher) { store.write(accountId, next) }
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (error: Exception) {
-                synchronized(this@NotificationRepository) {
-                    healthForLocked(accountId).value = NotificationStorageHealth.Unavailable
+        val record = acquireWrite(accountId)
+        return try {
+            record.mutex.withLock {
+                val prepared = synchronized(this@NotificationRepository) {
+                    if (!mutationAllowedLocked(token)) return@withLock null
+                    compute(stateForLocked(accountId).value)
+                } ?: return@withLock null
+                val (next, result) = prepared
+                if (!synchronized(this@NotificationRepository) { isCurrentLocked(token) }) return@withLock null
+                try {
+                    withContext(ioDispatcher) { store.write(accountId, next) }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (error: Exception) {
+                    synchronized(this@NotificationRepository) {
+                        healthForLocked(accountId).value = NotificationStorageHealth.Unavailable
+                    }
+                    return@withLock null
                 }
-                return@withLock null
+                synchronized(this@NotificationRepository) {
+                    if (!isCurrentLocked(token) || storageBlockedLocked(accountId)) return@synchronized null
+                    stateForLocked(accountId).value = next
+                    result
+                }
             }
-            synchronized(this@NotificationRepository) {
-                if (!isCurrentLocked(token) || storageBlockedLocked(accountId)) return@synchronized null
-                stateForLocked(accountId).value = next
-                result
-            }
+        } finally {
+            releaseWrite(accountId, record)
         }
     }
 
-    private fun lockFor(accountId: AccountId): Mutex =
-        synchronized(this) { writeLocks.getOrPut(accountId) { Mutex() } }
+    private fun acquireWrite(accountId: AccountId): WriteRecord = synchronized(this) {
+        val record = writeLocks.getOrPut(accountId) { WriteRecord() }
+        record.users++
+        record
+    }
+
+    private fun releaseWrite(accountId: AccountId, record: WriteRecord) = synchronized(this) {
+        record.users--
+        if (record.retiring && record.users == 0) {
+            writeLocks.remove(accountId, record)
+        }
+    }
 
     private fun stateForLocked(accountId: AccountId): MutableStateFlow<NotificationRepositoryState> =
         states.getOrPut(accountId) { MutableStateFlow(loadStateLocked(accountId)) }
+
+    private fun activateLocked(token: NotificationSyncToken) {
+        val retiredGeneration = retiredGenerations[token.accountId]
+        if (retiredGeneration != null) {
+            if (token.generation <= retiredGeneration) return
+            retiredGenerations.remove(token.accountId)
+        }
+        val current = generations[token.accountId]
+        if (current == null || token.generation >= current) generations[token.accountId] = token.generation
+        stateForLocked(token.accountId)
+    }
 
     private fun healthForLocked(accountId: AccountId): MutableStateFlow<NotificationStorageHealth> =
         storageHealth.getOrPut(accountId) { MutableStateFlow(NotificationStorageHealth.Healthy) }
 
     private fun mutationAllowedLocked(token: NotificationSyncToken): Boolean =
-        isCurrentLocked(token) && !storageBlockedLocked(token.accountId)
+        writeLocks[token.accountId]?.retiring != true &&
+            isCurrentLocked(token) && !storageBlockedLocked(token.accountId)
 
     private fun storageBlockedLocked(accountId: AccountId): Boolean {
         // Materialize the state entry first so a first-touch mutation classifies the stored value.
@@ -603,7 +694,9 @@ class NotificationRepository @Inject constructor(
     }
 
     private fun isCurrentLocked(token: NotificationSyncToken): Boolean =
-        (token.generation == 0L && token.accountId !in generations) || generations[token.accountId] == token.generation
+        token.accountId !in retiredGenerations &&
+            ((token.generation == 0L && token.accountId !in generations) ||
+                generations[token.accountId] == token.generation)
 
     private companion object {
         const val MAX_ITEMS = 500

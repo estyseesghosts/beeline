@@ -364,8 +364,8 @@ class CrossCuttingTest {
             val cache = CapabilityCache()
             val adminId = AccountId(Connection(origin, Protocol.MISSKEY), "admin")
             val regularId = AccountId(Connection(origin, Protocol.MISSKEY), "regular")
-            val admin = source(origin, adminId, cache, setOf(Timeline.Home, Timeline.Local))
-            val regular = source(origin, regularId, cache, setOf(Timeline.Home))
+            val admin = source(origin, adminId, cache, setOf(Timeline.Home, Timeline.Local), sessionRevision = 1L)
+            val regular = source(origin, regularId, cache, setOf(Timeline.Home), sessionRevision = 2L)
             enqueueTimeline(server, "admin-post")
             enqueueTimeline(server, "regular-post")
 
@@ -405,6 +405,7 @@ class CrossCuttingTest {
         accountId: AccountId,
         cache: CapabilityCache,
         timelines: Set<Timeline>,
+        sessionRevision: Long,
     ): MisskeySource = MisskeySource(
         origin = origin,
         token = accountId.localId,
@@ -415,6 +416,7 @@ class CrossCuttingTest {
                 ServerCapabilities(timelines = timelines, capabilitiesLastUpdated = System.currentTimeMillis())
         },
         capabilityCache = cache,
+        sessionRevision = sessionRevision,
     )
 
     private fun enqueueTimeline(server: MockWebServer, id: String) {

@@ -1,5 +1,6 @@
 package me.foxtails.palustris.data.notifications
 
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -54,12 +55,14 @@ interface NotificationSyncController {
     /** Registers [source] and returns the sync token that owns it. */
     fun register(accountId: AccountId, source: SocialSource): NotificationSyncToken
     fun unregister(accountId: AccountId)
-    fun removeAccount(accountId: AccountId)
+    suspend fun removeAccount(accountId: AccountId)
 }
 
 class NoOpNotificationSyncController : NotificationSyncController {
     private val states = mutableMapOf<AccountId, MutableStateFlow<NotificationSyncState>>()
     private val generations = mutableMapOf<AccountId, Long>()
+    /** Allocates non-persisted generations for this controller lifetime; active entries are not history. */
+    private val generationAllocator = AtomicLong()
 
     @Synchronized
     override fun observeAccount(accountId: AccountId): StateFlow<NotificationSyncState> = states.getOrPut(accountId) {
@@ -68,20 +71,22 @@ class NoOpNotificationSyncController : NotificationSyncController {
 
     @Synchronized
     override fun register(accountId: AccountId, source: SocialSource): NotificationSyncToken {
-        val generation = (generations[accountId] ?: 0L) + 1L
+        val generation = generationAllocator.incrementAndGet()
         generations[accountId] = generation
         return NotificationSyncToken(accountId, generation)
     }
 
     @Synchronized
     override fun unregister(accountId: AccountId) {
+        generations.remove(accountId)
         states[accountId]?.value = states[accountId]?.value?.copy(isActive = false) ?: NotificationSyncState()
     }
 
-    @Synchronized
-    override fun removeAccount(accountId: AccountId) {
-        unregister(accountId)
-        states.remove(accountId)
+    override suspend fun removeAccount(accountId: AccountId) {
+        synchronized(this) {
+            unregister(accountId)
+            states.remove(accountId)
+        }
     }
 }
 
@@ -115,6 +120,8 @@ class NotificationSyncOrchestrator @Inject constructor(
     private val jobs = mutableMapOf<AccountId, Job>()
     private val accountLocks = mutableMapOf<AccountId, Mutex>()
     private val generations = mutableMapOf<AccountId, Long>()
+    /** Allocates non-persisted generations for this controller lifetime; active entries are not history. */
+    private val generationAllocator = AtomicLong()
 
     @Synchronized
     override fun observeAccount(accountId: AccountId): StateFlow<NotificationSyncState> = states.getOrPut(accountId) {
@@ -125,26 +132,28 @@ class NotificationSyncOrchestrator @Inject constructor(
 
     @Synchronized
     override fun unregister(accountId: AccountId) {
-        val nextGeneration = (generations[accountId] ?: 0L) + 1L
-        generations[accountId] = nextGeneration
+        val generation = generations.remove(accountId)
         jobs.remove(accountId)?.cancel()
         accountLocks.remove(accountId)
         sourceRegistry.remove(accountId)
-        repository.invalidate(accountId, nextGeneration)
+        if (generation != null) repository.invalidate(accountId, generation)
         states[accountId]?.value = states[accountId]?.value?.copy(isActive = false) ?: NotificationSyncState()
     }
 
-    @Synchronized
-    override fun removeAccount(accountId: AccountId) {
-        unregister(accountId)
+    override suspend fun removeAccount(accountId: AccountId) {
+        synchronized(this) {
+            unregister(accountId)
+        }
         repository.remove(accountId)
-        states.remove(accountId)
+        synchronized(this) {
+            states.remove(accountId)
+        }
     }
 
     override fun register(accountId: AccountId, source: SocialSource): NotificationSyncToken {
         val token = synchronized(this) {
             jobs.remove(accountId)?.cancel()
-            val generation = (generations[accountId] ?: 0L) + 1L
+            val generation = generationAllocator.incrementAndGet()
             generations[accountId] = generation
             val created = NotificationSyncToken(accountId, generation)
             repository.activate(created)
@@ -255,7 +264,8 @@ class NotificationSyncOrchestrator @Inject constructor(
     }
 
     @Synchronized
-    private fun isCurrent(token: NotificationSyncToken): Boolean = generations[token.accountId] == token.generation
+    private fun isCurrent(token: NotificationSyncToken): Boolean =
+        generations[token.accountId] == token.generation
 
     override fun close() {
         scope.cancel()

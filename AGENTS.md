@@ -1,5 +1,15 @@
 # Beeline Agent Guide
 
+## Architecture regression rules
+
+One mutable state -> one authoritative owner.
+One lifetime -> one explicit release rule.
+Feature code belongs to its existing feature package.
+Composition roots wire features; they do not implement features.
+ViewModels do not privately construct production authorities or caches.
+Do not introduce an abstraction without naming the responsibility and lifetime it owns.
+Large files are warnings, not automatic split requirements.
+
 ## Preamble
 
 - Treat this document as gospel.

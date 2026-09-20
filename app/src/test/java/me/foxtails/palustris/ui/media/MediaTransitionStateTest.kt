@@ -130,6 +130,59 @@ class MediaTransitionStateTest {
     }
 
     @Test
+    fun replacementRetainsOnlyTheCurrentHiddenSource() {
+        val registry = MediaTransitionRegistry()
+        val firstKey = MediaTransitionKey("account", "post", "first")
+        val secondKey = MediaTransitionKey("account", "post", "second")
+
+        registry.begin(firstKey)
+        assertTrue(registry.isSourceHidden(firstKey))
+
+        registry.begin(secondKey)
+        assertFalse(registry.isSourceHidden(firstKey))
+        assertTrue(registry.isSourceHidden(secondKey))
+
+        registry.begin(firstKey)
+        assertTrue(registry.isSourceHidden(firstKey))
+        assertFalse(registry.isSourceHidden(secondKey))
+    }
+
+    @Test
+    fun staleOwnerCannotClearReplacementOrPrepareItsHandoff() {
+        val registry = MediaTransitionRegistry()
+        val firstKey = MediaTransitionKey("account", "post", "first")
+        val secondKey = MediaTransitionKey("account", "post", "second")
+        val first = registry.begin(firstKey)
+        val second = registry.begin(secondKey)
+
+        registry.end(first)
+        registry.prepareHandoff(first)
+
+        assertTrue(registry.isOwnerActive(second))
+        assertTrue(registry.isSourceHidden(secondKey))
+        assertFalse(registry.isSourceHidden(firstKey))
+    }
+
+    @Test
+    fun currentOwnerHandoffAndEndReleaseTheHiddenSource() {
+        val registry = MediaTransitionRegistry()
+        val key = MediaTransitionKey("account", "post", "attachment")
+        val owner = registry.begin(key)
+
+        registry.prepareHandoff(owner)
+        assertFalse(registry.isSourceHidden(key))
+        registry.markSourceReady(key)
+        assertTrue(registry.isSourceHidden(key))
+
+        registry.end(owner)
+        assertFalse(registry.isSourceHidden(key))
+        assertNull(registry.currentActiveKey)
+        registry.end(owner)
+        registry.prepareHandoff(owner)
+        assertFalse(registry.isSourceHidden(key))
+    }
+
+    @Test
     fun reducedMotionTransitionSnapsThroughReturnAndClosePhases() = runBlocking {
         val source = Rect(20f, 40f, 220f, 240f)
         val destination = Rect(0f, 0f, 1_000f, 1_000f)

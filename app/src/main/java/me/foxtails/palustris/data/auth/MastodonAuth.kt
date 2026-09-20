@@ -24,18 +24,18 @@ import java.util.UUID
 
 class MastodonAuth(
     private val apiFor: (String) -> MisskeyApi,
-    private val appRegistrationCache: AppRegistrationCache = AppRegistrationCache(),
+    private val appRegistrationCache: AppRegistrationCache,
     private val appMessages: AppMessages = AppMessages.Default,
 ) : AuthGateway {
     constructor(
         api: MisskeyApi,
-        appRegistrationCache: AppRegistrationCache = AppRegistrationCache(),
+        appRegistrationCache: AppRegistrationCache,
         appMessages: AppMessages = AppMessages.Default,
     ) : this({ api }, appRegistrationCache, appMessages)
 
     constructor(
         clientPool: HttpClientPool,
-        appRegistrationCache: AppRegistrationCache = AppRegistrationCache(),
+        appRegistrationCache: AppRegistrationCache,
         appMessages: AppMessages = AppMessages.Default,
     ) : this(
         { origin -> MisskeyApi(clientPool.clientFor(Connection(origin, Protocol.MASTODON)), appMessages = appMessages) },

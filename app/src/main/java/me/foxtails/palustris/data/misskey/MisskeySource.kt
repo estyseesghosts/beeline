@@ -81,10 +81,17 @@ class MisskeySource(
     private val capabilityCache: CapabilityCache = CapabilityCache(),
     private val clock: () -> Long = System::currentTimeMillis,
     private val sessionRevision: Long = 0L,
+    /** Rejects probe results after the session store replaces or removes this source's session. */
+    private val isCurrentSession: () -> Boolean = { true },
     private val onCapabilitiesUpdated: ((ServerCapabilities) -> Unit)? = null,
     private val appMessages: AppMessages = AppMessages.Default,
+    private val monotonicClock: () -> Long = System::nanoTime,
 ) : SocialSource, DirectMessageSource {
-    private val cacheKey = CapabilityCacheKey(origin, accountId ?: AccountId(Connection(origin, Protocol.MISSKEY), "anonymous"))
+    private val cacheKey = CapabilityCacheKey(
+        origin,
+        accountId ?: AccountId(Connection(origin, Protocol.MISSKEY), "anonymous"),
+        sessionRevision,
+    )
     private val _capabilities = MutableStateFlow(initialCapabilities)
     val capabilitiesFlow: StateFlow<ServerCapabilities> = _capabilities
     private val profileService = MisskeyProfileService(origin, token, api, accountId)
@@ -94,7 +101,7 @@ class MisskeySource(
     private val pushService = MisskeyPushService(origin, token, api, accountId)
     private val streamService = MisskeyStreamService(origin, token, api, accountId)
     private val timelineService = MisskeyTimelineService(origin, token, api)
-    private val continuationStore = java.util.concurrent.ConcurrentHashMap<String, ThreadAcquisition>()
+    private val continuationStore = MisskeyThreadContinuationStore(monotonicClock)
     override val capabilities: ServerCapabilities get() = _capabilities.value
     override fun observeCapabilities(): Flow<ServerCapabilities> = capabilitiesFlow
 
@@ -166,11 +173,11 @@ class MisskeySource(
         val state = continuation?.let { continuationState(it, key) } ?: beginThreadAcquisition(focalId, key)
         acquireDescendants(state)
         val next = if (state.pending.isNotEmpty() && !state.hardLimitReached) {
-            val tokenValue = UUID.randomUUID().toString().also { state.token = it }
-            continuationStore[tokenValue] = state
+            val tokenValue = UUID.randomUUID().toString()
+            state.token = tokenValue
+            continuationStore.insert(tokenValue, state)
             ThreadContinuation(key, tokenValue)
         } else {
-            state.token?.let(continuationStore::remove)
             null
         }
         ThreadContext(
@@ -336,9 +343,7 @@ class MisskeySource(
         expected: ThreadSessionKey,
     ): ThreadAcquisition {
         if (continuation.sessionKey != expected) throw SourceError.Unsupported("thread.continuation")
-        return continuationStore.remove(continuation.token)
-            ?.takeIf { it.key == expected }
-            ?: throw SourceError.Unsupported("thread.continuation")
+        return continuationStore.consume(continuation.token, expected)
     }
 
     private fun fetchingAccount(): AccountId = accountId
@@ -634,8 +639,7 @@ class MisskeySource(
         val schemaCurrent = capabilities.capabilitySchemaVersion == ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION
         if (schemaCurrent && now - capabilities.capabilitiesLastUpdated < CAPABILITIES_TTL_MILLIS) return
         capabilityCache.get(cacheKey)?.takeIf {
-            it.capabilitySchemaVersion == ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION &&
-                now - it.capabilitiesLastUpdated < CAPABILITIES_TTL_MILLIS
+            it.capabilitySchemaVersion == ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION
         }?.let {
             _capabilities.value = it.copy(
                 canPublish = it.canPublish || capabilities.canPublish,
@@ -651,6 +655,9 @@ class MisskeySource(
                     notifications = it.notifications.mergeNotificationCapabilities(capabilities.notifications),
                     profile = it.profile.takeVerifiedOr(capabilities.profile),
                 )
+                // A suspended probe can finish after account removal or session replacement.
+                // Check before every publication boundary so old evidence cannot become current.
+                if (!isCurrentSession()) return@also
                 _capabilities.value = updated
                 capabilityCache.put(cacheKey, updated)
                 onCapabilitiesUpdated?.invoke(updated)

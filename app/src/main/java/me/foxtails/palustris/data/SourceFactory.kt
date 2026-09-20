@@ -27,6 +27,9 @@ class SocialSourceFactory @Inject constructor(
             initialCapabilities = session.capabilities,
             capabilityCache = capabilityCache,
             sessionRevision = session.sessionRevision,
+            isCurrentSession = {
+                sessionStore?.let { it.read(session.accountId)?.sessionRevision == session.sessionRevision } ?: true
+            },
             onCapabilitiesUpdated = { capabilities ->
                 // Persist only when the stored session still matches the source revision.
                 sessionStore?.updateCapabilities(session.accountId, session.sessionRevision) { capabilities }

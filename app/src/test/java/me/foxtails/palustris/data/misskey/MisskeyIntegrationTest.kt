@@ -3,6 +3,7 @@ package me.foxtails.palustris.data.misskey
 import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.MisskeySourceContractTest
 import me.foxtails.palustris.data.auth.AuthCallback
+import me.foxtails.palustris.data.auth.AppRegistrationCache
 import me.foxtails.palustris.data.auth.MastodonAuth
 import me.foxtails.palustris.data.auth.MisskeyAuth
 import me.foxtails.palustris.data.auth.PendingLogin
@@ -786,7 +787,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                 clientId = "client-id", clientSecret = "client-secret", codeVerifier = "verifier",
                 codeChallenge = "challenge", authorizationCode = "auth-code")
             assertTrue(AuthCallback.matches("palustris://auth/mastodon?code=auth-code&state=oauth-state", pending, System.currentTimeMillis()))
-            val auth = MastodonAuth(MisskeyApi())
+            val auth = MastodonAuth(MisskeyApi(), AppRegistrationCache())
             val result = auth.complete(pending)
             assertEquals("mastodon-token", result.token)
             assertEquals(Protocol.MASTODON, result.protocol)
@@ -805,7 +806,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
     @Test fun mastodonBrowserUrlIncludesPkceWhenAvailable() {
         val pending = PendingLogin("https://example.org", "state", System.currentTimeMillis(), Protocol.MASTODON,
             clientId = "client-id", codeChallenge = "challenge")
-        val url = MastodonAuth(MisskeyApi()).browserUrl(pending).toHttpUrl()
+        val url = MastodonAuth(MisskeyApi(), AppRegistrationCache()).browserUrl(pending).toHttpUrl()
         assertEquals("/oauth/authorize", url.encodedPath)
         assertEquals("client-id", url.queryParameter("client_id"))
         assertEquals("challenge", url.queryParameter("code_challenge"))

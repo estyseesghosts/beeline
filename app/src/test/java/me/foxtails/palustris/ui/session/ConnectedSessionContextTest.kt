@@ -119,7 +119,7 @@ class ConnectedSessionContextTest {
 
         override fun unregister(accountId: AccountId) { registry.remove(accountId) }
 
-        override fun removeAccount(accountId: AccountId) {
+        override suspend fun removeAccount(accountId: AccountId) {
             registry.remove(accountId)
             synchronized(this) { states.remove(accountId) }
         }

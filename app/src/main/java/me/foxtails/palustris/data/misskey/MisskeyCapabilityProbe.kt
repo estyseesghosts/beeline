@@ -120,13 +120,3 @@ class MisskeyCapabilityProbe(
         fallback
     }
 }
-
-data class CapabilityCacheKey(val origin: String, val accountId: me.foxtails.palustris.domain.AccountId)
-
-class CapabilityCache {
-    private val values = java.util.concurrent.ConcurrentHashMap<CapabilityCacheKey, ServerCapabilities>()
-
-    fun get(key: CapabilityCacheKey): ServerCapabilities? = values[key]
-    fun put(key: CapabilityCacheKey, value: ServerCapabilities) { values[key] = value }
-    fun remove(key: CapabilityCacheKey) { values.remove(key) }
-}
