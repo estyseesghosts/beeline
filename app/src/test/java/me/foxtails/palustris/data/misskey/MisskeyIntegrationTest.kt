@@ -517,8 +517,8 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
 
     @Test fun misskeySearchesHashtagWithOpaqueNoteCursor() = runBlocking {
         MockWebServer().use { server ->
-            server.enqueue(MockResponse().setBody("[${note("tag-newest")}]") )
-            server.enqueue(MockResponse().setBody("[${note("tag-older")}]") )
+            server.enqueue(MockResponse().setBody("[${note("tag-newest")}]"))
+            server.enqueue(MockResponse().setBody("[${note("tag-older")}]"))
             val origin = server.url("/").toString().removeSuffix("/")
             val source = MisskeySource(origin, "test-token", MisskeyApi())
 

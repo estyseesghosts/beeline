@@ -1,10 +1,10 @@
 package me.foxtails.palustris.ui
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
 import me.foxtails.palustris.ui.posts.parseHashtagBlocks
 import me.foxtails.palustris.ui.posts.postBodyCharacterCount
 import me.foxtails.palustris.ui.posts.truncatedPostBody
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class PostTextPresentationTest {
     @Test fun textWithoutHashtagsRemainsUnchanged() {

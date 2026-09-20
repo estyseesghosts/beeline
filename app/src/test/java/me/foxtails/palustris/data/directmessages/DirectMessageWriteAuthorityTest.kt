@@ -8,8 +8,8 @@ import kotlinx.coroutines.test.runTest
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.Protocol
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test

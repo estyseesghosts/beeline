@@ -6,7 +6,6 @@ import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.Event
 import me.foxtails.palustris.domain.NotificationPage
 import me.foxtails.palustris.domain.NotificationQuery
-import me.foxtails.palustris.domain.NotificationSyncToken
 import me.foxtails.palustris.domain.NotificationUnreadState
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post

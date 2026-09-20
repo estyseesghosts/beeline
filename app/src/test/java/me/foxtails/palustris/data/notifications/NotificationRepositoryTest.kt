@@ -205,10 +205,8 @@ class NotificationRepositoryTest {
     fun cancellationDuringRemovalPropagatesAndLeavesTheAccountInvalidated() = runBlocking {
         val store = object : NotificationStore {
             override fun read(accountId: AccountId): NotificationStoreRead = NotificationStoreRead.Absent
-            override fun write(accountId: AccountId, state: NotificationRepositoryState) = Unit
-            override fun delete(accountId: AccountId) {
-                throw CancellationException("cancel delete")
-            }
+            override fun write(accountId: AccountId, state: NotificationRepositoryState) {}
+            override fun delete(accountId: AccountId) = throw CancellationException("cancel delete")
         }
         val repository = NotificationRepository(store)
         val token = NotificationSyncToken(account, 1)
