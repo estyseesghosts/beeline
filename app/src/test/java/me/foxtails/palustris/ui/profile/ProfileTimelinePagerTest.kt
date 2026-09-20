@@ -122,11 +122,11 @@ class ProfileTimelinePagerTest {
         runCurrent()
 
         assertEquals(67, source.calls.size)
-        assertEquals("c1", source.calls.last().second)
+        assertEquals("c1", source.calls.last())
     }
 
     private fun pager(
-        source: PagingSource,
+        source: SocialSource,
         states: MutableList<Map<ProfileTimelineTab, ProfilePageState>>,
         scope: CoroutineScope,
     ) = ProfileTimelinePager(target, source, scope, 0L, { states += it })
