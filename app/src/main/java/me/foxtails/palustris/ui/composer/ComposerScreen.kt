@@ -53,6 +53,7 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.ui.Avatar
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.motion.AnimatedStatePane

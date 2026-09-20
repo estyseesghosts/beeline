@@ -96,6 +96,7 @@ import me.foxtails.palustris.ui.media.MediaTransitionRegistry
 import me.foxtails.palustris.ui.composer.ComposerOwnerContext
 import me.foxtails.palustris.ui.composer.rememberComposerOwner
 import me.foxtails.palustris.ui.shell.AccountSwitcher
+import me.foxtails.palustris.ui.shell.AppLargeDetailPane
 import me.foxtails.palustris.ui.shell.BookmarksContract
 import me.foxtails.palustris.ui.shell.ComposerContract
 import me.foxtails.palustris.ui.shell.DestinationDraftCallbacks

@@ -20,6 +20,7 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.data.auth.toAccount
 import me.foxtails.palustris.domain.Account
+import me.foxtails.palustris.ui.Avatar
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.AppIcons
 

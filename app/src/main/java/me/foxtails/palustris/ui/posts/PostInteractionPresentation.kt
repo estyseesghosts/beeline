@@ -35,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -185,15 +186,21 @@ internal fun InteractionSummaryRow(counts: PostInteractionCounts) {
         counts.replyCount?.let { add("replies" to (R.plurals.post_reply_count to it)) }
     }
     if (metrics.isEmpty()) return
+    val summaryDescription = stringResource(R.string.post_interaction_summary)
     FlowRow(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).testTag("interaction_summary")
-            .semantics { contentDescription = stringResource(R.string.post_interaction_summary) },
+            .semantics { contentDescription = summaryDescription },
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         metrics.forEach { (name, resourceAndCount) ->
             val (resource, count) = resourceAndCount
-            Text(pluralStringResource(resource, count, count), Modifier.testTag("interaction_metric_$name"), MaterialTheme.typography.labelMedium, MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                pluralStringResource(resource, count, count),
+                Modifier.testTag("interaction_metric_$name"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelMedium,
+            )
         }
     }
 }
@@ -311,7 +318,14 @@ private fun InteractionButton(
     ) {
         PopEffect(popTrigger) {
             Icon(icon, label, Modifier.size(PostInteractionIconSize), tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else 0.38f))
-            selectedIndicator?.let { indicator -> Text(indicator, Modifier.align(Alignment.BottomEnd).semantics { contentDescription = interactionSelectedDescription }, MaterialTheme.typography.labelSmall, MaterialTheme.colorScheme.primary) }
+            selectedIndicator?.let { indicator ->
+                Text(
+                    indicator,
+                    Modifier.align(Alignment.BottomEnd).semantics { contentDescription = interactionSelectedDescription },
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
         }
     }
 }
