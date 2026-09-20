@@ -51,6 +51,9 @@ import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.session.ConnectedSessionHost
 import me.foxtails.palustris.ui.session.AccountManager
 import me.foxtails.palustris.ui.settings.SettingsOverlayHost
+import me.foxtails.palustris.ui.posts.LocalContentWarningRules
+import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
+import me.foxtails.palustris.ui.posts.LocalMutedHashtags
 
 @Composable
 fun ConnectedApp(

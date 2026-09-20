@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.shell
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +21,7 @@ import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.data.auth.toAccount
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.ui.components.AccountAvatar
+import me.foxtails.palustris.ui.AppIcons
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)

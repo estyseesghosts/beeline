@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.posts
 
 import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.ui.emoji.EmojiTextParser

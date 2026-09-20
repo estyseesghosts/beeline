@@ -56,9 +56,9 @@ import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.Avatar
-import me.foxtails.palustris.ui.Destination
-import me.foxtails.palustris.ui.NotificationsPanel
-import me.foxtails.palustris.ui.SearchPanel
+import me.foxtails.palustris.ui.shell.Destination
+import me.foxtails.palustris.ui.shell.NotificationsPanel
+import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.layout.CompactNavigationHeight
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.rememberSelectedColor

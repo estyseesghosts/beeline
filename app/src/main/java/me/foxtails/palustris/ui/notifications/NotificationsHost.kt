@@ -13,7 +13,7 @@ import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.SocialSource
-import me.foxtails.palustris.ui.NotificationsViewModel
+import me.foxtails.palustris.ui.notifications.NotificationsViewModel
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.shell.NotificationsContract
 import me.foxtails.palustris.ui.shell.PostProjectionCoordinator

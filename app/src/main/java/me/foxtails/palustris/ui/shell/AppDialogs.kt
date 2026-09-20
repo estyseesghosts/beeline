@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.shell
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text

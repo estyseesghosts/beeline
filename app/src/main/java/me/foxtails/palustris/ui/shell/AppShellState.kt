@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.shell
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.annotation.StringRes
@@ -10,6 +10,8 @@ import me.foxtails.palustris.domain.EditableProfilePatch
 import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.large.LargeNavTarget
+import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.posts.SinglePostPresentation
 
 internal enum class Destination(@StringRes val labelRes: Int, val icon: ImageVector) {
     Home(R.string.nav_home, AppIcons.HoneyHome),

@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.posts
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import me.foxtails.palustris.domain.ContentWarningRules

@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.posts
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -59,7 +59,7 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.HiddenContentPresentation
-import me.foxtails.palustris.ui.LocalHiddenContentPresentation
+import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
@@ -71,6 +71,8 @@ import me.foxtails.palustris.ui.thread.PostThreadPhase
 import me.foxtails.palustris.ui.thread.PostThreadUiState
 import me.foxtails.palustris.ui.thread.ThreadedReplyRow
 import me.foxtails.palustris.ui.posts.LocalPostActionOwner
+import me.foxtails.palustris.ui.ActionIcon
+import me.foxtails.palustris.ui.AppIcons
 
 internal enum class SinglePostPresentation { Standard, PhotoGrid }
 
@@ -105,6 +107,7 @@ internal fun SinglePostScreen(
     val post = ownedPost.post
     val context = LocalContext.current
     val postActionOwner = LocalPostActionOwner.current
+    val repostConfirmationOwner = LocalPostRepostConfirmationOwner.current
     val photos = post.attachments.filter { it.kind == MediaKind.Image || it.kind == MediaKind.AnimatedImage }
 
     key(ownedPost.fetchedBy, post.id.connection, post.id.value, presentation) {
@@ -134,24 +137,28 @@ internal fun SinglePostScreen(
                     items(ancestors, key = { "ancestor:${it.sessionRevision}:${it.post.id.connection}:${it.post.id.value}" }, contentType = { "ancestor" }) { ancestor ->
                         PostRow(
                             ownedPost = ancestor,
-                            availableActions = actionsForPost(availableActions, ancestor.post),
-                            onReact = onReact,
-                            onReply = onReply,
-                            onReshare = onReshare,
-                            onBookmark = onBookmark,
-                            onReaction = onReaction,
-                            onOpenProfile = onOpenProfile,
-                            onSearchHashtag = onSearchHashtag,
-                            onOpenHashtagBubble = onOpenHashtagBubble,
-                             onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
-                             onOpenReactionPicker = onOpenReactionPicker,
-                             onOpenMedia = onOpenMedia,
-                            truncateBody = false,
-                            quoteEnabled = quoteEnabled,
-                            onQuote = onQuote,
-                            onOpenUrl = onOpenUrl,
-                             onOpenUsername = onOpenUsername,
-                             contentWarningRules = contentWarningRules,
+                             presentation = PostRowPresentation(
+                                 availableActions = actionsForPost(availableActions, ancestor.post),
+                                 truncateBody = false,
+                                 quoteEnabled = quoteEnabled,
+                                 contentWarningRules = contentWarningRules,
+                             ),
+                             events = PostRowEvents(
+                                 onFavourite = onReact,
+                                 onReply = onReply,
+                                 onRepost = onReshare,
+                                 onBookmark = onBookmark,
+                                 onReaction = onReaction,
+                                 onOpenProfile = onOpenProfile,
+                                 onSearchHashtag = onSearchHashtag,
+                                 onOpenHashtagBubble = onOpenHashtagBubble,
+                                 onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
+                                 onOpenReactionPicker = onOpenReactionPicker,
+                                 onOpenMedia = onOpenMedia,
+                                 onQuote = onQuote,
+                                 onOpenUrl = onOpenUrl,
+                                 onOpenUsername = onOpenUsername,
+                             ),
                         )
                     }
                 }
@@ -159,25 +166,29 @@ internal fun SinglePostScreen(
                 if (presentation == SinglePostPresentation.Standard || photos.isEmpty()) {
                     PostRow(
                         ownedPost = ownedPost,
-                        availableActions = actionsForPost(availableActions, post),
-                        onReact = onReact,
-                        onReply = onReply,
-                        onReshare = onReshare,
-                        onBookmark = onBookmark,
-                        onReaction = onReaction,
-                        onOpenProfile = onOpenProfile,
-                        onSearchHashtag = onSearchHashtag,
-                         onOpenHashtagBubble = onOpenHashtagBubble,
-                         onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
-                         onOpenReactionPicker = onOpenReactionPicker,
-                         onOpenMedia = onOpenMedia,
-                        truncateBody = false,
-                        quoteEnabled = quoteEnabled,
-                        onQuote = onQuote,
-                        onOpenUrl = onOpenUrl,
-                         onOpenUsername = onOpenUsername,
-                         contentWarningRules = contentWarningRules,
-                        interactionPresentation = PostInteractionPresentation.Detailed,
+                         presentation = PostRowPresentation(
+                             availableActions = actionsForPost(availableActions, post),
+                             truncateBody = false,
+                             quoteEnabled = quoteEnabled,
+                             contentWarningRules = contentWarningRules,
+                             interactionPresentation = PostInteractionPresentation.Detailed,
+                         ),
+                         events = PostRowEvents(
+                             onFavourite = onReact,
+                             onReply = onReply,
+                             onRepost = onReshare,
+                             onBookmark = onBookmark,
+                             onReaction = onReaction,
+                             onOpenProfile = onOpenProfile,
+                             onSearchHashtag = onSearchHashtag,
+                             onOpenHashtagBubble = onOpenHashtagBubble,
+                             onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
+                             onOpenReactionPicker = onOpenReactionPicker,
+                             onOpenMedia = onOpenMedia,
+                             onQuote = onQuote,
+                             onOpenUrl = onOpenUrl,
+                             onOpenUsername = onOpenUsername,
+                         ),
                     )
                 } else {
             val presentation = remember(post.text, post.emoji) { parseHashtagBlocks(post.text, post.emoji) }
@@ -231,10 +242,14 @@ internal fun SinglePostScreen(
                  onReaction = onReaction,
                  quoteEnabled = quoteEnabled,
                    onQuote = onQuote,
-                   onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
-                   onOpenReactionPicker = onOpenReactionPicker,
+                    onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
+                    onOpenReactionPicker = onOpenReactionPicker,
+                    pendingRepost = repostConfirmationOwner.pending,
+                    onRepostConfirmationRequest = repostConfirmationOwner::request,
+                    onRepostConfirmationDismiss = repostConfirmationOwner::dismiss,
+                    onRepostConfirmationConfirm = { target -> repostConfirmationOwner.confirm(target, onReshare) },
                     onShare = { target, bounds -> postActionOwner?.open(target, bounds) },
-                )
+                 )
               if (post.reactions.any { it.count > 0 }) {
                   ReactionRow(
                       reactions = post.reactions,
@@ -256,32 +271,17 @@ internal fun SinglePostScreen(
                     modifier = Modifier.padding(horizontal = 4.dp),
                 ) { Text(stringResource(if (expanded) R.string.content_warning_hide else R.string.content_warning_show)) }
             }
-            if (contentVisible) {
-                SelectionContainer {
-                    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)) {
-                        if (presentation.visibleText.isNotBlank()) {
-                            PostBodyText(
-                                text = presentation.visibleText,
-                                emoji = post.emoji,
-                                onOpenUrl = onOpenUrl,
-                                onOpenUsername = onOpenUsername,
-                                onSearchHashtag = onSearchHashtag,
-                                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
-                            )
-                        }
-                        postTimestamp(post)?.let { timestamp ->
-                            if (presentation.visibleText.isNotBlank()) androidx.compose.foundation.layout.Spacer(Modifier.height(2.dp))
-                            val timeDescription = stringResource(R.string.post_time)
-                            Text(
-                                timestamp,
-                                Modifier.semantics { contentDescription = timeDescription },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-            }
+              if (contentVisible) {
+                  PostBodyContent(
+                      post = post,
+                      presentation = presentation,
+                      truncateBody = false,
+                      onOpenUrl = onOpenUrl,
+                      onOpenUsername = onOpenUsername,
+                      onSearchHashtag = onSearchHashtag,
+                      modifier = Modifier.padding(top = 12.dp),
+                  )
+              }
              InteractionSummaryRow(post.interactionCounts)
              post.pollOptions.forEach { option ->
                 Surface(

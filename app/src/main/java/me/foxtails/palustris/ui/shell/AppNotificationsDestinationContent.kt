@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.shell
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -14,6 +14,10 @@ import me.foxtails.palustris.ui.directmessages.DirectMessageInboxScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.notifications.NotificationsScreen
+import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.posts.LocalContentWarningRules
+import me.foxtails.palustris.ui.notifications.NotificationsUiState
 
 @Composable
 internal fun AppNotificationsDestinationContent(

@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.shell
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +14,10 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.thread.PostThreadUiState
+import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.posts.LocalContentWarningRules
+import me.foxtails.palustris.ui.posts.SinglePostScreen
 
 @Composable
 internal fun AppLargeDetailPane(

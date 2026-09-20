@@ -41,7 +41,7 @@ import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.ThreadTreeBuilder
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.feed.HomeFeed
-import me.foxtails.palustris.ui.LocalMutedHashtags
+import me.foxtails.palustris.ui.posts.LocalMutedHashtags
 import me.foxtails.palustris.ui.PalustrisApp
 import me.foxtails.palustris.ui.search.SearchScreen
 import me.foxtails.palustris.ui.feed.AccountSearchState

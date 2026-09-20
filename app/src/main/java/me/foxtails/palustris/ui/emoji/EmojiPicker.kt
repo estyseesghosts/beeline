@@ -615,9 +615,9 @@ private fun EmojiPinConfirmationPopup(
         if (pending.pinned) R.string.emoji_remove_question else R.string.emoji_pin_question,
     )
     Popup(
-        popupPositionProvider = me.foxtails.palustris.ui.WindowAnchorPositionProvider(
+        popupPositionProvider = me.foxtails.palustris.ui.posts.WindowAnchorPositionProvider(
             pending.bounds,
-            me.foxtails.palustris.ui.BubblePlacement.Above,
+            me.foxtails.palustris.ui.posts.BubblePlacement.Above,
         ),
         onDismissRequest = onDismiss,
         properties = PopupProperties(

@@ -33,8 +33,8 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostInteractionCounts
 import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.ui.SinglePostScreen
-import me.foxtails.palustris.ui.SinglePostPresentation
+import me.foxtails.palustris.ui.posts.SinglePostScreen
+import me.foxtails.palustris.ui.posts.SinglePostPresentation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule

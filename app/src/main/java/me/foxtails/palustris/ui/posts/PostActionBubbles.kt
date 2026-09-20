@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.posts
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

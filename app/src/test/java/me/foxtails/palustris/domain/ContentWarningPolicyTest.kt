@@ -3,7 +3,7 @@ package me.foxtails.palustris.domain
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.ContentWarningRules
-import me.foxtails.palustris.ui.postHashtags
+import me.foxtails.palustris.ui.posts.postHashtags
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

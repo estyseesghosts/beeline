@@ -12,12 +12,12 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Timeline
-import me.foxtails.palustris.ui.Destination
-import me.foxtails.palustris.ui.LargePostOrigin
-import me.foxtails.palustris.ui.LocalPage
-import me.foxtails.palustris.ui.NotificationsPanel
-import me.foxtails.palustris.ui.Overlay
-import me.foxtails.palustris.ui.SearchPanel
+import me.foxtails.palustris.ui.shell.Destination
+import me.foxtails.palustris.ui.shell.LargePostOrigin
+import me.foxtails.palustris.ui.shell.LocalPage
+import me.foxtails.palustris.ui.shell.NotificationsPanel
+import me.foxtails.palustris.ui.shell.Overlay
+import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.large.LargeNavTarget
 import me.foxtails.palustris.ui.motion.motionDirection
 

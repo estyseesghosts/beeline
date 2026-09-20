@@ -1,5 +1,6 @@
 package me.foxtails.palustris.ui.posts
 
+import android.content.Intent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -47,8 +48,8 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.ui.AppIcons
-import me.foxtails.palustris.ui.BubblePlacement
-import me.foxtails.palustris.ui.WindowAnchorPositionProvider
+import me.foxtails.palustris.ui.posts.BubblePlacement
+import me.foxtails.palustris.ui.posts.WindowAnchorPositionProvider
 import me.foxtails.palustris.ui.components.PillAction
 import me.foxtails.palustris.ui.components.BeelineCardShape
 import me.foxtails.palustris.ui.components.BeelineNestedSurfaceShape
@@ -441,4 +442,16 @@ internal fun copyPostShareContent(context: Context, post: Post) {
     }
     clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.post_share_clip_label), value))
     Toast.makeText(context, context.getString(R.string.post_share_copied), Toast.LENGTH_SHORT).show()
+}
+
+internal fun sharePost(context: Context, post: Post, cleanTrackingParameters: Boolean = false) {
+    val text = post.url?.let { ExternalLinkHandler.prepare(it) } ?: post.text
+    try {
+        context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+        }, context.getString(R.string.post_action_share_post)))
+    } catch (_: android.content.ActivityNotFoundException) {
+        Toast.makeText(context, context.getString(R.string.error_no_app_share_post), Toast.LENGTH_SHORT).show()
+    }
 }

@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.notifications
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,6 +33,7 @@ import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.mergeExternalActionFields
+import me.foxtails.palustris.ui.UiStrings
 
 data class NotificationsUiState(
     val items: List<Notification> = emptyList(),

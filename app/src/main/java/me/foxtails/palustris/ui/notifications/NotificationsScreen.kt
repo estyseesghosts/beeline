@@ -72,7 +72,7 @@ fun NotificationsScreen(
     connected: Boolean = false,
     compactLayout: Boolean = true,
     accountIdentity: String = "preview",
-    notificationState: me.foxtails.palustris.ui.NotificationsUiState = me.foxtails.palustris.ui.NotificationsUiState(),
+    notificationState: NotificationsUiState = NotificationsUiState(),
     onRefreshNotifications: () -> Unit = {},
     onLoadMoreNotifications: () -> Unit = {},
     onMarkNotificationSeen: (Notification?) -> Unit = {},
@@ -82,7 +82,7 @@ fun NotificationsScreen(
     onSelectQuery: (NotificationQuery) -> Unit = {},
     onMarkAllRead: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
-    contentWarningRules: me.foxtails.palustris.domain.ContentWarningRules = me.foxtails.palustris.ui.LocalContentWarningRules.current,
+    contentWarningRules: me.foxtails.palustris.domain.ContentWarningRules = me.foxtails.palustris.ui.posts.LocalContentWarningRules.current,
 ) {
     var selectedFilterName by rememberSaveable(accountIdentity) { mutableStateOf<String?>(null) }
     var markAllReadConfirmationPending by rememberSaveable(accountIdentity) { mutableStateOf(false) }
@@ -142,14 +142,14 @@ fun NotificationsScreen(
         }
     }
 
-    val mutedHashtags = me.foxtails.palustris.ui.LocalMutedHashtags.current
+    val mutedHashtags = me.foxtails.palustris.ui.posts.LocalMutedHashtags.current
     val visibleItems = notificationState.items.filter { notification ->
         val matchesFilter = selectedFilter?.matches(notification) ?: true
         val post = notification.post
         val hidden = post?.let {
             ContentWarningPolicy.decide(
                 it.contentWarning,
-                 me.foxtails.palustris.ui.postHashtags(it.text, it.emoji),
+                 me.foxtails.palustris.ui.posts.postHashtags(it.text, it.emoji),
                 contentWarningRules,
                 it.contentVisibility,
                 it.text,
@@ -157,11 +157,11 @@ fun NotificationsScreen(
         } == true
         val locallyMuted = post?.let {
             ContentWarningPolicy.matchesHashtagMute(
-                me.foxtails.palustris.ui.postHashtags(it.text, it.emoji),
+                 me.foxtails.palustris.ui.posts.postHashtags(it.text, it.emoji),
                 mutedHashtags,
             )
         } == true
-        matchesFilter && !locallyMuted && (!hidden || me.foxtails.palustris.ui.LocalHiddenContentPresentation.current == HiddenContentPresentation.Placeholder)
+        matchesFilter && !locallyMuted && (!hidden || me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation.current == HiddenContentPresentation.Placeholder)
     }
     val controlsPositioningInsets = compactContextualControlsPositioningInsets(navigationVisible = compactLayout)
     val notificationEndClearance = if (compactLayout) {
@@ -245,7 +245,7 @@ fun NotificationsScreen(
 private fun NotificationContent(
     title: String,
     subtitle: String,
-    state: me.foxtails.palustris.ui.NotificationsUiState,
+    state: NotificationsUiState,
     items: List<Notification>,
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,

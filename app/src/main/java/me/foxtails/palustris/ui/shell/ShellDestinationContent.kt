@@ -21,18 +21,18 @@ import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.Timeline
-import me.foxtails.palustris.ui.AppDestinationTopBar
+import me.foxtails.palustris.ui.shell.AppDestinationTopBar
 import me.foxtails.palustris.ui.AppIcons
-import me.foxtails.palustris.ui.AppLocalPageContent
-import me.foxtails.palustris.ui.AppNotificationDetailContent
-import me.foxtails.palustris.ui.AppNotificationsDestinationContent
-import me.foxtails.palustris.ui.Destination
+import me.foxtails.palustris.ui.shell.AppLocalPageContent
+import me.foxtails.palustris.ui.shell.AppNotificationDetailContent
+import me.foxtails.palustris.ui.shell.AppNotificationsDestinationContent
+import me.foxtails.palustris.ui.shell.Destination
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.feed.HomeFeed
-import me.foxtails.palustris.ui.LargePostOrigin
-import me.foxtails.palustris.ui.LocalPage
+import me.foxtails.palustris.ui.shell.LargePostOrigin
+import me.foxtails.palustris.ui.shell.LocalPage
 import me.foxtails.palustris.ui.photogrid.PhotoGridScreen
-import me.foxtails.palustris.ui.SearchPanel
+import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.search.SearchScreen
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
@@ -43,7 +43,7 @@ import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.notifications.NotificationRouteResolver
 import me.foxtails.palustris.ui.profile.ProfileScreen
-import me.foxtails.palustris.ui.timelineLabelRes
+import me.foxtails.palustris.ui.shell.timelineLabelRes
 
 /**
  * Destination scaffold and branches for the application shell.

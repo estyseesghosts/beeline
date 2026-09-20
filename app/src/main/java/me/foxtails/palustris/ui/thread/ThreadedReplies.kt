@@ -15,8 +15,10 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.ui.PostRow
-import me.foxtails.palustris.ui.actionsForPost
+import me.foxtails.palustris.ui.posts.PostRow
+import me.foxtails.palustris.ui.posts.PostRowEvents
+import me.foxtails.palustris.ui.posts.PostRowPresentation
+import me.foxtails.palustris.ui.posts.actionsForPost
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 
 @Composable
@@ -67,22 +69,26 @@ internal fun ThreadedReplyRow(
         }
         PostRow(
             ownedPost = row.ownedPost,
-            availableActions = actionsForPost(availableActions, row.post),
-            onReact = onReact,
-            onReply = onReply,
-            onReshare = onReshare,
-            onBookmark = onBookmark,
-            onReaction = onReaction,
-            onOpenProfile = onOpenProfile,
-            onSearchHashtag = onSearchHashtag,
-            onOpenHashtagBubble = onOpenHashtagBubble,
-            onOpenReactionBubble = { target, bounds -> onOpenReactionBubble?.invoke(target, bounds) },
-            onOpenMedia = onOpenMedia,
-            truncateBody = false,
-            quoteEnabled = quoteEnabled,
-            onQuote = onQuote,
-            onOpenUrl = onOpenUrl,
-            onOpenUsername = onOpenUsername,
+            presentation = PostRowPresentation(
+                availableActions = actionsForPost(availableActions, row.post),
+                truncateBody = false,
+                quoteEnabled = quoteEnabled,
+            ),
+            events = PostRowEvents(
+                onFavourite = onReact,
+                onReply = onReply,
+                onRepost = onReshare,
+                onBookmark = onBookmark,
+                onReaction = onReaction,
+                onOpenProfile = onOpenProfile,
+                onSearchHashtag = onSearchHashtag,
+                onOpenHashtagBubble = onOpenHashtagBubble,
+                onOpenReactionBubble = { target, bounds -> onOpenReactionBubble?.invoke(target, bounds) },
+                onOpenMedia = onOpenMedia,
+                onQuote = onQuote,
+                onOpenUrl = onOpenUrl,
+                onOpenUsername = onOpenUsername,
+            ),
         )
     }
 }

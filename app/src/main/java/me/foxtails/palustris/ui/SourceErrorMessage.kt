@@ -1,5 +1,7 @@
 package me.foxtails.palustris.ui
 
+import me.foxtails.palustris.ui.shell.timelineLabelRes
+
 import android.content.Context
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Audience

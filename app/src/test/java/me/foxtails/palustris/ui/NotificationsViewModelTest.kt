@@ -27,7 +27,7 @@ import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
-import me.foxtails.palustris.ui.NotificationsViewModel
+import me.foxtails.palustris.ui.notifications.NotificationsViewModel
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

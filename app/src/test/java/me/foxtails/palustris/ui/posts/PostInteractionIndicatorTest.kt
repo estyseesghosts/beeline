@@ -8,7 +8,7 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.ui.hasVisibleInteractionSelection
+import me.foxtails.palustris.ui.posts.hasVisibleInteractionSelection
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

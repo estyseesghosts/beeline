@@ -233,7 +233,7 @@ remains unavailable. Continue with Plan 04 after preserving unrelated worktree c
 
 The Photo Grid detail photo sizing slice is complete and uncommitted. Photo Grid
 detail uses aspect-aware heights from known attachment dimensions in compact
-and wide layouts (`ui/photogrid/PhotoPagerSizing.kt`, `ui/SinglePostScreen.kt`).
+and wide layouts (`ui/photogrid/PhotoPagerSizing.kt`, `ui/posts/SinglePostScreen.kt`).
 Square through 4:5 uses the natural height. Media at or wider than 16:9 uses
 the natural short height. Media taller than 4:5 stays capped at 4:5. Short
 viewports clamp to the available height. Unknown dimensions use the square to

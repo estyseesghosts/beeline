@@ -31,7 +31,9 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.PostRow
+import me.foxtails.palustris.ui.posts.PostRow
+import me.foxtails.palustris.ui.posts.PostRowEvents
+import me.foxtails.palustris.ui.posts.PostRowPresentation
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 
@@ -111,24 +113,23 @@ fun SavedPostsScreen(
                 items(state.posts, key = { "${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
                     PostRow(
                         ownedPost = ownedPost,
-                        availableActions = availableActions,
-                        onReact = onReact,
-                        onReply = onReply,
-                        onReshare = onReshare,
-                        onBookmark = onBookmark ?: onUnsave,
-                        onReaction = onReaction,
-                        onOpenProfile = onOpenProfile,
-                        onSearchHashtag = onSearchHashtag,
-                         onOpenHashtagBubble = onOpenHashtagBubble,
-                         onOpenReactionBubble = { target, bounds ->
-                            onOpenReactionBubble?.invoke(target, bounds)
-                        },
-                        onOpenReactionPicker = onOpenReactionPicker,
+                        presentation = PostRowPresentation(availableActions = availableActions, largeLayout = largeLayout),
+                        events = PostRowEvents(
+                            onFavourite = onReact,
+                            onReply = onReply,
+                            onRepost = onReshare,
+                            onBookmark = onBookmark ?: onUnsave,
+                            onReaction = onReaction,
+                            onOpenProfile = onOpenProfile,
+                            onSearchHashtag = onSearchHashtag,
+                            onOpenHashtagBubble = onOpenHashtagBubble,
+                            onOpenReactionBubble = { target, bounds -> onOpenReactionBubble?.invoke(target, bounds) },
+                            onOpenReactionPicker = onOpenReactionPicker,
                             onOpenMedia = onOpenMedia,
                             onOpenPost = onOpenPost,
-                            largeLayout = largeLayout,
                             onOpenUrl = onOpenUrl,
-                           onOpenUsername = onOpenUsername,
+                            onOpenUsername = onOpenUsername,
+                        ),
                           modifier = Modifier.animateItem(
                              fadeInSpec = LocalPalustrisMotionScheme.current.fastFadeIn,
                              fadeOutSpec = LocalPalustrisMotionScheme.current.fastFadeOut,

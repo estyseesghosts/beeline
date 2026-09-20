@@ -50,13 +50,15 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.LocalContentWarningRules
-import me.foxtails.palustris.ui.LocalMutedHashtags
-import me.foxtails.palustris.ui.PostActionBubbleHost
-import me.foxtails.palustris.ui.PostActionBubbleTarget
-import me.foxtails.palustris.ui.PostRow
+import me.foxtails.palustris.ui.posts.LocalContentWarningRules
+import me.foxtails.palustris.ui.posts.LocalMutedHashtags
+import me.foxtails.palustris.ui.posts.PostActionBubbleHost
+import me.foxtails.palustris.ui.posts.PostActionBubbleTarget
+import me.foxtails.palustris.ui.posts.PostRow
+import me.foxtails.palustris.ui.posts.PostRowEvents
+import me.foxtails.palustris.ui.posts.PostRowPresentation
 import me.foxtails.palustris.ui.emoji.EmojiCatalogState
-import me.foxtails.palustris.ui.postHashtags
+import me.foxtails.palustris.ui.posts.postHashtags
 import me.foxtails.palustris.ui.shell.HomeFeedUiState
 import me.foxtails.palustris.ui.layout.LegacyFeedBottomClearance
 import me.foxtails.palustris.ui.layout.compactHomeScrollEndClearance
@@ -208,7 +210,32 @@ fun HomeFeed(
                     val enabledActions = if (hasOwnership) availableActions.intersect(ClientReadyPostActions) else emptySet()
                     items(visibleRows, key = { "${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
                         Column(Modifier.animateItem(fadeInSpec = scheme.fastFadeIn, fadeOutSpec = scheme.fastFadeOut, placementSpec = scheme.gentleOffset)) {
-                            PostRow(ownedPost, enabledActions, onReact, onReply, onReshare, onBookmark, onReaction, onOpenProfile, onSearchHashtag, onOpenHashtagBubble = openHashtagBubble, quoteEnabled = quoteEnabled, onQuote = onQuote, onOpenReactionBubble = openReactionBubble, onOpenReactionPicker = onOpenReactionPicker, onOpenMedia = onOpenMedia, onOpenPost = onOpenPost, largeLayout = !compactLayout, onOpenUrl = onOpenUrl, onOpenUsername = onOpenUsername, contentWarningRules = contentWarningRules)
+                             PostRow(
+                                 ownedPost = ownedPost,
+                                 presentation = PostRowPresentation(
+                                     availableActions = enabledActions,
+                                     quoteEnabled = quoteEnabled,
+                                     largeLayout = !compactLayout,
+                                     contentWarningRules = contentWarningRules,
+                                 ),
+                                 events = PostRowEvents(
+                                     onFavourite = onReact,
+                                     onReply = onReply,
+                                     onRepost = onReshare,
+                                     onBookmark = onBookmark,
+                                     onReaction = onReaction,
+                                     onOpenProfile = onOpenProfile,
+                                     onSearchHashtag = onSearchHashtag,
+                                     onOpenHashtagBubble = openHashtagBubble,
+                                     onQuote = onQuote,
+                                     onOpenReactionBubble = openReactionBubble,
+                                     onOpenReactionPicker = onOpenReactionPicker,
+                                     onOpenMedia = onOpenMedia,
+                                     onOpenPost = onOpenPost,
+                                     onOpenUrl = onOpenUrl,
+                                     onOpenUsername = onOpenUsername,
+                                 ),
+                             )
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
                         }
                     }

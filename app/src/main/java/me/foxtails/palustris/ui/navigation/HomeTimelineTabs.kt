@@ -39,8 +39,8 @@ import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.components.BeelineBubbleMinHeight
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
-import me.foxtails.palustris.ui.timelineDescriptionRes
-import me.foxtails.palustris.ui.timelineLabelRes
+import me.foxtails.palustris.ui.shell.timelineDescriptionRes
+import me.foxtails.palustris.ui.shell.timelineLabelRes
 
 @Composable
 internal fun HomeTimelineTabs(

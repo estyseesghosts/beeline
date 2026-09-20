@@ -50,8 +50,8 @@ import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.Avatar
-import me.foxtails.palustris.ui.LocalContentWarningRules
-import me.foxtails.palustris.ui.LocalHiddenContentPresentation
+import me.foxtails.palustris.ui.posts.LocalContentWarningRules
+import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.springPress
@@ -159,12 +159,12 @@ fun NotificationRow(
                 )
                 notification.post?.let { post ->
                     val locallyMuted = ContentWarningPolicy.matchesHashtagMute(
-                        me.foxtails.palustris.ui.postHashtags(post.text, post.emoji),
-                        me.foxtails.palustris.ui.LocalMutedHashtags.current,
+                        me.foxtails.palustris.ui.posts.postHashtags(post.text, post.emoji),
+                        me.foxtails.palustris.ui.posts.LocalMutedHashtags.current,
                     )
                     val warningDecision = ContentWarningPolicy.decide(
                         post.contentWarning,
-                         me.foxtails.palustris.ui.postHashtags(post.text, post.emoji),
+                         me.foxtails.palustris.ui.posts.postHashtags(post.text, post.emoji),
                         contentWarningRules,
                         post.contentVisibility,
                         post.text,

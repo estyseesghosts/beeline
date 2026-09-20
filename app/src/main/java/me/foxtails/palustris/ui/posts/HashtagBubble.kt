@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.posts
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,6 +41,7 @@ import androidx.compose.foundation.lazy.items
 import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
 import me.foxtails.palustris.ui.components.PillAction
+import me.foxtails.palustris.ui.AppIcons
 
 private const val CompactHashtagLimit = 6
 

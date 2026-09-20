@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.composer
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition

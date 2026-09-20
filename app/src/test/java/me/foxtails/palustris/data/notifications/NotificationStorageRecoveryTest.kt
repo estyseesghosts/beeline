@@ -35,7 +35,7 @@ import me.foxtails.palustris.domain.PushRegistration
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.Timeline
-import me.foxtails.palustris.ui.NotificationsViewModel
+import me.foxtails.palustris.ui.notifications.NotificationsViewModel
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

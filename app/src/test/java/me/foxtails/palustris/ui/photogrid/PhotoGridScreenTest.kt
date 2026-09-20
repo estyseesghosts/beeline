@@ -23,8 +23,8 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.PalustrisTheme
 import me.foxtails.palustris.ui.photogrid.PhotoGridFeedState
 import me.foxtails.palustris.ui.photogrid.PhotoGridScreen
-import me.foxtails.palustris.ui.Destination
-import me.foxtails.palustris.ui.SearchPanel
+import me.foxtails.palustris.ui.shell.Destination
+import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.large.LargeNavTarget
 import me.foxtails.palustris.ui.photogrid.photoGridAspectRatio
 import me.foxtails.palustris.ui.photogrid.photoGridItems
@@ -101,18 +101,18 @@ class PhotoGridScreenTest {
     fun searchPanelsMapToSeparateLargeNavigationTargets() {
         assertEquals(
             LargeNavTarget.Search,
-            me.foxtails.palustris.ui.largeTargetFor(
+            me.foxtails.palustris.ui.shell.largeTargetFor(
                 Destination.Search,
                 SearchPanel.Search,
-                me.foxtails.palustris.ui.NotificationsPanel.Notifications,
+                me.foxtails.palustris.ui.shell.NotificationsPanel.Notifications,
             ),
         )
         assertEquals(
             LargeNavTarget.PhotoGrid,
-            me.foxtails.palustris.ui.largeTargetFor(
+            me.foxtails.palustris.ui.shell.largeTargetFor(
                 Destination.Search,
                 SearchPanel.PhotoGrid,
-                me.foxtails.palustris.ui.NotificationsPanel.Notifications,
+                me.foxtails.palustris.ui.shell.NotificationsPanel.Notifications,
             ),
         )
     }

@@ -17,7 +17,7 @@ import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import me.foxtails.palustris.MainActivity
-import me.foxtails.palustris.ui.NotificationsUiState
+import me.foxtails.palustris.ui.notifications.NotificationsUiState
 import me.foxtails.palustris.ui.notifications.NotificationsScreen
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId

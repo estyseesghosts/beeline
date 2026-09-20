@@ -8,8 +8,8 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.TrackingParameterCleaner
-import me.foxtails.palustris.ui.ComposeScreen
-import me.foxtails.palustris.ui.ComposerSheet
+import me.foxtails.palustris.ui.composer.ComposeScreen
+import me.foxtails.palustris.ui.composer.ComposerSheet
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.shell.ComposerContract
 

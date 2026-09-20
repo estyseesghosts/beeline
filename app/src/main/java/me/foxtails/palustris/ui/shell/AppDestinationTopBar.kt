@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.shell
 
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.navigation.AppRoute
+import me.foxtails.palustris.ui.ActionIcon
+import me.foxtails.palustris.ui.AppIcons
 
 @Composable
 internal fun AppDestinationTopBar(

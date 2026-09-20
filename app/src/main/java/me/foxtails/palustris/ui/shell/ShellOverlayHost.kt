@@ -9,11 +9,11 @@ import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.ui.AppDialogs
-import me.foxtails.palustris.ui.AppSelectionSheet
-import me.foxtails.palustris.ui.Destination
-import me.foxtails.palustris.ui.Overlay
-import me.foxtails.palustris.ui.PostActionBubbleHost
+import me.foxtails.palustris.ui.shell.AppDialogs
+import me.foxtails.palustris.ui.shell.AppSelectionSheet
+import me.foxtails.palustris.ui.shell.Destination
+import me.foxtails.palustris.ui.shell.Overlay
+import me.foxtails.palustris.ui.posts.PostActionBubbleHost
 import me.foxtails.palustris.ui.composer.ComposerOverlayHost
 import me.foxtails.palustris.ui.composer.ComposerOwner
 import me.foxtails.palustris.ui.emoji.EmojiPickerHost
@@ -30,7 +30,7 @@ import me.foxtails.palustris.ui.posts.PostPopupPresentation
 import me.foxtails.palustris.ui.posts.PostShareSheet
 import me.foxtails.palustris.ui.posts.copyPostShareContent
 import me.foxtails.palustris.ui.profile.EditProfileSheet
-import me.foxtails.palustris.ui.sharePost
+import me.foxtails.palustris.ui.posts.sharePost
 
 /**
  * Bubble and share-sheet hosting for the application shell.

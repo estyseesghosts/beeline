@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.posts
 
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntOffset

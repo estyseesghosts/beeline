@@ -49,7 +49,9 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
 import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.PostRow
+import me.foxtails.palustris.ui.posts.PostRow
+import me.foxtails.palustris.ui.posts.PostRowEvents
+import me.foxtails.palustris.ui.posts.PostRowPresentation
 import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.components.FilterChipRow
 import me.foxtails.palustris.ui.media.MediaOpenRequest
@@ -365,24 +367,24 @@ private fun LazyListScope.profilePinnedItems(
         items(posts, key = { "pinned/${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
             PostRow(
                 ownedPost = ownedPost,
-                availableActions = availableActions,
-                onReact = onReact,
-                onReply = onReply,
-                onReshare = onReshare,
-                onBookmark = onBookmark,
-                onReaction = onReaction,
-                onOpenReactionBubble = { ownedPost, bounds -> onOpenReactionBubble?.invoke(ownedPost, bounds) },
-                onOpenReactionPicker = onOpenReactionPicker,
-                onOpenProfile = onOpenProfile,
-                onSearchHashtag = onSearchHashtag,
-                     onOpenHashtagBubble = onOpenHashtagBubble,
-                      onOpenMedia = onOpenMedia,
-                       onOpenPost = onOpenPost,
-                       largeLayout = largeLayout,
-                       onOpenUrl = onOpenUrl,
-                      onOpenUsername = onOpenUsername,
-                 quoteEnabled = quoteEnabled,
-                 onQuote = onQuote,
+                presentation = PostRowPresentation(availableActions = availableActions, quoteEnabled = quoteEnabled, largeLayout = largeLayout),
+                events = PostRowEvents(
+                    onFavourite = onReact,
+                    onReply = onReply,
+                    onRepost = onReshare,
+                    onBookmark = onBookmark,
+                    onReaction = onReaction,
+                    onOpenReactionBubble = { target, bounds -> onOpenReactionBubble?.invoke(target, bounds) },
+                    onOpenReactionPicker = onOpenReactionPicker,
+                    onOpenProfile = onOpenProfile,
+                    onSearchHashtag = onSearchHashtag,
+                    onOpenHashtagBubble = onOpenHashtagBubble,
+                    onOpenMedia = onOpenMedia,
+                    onOpenPost = onOpenPost,
+                    onOpenUrl = onOpenUrl,
+                    onOpenUsername = onOpenUsername,
+                    onQuote = onQuote,
+                ),
                  modifier = Modifier.animateItem(
                     fadeInSpec = LocalPalustrisMotionScheme.current.fastFadeIn,
                     fadeOutSpec = LocalPalustrisMotionScheme.current.fastFadeOut,
@@ -449,24 +451,24 @@ private fun LazyListScope.profilePageItems(
     items(page.posts, key = { "timeline/${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
         PostRow(
             ownedPost = ownedPost,
-            availableActions = availableActions,
-            onReact = onReact,
-            onReply = onReply,
-            onReshare = onReshare,
-            onBookmark = onBookmark,
-            onReaction = onReaction,
-            onOpenReactionBubble = { ownedPost, bounds -> onOpenReactionBubble?.invoke(ownedPost, bounds) },
-            onOpenReactionPicker = onOpenReactionPicker,
-            onOpenProfile = onOpenProfile,
-            onSearchHashtag = onSearchHashtag,
-                     onOpenHashtagBubble = onOpenHashtagBubble,
-                      onOpenMedia = onOpenMedia,
-                       onOpenPost = onOpenPost,
-                       largeLayout = largeLayout,
-                       onOpenUrl = onOpenUrl,
-                      onOpenUsername = onOpenUsername,
-             quoteEnabled = quoteEnabled,
-             onQuote = onQuote,
+            presentation = PostRowPresentation(availableActions = availableActions, quoteEnabled = quoteEnabled, largeLayout = largeLayout),
+            events = PostRowEvents(
+                onFavourite = onReact,
+                onReply = onReply,
+                onRepost = onReshare,
+                onBookmark = onBookmark,
+                onReaction = onReaction,
+                onOpenReactionBubble = { target, bounds -> onOpenReactionBubble?.invoke(target, bounds) },
+                onOpenReactionPicker = onOpenReactionPicker,
+                onOpenProfile = onOpenProfile,
+                onSearchHashtag = onSearchHashtag,
+                onOpenHashtagBubble = onOpenHashtagBubble,
+                onOpenMedia = onOpenMedia,
+                onOpenPost = onOpenPost,
+                onOpenUrl = onOpenUrl,
+                onOpenUsername = onOpenUsername,
+                onQuote = onQuote,
+            ),
              modifier = Modifier.animateItem(
                 fadeInSpec = LocalPalustrisMotionScheme.current.fastFadeIn,
                 fadeOutSpec = LocalPalustrisMotionScheme.current.fastFadeOut,

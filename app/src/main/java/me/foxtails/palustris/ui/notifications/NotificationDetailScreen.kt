@@ -25,7 +25,9 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.PostRow
+import me.foxtails.palustris.ui.posts.PostRow
+import me.foxtails.palustris.ui.posts.PostRowEvents
+import me.foxtails.palustris.ui.posts.PostRowPresentation
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
@@ -50,7 +52,7 @@ fun NotificationDetailScreen(
     sessionRevision: Long = 0L,
     largeLayout: Boolean = false,
     modifier: Modifier = Modifier,
-    contentWarningRules: ContentWarningRules = me.foxtails.palustris.ui.LocalContentWarningRules.current,
+    contentWarningRules: ContentWarningRules = me.foxtails.palustris.ui.posts.LocalContentWarningRules.current,
 ) {
     val context = LocalContext.current
     val stateKey = "${route::class.simpleName}:${when (route) {
@@ -137,21 +139,25 @@ fun NotificationDetailScreen(
                     ) {
                         PostRow(
                             ownedPost = OwnedPost(owner, post, sessionRevision),
-                            availableActions = availableActions,
-                            onReact = onReact,
-                            onReply = onReply,
-                            onReshare = onReshare,
-                            onBookmark = onBookmark,
-                            onReaction = onReaction,
-                            onQuote = onQuote,
-                            quoteEnabled = quoteEnabled,
-                            onOpenReactionBubble = onOpenReactionBubble,
-                            onOpenProfile = null,
-                            onSearchHashtag = onSearchHashtag,
-                             onOpenHashtagBubble = onOpenHashtagBubble,
-                             onOpenPost = onOpenPost,
-                              largeLayout = largeLayout,
-                              contentWarningRules = contentWarningRules,
+                            presentation = PostRowPresentation(
+                                availableActions = availableActions,
+                                quoteEnabled = quoteEnabled,
+                                largeLayout = largeLayout,
+                                contentWarningRules = contentWarningRules,
+                            ),
+                            events = PostRowEvents(
+                                onFavourite = onReact,
+                                onReply = onReply,
+                                onRepost = onReshare,
+                                onBookmark = onBookmark,
+                                onReaction = onReaction,
+                                onQuote = onQuote,
+                                onOpenReactionBubble = onOpenReactionBubble,
+                                onOpenProfile = null,
+                                onSearchHashtag = onSearchHashtag,
+                                onOpenHashtagBubble = onOpenHashtagBubble,
+                                onOpenPost = onOpenPost,
+                            ),
                           )
                         ValidatedUrl.https(post.url.orEmpty())?.let { url ->
                             Button(

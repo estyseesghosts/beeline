@@ -71,8 +71,10 @@ import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.PostInteractionPresentation
-import me.foxtails.palustris.ui.PostRow
+import me.foxtails.palustris.ui.posts.PostInteractionPresentation
+import me.foxtails.palustris.ui.posts.PostRow
+import me.foxtails.palustris.ui.posts.PostRowEvents
+import me.foxtails.palustris.ui.posts.PostRowPresentation
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.components.CategoryChips
 import me.foxtails.palustris.ui.feed.AccountSearchState
@@ -399,25 +401,29 @@ private fun HashtagSearchResults(
                 ) {
                     PostRow(
                         ownedPost = OwnedPost(mediaOwner ?: post.author.id, post, sessionRevision),
-                        availableActions = availableActions.intersect(ClientReadyPostActions),
-                        onReact = onReact,
-                        onReply = onReply,
-                        onReshare = onReshare,
-                        onBookmark = onBookmark,
-                        onReaction = onReaction,
-                        onOpenProfile = onAccountClick,
-                        onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
-                        onOpenReactionPicker = onOpenReactionPicker,
-                        quoteEnabled = quoteEnabled,
-                        onQuote = onQuote,
-                        onSearchHashtag = onSearchHashtag,
-                        onOpenHashtagBubble = onOpenHashtagBubble,
-                        onOpenMedia = if (mediaOwner != null) onOpenMedia else { _: me.foxtails.palustris.ui.media.MediaOpenRequest -> },
-                        onOpenPost = onOpenPost,
-                        onOpenUrl = onOpenUrl,
-                        onOpenUsername = onOpenUsername,
-                        largeLayout = largeLayout,
-                        interactionPresentation = PostInteractionPresentation.Detailed,
+                        presentation = PostRowPresentation(
+                            availableActions = availableActions.intersect(ClientReadyPostActions),
+                            quoteEnabled = quoteEnabled,
+                            largeLayout = largeLayout,
+                            interactionPresentation = PostInteractionPresentation.Detailed,
+                        ),
+                        events = PostRowEvents(
+                            onFavourite = onReact,
+                            onReply = onReply,
+                            onRepost = onReshare,
+                            onBookmark = onBookmark,
+                            onReaction = onReaction,
+                            onOpenProfile = onAccountClick,
+                            onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
+                            onOpenReactionPicker = onOpenReactionPicker,
+                            onQuote = onQuote,
+                            onSearchHashtag = onSearchHashtag,
+                            onOpenHashtagBubble = onOpenHashtagBubble,
+                            onOpenMedia = if (mediaOwner != null) onOpenMedia else { _: me.foxtails.palustris.ui.media.MediaOpenRequest -> },
+                            onOpenPost = onOpenPost,
+                            onOpenUrl = onOpenUrl,
+                            onOpenUsername = onOpenUsername,
+                        ),
                     )
                     androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
                 }

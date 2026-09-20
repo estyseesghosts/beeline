@@ -2,7 +2,7 @@ package me.foxtails.palustris.ui.shell
 
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationQuery
-import me.foxtails.palustris.ui.NotificationsUiState
+import me.foxtails.palustris.ui.notifications.NotificationsUiState
 
 /**
  * Notification inbox presentation.

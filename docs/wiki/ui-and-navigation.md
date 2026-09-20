@@ -54,6 +54,5 @@ height is the smallest aspect-aware height. The shared height prevents
 vertical letterboxing for the active photo. Horizontal letterboxing on
 taller pages is the accepted tradeoff.
 
-Sources: `ui/SinglePostScreen.kt`, `ui/photogrid/PhotoPagerSizing.kt`,
+Sources: `ui/posts/SinglePostScreen.kt`, `ui/photogrid/PhotoPagerSizing.kt`,
 `SinglePostScreenTest`.
-

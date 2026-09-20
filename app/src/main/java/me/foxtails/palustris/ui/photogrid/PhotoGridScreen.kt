@@ -78,11 +78,11 @@ import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.components.FilterChipRow
-import me.foxtails.palustris.ui.postHashtags
-import me.foxtails.palustris.ui.LocalContentWarningRules
-import me.foxtails.palustris.ui.LocalHiddenContentPresentation
-import me.foxtails.palustris.ui.LocalMutedHashtags
-import me.foxtails.palustris.ui.timelineLabelRes
+import me.foxtails.palustris.ui.posts.postHashtags
+import me.foxtails.palustris.ui.posts.LocalContentWarningRules
+import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
+import me.foxtails.palustris.ui.posts.LocalMutedHashtags
+import me.foxtails.palustris.ui.shell.timelineLabelRes
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
 import me.foxtails.palustris.ui.media.SensitiveMediaTile
