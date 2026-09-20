@@ -3,10 +3,6 @@ package me.foxtails.palustris.data.misskey
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
-import kotlin.test.assertSame
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
@@ -15,7 +11,16 @@ import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Timeline
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class CapabilityCacheTest {
     @Test
     fun freshLookupReturnsEntry() {
