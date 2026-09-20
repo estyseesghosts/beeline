@@ -213,6 +213,26 @@ class ProfileViewModelTest {
         assertTrue(page.terminal)
     }
 
+    @Test fun profilePagingUsesOneAcquisitionPerRequestedPage() = runProfileTest {
+        val source = FakeSource().apply {
+            timelineResults[ProfileTimelineTab.Posts] = mutableListOf(
+                Page(listOf(post("one", remote)), "cursor-a"),
+                Page(listOf(post("two", remote)), null),
+            )
+        }
+        val model = model(source)
+
+        model.open(remote)
+        advanceUntilIdle()
+        model.loadMoreSelected()
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(null, "cursor-a"),
+            source.timelineCalls.map { it.second },
+        )
+    }
+
     @Test fun emptyFilteredPagesKeepCursorForManualContinuation() = runProfileTest {
         val source = FakeSource().apply {
             timelineResults[ProfileTimelineTab.Posts] = mutableListOf(
