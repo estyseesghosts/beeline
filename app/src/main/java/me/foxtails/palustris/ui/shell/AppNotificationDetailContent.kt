@@ -2,16 +2,16 @@ package me.foxtails.palustris.ui.shell
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import me.foxtails.palustris.domain.ContentWarningRules
+import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.ui.posts.LocalContentWarningRules
-import me.foxtails.palustris.ui.notifications.NotificationDetailScreen
 import me.foxtails.palustris.ui.navigation.AppRoute
+import me.foxtails.palustris.ui.notifications.NotificationDetailScreen
+import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 
 @Composable
 internal fun AppNotificationDetailContent(

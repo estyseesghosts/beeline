@@ -9,15 +9,15 @@ import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationQuery
+import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.directmessages.DirectMessageConversationScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageInboxScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.notifications.NotificationsScreen
-import me.foxtails.palustris.ui.AppIcons
-import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.notifications.NotificationsUiState
+import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 
 @Composable
 internal fun AppNotificationsDestinationContent(

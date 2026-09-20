@@ -12,12 +12,12 @@ import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.ui.media.MediaOpenRequest
-import me.foxtails.palustris.ui.thread.PostThreadUiState
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.SinglePostScreen
+import me.foxtails.palustris.ui.thread.PostThreadUiState
 
 @Composable
 internal fun AppLargeDetailPane(

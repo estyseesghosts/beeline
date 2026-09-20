@@ -7,9 +7,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.R
-import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.navigation.AppRoute
 
 @Composable
 internal fun AppDestinationTopBar(
