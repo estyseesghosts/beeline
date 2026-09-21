@@ -709,6 +709,43 @@ class ArchitectureAuditTest(unittest.TestCase):
             self.assertEqual(audit.main([str(root), "--check", "--record-baseline", str(out_path)]), 0)
             self.assertTrue(out_path.exists())
 
+    def test_all_owner_suffixes_warn_without_failing(self):
+        # Slice 19 new-owner rule: each Owner-like suffix reports a review
+        # warning but never fails --check alone. The six documentation
+        # items stay a human review duty, not an automated gate.
+        for suffix in ("Owner", "Authority", "Manager", "Controller", "Coordinator"):
+            report = self.run_audit(f"class Sample{suffix}(val x: String)")
+            owned = [x for x in report["findings"] if x["kind"] == "ownership-class"]
+            self.assertTrue(owned, suffix)
+            result = audit.classify(report, {})
+            self.assertFalse(result["regressions"], suffix)
+            self.assertTrue(all(x["classification"] == "warning" for x in owned), suffix)
+
+    def test_slice19_size_policy_allows_large_cohesive_file(self):
+        # Slice 19 size policy: a large cohesive single-domain file warns
+        # but never fails. Only material hotspot growth fails the check.
+        self.assertTrue(
+            {"ownership-class", "dependency-direction", "file-size-warning",
+             "function-size-warning", "function-parameter-warning",
+             "function-nesting-warning"} <= set(audit.WARNING_KINDS)
+        )
+        report = self.run_audit("\n".join(["val value = 1"] * 800))
+        self.assertEqual({x["kind"] for x in report["findings"]}, {"file-size-warning"})
+        self.assertFalse(audit.classify(report, {})["regressions"])
+        rel = next(iter(report["fileMetrics"]))
+        lines = report["fileMetrics"][rel]["lines"]
+        self.assertGreater(lines, 700)
+        grown = audit.classify(
+            {"findings": [], "fileMetrics": {rel: {"lines": lines}}, "functionMetrics": []},
+            {"fileMetrics": {rel: {"lines": 100}}},
+        )
+        self.assertIn("hotspot-growth", {x["kind"] for x in grown["regressions"]})
+        stable = audit.classify(
+            {"findings": [], "fileMetrics": {rel: {"lines": lines}}, "functionMetrics": []},
+            {"fileMetrics": {rel: {"lines": lines - 10}}},
+        )
+        self.assertFalse(stable["regressions"])
+
 
 if __name__ == "__main__":
     unittest.main()
