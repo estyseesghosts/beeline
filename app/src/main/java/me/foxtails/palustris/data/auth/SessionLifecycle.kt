@@ -183,6 +183,8 @@ class SessionLifecycle @Inject constructor(
     }
 
     private fun register(session: Session): Activation {
+        // Start a new capability session boundary before the source attaches its identity.
+        capabilityCache.activate(session.accountId)
         val source = sourceFactory.create(session)
         val token = notificationSync.register(session.accountId, source)
         push.onSessionAvailable(session.accountId)
@@ -190,6 +192,8 @@ class SessionLifecycle @Inject constructor(
     }
 
     private suspend fun activate(session: Session, account: Account): Activation {
+        // Start a new capability session boundary before the source attaches its identity.
+        capabilityCache.activate(session.accountId)
         val source = sourceFactory.create(session)
         val token = notificationSync.register(session.accountId, source)
         push.onSessionAvailable(session.accountId)

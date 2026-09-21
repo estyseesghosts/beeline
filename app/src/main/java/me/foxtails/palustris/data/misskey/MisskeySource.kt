@@ -81,6 +81,8 @@ class MisskeySource(
     private val capabilityCache: CapabilityCache,
     private val clock: () -> Long = System::currentTimeMillis,
     private val sessionRevision: Long = 0L,
+    /** Opaque identity from [CapabilityCache.activate] for this session. Null only for anonymous or test sources. */
+    private val sessionIdentity: Long? = null,
     /** Rejects probe results after the session store replaces or removes this source's session. */
     private val isCurrentSession: () -> Boolean = { true },
     private val onCapabilitiesUpdated: ((ServerCapabilities) -> Unit)? = null,
@@ -638,7 +640,15 @@ class MisskeySource(
         val now = clock()
         val schemaCurrent = capabilities.capabilitySchemaVersion == ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION
         if (schemaCurrent && now - capabilities.capabilitiesLastUpdated < CAPABILITIES_TTL_MILLIS) return
-        capabilityCache.get(cacheKey)?.takeIf {
+        // A session source must use the fenced lookup. The revision restarts at one
+        // after removal and re-add, so an unfenced hit could return replacement
+        // evidence to the old session. Anonymous sources keep the direct lookup.
+        val cached = if (sessionIdentity != null && accountId != null) {
+            capabilityCache.get(cacheKey, sessionIdentity)
+        } else {
+            capabilityCache.get(cacheKey)
+        }
+        cached?.takeIf {
             it.capabilitySchemaVersion == ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION
         }?.let {
             _capabilities.value = it.copy(
@@ -657,9 +667,14 @@ class MisskeySource(
                 )
                 // A suspended probe can finish after account removal or session replacement.
                 // Check before every publication boundary so old evidence cannot become current.
+                // The fenced put also fails after removal, which covers durable revision reuse.
                 if (!isCurrentSession()) return@also
+                if (sessionIdentity != null && accountId != null) {
+                    if (!capabilityCache.put(cacheKey, updated, sessionIdentity)) return@also
+                } else {
+                    capabilityCache.put(cacheKey, updated)
+                }
                 _capabilities.value = updated
-                capabilityCache.put(cacheKey, updated)
                 onCapabilitiesUpdated?.invoke(updated)
             }
         } catch (e: CancellationException) {

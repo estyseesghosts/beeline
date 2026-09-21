@@ -27,6 +27,10 @@ class SocialSourceFactory @Inject constructor(
             initialCapabilities = session.capabilities,
             capabilityCache = capabilityCache,
             sessionRevision = session.sessionRevision,
+            // Reuse the session boundary identity so transient sources share it.
+            // Allocate one when no boundary is active yet.
+            sessionIdentity = capabilityCache.currentIdentity(session.accountId)
+                ?: capabilityCache.activate(session.accountId),
             isCurrentSession = {
                 sessionStore?.let { it.read(session.accountId)?.sessionRevision == session.sessionRevision } ?: true
             },

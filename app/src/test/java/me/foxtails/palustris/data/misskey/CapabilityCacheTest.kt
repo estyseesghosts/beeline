@@ -12,8 +12,10 @@ import me.foxtails.palustris.domain.Timeline
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -119,6 +121,145 @@ class CapabilityCacheTest {
     }
 
     @Test
+    fun lateOldSessionPutAfterRemovalCannotRepopulate() {
+        val cache = CapabilityCache { 1_000L }
+        val account = account("one")
+        val key = CapabilityCacheKey("https://example", account, 1L)
+        val identity = cache.activate(account)
+        assertTrue(cache.put(key, capabilities(1_000L), identity))
+        assertEquals(1_000L, cache.get(key)?.capabilitiesLastUpdated)
+
+        cache.invalidate(account)
+
+        assertFalse(cache.put(key, capabilities(1_001L), identity))
+        assertNull(cache.get(key))
+        assertEquals(0, cache.size)
+    }
+
+    @Test
+    fun replacementSessionProbesNormallyAfterRemoval() {
+        val cache = CapabilityCache { 1_000L }
+        val account = account("one")
+        // Removal deletes the stored session, so the replacement restarts at revision one.
+        val key = CapabilityCacheKey("https://example", account, 1L)
+        val oldIdentity = cache.activate(account)
+        assertTrue(cache.put(key, capabilities(1_000L), oldIdentity))
+        cache.invalidate(account)
+
+        val newIdentity = cache.activate(account)
+        assertTrue(newIdentity != oldIdentity)
+        assertFalse(cache.put(key, capabilities(1_001L), oldIdentity))
+        assertTrue(cache.put(key, capabilities(1_002L), newIdentity))
+
+        assertEquals(1_002L, cache.get(key)?.capabilitiesLastUpdated)
+        assertEquals(1, cache.size)
+    }
+
+    @Test
+    fun fencedLookupReturnsEvidenceOnlyToActiveSession() {
+        val cache = CapabilityCache { 1_000L }
+        val account = account("one")
+        val key = CapabilityCacheKey("https://example", account, 1L)
+        val oldIdentity = cache.activate(account)
+        assertTrue(cache.put(key, capabilities(1_000L), oldIdentity))
+        assertEquals(1_000L, cache.get(key, oldIdentity)?.capabilitiesLastUpdated)
+
+        cache.invalidate(account)
+        val newIdentity = cache.activate(account)
+        assertTrue(cache.put(key, capabilities(1_002L), newIdentity))
+
+        assertNull(cache.get(key, oldIdentity))
+        assertEquals(1_002L, cache.get(key, newIdentity)?.capabilitiesLastUpdated)
+        // Anonymous sources have no boundary, so the direct lookup still works.
+        assertEquals(1_002L, cache.get(key)?.capabilitiesLastUpdated)
+    }
+
+    @Test
+    fun oldSourceReadAfterReplacementMissesAndPublishesNothing() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("[]"))
+            server.enqueue(MockResponse().setBody("[]"))
+            val origin = server.url("/").toString().removeSuffix("/")
+            val account = account("one")
+            val cache = CapabilityCache { 1_000L }
+            val key = CapabilityCacheKey(origin, account, 1L)
+            val oldIdentity = cache.activate(account)
+            var oldCallbackCount = 0
+            val oldSource = MisskeySource(
+                origin = origin,
+                token = "old-token",
+                api = MisskeyApi(),
+                accountId = account,
+                capabilityProbe = object : CapabilityProbe {
+                    override suspend fun probeCapabilities(connection: Connection) = capabilities(1_000L)
+                },
+                capabilityCache = cache,
+                sessionRevision = 1L,
+                sessionIdentity = oldIdentity,
+                // The durable revision check passes again after the re-add, so the identity fence must hold.
+                isCurrentSession = { true },
+                onCapabilitiesUpdated = { oldCallbackCount++ },
+            )
+
+            // Remove the account, then re-add it. The revision restarts at one.
+            cache.invalidate(account)
+            val newIdentity = cache.activate(account)
+            var newCallbackCount = 0
+            val newSource = MisskeySource(
+                origin = origin,
+                token = "new-token",
+                api = MisskeyApi(),
+                accountId = account,
+                capabilityProbe = object : CapabilityProbe {
+                    override suspend fun probeCapabilities(connection: Connection) = capabilities(1_002L)
+                },
+                capabilityCache = cache,
+                sessionRevision = 1L,
+                sessionIdentity = newIdentity,
+                onCapabilitiesUpdated = { newCallbackCount++ },
+            )
+            newSource.timeline(Timeline.Home)
+
+            // The old source reads after the replacement published the same key.
+            oldSource.timeline(Timeline.Home)
+
+            assertEquals(0L, oldSource.capabilities.capabilitiesLastUpdated)
+            assertEquals(0, oldCallbackCount)
+            assertEquals(1_002L, newSource.capabilities.capabilitiesLastUpdated)
+            assertEquals(1, newCallbackCount)
+            assertNull(cache.get(key, oldIdentity))
+            assertEquals(1_002L, cache.get(key, newIdentity)?.capabilitiesLastUpdated)
+            assertEquals(1, cache.size)
+        }
+    }
+
+    @Test
+    fun activationClearsPreviousSessionEvidence() {
+        val cache = CapabilityCache { 1_000L }
+        val account = account("one")
+        val key = CapabilityCacheKey("https://example", account, 1L)
+        val oldIdentity = cache.activate(account)
+        assertTrue(cache.put(key, capabilities(1_000L), oldIdentity))
+
+        cache.activate(account)
+
+        assertNull(cache.get(key))
+        assertFalse(cache.put(key, capabilities(1_001L), oldIdentity))
+        assertEquals(0, cache.size)
+    }
+
+    @Test
+    fun fencedPutWithoutActivationIsRejected() {
+        val cache = CapabilityCache { 1_000L }
+        val account = account("one")
+        val key = CapabilityCacheKey("https://example", account, 1L)
+
+        assertFalse(cache.put(key, capabilities(1_000L), 1L))
+        assertNull(cache.get(key))
+        assertEquals(0, cache.size)
+    }
+
+    @Test
     fun sameOriginAccountsKeepIndependentSnapshots() {
         val now = 1_000L
         val cache = CapabilityCache { now }
@@ -170,6 +311,70 @@ class CapabilityCacheTest {
             assertEquals(0L, source.capabilities.capabilitiesLastUpdated)
             assertEquals(0, cache.size)
             assertEquals(0, callbackCount)
+        }
+    }
+
+    @Test
+    fun lateProbeAfterRemoveAndReAddWithSameRevisionCannotPublish() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("[]"))
+            server.enqueue(MockResponse().setBody("[]"))
+            val origin = server.url("/").toString().removeSuffix("/")
+            val account = account("one")
+            val cache = CapabilityCache { 1_000L }
+            val key = CapabilityCacheKey(origin, account, 1L)
+            val oldIdentity = cache.activate(account)
+            var oldCallbackCount = 0
+            val probeStarted = CompletableDeferred<Unit>()
+            val releaseProbe = CompletableDeferred<Unit>()
+            val oldSource = MisskeySource(
+                origin = origin,
+                token = "old-token",
+                api = MisskeyApi(),
+                accountId = account,
+                capabilityProbe = object : CapabilityProbe {
+                    override suspend fun probeCapabilities(connection: Connection): ServerCapabilities {
+                        probeStarted.complete(Unit)
+                        releaseProbe.await()
+                        return capabilities(1_000L)
+                    }
+                },
+                capabilityCache = cache,
+                sessionRevision = 1L,
+                sessionIdentity = oldIdentity,
+                // The durable revision check passes again after the re-add, so the identity fence must hold.
+                isCurrentSession = { true },
+                onCapabilitiesUpdated = { oldCallbackCount++ },
+            )
+
+            val request = launch { oldSource.timeline(Timeline.Home) }
+            probeStarted.await()
+            // Remove the account, then re-add it. The durable revision restarts at one.
+            cache.invalidate(account)
+            val newIdentity = cache.activate(account)
+            var newCallbackCount = 0
+            val newSource = MisskeySource(
+                origin = origin,
+                token = "new-token",
+                api = MisskeyApi(),
+                accountId = account,
+                capabilityProbe = object : CapabilityProbe {
+                    override suspend fun probeCapabilities(connection: Connection) = capabilities(1_002L)
+                },
+                capabilityCache = cache,
+                sessionRevision = 1L,
+                sessionIdentity = newIdentity,
+                onCapabilitiesUpdated = { newCallbackCount++ },
+            )
+            newSource.timeline(Timeline.Home)
+            releaseProbe.complete(Unit)
+            request.join()
+
+            assertEquals(0L, oldSource.capabilities.capabilitiesLastUpdated)
+            assertEquals(0, oldCallbackCount)
+            assertEquals(1_002L, newSource.capabilities.capabilitiesLastUpdated)
+            assertEquals(1, newCallbackCount)
+            assertEquals(1_002L, cache.get(key)?.capabilitiesLastUpdated)
         }
     }
 
