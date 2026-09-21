@@ -19,6 +19,7 @@ import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostActionResult
@@ -35,7 +36,6 @@ import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.ThreadContext
 import me.foxtails.palustris.domain.ThreadContinuation
 import me.foxtails.palustris.domain.ThreadSessionKey
-import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.thread.PostThreadPhase
 import me.foxtails.palustris.ui.thread.PostThreadViewModel
@@ -54,6 +54,7 @@ class PostThreadViewModelTest {
     private val focal = owned("focal")
 
     @Before fun setUp() { Dispatchers.setMain(StandardTestDispatcher()) }
+
     @After fun tearDown() { Dispatchers.resetMain() }
 
     @Test

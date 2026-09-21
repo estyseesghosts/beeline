@@ -4,8 +4,8 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.ui.photogrid.PhotoGridFeedState
-import me.foxtails.palustris.ui.saved.SavedPostsUiState
 import me.foxtails.palustris.ui.profile.ProfileUiState
+import me.foxtails.palustris.ui.saved.SavedPostsUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame

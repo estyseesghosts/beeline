@@ -5,10 +5,10 @@ import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.session.ConnectedSessionPostInteractionAuthority
-import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertSame
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Test
 
 /** Verifies that connected surfaces share slots without sharing replacement sessions. */
