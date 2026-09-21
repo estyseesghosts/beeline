@@ -80,7 +80,17 @@ Any new Owner, Authority, Manager, Controller, or Coordinator reports an `owners
 No answer means no new abstraction.
 
 ### Retention-rule requirements
-Add a retention rule to the baseline for a long-lived map only when its owner, lifetime, and release or bound policy are documented in the source or architecture record. Use the relative file path as the key. Write a short reason as the value. Keep evidence near the map. Valid evidence includes `clear`, `remove`, `invalidate`, `release`, `evict`, expiry terms, prune terms, maximum terms, bound terms, or size limits in the same owner scope. An explicit retention comment near the map also counts.
+Add a retention rule to the baseline for a long-lived map only when its owner, lifetime, and release or bound policy are documented in the source or architecture record. Use `relative/file/path:mapSymbol` as the key. Write a short reason as the value. Direct maps and Compose `remember { mutableStateMapOf }` plus `remember(key) { mutableStateMapOf }` use the same audit. File-level keys (bare relative path) stay readable as legacy exemptions, but Slice 19 narrows every exemption to individual map symbols where feasible. A new map in a narrowed file fails the check until it carries in-source evidence or its own symbol key. Keep evidence near the map. Valid evidence includes `clear`, `remove`, `invalidate`, `release`, `evict`, expiry terms, prune terms, maximum terms, bound terms, or size limits in the same owner scope. An explicit retention comment near the map also counts.
+
+### Slice 19 zero-tolerance gates
+The cleanup findings below fail `--check` on any new occurrence. `existingFindings` holds no tolerated entries. Previously fixed findings stay in `resolvedFindings`, so a returned violation fails as `regression-returned-resolved`:
+
+- `package-path-mismatch`: package/path mismatch.
+- `root-ui-feature-file`: feature files in the wrong package, including prohibited root-UI files. Root `ui` holds only entry/composition, theme, icons, bars, strings, and primitives.
+- `private-owner-construction`: production default authority construction.
+- `unretained-long-lived-map`: unbounded long-lived map without policy.
+- `duplicate-paging-ownership`: full Slice 1 gate. `ProfileViewModel` must not contain `pageJobs`, `requestedCursors`, `loadPage`, or `publishPageFailure`. Only `ProfileTimelinePager` owns profile paging.
+- `post-execution-duplication`: full Slice 14 gate. One `PostInteractionExecutionAuthority` construction lives in `ui/session/ConnectedSessionHost.kt`. Any other production construction, including a second canonical construction or a default parameter construction on feed, profile, thread, saved, search, notification detail, or single-post surfaces, fails.
 
 ### Parser heuristic limits
 The parser uses lightweight regular expressions. It is not compiler-grade analysis. It has these limits:

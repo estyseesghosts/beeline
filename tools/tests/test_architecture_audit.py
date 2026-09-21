@@ -259,6 +259,143 @@ class ArchitectureAuditTest(unittest.TestCase):
             report = audit.audit(root, {path.relative_to(root).as_posix(): "documented owner lifetime"})
             self.assertNotIn("unretained-long-lived-map", {x["kind"] for x in report["findings"]})
 
+    def test_symbol_level_retention_rule_exempts_only_named_map(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            path = root / "app/src/main/java/me/foxtails/palustris/ui/feed/Example.kt"
+            path.parent.mkdir(parents=True)
+            path.write_text(source("val kept = HashMap()\nval dropped = HashMap()"), encoding="utf-8")
+            rel = path.relative_to(root).as_posix()
+            report = audit.audit(root, {f"{rel}:kept": "documented owner lifetime"})
+            maps = {x["detail"] for x in report["findings"] if x["kind"] == "unretained-long-lived-map"}
+            self.assertEqual(maps, {"dropped"})
+
+    def test_duplicate_paging_stub_flags_viewmodel_cursor_tracking(self):
+        clean = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt":
+                source("fun x() = Unit", "me.foxtails.palustris.ui.profile"),
+        })
+        self.assertNotIn("duplicate-paging-ownership", {x["kind"] for x in clean["findings"]})
+        regressed = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt":
+                source("private val pageJobs = mutableMapOf<String, String>()", "me.foxtails.palustris.ui.profile"),
+        })
+        violation = next(x for x in regressed["findings"] if x["kind"] == "duplicate-paging-ownership")
+        self.assertEqual(violation["symbol"], "pageJobs")
+        self.assertTrue(audit.classify(regressed, {})["regressions"])
+
+    def test_execution_authority_stub_flags_non_canonical_construction(self):
+        canonical = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt":
+                source("val authority = PostInteractionExecutionAuthority()", "me.foxtails.palustris.ui.session"),
+        })
+        self.assertNotIn("post-execution-duplication", {x["kind"] for x in canonical["findings"]})
+        regressed = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt":
+                source("val authority = PostInteractionExecutionAuthority()", "me.foxtails.palustris.ui.feed"),
+        })
+        self.assertIn("post-execution-duplication", {x["kind"] for x in regressed["findings"]})
+        self.assertTrue(audit.classify(regressed, {})["regressions"])
+
+    def test_duplicate_paging_full_gate_flags_all_tracking_symbols(self):
+        clean = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt":
+                source("fun x() = Unit", "me.foxtails.palustris.ui.profile"),
+        })
+        self.assertNotIn("duplicate-paging-ownership", {x["kind"] for x in clean["findings"]})
+        for symbol, body in (
+            ("pageJobs", "private val pageJobs = mutableMapOf<String, String>()"),
+            ("requestedCursors", "private val requestedCursors = mutableMapOf<String, String>()"),
+            ("loadPage", "private fun loadPage(cursor: String?) = Unit"),
+            ("publishPageFailure", "private fun publishPageFailure(error: String) = Unit"),
+        ):
+            regressed = self.run_audit_files({
+                "app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt":
+                    source(body, "me.foxtails.palustris.ui.profile"),
+            })
+            violation = next(x for x in regressed["findings"] if x["kind"] == "duplicate-paging-ownership" and x["symbol"] == symbol)
+            self.assertEqual(violation["symbol"], symbol)
+            self.assertTrue(audit.classify(regressed, {})["regressions"])
+        pager = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/profile/ProfileTimelinePager.kt":
+                source("private val pageJobs = mutableMapOf<String, String>()", "me.foxtails.palustris.ui.profile"),
+        })
+        self.assertNotIn("duplicate-paging-ownership", {x["kind"] for x in pager["findings"]})
+
+    def test_execution_authority_allows_single_canonical_rejects_duplicates(self):
+        canonical = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt":
+                source("val authority = PostInteractionExecutionAuthority()", "me.foxtails.palustris.ui.session"),
+        })
+        self.assertNotIn("post-execution-duplication", {x["kind"] for x in canonical["findings"]})
+        duplicate_canonical = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt":
+                source(
+                    "val first = PostInteractionExecutionAuthority()\nval second = PostInteractionExecutionAuthority()",
+                    "me.foxtails.palustris.ui.session",
+                ),
+        })
+        self.assertIn("post-execution-duplication", {x["kind"] for x in duplicate_canonical["findings"]})
+        self.assertTrue(audit.classify(duplicate_canonical, {})["regressions"])
+        surfaces = [
+            "app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt",
+            "app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt",
+            "app/src/main/java/me/foxtails/palustris/ui/thread/PostThreadViewModel.kt",
+            "app/src/main/java/me/foxtails/palustris/ui/saved/SavedPostsViewModel.kt",
+            "app/src/main/java/me/foxtails/palustris/ui/search/SearchController.kt",
+            "app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationDetailScreen.kt",
+            "app/src/main/java/me/foxtails/palustris/ui/posts/SinglePostScreen.kt",
+        ]
+        for path in surfaces:
+            package = "me.foxtails.palustris." + ".".join(Path(path).parts[6:-1])
+            regressed = self.run_audit_files({
+                path: source("val authority = PostInteractionExecutionAuthority()", package),
+            })
+            self.assertIn("post-execution-duplication", {x["kind"] for x in regressed["findings"]}, path)
+        default = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt":
+                source(
+                    "class FeedViewModel(val authority: Any = PostInteractionExecutionAuthority())",
+                    "me.foxtails.palustris.ui.feed",
+                ),
+        })
+        self.assertIn("post-execution-duplication", {x["kind"] for x in default["findings"]})
+        declaration = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/posts/PostInteractionExecutionAuthority.kt":
+                source("class PostInteractionExecutionAuthority", "me.foxtails.palustris.ui.posts"),
+        })
+        self.assertNotIn("post-execution-duplication", {x["kind"] for x in declaration["findings"]})
+
+    def test_remembered_state_maps_require_retention(self):
+        plain = self.run_audit(
+            "import androidx.compose.runtime.mutableStateMapOf\n"
+            "import androidx.compose.runtime.remember\n"
+            "val revealed = remember { mutableStateMapOf<String, String>() }"
+        )
+        self.assertEqual(
+            {x["detail"] for x in plain["findings"] if x["kind"] == "unretained-long-lived-map"},
+            {"revealed"},
+        )
+        keyed = self.run_audit(
+            "import androidx.compose.runtime.mutableStateMapOf\n"
+            "import androidx.compose.runtime.remember\n"
+            "val keyed = remember(key) { mutableStateMapOf<String, String>() }"
+        )
+        self.assertEqual(
+            {x["detail"] for x in keyed["findings"] if x["kind"] == "unretained-long-lived-map"},
+            {"keyed"},
+        )
+        retained = self.run_audit(
+            "import androidx.compose.runtime.mutableStateMapOf\n"
+            "import androidx.compose.runtime.remember\n"
+            "fun retained() {\n"
+            " val cache = remember { mutableStateMapOf<String, String>() }\n"
+            " cache.clear()\n"
+            "}"
+        )
+        self.assertNotIn("unretained-long-lived-map", {x["kind"] for x in retained["findings"]})
+        self.assertTrue(audit.classify(plain, {})["regressions"])
+
     def test_dependency_and_retention_rules(self):
         report = self.run_audit("import me.foxtails.palustris.ui.profile.Profile\nval values = mutableMapOf<String, String>()")
         kinds = {x["kind"] for x in report["findings"]}

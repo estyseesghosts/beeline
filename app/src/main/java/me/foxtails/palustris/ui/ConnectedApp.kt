@@ -50,6 +50,7 @@ import me.foxtails.palustris.ui.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.session.ConnectedSessionHost
 import me.foxtails.palustris.ui.session.AccountManager
+import me.foxtails.palustris.ui.setup.SignInScreen
 import me.foxtails.palustris.ui.settings.SettingsOverlayHost
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation

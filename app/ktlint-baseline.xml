@@ -331,7 +331,7 @@
     <file name="src/main/java/me/foxtails/palustris/ui/PostTextPresentation.kt">
         <error line="15" column="20" source="standard:property-naming" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/ui/SignInScreen.kt">
+    <file name="src/main/java/me/foxtails/palustris/ui/setup/SignInScreen.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
     <file name="src/main/java/me/foxtails/palustris/ui/SinglePostScreen.kt">

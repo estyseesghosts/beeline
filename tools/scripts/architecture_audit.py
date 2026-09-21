@@ -29,6 +29,22 @@ WARNING_KINDS = frozenset({
 FUNCTION_GROWTH_LINES = 5
 FUNCTION_GROWTH_STEPS = 1
 OWNER_SUFFIXES = ("Manager", "Coordinator", "Controller", "Owner", "Authority")
+# Slice 19 zero-tolerance stub detectors. Subtask B owns full detectors for
+# these categories. These narrow checks encode only the Slice 1 and Slice 14
+# exit conditions, so a cleaned-up violation cannot silently return.
+# ProfileViewModel must not reintroduce paging-job or cursor tracking.
+# ProfileTimelinePager stays the only profile paging owner. Only production
+# roots are scanned, so test fixtures stay allowed.
+DUPLICATE_PAGING_OWNER_SUFFIX = "ui/profile/ProfileViewModel.kt"
+DUPLICATE_PAGING_RE = re.compile(r"\b(pageJobs|requestedCursors|loadPage|publishPageFailure)\b")
+# PostInteractionExecutionAuthority must be constructed once per connected
+# session at the canonical session wiring point, never per feature surface
+# (feed, profile, thread, saved, search, notification detail, single-post).
+# Only production roots are scanned, so test fixtures stay allowed.
+EXECUTION_AUTHORITY_CONSTRUCTION_RE = re.compile(r"\bPostInteractionExecutionAuthority\s*\(")
+EXECUTION_AUTHORITY_CANONICAL_FILES = frozenset({
+    "app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt",
+})
 # Files that wire features instead of implementing them. Composition roots may
 # import across feature boundaries, so dependency checks skip them explicitly.
 COMPOSITION_ROOT_STEMS = frozenset({"MainActivity", "PalustrisApp", "PalustrisApplication"})
@@ -36,6 +52,14 @@ MAP_RE = re.compile(
     r"\b(?:val|var)\s+([A-Za-z_]\w*)\s*(?::\s*[^=\n]+)?\s*=\s*"
     r"(?:mutableMapOf|mapOf|ConcurrentHashMap|HashMap|LinkedHashMap|mutableStateMapOf)"
     r"\b(?:\s*<[^\n>]*>)?\s*(?:\([^\n]*\))?"
+)
+# Compose remembered maps share the screen lifetime and need the same
+# retention audit as direct maps. Covers both remember { mutableStateMapOf }
+# and remember(key) { mutableStateMapOf } so MediaViewerScreen symbol keys
+# are actually audited.
+REMEMBERED_MAP_RE = re.compile(
+    r"\b(?:val|var)\s+([A-Za-z_]\w*)\s*(?::\s*[^=\n]+)?\s*=\s*"
+    r"remember\s*(?:\([^()]*\))?\s*\{\s*mutableStateMapOf\b"
 )
 CLASS_RE = re.compile(r"\b(?:class|object|interface)\s+([A-Za-z_]\w*)")
 CLASS_HEADER_RE = re.compile(r"\bclass\s+[A-Za-z_]\w*")
@@ -183,6 +207,19 @@ def owner_scope(text: str, position: int):
     if not openings:
         return ""
     opening = openings[-1]
+    # A remembered map declaration sits inside its own remember lambda, but
+    # retention calls (clear/remove/...) live in the enclosing function or
+    # composable body. Step out of the remember lambda so that evidence stays
+    # visible. Match only the direct remember form to keep the scan exact.
+    while openings:
+        before = text[max(0, opening - 64):opening]
+        if re.search(r"remember\s*(?:\([^()]*\))?\s*$", before):
+            openings.pop()
+            if not openings:
+                return ""
+            opening = openings[-1]
+            continue
+        break
     end = balanced_end(text, opening, "{", "}")
     return text[opening:end + 1] if end is not None else text[opening:]
 
@@ -213,6 +250,11 @@ def _is_top_level_statement(lines: list[str], depths: list[int], index: int) -> 
     return bool(stripped) and "{" not in lines[index] and "}" not in lines[index]
 
 
+def is_map_declaration(line: str) -> bool:
+    """Check direct and Compose remembered map declarations on one line."""
+    return bool(MAP_RE.search(line) or REMEMBERED_MAP_RE.search(line))
+
+
 def declaration_block(text: str, position: int) -> str:
     """Return the top-level region around a declaration outside any owner body."""
     lines = text.splitlines()
@@ -228,7 +270,7 @@ def declaration_block(text: str, position: int) -> str:
         step = -1 if neighbor < decl else 1
         while 0 <= cursor < len(lines) and not lines[cursor].strip():
             cursor += step
-        if _is_top_level_statement(lines, depths, cursor) and MAP_RE.search(lines[cursor]):
+        if _is_top_level_statement(lines, depths, cursor) and is_map_declaration(lines[cursor]):
             return declaration
     collected = [declaration]
     backward = []
@@ -236,7 +278,7 @@ def declaration_block(text: str, position: int) -> str:
     while len(backward) < TOP_LEVEL_SCOPE_LINES and cursor >= 0:
         if not lines[cursor].strip() or not _is_top_level_statement(lines, depths, cursor):
             break
-        if MAP_RE.search(lines[cursor]):
+        if is_map_declaration(lines[cursor]):
             break
         backward.append(lines[cursor])
         cursor -= 1
@@ -245,7 +287,7 @@ def declaration_block(text: str, position: int) -> str:
     while len(forward) < TOP_LEVEL_SCOPE_LINES and cursor < len(lines):
         if not lines[cursor].strip() or not _is_top_level_statement(lines, depths, cursor):
             break
-        if MAP_RE.search(lines[cursor]):
+        if is_map_declaration(lines[cursor]):
             break
         forward.append(lines[cursor])
         cursor += 1
@@ -262,6 +304,14 @@ def nearby_retention_comment(raw_text: str, symbol: str, position: int) -> bool:
             if "//" in line or "/*" in line or "*" in line or re.search(r"@\w+", line):
                 return True
     return False
+
+
+def is_retention_exempt(rel: str, symbol: str, retention_rules) -> bool:
+    """Check file-level (legacy) or symbol-level retention exemptions."""
+    # Symbol keys use "relative/path:mapSymbol". File keys exempt every map
+    # in the file. Slice 19 narrows exemptions to symbol keys where feasible.
+    rules = retention_rules or {}
+    return rel in rules or f"{rel}:{symbol}" in rules
 
 
 def has_retention_evidence(text: str, symbol: str, position: int, raw_text=None) -> bool:
@@ -339,10 +389,39 @@ def audit(root: Path, retention_rules=None, thresholds=None, allowlists=None) ->
             rows.append(finding("ownership-class", rel, cls))
         if has_constructor_default_construction(text):
             rows.append(finding("private-owner-construction", rel, "default constructor construction"))
-        for map_match in MAP_RE.finditer(text):
+        map_matches = sorted(
+            list(MAP_RE.finditer(text)) + list(REMEMBERED_MAP_RE.finditer(text)),
+            key=lambda m: m.start(),
+        )
+        seen_maps = set()
+        for map_match in map_matches:
             symbol = map_match.group(1)
-            if not has_retention_evidence(text, symbol, map_match.start(), raw) and rel not in (retention_rules or {}):
+            key = (symbol, map_match.start())
+            if key in seen_maps:
+                continue
+            seen_maps.add(key)
+            if not has_retention_evidence(text, symbol, map_match.start(), raw) and not is_retention_exempt(rel, symbol, retention_rules):
                 rows.append(finding("unretained-long-lived-map", rel, symbol))
+        if rel.endswith(DUPLICATE_PAGING_OWNER_SUFFIX):
+            seen_paging = set()
+            for paging in DUPLICATE_PAGING_RE.finditer(text):
+                symbol = paging.group(1)
+                if symbol in seen_paging:
+                    continue
+                seen_paging.add(symbol)
+                rows.append(finding("duplicate-paging-ownership", rel, symbol, symbol=symbol))
+        constructions = []
+        for authority in EXECUTION_AUTHORITY_CONSTRUCTION_RE.finditer(text):
+            line_start = text.rfind("\n", 0, authority.start()) + 1
+            line_end = text.find("\n", authority.end())
+            line = text[line_start:] if line_end < 0 else text[line_start:line_end]
+            if "class PostInteractionExecutionAuthority" in line:
+                continue
+            constructions.append(authority)
+        if constructions and (
+            rel not in EXECUTION_AUTHORITY_CANONICAL_FILES or len(constructions) > 1
+        ):
+            rows.append(finding("post-execution-duplication", rel, "PostInteractionExecutionAuthority", symbol="PostInteractionExecutionAuthority"))
         package_name = package.group(1) if package else ""
         composition_root = is_composition_root(rel, package_name, path.stem, allowlists)
         for imp in re.findall(r"(?m)^\s*import\s+([\w.]+)", text):

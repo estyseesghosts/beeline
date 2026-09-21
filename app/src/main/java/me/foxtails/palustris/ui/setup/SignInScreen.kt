@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.setup
 
 import android.widget.Toast
 import android.app.Activity
@@ -25,10 +25,6 @@ import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.session.SessionUi
-import me.foxtails.palustris.ui.setup.SetupInitialScreen
-import me.foxtails.palustris.ui.setup.SetupIntroductionScreen
-import me.foxtails.palustris.ui.setup.SetupServerScreen
-import me.foxtails.palustris.ui.setup.setupTypography
 
 private enum class SetupDestination { Initial, Server, Pending }
 
