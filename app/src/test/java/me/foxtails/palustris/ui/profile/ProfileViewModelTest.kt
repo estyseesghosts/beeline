@@ -233,6 +233,34 @@ class ProfileViewModelTest {
         )
     }
 
+    @Test fun pagingOwnerRemainsThePager() = runProfileTest {
+        // The pager owns cursor admission. The ViewModel must not acquire pages directly.
+        val fieldNames = ProfileViewModel::class.java.declaredFields.map { it.name }
+        assertFalse(fieldNames.contains("pageJobs"))
+        assertFalse(fieldNames.contains("requestedCursors"))
+        val methodNames = ProfileViewModel::class.java.declaredMethods.map { it.name }
+        assertFalse(methodNames.contains("loadPage"))
+        assertFalse(methodNames.contains("publishPageFailure"))
+
+        val source = FakeSource().apply {
+            timelineResults[ProfileTimelineTab.Posts] = mutableListOf(
+                Page(listOf(post("one", remote)), "cursor-a"),
+            )
+        }
+        val model = model(source)
+
+        model.open(remote)
+        advanceUntilIdle()
+        model.refreshSelected()
+        advanceUntilIdle()
+
+        // Open and refresh each acquire exactly one page through the pager.
+        assertEquals(
+            listOf(null, null),
+            source.timelineCalls.map { it.second },
+        )
+    }
+
     @Test fun emptyFilteredPagesKeepCursorForManualContinuation() = runProfileTest {
         val source = FakeSource().apply {
             timelineResults[ProfileTimelineTab.Posts] = mutableListOf(

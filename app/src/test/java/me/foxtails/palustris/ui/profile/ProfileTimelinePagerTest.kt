@@ -6,7 +6,9 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.ProfileTimelineQuery
@@ -14,7 +16,10 @@ import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.SourceError
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -125,6 +130,92 @@ class ProfileTimelinePagerTest {
         assertEquals("c1", source.calls.last())
     }
 
+    @Test
+    fun mergedRowsPreserveTransportOrder() = runTest {
+        val author = Account(target, "Target", "@target@example.org")
+        fun post(id: String) = Post(
+            id = EntityId(target.connection.origin, id),
+            author = author,
+            text = id,
+            publishedAtEpochMillis = 0,
+            audience = Audience.Public,
+        )
+        val source = PagingSource(listOf(
+            Page(listOf(post("one")), "cursor-a"),
+            Page(listOf(post("one"), post("two")), null),
+        ))
+        val states = mutableListOf<Map<ProfileTimelineTab, ProfilePageState>>()
+        val pager = pager(source, states, this)
+
+        pager.setTarget(target, 1)
+        pager.refresh(target, 1, ProfileTimelineTab.Posts)
+        runCurrent()
+        pager.loadMore(target, 1, ProfileTimelineTab.Posts)
+        runCurrent()
+
+        // Transport order stays intact while repeated rows collapse into one entry.
+        val page = states.last().getValue(ProfileTimelineTab.Posts)
+        assertEquals(listOf("one", "two"), page.posts.map { it.post.id.value })
+        assertEquals(listOf(null, "cursor-a"), source.calls.map { it.second })
+    }
+
+    @Test
+    fun oldTargetAndGenerationCannotTriggerAcquisition() = runTest {
+        val source = PagingSource(listOf(Page(emptyList(), "cursor"), Page(emptyList(), null)))
+        val states = mutableListOf<Map<ProfileTimelineTab, ProfilePageState>>()
+        val pager = pager(source, states, this)
+
+        pager.setTarget(target, 1)
+        pager.refresh(target, 1, ProfileTimelineTab.Posts)
+        runCurrent()
+        assertEquals(1, source.calls.size)
+
+        val other = target.copy(localId = "other")
+        pager.setTarget(other, 2)
+        pager.refresh(target, 1, ProfileTimelineTab.Posts)
+        runCurrent()
+        pager.loadMore(target, 1, ProfileTimelineTab.Posts)
+        runCurrent()
+        pager.refresh(other, 1, ProfileTimelineTab.Posts)
+        runCurrent()
+
+        // A stale target or a stale generation must not acquire another page.
+        assertEquals(1, source.calls.size)
+        assertFalse(states.last().containsKey(ProfileTimelineTab.Posts))
+    }
+
+    @Test
+    fun refreshFailureRetainsRowsAndCursor() = runTest {
+        val author = Account(target, "Target", "@target@example.org")
+        val first = Post(
+            id = EntityId(target.connection.origin, "first"),
+            author = author,
+            text = "first",
+            publishedAtEpochMillis = 0,
+            audience = Audience.Public,
+        )
+        val source = FailingProfileSource(listOf(Page(listOf(first), "cursor-a")))
+        val states = mutableListOf<Map<ProfileTimelineTab, ProfilePageState>>()
+        val pager = pager(source, states, this)
+
+        pager.setTarget(target, 1)
+        pager.refresh(target, 1, ProfileTimelineTab.Posts)
+        runCurrent()
+        source.error = SourceError.Unauthorized
+        pager.refresh(target, 1, ProfileTimelineTab.Posts)
+        runCurrent()
+
+        // A failed refresh keeps the rows and the cursor for sign-in recovery.
+        val page = states.last().getValue(ProfileTimelineTab.Posts)
+        assertEquals(listOf("first"), page.posts.map { it.post.id.value })
+        assertEquals("cursor-a", page.nextCursor)
+        assertNotNull(page.error)
+        assertTrue(page.needsSignIn)
+        assertFalse(page.refreshing)
+        assertFalse(page.initialLoading)
+        assertFalse(page.loadingMore)
+    }
+
     private fun pager(
         source: SocialSource,
         states: MutableList<Map<ProfileTimelineTab, ProfilePageState>>,
@@ -165,5 +256,22 @@ class ProfileTimelinePagerTest {
             }
             return Page(emptyList(), next)
         }
+    }
+
+    private class FailingProfileSource(
+        private val pages: List<Page<Post>>,
+    ) : SocialSource {
+        override val capabilities = ServerCapabilities()
+        var error: Exception? = null
+        private var index = 0
+
+        override suspend fun timeline(timeline: me.foxtails.palustris.domain.Timeline, cursor: String?) = Page<Post>(emptyList())
+
+        override suspend fun profileTimeline(query: ProfileTimelineQuery, cursor: String?): Page<Post> {
+            error?.let { throw it }
+            return pages[index++]
+        }
+
+        override suspend fun profile(id: AccountId): Account = Account(id, "Target", "@target@example.org")
     }
 }
