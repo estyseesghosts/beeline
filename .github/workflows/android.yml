@@ -31,6 +31,8 @@ jobs:
         run: |
           yes | sdkmanager --licenses > /dev/null
           sdkmanager "platform-tools" "platforms;android-37.0" "build-tools;36.0.0"
+      - name: Run architecture audit tool tests
+        run: python3 -m unittest discover -s tools/tests
       - name: Run architecture audit
         run: python3 tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check
       - name: Run unit tests
