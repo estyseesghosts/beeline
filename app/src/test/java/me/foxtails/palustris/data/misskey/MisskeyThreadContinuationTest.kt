@@ -122,7 +122,8 @@ class MisskeyThreadContinuationTest {
     }
 
     @Test
-    fun sourceContinuationTokenIsOpaqueUuidAndSingleUse() = runBlocking {
+    fun sourceContinuationTokenIsOpaqueUuidAndSingleUse() {
+        runBlocking {
         MockWebServer().use { server ->
             val source = sourceWithContinuation(server)
             val continuation = source.threadContext(key.focalId).continuation!!
@@ -139,10 +140,12 @@ class MisskeyThreadContinuationTest {
                 runBlocking { source.threadContext(key.focalId, continuation) }
             }
         }
+        }
     }
 
     @Test
-    fun sourceReleasesContinuationStoreBeforeNetworkWork() = runBlocking {
+    fun sourceReleasesContinuationStoreBeforeNetworkWork() {
+        runBlocking {
         MockWebServer().use { server ->
             val requestCount = AtomicInteger()
             val networkStarted = CountDownLatch(1)
@@ -176,6 +179,7 @@ class MisskeyThreadContinuationTest {
             releaseNetwork.countDown()
             request.get(5, TimeUnit.SECONDS)
             executor.shutdownNow()
+        }
         }
     }
 
