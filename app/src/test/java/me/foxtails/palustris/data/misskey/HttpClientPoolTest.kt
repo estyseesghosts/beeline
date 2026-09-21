@@ -17,16 +17,21 @@ import org.junit.Test
 
 class HttpClientPoolTest {
     @Test
-    fun equalConnectionsReuseClientAndProtocolIsPartOfKey() {
+    fun equalKeysReuseSameClient() {
+        val pool = HttpClientPool()
+        val first = Connection("https://example.org", Protocol.MISSKEY)
+        val equal = Connection("https://example.org", Protocol.MISSKEY)
+
+        assertSame(pool.clientFor(first), pool.clientFor(equal))
+    }
+
+    @Test
+    fun protocolIsPartOfKey() {
         val pool = HttpClientPool()
         val misskey = Connection("https://example.org", Protocol.MISSKEY)
-        val equalMisskey = Connection("https://example.org", Protocol.MISSKEY)
+        val mastodon = Connection("https://example.org", Protocol.MASTODON)
 
-        assertSame(pool.clientFor(misskey), pool.clientFor(equalMisskey))
-        assertNotSame(
-            pool.clientFor(misskey),
-            pool.clientFor(Connection("https://example.org", Protocol.MASTODON)),
-        )
+        assertNotSame(pool.clientFor(misskey), pool.clientFor(mastodon))
     }
 
     @Test
@@ -68,22 +73,45 @@ class HttpClientPoolTest {
     }
 
     @Test
-    fun clientsPreserveConfigurationAndBorrowedClientRemainsUsableAfterEviction() {
+    fun retentionStaysBoundedAfterManyDistinctKeys() {
+        val pool = HttpClientPool()
+        val early = Connection("https://early.example", Protocol.MISSKEY)
+        val earlyClient = pool.clientFor(early)
+        val recentConnections = (0 until 32).map {
+            Connection("https://many-$it.example", Protocol.MISSKEY)
+        }
+        val recentClients = recentConnections.map(pool::clientFor)
+
+        // The newest entry remains in the lookup after many insertions.
+        assertSame(recentClients.last(), pool.clientFor(recentConnections.last()))
+        // The earliest entry left the lookup, so lookup creates a new client.
+        assertNotSame(earlyClient, pool.clientFor(early))
+    }
+
+    @Test
+    fun clientsPreserveTimeoutAndRedirectPolicy() {
+        val pool = HttpClientPool(
+            HttpLayerConfig(connectTimeoutSeconds = 3, readTimeoutSeconds = 4, callTimeoutSeconds = 5),
+        )
+        val client = pool.clientFor(Connection("https://policy.example", Protocol.MISSKEY))
+
+        assertEquals(3_000, client.connectTimeoutMillis)
+        assertEquals(4_000, client.readTimeoutMillis)
+        assertEquals(5_000, client.callTimeoutMillis)
+        assertTrue(!client.followRedirects)
+        assertTrue(!client.followSslRedirects)
+    }
+
+    @Test
+    fun evictedBorrowedClientStillPerformsRequests() {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody("ok"))
-            val pool = HttpClientPool(
-                HttpLayerConfig(connectTimeoutSeconds = 3, readTimeoutSeconds = 4, callTimeoutSeconds = 5),
-            )
+            val pool = HttpClientPool()
             val borrowed = pool.clientFor(Connection(server.url("/").toString(), Protocol.MISSKEY))
             (0..16).forEach {
                 pool.clientFor(Connection("https://eviction-$it.example", Protocol.MISSKEY))
             }
 
-            assertEquals(3_000, borrowed.connectTimeoutMillis)
-            assertEquals(4_000, borrowed.readTimeoutMillis)
-            assertEquals(5_000, borrowed.callTimeoutMillis)
-            assertTrue(!borrowed.followRedirects)
-            assertTrue(!borrowed.followSslRedirects)
             val response = borrowed.newCall(Request.Builder().url(server.url("/")).build()).execute()
             assertEquals("ok", response.use { requireNotNull(it.body).string() })
         }

@@ -11,7 +11,15 @@ data class HttpLayerConfig(
     val callTimeoutSeconds: Long = 40,
 )
 
-/** Lazily shares up to 16 credential-free clients per server origin and protocol. */
+/**
+ * Shares credential-free clients by server origin and protocol.
+ *
+ * State owned: lookup from Connection to OkHttpClient.
+ * Lifetime: lifetime of the injected singleton.
+ * Retention: at most 16 entries with access-order eviction.
+ * Release: eviction drops the lookup reference only. The pool never
+ * closes a client, so a borrowed client remains usable.
+ */
 class HttpClientPool(private val config: HttpLayerConfig = HttpLayerConfig()) {
     private val clients = LinkedHashMap<Connection, OkHttpClient>(MAX_CLIENTS, 0.75f, true)
     private val lock = Any()
@@ -30,6 +38,8 @@ class HttpClientPool(private val config: HttpLayerConfig = HttpLayerConfig()) {
             .callTimeout(config.callTimeoutSeconds, TimeUnit.SECONDS)
             .build()
         clients[connection] = client
+        // Evict the least recently used lookup entry only. The pool never
+        // closes the evicted client, so borrowed users keep a usable client.
         if (clients.size > MAX_CLIENTS) {
             val eldest = clients.entries.iterator()
             eldest.next()
