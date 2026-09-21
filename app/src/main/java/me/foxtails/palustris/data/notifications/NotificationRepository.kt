@@ -63,7 +63,6 @@ class NotificationRepository @Inject constructor(
         val mutex = Mutex()
         var users = 0
         var retiring = false
-        var pendingActivation: NotificationSyncToken? = null
     }
     private val writeLocks = mutableMapOf<AccountId, WriteRecord>()
 
@@ -122,22 +121,16 @@ class NotificationRepository @Inject constructor(
     /**
      * Activates an owner unless its token is at or below a removal tombstone. A replacement must
      * therefore carry a strictly newer generation; stale activation never materializes state.
+     * Activation during retirement never applies. No pending activation survives removal.
      */
     fun activate(token: NotificationSyncToken) {
         val record = acquireWrite(token.accountId, token, allowNewerActivation = true) ?: return
         try {
             synchronized(record) {
                 synchronized(this) {
-                    if (record.retiring) {
-                        val retiredGeneration = retiredGenerations[token.accountId]
-                        if (retiredGeneration == null || token.generation > retiredGeneration) {
-                            val pending = record.pendingActivation
-                            if (pending == null || token.generation > pending.generation) {
-                                record.pendingActivation = token
-                            }
-                        }
-                        return
-                    }
+                    // A retiring record never activates. The replacement activates only
+                    // after removal completes with a strictly newer generation.
+                    if (record.retiring) return
                     activateLocked(token)
                 }
             }
@@ -557,17 +550,21 @@ class NotificationRepository @Inject constructor(
      * Drops one account's in-memory state and deletes its rows. Row deletion is best effort:
      * revocation and memory removal are authoritative, so a disk failure never blocks local
      * removal or resurrects the account. Callers revoke writers before this call.
+     *
+     * The record retires before durable deletion. Owners and waiters stay attached until
+     * they release. The lock entry disappears only when the user count reaches zero.
+     * The tombstone stays so late tokens stay rejected. No pending activation revives.
      */
     suspend fun remove(accountId: AccountId) {
         val record = acquireWrite(accountId)!!
         try {
             record.mutex.withLock {
-                val current = synchronized(this@NotificationRepository) {
+                synchronized(this@NotificationRepository) {
                     val current = generations[accountId] ?: 0L
                     generations[accountId] = current + 1L
-                    retiredGenerations[accountId] = current
+                    // A repeated removal never lowers the tombstone.
+                    retiredGenerations[accountId] = maxOf(retiredGenerations[accountId] ?: 0L, current)
                     record.retiring = true
-                    current
                 }
                 try {
                     try {
@@ -584,12 +581,6 @@ class NotificationRepository @Inject constructor(
                         states.remove(accountId)
                         storageHealth.remove(accountId)
                         generations.remove(accountId)
-                        val pending = record.pendingActivation
-                        if (pending != null && pending.generation > current) {
-                            record.pendingActivation = null
-                            record.retiring = false
-                            activateLocked(pending)
-                        }
                     }
                 }
             }

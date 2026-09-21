@@ -26,6 +26,7 @@ class DirectMessageWriteAuthorityTest {
 
         assertFalse(authority.isCurrent(account, generation))
         assertNull(authority.commitIfCurrent(account, generation) { Unit })
+        assertFalse(authority.hasRecordForTest(account))
     }
 
     @Test
@@ -34,6 +35,7 @@ class DirectMessageWriteAuthorityTest {
         val generation = authority.activate(account)
         val entered = CompletableDeferred<Unit>()
         val release = CompletableDeferred<Unit>()
+        // The waiter holds the retiring record while removal waits on the lock.
         val writer = async {
             authority.commitIfCurrent(account, generation) {
                 entered.complete(Unit)
@@ -46,7 +48,65 @@ class DirectMessageWriteAuthorityTest {
         writer.await()
         removal.await()
 
-        assertNull(authority.commitIfCurrent(account, generation) { Unit })
+        var ran = false
+        assertNull(
+            authority.commitIfCurrent(account, generation) {
+                ran = true
+            },
+        )
+        assertFalse(ran)
+        assertFalse(authority.hasRecordForTest(account))
+    }
+
+    @Test
+    fun lateCommitAfterRemovalCreatesNoRecord() = runTest {
+        val authority = DirectMessageWriteAuthority()
+        val generation = authority.activate(account)
+        authority.invalidateAndDelete(account) {}
+
+        var ran = false
+        assertNull(
+            authority.commitIfCurrent(account, generation) {
+                ran = true
+            },
+        )
+
+        assertFalse(ran)
+        assertFalse(authority.isCurrent(account, generation))
+        assertFalse(authority.hasRecordForTest(account))
+    }
+
+    @Test
+    fun waiterDuringRemovalStaysOnRetiringRecord() = runTest {
+        val authority = DirectMessageWriteAuthority()
+        val generation = authority.activate(account)
+        val holderEntered = CompletableDeferred<Unit>()
+        val holderRelease = CompletableDeferred<Unit>()
+        // The holder keeps the record alive while removal retires it.
+        val holder = async {
+            authority.commitIfCurrent(account, generation) {
+                holderEntered.complete(Unit)
+                holderRelease.await()
+            }
+        }
+        holderEntered.await()
+        val removal = async { authority.invalidateAndDelete(account) {} }
+        runCurrent()
+        // The waiter attaches to the retiring record and cannot run its block.
+        var ran = false
+        val waiter = async {
+            authority.commitIfCurrent(account, generation) {
+                ran = true
+            }
+        }
+        runCurrent()
+        holderRelease.complete(Unit)
+        holder.await()
+        removal.await()
+
+        assertNull(waiter.await())
+        assertFalse(ran)
+        assertFalse(authority.hasRecordForTest(account))
     }
 
     @Test
@@ -69,6 +129,7 @@ class DirectMessageWriteAuthorityTest {
 
         authority.invalidateAndDelete(account) {}
         assertFalse(authority.isCurrent(account, generation))
+        assertFalse(authority.hasRecordForTest(account))
     }
 
     @Test
@@ -87,6 +148,7 @@ class DirectMessageWriteAuthorityTest {
 
         authority.invalidateAndDelete(account) {}
         assertFalse(authority.isCurrent(account, generation))
+        assertFalse(authority.hasRecordForTest(account))
     }
 
     @Test
@@ -94,6 +156,7 @@ class DirectMessageWriteAuthorityTest {
         val authority = DirectMessageWriteAuthority()
         val oldGeneration = authority.activate(account)
         authority.invalidateAndDelete(account) {}
+        assertFalse(authority.hasRecordForTest(account))
 
         val newGeneration = authority.activate(account)
 
@@ -101,6 +164,7 @@ class DirectMessageWriteAuthorityTest {
         assertTrue(newGeneration > oldGeneration)
         assertNull(authority.commitIfCurrent(account, oldGeneration) { Unit })
         assertTrue(authority.isCurrent(account, newGeneration))
+        assertTrue(authority.hasRecordForTest(account))
     }
 
     @Test
@@ -125,5 +189,9 @@ class DirectMessageWriteAuthorityTest {
         release.complete(Unit)
         writer.join()
         removal.join()
+
+        assertFalse(authority.hasRecordForTest(account))
+        assertTrue(authority.hasRecordForTest(other))
+        assertTrue(authority.isCurrent(other, otherGeneration))
     }
 }

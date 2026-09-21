@@ -198,6 +198,44 @@ class SessionLifecycleTest {
     }
 
     @Test
+    fun removedAccountStaysRevokedWhileOtherAccountStaysUsable() = runTest {
+        val other = makeAccount("bob").id
+        val store = RecordingStore().apply {
+            index = AccountIndex(accounts = listOf(ref(accountId), ref(other)), activeAccountId = accountId)
+            sessions[accountId] = session(accountId)
+            sessions[other] = session(other)
+        }
+        val directMessageWriters = DirectMessageWriteAuthority()
+        val draftWriters = DraftWriteAuthority()
+        val firstDirectMessage = directMessageWriters.activate(accountId)
+        val firstDraft = draftWriters.activate(accountId)
+        val drafts = RecordingDraftStore()
+
+        val result = lifecycle(
+            store,
+            directMessageWriters = directMessageWriters,
+            drafts = drafts,
+            draftWriters = draftWriters,
+        ).remove(accountId)
+
+        // Write invalidation ran before durable deletion. Stale writers stay rejected.
+        assertNull(directMessageWriters.commitIfCurrent(accountId, firstDirectMessage) { "stale" })
+        assertNull(draftWriters.commitIfCurrent(accountId, firstDraft) { "stale" })
+        assertEquals(1, drafts.deleteAllCount)
+        assertNull(store.sessions[accountId])
+        // The other account keeps working in isolation. Removal activates the next
+        // account, so the other account uses its live generation.
+        val liveDirectMessage = directMessageWriters.activate(other)
+        val liveDraft = draftWriters.activate(other)
+        assertEquals("ok", directMessageWriters.commitIfCurrent(other, liveDirectMessage) { "ok" })
+        assertEquals("ok", draftWriters.commitIfCurrent(other, liveDraft) { "ok" })
+        // Replacement activation runs after removal with fresh generations.
+        assertEquals(other, result.next?.session?.accountId)
+        assertTrue(directMessageWriters.activate(accountId) != firstDirectMessage)
+        assertTrue(draftWriters.activate(accountId) != firstDraft)
+    }
+
+    @Test
     fun removingActiveAccountActivatesNextAccount() = runTest {
         val other = makeAccount("bob").id
         val store = RecordingStore().apply {

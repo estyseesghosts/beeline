@@ -74,6 +74,9 @@ class NoOpNotificationSyncController : NotificationSyncController {
     override fun register(accountId: AccountId, source: SocialSource): NotificationSyncToken {
         val generation = generationAllocator.incrementAndGet()
         generations[accountId] = generation
+        states.getOrPut(accountId) { MutableStateFlow(NotificationSyncState()) }.also {
+            it.value = it.value.copy(isActive = true, error = null)
+        }
         return NotificationSyncToken(accountId, generation)
     }
 
@@ -119,6 +122,8 @@ class NotificationSyncOrchestrator @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val states = mutableMapOf<AccountId, MutableStateFlow<NotificationSyncState>>()
     private val jobs = mutableMapOf<AccountId, Job>()
+    // Account locks live for the controller lifetime. Removal never detaches them,
+    // so waiters keep one order per account.
     private val accountLocks = mutableMapOf<AccountId, Mutex>()
     private val generations = mutableMapOf<AccountId, Long>()
 
@@ -136,12 +141,17 @@ class NotificationSyncOrchestrator @Inject constructor(
     override fun unregister(accountId: AccountId) {
         val generation = generations.remove(accountId)
         jobs.remove(accountId)?.cancel()
-        accountLocks.remove(accountId)
+        // The per-account lock stays. Waiters keep their order through removal.
         sourceRegistry.remove(accountId)
         if (generation != null) repository.invalidate(accountId, generation)
         states[accountId]?.value = states[accountId]?.value?.copy(isActive = false) ?: NotificationSyncState()
     }
 
+    /**
+     * Removes one account. Invalidation runs before repository removal, so late
+     * stream events fail and the generation entry disappears. A new registration
+     * after this call receives a fresh generation from the process-lifetime allocator.
+     */
     override suspend fun removeAccount(accountId: AccountId) {
         synchronized(this) {
             unregister(accountId)

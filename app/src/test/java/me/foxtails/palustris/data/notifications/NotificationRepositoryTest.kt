@@ -807,6 +807,60 @@ class NotificationRepositoryTest {
         assertTrue(repository.pendingDeliveries(account).isEmpty())
     }
 
+    @Test
+    fun removalWaiterCannotActivateStaleReplacement() = runBlocking {
+        val store = GatedNotificationStore()
+        val repository = NotificationRepository(store)
+        val token = NotificationSyncToken(account, 1)
+        repository.activate(token)
+
+        val writer = async {
+            repository.updateUnreadState(token, NotificationUnreadState.Exact(1))
+        }
+        store.writeEntered.await()
+
+        val removal = async { repository.remove(account) }
+        yield()
+        // A racing activation with the stale generation never applies.
+        repository.activate(token)
+        store.releaseWrite.complete(Unit)
+        assertTrue(writer.await())
+        removal.await()
+
+        assertFalse(repository.updateUnreadState(token, NotificationUnreadState.Exact(2)))
+        assertEquals(null, repository.currentToken(account))
+        assertTrue(store.read(account) is NotificationStoreRead.Absent)
+
+        // Only a strictly newer generation activates after removal.
+        repository.activate(token)
+        assertEquals(null, repository.currentToken(account))
+        val replacement = NotificationSyncToken(account, 2)
+        repository.activate(replacement)
+        assertTrue(repository.updateUnreadState(replacement, NotificationUnreadState.Exact(3)))
+    }
+
+    @Test
+    fun lateStreamEventCannotRecreateStateAfterRemoval() = runBlocking {
+        val store = InMemoryNotificationStore()
+        val repository = NotificationRepository(store)
+        val token = NotificationSyncToken(account, 1)
+        repository.activate(token)
+        repository.establishBaseline(
+            token,
+            baselineRequest(),
+            NotificationPage(listOf(notification("before-remove", NotificationActivity.Follow))),
+        )
+        repository.remove(account)
+
+        val late = Event(
+            account,
+            SocialEvent.NotificationReceived(notification("after-remove", NotificationActivity.Mention)),
+        )
+        assertFalse(repository.applyStreamEvent(token, late))
+        assertTrue(repository.observe(account).value.items.isEmpty())
+        assertTrue(store.read(account) is NotificationStoreRead.Absent)
+    }
+
     private fun ingestRequest(page: NotificationPage) =
         NotificationIngestRequest(page.checkpoint?.query ?: NotificationQuery(), NotificationPageDirection.Initial)
 
