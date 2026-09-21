@@ -164,6 +164,29 @@ class MediaTransitionStateTest {
     }
 
     @Test
+    fun staleSameKeyMarkSourceReadyCannotRehideActiveReplacement() {
+        val registry = MediaTransitionRegistry()
+        val key = MediaTransitionKey("account", "post", "attachment")
+        val first = registry.begin(key)
+        val second = registry.begin(key)
+
+        assertTrue(registry.isOwnerActive(second))
+        assertTrue(registry.isSourceHidden(key))
+
+        registry.prepareHandoff(second)
+        assertFalse(registry.isSourceHidden(key))
+
+        registry.markSourceReady(first)
+        assertFalse(registry.isSourceHidden(key))
+        assertTrue(registry.isOwnerActive(second))
+        assertEquals(key, registry.currentActiveKey)
+
+        registry.markSourceReady(second)
+        assertTrue(registry.isSourceHidden(key))
+        assertTrue(registry.isOwnerActive(second))
+    }
+
+    @Test
     fun currentOwnerHandoffAndEndReleaseTheHiddenSource() {
         val registry = MediaTransitionRegistry()
         val key = MediaTransitionKey("account", "post", "attachment")
@@ -171,7 +194,7 @@ class MediaTransitionStateTest {
 
         registry.prepareHandoff(owner)
         assertFalse(registry.isSourceHidden(key))
-        registry.markSourceReady(key)
+        registry.markSourceReady(owner)
         assertTrue(registry.isSourceHidden(key))
 
         registry.end(owner)
@@ -180,6 +203,89 @@ class MediaTransitionStateTest {
         registry.end(owner)
         registry.prepareHandoff(owner)
         assertFalse(registry.isSourceHidden(key))
+    }
+
+    @Test
+    fun manyRepeatedTransitionsRetainOnlyTheLatestHiddenKey() {
+        val registry = MediaTransitionRegistry()
+        val keys = List(6) { index -> MediaTransitionKey("account", "post", "attachment-$index") }
+        val owners = keys.map(registry::begin)
+
+        keys.forEachIndexed { index, key ->
+            assertEquals(index == keys.lastIndex, registry.isSourceHidden(key))
+        }
+        assertTrue(registry.isOwnerActive(owners.last()))
+        assertEquals(keys.last(), registry.currentActiveKey)
+
+        owners.dropLast(1).forEach { stale ->
+            registry.end(stale)
+            registry.prepareHandoff(stale)
+        }
+
+        assertTrue(registry.isOwnerActive(owners.last()))
+        assertTrue(registry.isSourceHidden(keys.last()))
+        keys.dropLast(1).forEach { staleKey ->
+            assertFalse(registry.isSourceHidden(staleKey))
+        }
+
+        registry.end(owners.last())
+        assertNull(registry.currentActiveKey)
+        keys.forEach { key ->
+            assertFalse(registry.isSourceHidden(key))
+        }
+    }
+
+    @Test
+    fun replacementAfterHandoffKeepsOnlyTheLatestHiddenKey() {
+        val registry = MediaTransitionRegistry()
+        val firstKey = MediaTransitionKey("account", "post", "first")
+        val secondKey = MediaTransitionKey("account", "post", "second")
+        val thirdKey = MediaTransitionKey("account", "post", "third")
+        val first = registry.begin(firstKey)
+
+        registry.prepareHandoff(first)
+        assertFalse(registry.isSourceHidden(firstKey))
+
+        val second = registry.begin(secondKey)
+        assertTrue(registry.isSourceHidden(secondKey))
+        assertFalse(registry.isSourceHidden(firstKey))
+
+        val third = registry.begin(thirdKey)
+        assertTrue(registry.isSourceHidden(thirdKey))
+        assertFalse(registry.isSourceHidden(firstKey))
+        assertFalse(registry.isSourceHidden(secondKey))
+
+        registry.end(first)
+        registry.prepareHandoff(first)
+        registry.end(second)
+        registry.prepareHandoff(second)
+        registry.markSourceReady(first)
+        registry.markSourceReady(second)
+
+        assertTrue(registry.isOwnerActive(third))
+        assertFalse(registry.isOwnerActive(first))
+        assertFalse(registry.isOwnerActive(second))
+        assertTrue(registry.isSourceHidden(thirdKey))
+        assertFalse(registry.isSourceHidden(firstKey))
+        assertFalse(registry.isSourceHidden(secondKey))
+        assertEquals(thirdKey, registry.currentActiveKey)
+
+        registry.prepareHandoff(third)
+        assertFalse(registry.isSourceHidden(thirdKey))
+        assertEquals(thirdKey, registry.currentActiveKey)
+
+        registry.markSourceReady(third)
+        assertTrue(registry.isSourceHidden(thirdKey))
+
+        registry.end(third)
+        assertNull(registry.currentActiveKey)
+        assertFalse(registry.isSourceHidden(firstKey))
+        assertFalse(registry.isSourceHidden(secondKey))
+        assertFalse(registry.isSourceHidden(thirdKey))
+
+        registry.end(third)
+        registry.prepareHandoff(third)
+        assertFalse(registry.isSourceHidden(thirdKey))
     }
 
     @Test
