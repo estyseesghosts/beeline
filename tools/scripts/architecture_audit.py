@@ -8,14 +8,23 @@ import re
 import sys
 from pathlib import Path
 
-PARSER_VERSION = "1"
+PARSER_VERSION = "2"
 OWNER_SUFFIXES = ("Manager", "Coordinator", "Controller", "Owner", "Authority")
+# Files that wire features instead of implementing them. Composition roots may
+# import across feature boundaries, so dependency checks skip them explicitly.
+COMPOSITION_ROOT_STEMS = frozenset({"MainActivity", "PalustrisApp", "PalustrisApplication"})
 MAP_RE = re.compile(
     r"\b(?:val|var)\s+([A-Za-z_]\w*)\s*(?::\s*[^=\n]+)?\s*=\s*"
     r"(?:mutableMapOf|mapOf|ConcurrentHashMap|HashMap|LinkedHashMap|mutableStateMapOf)"
     r"\b(?:\s*<[^\n>]*>)?\s*(?:\([^\n]*\))?"
 )
 CLASS_RE = re.compile(r"\b(?:class|object|interface)\s+([A-Za-z_]\w*)")
+CLASS_HEADER_RE = re.compile(r"\bclass\s+[A-Za-z_]\w*")
+SECONDARY_CONSTRUCTOR_RE = re.compile(r"(?<!\w)constructor\s*\(")
+HEADER_PREFIX_RE = re.compile(r"(?:\s*(?:@[\w.]+(?:\s*\([^()]*\))?|(?:public|private|protected|internal)|constructor))*\s*\(")
+OWNER_DEFAULT_CONSTRUCTION_RE = re.compile(
+    r"=\s*(?!\w*MutationOwner\b)[A-Z]\w*(?:Authority|Cache|Pool|Controller|Owner|Manager)\s*\("
+)
 FUN_RE = re.compile(r'(?m)^\s*(?:@[\w.()", =:-]+\s*)*(?:(?:public|private|protected|internal|inline|tailrec|operator|infix|suspend|override|open|final|abstract)\s+)*fun\s+(?:<[^>{}]+>\s*)?(?:[\w?.<>]+\.)?([A-Za-z_]\w*)\s*\(')
 DEFAULT_THRESHOLDS = {
     "fileWarningLines": 700,
@@ -29,9 +38,37 @@ RETENTION_KEYWORDS = r"(?:maximum|max\b|bound|expiry|expires|expire|prune|clear|
 RETENTION_COMMENT_LINES = 3
 
 
+def source_roots(root: Path):
+    """Return existing production Kotlin source roots in a fixed order."""
+    candidates = [root / "app" / "src" / "main" / "java", root / "app" / "src" / "main" / "kotlin"]
+    return [candidate for candidate in candidates if candidate.exists()]
+
+
 def kotlin_files(root: Path):
-    source = root / "app" / "src" / "main" / "java"
-    return sorted(source.rglob("*.kt"), key=lambda p: p.as_posix()) if source.exists() else []
+    files = []
+    for source in source_roots(root):
+        files.extend(source.rglob("*.kt"))
+    return sorted(files, key=lambda p: p.relative_to(root).as_posix())
+
+
+def expected_package(path: Path, root: Path) -> str:
+    """Derive the expected package from the source root that contains the file."""
+    for source in source_roots(root):
+        try:
+            return ".".join(path.relative_to(source).parts[:-1])
+        except ValueError:
+            continue
+    return ""
+
+
+def is_composition_root(rel: str, package_name: str, stem: str, allowlists=None) -> bool:
+    """Check whether a file wires features instead of implementing them."""
+    configured = set((allowlists or {}).get("compositionRootFiles", ()))
+    if rel in configured:
+        return True
+    if package_name == "me.foxtails.palustris.di" or ".di." in package_name or package_name.endswith(".di"):
+        return True
+    return stem in COMPOSITION_ROOT_STEMS
 
 
 def mask(text: str) -> str:
@@ -106,6 +143,8 @@ def max_depth(text: str) -> int:
 
 
 def finding(kind, file, detail, **extra):
+    # Keep IDs stable across runs: use the symbol name, never a metric value,
+    # so baseline entries match until the violation itself changes.
     symbol = extra.pop("symbol", None)
     row = {"id": f"{kind}:{file}:{symbol if symbol is not None else detail}", "kind": kind, "file": file, "detail": detail}
     if symbol is not None:
@@ -161,6 +200,40 @@ def has_retention_evidence(text: str, symbol: str, position: int, raw_text=None)
     return bool(tied or re.search(RETENTION_KEYWORDS, scope, re.IGNORECASE) or (raw_text and nearby_retention_comment(raw_text, symbol, position)))
 
 
+def has_constructor_default_construction(text: str) -> bool:
+    """Check constructor parameter defaults only for directly created owners."""
+    # Scan primary and explicit constructor parameter lists only.
+    # Class-body and function-body construction stays out of scope.
+    for header in CLASS_HEADER_RE.finditer(text):
+        cursor = header.end()
+        while cursor < len(text) and text[cursor].isspace():
+            cursor += 1
+        if cursor < len(text) and text[cursor] == "<":
+            depth = 0
+            while cursor < len(text):
+                if text[cursor] == "<":
+                    depth += 1
+                elif text[cursor] == ">":
+                    depth -= 1
+                    if depth == 0:
+                        cursor += 1
+                        break
+                cursor += 1
+        prefix = HEADER_PREFIX_RE.match(text, cursor)
+        if not prefix:
+            continue
+        start = cursor + prefix.end() - 1
+        end = balanced_end(text, start)
+        if end is not None and OWNER_DEFAULT_CONSTRUCTION_RE.search(text[start + 1:end]):
+            return True
+    for secondary in SECONDARY_CONSTRUCTOR_RE.finditer(text):
+        start = secondary.end() - 1
+        end = balanced_end(text, start)
+        if end is not None and OWNER_DEFAULT_CONSTRUCTION_RE.search(text[start + 1:end]):
+            return True
+    return False
+
+
 def audit(root: Path, retention_rules=None, thresholds=None, allowlists=None) -> dict:
     root = root.resolve()
     thresholds = {**DEFAULT_THRESHOLDS, **(thresholds or {})}
@@ -173,7 +246,7 @@ def audit(root: Path, retention_rules=None, thresholds=None, allowlists=None) ->
         lines = raw.count("\n") + (1 if raw else 0)
         files[rel] = {"lines": lines}
         package = re.search(r"(?m)^\s*package\s+([\w.]+)", text)
-        expected = ".".join(path.relative_to(root / "app/src/main/java").parts[:-1])
+        expected = expected_package(path, root)
         actual_package = package.group(1) if package else "<missing>"
         if not package or actual_package != expected:
             rows.append(finding("package-path-mismatch", rel, f"{actual_package} != {expected}"))
@@ -186,14 +259,17 @@ def audit(root: Path, retention_rules=None, thresholds=None, allowlists=None) ->
         owner_classes = [c for c in classes if c.endswith(OWNER_SUFFIXES)]
         for cls in owner_classes:
             rows.append(finding("ownership-class", rel, cls))
-        if re.search(r"\b(?:class|constructor)\b[\s\S]{0,1200}?=\s*(?!\w*MutationOwner\b)[A-Z]\w*(?:Authority|Cache|Pool|Controller|Owner|Manager)\s*\(", text):
+        if has_constructor_default_construction(text):
             rows.append(finding("private-owner-construction", rel, "default constructor construction"))
         for map_match in MAP_RE.finditer(text):
             symbol = map_match.group(1)
             if not has_retention_evidence(text, symbol, map_match.start(), raw) and rel not in (retention_rules or {}):
                 rows.append(finding("unretained-long-lived-map", rel, symbol))
         package_name = package.group(1) if package else ""
+        composition_root = is_composition_root(rel, package_name, path.stem, allowlists)
         for imp in re.findall(r"(?m)^\s*import\s+([\w.]+)", text):
+            if composition_root:
+                break
             if package_name.startswith("me.foxtails.palustris.domain") and ".data." in imp or package_name.startswith("me.foxtails.palustris.domain") and ".ui." in imp:
                 rows.append(finding("dependency-direction", rel, imp))
             if ".data." in package_name and ".ui." in imp:

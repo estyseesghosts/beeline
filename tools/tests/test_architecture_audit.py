@@ -21,11 +21,42 @@ class ArchitectureAuditTest(unittest.TestCase):
             path.write_text(body if raw else source(body, package), encoding="utf-8")
             return audit.audit(root)
 
+    def run_audit_files(self, files):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for rel, body in files.items():
+                path = root / rel
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(body, encoding="utf-8")
+            return audit.audit(root)
+
     def test_deterministic_and_extracts_metrics(self):
         body = "fun f(a: Int, b: Int) { if (a > b) { println(a) } }"
         one, two = self.run_audit(body), self.run_audit(body)
         self.assertEqual(json.dumps(one, sort_keys=True), json.dumps(two, sort_keys=True))
         self.assertEqual(one["functionMetrics"][0]["params"], 2)
+
+    def test_java_and_kotlin_roots_are_discovered(self):
+        report = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/ui/feed/Feed.kt":
+                source("fun x() = Unit", "me.foxtails.palustris.ui.feed"),
+            "app/src/main/kotlin/me/foxtails/palustris/ui/feed/Extra.kt":
+                source("fun y() = Unit", "me.foxtails.palustris.ui.feed"),
+        })
+        self.assertEqual(
+            sorted(report["fileMetrics"]),
+            ["app/src/main/java/me/foxtails/palustris/ui/feed/Feed.kt",
+             "app/src/main/kotlin/me/foxtails/palustris/ui/feed/Extra.kt"],
+        )
+        self.assertFalse([x for x in report["findings"] if x["kind"] == "package-path-mismatch"])
+
+    def test_kotlin_root_package_mismatch_uses_kotlin_root(self):
+        report = self.run_audit_files({
+            "app/src/main/kotlin/me/foxtails/palustris/ui/feed/Extra.kt":
+                source("fun y() = Unit", "me.foxtails.palustris.ui"),
+        })
+        mismatch = next(x for x in report["findings"] if x["kind"] == "package-path-mismatch")
+        self.assertIn("me.foxtails.palustris.ui.feed", mismatch["detail"])
 
     def test_findings_and_metrics_are_sorted_directly(self):
         report = self.run_audit("""
@@ -67,6 +98,16 @@ class ArchitectureAuditTest(unittest.TestCase):
             path.write_text(source("fun x() = Unit", "me.foxtails.palustris.ui"), encoding="utf-8")
             self.assertTrue(any(x["kind"] == "root-ui-feature-file" for x in audit.audit(root)["findings"]))
 
+    def test_root_ui_global_allowlist_exempts_shared_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            path = root / "app/src/main/java/me/foxtails/palustris/ui/NewShared.kt"
+            path.parent.mkdir(parents=True)
+            path.write_text(source("fun x() = Unit", "me.foxtails.palustris.ui"), encoding="utf-8")
+            self.assertTrue(any(x["kind"] == "root-ui-feature-file" for x in audit.audit(root)["findings"]))
+            allowed = audit.audit(root, allowlists={"rootUiGlobalFiles": ["NewShared"]})
+            self.assertFalse(any(x["kind"] == "root-ui-feature-file" for x in allowed["findings"]))
+
     def test_default_construction_and_ownership_class(self):
         report = self.run_audit("class SampleOwner(private val cache: Cache = Cache())")
         kinds = {x["kind"] for x in report["findings"]}
@@ -79,6 +120,72 @@ class ArchitectureAuditTest(unittest.TestCase):
         for construction in ("CapabilityCache()", "DraftWriteAuthority()", "ExecutionAuthority()", "HttpClientPool()"):
             report = self.run_audit(f"class SampleOwner(val value: Any = {construction})")
             self.assertIn("private-owner-construction", {x["kind"] for x in report["findings"]})
+
+    def test_multiline_default_owner_construction_is_flagged(self):
+        report = self.run_audit("""
+            class SampleOwner(
+                private val cache: CapabilityCache = CapabilityCache(
+                    maxSize = 10
+                )
+            )
+        """)
+        self.assertIn("private-owner-construction", {x["kind"] for x in report["findings"]})
+
+    def test_class_body_construction_is_not_a_constructor_default(self):
+        plain = self.run_audit("class Plain { val cache = CapabilityCache() }")
+        self.assertNotIn("private-owner-construction", {x["kind"] for x in plain["findings"]})
+        single = self.run_audit("class Foo(private val cache: Any = CapabilityCache())")
+        self.assertIn("private-owner-construction", {x["kind"] for x in single["findings"]})
+        multiline = self.run_audit("""
+            class Foo(
+                private val cache: Any = CapabilityCache(
+                    maxSize = 10
+                )
+            )
+        """)
+        self.assertIn("private-owner-construction", {x["kind"] for x in multiline["findings"]})
+
+    def test_later_construction_is_not_attributed_to_first_class(self):
+        later_function = self.run_audit("""
+            class First(val x: String)
+            fun make(): Any = CapabilityCache()
+        """)
+        self.assertNotIn("private-owner-construction", {x["kind"] for x in later_function["findings"]})
+        second_body = self.run_audit("""
+            class First(val x: String)
+            class Second {
+                val cache = CapabilityCache()
+            }
+        """)
+        self.assertNotIn("private-owner-construction", {x["kind"] for x in second_body["findings"]})
+        attributed = self.run_audit("""
+            class First(val x: String)
+            class Second(val cache: Any = CapabilityCache())
+        """)
+        self.assertIn("private-owner-construction", {x["kind"] for x in attributed["findings"]})
+
+    def test_composition_roots_skip_dependency_direction(self):
+        body = "import me.foxtails.palustris.ui.profile.Profile\nfun x() = Unit"
+        di_report = self.run_audit_files({
+            "app/src/main/java/me/foxtails/palustris/di/AppModule.kt":
+                source(body, "me.foxtails.palustris.di"),
+        })
+        self.assertNotIn("dependency-direction", {x["kind"] for x in di_report["findings"]})
+        feature_report = self.run_audit(body)
+        self.assertIn("dependency-direction", {x["kind"] for x in feature_report["findings"]})
+
+    def test_composition_root_allowlist_exempts_a_feature_file(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            rel = "app/src/main/java/me/foxtails/palustris/ui/feed/Example.kt"
+            path = root / rel
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                source("import me.foxtails.palustris.ui.profile.Profile\nfun x() = Unit"),
+                encoding="utf-8",
+            )
+            report = audit.audit(root, allowlists={"compositionRootFiles": [rel]})
+            self.assertNotIn("dependency-direction", {x["kind"] for x in report["findings"]})
 
     def test_generic_and_non_generic_maps_require_scoped_retention(self):
         report = self.run_audit("""
