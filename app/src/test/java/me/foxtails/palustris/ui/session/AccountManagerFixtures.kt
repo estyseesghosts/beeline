@@ -30,7 +30,8 @@ internal fun accountManagerFixture(
     draftWriteAuthority: DraftWriteAuthority = DraftWriteAuthority(),
     notificationSync: NotificationSyncController = NoOpNotificationSyncController(),
     uiStrings: UiStrings = UiStrings.Default,
-    sourceFactory: SocialSourceFactory = SocialSourceFactory(HttpClientPool()),
+    capabilityCache: CapabilityCache = CapabilityCache(),
+    sourceFactory: SocialSourceFactory = SocialSourceFactory(HttpClientPool(), capabilityCache = capabilityCache),
 ): AccountManager = AccountManager(
     auth = auth,
     lifecycle = SessionLifecycle(
@@ -47,7 +48,7 @@ internal fun accountManagerFixture(
         emojiPicker = InMemoryEmojiPickerPreferencesRepository(),
         drafts = draftStore,
         draftWriters = draftWriteAuthority,
-        capabilityCache = CapabilityCache(),
+        capabilityCache = capabilityCache,
         io = ioDispatcher,
     ),
     uiStrings = uiStrings,

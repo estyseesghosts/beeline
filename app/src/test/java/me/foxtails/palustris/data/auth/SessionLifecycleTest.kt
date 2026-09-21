@@ -244,7 +244,7 @@ class SessionLifecycleTest {
         capabilityCache: CapabilityCache = CapabilityCache(),
     ) = SessionLifecycle(
         store = store,
-        sourceFactory = SocialSourceFactory(HttpClientPool()),
+        sourceFactory = SocialSourceFactory(HttpClientPool(), capabilityCache = capabilityCache),
         notificationSync = sync,
         push = push,
         streams = streams,

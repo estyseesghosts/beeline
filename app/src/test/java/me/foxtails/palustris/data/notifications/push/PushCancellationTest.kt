@@ -17,6 +17,7 @@ import me.foxtails.palustris.data.SocialSourceFactory
 import me.foxtails.palustris.data.auth.AccountIndex
 import me.foxtails.palustris.data.auth.SessionStore
 import me.foxtails.palustris.data.misskey.HttpClientPool
+import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.notifications.AndroidNotificationPresenter
 import me.foxtails.palustris.data.notifications.InMemoryNotificationStore
 import me.foxtails.palustris.data.notifications.NotificationPermissionController
@@ -235,7 +236,7 @@ class PushCancellationTest {
             repository,
             store,
             registry,
-            SocialSourceFactory(HttpClientPool()),
+            SocialSourceFactory(HttpClientPool(), capabilityCache = CapabilityCache()),
             scheduler,
             presenter,
             connector,
@@ -246,7 +247,7 @@ class PushCancellationTest {
                 repository,
                 store,
                 registry,
-                SocialSourceFactory(HttpClientPool()),
+                SocialSourceFactory(HttpClientPool(), capabilityCache = CapabilityCache()),
                 scheduler,
                 presenter,
                 PushMessageDecoder(context),

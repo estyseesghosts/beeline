@@ -15,7 +15,7 @@ import me.foxtails.palustris.data.auth.SessionStore
 class SocialSourceFactory @Inject constructor(
     private val clientPool: HttpClientPool,
     private val sessionStore: SessionStore? = null,
-    private val capabilityCache: CapabilityCache = CapabilityCache(),
+    private val capabilityCache: CapabilityCache,
     private val appMessages: AppMessages = AppMessages.Default,
 ) {
     fun create(session: Session): SocialSource = when (session.accountId.connection.protocol) {
