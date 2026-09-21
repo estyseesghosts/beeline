@@ -82,3 +82,15 @@ Then use `trace_symbol.py` for specific classes, functions, DTOs, routes, settin
 ### Limits
 
 These scripts use lightweight parsing/heuristics. Kotlin syntax can be complex. Results are navigation aids and review signals, not compiler-grade dependency or complexity analysis.
+
+## New owner rule and Cohesion rule
+
+Any new Owner, Authority, Manager, Controller, or Coordinator must document six items.
+List State owned.
+List Lifetime.
+List Creation point.
+List Release point.
+List Who may mutate it.
+State Why an existing owner cannot own this.
+No answer means no new abstraction.
+Size warnings follow AGENTS.md regression rules and do not force splits on their own.
