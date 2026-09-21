@@ -10,10 +10,7 @@
     "hotspotGrowthLines": 50
   },
   "existingFindings": [
-    "root-ui-feature-file:app/src/main/java/me/foxtails/palustris/ui/SignInScreen.kt:SignInScreen",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/SourceFactory.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/auth/DraftActions.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/misskey/MisskeySource.kt:default constructor construction"
+    "root-ui-feature-file:app/src/main/java/me/foxtails/palustris/ui/SignInScreen.kt:SignInScreen"
   ],
   "enforcedFindings": [],
   "resolvedFindings": [
@@ -41,7 +38,10 @@
     "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt:default constructor construction",
     "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/thread/PostThreadViewModel.kt:default constructor construction",
     "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/saved/SavedPostsViewModel.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt:default constructor construction"
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/SourceFactory.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/auth/DraftActions.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/misskey/MisskeySource.kt:default constructor construction"
   ],
   "fileMetrics": {
     "app/src/main/java/me/foxtails/palustris/ui/SvgIconPaths.kt": {"lines": 4141}
