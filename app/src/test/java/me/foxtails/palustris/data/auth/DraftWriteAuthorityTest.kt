@@ -1,9 +1,11 @@
 package me.foxtails.palustris.data.auth
 
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
@@ -14,6 +16,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DraftWriteAuthorityTest {
     private val account = AccountId(Connection("https://draft-authority.example", Protocol.MISSKEY), "user")
 

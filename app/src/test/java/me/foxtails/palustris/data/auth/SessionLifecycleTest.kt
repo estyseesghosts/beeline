@@ -1,6 +1,8 @@
 package me.foxtails.palustris.data.auth
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -251,6 +253,98 @@ class SessionLifecycleTest {
     }
 
     @Test
+    fun removalDeletesOnlyRemovedAccountDrafts() = runTest {
+        val other = makeAccount("bob").id
+        val store = RecordingStore().apply {
+            index = AccountIndex(accounts = listOf(ref(accountId), ref(other)), activeAccountId = accountId)
+            sessions[accountId] = session(accountId)
+            sessions[other] = session(other)
+        }
+        val drafts = InMemoryDraftStore()
+        drafts.save(PostDraft(accountId = accountId, text = "leak"))
+        drafts.save(PostDraft(accountId = other, text = "keep"))
+
+        lifecycle(store, drafts = drafts).remove(accountId)
+
+        assertTrue(drafts.list(accountId).isEmpty())
+        assertEquals(listOf("keep"), drafts.list(other).map { it.text })
+    }
+
+    @Test
+    fun removalCannotLeaveRecreatedDraftFromPendingSave() = runTest {
+        val other = makeAccount("bob").id
+        val store = RecordingStore().apply {
+            index = AccountIndex(accounts = listOf(ref(accountId), ref(other)), activeAccountId = accountId)
+            sessions[accountId] = session(accountId)
+            sessions[other] = session(other)
+        }
+        val saveGate = CompletableDeferred<Unit>()
+        val enteredSave = CompletableDeferred<Unit>()
+        val drafts = GatedDraftStore(saveGate = saveGate, enteredSave = enteredSave)
+        drafts.saveDirect(PostDraft(accountId = other, text = "keep"))
+        val draftWriters = DraftWriteAuthority()
+        val generation = draftWriters.activate(accountId)
+        val target = lifecycle(store, drafts = drafts, draftWriters = draftWriters)
+
+        // A lifecycle-level late save holds the writer lock while removal waits.
+        // The serialized delete still removes the late row, so no draft is recreated.
+        val pendingSave = async {
+            draftWriters.commitIfCurrent(accountId, generation) {
+                drafts.save(PostDraft(accountId = accountId, text = "late"))
+            }
+        }
+        enteredSave.await()
+        val removal = async { target.remove(accountId) }
+        saveGate.complete(Unit)
+        pendingSave.await()
+        removal.await()
+
+        assertTrue(drafts.list(accountId).isEmpty())
+        assertEquals(listOf("keep"), drafts.list(other).map { it.text })
+    }
+
+    @Test
+    fun pendingSurvivesRestoreAndLoginClearsIt() = runTest {
+        val store = RecordingStore()
+        val pending = PendingLogin("https://example.org", "pending", System.currentTimeMillis())
+        lifecycle(store).writePending(pending)
+
+        val restoration = lifecycle(store).restore()
+
+        assertEquals("pending", restoration.pending?.id)
+        val login = LoginSession(
+            origin = "https://example.org",
+            token = "new-token",
+            user = JSONObject("""{"id":"alice","username":"alice"}"""),
+        )
+        lifecycle(store).login(login)
+
+        assertNull(store.readPending())
+        assertTrue(store.events.contains("clearPending"))
+    }
+
+    @Test
+    fun loginPreservesOtherAccountSessions() = runTest {
+        val existing = session(accountId)
+        val store = RecordingStore().apply {
+            index = AccountIndex(accounts = listOf(ref(accountId)), activeAccountId = accountId)
+            sessions[accountId] = existing
+        }
+        val login = LoginSession(
+            origin = "https://other.example",
+            token = "second-token",
+            user = JSONObject("""{"id":"bob","username":"bob"}"""),
+        )
+
+        val result = lifecycle(store).login(login)
+
+        assertEquals(existing, store.sessions[accountId])
+        assertEquals("second-token", store.sessions.getValue(login.account.id).token)
+        assertEquals(setOf(accountId, login.account.id), store.index.accounts.map { it.accountId }.toSet())
+        assertEquals(login.account.id, result.index.activeAccountId)
+    }
+
+    @Test
     fun profilePersistenceRoundTripsBannerUrl() = runTest {
         val store = RecordingStore()
         val lifecycle = lifecycle(store)
@@ -327,6 +421,7 @@ class SessionLifecycleTest {
         }
         override fun writeProfile(accountId: AccountId, profile: JSONObject) { events += "profile"; this.profile = profile }
         override fun readPending() = pending
+        override fun writePending(pending: PendingLogin) { this.pending = pending }
         override fun clearPending() { events += "clearPending"; pending = null }
     }
 
@@ -342,6 +437,29 @@ class SessionLifecycleTest {
         override suspend fun save(draft: PostDraft) { saveCount++ }
         override suspend fun delete(accountId: AccountId?, draftId: String) = Unit
         override suspend fun deleteAll(accountId: AccountId?) { deleteAllCount++ }
+        override suspend fun migrateLegacy(accountId: AccountId?, preferences: android.content.SharedPreferences) = Unit
+    }
+
+    private class GatedDraftStore(
+        var saveGate: CompletableDeferred<Unit>? = null,
+        var enteredSave: CompletableDeferred<Unit>? = null,
+    ) : DraftStore {
+        private val backing = InMemoryDraftStore()
+
+        suspend fun saveDirect(draft: PostDraft) { backing.save(draft) }
+
+        override suspend fun list(accountId: AccountId?) = backing.list(accountId)
+
+        override suspend fun save(draft: PostDraft) {
+            enteredSave?.complete(Unit)
+            saveGate?.await()
+            backing.save(draft)
+        }
+
+        override suspend fun delete(accountId: AccountId?, draftId: String) { backing.delete(accountId, draftId) }
+
+        override suspend fun deleteAll(accountId: AccountId?) { backing.deleteAll(accountId) }
+
         override suspend fun migrateLegacy(accountId: AccountId?, preferences: android.content.SharedPreferences) = Unit
     }
 

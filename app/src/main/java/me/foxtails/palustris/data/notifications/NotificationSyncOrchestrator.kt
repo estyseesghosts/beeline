@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -426,10 +427,10 @@ class NotificationSyncOrchestrator @Inject constructor(
         source: SocialSource,
         query: NotificationQuery,
     ): NotificationSyncResult {
-        coroutineContext.ensureActive()
+        currentCoroutineContext().ensureActive()
         if (!isCurrent(token) || repository.isRetired(token.accountId)) throw SourceError.Unauthorized
         val result = lockFor(token.accountId).withLock {
-        coroutineContext.ensureActive()
+        currentCoroutineContext().ensureActive()
         if (!isCurrent(token) || repository.isRetired(token.accountId)) throw SourceError.Unauthorized
         if (repository.checkpoint(token.accountId, query) == null) {
             synchronizer.establishBaseline(source, token, query)
@@ -437,7 +438,7 @@ class NotificationSyncOrchestrator @Inject constructor(
             synchronizer.catchUpNewer(source, token, query)
         }
         }
-        coroutineContext.ensureActive()
+        currentCoroutineContext().ensureActive()
         if (!isCurrent(token) || repository.isRetired(token.accountId)) throw SourceError.Unauthorized
         // Test-only ordering gate. It runs outside locks. Production keeps it null.
         preEnqueueGate?.invoke()
