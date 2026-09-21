@@ -11,6 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -152,6 +153,23 @@ class NotificationSyncOrchestrator @Inject constructor(
     @Volatile
     var preActivateGate: (() -> Unit)? = null
 
+    /**
+     * Test-only gate. It runs outside locks between publication and poll start.
+     * Production keeps it null. Tests use it to force removal into that window.
+     */
+    @VisibleForTesting
+    @Volatile
+    var prePollGate: (() -> Unit)? = null
+
+    /**
+     * Test-only gate. It runs outside locks after the final ownership check
+     * and before delivery enqueue. Production keeps it null. Tests use it to
+     * force removal into that window.
+     */
+    @VisibleForTesting
+    @Volatile
+    var preEnqueueGate: (() -> Unit)? = null
+
     @Synchronized
     override fun observeAccount(accountId: AccountId): StateFlow<NotificationSyncState> {
         // A removed account never materializes display or repository state. Check the
@@ -213,7 +231,13 @@ class NotificationSyncOrchestrator @Inject constructor(
      * own activation through a compare-and-clear that touches only its own token. Adjunct
      * display state loads only for a candidate that still agrees with the active map, the
      * removal epoch, and the repository. Publish needs map agreement, epoch agreement,
-     * repository agreement, and no retirement. No lock is held across repository I/O.
+     * repository agreement, and no retirement. The publish lock holds no repository
+     * call; it uses only snapshots read outside the lock. The removal check in
+     * [removeAccount] holds the controller lock across the in-memory
+     * [NotificationRepository.currentToken] getter only, never across store or
+     * network I/O. The repository monitor necessarily covers short in-memory checks plus the
+     * activation store read. Callers invoke registration from an I/O context. The interface
+     * does not enforce that context.
      * A concurrent removal wins through invalidate-before-delete, the repository tombstone,
      * the epoch check, stale undo, and the post-removal drop in [removeAccount]. A null
      * baseline needs the epoch and retirement checks: the active map alone cannot show
@@ -264,17 +288,23 @@ class NotificationSyncOrchestrator @Inject constructor(
             }
             var published = false
             var stale = false
+            var publishedState: MutableStateFlow<NotificationSyncState>? = null
+            // Snapshot repository agreement outside the controller lock. The publish
+            // lock uses only this snapshot plus map and epoch state.
+            val repoTokenSnapshot = repository.currentToken(accountId)
+            val repoRetiredSnapshot = repository.isRetired(accountId)
+            val repoAgreesSnapshot = repositoryAccepted &&
+                repoTokenSnapshot == token &&
+                !repoRetiredSnapshot
             synchronized(this) {
                 if (generations[accountId] != baseline || (removalEpochs[accountId] ?: 0L) != epochBefore) {
                     stale = true
-                } else if (repositoryAccepted &&
-                    repository.currentToken(accountId) == token &&
-                    !repository.isRetired(accountId)
-                ) {
+                } else if (repoAgreesSnapshot) {
                     jobs.remove(accountId)?.cancel()
                     generations[accountId] = token.generation
                     sourceRegistry.register(token, source)
                     markActiveLocked(accountId, unreadState)
+                    publishedState = states[accountId]
                     published = true
                 }
                 // Otherwise the repository rejected this allocation while the active entry
@@ -282,7 +312,31 @@ class NotificationSyncOrchestrator @Inject constructor(
                 // allocates a newer generation unless removal now owns the account.
             }
             if (published) {
-                startPollJob(accountId, token, source)
+                // Re-verify repository agreement outside the lock. A concurrent removal
+                // or replacement can move the repository after the snapshot. On mismatch
+                // drop only own entry and deactivate only own token, then stay inactive
+                // with no retry so a newer retry never revives removal or overtakes a winner.
+                if (repository.currentToken(accountId) != token || repository.isRetired(accountId)) {
+                    var undone = false
+                    synchronized(this) {
+                        if (generations[accountId] == token.generation) {
+                            generations.remove(accountId)
+                            jobs.remove(accountId)?.cancel()
+                            sourceRegistry.remove(accountId)
+                            markInactiveLocked(accountId)
+                            undone = true
+                        }
+                    }
+                    if (undone) repository.deactivate(token)
+                    return token
+                }
+                // Test-only ordering gate. It runs outside locks between publication
+                // and poll start. Production keeps it null.
+                prePollGate?.invoke()
+                // The flow comes from the publish lock. No map lookup follows, so removal
+                // between publish and job start cannot throw. A stale job cancels below.
+                val flow = publishedState
+                if (flow != null) startPollJob(accountId, token, source, flow)
                 return token
             }
             if (stale) {
@@ -358,19 +412,39 @@ class NotificationSyncOrchestrator @Inject constructor(
         }
     }
 
+    /**
+     * Runs one sync pass for one token. The method rejects a stale or retired token before
+     * network work and before delivery. The final ownership check and the delivery enqueue
+     * run atomically under a short controller lock with no repository call inside. Removal
+     * clears the generation under the same lock, so removal between check and enqueue cannot
+     * leave a stale enqueue. An enqueue that already ran while live stays harmless: the
+     * delivery worker drops work with no session and the repository tombstone rejects claims.
+     * Live behavior is unchanged.
+     */
     private suspend fun synchronize(
         token: NotificationSyncToken,
         source: SocialSource,
         query: NotificationQuery,
     ): NotificationSyncResult {
+        coroutineContext.ensureActive()
+        if (!isCurrent(token) || repository.isRetired(token.accountId)) throw SourceError.Unauthorized
         val result = lockFor(token.accountId).withLock {
+        coroutineContext.ensureActive()
+        if (!isCurrent(token) || repository.isRetired(token.accountId)) throw SourceError.Unauthorized
         if (repository.checkpoint(token.accountId, query) == null) {
             synchronizer.establishBaseline(source, token, query)
         } else {
             synchronizer.catchUpNewer(source, token, query)
         }
         }
-        deliveryScheduler.enqueueDelivery(token.accountId)
+        coroutineContext.ensureActive()
+        if (!isCurrent(token) || repository.isRetired(token.accountId)) throw SourceError.Unauthorized
+        // Test-only ordering gate. It runs outside locks. Production keeps it null.
+        preEnqueueGate?.invoke()
+        synchronized(this) {
+            if (!isCurrent(token)) throw SourceError.Unauthorized
+            deliveryScheduler.enqueueDelivery(token.accountId)
+        }
         return result
     }
 
@@ -394,9 +468,20 @@ class NotificationSyncOrchestrator @Inject constructor(
         states[accountId]?.value = states[accountId]?.value?.copy(isActive = false) ?: NotificationSyncState()
     }
 
-    /** Starts REST reconciliation polling for one accepted token. A stale token cancels its job. */
-    private fun startPollJob(accountId: AccountId, token: NotificationSyncToken, source: SocialSource) {
-        val state = synchronized(this) { states.getValue(accountId) }
+    /**
+     * Starts polling for one accepted token. The caller passes the state flow that publication
+     * captured under the controller lock. The method performs no map lookup. Each state write
+     * runs atomically with its ownership check under a short controller lock: the lock verifies
+     * the token is current and the captured flow is still attached, then writes the in-memory
+     * flow value. A stale token cancels its job. A removed account leaves no job and no stale
+     * write reaches detached collectors.
+     */
+    private fun startPollJob(
+        accountId: AccountId,
+        token: NotificationSyncToken,
+        source: SocialSource,
+        state: MutableStateFlow<NotificationSyncState>,
+    ) {
         val job = scope.launch {
             while (isActive && isCurrent(token)) {
                 try {
@@ -404,19 +489,37 @@ class NotificationSyncOrchestrator @Inject constructor(
                     // reconciliation active because readiness can be overstated and events can
                     // be missed while a stream reconnects.
                     val result = synchronize(token, source, NotificationQuery())
-                    if (!isCurrent(token)) break
-                    state.value = state.value.copy(
-                        unreadState = result.unreadState.takeUnless { it is NotificationUnreadState.Unknown }
-                            ?: repository.observe(accountId).value.unreadState,
-                        lastUpdated = System.currentTimeMillis(),
-                        delayed = result.delayed,
-                        error = null,
-                    )
+                    // Snapshot adjunct read outside the controller lock. The write below
+                    // uses only this snapshot under the lock.
+                    val fallbackUnread = repository.observe(accountId).value.unreadState
+                    val nextUnread = result.unreadState.takeUnless { it is NotificationUnreadState.Unknown }
+                        ?: fallbackUnread
+                    val wrote = synchronized(this@NotificationSyncOrchestrator) {
+                        if (!isCurrent(token) || states[accountId] !== state) {
+                            false
+                        } else {
+                            state.value = state.value.copy(
+                                unreadState = nextUnread,
+                                lastUpdated = System.currentTimeMillis(),
+                                delayed = result.delayed,
+                                error = null,
+                            )
+                            true
+                        }
+                    }
+                    if (!wrote) break
                 } catch (error: CancellationException) {
                     throw error
                 } catch (error: Exception) {
-                    if (!isCurrent(token)) break
-                    state.value = state.value.copy(error = error.message ?: appMessages.notificationSyncFailed())
+                    val wroteError = synchronized(this@NotificationSyncOrchestrator) {
+                        if (!isCurrent(token) || states[accountId] !== state) {
+                            false
+                        } else {
+                            state.value = state.value.copy(error = error.message ?: appMessages.notificationSyncFailed())
+                            true
+                        }
+                    }
+                    if (!wroteError) break
                 }
                 if (isCurrent(token)) delay(POLL_INTERVAL_MILLIS)
             }

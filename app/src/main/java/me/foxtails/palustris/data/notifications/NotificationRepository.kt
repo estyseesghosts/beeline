@@ -108,6 +108,8 @@ class NotificationRepository @Inject constructor(
 
     @Synchronized
     fun checkpoint(accountId: AccountId, query: NotificationQuery): NotificationCheckpoint? {
+        // A tombstoned account returns null. No state entry appears. No store read runs.
+        if (accountId in retiredGenerations) return null
         val state = stateForLocked(accountId).value
         return validatedCheckpoint(state, accountId, query)
     }

@@ -4,12 +4,15 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import me.foxtails.palustris.data.AccountSourceRegistry
+import me.foxtails.palustris.data.notifications.work.NotificationDeliveryScheduler
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.Event
@@ -25,6 +28,7 @@ import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.Timeline
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -274,7 +278,9 @@ class NotificationSyncOrchestratorTest {
             assertFalse(repositoryStateKeys(repository).contains(account))
             assertFalse(orchestratorStateKeys(controller).contains(account))
             assertTrue((retiredGenerationsOf(repository)[account] ?: 0L) >= first.generation)
-            assertTrue(allocatorValue(controller) - allocatorBefore <= 5)
+            // Removal wins during activation. The stale call allocates one
+            // generation and exits with no retry, so the delta stays exact.
+            assertEquals(1L, allocatorValue(controller) - allocatorBefore)
         } finally {
             controller.preActivateGate = null
             controller.close()
@@ -318,6 +324,152 @@ class NotificationSyncOrchestratorTest {
             assertFalse(orchestratorStateKeys(controller).contains(account))
         } finally {
             controller.preActivateGate = null
+            controller.close()
+        }
+    }
+
+    @Test
+    fun removalRightAfterPublishCancelsPollWithoutOrphan() = runBlocking {
+        val controller = NotificationSyncOrchestrator()
+        try {
+            val repository = repositoryOf(controller)
+            // Hold registration between publication and poll start. The gate runs
+            // outside locks, so removal completes fully inside that window.
+            val entered = CountDownLatch(1)
+            val release = CountDownLatch(1)
+            controller.prePollGate = {
+                entered.countDown()
+                check(release.await(10, TimeUnit.SECONDS)) { "Poll gate never released." }
+            }
+            val registerCall = async(Dispatchers.Default) { controller.register(account, source) }
+            try {
+                assertTrue(entered.await(10, TimeUnit.SECONDS))
+                controller.removeAccount(account)
+                assertNull(repository.currentToken(account))
+                assertFalse(generationsOf(controller).containsKey(account))
+            } finally {
+                release.countDown()
+            }
+            val token = withTimeout(10_000) { registerCall.await() }
+            controller.prePollGate = null
+            val pollAfter = jobsOf(controller)[account]
+            // Removal causes no crash. No job remains. No state remains.
+            // No orphan blocks a later owner. The tombstone blocks the old token.
+            assertNull(pollAfter)
+            assertFalse(jobsOf(controller).containsKey(account))
+            assertFalse(generationsOf(controller).containsKey(account))
+            assertNull(repository.currentToken(account))
+            assertFalse(repository.updateUnreadState(token, NotificationUnreadState.Exact(1)))
+            assertFalse(controller.accept(Event(account, SocialEvent.Other("late"))))
+            assertFalse(controller.observeAccount(account).value.isActive)
+            assertFalse(repositoryStateKeys(repository).contains(account))
+            assertFalse(orchestratorStateKeys(controller).contains(account))
+            assertTrue((retiredGenerationsOf(repository)[account] ?: 0L) >= token.generation)
+            // A replacement still succeeds with a strictly newer generation.
+            val replacement = controller.register(account, source)
+            assertTrue(replacement.generation > token.generation)
+            assertEquals(replacement, repository.currentToken(account))
+            assertTrue(controller.observeAccount(account).value.isActive)
+        } finally {
+            controller.prePollGate = null
+            controller.close()
+        }
+    }
+
+    @Test
+    fun staleEnqueueAfterOwnershipCheckEnqueuesNothing() = runBlocking {
+        val deliveries = AtomicLong(0)
+        val repository = NotificationRepository()
+        val controller = NotificationSyncOrchestrator(
+            repository,
+            NotificationSynchronizer(repository),
+            AccountSourceRegistry(),
+            RecordingDeliveryScheduler(deliveries),
+        )
+        try {
+            // Hold the poll after its final ownership check and before enqueue.
+            // The gate runs outside locks, so removal completes fully in that window.
+            val entered = CountDownLatch(1)
+            val release = CountDownLatch(1)
+            controller.preEnqueueGate = {
+                entered.countDown()
+                check(release.await(10, TimeUnit.SECONDS)) { "Enqueue gate never released." }
+            }
+            val token = controller.register(account, EmptySource())
+            assertTrue(controller.observeAccount(account).value.isActive)
+            val pollBefore = jobsOf(controller)[account]
+            assertNotNull(pollBefore)
+            assertTrue(entered.await(10, TimeUnit.SECONDS))
+            controller.removeAccount(account)
+            assertNull(repository.currentToken(account))
+            assertFalse(generationsOf(controller).containsKey(account))
+            release.countDown()
+            withTimeout(10_000) {
+                try {
+                    pollBefore?.join()
+                } catch (_: CancellationException) {
+                    // Removal cancels the poll. Cancellation is the expected outcome.
+                }
+            }
+            // The stale poll enqueues nothing. No delivery runs. No job remains.
+            // No state materializes. The tombstone blocks reuse.
+            assertTrue(pollBefore?.isCompleted == true)
+            assertEquals(0L, deliveries.get())
+            assertFalse(jobsOf(controller).containsKey(account))
+            assertFalse(generationsOf(controller).containsKey(account))
+            assertNull(repository.currentToken(account))
+            assertFalse(controller.observeAccount(account).value.isActive)
+            assertFalse(repositoryStateKeys(repository).contains(account))
+            assertFalse(orchestratorStateKeys(controller).contains(account))
+            assertFalse(controller.accept(Event(account, SocialEvent.Other("late"))))
+            assertFalse(repository.updateUnreadState(token, NotificationUnreadState.Exact(1)))
+            assertTrue((retiredGenerationsOf(repository)[account] ?: 0L) >= token.generation)
+        } finally {
+            controller.preEnqueueGate = null
+            controller.close()
+        }
+    }
+
+    @Test
+    fun stalePollAfterRemovalDeliversNothingAndLeavesNoState() = runBlocking {
+        val deliveries = AtomicLong(0)
+        val repository = NotificationRepository()
+        val controller = NotificationSyncOrchestrator(
+            repository,
+            NotificationSynchronizer(repository),
+            AccountSourceRegistry(),
+            RecordingDeliveryScheduler(deliveries),
+        )
+        try {
+            val entered = CountDownLatch(1)
+            val release = CompletableDeferred<Unit>()
+            val token = controller.register(account, GatedPollSource(entered, release))
+            assertTrue(controller.observeAccount(account).value.isActive)
+            val pollBefore = jobsOf(controller)[account]
+            assertNotNull(pollBefore)
+            // Pause the poll inside network work after the current check.
+            // The source gate stands in for the network pause. No production
+            // hook splits the check from the checkpoint read.
+            assertTrue(entered.await(10, TimeUnit.SECONDS))
+            // Complete removal before the poll reads or writes the checkpoint.
+            controller.removeAccount(account)
+            assertNull(repository.currentToken(account))
+            release.complete(Unit)
+            withTimeout(10_000) { pollBefore?.join() }
+            // The stale poll breaks with no crash. Nothing materializes.
+            // No delivery runs. No job remains. The tombstone blocks reuse.
+            assertTrue(pollBefore?.isCompleted == true)
+            assertFalse(jobsOf(controller).containsKey(account))
+            assertFalse(generationsOf(controller).containsKey(account))
+            assertNull(repository.currentToken(account))
+            assertFalse(controller.observeAccount(account).value.isActive)
+            assertFalse(repositoryStateKeys(repository).contains(account))
+            assertFalse(orchestratorStateKeys(controller).contains(account))
+            assertFalse(controller.accept(Event(account, SocialEvent.Other("late"))))
+            assertFalse(repository.updateUnreadState(token, NotificationUnreadState.Exact(1)))
+            assertEquals(0L, deliveries.get())
+            assertTrue((retiredGenerationsOf(repository)[account] ?: 0L) >= token.generation)
+        } finally {
             controller.close()
         }
     }
@@ -722,6 +874,47 @@ class NotificationSyncOrchestratorTest {
             isAccessible = true
         }
         return ((field.get(controller) as Map<AccountId, Long>).toMap())
+    }
+
+    private class RecordingDeliveryScheduler(
+        private val deliveries: AtomicLong,
+    ) : NotificationDeliveryScheduler {
+        override fun enqueueDelivery(accountId: AccountId) {
+            deliveries.incrementAndGet()
+        }
+    }
+
+    private class GatedPollSource(
+        private val entered: CountDownLatch,
+        private val release: CompletableDeferred<Unit>,
+    ) : SocialSource {
+        override val capabilities = ServerCapabilities()
+
+        override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = Page(emptyList())
+
+        override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> = Page(emptyList())
+
+        override suspend fun notifications(
+            query: NotificationQuery,
+            cursor: me.foxtails.palustris.domain.NotificationCursor?,
+        ): NotificationPage {
+            entered.countDown()
+            release.await()
+            return NotificationPage(emptyList())
+        }
+
+        override suspend fun fetchNewerNotifications(
+            query: NotificationQuery,
+            checkpoint: me.foxtails.palustris.domain.NotificationCheckpoint,
+        ): NotificationPage = NotificationPage(emptyList())
+
+        override suspend fun fetchOlderNotifications(
+            query: NotificationQuery,
+            checkpoint: me.foxtails.palustris.domain.NotificationCheckpoint,
+        ): NotificationPage = NotificationPage(emptyList())
+
+        override suspend fun notificationUnreadState(): NotificationUnreadState =
+            NotificationUnreadState.Unknown
     }
 
     private class EmptySource : SocialSource {

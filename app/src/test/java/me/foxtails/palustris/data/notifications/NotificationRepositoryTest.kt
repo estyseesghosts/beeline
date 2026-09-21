@@ -7,6 +7,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import me.foxtails.palustris.data.notifications.InMemoryNotificationStore
 import me.foxtails.palustris.data.notifications.NotificationIngestRequest
@@ -129,15 +130,24 @@ class NotificationRepositoryTest {
                 NotificationPage(listOf(notification("in-flight", NotificationActivity.Follow))),
             )
         }
-        store.writeEntered.await()
+        try {
+            withTimeout(10_000) { store.writeEntered.await() }
 
-        val removal = async { repository.remove(account) }
-        yield()
-        assertFalse(removal.isCompleted)
+            val removal = async { repository.remove(account) }
+            try {
+                yield()
+                assertFalse(removal.isCompleted)
 
-        store.releaseWrite.complete(Unit)
-        assertTrue(writer.await())
-        removal.await()
+                store.releaseWrite.complete(Unit)
+                assertTrue(withTimeout(10_000) { writer.await() })
+                withTimeout(10_000) { removal.await() }
+            } finally {
+                removal.cancel()
+                store.releaseWrite.complete(Unit)
+            }
+        } finally {
+            writer.cancel()
+        }
 
         assertTrue(store.read(account) is NotificationStoreRead.Absent)
         assertFalse(repository.establishBaseline(
@@ -162,15 +172,23 @@ class NotificationRepositoryTest {
         val writer = async {
             repository.updateUnreadState(token, NotificationUnreadState.Exact(1))
         }
-        store.writeEntered.await()
+        try {
+            withTimeout(10_000) { store.writeEntered.await() }
 
-        val waiter = launch {
-            repository.updateUnreadState(token, NotificationUnreadState.Exact(2))
+            val waiter = launch {
+                repository.updateUnreadState(token, NotificationUnreadState.Exact(2))
+            }
+            try {
+                yield()
+            } finally {
+                waiter.cancelAndJoin()
+            }
+            store.releaseWrite.complete(Unit)
+            assertTrue(withTimeout(10_000) { writer.await() })
+        } finally {
+            writer.cancel()
+            store.releaseWrite.complete(Unit)
         }
-        yield()
-        waiter.cancelAndJoin()
-        store.releaseWrite.complete(Unit)
-        assertTrue(writer.await())
 
         repository.remove(account)
         assertFalse(repository.updateUnreadState(token, NotificationUnreadState.Exact(3)))
@@ -190,14 +208,23 @@ class NotificationRepositoryTest {
         val writer = async {
             repository.updateUnreadState(token, NotificationUnreadState.Exact(1))
         }
-        store.writeEntered.await()
-        val removal = async { repository.remove(account) }
-        yield()
+        try {
+            withTimeout(10_000) { store.writeEntered.await() }
+            val removal = async { repository.remove(account) }
+            try {
+                yield()
 
-        assertTrue(repository.updateUnreadState(otherToken, NotificationUnreadState.Exact(1)))
-        store.releaseWrite.complete(Unit)
-        assertTrue(writer.await())
-        removal.await()
+                assertTrue(repository.updateUnreadState(otherToken, NotificationUnreadState.Exact(1)))
+                store.releaseWrite.complete(Unit)
+                assertTrue(withTimeout(10_000) { writer.await() })
+                withTimeout(10_000) { removal.await() }
+            } finally {
+                removal.cancel()
+                store.releaseWrite.complete(Unit)
+            }
+        } finally {
+            writer.cancel()
+        }
         assertEquals(NotificationUnreadState.Exact(1), repository.observe(other).value.unreadState)
     }
 
@@ -839,15 +866,24 @@ class NotificationRepositoryTest {
         val writer = async {
             repository.updateUnreadState(token, NotificationUnreadState.Exact(1))
         }
-        store.writeEntered.await()
+        try {
+            withTimeout(10_000) { store.writeEntered.await() }
 
-        val removal = async { repository.remove(account) }
-        yield()
-        // A racing activation with the stale generation never applies.
-        repository.activate(token)
-        store.releaseWrite.complete(Unit)
-        assertTrue(writer.await())
-        removal.await()
+            val removal = async { repository.remove(account) }
+            try {
+                yield()
+                // A racing activation with the stale generation never applies.
+                repository.activate(token)
+                store.releaseWrite.complete(Unit)
+                assertTrue(withTimeout(10_000) { writer.await() })
+                withTimeout(10_000) { removal.await() }
+            } finally {
+                removal.cancel()
+                store.releaseWrite.complete(Unit)
+            }
+        } finally {
+            writer.cancel()
+        }
 
         assertFalse(repository.updateUnreadState(token, NotificationUnreadState.Exact(2)))
         assertEquals(null, repository.currentToken(account))
@@ -932,7 +968,9 @@ private class GatedNotificationStore : NotificationStore {
             gateNextWrite = false
             runBlocking {
                 writeEntered.complete(Unit)
-                releaseWrite.await()
+                // Bound the gate. A test that never releases fails fast
+                // instead of hanging the suite.
+                withTimeout(10_000) { releaseWrite.await() }
             }
         }
         delegate.write(accountId, state)
