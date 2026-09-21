@@ -73,6 +73,13 @@ class ArchitectureAuditTest(unittest.TestCase):
         self.assertIn("ownership-class", kinds)
         self.assertIn("private-owner-construction", kinds)
 
+    def test_mutation_owner_construction_is_exempt_but_authority_defaults_are_flagged(self):
+        exempt = self.run_audit("class PostViewModel(val owner: PostInteractionMutationOwner = PostInteractionMutationOwner())")
+        self.assertNotIn("private-owner-construction", {x["kind"] for x in exempt["findings"]})
+        for construction in ("CapabilityCache()", "DraftWriteAuthority()", "ExecutionAuthority()", "HttpClientPool()"):
+            report = self.run_audit(f"class SampleOwner(val value: Any = {construction})")
+            self.assertIn("private-owner-construction", {x["kind"] for x in report["findings"]})
+
     def test_generic_and_non_generic_maps_require_scoped_retention(self):
         report = self.run_audit("""
             val generic = mutableMapOf<String, String>()

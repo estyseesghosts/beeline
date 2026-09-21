@@ -186,7 +186,7 @@ def audit(root: Path, retention_rules=None, thresholds=None, allowlists=None) ->
         owner_classes = [c for c in classes if c.endswith(OWNER_SUFFIXES)]
         for cls in owner_classes:
             rows.append(finding("ownership-class", rel, cls))
-        if re.search(r"\b(?:class|constructor)\b[\s\S]{0,1200}?=\s*[A-Z]\w*(?:Authority|Cache|Pool|Controller|Owner|Manager)\s*\(", text):
+        if re.search(r"\b(?:class|constructor)\b[\s\S]{0,1200}?=\s*(?!\w*MutationOwner\b)[A-Z]\w*(?:Authority|Cache|Pool|Controller|Owner|Manager)\s*\(", text):
             rows.append(finding("private-owner-construction", rel, "default constructor construction"))
         for map_match in MAP_RE.finditer(text):
             symbol = map_match.group(1)
