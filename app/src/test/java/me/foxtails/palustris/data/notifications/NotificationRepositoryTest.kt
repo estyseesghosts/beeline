@@ -270,6 +270,28 @@ class NotificationRepositoryTest {
     }
 
     @Test
+    fun tombstonedObserveSkipsStoreReadAndCreatesNoEntry() = runBlocking {
+        val counting = CountingNotificationStore()
+        val repository = NotificationRepository(counting)
+        val token = NotificationSyncToken(account, 1)
+        repository.activate(token)
+        repository.remove(account)
+
+        counting.reads = 0
+        val state = repository.observe(account).value
+
+        // A retired account returns a transient empty value. No store read runs.
+        // No map entry appears.
+        assertTrue(state.items.isEmpty())
+        assertEquals(NotificationUnreadState.Unknown, state.unreadState)
+        assertEquals(0, counting.reads)
+        assertFalse(stateKeys(repository).contains(account))
+        repository.observe(account)
+        assertEquals(0, counting.reads)
+        assertFalse(stateKeys(repository).contains(account))
+    }
+
+    @Test
     fun acknowledgementSeparatesServerReadAndAndroidPresentationState() = runBlocking {
         val repository = NotificationRepository(InMemoryNotificationStore())
         val token = NotificationSyncToken(account, 1)
@@ -886,6 +908,14 @@ class NotificationRepositoryTest {
         post = post,
         rawType = id,
     )
+
+    @Suppress("UNCHECKED_CAST")
+    private fun stateKeys(repository: NotificationRepository): Set<AccountId> {
+        val field = NotificationRepository::class.java.getDeclaredField("states").apply {
+            isAccessible = true
+        }
+        return ((field.get(repository) as Map<AccountId, *>).keys.toSet())
+    }
 }
 
 /** Blocks one durable write so account-lock ordering can be tested without timing assumptions. */
@@ -907,6 +937,22 @@ private class GatedNotificationStore : NotificationStore {
         }
         delegate.write(accountId, state)
     }
+
+    override fun delete(accountId: AccountId) = delegate.delete(accountId)
+}
+
+/** Counts store reads so a tombstoned observe can prove it issues no read. */
+private class CountingNotificationStore : NotificationStore {
+    private val delegate = InMemoryNotificationStore()
+    var reads = 0
+
+    override fun read(accountId: AccountId): NotificationStoreRead {
+        reads++
+        return delegate.read(accountId)
+    }
+
+    override fun write(accountId: AccountId, state: NotificationRepositoryState) =
+        delegate.write(accountId, state)
 
     override fun delete(accountId: AccountId) = delegate.delete(accountId)
 }

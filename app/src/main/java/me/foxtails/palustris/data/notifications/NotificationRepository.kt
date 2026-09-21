@@ -66,9 +66,17 @@ class NotificationRepository @Inject constructor(
     }
     private val writeLocks = mutableMapOf<AccountId, WriteRecord>()
 
+    /**
+     * Observes one account without reviving a retired account. A tombstoned account
+     * returns a transient empty flow. No store read runs. No map entry appears.
+     */
     @Synchronized
     fun observe(accountId: AccountId): StateFlow<NotificationRepositoryState> =
-        stateForLocked(accountId).asStateFlow()
+        if (accountId in retiredGenerations) {
+            MutableStateFlow(NotificationRepositoryState()).asStateFlow()
+        } else {
+            stateForLocked(accountId).asStateFlow()
+        }
 
     /**
      * Health is account-local. A corrupt or unavailable account receives a stable failure that
@@ -144,6 +152,13 @@ class NotificationRepository @Inject constructor(
         NotificationSyncToken(accountId, it)
     }
 
+    /**
+     * Reports a removal tombstone without store read or map insert. Observe uses
+     * it to avoid materializing state for a retired account.
+     */
+    @Synchronized
+    fun isRetired(accountId: AccountId): Boolean = accountId in retiredGenerations
+
     /** Rehydrates a worker token only when the durable registration still belongs to this session. */
     @Synchronized
     fun recoverToken(accountId: AccountId, sessionRevision: Long): NotificationSyncToken? {
@@ -165,6 +180,25 @@ class NotificationRepository @Inject constructor(
     fun invalidate(accountId: AccountId, generation: Long) {
         val next = maxOf(generations[accountId] ?: 0L, generation + 1L)
         generations[accountId] = next
+    }
+
+    /**
+     * Cancels a stale activation only when it still owns the current token. A winner token
+     * stays untouched. The tombstone advances to the stale generation, so removal still wins
+     * and a later owner needs a strictly newer generation. In-memory state created for the
+     * stale token disappears; durable rows stay as removal left them. This call issues no I/O.
+     */
+    @Synchronized
+    fun deactivate(token: NotificationSyncToken): Boolean {
+        if (generations[token.accountId] != token.generation) return false
+        generations.remove(token.accountId)
+        states.remove(token.accountId)
+        storageHealth.remove(token.accountId)
+        val retired = retiredGenerations[token.accountId]
+        if (retired == null || token.generation > retired) {
+            retiredGenerations[token.accountId] = token.generation
+        }
+        return true
     }
 
     /**
@@ -642,7 +676,16 @@ class NotificationRepository @Inject constructor(
     ): WriteRecord? = synchronized(this) {
         val tokenRejected = token != null && if (allowNewerActivation) {
             val retiredGeneration = retiredGenerations[accountId]
-            if (retiredGeneration != null) token.generation <= retiredGeneration else !isCurrentLocked(token)
+            if (retiredGeneration != null) {
+                // A tombstoned account accepts only a strictly newer owner.
+                // Stale activation never clears the tombstone.
+                token.generation <= retiredGeneration
+            } else {
+                // No tombstone. Fresh activation and a newer replacement may
+                // proceed. Only an older generation is stale.
+                val current = generations[accountId]
+                current != null && token.generation < current
+            }
         } else {
             !isCurrentLocked(token)
         }
