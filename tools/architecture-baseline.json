@@ -10,6 +10,20 @@
     "hotspotGrowthLines": 50
   },
   "existingFindings": [
+    "root-ui-feature-file:app/src/main/java/me/foxtails/palustris/ui/SignInScreen.kt:SignInScreen",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/SourceFactory.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/auth/DraftActions.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/misskey/MisskeySource.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/posts/PostInteractionMutationOwner.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/thread/PostThreadViewModel.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/saved/SavedPostsViewModel.kt:default constructor construction",
+    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt:default constructor construction"
+  ],
+  "enforcedFindings": [],
+  "resolvedFindings": [
     "package-path-mismatch:app/src/main/java/me/foxtails/palustris/ui/posts/PostRow.kt:me.foxtails.palustris.ui != me.foxtails.palustris.ui.posts",
     "package-path-mismatch:app/src/main/java/me/foxtails/palustris/ui/posts/ContentWarningPresentation.kt:me.foxtails.palustris.ui != me.foxtails.palustris.ui.posts",
     "root-ui-feature-file:app/src/main/java/me/foxtails/palustris/ui/AppDestinationTopBar.kt:AppDestinationTopBar",
@@ -27,21 +41,8 @@
     "root-ui-feature-file:app/src/main/java/me/foxtails/palustris/ui/PostActionBubblePlacement.kt:PostActionBubblePlacement",
     "root-ui-feature-file:app/src/main/java/me/foxtails/palustris/ui/PostTextPresentation.kt:PostTextPresentation",
     "root-ui-feature-file:app/src/main/java/me/foxtails/palustris/ui/PostActionBubbles.kt:PostActionBubbles",
-    "root-ui-feature-file:app/src/main/java/me/foxtails/palustris/ui/SinglePostScreen.kt:SinglePostScreen",
-    "root-ui-feature-file:app/src/main/java/me/foxtails/palustris/ui/SignInScreen.kt:SignInScreen",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/SourceFactory.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/auth/DraftActions.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/data/misskey/MisskeySource.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/posts/PostInteractionMutationOwner.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/thread/PostThreadViewModel.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/saved/SavedPostsViewModel.kt:default constructor construction",
-    "private-owner-construction:app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt:default constructor construction"
+    "root-ui-feature-file:app/src/main/java/me/foxtails/palustris/ui/SinglePostScreen.kt:SinglePostScreen"
   ],
-  "enforcedFindings": [],
-  "resolvedFindings": [],
   "fileMetrics": {
     "app/src/main/java/me/foxtails/palustris/ui/SvgIconPaths.kt": {"lines": 4141}
   },
@@ -74,6 +75,6 @@
     "app/src/main/java/me/foxtails/palustris/ui/settings/ModerationViewModel.kt": "ViewModel lifetime"
   },
   "allowlists": {
-    "rootUiGlobalFiles": ["AppIcons", "BeelineSvgPaths", "Components", "Theme", "UiStrings", "SystemBars", "SourceErrorMessage", "DetailActionPolicy", "ConnectedApp"]
+    "rootUiGlobalFiles": ["AppIcons", "BeelineSvgPaths", "Components", "Theme", "UiStrings", "SystemBars", "SourceErrorMessage", "DetailActionPolicy", "ConnectedApp", "PalustrisApp", "PalustrisAppPreview"]
   }
 }
