@@ -27,6 +27,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -63,6 +64,35 @@ class MisskeyThreadContinuationTest {
         store.insert("expired", acquisition(2))
         now += TEN_MINUTES_NANOS
         assertThrows(SourceError.Unsupported::class.java) { store.consume("expired", key) }
+    }
+
+    @Test
+    fun capacityRetainsNewestSixteenInInsertionOrder() {
+        val store = store()
+        repeat(17) { store.insert("token-$it", acquisition(it)) }
+
+        assertThrows(SourceError.Unsupported::class.java) { store.consume("token-0", key) }
+        repeat(16) { assertNotNull(store.consume("token-${it + 1}", key)) }
+    }
+
+    @Test
+    fun missingTokenIsRejected() {
+        val store = store()
+        assertThrows(SourceError.Unsupported::class.java) { store.consume("never-inserted", key) }
+    }
+
+    @Test
+    fun foreignAccountAndFocalRejectPreserveTheValidEntry() {
+        val store = store()
+        store.insert("one", acquisition(1))
+        val foreignAccount = key.copy(
+            fetchingAccount = AccountId(Connection(origin, Protocol.MISSKEY), "other"),
+        )
+        val foreignFocal = key.copy(focalId = EntityId(origin, "other-note"))
+
+        assertThrows(SourceError.Unsupported::class.java) { store.consume("one", foreignAccount) }
+        assertThrows(SourceError.Unsupported::class.java) { store.consume("one", foreignFocal) }
+        assertNotNull(store.consume("one", key))
     }
 
     @Test
@@ -107,17 +137,48 @@ class MisskeyThreadContinuationTest {
     fun sourceValidatesSessionBeforeConsumingContinuation() = runBlocking {
         MockWebServer().use { server ->
             val source = sourceWithContinuation(server)
-            val continuation = source.threadContext(key.focalId).continuation!!
-            val foreign = continuation.copy(sessionKey = key.copy(sessionRevision = 2L))
+            val sessionKey = serverKey(server)
+            val continuation = source.threadContext(sessionKey.focalId).continuation!!
+            val foreign = continuation.copy(sessionKey = sessionKey.copy(sessionRevision = 2L))
             val requestsBeforeReject = server.requestCount
 
             assertThrows(SourceError.Unsupported::class.java) {
-                runBlocking { source.threadContext(key.focalId, foreign) }
+                runBlocking { source.threadContext(sessionKey.focalId, foreign) }
             }
             assertEquals(requestsBeforeReject, server.requestCount)
 
             server.enqueue(MockResponse().setBody("[]"))
-            assertNotNull(source.threadContext(key.focalId, continuation))
+            assertNotNull(source.threadContext(sessionKey.focalId, continuation))
+        }
+    }
+
+    @Test
+    fun sourceRejectsForeignAccountAndFocalWithoutNetworkOrConsumption() = runBlocking {
+        MockWebServer().use { server ->
+            val source = sourceWithContinuation(server)
+            val serverOrigin = serverOrigin(server)
+            val sessionKey = serverKey(server)
+            val continuation = source.threadContext(sessionKey.focalId).continuation!!
+            val foreignAccount = continuation.copy(
+                sessionKey = sessionKey.copy(
+                    fetchingAccount = AccountId(Connection(serverOrigin, Protocol.MISSKEY), "other"),
+                ),
+            )
+            val foreignFocal = continuation.copy(
+                sessionKey = sessionKey.copy(focalId = EntityId(serverOrigin, "other-note")),
+            )
+            val requestsBeforeReject = server.requestCount
+
+            assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { source.threadContext(sessionKey.focalId, foreignAccount) }
+            }
+            assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { source.threadContext(sessionKey.focalId, foreignFocal) }
+            }
+            assertEquals(requestsBeforeReject, server.requestCount)
+
+            server.enqueue(MockResponse().setBody("[]"))
+            assertNotNull(source.threadContext(sessionKey.focalId, continuation))
         }
     }
 
@@ -126,20 +187,68 @@ class MisskeyThreadContinuationTest {
         runBlocking {
         MockWebServer().use { server ->
             val source = sourceWithContinuation(server)
-            val continuation = source.threadContext(key.focalId).continuation!!
+            val sessionKey = serverKey(server)
+            val continuation = source.threadContext(sessionKey.focalId).continuation!!
             val parsed = UUID.fromString(continuation.token)
 
             assertNotNull(parsed)
-            assertFalse(continuation.token.contains(key.fetchingAccount.localId))
-            assertFalse(continuation.token.contains(key.focalId.value))
-            assertNotEquals(key.sessionRevision.toString(), continuation.token)
+            assertFalse(continuation.token.contains(sessionKey.fetchingAccount.localId))
+            assertFalse(continuation.token.contains(sessionKey.focalId.value))
+            assertNotEquals(sessionKey.sessionRevision.toString(), continuation.token)
 
             server.enqueue(MockResponse().setBody("[]"))
-            source.threadContext(key.focalId, continuation)
+            source.threadContext(sessionKey.focalId, continuation)
             assertThrows(SourceError.Unsupported::class.java) {
-                runBlocking { source.threadContext(key.focalId, continuation) }
+                runBlocking { source.threadContext(sessionKey.focalId, continuation) }
             }
         }
+        }
+    }
+
+    @Test
+    fun sourcePreservesTransportOrderAcrossContinuations() = runBlocking {
+        MockWebServer().use { server ->
+            val serverOrigin = serverOrigin(server)
+            val sessionKey = serverKey(server)
+            server.dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    val body = JSONObject(request.body.readUtf8())
+                    if (request.path == "/api/notes/show") {
+                        return MockResponse().setBody(note(body.getString("noteId")))
+                    }
+                    if (body.getString("noteId") != "root") return MockResponse().setBody("[]")
+                    if (!body.has("untilId")) {
+                        // Serve the first page in non-alphabetical order.
+                        // The source must keep this server order.
+                        return MockResponse().setBody(
+                            childrenInOrder("root", (29 downTo 0).map { "child-$it" }),
+                        )
+                    }
+                    return MockResponse().setBody(childrenInOrder("root", listOf("zeta", "alpha")))
+                }
+            }
+            val viewer = AccountId(Connection(serverOrigin, Protocol.MISSKEY), "viewer")
+            val source = MisskeySource(
+                serverOrigin,
+                "token",
+                MisskeyApi(),
+                accountId = viewer,
+                capabilityCache = CapabilityCache(),
+                sessionRevision = sessionKey.sessionRevision,
+                monotonicClock = { now },
+            )
+
+            var context = source.threadContext(sessionKey.focalId)
+            var guard = 0
+            while (context.continuation != null && guard++ < 10) {
+                context = source.threadContext(sessionKey.focalId, context.continuation)
+            }
+
+            assertNull(context.continuation)
+            assertEquals(
+                (29 downTo 0).map { "child-$it" } + listOf("zeta", "alpha"),
+                context.descendants.map { it.id.value },
+            )
         }
     }
 
@@ -165,37 +274,55 @@ class MisskeyThreadContinuationTest {
                 }
             }
             val source = sourceWithContinuation(server)
-            val continuation = source.threadContext(key.focalId).continuation!!
+            val sessionKey = serverKey(server)
+            val continuation = source.threadContext(sessionKey.focalId).continuation!!
             val executor = Executors.newSingleThreadExecutor()
             val request: Future<*> = executor.submit {
-                runBlocking { source.threadContext(key.focalId, continuation) }
+                runBlocking { source.threadContext(sessionKey.focalId, continuation) }
             }
 
             assertTrue(networkStarted.await(5, TimeUnit.SECONDS))
+            // The blocked network call must not hold the continuation lock.
+            // This insert runs on the calling thread and must complete while
+            // network work is still blocked.
             val store = continuationStore(source)
-            val insert = executor.submit { store.insert("probe", acquisition(99)) }
-            insert.get(1, TimeUnit.SECONDS)
+            store.insert("probe", acquisition(99))
 
             releaseNetwork.countDown()
             request.get(5, TimeUnit.SECONDS)
             executor.shutdownNow()
+            assertNotNull(store.consume("probe", key))
         }
         }
     }
 
     private fun store() = MisskeyThreadContinuationStore { now }
 
-    private suspend fun sourceWithContinuation(server: MockWebServer): MisskeySource {
+    private fun serverOrigin(server: MockWebServer): String =
+        server.url("/").toString().removeSuffix("/")
+
+    private fun serverKey(server: MockWebServer): ThreadSessionKey {
+        val serverOrigin = serverOrigin(server)
+        return ThreadSessionKey(
+            AccountId(Connection(serverOrigin, Protocol.MISSKEY), "viewer"),
+            1L,
+            EntityId(serverOrigin, "root"),
+        )
+    }
+
+    private fun sourceWithContinuation(server: MockWebServer): MisskeySource {
+        val serverOrigin = serverOrigin(server)
+        val viewer = AccountId(Connection(serverOrigin, Protocol.MISSKEY), "viewer")
         server.enqueue(MockResponse().setBody(note("root")))
         server.enqueue(MockResponse().setBody(children("root")))
-        repeat(8) { server.enqueue(MockResponse().setBody("[]")) }
+        repeat(20) { server.enqueue(MockResponse().setBody("[]")) }
         return MisskeySource(
-            server.url("/").toString().removeSuffix("/"),
+            serverOrigin,
             "token",
             MisskeyApi(),
-            accountId = account,
+            accountId = viewer,
             capabilityCache = CapabilityCache(),
-            sessionRevision = key.sessionRevision,
+            sessionRevision = 1L,
             monotonicClock = { now },
         )
     }
@@ -217,6 +344,12 @@ class MisskeyThreadContinuationTest {
     private fun children(parentId: String): String {
         val values = JSONArray()
         repeat(30) { values.put(JSONObject(note("child-$it")).put("replyId", parentId)) }
+        return values.toString()
+    }
+
+    private fun childrenInOrder(parentId: String, ids: List<String>): String {
+        val values = JSONArray()
+        ids.forEach { values.put(JSONObject(note(it)).put("replyId", parentId)) }
         return values.toString()
     }
 
