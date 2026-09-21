@@ -9,12 +9,11 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
-import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.ProfileTimelineQuery
 import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.SourceError
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONArray

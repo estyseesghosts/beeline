@@ -1,12 +1,10 @@
 package me.foxtails.palustris
 
 import kotlinx.coroutines.runBlocking
-import me.foxtails.palustris.data.mastodon.MastodonMapper
 import me.foxtails.palustris.data.mastodon.MastodonNotificationMapper
 import me.foxtails.palustris.data.mastodon.MastodonSource
 import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MisskeyApi
-import me.foxtails.palustris.data.misskey.MisskeyMapper
 import me.foxtails.palustris.data.misskey.MisskeyNotificationMapper
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.domain.AccountId

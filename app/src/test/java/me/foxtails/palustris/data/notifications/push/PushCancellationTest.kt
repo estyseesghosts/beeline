@@ -16,9 +16,8 @@ import me.foxtails.palustris.data.AccountSourceRegistry
 import me.foxtails.palustris.data.SocialSourceFactory
 import me.foxtails.palustris.data.auth.AccountIndex
 import me.foxtails.palustris.data.auth.SessionStore
-import me.foxtails.palustris.data.misskey.HttpClientPool
 import me.foxtails.palustris.data.misskey.CapabilityCache
-import me.foxtails.palustris.data.notifications.AndroidNotificationPresenter
+import me.foxtails.palustris.data.misskey.HttpClientPool
 import me.foxtails.palustris.data.notifications.InMemoryNotificationStore
 import me.foxtails.palustris.data.notifications.NotificationPermissionController
 import me.foxtails.palustris.data.notifications.NotificationPresentation
@@ -27,7 +26,6 @@ import me.foxtails.palustris.data.notifications.NotificationPresenter
 import me.foxtails.palustris.data.notifications.NotificationRepository
 import me.foxtails.palustris.data.notifications.NotificationSettingsRepository
 import me.foxtails.palustris.data.notifications.push.PushConnectorFailure
-import me.foxtails.palustris.data.notifications.push.PushConnectorOperation
 import me.foxtails.palustris.data.notifications.push.PushMessageDecoder
 import me.foxtails.palustris.data.notifications.push.PushRegistrationManager
 import me.foxtails.palustris.data.notifications.push.PushRegistrationRepository
