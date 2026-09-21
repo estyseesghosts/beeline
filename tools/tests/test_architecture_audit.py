@@ -120,6 +120,10 @@ class ArchitectureAuditTest(unittest.TestCase):
         for construction in ("CapabilityCache()", "DraftWriteAuthority()", "ExecutionAuthority()", "HttpClientPool()"):
             report = self.run_audit(f"class SampleOwner(val value: Any = {construction})")
             self.assertIn("private-owner-construction", {x["kind"] for x in report["findings"]})
+        bare = self.run_audit("class SampleOwner(val value: Any = Owner())")
+        self.assertIn("private-owner-construction", {x["kind"] for x in bare["findings"]})
+        lowercase = self.run_audit("class SampleOwner(val value: Any = cache())")
+        self.assertNotIn("private-owner-construction", {x["kind"] for x in lowercase["findings"]})
 
     def test_multiline_default_owner_construction_is_flagged(self):
         report = self.run_audit("""
@@ -518,6 +522,55 @@ class ArchitectureAuditTest(unittest.TestCase):
             path.parent.mkdir(parents=True)
             path.write_text(source("class SampleOwner(val x: String)"), encoding="utf-8")
             self.assertEqual(audit.main([str(root), "--check"]), 0)
+
+
+    def test_distant_top_level_use_does_not_exempt_map(self):
+        report = self.run_audit("""
+            val distant = HashMap()
+            val a = 1
+            val b = 2
+            val c = 3
+            val d = 4
+            distant.clear()
+        """)
+        maps = {x["detail"] for x in report["findings"] if x["kind"] == "unretained-long-lived-map"}
+        self.assertEqual(maps, {"distant"})
+
+    def test_blank_line_stops_top_level_scope(self):
+        report = self.run_audit("val solo = HashMap()\n\nsolo.clear()")
+        maps = {x["detail"] for x in report["findings"] if x["kind"] == "unretained-long-lived-map"}
+        self.assertEqual(maps, {"solo"})
+
+    def test_map_after_function_body_uses_top_level_scope(self):
+        report = self.run_audit("""
+            fun helper() {
+                println(1)
+            }
+            val after = HashMap()
+            after.clear()
+        """)
+        self.assertNotIn("unretained-long-lived-map", {x["kind"] for x in report["findings"]})
+
+    def test_consecutive_maps_stay_isolated(self):
+        # Consecutively declared maps keep single-line scopes, so the
+        # trailing use exempts neither map. Both stay flagged.
+        report = self.run_audit("""
+            val first = HashMap()
+            val second = HashMap()
+            second.clear()
+        """)
+        maps = {x["detail"] for x in report["findings"] if x["kind"] == "unretained-long-lived-map"}
+        self.assertEqual(maps, {"first", "second"})
+
+    def test_check_with_record_baseline_exits_zero(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "root"
+            path = root / "app/src/main/java/me/foxtails/palustris/ui/feed/Example.kt"
+            path.parent.mkdir(parents=True)
+            path.write_text(source("val cache = HashMap()"), encoding="utf-8")
+            out_path = Path(temp) / "recorded.json"
+            self.assertEqual(audit.main([str(root), "--check", "--record-baseline", str(out_path)]), 0)
+            self.assertTrue(out_path.exists())
 
 
 if __name__ == "__main__":

@@ -42,7 +42,7 @@ CLASS_HEADER_RE = re.compile(r"\bclass\s+[A-Za-z_]\w*")
 SECONDARY_CONSTRUCTOR_RE = re.compile(r"(?<!\w)constructor\s*\(")
 HEADER_PREFIX_RE = re.compile(r"(?:\s*(?:@[\w.]+(?:\s*\([^()]*\))?|(?:public|private|protected|internal)|constructor))*\s*\(")
 OWNER_DEFAULT_CONSTRUCTION_RE = re.compile(
-    r"=\s*(?!\w*MutationOwner\b)[A-Z]\w*(?:Authority|Cache|Pool|Controller|Owner|Manager)\s*\("
+    r"=\s*(?!\w*MutationOwner\b)(?:[A-Z]\w*)?(?:Authority|Cache|Pool|Controller|Coordinator|Owner|Manager)\s*\("
 )
 FUN_RE = re.compile(r'(?m)^\s*(?:@[\w.()", =:-]+\s*)*(?:(?:public|private|protected|internal|inline|tailrec|operator|infix|suspend|override|open|final|abstract)\s+)*fun\s+(?:<[^>{}]+>\s*)?(?:[\w?.<>]+\.)?([A-Za-z_]\w*)\s*\(')
 DEFAULT_THRESHOLDS = {
@@ -187,11 +187,69 @@ def owner_scope(text: str, position: int):
     return text[opening:end + 1] if end is not None else text[opening:]
 
 
+# Top-level lines read around an isolated map declaration when no owner
+# body encloses it. Small so distant uses cannot leak across declarations.
+TOP_LEVEL_SCOPE_LINES = 3
+
+
+def _line_depths(text: str) -> list[int]:
+    """Return the brace depth at the start of each masked-text line."""
+    depths, depth = [], 0
+    for line in text.splitlines():
+        depths.append(depth)
+        for character in line:
+            if character == "{":
+                depth += 1
+            elif character == "}":
+                depth = max(0, depth - 1)
+    return depths
+
+
+def _is_top_level_statement(lines: list[str], depths: list[int], index: int) -> bool:
+    """Check whether a line is a top-level statement outside any body."""
+    if index < 0 or index >= len(lines) or depths[index] != 0:
+        return False
+    stripped = lines[index].strip()
+    return bool(stripped) and "{" not in lines[index] and "}" not in lines[index]
+
+
 def declaration_block(text: str, position: int) -> str:
-    """Return only the top-level declaration line when no owner body encloses it."""
-    start = text.rfind("\n", 0, position) + 1
-    end = text.find("\n", position)
-    return text[start:] if end < 0 else text[start:end]
+    """Return the top-level region around a declaration outside any owner body."""
+    lines = text.splitlines()
+    if not lines:
+        return ""
+    depths = _line_depths(text)
+    decl = min(text.count("\n", 0, position), len(lines) - 1)
+    declaration = lines[decl]
+    for neighbor in (decl - 1, decl + 1):
+        # Consecutively declared maps keep single-line scopes so one map's
+        # trailing use cannot exempt another map through loose tied matching.
+        cursor = neighbor
+        step = -1 if neighbor < decl else 1
+        while 0 <= cursor < len(lines) and not lines[cursor].strip():
+            cursor += step
+        if _is_top_level_statement(lines, depths, cursor) and MAP_RE.search(lines[cursor]):
+            return declaration
+    collected = [declaration]
+    backward = []
+    cursor = decl - 1
+    while len(backward) < TOP_LEVEL_SCOPE_LINES and cursor >= 0:
+        if not lines[cursor].strip() or not _is_top_level_statement(lines, depths, cursor):
+            break
+        if MAP_RE.search(lines[cursor]):
+            break
+        backward.append(lines[cursor])
+        cursor -= 1
+    forward = []
+    cursor = decl + 1
+    while len(forward) < TOP_LEVEL_SCOPE_LINES and cursor < len(lines):
+        if not lines[cursor].strip() or not _is_top_level_statement(lines, depths, cursor):
+            break
+        if MAP_RE.search(lines[cursor]):
+            break
+        forward.append(lines[cursor])
+        cursor += 1
+    return "\n".join(backward[::-1] + collected + forward)
 
 
 def nearby_retention_comment(raw_text: str, symbol: str, position: int) -> bool:
@@ -241,7 +299,8 @@ def has_constructor_default_construction(text: str) -> bool:
         prefix = HEADER_PREFIX_RE.match(text, cursor)
         if not prefix:
             continue
-        start = cursor + prefix.end() - 1
+        # match() with pos returns absolute offsets, so use prefix.end() directly.
+        start = prefix.end() - 1
         end = balanced_end(text, start)
         if end is not None and OWNER_DEFAULT_CONSTRUCTION_RE.search(text[start + 1:end]):
             return True
@@ -408,6 +467,8 @@ def main(argv=None):
     baseline_data = json.loads(args.baseline.read_text(encoding="utf-8")) if args.baseline and args.baseline.exists() else {}
     report = audit(Path(args.root), baseline_data.get("retentionRules"), baseline_data.get("thresholds"), baseline_data.get("allowlists"))
     if args.baseline and args.baseline.exists():
+        report = classify(report, baseline_data)
+    elif args.check and args.record_baseline is None:
         report = classify(report, baseline_data)
     if args.record_baseline is not None:
         # Record from clean reviewed source only. Keep --check unchanged
