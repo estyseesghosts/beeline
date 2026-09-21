@@ -9,6 +9,25 @@ import sys
 from pathlib import Path
 
 PARSER_VERSION = "2"
+# Current baseline schema version. Record always writes this value.
+# Old baselines stay readable, but record refreshes them forward.
+SCHEMA_VERSION = 2
+# Kinds that report review signals but never fail --check by themselves.
+# New Owner-like names stay visible without failing every existing Owner.
+# Size and dependency signals stay visible without blocking unrelated work.
+WARNING_KINDS = frozenset({
+    "ownership-class",
+    "dependency-direction",
+    "file-size-warning",
+    "function-size-warning",
+    "function-parameter-warning",
+    "function-nesting-warning",
+})
+# Minimum absolute growth for a function metric to count as material.
+# File growth uses thresholds["hotspotGrowthLines"]. Function growth uses
+# these smaller bounds because functions are short by design.
+FUNCTION_GROWTH_LINES = 5
+FUNCTION_GROWTH_STEPS = 1
 OWNER_SUFFIXES = ("Manager", "Coordinator", "Controller", "Owner", "Authority")
 # Files that wire features instead of implementing them. Composition roots may
 # import across feature boundaries, so dependency checks skip them explicitly.
@@ -309,7 +328,7 @@ def classify(report: dict, baseline: dict) -> dict:
     result = []
     for row in report["findings"]:
         item = dict(row)
-        if row["kind"] in {"ownership-class", "dependency-direction", "file-size-warning", "function-size-warning", "function-parameter-warning", "function-nesting-warning"}: item["classification"] = "warning"
+        if row["kind"] in WARNING_KINDS: item["classification"] = "warning"
         elif row["id"] in resolved: item["classification"] = "regression-returned-resolved"
         elif row["id"] in enforced: item["classification"] = "regression"
         elif row["id"] in existing: item["classification"] = "existing-baseline"
@@ -324,9 +343,11 @@ def classify(report: dict, baseline: dict) -> dict:
 def hotspot_regressions(report, baseline):
     out = []
     thresholds = {**DEFAULT_THRESHOLDS, **baseline.get("thresholds", {})}
+    percent = thresholds["hotspotGrowthPercent"] / 100
     for file, old in baseline.get("fileMetrics", {}).items():
         new = report["fileMetrics"].get(file)
-        if new and old.get("lines", 0) and new["lines"] > old["lines"] * (1 + thresholds["hotspotGrowthPercent"] / 100) and new["lines"] - old["lines"] >= thresholds["hotspotGrowthLines"]:
+        # File hotspot needs both percentage growth and absolute growth.
+        if new and old.get("lines", 0) and new["lines"] > old["lines"] * (1 + percent) and new["lines"] - old["lines"] >= thresholds["hotspotGrowthLines"]:
             out.append(finding("hotspot-growth", file, f"{old['lines']} -> {new['lines']} lines", symbol="<file>", classification="regression"))
     old_functions = {(x.get("file"), x.get("name")): x for x in baseline.get("functionMetrics", [])}
     for new in report.get("functionMetrics", []):
@@ -334,13 +355,44 @@ def hotspot_regressions(report, baseline):
         if not old:
             continue
         changed = []
-        for metric in ("lines", "params", "nesting"):
+        # Function growth needs both percentage growth and absolute growth.
+        # A small change above a warning threshold is not material by itself.
+        for metric, absolute in (("lines", FUNCTION_GROWTH_LINES), ("params", FUNCTION_GROWTH_STEPS), ("nesting", FUNCTION_GROWTH_STEPS)):
             before, after = old.get(metric, 0), new.get(metric, 0)
-            if after > before and (after > thresholds.get({"lines": "functionWarningLines", "params": "functionWarningParameters", "nesting": "functionWarningNesting"}[metric]) or (before and after > before * (1 + thresholds["hotspotGrowthPercent"] / 100) and after - before >= 1)):
+            if after > before and before and after > before * (1 + percent) and after - before >= absolute:
                 changed.append(f"{metric} {before}->{after}")
         if changed:
             out.append(finding("function-complexity-growth", new["file"], f"{new['name']}: {', '.join(changed)}", symbol=new["name"], classification="regression"))
     return out
+
+
+def build_baseline(report: dict, previous: dict) -> dict:
+    """Build a deterministic baseline from a reviewed report."""
+    # Refresh schemaVersion and parserVersion to current values.
+    # Keep manual review sections from the previous baseline.
+    # Refresh only the generated metrics and versions.
+    # Note: the current baseline holds hotspot-only fileMetrics and empty functionMetrics.
+    # Record full metrics with `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --record-baseline tools/architecture-baseline.json` on clean reviewed source.
+    # Review the diff before commit.
+    # Growth detection applies only to entries present in the baseline.
+    # New files still receive normal findings through the standard checks.
+    return {
+        "schemaVersion": SCHEMA_VERSION,
+        "parserVersion": PARSER_VERSION,
+        "thresholds": previous.get("thresholds", dict(DEFAULT_THRESHOLDS)),
+        "existingFindings": sorted(previous.get("existingFindings", [])),
+        "enforcedFindings": sorted(previous.get("enforcedFindings", [])),
+        "resolvedFindings": sorted(previous.get("resolvedFindings", [])),
+        "fileMetrics": {key: report["fileMetrics"][key] for key in sorted(report["fileMetrics"])},
+        "functionMetrics": sorted(report.get("functionMetrics", []), key=lambda x: (x.get("file"), x.get("name"))),
+        "retentionRules": {key: previous.get("retentionRules", {}).get(key, "") for key in sorted(previous.get("retentionRules", {}))} if previous.get("retentionRules") else {},
+        "allowlists": {key: sorted(value) if isinstance(value, list) else value for key, value in sorted(previous.get("allowlists", {}).items())},
+    }
+
+
+def write_baseline(path: Path, data: dict) -> None:
+    # Use sorted keys so repeated records stay byte-identical.
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def main(argv=None):
@@ -349,11 +401,24 @@ def main(argv=None):
     ap.add_argument("--baseline", type=Path)
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--json", action="store_true")
+    # Controlled record path. Review the diff before commit.
+    # Never absorb unrelated dirty files into the baseline.
+    ap.add_argument("--record-baseline", type=Path, default=None)
     args = ap.parse_args(argv)
     baseline_data = json.loads(args.baseline.read_text(encoding="utf-8")) if args.baseline and args.baseline.exists() else {}
     report = audit(Path(args.root), baseline_data.get("retentionRules"), baseline_data.get("thresholds"), baseline_data.get("allowlists"))
     if args.baseline and args.baseline.exists():
         report = classify(report, baseline_data)
+    if args.record_baseline is not None:
+        # Record from clean reviewed source only. Keep --check unchanged
+        # when this flag is absent. Exit 0 so record never fails a review.
+        fresh = audit(Path(args.root), baseline_data.get("retentionRules"), baseline_data.get("thresholds"), baseline_data.get("allowlists"))
+        write_baseline(args.record_baseline, build_baseline(fresh, baseline_data))
+        if args.json: print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            for row in report["findings"]: print(f"{row['classification']}: {row['id']}")
+            print(f"Architecture audit: {len(report['findings'])} findings")
+        return 0
     if args.json: print(json.dumps(report, indent=2, sort_keys=True))
     else:
         for row in report["findings"]: print(f"{row['classification']}: {row['id']}")

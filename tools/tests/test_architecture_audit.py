@@ -296,6 +296,229 @@ class ArchitectureAuditTest(unittest.TestCase):
         result = audit.classify(report, baseline)
         self.assertIn("function-complexity-growth", {x["kind"] for x in result["regressions"]})
 
+    def test_all_warning_kinds_never_fail_check(self):
+        # Each warning kind reports a signal but never fails --check alone.
+        bodies = [
+            "class SampleOwner(val x: String)",
+            "import me.foxtails.palustris.ui.profile.Profile\nfun x() = Unit",
+            "\n".join(["val value = 1"] * 701),
+        ]
+        for body in bodies:
+            report = self.run_audit(body)
+            result = audit.classify(report, {})
+            self.assertFalse(result["regressions"], body[:60])
+            self.assertTrue(all(x["classification"] == "warning" for x in result["findings"] if x["kind"] in audit.WARNING_KINDS))
+        synthetic = {
+            "findings": [
+                {"id": "function-size-warning:f:long", "kind": "function-size-warning", "file": "f", "detail": "long", "classification": "warning"},
+                {"id": "function-parameter-warning:f:wide", "kind": "function-parameter-warning", "file": "f", "detail": "wide", "classification": "warning"},
+                {"id": "function-nesting-warning:f:deep", "kind": "function-nesting-warning", "file": "f", "detail": "deep", "classification": "warning"},
+            ],
+            "fileMetrics": {},
+            "functionMetrics": [],
+        }
+        result = audit.classify(synthetic, {})
+        self.assertFalse(result["regressions"])
+        self.assertTrue(all(x["classification"] == "warning" for x in result["findings"]))
+
+    def test_new_owner_class_reports_without_failing(self):
+        report = self.run_audit("class SampleOwner(val x: String)")
+        owned = [x for x in report["findings"] if x["kind"] == "ownership-class"]
+        self.assertTrue(owned)
+        result = audit.classify(report, {})
+        self.assertFalse(result["regressions"])
+        self.assertEqual(result["findings"][0]["classification"], "warning")
+
+    def test_new_private_construction_fails_but_baselined_passes(self):
+        report = self.run_audit("class Foo(private val cache: Any = CapabilityCache())")
+        violation = next(x for x in report["findings"] if x["kind"] == "private-owner-construction")
+        failed = audit.classify(report, {})
+        self.assertIn(violation["id"], {x["id"] for x in failed["regressions"]})
+        passed = audit.classify(self.run_audit("class Foo(private val cache: Any = CapabilityCache())"), {"existingFindings": [violation["id"]]})
+        self.assertFalse(passed["regressions"])
+        self.assertEqual(next(x for x in passed["findings"] if x["id"] == violation["id"])["classification"], "existing-baseline")
+
+    def test_new_unretained_map_fails_but_retained_passes(self):
+        report = self.run_audit("val cache = HashMap()")
+        violation = next(x for x in report["findings"] if x["kind"] == "unretained-long-lived-map")
+        self.assertTrue(audit.classify(report, {})["regressions"])
+        cleared = self.run_audit("fun retained() {\n val cache = HashMap()\n cache.clear()\n}")
+        self.assertNotIn("unretained-long-lived-map", {x["kind"] for x in cleared["findings"]})
+
+    def test_existing_resolved_and_new_classification(self):
+        report = self.run_audit("fun x() = Unit", "me.foxtails.palustris.ui", "PostRow.kt")
+        violation = next(x for x in report["findings"] if x["kind"] == "package-path-mismatch")
+        new_result = audit.classify(report, {})
+        self.assertEqual(next(x for x in new_result["findings"] if x["id"] == violation["id"])["classification"], "regression")
+        existing_result = audit.classify(self.run_audit("fun x() = Unit", "me.foxtails.palustris.ui", "PostRow.kt"), {"existingFindings": [violation["id"]]})
+        self.assertEqual(next(x for x in existing_result["findings"] if x["id"] == violation["id"])["classification"], "existing-baseline")
+        self.assertFalse(existing_result["regressions"])
+        resolved_result = audit.classify(self.run_audit("fun x() = Unit", "me.foxtails.palustris.ui", "PostRow.kt"), {"resolvedFindings": [violation["id"]]})
+        self.assertEqual(next(x for x in resolved_result["findings"] if x["id"] == violation["id"])["classification"], "regression-returned-resolved")
+        self.assertTrue(resolved_result["regressions"])
+
+    def test_file_growth_needs_percentage_and_absolute(self):
+        # Small file: +49 lines is not material even at +49 percent.
+        small = audit.classify(
+            {"findings": [], "fileMetrics": {"a.kt": {"lines": 149}}, "functionMetrics": []},
+            {"fileMetrics": {"a.kt": {"lines": 100}}},
+        )
+        self.assertFalse(small["regressions"])
+        # Small file: +50 lines and +50 percent is material.
+        material = audit.classify(
+            {"findings": [], "fileMetrics": {"a.kt": {"lines": 150}}, "functionMetrics": []},
+            {"fileMetrics": {"a.kt": {"lines": 100}}},
+        )
+        self.assertIn("hotspot-growth", {x["kind"] for x in material["regressions"]})
+        # Large file: +150 lines is not material below 20 percent.
+        percent = audit.classify(
+            {"findings": [], "fileMetrics": {"a.kt": {"lines": 1150}}, "functionMetrics": []},
+            {"fileMetrics": {"a.kt": {"lines": 1000}}},
+        )
+        self.assertFalse(percent["regressions"])
+        # Large file: exactly +20 percent is not material; above it is.
+        exact = audit.classify(
+            {"findings": [], "fileMetrics": {"a.kt": {"lines": 1200}}, "functionMetrics": []},
+            {"fileMetrics": {"a.kt": {"lines": 1000}}},
+        )
+        self.assertFalse(exact["regressions"])
+        over = audit.classify(
+            {"findings": [], "fileMetrics": {"a.kt": {"lines": 1201}}, "functionMetrics": []},
+            {"fileMetrics": {"a.kt": {"lines": 1000}}},
+        )
+        self.assertIn("hotspot-growth", {x["kind"] for x in over["regressions"]})
+        # Unknown files never count as hotspot growth.
+        unknown = audit.classify(
+            {"findings": [], "fileMetrics": {"b.kt": {"lines": 5000}}, "functionMetrics": []},
+            {"fileMetrics": {"a.kt": {"lines": 100}}},
+        )
+        self.assertFalse(unknown["regressions"])
+
+    def test_function_growth_is_deterministic_and_material(self):
+        baseline = {"functionMetrics": [{"file": "a.kt", "name": "f", "lines": 70, "params": 6, "nesting": 4}]}
+        tiny = {"findings": [], "fileMetrics": {}, "functionMetrics": [{"file": "a.kt", "name": "f", "lines": 71, "params": 6, "nesting": 4}]}
+        self.assertFalse(audit.classify(dict(tiny), baseline)["regressions"])
+        small_params = {"findings": [], "fileMetrics": {}, "functionMetrics": [{"file": "a.kt", "name": "f", "lines": 70, "params": 7, "nesting": 4}]}
+        self.assertFalse(audit.classify(dict(small_params), baseline)["regressions"])
+        material_nesting = {"findings": [], "fileMetrics": {}, "functionMetrics": [{"file": "a.kt", "name": "f", "lines": 70, "params": 6, "nesting": 5}]}
+        grown = audit.classify(dict(material_nesting), baseline)
+        self.assertIn("function-complexity-growth", {x["kind"] for x in grown["regressions"]})
+        repeated = audit.classify(dict(material_nesting), baseline)
+        self.assertEqual(json.dumps(grown, sort_keys=True), json.dumps(repeated, sort_keys=True))
+        unknown = {"findings": [], "fileMetrics": {}, "functionMetrics": [{"file": "a.kt", "name": "other", "lines": 200, "params": 20, "nesting": 20}]}
+        self.assertFalse(audit.classify(unknown, baseline)["regressions"])
+
+    def test_dependency_violation_reported_but_composition_root_exempt(self):
+        body = "import me.foxtails.palustris.ui.profile.Profile\nfun x() = Unit"
+        feature = self.run_audit(body)
+        self.assertIn("dependency-direction", {x["kind"] for x in feature["findings"]})
+        # Dependency signals warn without failing the check.
+        self.assertFalse(audit.classify(feature, {})["regressions"])
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            rel = "app/src/main/java/me/foxtails/palustris/ui/feed/Example.kt"
+            path = root / rel
+            path.parent.mkdir(parents=True)
+            path.write_text(source(body), encoding="utf-8")
+            exempt = audit.audit(root, allowlists={"compositionRootFiles": [rel]})
+            self.assertNotIn("dependency-direction", {x["kind"] for x in exempt["findings"]})
+
+    def test_record_baseline_is_deterministic(self):
+        report = self.run_audit("fun f(a: Int) { println(a) }")
+        previous = {
+            "schemaVersion": 2,
+            "thresholds": dict(audit.DEFAULT_THRESHOLDS),
+            "existingFindings": ["b", "a"],
+            "enforcedFindings": [],
+            "resolvedFindings": [],
+            "retentionRules": {"z.kt": "reason"},
+            "allowlists": {"rootUiGlobalFiles": ["B", "A"]},
+        }
+        one, two = audit.build_baseline(report, previous), audit.build_baseline(report, previous)
+        self.assertEqual(json.dumps(one, sort_keys=True), json.dumps(two, sort_keys=True))
+        self.assertEqual(one["parserVersion"], audit.PARSER_VERSION)
+        self.assertEqual(one["existingFindings"], ["a", "b"])
+        self.assertEqual(one["allowlists"]["rootUiGlobalFiles"], ["A", "B"])
+        self.assertEqual(list(one["fileMetrics"]), sorted(one["fileMetrics"]))
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "baseline.json"
+            audit.write_baseline(path, one)
+            self.assertEqual(json.loads(path.read_text(encoding="utf-8")), one)
+
+
+    def test_record_baseline_cli_refreshes_versions_and_preserves_manual_sections(self):
+        # Record refreshes old versions but keeps manual review sections.
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "root"
+            rel = "app/src/main/java/me/foxtails/palustris/ui/feed/Example.kt"
+            path = root / rel
+            path.parent.mkdir(parents=True)
+            path.write_text(source("fun f(a: Int) { println(a) }"), encoding="utf-8")
+            baseline_path = Path(temp) / "previous.json"
+            baseline_path.write_text(json.dumps({
+                "schemaVersion": 1,
+                "parserVersion": "1",
+                "thresholds": dict(audit.DEFAULT_THRESHOLDS),
+                "existingFindings": ["keep-existing"],
+                "enforcedFindings": ["keep-enforced"],
+                "resolvedFindings": ["keep-resolved"],
+                "retentionRules": {"keep.kt": "keep reason"},
+                "allowlists": {"rootUiGlobalFiles": ["KeepGlobal"]},
+                "fileMetrics": {},
+                "functionMetrics": [],
+            }), encoding="utf-8")
+            out_path = Path(temp) / "recorded.json"
+            result = audit.main([str(root), "--baseline", str(baseline_path),
+                                 "--record-baseline", str(out_path)])
+            self.assertEqual(result, 0)
+            recorded = json.loads(out_path.read_text(encoding="utf-8"))
+            self.assertEqual(recorded["schemaVersion"], 2)
+            self.assertEqual(recorded["schemaVersion"], audit.SCHEMA_VERSION)
+            self.assertEqual(recorded["parserVersion"], audit.PARSER_VERSION)
+            self.assertEqual(recorded["existingFindings"], ["keep-existing"])
+            self.assertEqual(recorded["enforcedFindings"], ["keep-enforced"])
+            self.assertEqual(recorded["resolvedFindings"], ["keep-resolved"])
+            self.assertEqual(recorded["retentionRules"], {"keep.kt": "keep reason"})
+            self.assertEqual(recorded["allowlists"], {"rootUiGlobalFiles": ["KeepGlobal"]})
+            self.assertEqual(recorded["thresholds"], dict(audit.DEFAULT_THRESHOLDS))
+            self.assertIn(rel, recorded["fileMetrics"])
+            raw = out_path.read_text(encoding="utf-8")
+            self.assertEqual(raw, json.dumps(recorded, indent=2, sort_keys=True) + "\n")
+
+    def test_check_without_record_flag_unchanged(self):
+        # Check without record keeps pass and fail behavior.
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "root"
+            rel = "app/src/main/java/me/foxtails/palustris/ui/feed/Example.kt"
+            path = root / rel
+            path.parent.mkdir(parents=True)
+            path.write_text(source("val cache = HashMap()"), encoding="utf-8")
+            self.assertEqual(audit.main([str(root), "--check"]), 1)
+            baseline_path = Path(temp) / "baseline.json"
+            report = audit.audit(root)
+            violation = next(x["id"] for x in report["findings"] if x["kind"] == "unretained-long-lived-map")
+            baseline_path.write_text(json.dumps({
+                "schemaVersion": 2,
+                "parserVersion": audit.PARSER_VERSION,
+                "thresholds": dict(audit.DEFAULT_THRESHOLDS),
+                "existingFindings": [violation],
+                "enforcedFindings": [],
+                "resolvedFindings": [],
+                "retentionRules": {},
+                "allowlists": {},
+                "fileMetrics": {},
+                "functionMetrics": [],
+            }), encoding="utf-8")
+            self.assertEqual(audit.main([str(root), "--baseline", str(baseline_path), "--check"]), 0)
+            record_path = Path(temp) / "must-not-exist.json"
+            self.assertFalse(record_path.exists())
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "root"
+            path = root / "app/src/main/java/me/foxtails/palustris/ui/feed/Warning.kt"
+            path.parent.mkdir(parents=True)
+            path.write_text(source("class SampleOwner(val x: String)"), encoding="utf-8")
+            self.assertEqual(audit.main([str(root), "--check"]), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
