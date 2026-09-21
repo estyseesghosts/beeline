@@ -292,8 +292,8 @@ class CrossCuttingTest {
         val registry = me.foxtails.palustris.data.AccountSourceRegistry()
         val first = AccountId(Connection("https://first.example", Protocol.MISSKEY), "one")
         val second = AccountId(Connection("https://second.example", Protocol.MISSKEY), "two")
-        val firstSource = MisskeySource(first.connection.origin, "token-a", MisskeyApi(), accountId = first)
-        val secondSource = MisskeySource(second.connection.origin, "token-b", MisskeyApi(), accountId = second)
+        val firstSource = MisskeySource(first.connection.origin, "token-a", MisskeyApi(), accountId = first, capabilityCache = CapabilityCache())
+        val secondSource = MisskeySource(second.connection.origin, "token-b", MisskeyApi(), accountId = second, capabilityCache = CapabilityCache())
         val token = { account: AccountId -> me.foxtails.palustris.domain.NotificationSyncToken(account, 1L) }
 
         registry.register(token(first), firstSource)

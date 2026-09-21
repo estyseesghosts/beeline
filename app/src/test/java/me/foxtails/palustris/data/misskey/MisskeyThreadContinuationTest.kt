@@ -190,6 +190,7 @@ class MisskeyThreadContinuationTest {
             "token",
             MisskeyApi(),
             accountId = account,
+            capabilityCache = CapabilityCache(),
             sessionRevision = key.sessionRevision,
             monotonicClock = { now },
         )

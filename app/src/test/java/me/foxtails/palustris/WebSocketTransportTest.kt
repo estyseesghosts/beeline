@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
+import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.data.mastodon.MastodonSource
 import me.foxtails.palustris.domain.AccountId
@@ -57,6 +58,7 @@ class WebSocketTransportTest {
             token = "test-token",
             api = MisskeyApi(client),
             accountId = account,
+            capabilityCache = CapabilityCache(),
         )
         val collector = launch { source.streamEvents().collect() }
         withTimeout(1_000) {
@@ -88,7 +90,7 @@ class WebSocketTransportTest {
         val client = CapturingWebSocketClient()
         val origin = "https://example.org"
         val account = AccountId(Connection(origin, Protocol.MISSKEY), "receiver")
-        val source = MisskeySource(origin, "test-token", MisskeyApi(client), accountId = account)
+        val source = MisskeySource(origin, "test-token", MisskeyApi(client), accountId = account, capabilityCache = CapabilityCache())
         val event = async { source.streamEvents().first() }
         withTimeout(1_000) {
             while (client.listener == null) yield()

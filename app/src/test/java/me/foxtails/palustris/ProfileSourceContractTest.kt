@@ -2,6 +2,7 @@ package me.foxtails.palustris
 
 import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.data.mastodon.MastodonSource
+import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.domain.AccountId
@@ -95,6 +96,7 @@ class ProfileSourceContractTest {
                 token = "contract-token",
                 api = MisskeyApi(),
                 accountId = target,
+                capabilityCache = CapabilityCache(),
             )
 
             server.enqueue(misskeyPage("posts-first"))

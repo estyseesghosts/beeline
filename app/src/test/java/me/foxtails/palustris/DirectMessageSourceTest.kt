@@ -7,6 +7,7 @@ import me.foxtails.palustris.data.directmessages.DirectMessageRepository
 import me.foxtails.palustris.data.directmessages.DirectMessageWriteAuthority
 import me.foxtails.palustris.data.directmessages.InMemoryDirectMessageStore
 import me.foxtails.palustris.data.mastodon.MastodonSource
+import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.domain.Account
@@ -46,7 +47,7 @@ class DirectMessageSourceTest {
                 ),
             )
             val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
-            val source = MisskeySource(origin, "token", MisskeyApi(), accountId = owner)
+            val source = MisskeySource(origin, "token", MisskeyApi(), accountId = owner, capabilityCache = CapabilityCache())
 
             source.sendDirectMessage(
                 DirectMessageRequest(
@@ -255,7 +256,7 @@ class DirectMessageSourceTest {
             val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
             server.enqueue(MockResponse().setBody("[${createdMisskeyNote("root")},${createdMisskeyNote("public").replace("specified", "public")}]"))
             server.enqueue(MockResponse().setBody("[${createdMisskeyNote("reply", "root")}]"))
-            val source = MisskeySource(origin, "token", MisskeyApi(), accountId = owner)
+            val source = MisskeySource(origin, "token", MisskeyApi(), accountId = owner, capabilityCache = CapabilityCache())
 
             val conversation = source.conversations().items.single()
 

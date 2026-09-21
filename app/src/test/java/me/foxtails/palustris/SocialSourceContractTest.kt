@@ -2,6 +2,7 @@ package me.foxtails.palustris
 
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.runBlocking
+import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.Connection
@@ -144,6 +145,7 @@ open class MisskeySourceContractTest : SocialSourceContractTest() {
             api = api,
             accountId = me.foxtails.palustris.domain.AccountId(Connection(origin, Protocol.MISSKEY), "contract-user"),
             capabilityProbe = capabilityProbe ?: me.foxtails.palustris.data.misskey.MisskeyCapabilityProbe(api),
+            capabilityCache = CapabilityCache(),
             clock = clock,
         )
     }

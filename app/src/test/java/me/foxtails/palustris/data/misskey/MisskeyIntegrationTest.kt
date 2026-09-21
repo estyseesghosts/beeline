@@ -184,6 +184,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                 origin = origin,
                 token = "test-token",
                 api = MisskeyApi(),
+                capabilityCache = CapabilityCache(),
                 initialCapabilities = ServerCapabilities(canPublish = true),
             )
             val request = CreatePostRequest(
@@ -215,7 +216,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         MockWebServer().use { server ->
             val origin = server.url("/").toString().removeSuffix("/")
             val attachment = Attachment("https://example.org/photo.jpg", "image/jpeg", null)
-            val source = MisskeySource(origin, "test-token", MisskeyApi())
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
 
             assertThrows(SourceError.Unsupported::class.java) {
                 runBlocking { source.create(CreatePostRequest("text", attachments = listOf(attachment))) }
@@ -228,7 +229,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody(user))
             val origin = server.url("/").toString().removeSuffix("/")
-            val profile = MisskeySource(origin, "test-token", MisskeyApi())
+            val profile = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
                 .updateEditableProfile(EditableProfilePatch(displayName = "New name", biography = "New bio"))
             assertEquals("Alice", profile.displayName)
             val request = server.takeRequest()
@@ -245,7 +246,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody(user))
             server.enqueue(MockResponse().setBody(user))
             val origin = server.url("/").toString().removeSuffix("/")
-            val source = MisskeySource(origin, "test-token", MisskeyApi())
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
             val accountId = AccountId(Connection(origin, Protocol.MISSKEY), "user-a")
 
             val profile = source.profile(accountId)
@@ -272,7 +273,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody(old.toString()))
             server.enqueue(MockResponse().setBody(destination.toString()))
 
-            val profile = MisskeySource(origin, "test-token", MisskeyApi()).profile(
+            val profile = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache()).profile(
                 AccountId(Connection(origin, Protocol.MISSKEY), "user-a"),
             )
 
@@ -299,7 +300,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody(JSONObject(user).put("movedTo", "missing-id").toString()))
             server.enqueue(MockResponse().setResponseCode(404).setBody("{\"error\":\"missing\"}"))
 
-            val profile = MisskeySource(origin, "test-token", MisskeyApi()).profile(
+            val profile = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache()).profile(
                 AccountId(Connection(origin, Protocol.MISSKEY), "user-a"),
             )
 
@@ -319,7 +320,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                 .put("object", JSONObject(user).put("id", "remote-id").put("username", "newalice").put("name", "New Alice"))
                 .toString()))
 
-            val profile = MisskeySource(origin, "test-token", MisskeyApi()).profile(
+            val profile = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache()).profile(
                 AccountId(Connection(origin, Protocol.MISSKEY), "user-a"),
             )
 
@@ -339,7 +340,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             val origin = server.url("/").toString().removeSuffix("/")
             server.enqueue(MockResponse().setBody(user))
 
-            val profile = MisskeySource(origin, "test-token", MisskeyApi()).profile(
+            val profile = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache()).profile(
                 AccountId(Connection(origin, Protocol.MISSKEY), "user-a"),
             )
 
@@ -354,7 +355,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody(JSONObject(user).put("movedTo", "broken-id").toString()))
             server.enqueue(MockResponse().setBody(JSONObject().put("id", "").put("username", "").toString()))
 
-            val profile = MisskeySource(origin, "test-token", MisskeyApi()).profile(
+            val profile = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache()).profile(
                 AccountId(Connection(origin, Protocol.MISSKEY), "user-a"),
             )
 
@@ -382,7 +383,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody(JSONArray().put(JSONObject(note("plain"))).put(media).toString()))
             server.enqueue(MockResponse().setBody(JSONArray().put(repost).toString()))
             server.enqueue(MockResponse().setBody(JSONArray().put(reply).toString()))
-            val source = MisskeySource(origin, "test-token", MisskeyApi())
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
 
             val posts = source.profileTimeline(ProfileTimelineQuery(target, ProfileTimelineTab.Posts))
             source.profileTimeline(ProfileTimelineQuery(target, ProfileTimelineTab.Posts), posts.nextCursor)
@@ -426,7 +427,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody(
                 JSONArray().put(JSONObject().put("id", "cursor-liked").put("note", liked)).toString(),
             ))
-            val source = MisskeySource(origin, "test-token", MisskeyApi())
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
 
             val page = source.profileTimeline(ProfileTimelineQuery(target, ProfileTimelineTab.Liked))
 
@@ -449,7 +450,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody("{\"isFollowing\":true}"))
             server.enqueue(MockResponse().setBody("{}"))
             server.enqueue(MockResponse().setBody("{\"isFollowing\":false}"))
-            val source = MisskeySource(origin, "test-token", MisskeyApi())
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
 
             assertTrue(source.profileRelationship(target).followedBy)
             assertTrue(source.followProfile(target).following)
@@ -471,7 +472,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             val target = AccountId(Connection(origin, Protocol.MISSKEY), "remote-mastodon-user")
             server.enqueue(MockResponse().setBody("[{\"id\":\"remote-mastodon-user\",\"following\":true,\"followedBy\":true,\"hasPendingRequestFromYou\":false}]"))
 
-            val relationship = MisskeySource(origin, "test-token", MisskeyApi()).profileRelationship(target)
+            val relationship = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache()).profileRelationship(target)
 
             assertTrue(relationship.following)
             assertTrue(relationship.followedBy)
@@ -488,7 +489,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody(JSONObject(user).put(
                 "pinnedNotes", JSONArray().put(JSONObject(note("inline")).put("user", JSONObject(user))).put(foreignNote),
             ).toString()))
-            val source = MisskeySource(origin, "test-token", MisskeyApi())
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
             assertEquals(listOf("inline"), source.pinnedPosts(target).map { it.id.value })
             assertEquals("/api/users/show", server.takeRequest().path)
 
@@ -508,7 +509,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         MockWebServer().use { server ->
             val origin = server.url("/").toString().removeSuffix("/")
             val foreign = AccountId(Connection("https://other.example", Protocol.MISSKEY), "user-a")
-            val source = MisskeySource(origin, "test-token", MisskeyApi())
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
 
             assertThrows(SourceError.Unsupported::class.java) { runBlocking { source.profile(foreign) } }
             assertEquals(0, server.requestCount)
@@ -520,7 +521,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody("[${note("tag-newest")}]"))
             server.enqueue(MockResponse().setBody("[${note("tag-older")}]"))
             val origin = server.url("/").toString().removeSuffix("/")
-            val source = MisskeySource(origin, "test-token", MisskeyApi())
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
 
             val first = source.searchHashtag("#cats")
             val second = source.searchHashtag("cats", first.nextCursor)
@@ -543,6 +544,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                 origin = origin,
                 token = "test-token",
                 api = MisskeyApi(),
+                capabilityCache = CapabilityCache(),
                 initialCapabilities = ServerCapabilities(canPublish = true),
             )
 
@@ -559,7 +561,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                     .put("createdNote", JSONObject(note("created-$it"))).toString()))
             }
             val origin = server.url("/").toString().removeSuffix("/")
-            val source = MisskeySource(origin, "test-token", MisskeyApi(), initialCapabilities = ServerCapabilities(canPublish = true))
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache(), initialCapabilities = ServerCapabilities(canPublish = true))
             listOf(
                 Audience.Public to "public",
                 Audience.Unlisted to "home",
@@ -576,7 +578,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody("{}"))
             val origin = server.url("/").toString().removeSuffix("/")
-            MisskeySource(origin, "test-token", MisskeyApi()).delete(EntityId(origin, "note-to-delete"))
+            MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache()).delete(EntityId(origin, "note-to-delete"))
 
             val request = server.takeRequest()
             assertEquals("/api/notes/delete", request.path)
@@ -589,7 +591,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
     @Test fun misskeyPostAndDeleteRejectForeignOriginsBeforeNetwork() = runBlocking {
         MockWebServer().use { server ->
             val origin = server.url("/").toString().removeSuffix("/")
-            val source = MisskeySource(origin, "test-token", MisskeyApi())
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
             val foreign = EntityId("https://foreign.example", "note-1")
 
             assertThrows(SourceError.ForeignOrigin::class.java) { runBlocking { source.post(foreign) } }
@@ -601,7 +603,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
     @Test fun misskeyPostAndDeleteRejectBlankValuesBeforeNetwork() = runBlocking {
         MockWebServer().use { server ->
             val origin = server.url("/").toString().removeSuffix("/")
-            val source = MisskeySource(origin, "test-token", MisskeyApi())
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
             val blank = EntityId(origin, "   ")
 
             assertThrows(SourceError.Unsupported::class.java) { runBlocking { source.post(blank) } }
@@ -613,7 +615,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
     @Test fun misskeyCreateRejectsForeignAndBlankQuoteBeforeNetwork() = runBlocking {
         MockWebServer().use { server ->
             val origin = server.url("/").toString().removeSuffix("/")
-            val source = MisskeySource(origin, "test-token", MisskeyApi(), initialCapabilities = ServerCapabilities(canPublish = true))
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache(), initialCapabilities = ServerCapabilities(canPublish = true))
 
             assertThrows(SourceError.ForeignOrigin::class.java) {
                 runBlocking { source.create(CreatePostRequest("text", quoteOf = EntityId("https://foreign.example", "quote"))) }
@@ -631,7 +633,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody("""{"version":"2026.1.0"}"""))
             server.enqueue(MockResponse().setBody("[$renote]"))
             server.enqueue(MockResponse().setBody("[]"))
-            val source = MisskeySource(server.url("/").toString().removeSuffix("/"), "test-token", MisskeyApi())
+            val source = MisskeySource(server.url("/").toString().removeSuffix("/"), "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
             val page = source.timeline(Timeline.Home)
             assertEquals("outer-id", page.nextCursor)
             assertEquals("outer-id", page.items.single().id.value)
@@ -720,7 +722,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody("""{"version":"2026.1.0"}"""))
             repeat(3) { server.enqueue(MockResponse().setBody("[]")) }
-            val source = MisskeySource(server.url("/").toString().removeSuffix("/"), "test-token", MisskeyApi())
+            val source = MisskeySource(server.url("/").toString().removeSuffix("/"), "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
 
             source.timeline(Timeline.Local)
             source.timeline(Timeline.Social)
@@ -742,7 +744,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody(root))
             server.enqueue(MockResponse().setBody(parent))
             server.enqueue(MockResponse().setBody("[$child]"))
-            val source = MisskeySource(server.url("/").toString().removeSuffix("/"), "test-token", MisskeyApi())
+            val source = MisskeySource(server.url("/").toString().removeSuffix("/"), "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
             val rootId = EntityId(server.url("/").toString().removeSuffix("/"), "root")
 
             assertEquals("root", source.post(rootId).id.value)

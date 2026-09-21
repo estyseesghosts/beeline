@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.data.mastodon.MastodonMapper
 import me.foxtails.palustris.data.mastodon.MastodonNotificationMapper
 import me.foxtails.palustris.data.mastodon.MastodonSource
+import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeyMapper
 import me.foxtails.palustris.data.misskey.MisskeyNotificationMapper
@@ -189,7 +190,7 @@ class NotificationAdapterContractTest {
         server.enqueue(MockResponse().setBody(JSONArray().put(misskeyNotification("n-older", "mention")).toString()))
         server.enqueue(MockResponse().setBody(JSONArray().put(misskeyNotification("n-newer", "mention")).toString()))
 
-        val source = MisskeySource(origin, "token", MisskeyApi(), accountId = account)
+        val source = MisskeySource(origin, "token", MisskeyApi(), accountId = account, capabilityCache = CapabilityCache())
         val first = source.notifications(query)
         val older = source.notifications(query, first.olderCursor)
         val newer = source.fetchNewerNotifications(query, first.checkpoint!!)
@@ -237,7 +238,7 @@ class NotificationAdapterContractTest {
         assertNotNull(result.first().post)
 
         server.enqueue(MockResponse().setBody(JSONArray().put(groupedReaction).toString()))
-        val page = MisskeySource(origin, "token", MisskeyApi(), accountId = receiver)
+        val page = MisskeySource(origin, "token", MisskeyApi(), accountId = receiver, capabilityCache = CapabilityCache())
             .notifications(NotificationQuery(grouped = true))
         assertEquals("reaction-group", page.items.single().id.value)
         val groupedRequest = server.takeRequest()
@@ -269,7 +270,7 @@ class NotificationAdapterContractTest {
         val account = AccountId(Connection(origin, Protocol.MISSKEY), "receiver")
         server.enqueue(MockResponse().setBody(JSONObject().put("notificationCount", 4).toString()))
         server.enqueue(MockResponse().setBody("{}"))
-        val source = MisskeySource(origin, "token", MisskeyApi(), accountId = account)
+        val source = MisskeySource(origin, "token", MisskeyApi(), accountId = account, capabilityCache = CapabilityCache())
 
         assertEquals(me.foxtails.palustris.domain.NotificationUnreadState.Exact(4), source.notificationUnreadState())
         assertEquals(me.foxtails.palustris.domain.NotificationUnreadState.None, source.acknowledgeNotifications().readState)
@@ -351,7 +352,7 @@ class NotificationAdapterContractTest {
         server.enqueue(MockResponse().setBody(JSONObject().put("endpoint", spec.endpoint.value).put("key", "registration").toString()))
         server.enqueue(MockResponse().setBody(JSONObject().put("endpoint", spec.endpoint.value).put("key", "registration").toString()))
         server.enqueue(MockResponse())
-        val source = MisskeySource(origin, "token", MisskeyApi(), accountId = account)
+        val source = MisskeySource(origin, "token", MisskeyApi(), accountId = account, capabilityCache = CapabilityCache())
 
         val existing = source.queryOwnedPushSubscription(oldEndpoint)!!
         val replacement = source.createOrReplacePushSubscription(spec, existing)
@@ -391,7 +392,7 @@ class NotificationAdapterContractTest {
 
         assertThrows(SourceError.UnsupportedCredential::class.java) {
             runBlocking {
-                MisskeySource(origin, "miauth-token", MisskeyApi(), accountId = account)
+                MisskeySource(origin, "miauth-token", MisskeyApi(), accountId = account, capabilityCache = CapabilityCache())
                     .createOrReplacePushSubscription(spec)
             }
         }
@@ -422,7 +423,7 @@ class NotificationAdapterContractTest {
         )
         server.enqueue(MockResponse().setBody(JSONObject().put("endpoint", "https://push.example/other").toString()))
         assertThrows(SourceError.ServerError::class.java) {
-            runBlocking { MisskeySource(origin, "token", MisskeyApi(), accountId = misskeyAccount).createOrReplacePushSubscription(misskeySpec) }
+            runBlocking { MisskeySource(origin, "token", MisskeyApi(), accountId = misskeyAccount, capabilityCache = CapabilityCache()).createOrReplacePushSubscription(misskeySpec) }
         }
         Unit
     }

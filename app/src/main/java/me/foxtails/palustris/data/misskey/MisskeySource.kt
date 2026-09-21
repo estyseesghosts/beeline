@@ -78,7 +78,7 @@ class MisskeySource(
     private val initialCapabilities: ServerCapabilities = ServerCapabilities(timelines = setOf(Timeline.Home)),
     private val accountId: AccountId? = null,
     private val capabilityProbe: CapabilityProbe = MisskeyCapabilityProbe(api, token.takeIf { accountId != null }),
-    private val capabilityCache: CapabilityCache = CapabilityCache(),
+    private val capabilityCache: CapabilityCache,
     private val clock: () -> Long = System::currentTimeMillis,
     private val sessionRevision: Long = 0L,
     /** Rejects probe results after the session store replaces or removes this source's session. */
