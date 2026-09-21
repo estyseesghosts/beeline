@@ -25,6 +25,7 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.data.auth.DraftActions
 import me.foxtails.palustris.data.auth.DraftStore
+import me.foxtails.palustris.data.auth.DraftWriteAuthority
 import me.foxtails.palustris.data.auth.InMemoryDraftStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -247,6 +248,7 @@ internal object AppShellFixtures {
                 ApplicationProvider.getApplicationContext<Context>()
                     .getSharedPreferences("local_draft", Context.MODE_PRIVATE)
             },
+            writeAuthority = DraftWriteAuthority(),
         ).asDraftsContract()
     }
 

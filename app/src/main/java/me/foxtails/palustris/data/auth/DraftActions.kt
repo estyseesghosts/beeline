@@ -24,7 +24,7 @@ class DraftActions(
     private val accountId: AccountId?,
     private val legacyPreferences: () -> SharedPreferences,
     private val writeGeneration: Long = 0L,
-    private val writeAuthority: DraftWriteAuthority = DraftWriteAuthority(),
+    private val writeAuthority: DraftWriteAuthority,
     private val appMessages: AppMessages = AppMessages.Default,
 ) {
     fun load(onResult: (List<PostDraft>) -> Unit, onError: (String) -> Unit = {}) {
@@ -86,7 +86,7 @@ class DraftActions(
             accountId: AccountId?,
             context: Context,
             writeGeneration: Long = 0L,
-            writeAuthority: DraftWriteAuthority = DraftWriteAuthority(),
+            writeAuthority: DraftWriteAuthority,
         ): DraftActions = DraftActions(
             scope = scope,
             store = store,

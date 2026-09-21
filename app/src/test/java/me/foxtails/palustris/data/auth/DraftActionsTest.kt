@@ -69,7 +69,7 @@ class DraftActionsTest {
     fun loadCancellationReportsNothing() = runTest {
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob())
         val store = GateDraftStore(listGate = CompletableDeferred())
-        val actions = DraftActions(scope, store, account, ::preferences)
+        val actions = DraftActions(scope, store, account, ::preferences, writeAuthority = DraftWriteAuthority())
         val results = mutableListOf<List<PostDraft>>()
         val errors = mutableListOf<String>()
         actions.load(onResult = { results += it }, onError = { errors += it })
@@ -100,7 +100,7 @@ class DraftActionsTest {
     fun saveCancellationReportsNothing() = runTest {
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob())
         val store = GateDraftStore(saveGate = CompletableDeferred())
-        val actions = DraftActions(scope, store, account, ::preferences)
+        val actions = DraftActions(scope, store, account, ::preferences, writeAuthority = DraftWriteAuthority())
         var results = 0
         var errors = 0
         actions.save(draft, onResult = { results++ }, onError = { errors++ })
@@ -130,7 +130,7 @@ class DraftActionsTest {
     fun deleteCancellationReportsNothing() = runTest {
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob())
         val store = GateDraftStore(deleteGate = CompletableDeferred())
-        val actions = DraftActions(scope, store, account, ::preferences)
+        val actions = DraftActions(scope, store, account, ::preferences, writeAuthority = DraftWriteAuthority())
         var done = 0
         val errors = mutableListOf<String>()
         actions.delete(draftId = "draft", onDone = { done++ }, onError = { errors += it })
@@ -234,6 +234,7 @@ class DraftActionsTest {
         store = store,
         accountId = account,
         legacyPreferences = ::preferences,
+        writeAuthority = DraftWriteAuthority(),
         appMessages = appMessages,
     )
 
