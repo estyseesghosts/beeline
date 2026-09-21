@@ -9,6 +9,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppRegistrationCacheTest {
@@ -140,6 +141,100 @@ class AppRegistrationCacheTest {
 
         assertEquals(1, creations.get())
         completed.forEach { assertEquals(setOf("read", "push"), it.scopes) }
+    }
+
+    @Test
+    fun retainsAtMost16Entries() {
+        val cache = AppRegistrationCache()
+        repeat(16) { cache.put("origin-$it", registration(setOf("read"))) }
+        repeat(16) { assertNotNull(cache.get("origin-$it")) }
+
+        cache.put("origin-16", registration(setOf("read")))
+
+        assertNull(cache.get("origin-0"))
+        repeat(15) { assertNotNull(cache.get("origin-${it + 1}")) }
+        assertNotNull(cache.get("origin-16"))
+    }
+
+    @Test
+    fun successfulLookupPromotesEntryInLruOrder() {
+        val cache = AppRegistrationCache()
+        repeat(16) { cache.put("origin-$it", registration(setOf("read"))) }
+        assertNotNull(cache.get("origin-0"))
+
+        cache.put("origin-16", registration(setOf("read")))
+
+        assertNotNull(cache.get("origin-0"))
+        assertNull(cache.get("origin-1"))
+    }
+
+    @Test
+    fun idleExpiryBoundaryIsExactly24Hours() {
+        val clock = FakeClock()
+        val cache = AppRegistrationCache(clock::now)
+        cache.put("exact", registration(setOf("read")))
+        clock.advance(IDLE)
+        assertNull(cache.get("exact"))
+
+        cache.put("just-before", registration(setOf("read")))
+        clock.advance(IDLE - 1)
+        assertNotNull(cache.get("just-before"))
+    }
+
+    @Test
+    fun sufficientRegistrationServesLowerScopeRequests() {
+        val cache = AppRegistrationCache(FakeClock()::now)
+        val full = registration(setOf("read", "write", "push"))
+        cache.put("origin", full)
+
+        assertSame(full, cache.get("origin", setOf("read")))
+        assertSame(full, cache.get("origin", setOf("read", "write")))
+        assertNull(cache.get("origin", setOf("admin")))
+    }
+
+    @Test
+    fun differentOriginsAreIsolated() = runBlocking {
+        val cache = AppRegistrationCache(FakeClock()::now)
+        val creations = AtomicInteger()
+        val enteredA = CompletableDeferred<Unit>()
+        val enteredB = CompletableDeferred<Unit>()
+        val releaseCreators = CompletableDeferred<Unit>()
+        val first = async {
+            cache.getOrPut("https://a.example", setOf("read")) {
+                creations.incrementAndGet()
+                enteredA.complete(Unit)
+                releaseCreators.await()
+                AppRegistration("id-a", "secret-a", setOf("read"), scopesKnown = true)
+            }
+        }
+        val second = async {
+            cache.getOrPut("https://b.example", setOf("read")) {
+                creations.incrementAndGet()
+                enteredB.complete(Unit)
+                releaseCreators.await()
+                AppRegistration("id-b", "secret-b", setOf("read"), scopesKnown = true)
+            }
+        }
+
+        enteredA.await()
+        enteredB.await()
+        releaseCreators.complete(Unit)
+
+        assertEquals("id-a", first.await().clientId)
+        assertEquals("id-b", second.await().clientId)
+        assertEquals(2, creations.get())
+        assertEquals("id-a", cache.get("https://a.example")?.clientId)
+        assertEquals("id-b", cache.get("https://b.example")?.clientId)
+        assertNull(cache.get("https://c.example"))
+    }
+
+    @Test
+    fun mastodonAuthAlwaysRequiresInjectedCache() {
+        val constructors = MastodonAuth::class.java.declaredConstructors
+        assertTrue(constructors.isNotEmpty())
+        constructors.forEach {
+            assertTrue(it.parameterTypes.contains(AppRegistrationCache::class.java))
+        }
     }
 
     private fun registration(scopes: Set<String>) =
