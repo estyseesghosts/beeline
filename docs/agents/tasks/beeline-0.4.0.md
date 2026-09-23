@@ -26,6 +26,8 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 - Slice 0A is complete at `ba3fe53`. Verification: 51 Python tests passed; architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline; all 120 relative links across 11 touched Markdown files resolve. No source changes occurred.
 - Slice 0B is complete (this record ships with the slice commit). Its commit hash is recorded at the 1A boundary. The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
+- Slice L0 is complete. Its record ships together with the L0 commit. Record the L0 hash at the 1A boundary.
+- Slice 1A is current: implementation and tests are in the worktree. Its gate results are recorded: `ModerationServiceTest` exited 0, adapter contracts exited 0, and `lintDebug` exited 0 after L0. Review 1A, then commit 1A. Record the 1A hash at the 1B1 boundary.
 
 # Current slice
 
@@ -77,13 +79,23 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 - `NavigationTest.closingComposerAutosavesUnsavedText` and `NavigationTest.draftsSurviveActivityRecreationAndCanBeDeleted` fail when run standalone and in the combined set. Both failures reproduce at base commit `ba3fe53` with an empty `app/src` diff. This is a pre-existing open defect; its cause is not established. The failures are excluded from the 0B gate for that reason only and are tracked in `logs/BUGS.txt`.
 - 0B `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
 - 0B architecture audit `--check`: exit 0; 605 findings, no new regressions against baseline.
+- 1A focused `ModerationServiceTest`: exit 0; Gradle reported `BUILD SUCCESSFUL`. The test task did not print a test count.
+- 1A Mastodon integration/source contract and Misskey integration tests: exit 0; Gradle reported `BUILD SUCCESSFUL`. The test task did not print a test count.
+- 1A initial `:app:lintDebug`: exit 1; 1 error, 92 warnings, and 2 hints. The `UnusedBoxWithConstraintsScope` finding was outside the 1A diff and is resolved by L0 below.
+- L0 `:app:lintDebug`: exit 0; Gradle reported `BUILD SUCCESSFUL` after replacing the unused `BoxWithConstraints` with `Box`.
+- L0 shell regression tests (`ShellCharacterizationTest`, `AppShellStateTest`): exit 0; Gradle reported `BUILD SUCCESSFUL`.
+- L0 `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- L0 architecture audit `--check`: exit 0; 605 findings, with no new regressions against the baseline.
+- 1A `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- 1A architecture audit `--check`: exit 0; 605 findings, with no new regressions against the baseline.
+- The requested `git status --short` exited 0; `docs/classic_navigation.md` remained staged. The requested `git rev-parse --short HEAD` exited 0 and returned `72fafc4`.
 - 0B Markdown links: eight baseline-file targets were checked against direct file reads and glob; all eight targets resolve. Source/test directory links resolve by glob.
 - Register: 68 rows — 29 binding-specification rows, 26 proposal rows, and 13 polish research/reference rows. Binding clauses restated in proposal rows remain part of those proposal rows and do not add separate register rows or change the binding status of the original specification clauses. Several proposal rows also flag unverified device measures.
 - No source changes occurred. Device and live-server checks remain unverified.
 
 # Next
 
-Slice 1A: fix Mastodon block/mute relationship recovery per `docs/beeline_0.4.0.md`.
+Slice 1A is the current slice. Its implementation and tests are in the worktree. Its gate results are recorded: `ModerationServiceTest` exited 0, adapter contracts exited 0, and `lintDebug` exited 0 after L0. Review 1A, then commit 1A. Record the 1A hash at the 1B1 boundary. Slice L0 is complete. Its record ships together with the L0 commit. Record the L0 hash at the 1A boundary. `72fafc4` (0B) is the last commit in history and the last safe commit. No later commit exists.
 
 # Blockers
 
@@ -100,4 +112,4 @@ Slice 1A: fix Mastodon block/mute relationship recovery per `docs/beeline_0.4.0.
 
 # Last safe commit
 
-`ba3fe53` is the last safe commit (0A). Record the 0B commit hash at the 1A boundary.
+`72fafc4` (0B) is the last commit in history and the last safe commit. No later commit exists. Slice 1A remains in the worktree. Record its commit hash at the 1B1 boundary.
