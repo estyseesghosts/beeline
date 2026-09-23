@@ -1,22 +1,22 @@
 # Handoff
 
-**Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state. This handoff is the next-agent pointer.
+**Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state. This file is the next-agent pointer.
 
 ## Start here — maintainer directive
 
 1. Read `AGENTS.md` and `importantdocs/writing_style.md`.
-2. Reread `docs/beeline_0.4.0.md` **in full**, including its updated requirements, packet table, and execution map.
+2. Reread `docs/beeline_0.4.0.md` in full, including its updated requirements, packet table, and execution map.
 3. Read `docs/agents/tasks/beeline-0.4.0.md`, `docs/agents/beeline-0.4.0-ui-baseline.md`, and `logs/BUGS.txt`.
 4. Check `git log --oneline -12`, `git status --short`, HEAD, and the current diff.
-5. Obtain the maintainer's specified changes to phases 0 and 1. If they are not available, stop and ask for them.
+5. Obtain the maintainer's specified changes to phases 0 and 1. If they are not available, stop and ask.
 
-**The maintainer requires one more traversal of phases 0 and 1 before later packets continue.** Treat the updated `docs/beeline_0.4.0.md` requirements as authoritative when an executed slice conflicts with them. Do not assume the existing commits satisfy the revised plan. First map the changes to owners, tests, and commit-sized packets. Do not implement an unspecified change.
+The maintainer requires one more traversal of phases 0 and 1 before later packets continue. Treat the updated `docs/beeline_0.4.0.md` requirements as authoritative when an executed slice conflicts with them. Do not assume existing commits satisfy the revised plan. Map changes to owners, tests, and commit-sized packets before implementation. The changes remain unspecified and outstanding.
 
-The plan is git-ignored planning material directly under `docs/`. Do not force-add it as part of an unrelated slice. Also check `docs/260923_current_state.md`, `docs/agents/app-shell-ownership.md`, and `docs/agents/protocol-and-session-ownership.md` when the next packet touches their boundaries. Historical Plan 04 and retention records are history, not a work queue.
+The plan is git-ignored planning material directly under `docs/`. Do not force-add it as part of an unrelated slice. Also check `docs/260923_current_state.md`, `docs/agents/app-shell-ownership.md`, and `docs/agents/protocol-and-session-ownership.md` when the next packet touches their boundaries. Historical Plan 04 and retention records are not a work queue.
 
 ## Current position and last safe code-slice commit
 
-Last safe code-slice commit: `fa087d0` (1D2). The subsequent records-sync commit changes documentation only. None of the 11 listed commits has been pushed.
+Last safe code-slice commit: `fa087d0` (1D2). The records-sync commit is `0b3214b`. This documentation-only foldable device-verification slice is complete in the worktree; its commit is pending. None of the prior 11 listed commits has been pushed.
 
 Executed order, oldest to newest:
 
@@ -31,8 +31,17 @@ Executed order, oldest to newest:
 - 1C `71c6f7d`: shared quote visibility in `QuotePreviewCard` across rows and Photo Grid detail.
 - 1D1 `e46e44c`: characterized Misskey inbox streams and the validation-only read no-op.
 - 1D2 `fa087d0`: added the identity-bound composite Misskey inbox cursor, per-stream progress, fallback progress, and endpoint-order merge.
+- Foldable emulator device pass `pending commit`: recorded verified emulator posture rendering, navigation, grouped memory, and capture limits; documentation only, no source changes.
 
-`e46e44c` is the historical 1D2 start boundary, not current HEAD. The 1D2 focused gate results are in the task state. No device or live-server verification follows from those results.
+`e46e44c` is the historical 1D2 start boundary, not current HEAD. The 1D2 focused gate results are in the task state. Emulator device and live-server evidence is recorded in the UI baseline; physical foldable rendering remains unverified.
+
+### Reachable foldable emulator
+
+- Pixel Fold AVD, API 36, serial `emulator-5554`; live test accounts are signed in: Mastodon `jmjmjm` on mstdn.ca and Misskey `ctr` on dvd.chat.
+- Fold with `adb shell cmd device_state state 0`. Unfold with `adb shell cmd device_state state 2`.
+- Capture reliably with `adb shell screencap -p /sdcard/shot.png`, then `adb pull /sdcard/shot.png <local-file>`.
+- A posture transition can show the emulator keyguard. Dismiss it with `adb shell wm dismiss-keyguard`.
+- Helpers under `tools/scripts/` cannot find `adb` because `adb` is not on PATH. The direct `adb exec-out screencap -p` method produced stale or undecodable captures.
 
 ## Next slices and packet gates
 
@@ -68,17 +77,18 @@ The plan's packet table and detailed phase text control each packet. Recheck sou
 
 Use one behavior and one reviewed commit per implementation slice. Have `problem_solver_high` produce a precise plan. Have `targeted_fixer` execute that plan verbatim. Stop and report contradictions instead of improvising. Use `code_reviewer_high` for networking or multi-file slices; use `code_reviewer_low` for a simple single-file slice. Repair until the reviewer approves. Have `git_handler` stage and commit only explicit slice pathspecs. Never push.
 
-Use exactly one command per shell call. Do not chain commands with `;`, `&&`, `|`, backticks, `$env:`, or line continuations. On Windows, run Gradle only as `.\gradlew.bat --no-daemon --console=plain <task>`. Configure `GRADLE_OPTS=-Dorg.gradle.daemon=false` outside the command, keep standard input closed, and set an explicit timeout: at least 900000 ms for tests and 1800000 ms for lint or a full gate. Run focused tests first; run lint when the changed boundary requires it. The coding-task completion gate is `test assembleRelease`, but its existing red result remains unresolved.
+Use exactly one command per shell call. Do not chain commands with `;`, `&&`, `|`, backticks, `$env:`, or line continuations. On Windows, run the wrapper as `gradlew.bat --no-daemon --console=plain <task>`. Configure `GRADLE_OPTS=-Dorg.gradle.daemon=false` outside the command, keep standard input closed, and set an explicit timeout: at least 900000 ms for tests and 1800000 ms for lint or a full gate. Run focused tests first; run lint when the changed boundary requires it. The coding-task completion gate is `test assembleRelease`, but its existing red result remains unresolved.
 
 ## Blockers and verification limits
 
 - The task-level full `test assembleRelease` gate is RED. During 1B1, release assembly completed, but 16 of 1,265 JVM tests failed. Two `NavigationTest` failures were separately reproduced at `ba3fe53` with an empty `app/src` diff; their cause is unknown.
 - The other 14 failures are `DraftActionsTest` (2), `CapabilityCacheTest` (2), `MisskeyThreadContinuationTest` (5), and `NotificationSyncOrchestratorTest` (5). Focused runs reproduced them. Byte identity, changed-symbol non-reachability checks, and provenance evidence do not attribute them to the 0.4.0 slices. Transitive closure was not fully proved. Introduction commits were not bisected because `git worktree add` was permission-blocked. Product versus environment cause is unknown. A dedicated investigation slice must restore full-suite green before phase 10. Do not skip or weaken tests.
 - 1B5 remains paused for the explicit decision above.
-- No device is reachable for this task. Physical-device, API 29, compact/wide rendering, foldable, RTL-device, TalkBack, and connected instrumentation checks remain unverified. Live-server and signed-release behavior remain unverified. The historical Android 15 system-bar instrumentation concern is in `logs/BUGS.txt`.
-- `NotificationsViewModelTest` and `MediaViewerScreenTest` have historical flakes. Investigate if they reproduce; do not label a single old isolated failure a new regression.
+- Foldable posture rendering on the Pixel Fold emulator is device verified. Physical-device, API 29, real RTL-device, TalkBack, dark and pure-black themes, font scale 200%, animator scale 0, mixed-direction content, IME-open states, and signed-release behavior remain unverified. Live-server evidence covers sign-in, timelines, notifications, profiles, and Photo Grid media for both protocols. The historical Android 15 system-bar instrumentation concern is in `logs/BUGS.txt`.
+- Notifications and media-viewer tests have historical flakes. Investigate if they reproduce; do not label one old isolated failure a new regression.
 - Focused mocked HTTP tests do not prove live-server behavior. Compose and Robolectric tests do not prove physical rendering. Report a gate as independently verified only if the reviewing agent actually ran it; otherwise identify the agent-reported result and the reviewer's inspection limit.
 - Retention has source/test characterization, not heap, disk, or Room measurements. Keep other historical limits and risks in the task state and `logs/BUGS.txt`.
+- The emulator pass does not measure or approve any 0B geometry decision. Physical foldable rendering remains unverified.
 
 ## Worktree hygiene and records
 

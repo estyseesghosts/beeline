@@ -18,7 +18,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 - `docs/260923_current_state.md` is the active review input. `docs/260926_current_state.md` does not exist. Confirm if a newer review appears.
 - Slice 2E is conditional on a later UI change that needs it. Phases 0-2 do not trigger it. Record it as not triggered and confirm before running.
-- No device is reachable. Device, screenshot, foldable, RTL-device, TalkBack, live-server, and signed-release checks are unverified.
+- A Pixel Fold emulator is reachable. Foldable posture rendering is device verified (emulator); physical-device, API 29, RTL-device, TalkBack, theme/font/animator capture axes, and signed-release checks remain unverified. Live-server evidence covers sign-in, timelines, notifications, profiles, and Photo Grid media on mstdn.ca and dvd.chat.
 - Architecture audit exit 0 means no new regressions against the baseline. It does not mean architecture completion.
 - Research for 0A and 0B can run in parallel. Keep commits ordered 0A, then 0B.
 
@@ -28,10 +28,11 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 - Slice 0B is complete at `72fafc4`. The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
 - Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`.
 - Slice 1B1 is complete at `5207a96`. Timeline cursors use opaque, identity-bound route tokens.
+- The foldable emulator device-verification slice is complete as a documentation-only slice with no source changes. Pixel Fold API 36 posture rendering, compact and wide navigation, primary-surface navigation in both postures, and Photo Grid `Local` grouped-memory preservation across three posture changes passed. Live sign-in and feed evidence covers Mastodon `jmjmjm` on mstdn.ca and Misskey `ctr` on dvd.chat. Screenshots remain git-ignored evidence under `docs/`.
 
 # Current slice
 
-Slice 1D2 is committed at `fa087d0`. The last safe code-slice commit is `fa087d0`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary. The next implementation work is the maintainer-directed review of phases 0 and 1 against `docs/beeline_0.4.0.md`; 1D3 and later packets follow only after that review.
+Slice 1D2 is committed at `fa087d0`. The foldable emulator device pass is complete, and its documentation records are ready for the records commit. The last safe code-slice commit is `fa087d0`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary. The maintainer-directed phase 0/1 re-traversal remains the next implementation work; its specified changes remain outstanding.
 
 ## Maintainer directive
 
@@ -100,16 +101,15 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 - Final `git status --short`: exit 0; staged `docs/classic_navigation.md` and unrelated dirty files remain unchanged. `git rev-parse --short HEAD`: exit 0; `cbf8698`.
 - 0B Markdown links: eight baseline-file targets were checked against direct file reads and glob; all eight targets resolve. Source/test directory links resolve by glob.
 - Register: 68 rows — 29 binding-specification rows, 26 proposal rows, and 13 polish research/reference rows. Binding clauses restated in proposal rows remain part of those proposal rows and do not add separate register rows or change the binding status of the original specification clauses. Several proposal rows also flag unverified device measures.
-- No source changes occurred. Device and live-server checks remain unverified.
+- No source changes occurred. Foldable-emulator posture rendering and live sign-in/feed loading on mstdn.ca and dvd.chat are device/live verified (emulator pass 2026-09-23). Physical-device, API 29, theme/font/animator/RTL/TalkBack, signed-release, and broad live-server behavior remain unverified.
 
 # Next
 
-Slice 1D2 is committed at `fa087d0`, the last safe code-slice commit. `e46e44c` remains the historical 1D1 completion and 1D2 start boundary. Next: the maintainer-directed review of phases 0 and 1 against the complete updated plan. 1B5 remains paused because its non-thread response-cap gate is unmet. 1D3, 1E1, 1E2, and phase 2 remain prospective.
+Slice 1D2 is committed at `fa087d0`, the last safe code-slice commit. `e46e44c` remains the historical 1D1 completion and 1D2 start boundary. Next: the maintainer-directed review of phases 0 and 1 against the complete updated plan. 1B5 remains paused because its non-thread response-cap gate is unmet. 1D3, 1E1, 1E2, and phase 2 remain prospective. The Pixel Fold emulator is available for later device checks; use `adb shell cmd device_state state 0|2` and the reliable shell screencap plus `adb pull` method recorded in the baseline.
 
 # Blockers
 
-- No device is reachable; device baselines and checks remain unverified.
-- Live-server and signed-release behavior remain unverified.
+- Foldable-emulator posture rendering and live sign-in/feed loading on mstdn.ca and dvd.chat are device/live verified (emulator pass 2026-09-23). Physical-device, API 29, theme/font/animator/RTL/TalkBack, signed-release, and broad live-server behavior remain unverified.
 - The Android 15 system-bar instrumentation failure remains recorded in `logs/BUGS.txt`.
 - No empirical retention measurements exist.
 - 0B device measures remain pending.
