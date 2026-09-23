@@ -274,7 +274,7 @@ class MastodonSource(
 
     override suspend fun unfavorite(id: EntityId, favouriteEmoji: String?) = request {
         validatePostId(id, "favorite")
-        api.postForm(origin, "api/v1/statuses/${id.value}/unfavourite", emptyList(), token)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/unfavourite", emptyList(), token)
         Unit
     }
 

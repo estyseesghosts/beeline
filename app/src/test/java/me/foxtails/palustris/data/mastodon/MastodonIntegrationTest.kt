@@ -707,6 +707,26 @@ class MastodonIntegrationTest {
     }
 
     @Test
+    fun unfavoriteEncodesReservedIdCharactersAndPreservesPlainIdPath() = runBlocking {
+        server.enqueue(MockResponse().setBody("{}"))
+        server.enqueue(MockResponse().setBody("{}"))
+        val source = source()
+
+        source.unfavorite(EntityId(origin, "plain-id"))
+        source.unfavorite(EntityId(origin, "slash/? space%#"))
+
+        val plainRequest = server.takeRequest()
+        assertEquals("POST", plainRequest.method)
+        assertEquals("/api/v1/statuses/plain-id/unfavourite", plainRequest.path)
+        assertEquals("Bearer token", plainRequest.getHeader("Authorization"))
+
+        val reservedRequest = server.takeRequest()
+        assertEquals("POST", reservedRequest.method)
+        assertEquals("/api/v1/statuses/slash%2F%3F%20space%25%23/unfavourite", reservedRequest.path)
+        assertEquals("Bearer token", reservedRequest.getHeader("Authorization"))
+    }
+
+    @Test
     fun sourceLoadsApiEightSelfProfileWithBearerAndRawValues() = runBlocking {
         server.enqueue(MockResponse().setBody(profileResponse("local-user").toString()))
         val source = editableSource(editableCapabilities())

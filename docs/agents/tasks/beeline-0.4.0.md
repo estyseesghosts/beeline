@@ -31,7 +31,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Current slice
 
-Slice 1B3 is complete in the current worktree. Its focused moderation gate passed after correcting an invalid test assumption. Last safe commit is `9e29ef4`.
+Slice 1B4 is complete and ships with the current commit. `unfavorite` now encodes its ID with the existing path-segment helper. 1B3 commit and last safe commit are `d21280e`. Current slice 1B5 is PAUSED; next is 1C, and the 1B4 hash is recorded at that next boundary.
 
 # Files involved
 
@@ -74,6 +74,7 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Verification
 
+- The 1B4 slice consists of `MastodonSource.kt`, `MastodonIntegrationTest.kt`, and these two records; the whole-worktree diff also lists unrelated pre-existing changes that are never staged or committed with a slice.
 - 0A verification is recorded above: 51 Python tests; architecture audit exit 0 with 605 findings and no new regressions; 120 relative links resolved.
 - The initial focused Gradle run exited 1 with two `NavigationTest` failures. `NavigationTest` then failed standalone at base commit `ba3fe53` with an empty `app/src` diff; this pre-existing issue is logged in `logs/BUGS.txt` and the task-state blockers. The final 0B gate excluded `NavigationTest` and passed the seven-class set: exit 0, 79 tests across `MotionTokensTest`, `SpringyInteractionsTest`, `LargeLayoutModeTest`, `WideNavigationTest`, `HomeFeedTest`, `AppShellStateTest`, and `SettingsDisplayTest`.
 - `NavigationTest.closingComposerAutosavesUnsavedText` and `NavigationTest.draftsSurviveActivityRecreationAndCanBeDeleted` fail when run standalone and in the combined set. Both failures reproduce at base commit `ba3fe53` with an empty `app/src` diff. This is a pre-existing open defect; its cause is not established. The failures are excluded from the 0B gate for that reason only and are tracked in `logs/BUGS.txt`.
@@ -99,9 +100,9 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Completed += `Slice 1B3 — complete (ships with this commit)`; 1B2 commit = `9e29ef4`.
-Current slice = `1B4`; Next = 1B4 (encode unfavorite ID in MastodonSource.kt and test reserved characters).
-Last safe commit = `9e29ef4`. Record the 1B3 hash at the 1B4 boundary.
+Completed += `Slice 1B4 — complete (ships with this commit)`; 1B3 commit = `d21280e`.
+Current slice = `1B5 — PAUSED (gate unmet, awaiting decision)`; Next = `1C` (shared quote/CW presentation rule). Resume 1B5 only if the recorded decision approves a conservative response cap per adapter.
+Last safe commit = `d21280e`. The 1B4 hash is recorded at the next slice boundary (1C, since 1B5 is paused).
 
 # Blockers
 
@@ -141,7 +142,23 @@ Last safe commit = `9e29ef4`. Record the 1B3 hash at the 1B4 boundary.
 
 # Last safe commit
 
-`9e29ef4` (1B2) is the last safe commit. Record the 1B3 hash at the 1B4 boundary.
+`d21280e` (1B3) is the last safe commit. The 1B4 hash is recorded at the next slice boundary (1C, since 1B5 is paused).
+
+# 1B4 verification
+
+- Changed only the `unfavorite` path to call the existing `encodePathSegment()` helper. `setPrimaryFavourite` already uses that same helper for both selected and unselected mutations.
+- `MastodonSource.kt` raw-ID interpolation grep found a single raw ID in a request path: `unfavorite` at its prior line 277. Other matched path interpolations encode the ID. Query parameters use builders and are not part of this path finding.
+- `MastodonIntegrationTest.unfavoriteEncodesReservedIdCharactersAndPreservesPlainIdPath` checks POST, bearer authorization, exact `/api/v1/statuses/plain-id/unfavourite` path, and exact `/api/v1/statuses/slash%2F%3F%20space%25%23/unfavourite` path. No unfavourite alias exists. No raw-path assertion needed updating.
+- Response error mapping is unchanged. SourceError behavior was not modified.
+- Integration gate: exit 0; `MastodonIntegrationTest` passed, including the new unfavorite wire-path case.
+- Source-contract/moderation/Misskey integration gate: exit 0; Gradle reported `BUILD SUCCESSFUL`.
+- `:app:lintDebug`: exit 0; Gradle reported `BUILD SUCCESSFUL`.
+- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- Architecture audit `--check`: exit 0; 605 findings and no new baseline regressions.
+- No other test asserts unfavorite wire bytes, and there is no unfavourite alias. No prior raw-path assertion needed updating.
+- The helper is `URLEncoder.encode(value, UTF_8).replace("+", "%20")`. Plain IDs retain identical path bytes. Reserved characters `/`, `?`, space, `%`, and `#` serialize as `%2F`, `%3F`, `%20`, `%25`, and `%23`.
+- `git status --short`: exit 0; `docs/classic_navigation.md` remains staged, and unrelated dirty paths remain untouched. `git rev-parse --short HEAD`: exit 0; `d21280e`. No staging or commit occurred.
+- Device and live-server behavior remain unverified. Full-suite red, NavigationTest, 14-failure investigation, and paused 1B5 blockers remain unchanged.
 
 # 1B2 verification
 
@@ -170,12 +187,12 @@ Last safe commit = `9e29ef4`. Record the 1B3 hash at the 1B4 boundary.
 - Mastodon integration/source contract and Misskey integration command: exit 0; `BUILD SUCCESSFUL`. Grep found no other tests asserting Mastodon moderation-list paging or `/v1/lists` routes.
 - `:app:lintDebug`: exit 0. Python unittest: exit 0; 51 tests. Architecture audit `--check`: exit 0; 605 findings, no baseline regression.
 - Invalid cursor failures retain `moderation.cursor`, as asserted by the existing test. Invalid server Links use `pagination.link`.
-- HEAD remains `9e29ef4`; no staging or commit occurred. Device and live-server behavior remain unverified. The full-suite, NavigationTest, 14-failure, and paused 1B5 blockers remain unchanged.
+- At the 1B2 boundary, HEAD was `9e29ef4`; no staging or commit occurred. Device and live-server behavior remain unverified. The full-suite, NavigationTest, 14-failure, and paused 1B5 blockers remain unchanged.
 - Review repair adds `hashtagCursorRejectsAnotherQueryWithoutChangingTheCursor`: it obtains a cats cursor from a real cats Link response, passes that unchanged cursor to `searchHashtag("dogs", cursor)`, and asserts `Unsupported("pagination.cursor")` with no additional request.
 - Review repair adds `bookmarkCursorRejectsTimelineRouteBeforeCapabilityProbe`: it obtains a bookmark cursor from a real bookmarks Link response, passes it to `timeline(Home, cursor)` on a source with the real capability probe, and asserts `Unsupported("pagination.cursor")` with no additional request.
 - Renamed the earlier mixed tampering case to `hashtagCursorPayloadTamperingAndOtherRoutesAreRejected`. Its changed query payload has a cats path, so that case proves payload tampering/path validation, not unchanged-cursor cross-query rejection.
 - Both required Gradle focused gates, Python unittest, and architecture audit exited 0. `lintDebug` was not rerun because this repair changes tests and records only; no main source changed.
-- HEAD remains `5207a96`; staged `docs/classic_navigation.md` and unrelated worktree changes remain untouched. No staging or commit occurred. Existing blockers remain unchanged.
+- At the 1B2 boundary, HEAD was `5207a96`; staged `docs/classic_navigation.md` and unrelated worktree changes remained untouched. No staging or commit occurred. Existing blockers remain unchanged.
 
 # 1B1 review repair verification
 
@@ -183,7 +200,7 @@ Last safe commit = `9e29ef4`. Record the 1B3 hash at the 1B4 boundary.
 - At the 1B1 boundary, the ownership text still described temporary bookmark and hashtag raw-Link replay. Slice 1B2 resolved that transitional behavior; the current ownership contract covers all page routes.
 - Required Mastodon integration, adapter contract/moderation/Misskey integration, lint, Python, and architecture audit gates exited 0.
 - Full-suite red status remains tracked as its own blocker. The 14 unexplained failures are not reclassified. No full suite was run for this repair.
-- HEAD remains `af1f983`; the staged `docs/classic_navigation.md` remains untouched. Review changes are not committed. Record the 1B1 hash at the 1B2 boundary.
+- At the 1B1 review boundary, HEAD was `af1f983`; the staged `docs/classic_navigation.md` remained untouched. Review changes were not committed. The 1B1 hash is recorded at the 1B2 boundary.
 
 # 1B3 review repair
 
@@ -198,4 +215,4 @@ Last safe commit = `9e29ef4`. Record the 1B3 hash at the 1B4 boundary.
 - `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
 - Architecture audit `--check`: exit 0; 605 findings and no new baseline regressions.
 - The moderation cursor binds origin/account/kind/variant/route/query, but not `sessionRevision` or `sourceInstance`. ViewModel memory lifetime and `AccountSourceRegistry.isCurrent` guard normal paging. A direct same-account `SocialSource` replay after source replacement remains possible. Stronger binding was consciously deferred; no code change was made for this NIT.
-- Last safe commit remains `9e29ef4`; 1B3 remains complete, 1B4 remains current/next, and the 1B3 hash remains due at the 1B4 boundary. No staging or commit occurred. Existing blockers remain unchanged.
+- The 1B3 review repair recorded `9e29ef4` as its last safe commit at that time. The current 1B3 hash and last safe commit are `d21280e`; 1B4 is complete and ships with this commit. The current slice is 1B5 PAUSED and the next slice is 1C; record the 1B4 hash at that next boundary. No staging or commit occurred. Existing blockers remain unchanged.
