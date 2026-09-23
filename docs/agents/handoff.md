@@ -1,107 +1,89 @@
 # Handoff
 
-**Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state for Beeline 0.4.0.
+**Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state. This handoff is the next-agent pointer.
 
-Historical records stay linked as history, never as a queue. See [Plan 04 archive](../archive/agents/plan04-utility-retention.md), [wide detail photo sizing](../archive/agents/wide-detail-photo-sizing.md), and [docs archive](../archive/agents/docs-archive.md).
+## Start here — maintainer directive
 
-## Where To Start
+1. Read `AGENTS.md` and `importantdocs/writing_style.md`.
+2. Reread `docs/beeline_0.4.0.md` **in full**, including its updated requirements, packet table, and execution map.
+3. Read `docs/agents/tasks/beeline-0.4.0.md`, `docs/agents/beeline-0.4.0-ui-baseline.md`, and `logs/BUGS.txt`.
+4. Check `git log --oneline -12`, `git status --short`, HEAD, and the current diff.
+5. Obtain the maintainer's specified changes to phases 0 and 1. If they are not available, stop and ask for them.
 
-1. `AGENTS.md`.
-2. `docs/agents/tasks/beeline-0.4.0.md`.
-3. `docs/agents/beeline-0.4.0-ui-baseline.md` for 0B classification and open device gates.
-4. `git status` and the current diff.
-5. Recent commits.
-6. `docs/beeline_0.4.0.md` (active plan; git-ignored planning material under `docs/` unless explicitly added).
-7. `docs/260923_current_state.md` (active cleanup review; also git-ignored).
-8. `docs/agents/app-shell-ownership.md` and `docs/agents/protocol-and-session-ownership.md`.
-9. `logs/BUGS.txt`.
+**The maintainer requires one more traversal of phases 0 and 1 before later packets continue.** Treat the updated `docs/beeline_0.4.0.md` requirements as authoritative when an executed slice conflicts with them. Do not assume the existing commits satisfy the revised plan. First map the changes to owners, tests, and commit-sized packets. Do not implement an unspecified change.
 
-## Current Position
+The plan is git-ignored planning material directly under `docs/`. Do not force-add it as part of an unrelated slice. Also check `docs/260923_current_state.md`, `docs/agents/app-shell-ownership.md`, and `docs/agents/protocol-and-session-ownership.md` when the next packet touches their boundaries. Historical Plan 04 and retention records are history, not a work queue.
 
-- Plan 04-A through 04-K have committed work: 04-A `ee52ba9`, 04-B `6a87c76`, 04-C `633cd7a`, 04-D `f0735df`, 04-E1 `b04b2e8`, 04-F `9a1b055`, 04-G `d5f694c`, 04-H1 `cc900d9`, 04-H2 `fab0131`, 04-I `51351a7`, 04-J1 `dc9ae5f`, 04-J2 `c6a2ed0`, 04-J3 `484b995`, and 04-K `9e9a0d7`.
-- The earlier ditch decision `b0d3ddd` is dated history in the archive, not current status.
-- Photo Grid detail photo sizing is committed in `e25c0e5` and `736a26f`. Coverage lives in `SinglePostScreenTest`.
-- Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`. Slice 1B1 is complete at `5207a96`. Slice 1B2 is complete at `9e29ef4`. Slice 1B3 is complete at `d21280e`. Slice 1B4 is complete at `c3802c9`.
-- Slice 1C completed at `71c6f7d`. Slice 1D1 completed at `e46e44c`. Slice 1D2 is complete in the worktree and pending its 1D2 commit.
-- Retention has source- and test-level characterization only. Heap, disk, and Room measurements were never collected and remain unverified.
+## Current position and last safe code-slice commit
 
-## Last Safe Commit
+Last safe code-slice commit: `fa087d0` (1D2). The subsequent records-sync commit changes documentation only. None of the 11 listed commits has been pushed.
 
-`e46e44c` (1D1 complete) was the last safe commit at the start of 1D2.
+Executed order, oldest to newest:
 
-## Next Slice
+- 0A `ba3fe53`: reconciled active records and source baseline.
+- 0B `72fafc4`: recorded the UI requirements baseline; device measures remain open.
+- L0 `cbf8698`: repaired the pre-existing `UnusedBoxWithConstraintsScope` lint blocker in `ShellContent.kt`.
+- 1A `af1f983`: repaired Mastodon block/mute relationship recovery.
+- 1B1 `5207a96`: bound Mastodon timeline cursors to identity, route, query, and variant.
+- 1B2 `9e29ef4`: bound bookmark and hashtag cursors; removed legacy raw-Link replay.
+- 1B3 `d21280e`: pinned Mastodon moderation cursor routes and query shape.
+- 1B4 `c3802c9`: encoded Mastodon unfavorite path IDs.
+- 1C `71c6f7d`: shared quote visibility in `QuotePreviewCard` across rows and Photo Grid detail.
+- 1D1 `e46e44c`: characterized Misskey inbox streams and the validation-only read no-op.
+- 1D2 `fa087d0`: added the identity-bound composite Misskey inbox cursor, per-stream progress, fallback progress, and endpoint-order merge.
 
-Slice 1D2 is complete in the worktree, verified by the recorded focused gates, and pending its 1D2 commit; no 1D2 commit hash exists yet.
+`e46e44c` is the historical 1D2 start boundary, not current HEAD. The 1D2 focused gate results are in the task state. No device or live-server verification follows from those results.
 
-Start boundary and last safe commit are both `e46e44c`. Current slice = `1D2`; next = `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it.` No staging or commit occurred.
+## Next slices and packet gates
 
-## Historical work and open verification
+**Next action:** Re-traverse phases 0 and 1 against the full updated plan and the maintainer's specified changes. Confirm which earlier results still meet the requirements. Define and verify any new work in separate packets before resuming this queue.
 
-S1, P1, Q1, T1, Plan 03, and Plan 04 are complete historical series. See the [archive index](../archive/README.md) and the [Plan 04 archive](../archive/agents/plan04-utility-retention.md). V1 device verification, live-server behavior, and signed-release checks remain open.
+After that review and its required packets:
 
-## Verification
+1. **1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it.** Gate: after 1D2. Split adapter and UI into two commits when needed. Cover long threads, failures, account replacement, and visible partial/retry state.
+2. **1E1 — Remove only unused source constants.** Gate: after 1B and 1D. Compare live service values before deletion.
+3. **1E2 — Remove unused mapper arguments and update mapper callers/tests.** It can run parallel with 1E1 only on separate branches.
+4. **1B5 — Attribute response-size failures to the correct operation in `MastodonSource.kt` and then `MisskeySource.kt`.** PAUSED. Its gate requires a characterized non-thread capped failure. Source inspection found no non-thread capped path in either adapter. Await an explicit maintainer decision to approve a new conservative cap per adapter, which changes behavior, or to drop or continue pausing this packet. The plan requires separate adapter commits after its gate is met. Do not block independent 1E work on this decision.
 
-- 1B3 moderation cursors pin `/api/v1/accounts/blocked` or `/api/v1/accounts/muted`. Continuations allow one nonblank `max_id`, `since_id`, or `min_id`; a missing `limit` is valid, and a present `limit` must occur once with value exactly `40`. Cursor state is in-memory; no persistence migration is needed.
-- 1B4 uses the existing `encodePathSegment()` helper for unfavorite IDs. `MastodonIntegrationTest.unfavoriteEncodesReservedIdCharactersAndPreservesPlainIdPath` checks literal paths, POST methods, and bearer headers for a plain ID and a composite reserved-character ID. Verification and raw-interpolation grep findings are recorded in the task state.
-- 1D1 tests assert the decoded `mentioned` cursor value, timestamp-merged order `m-new, s-new, m-old` with unequal fixture timestamps, and both continuation POST methods and complete bodies with `untilId: m-old`. Read tests keep repeated valid calls request-free and require blank/foreign-origin IDs to throw `Unsupported("direct.read")` without requests. The server-failure test walks every cause message for token absence. The fixture token is a non-secret test double asserted only as part of expected request-body bytes; production tokens never appear in tests or errors; error cause chains are asserted token-free. Production behavior did not change apart from a comment documenting the validation-only no-op until a verified endpoint exists.
-- `MastodonSource` calls moderation service methods without a preceding capability refresh or other I/O. Cursor rejection occurs before network work.
-- `ModerationServiceTest.mastodonBlockedAndMutedPagesUseOpaqueRouteBoundCursors` checks GET method and bearer authorization on both pages, routes, encoded opaque continuation bytes, and exact returned item order. `mastodonModerationRejectsTamperedAndLegacyCursorsBeforeRequest` checks invalid query shapes and payload tampering with unchanged request counts. Link rejection and loop checks remain in `mastodonModerationRejectsInvalidLinksAndCurrentUrlLoop`.
-- `mastodonModerationRejectsValuelessLimitLinksAndAllowsMissingLimit` rejects valueless, empty, and duplicate `limit` Link values and accepts a missing `limit`. Only a present value other than exactly `40` is invalid.
-- 1B3 focused moderation, Mastodon integration/source contract/Misskey integration, lint, Python, and architecture gates passed. Review repair outcomes are recorded in the task state and task log.
-- The moderation cursor binds origin/account/kind/variant/route/query, but not `sessionRevision` or `sourceInstance`, unlike `MastodonPageCursor`. The ViewModel keeps cursors in memory and paging checks `AccountSourceRegistry.isCurrent`. A direct `SocialSource` caller can replay a same-account cursor after source replacement. Session/source-instance binding was consciously deferred because cursors have an in-memory lifetime and paging has the current-account guard.
+Phase 2 follows the phase-1 source fixes and 0B gate, subject to the maintainer review:
 
-- `hashtagCursorRejectsAnotherQueryWithoutChangingTheCursor` uses a real cats Link cursor unchanged with `searchHashtag("dogs", cursor)`. It asserts `Unsupported("pagination.cursor")` and no additional request.
+- 2A1: Characterize shared transport request, response, cancellation, origin, and Link contracts in tests. Gate: after 1B.
+- 2A2: Move the pool and generic HTTP response into `data/transport/`; update imports and tests. Gate: after 2A1; no behavior change.
+- 2A3: Separate the neutral authenticated HTTP client from Misskey JSON and endpoint prefixes; migrate Mastodon callers. Gate: after 2A2.
+- 2A4: Migrate auth/shared callers and DI; remove the old generic transport placement; run full contracts. Gate: after 2A3.
+- 2B1: Pin notification intent extras, preferences, and pending-intent identity in tests. It can run parallel with 2A1 on a separate branch.
+- 2B2: Move launch value, codec, and store below UI; preserve stored and incoming formats. Gate: after 2B1.
+- 2B3: Separate prepared notification text from the UI formatter; remove data-to-UI imports. Gate: after 2B2.
+- 2C1: Move `AccountSearchState` to `ui/search/` with test imports. Gate: after characterization.
+- 2C2: Give Search an explicit connected lifetime, release, and projection subscription. Gate: after 2C1.
+- 2C3: Give Photo Grid an explicit connected lifetime while preserving its independent preferences and pager. Gate: after 2C2 if the shared host changes; otherwise use a separate branch.
+- 2D1: Require `PostPreferencesRepository` in `PostThreadViewModel.kt`. Gate: owner tests; independent of 2D2.
+- 2D2: Move profile Liked eligibility behind adapter/source support. Gate: after 2C characterization, adapter contract tests, and lint.
+- 2D3: Replace the post favorite-icon protocol branch with a supplied presentation rule. It can run parallel with 2D2 only if the capability contract is untouched.
+- 2E is conditional and incremental. Do not run a coordinator extraction unless a later UI change needs it. A file-size metric alone is not a gate.
 
-- 1C shares row and Photo Grid quote preview rendering through `ui/posts/QuotePreviewCard.kt`. Hidden quote text does not enter composition or semantics. The visible card retains author, placeholder, label, and open action. Full decisions and tests are in the active task state.
-- 1C explicitly keeps hidden quote cards present. `HiddenContentPresentation.Remove` remains limited to parent-post handling and Photo Grid filtering. Parent handling and Photo Grid geometry were not changed.
-- The implementing agent reported that focused quote tests, `ContentWarningPolicyTest`, `PostTextPresentationTest`, lint, Python tests, and the architecture audit passed. The independent reviewer confirmed source and diff only because shell access denied Python and Gradle reruns.
-- The full `test assembleRelease` gate did not run for 1C. Its red status remains a task-level blocker. Device, foldable, RTL, and TalkBack checks remain unverified.
-- `bookmarkCursorRejectsTimelineRouteBeforeCapabilityProbe` uses a real bookmark Link cursor with `timeline(Home, cursor)` on a source with the real capability probe. It asserts `Unsupported("pagination.cursor")` and no additional request.
-- The earlier mixed case is now named `hashtagCursorPayloadTamperingAndOtherRoutesAreRejected`; its tampered query payload has a cats path and proves tampering/path validation, not unchanged-cursor cross-query rejection.
-- Those outcomes apply to the 1B2 review repair, which changed tests and records only. The 1B3 source lint gate passed separately above.
-- At 1C start, HEAD and last safe commit were `c3802c9` (1B4). The staged `docs/classic_navigation.md` and unrelated worktree changes remain untouched. Existing blockers remain unchanged.
-- 1C review repair now queries the complete hidden quote body in the Remove absence assertion. The sibling consistency and font-scale assertions already use their complete fixture bodies; focused test, Python, and architecture audit reruns passed.
-- The 1B3 review repair gates passed: focused moderation tests, adapter integration/contracts, lint, Python tests, and architecture audit. Exact outcomes are in the task state and task log.
-- The 1B4 slice consists of `MastodonSource.kt`, `MastodonIntegrationTest.kt`, and these two records; the whole-worktree diff also lists unrelated pre-existing changes that are never staged or committed with a slice.
-- 1D1 focused adapter/repository tests passed. Python, architecture, lint, and protocol regression results are recorded in the active task state and task log.
-- 1D2 source inspection confirms strict identity-bound per-endpoint cursors, explicit exhaustion, id-less-page termination, a latched notification fallback with its own ID space, and mentions-first endpoint-order merge/dedup. Cursor payload account field is `account`, matching `MastodonPageCursor`. Fresh repair verification is complete; see the task state for exact results.
-- Misskey conversation identity is verified only when a returned parentless post establishes the reply root; a reply without its returned root remains provisional. The focused regression asserts the anchor and two expected requests. Independent account, session-revision, and source-instance cursor rejections each return `Unsupported("direct.pagination")` without increasing request count beyond 2.
-- The two aborted 1D2 sessions did not establish a verification gate. Their reported gate claims are withdrawn; only the fresh command results listed here count as 1D2 verification.
-- The first repair gate-1 run exited 1 because of a `NetworkUnavailable` fixture-count mistake, which was corrected. A prior hang came from a fallback test waiting for a skipped sent-stream request. The corrected request sequence is 3/4/6. The final helper covers every request-consuming wait.
-- Gate 1, `.\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.DirectMessageSourceTest" --tests "me.foxtails.palustris.data.directmessages.DirectMessageRepositoryTest"`: exit 0; `BUILD SUCCESSFUL`.
-- Gate 2, `.\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.MisskeySourceContractTest"`: exit 0; `BUILD SUCCESSFUL`.
-- Gate 3, `.\gradlew.bat --no-daemon --console=plain :app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
-- Gate 4, `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- Gate 5, `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 607 findings and no new baseline regressions.
-- Gate 6, `git diff --check`: exit 1 only for documented pre-existing trailing whitespace in `.opencode/agents/orchestrator.md` and `.opencode/agents/targeted_fixer.md`; no 1D2 path appears in findings.
-- Gate 7, `git status --short`: exit 0; `docs/classic_navigation.md` is the only staged path. Existing unrelated dirty and untracked paths remain.
-- Gate 8, `git rev-parse --short HEAD`: exit 0; `e46e44c`.
-- Identity-evidence and independent cursor-dimension regression gates are included in the fresh focused reruns; exact results appear below after execution.
-- The 1D2 cursor contract is documented in the task state. Full suite, device, foldable, RTL, TalkBack, and live-server checks remain unverified.
-- After the identity-evidence and independent-dimension regressions, Gates 1–3 exited 0 (`BUILD SUCCESSFUL`); Python exited 0 with 51 tests; architecture audit exited 0 with 607 findings and no baseline regression. See task-state verification for exact commands and elapsed times.
+The plan's packet table and detailed phase text control each packet. Recheck source and tests before editing. Parallel work means separate branches or worktrees, not simultaneous edits or commits in this working tree.
 
-## Known Blockers
+## Execution and shell rules
 
-- No emulator or device is reachable. Connected instrumentation remains unverified.
-- Live-server and signed-release behavior remain unverified.
-- The Android 15 system-bar instrumentation failure remains in `logs/BUGS.txt`.
-- Git-ignored planning material under `docs/decomposition_3/` and directly under `docs/` must not be force-added.
-- Two localization tests must be tightened when catalogs return: `AppLocaleControllerTest.everyLocaleResolvesATranslatedValueOrFallback` and `LocalizationResourceTest.localeCatalogMatchesResourcesEnumAndAndroidConfig`.
-- The residual 03-G ordering risk remains recorded in the Plan 03 task state.
-- No full green gate has passed. One full run executed during 1B1 and is red with 16 failures (above).
-- NavigationTest has two failures. Their pre-existing status is separately verified at `ba3fe53` with an empty `app/src` diff. The cause is not established. Investigate in a dedicated slice before phase 10.
-- Fourteen failures affect DraftActionsTest (2), CapabilityCacheTest (2), MisskeyThreadContinuationTest (5), and NotificationSyncOrchestratorTest (5). Their executed test and production sources are byte-identical to `af1f983`; `git diff af1f983 --name-only` lists none of them. Direct grep finds no reference from those classes and subjects to symbols changed by L0, 1A, or 1B1. Focused runs reproduce all 14 failures. Transitive closure was not exhaustively proven. Introduction commits were not bisected because `git worktree add` was blocked by permission. The baseline was not executed. Product-versus-environment cause is not established. These failures are not attributable to the 0.4.0 slices by available evidence. Do not weaken or skip tests. A dedicated investigation slice owns these failures.
-- Full unit suite is RED (16 failures in `test assembleRelease`). A dedicated investigation slice must restore full-suite green before the phase-10 release gate.
-- 1B5 gate unmet: source verification shows the only response caps routed through request{} are thread reads (Mastodon: MastodonThreadService; Misskey: MisskeySource thread paths). No non-thread capped path exists, so the plan's required non-thread failure test cannot be written without adding a new conservative response cap per adapter (a behavior change). 1B5 is paused pending an explicit decision. 1E1/1E2 do not depend on 1B5 and proceed.
-- 1B1 follow-up cursor tests passed. They cover identity mismatch, unsafe decoded URL properties, hardened query validation, missing Link termination, and malformed payloads. The test names and exact focused gate results are in `docs/agents/tasks/beeline-0.4.0.md`.
+Use one behavior and one reviewed commit per implementation slice. Have `problem_solver_high` produce a precise plan. Have `targeted_fixer` execute that plan verbatim. Stop and report contradictions instead of improvising. Use `code_reviewer_high` for networking or multi-file slices; use `code_reviewer_low` for a simple single-file slice. Repair until the reviewer approves. Have `git_handler` stage and commit only explicit slice pathspecs. Never push.
 
-## Process Rules
+Use exactly one command per shell call. Do not chain commands with `;`, `&&`, `|`, backticks, `$env:`, or line continuations. On Windows, run Gradle only as `.\gradlew.bat --no-daemon --console=plain <task>`. Configure `GRADLE_OPTS=-Dorg.gradle.daemon=false` outside the command, keep standard input closed, and set an explicit timeout: at least 900000 ms for tests and 1800000 ms for lint or a full gate. Run focused tests first; run lint when the changed boundary requires it. The coding-task completion gate is `test assembleRelease`, but its existing red result remains unresolved.
 
-- Keep one slice, one behavior, and one commit. Include current task state, task log, handoff, and affected documentation.
-- Rewrite the handoff at each slice boundary.
-- Keep ownership pages current in the same slice when their boundary changes.
-- Stage only slice files. Preserve unrelated worktree changes.
-- Use Beeline in user-facing text. Keep the internal codename out of user-facing content.
-- Keep protocol behavior in adapters. Keep account secrets and tokens out of presentation contracts.
-- Do not change a stored format without a migration in the same slice.
-- Do not use subagents unless the user asks.
+## Blockers and verification limits
+
+- The task-level full `test assembleRelease` gate is RED. During 1B1, release assembly completed, but 16 of 1,265 JVM tests failed. Two `NavigationTest` failures were separately reproduced at `ba3fe53` with an empty `app/src` diff; their cause is unknown.
+- The other 14 failures are `DraftActionsTest` (2), `CapabilityCacheTest` (2), `MisskeyThreadContinuationTest` (5), and `NotificationSyncOrchestratorTest` (5). Focused runs reproduced them. Byte identity, changed-symbol non-reachability checks, and provenance evidence do not attribute them to the 0.4.0 slices. Transitive closure was not fully proved. Introduction commits were not bisected because `git worktree add` was permission-blocked. Product versus environment cause is unknown. A dedicated investigation slice must restore full-suite green before phase 10. Do not skip or weaken tests.
+- 1B5 remains paused for the explicit decision above.
+- No device is reachable for this task. Physical-device, API 29, compact/wide rendering, foldable, RTL-device, TalkBack, and connected instrumentation checks remain unverified. Live-server and signed-release behavior remain unverified. The historical Android 15 system-bar instrumentation concern is in `logs/BUGS.txt`.
+- `NotificationsViewModelTest` and `MediaViewerScreenTest` have historical flakes. Investigate if they reproduce; do not label a single old isolated failure a new regression.
+- Focused mocked HTTP tests do not prove live-server behavior. Compose and Robolectric tests do not prove physical rendering. Report a gate as independently verified only if the reviewing agent actually ran it; otherwise identify the agent-reported result and the reviewer's inspection limit.
+- Retention has source/test characterization, not heap, disk, or Room measurements. Keep other historical limits and risks in the task state and `logs/BUGS.txt`.
+
+## Worktree hygiene and records
+
+Preserve modified `.opencode/agents/*` and `importantdocs/writing_style.md`; deleted `currentbehaviour.png` and `intendedbehaviour.png`; untracked `.opencode/agents/adb_handler.md`, `codebase_explorer_android.md`, and `tools/**/__pycache__/`. Preserve the pre-staged, unrelated `docs/classic_navigation.md` exactly as staged, but exclude it from every slice commit. Do not stage, discard, reformat, or commit any of those paths.
+
+New files directly under `docs/`, including `docs/260923_current_state.md` and `docs/beeline_0.4.0.md`, are git-ignored. `docs/wiki/*` and `docs/agents/*` are tracked. The task log `logs/260923-035132.txt` is git-ignored. Read that log and `logs/BUGS.txt` for audit history; do not treat them as the current queue. The durable current state is `docs/agents/tasks/beeline-0.4.0.md`.
+
+The architecture audit currently reports exit 0 with 607 findings and no new baseline regressions. Exit 0 does not mean the architecture is complete. Whole-worktree `git diff --check` currently reports only pre-existing trailing whitespace in `.opencode/agents/orchestrator.md` and `.opencode/agents/targeted_fixer.md`; do not edit those files to make this records slice appear clean.

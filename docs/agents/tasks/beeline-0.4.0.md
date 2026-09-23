@@ -25,13 +25,17 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 # Completed
 
 - Slice 0A is complete at `ba3fe53`. Verification: 51 Python tests passed; architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline; all 120 relative links across 11 touched Markdown files resolve. No source changes occurred.
-- Slice 0B is complete (this record ships with the slice commit). Its commit hash is recorded at the 1A boundary. The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
+- Slice 0B is complete at `72fafc4`. The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
 - Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`.
 - Slice 1B1 is complete at `5207a96`. Timeline cursors use opaque, identity-bound route tokens.
 
 # Current slice
 
-Slice 1D2 is complete in the worktree, verified by the recorded focused gates, and pending its 1D2 commit; no 1D2 commit hash exists yet. Start boundary and last safe commit are both `e46e44c`. Current slice = `1D2`; next = `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it.`
+Slice 1D2 is committed at `fa087d0`. The last safe code-slice commit is `fa087d0`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary. The next implementation work is the maintainer-directed review of phases 0 and 1 against `docs/beeline_0.4.0.md`; 1D3 and later packets follow only after that review.
+
+## Maintainer directive
+
+Traverse phases 0 and 1 one more time before starting 1D3, 1E, or phase 2. The next agent must reread the complete updated `docs/beeline_0.4.0.md` first and obtain the maintainer's specified changes. Treat those requirements as authoritative over conflicting earlier slice claims. Record resulting packets and gates before implementation. The changes remain unspecified and are not implemented here. If they are unavailable, stop and ask the maintainer.
 
 # Files involved
 
@@ -100,8 +104,7 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Slice 1D2 is complete in the worktree, verified by the recorded focused gates, and pending its 1D2 commit; no 1D2 commit hash exists yet. Start boundary and last safe commit are both `e46e44c`. Current slice = `1D2`; next = `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it.` 1B5 remains paused because its non-thread response-cap gate is unmet.
-Last safe commit = `e46e44c` (1D1 complete at 1D2 start); no commit was created in this dispatch.
+Slice 1D2 is committed at `fa087d0`, the last safe code-slice commit. `e46e44c` remains the historical 1D1 completion and 1D2 start boundary. Next: the maintainer-directed review of phases 0 and 1 against the complete updated plan. 1B5 remains paused because its non-thread response-cap gate is unmet. 1D3, 1E1, 1E2, and phase 2 remain prospective.
 
 # Blockers
 
@@ -141,7 +144,7 @@ Last safe commit = `e46e44c` (1D1 complete at 1D2 start); no commit was created 
 
 # Last safe commit
 
-`e46e44c` (1D1 complete) is the last safe commit and the 1D2 start boundary. `71c6f7d` was the historical 1D1 start boundary.
+`fa087d0` is the last safe code-slice commit (1D2). `e46e44c` is the historical 1D1 completion and 1D2 start boundary. `71c6f7d` was the historical 1D1 start boundary.
 
 # 1D1 verification
 
@@ -187,7 +190,9 @@ Last safe commit = `e46e44c` (1D1 complete at 1D2 start); no commit was created 
 
 ## 1D2 request-wait repair verification
 
-Slice 1D2 is complete in the worktree, verified by the recorded focused gates, and pending its 1D2 commit; no 1D2 commit hash exists yet.
+### Historical pre-commit 1D2 verification
+
+The following results were recorded before 1D2 was committed later as `fa087d0`.
 
 - The aborted sessions' gate claims are withdrawn. The first repair gate-1 run exited 1 because of a `NetworkUnavailable` fixture-count mistake, which was corrected. A prior hang came from a fallback test waiting for a skipped sent-stream request. The corrected request sequence is 3/4/6. The final helper now covers every request-consuming wait.
 - `DirectMessageSourceTest.kt` now uses `recordedRequest(server)` at both remaining unbounded sites. Searching the whole test file finds only `server.takeRequest(5, TimeUnit.SECONDS)` inside that helper. Assertions and fixtures are unchanged by this repair.
@@ -202,7 +207,7 @@ Slice 1D2 is complete in the worktree, verified by the recorded focused gates, a
 - Gate 6, `git diff --check`: exit 1 only for documented pre-existing trailing whitespace in `.opencode/agents/orchestrator.md` and `.opencode/agents/targeted_fixer.md`; no 1D2 path appears in findings.
 - Gate 7, `git status --short`: exit 0; `docs/classic_navigation.md` is the only staged path. Existing unrelated dirty and untracked paths remain.
 - Gate 8, `git rev-parse --short HEAD`: exit 0; `e46e44c`.
-- Start boundary and last safe commit are `e46e44c`. Current slice is `1D2`. Next slice: `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it.` No staging or commit occurred.
+- At the 1D2 repair-gate run, the start boundary and last safe commit were `e46e44c`, the current slice was `1D2`, the next slice was `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it`, and no staging or commit occurred. These are historical observations, not the current queue or Git state.
 - Blockers remain: task-level red full suite; two `NavigationTest` failures; the 14-failure investigation; paused 1B5; and unverified device, foldable, RTL, TalkBack, and live-server checks.
 - Focused mocked HTTP tests do not verify live-server behavior or physical rendering.
 - Repair reruns after the identity-evidence and independent-dimension tests: Gate 1 exited 0 (`BUILD SUCCESSFUL`, 35s); Gate 2 exited 0 (`BUILD SUCCESSFUL`, 1m15s); Gate 3 exited 0 (`BUILD SUCCESSFUL`, 1m43s).
@@ -295,4 +300,4 @@ Slice 1D2 is complete in the worktree, verified by the recorded focused gates, a
 - `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
 - Architecture audit `--check`: exit 0; 605 findings and no new baseline regressions.
 - The moderation cursor binds origin/account/kind/variant/route/query, but not `sessionRevision` or `sourceInstance`. ViewModel memory lifetime and `AccountSourceRegistry.isCurrent` guard normal paging. A direct same-account `SocialSource` replay after source replacement remains possible. Stronger binding was consciously deferred; no code change was made for this NIT.
-- The 1B3 review repair recorded `9e29ef4` as its last safe commit at that time. The current 1B3 hash and last safe commit are `d21280e`; 1B4 is complete and ships with this commit. The current slice is 1B5 PAUSED and the next slice is 1C; record the 1B4 hash at that next boundary. No staging or commit occurred. Existing blockers remain unchanged.
+- At the 1B3 review boundary, `9e29ef4` was recorded as its last safe commit. `d21280e` was the 1B3 hash and last safe commit at that review boundary; 1B4 was complete and shipped with its commit. The slice was 1B5 PAUSED and the next slice was 1C; the 1B4 hash was to be recorded at that next boundary. No staging or commit occurred at that review boundary. Existing blockers remain unchanged.
