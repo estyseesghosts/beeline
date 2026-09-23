@@ -21,16 +21,16 @@ Historical records stay linked as history, never as a queue. See [Plan 04 archiv
 - Plan 04-A through 04-K have committed work: 04-A `ee52ba9`, 04-B `6a87c76`, 04-C `633cd7a`, 04-D `f0735df`, 04-E1 `b04b2e8`, 04-F `9a1b055`, 04-G `d5f694c`, 04-H1 `cc900d9`, 04-H2 `fab0131`, 04-I `51351a7`, 04-J1 `dc9ae5f`, 04-J2 `c6a2ed0`, 04-J3 `484b995`, and 04-K `9e9a0d7`.
 - The earlier ditch decision `b0d3ddd` is dated history in the archive, not current status.
 - Photo Grid detail photo sizing is committed in `e25c0e5` and `736a26f`. Coverage lives in `SinglePostScreenTest`.
-- Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete. Its record ships together with the L0 commit. Record the L0 hash at the 1A boundary. Slice 1A is current: implementation and tests are in the worktree. Its gate results are recorded: `ModerationServiceTest` exited 0, adapter contracts exited 0, and `lintDebug` exited 0 after L0.
+- Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete at `cbf8698`. Slice 1A is complete (ships with this commit). Record the 1A hash at the 1B1 boundary.
 - Retention has source- and test-level characterization only. Heap, disk, and Room measurements were never collected and remain unverified.
 
 ## Last Safe Commit
 
-`72fafc4` (0B) is the last commit in history and the last safe commit. No later commit exists. Slice 1A remains in the worktree. Record its commit hash at the 1B1 boundary.
+`cbf8698` (L0) is the last safe commit. Slice 1A hash does not exist yet. Record its hash at the 1B1 boundary.
 
 ## Next Slice
 
-Slice 1A is the current slice. Its implementation and tests are in the worktree. Its gate results are recorded: `ModerationServiceTest` exited 0, adapter contracts exited 0, and `lintDebug` exited 0 after L0. Review 1A, then commit 1A. Record the 1A hash at the 1B1 boundary. Slice L0 is complete. Its record ships together with the L0 commit. Record the L0 hash at the 1A boundary. `72fafc4` (0B) is the last commit in history and the last safe commit. No later commit exists. Keep the pre-existing NavigationTest blocker and other open blockers below. Device and live checks remain unverified.
+Slice 1A is complete (ships with this commit). Current slice is 1B1. Next, bind Mastodon timeline cursors per plan. Record the 1A hash at the 1B1 boundary. L0 hash is `cbf8698`. Last safe commit is `cbf8698` (L0). Keep the pre-existing NavigationTest blocker. Device and live checks remain unverified.
 
 ## Historical work and open verification
 

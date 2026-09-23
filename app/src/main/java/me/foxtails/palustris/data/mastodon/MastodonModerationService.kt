@@ -68,28 +68,37 @@ class MastodonModerationService(
 
     private suspend fun remove(action: String, target: AccountId) {
         validateOrigin(target.connection.origin, "moderation.remove")
-        api.delete(origin, "api/v1/accounts/${target.localId}/$action", token)
+        api.delete(origin, accountPath(target, action), token)
     }
 
     private suspend fun relationship(target: AccountId, action: String): ProfileRelationship {
         validateTarget(target, "profile.$action")
         val response = if (action == "block" || action == "mute") {
-            api.postForm(origin, "api/v1/accounts/${target.localId}/$action", emptyList(), token)
+            api.postForm(origin, accountPath(target, action), emptyList(), token)
         } else {
-            api.delete(origin, "api/v1/accounts/${target.localId}/$action", token)
+            api.delete(origin, accountPath(target, action), token)
         }
         return runCatching { parseRelationship(response.body, target) }
             .getOrElse { profileRelationship(target) }
     }
 
     private suspend fun profileRelationship(target: AccountId): ProfileRelationship {
-        val response = api.get(
-            origin,
-            "api/v1/accounts/relationships?id[]=${target.localId}",
-            token,
-        )
+        // Build a complete HttpUrl with an encoded path and query, then use getUrl to bypass the /api/ prefix that MisskeyApi.get adds.
+        val url = origin.toHttpUrl().newBuilder()
+            .addPathSegments("api/v1/accounts/relationships")
+            .addQueryParameter("id[]", target.localId)
+            .build()
+        val response = api.getUrl(url.toString(), token)
         return parseRelationship(response.body, target)
     }
+
+    private fun accountPath(target: AccountId, action: String): String = origin.toHttpUrl().newBuilder()
+        .addPathSegments("api/v1/accounts")
+        .addPathSegment(target.localId)
+        .addPathSegment(action)
+        .build()
+        .encodedPath
+        .removePrefix("/")
 
     private fun parseRelationship(body: String, profileId: AccountId): ProfileRelationship {
         val root = body.trimStart()
