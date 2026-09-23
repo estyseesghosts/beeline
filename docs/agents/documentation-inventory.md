@@ -31,6 +31,7 @@ This page classifies every reviewed document. Use one of these classes: `current
 | `docs/agents/handoff.md` | current | Continuation pointer to the active task state. |
 | `docs/agents/tasks/_template.md` | current | Task-state template. |
 | `docs/agents/tasks/beeline-0.4.0.md` | current | Active task state for the Beeline 0.4.0 execution (owner/caller/test map, decisions, slice progress). |
+| `docs/agents/beeline-0.4.0-ui-baseline.md` | planned | Requirement classification and device-capture baseline for the 0.4.0 UI work; device measures pending. |
 | `docs/archive/agents/decomposition-01-02-completion.md` | historical | Completed 01/02 task. Kept as the durable record. |
 | `docs/archive/agents/plan03-gate-partials.md` | historical | Completed gate task. Kept as the slice record. |
 | `docs/archive/agents/plan03-protocol-notifications.md` | historical | Completed Plan 03 task. Kept as the durable record. |

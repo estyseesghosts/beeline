@@ -24,15 +24,16 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Completed
 
-- Slice 0A is complete. This record ships together with the slice commit. The commit hash is recorded at the next slice boundary (0B). Verification: 51 Python tests passed; architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline; all 120 relative links across 11 touched Markdown files resolve. No source changes occurred. Gradle was not run. Device and live-server checks remain unverified.
+- Slice 0A is complete at `ba3fe53`. Verification: 51 Python tests passed; architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline; all 120 relative links across 11 touched Markdown files resolve. No source changes occurred.
+- Slice 0B is complete (this record ships with the slice commit). Its commit hash is recorded at the 1A boundary. The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
 
 # Current slice
 
-Slice 0B.
+Slice 1A.
 
 # Files involved
 
-0A documentation: `docs/agents/handoff.md`, `docs/agents/app-shell-ownership.md`, `docs/agents/documentation-inventory.md`, `docs/agents/README.md`, `docs/agents/retention-inventory.md`, `docs/archive/agents/wide-detail-photo-sizing.md`, `docs/wiki/ui-and-navigation.md`, `docs/wiki/notifications-and-direct-messages.md`, `docs/260923_current_state.md`, this task state, and `logs/260923-035132.txt`. Later source files and tests appear in the owner map below.
+0B documentation: `docs/agents/beeline-0.4.0-ui-baseline.md`, `docs/agents/documentation-inventory.md`, `docs/agents/README.md`, this task state, `docs/agents/handoff.md`, and `logs/260923-035132.txt`. Later source files and tests appear in the owner map below.
 
 Forward owner/caller/test map for phases 1-2. Paths are relative to `app/src/main/java/me/foxtails/palustris/` unless noted. Tests are under `app/src/test/java/me/foxtails/palustris/`. These are planned checks, not 0A results.
 
@@ -71,14 +72,18 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Verification
 
-- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 605 findings and no new regressions against baseline. Exit 0 does not mean architecture completion.
-- Relative-link check: 11 touched Markdown files contained 120 relative links; all targets exist and none are broken. No in-document fragment links occur in these files. The orchestrator performed the check against repository file listings. The read-only reviewer spot-checked key targets but could not independently reproduce the exhaustive count because its shell rejects Python.
-- No source changes occurred. Gradle was not run. Device and live-server checks remain unverified.
+- 0A verification is recorded above: 51 Python tests; architecture audit exit 0 with 605 findings and no new regressions; 120 relative links resolved.
+- The initial focused Gradle run exited 1 with two `NavigationTest` failures. `NavigationTest` then failed standalone at base commit `ba3fe53` with an empty `app/src` diff; this pre-existing issue is logged in `logs/BUGS.txt` and the task-state blockers. The final 0B gate excluded `NavigationTest` and passed the seven-class set: exit 0, 79 tests across `MotionTokensTest`, `SpringyInteractionsTest`, `LargeLayoutModeTest`, `WideNavigationTest`, `HomeFeedTest`, `AppShellStateTest`, and `SettingsDisplayTest`.
+- `NavigationTest.closingComposerAutosavesUnsavedText` and `NavigationTest.draftsSurviveActivityRecreationAndCanBeDeleted` fail when run standalone and in the combined set. Both failures reproduce at base commit `ba3fe53` with an empty `app/src` diff. This is a pre-existing open defect; its cause is not established. The failures are excluded from the 0B gate for that reason only and are tracked in `logs/BUGS.txt`.
+- 0B `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- 0B architecture audit `--check`: exit 0; 605 findings, no new regressions against baseline.
+- 0B Markdown links: eight baseline-file targets were checked against direct file reads and glob; all eight targets resolve. Source/test directory links resolve by glob.
+- Register: 68 rows — 29 binding-specification rows, 26 proposal rows, and 13 polish research/reference rows. Binding clauses restated in proposal rows remain part of those proposal rows and do not add separate register rows or change the binding status of the original specification clauses. Several proposal rows also flag unverified device measures.
+- No source changes occurred. Device and live-server checks remain unverified.
 
 # Next
 
-Slice 0B: capture UI requirements and baselines per `docs/beeline_0.4.0.md`. Keep unavailable device measurements unverified.
+Slice 1A: fix Mastodon block/mute relationship recovery per `docs/beeline_0.4.0.md`.
 
 # Blockers
 
@@ -91,7 +96,8 @@ Slice 0B: capture UI requirements and baselines per `docs/beeline_0.4.0.md`. Kee
 - Tighten `AppLocaleControllerTest.everyLocaleResolvesATranslatedValueOrFallback` and `LocalizationResourceTest.localeCatalogMatchesResourcesEnumAndAndroidConfig` when catalogs return.
 - The residual 03-G ordering risk remains in the Plan 03 task state.
 - The full Gradle gate remains pending for the final release gate. No full gate has run for 0.4.0.
+- NavigationTest has two failures reproducible at base commit ba3fe53 with no source diff. The cause is not established. Investigate in a dedicated slice before phase 7 composer work.
 
 # Last safe commit
 
-`8c964a3` is the last safe commit before 0A. Record this slice's own commit hash at the 0B boundary.
+`ba3fe53` is the last safe commit (0A). Record the 0B commit hash at the 1A boundary.

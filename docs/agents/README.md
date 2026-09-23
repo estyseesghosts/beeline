@@ -45,7 +45,8 @@ Rebuild the TODO list from these items.
 
 ## Current tasks
 
-The active task is [Beeline 0.4.0](tasks/beeline-0.4.0.md). Keep the
+The active task is [Beeline 0.4.0](tasks/beeline-0.4.0.md). See its [UI baseline](beeline-0.4.0-ui-baseline.md).
+Keep the
 [task template](tasks/_template.md) for new task states.
 
 ## Historical tasks

@@ -8,28 +8,29 @@ Historical records stay linked as history, never as a queue. See [Plan 04 archiv
 
 1. `AGENTS.md`.
 2. `docs/agents/tasks/beeline-0.4.0.md`.
-3. `git status` and the current diff.
-4. Recent commits.
-5. `docs/beeline_0.4.0.md` (active plan; git-ignored planning material under `docs/` unless explicitly added).
-6. `docs/260923_current_state.md` (active cleanup review; also git-ignored).
-7. `docs/agents/app-shell-ownership.md` and `docs/agents/protocol-and-session-ownership.md`.
-8. `logs/BUGS.txt`.
+3. `docs/agents/beeline-0.4.0-ui-baseline.md` for 0B classification and open device gates.
+4. `git status` and the current diff.
+5. Recent commits.
+6. `docs/beeline_0.4.0.md` (active plan; git-ignored planning material under `docs/` unless explicitly added).
+7. `docs/260923_current_state.md` (active cleanup review; also git-ignored).
+8. `docs/agents/app-shell-ownership.md` and `docs/agents/protocol-and-session-ownership.md`.
+9. `logs/BUGS.txt`.
 
 ## Current Position
 
 - Plan 04-A through 04-K have committed work: 04-A `ee52ba9`, 04-B `6a87c76`, 04-C `633cd7a`, 04-D `f0735df`, 04-E1 `b04b2e8`, 04-F `9a1b055`, 04-G `d5f694c`, 04-H1 `cc900d9`, 04-H2 `fab0131`, 04-I `51351a7`, 04-J1 `dc9ae5f`, 04-J2 `c6a2ed0`, 04-J3 `484b995`, and 04-K `9e9a0d7`.
 - The earlier ditch decision `b0d3ddd` is dated history in the archive, not current status.
 - Photo Grid detail photo sizing is committed in `e25c0e5` and `736a26f`. Coverage lives in `SinglePostScreenTest`.
-- Slice 0A is complete. This record ships together with the slice commit. The commit hash is recorded at the next slice boundary (0B). Slice 0B is the current and next slice.
+- Slice 0A is complete at `ba3fe53`. Slice 0B is complete and ships with this commit; its hash is recorded at the 1A boundary. Slice 1A is next.
 - Retention has source- and test-level characterization only. Heap, disk, and Room measurements were never collected and remain unverified.
 
 ## Last Safe Commit
 
-`8c964a3` is the last safe commit before 0A. Record this slice's own commit hash at the 0B boundary.
+`ba3fe53` is the last safe commit (0A). Record the 0B commit hash at the 1A boundary.
 
 ## Next Slice
 
-Slice 0B (capture UI requirements and baselines per `docs/beeline_0.4.0.md`) follows `docs/agents/tasks/beeline-0.4.0.md`. Slice 0A passed 51 Python tests, and the architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline. All 120 relative links across 11 touched Markdown files resolve. No source changes occurred. Gradle was not run. Device and live-server checks remain unverified.
+Slice 1A (Mastodon block/mute relationship recovery) follows `docs/agents/tasks/beeline-0.4.0.md`. Slice 0A completed at `ba3fe53`. Slice 0B is complete and ships with this commit; record its hash at the 1A boundary. The initial focused Gradle run exited 1 with two `NavigationTest` failures. `NavigationTest` then failed standalone at base commit `ba3fe53` with an empty `app/src` diff; this pre-existing issue is logged in `logs/BUGS.txt` and the task-state blockers. The final 0B gate excluded `NavigationTest` and passed the seven-class set: exit 0, 79 tests. Python unittest passed 51 tests. Architecture audit `--check` exited 0 with 605 findings and no new regressions. Eight baseline-file links resolve. Device and live checks remain unverified.
 
 ## Historical work and open verification
 
@@ -44,6 +45,7 @@ S1, P1, Q1, T1, Plan 03, and Plan 04 are complete historical series. See the [ar
 - Two localization tests must be tightened when catalogs return: `AppLocaleControllerTest.everyLocaleResolvesATranslatedValueOrFallback` and `LocalizationResourceTest.localeCatalogMatchesResourcesEnumAndAndroidConfig`.
 - The residual 03-G ordering risk remains recorded in the Plan 03 task state.
 - The full Gradle gate remains pending for the final release gate. No full gate has run for 0.4.0.
+- NavigationTest has two failures reproducible at base commit ba3fe53 with no source diff. The cause is not established. Investigate in a dedicated slice before phase 7 composer work.
 
 ## Process Rules
 
