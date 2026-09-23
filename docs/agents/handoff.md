@@ -21,18 +21,19 @@ Historical records stay linked as history, never as a queue. See [Plan 04 archiv
 - Plan 04-A through 04-K have committed work: 04-A `ee52ba9`, 04-B `6a87c76`, 04-C `633cd7a`, 04-D `f0735df`, 04-E1 `b04b2e8`, 04-F `9a1b055`, 04-G `d5f694c`, 04-H1 `cc900d9`, 04-H2 `fab0131`, 04-I `51351a7`, 04-J1 `dc9ae5f`, 04-J2 `c6a2ed0`, 04-J3 `484b995`, and 04-K `9e9a0d7`.
 - The earlier ditch decision `b0d3ddd` is dated history in the archive, not current status.
 - Photo Grid detail photo sizing is committed in `e25c0e5` and `736a26f`. Coverage lives in `SinglePostScreenTest`.
-- Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`. Slice 1B1 is complete at `5207a96`. Slice 1B2 is complete at `9e29ef4`. Slice 1B3 is complete at `d21280e`.
+- Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`. Slice 1B1 is complete at `5207a96`. Slice 1B2 is complete at `9e29ef4`. Slice 1B3 is complete at `d21280e`. Slice 1B4 is complete at `c3802c9`.
+- Slice 1C is implemented and verified in the current worktree. Its hash is recorded at the 1D1 boundary.
 - Retention has source- and test-level characterization only. Heap, disk, and Room measurements were never collected and remain unverified.
 
 ## Last Safe Commit
 
-`d21280e` (1B3) is the last safe commit. The 1B4 hash is recorded at the next slice boundary (1C, since 1B5 is paused).
+`c3802c9` (1B4) was the last safe commit at the start of 1C. The 1C hash is recorded at the 1D1 boundary.
 
 ## Next Slice
 
-Completed += `Slice 1B4 — complete (ships with this commit)`; 1B3 commit = `d21280e`.
-Current slice = `1B5 — PAUSED (gate unmet, awaiting decision)`; Next = `1C` (shared quote/CW presentation rule). Resume 1B5 only if the recorded decision approves a conservative response cap per adapter.
-Last safe commit = `d21280e`. The 1B4 hash is recorded at the next slice boundary (1C, since 1B5 is paused).
+Completed += `Slice 1C — complete (ships with this commit)`; last safe commit = `c3802c9` (1B4). The 1C hash is recorded at the 1D1 boundary.
+Current slice = `1D1 — Characterize two Misskey inbox streams and the read no-op with adapter and repository tests`; Next = 1D1. 1B5 remains paused because its non-thread response-cap gate is unmet.
+Last safe commit = `c3802c9` (1B4); the 1C hash is recorded at the 1D1 boundary.
 
 ## Historical work and open verification
 
@@ -49,10 +50,16 @@ S1, P1, Q1, T1, Plan 03, and Plan 04 are complete historical series. See the [ar
 - The moderation cursor binds origin/account/kind/variant/route/query, but not `sessionRevision` or `sourceInstance`, unlike `MastodonPageCursor`. The ViewModel keeps cursors in memory and paging checks `AccountSourceRegistry.isCurrent`. A direct `SocialSource` caller can replay a same-account cursor after source replacement. Session/source-instance binding was consciously deferred because cursors have an in-memory lifetime and paging has the current-account guard.
 
 - `hashtagCursorRejectsAnotherQueryWithoutChangingTheCursor` uses a real cats Link cursor unchanged with `searchHashtag("dogs", cursor)`. It asserts `Unsupported("pagination.cursor")` and no additional request.
+
+- 1C shares row and Photo Grid quote preview rendering through `ui/posts/QuotePreviewCard.kt`. Hidden quote text does not enter composition or semantics. The visible card retains author, placeholder, label, and open action. Full decisions and tests are in the active task state.
+- 1C explicitly keeps hidden quote cards present. `HiddenContentPresentation.Remove` remains limited to parent-post handling and Photo Grid filtering. Parent handling and Photo Grid geometry were not changed.
+- The implementing agent reported that focused quote tests, `ContentWarningPolicyTest`, `PostTextPresentationTest`, lint, Python tests, and the architecture audit passed. The independent reviewer confirmed source and diff only because shell access denied Python and Gradle reruns.
+- The full `test assembleRelease` gate did not run for 1C. Its red status remains a task-level blocker. Device, foldable, RTL, and TalkBack checks remain unverified.
 - `bookmarkCursorRejectsTimelineRouteBeforeCapabilityProbe` uses a real bookmark Link cursor with `timeline(Home, cursor)` on a source with the real capability probe. It asserts `Unsupported("pagination.cursor")` and no additional request.
 - The earlier mixed case is now named `hashtagCursorPayloadTamperingAndOtherRoutesAreRejected`; its tampered query payload has a cats path and proves tampering/path validation, not unchanged-cursor cross-query rejection.
 - Those outcomes apply to the 1B2 review repair, which changed tests and records only. The 1B3 source lint gate passed separately above.
-- Current HEAD and last safe commit are `d21280e` (1B3). The 1B4 hash is recorded at the next slice boundary (1C, since 1B5 is paused). The staged `docs/classic_navigation.md` and unrelated worktree changes remain untouched. Existing blockers remain unchanged.
+- At 1C start, HEAD and last safe commit were `c3802c9` (1B4). The staged `docs/classic_navigation.md` and unrelated worktree changes remain untouched. Existing blockers remain unchanged.
+- 1C review repair now queries the complete hidden quote body in the Remove absence assertion. The sibling consistency and font-scale assertions already use their complete fixture bodies; focused test, Python, and architecture audit reruns passed.
 - The 1B3 review repair gates passed: focused moderation tests, adapter integration/contracts, lint, Python tests, and architecture audit. Exact outcomes are in the task state and task log.
 - The 1B4 slice consists of `MastodonSource.kt`, `MastodonIntegrationTest.kt`, and these two records; the whole-worktree diff also lists unrelated pre-existing changes that are never staged or committed with a slice.
 

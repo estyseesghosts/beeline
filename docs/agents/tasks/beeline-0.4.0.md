@@ -31,7 +31,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Current slice
 
-Slice 1B4 is complete and ships with the current commit. `unfavorite` now encodes its ID with the existing path-segment helper. 1B3 commit and last safe commit are `d21280e`. Current slice 1B5 is PAUSED; next is 1C, and the 1B4 hash is recorded at that next boundary.
+Slice 1C is complete and ships with the current worktree. Row and Photo Grid quote cards share one stateless presentation. Hidden quote previews now show a placeholder in both surfaces. Current slice = `1D1 — Characterize two Misskey inbox streams and the read no-op with adapter and repository tests`; Next = 1D1. Last safe commit at 1C start = `c3802c9` (1B4). The 1C hash is recorded at the 1D1 boundary.
 
 # Files involved
 
@@ -100,9 +100,9 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Completed += `Slice 1B4 — complete (ships with this commit)`; 1B3 commit = `d21280e`.
-Current slice = `1B5 — PAUSED (gate unmet, awaiting decision)`; Next = `1C` (shared quote/CW presentation rule). Resume 1B5 only if the recorded decision approves a conservative response cap per adapter.
-Last safe commit = `d21280e`. The 1B4 hash is recorded at the next slice boundary (1C, since 1B5 is paused).
+Completed += `Slice 1C — complete (ships with this commit)`; last safe commit = `c3802c9` (1B4). The 1C hash is recorded at the 1D1 boundary.
+Current slice = `1D1 — Characterize two Misskey inbox streams and the read no-op with adapter and repository tests`; Next = 1D1. 1B5 remains paused because its non-thread response-cap gate is unmet.
+Last safe commit = `c3802c9` (1B4); the 1C hash is recorded at the 1D1 boundary.
 
 # Blockers
 
@@ -142,7 +142,23 @@ Last safe commit = `d21280e`. The 1B4 hash is recorded at the next slice boundar
 
 # Last safe commit
 
-`d21280e` (1B3) is the last safe commit. The 1B4 hash is recorded at the next slice boundary (1C, since 1B5 is paused).
+`c3802c9` (1B4) is the last safe commit recorded at the 1C start boundary. The 1C hash is recorded at the 1D1 boundary.
+
+# 1C verification
+
+- Shared owner: `ui/posts/QuotePreviewCard.kt`. Its KDoc says: “Keeps hidden quote text out of composition while preserving the quote card and its action.” Both surfaces call it with their existing label resource and caller-owned URL callback.
+- Quote decisions use the row’s current inputs: quote warning, quote hashtags, `contentWarningRules`, and quote body. Muted hashtags outside those rules were not added. Hidden decisions conditionally compose only the placeholder; other decisions retain the warning-text-or-body preview, five-line limit, and ellipsis.
+- Decision: detail aligns to row behavior. Hidden quote cards remain visible with placeholder. `HiddenContentPresentation.Remove` remains parent-post and Photo Grid filtering behavior only. Parent content-warning handling is untouched. `PhotoPagerSizing.kt` and `PhotoGridScreen.kt` are untouched.
+- Characterization and regression tests in `SinglePostScreenTest`: `photoGridQuotePreviewShowsWarningButNotWarningBody` checks CW display and excludes quote body from unmerged semantics; `photoGridQuotePreviewHidesLocallyMutedQuoteTextFromSemantics` checks placeholder and excludes warning/body; `photoGridQuotePreviewShowsPlainQuoteBody` checks plain body; `postRowQuoteCharacterizationKeepsHiddenWarningAndPlainPreviews` pins the row placeholder and plain preview; `misskeyPhotoGridQuoteUsesTheSameHiddenPlaceholderOutcome` checks the same hidden outcome for a Misskey-family fixture. Review additions test Remove behavior and quote media omission, identical normalized post decisions through both surfaces, and font scale 2.0. Existing geometry and action tests remain unchanged.
+- No other test class composes `PostRow`; the cross-surface characterization uses `SinglePostScreen` Standard mode because that mode delegates its focal post to `PostRow`, while Photo Grid exercises the detail branch.
+- Wiki review found no dedicated posts/quote feature page. Updated `docs/wiki/ui-and-navigation.md`, the existing UI feature page, with the shared quote preview rule.
+- Implementing agent reported exit 0 for `SinglePostScreenTest`, `ContentWarningPolicyTest`, `PostTextPresentationTest`, `:app:lintDebug`, Python unittest (51 tests), and architecture audit `--check` (606 findings, no baseline regression). These are reported results from that agent, not independent reruns here.
+- Independent reviewer confirmation was limited to source and diff inspection. The reviewer's shell denied Python and Gradle reruns, so those gates were not independently confirmed.
+- The full `test assembleRelease` gate did not run for 1C. Its red state remains tracked as the task-level blocker below.
+- The first compile attempt found a removed `ContentWarningPolicy` import. The import was restored. The next compile found an unavailable assertion import; tests now use `assertCountEquals(0)`. Final focused gates pass.
+- At 1C start, HEAD and last safe commit were `c3802c9`; staged `docs/classic_navigation.md` and unrelated dirty work were preserved. No staging or commit occurred. `PhotoPagerSizing.kt` and `PhotoGridScreen.kt` remain unchanged.
+- Device, live-server, foldable, RTL, and TalkBack checks remain unverified. Existing full-suite red, NavigationTest failures, 14-failure investigation, and paused 1B5 blockers remain unchanged.
+- Review repair uses the complete hidden quote body `secret quote body #secret` in the Remove absence assertion; sibling consistency and font-scale tests already query complete bodies. The focused test, Python suite, and architecture audit reruns passed.
 
 # 1B4 verification
 

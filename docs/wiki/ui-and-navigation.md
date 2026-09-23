@@ -56,3 +56,10 @@ taller pages is the accepted tradeoff.
 
 Sources: `ui/posts/SinglePostScreen.kt`, `ui/photogrid/PhotoPagerSizing.kt`,
 `SinglePostScreenTest`.
+
+## Post Quote Previews
+
+Rows and Photo Grid detail use one quote preview presentation. Local content-warning rules hide the quote preview text and show a placeholder, while the quote card, author, label, and open action remain available. Other warning decisions keep the warning-text-or-body preview. The hidden-content Remove preference applies to parent posts and Photo Grid filtering, not quote cards.
+
+Sources: `ui/posts/QuotePreviewCard.kt`, `ui/posts/PostRow.kt`,
+`ui/posts/SinglePostScreen.kt`, `SinglePostScreenTest`.

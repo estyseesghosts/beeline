@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -293,20 +292,8 @@ internal fun SinglePostScreen(
                 }
             }
             post.quote?.let { quote ->
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    onClick = { ExternalLinkHandler.open(context, quote.url) },
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        AccountDisplayName(quote.author, style = MaterialTheme.typography.titleSmall)
-                        InlineEmojiText(
-                            quote.contentWarning?.ifBlank { stringResource(R.string.content_warning) } ?: quote.text,
-                            quote.emoji,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 5,
-                        )
-                        Text(stringResource(R.string.single_post_view_quote), Modifier.padding(top = 12.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    }
+                QuotePreviewCard(quote, contentWarningRules, R.string.single_post_view_quote) {
+                    ExternalLinkHandler.open(context, quote.url)
                 }
             }
                     }

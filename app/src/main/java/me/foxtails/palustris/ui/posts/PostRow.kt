@@ -9,12 +9,10 @@ package me.foxtails.palustris.ui.posts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,7 +29,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.ContentWarningDecision
@@ -161,27 +158,8 @@ internal fun PostRow(
                 }
             }
             post.quote?.let { quote ->
-                val quoteDecision = ContentWarningPolicy.decide(
-                    quote.contentWarning,
-                     postHashtags(quote.text, quote.emoji),
-                    contentWarningRules,
-                    bodyText = quote.text,
-                )
-                OutlinedCard(modifier = Modifier.fillMaxWidth().padding(16.dp), onClick = { ExternalLinkHandler.open(context, quote.url) }) {
-                    Column(Modifier.padding(16.dp)) {
-                        AccountDisplayName(quote.author, style = MaterialTheme.typography.titleSmall)
-                        Spacer(Modifier.height(8.dp))
-                        if (quoteDecision != ContentWarningDecision.Hidden) {
-                            InlineEmojiText(
-                                quote.contentWarning?.ifBlank { stringResource(R.string.content_warning) } ?: quote.text,
-                                quote.emoji,
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 5,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                         } else Text(stringResource(R.string.content_hidden_quoted), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(stringResource(R.string.post_view_quoted), Modifier.padding(top = 12.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    }
+                QuotePreviewCard(quote, contentWarningRules, R.string.post_view_quoted) {
+                    ExternalLinkHandler.open(context, quote.url)
                 }
             }
         }

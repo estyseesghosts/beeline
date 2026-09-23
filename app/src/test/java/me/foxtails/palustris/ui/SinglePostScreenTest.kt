@@ -5,16 +5,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performTouchInput
@@ -29,12 +33,15 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.ContentWarningRules
+import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostInteractionCounts
 import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.posts.SinglePostScreen
 import me.foxtails.palustris.ui.posts.SinglePostPresentation
+import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -449,6 +456,217 @@ class SinglePostScreenTest {
         assertEquals(1, quotes)
     }
 
+    @Test fun photoGridQuotePreviewShowsWarningButNotWarningBody() {
+        val quoted = Post(
+            EntityId("https://example.org", "quoted-preview"), account, "quoted body secret", 0, Audience.Public,
+            contentWarning = "Sensitive topic",
+        )
+        val post = Post(
+            EntityId("https://example.org", "quote-preview"), account, "parent", 0, Audience.Public,
+            attachments = listOf(image("quote-preview")), quote = quoted,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(OwnedPost(account.id, post), SinglePostPresentation.PhotoGrid, onClose = {})
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Sensitive topic").assertIsDisplayed()
+        compose.onAllNodesWithText("quoted body secret", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test fun removeSettingKeepsHiddenQuoteCardAndOmitsItsMediaInPhotoGridDetail() {
+        val quoted = Post(
+            EntityId("https://example.org", "removed-quoted"), account, "secret quote body #secret", 0, Audience.Public,
+            contentWarning = "Sensitive topic", attachments = listOf(image("hidden-quote-media")),
+        )
+        val post = Post(
+            EntityId("https://example.org", "remove-parent"), account, "visible parent", 0, Audience.Public,
+            attachments = listOf(image("visible-parent-media")), quote = quoted,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                CompositionLocalProvider(LocalHiddenContentPresentation provides HiddenContentPresentation.Remove) {
+                    SinglePostScreen(OwnedPost(account.id, post), SinglePostPresentation.PhotoGrid, onClose = {},
+                        contentWarningRules = ContentWarningRules(hideHashtags = listOf("secret")))
+                }
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Quoted content hidden.").assertIsDisplayed()
+        compose.onAllNodesWithText("secret quote body #secret", useUnmergedTree = true).assertCountEquals(0)
+        compose.onNodeWithTag("single_post_photo_pager", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("post_media_frame_removed-quoted_0", useUnmergedTree = true).assertDoesNotExist()
+        // Remove does not remove this visible parent or its detail pager; it applies to hidden parent content and grid entries.
+
+        val hiddenParent = post.copy(text = "parent secret #parentmute", contentWarning = "Parent warning")
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                CompositionLocalProvider(LocalHiddenContentPresentation provides HiddenContentPresentation.Remove) {
+                    SinglePostScreen(OwnedPost(account.id, hiddenParent), SinglePostPresentation.PhotoGrid, onClose = {},
+                        contentWarningRules = ContentWarningRules(hideHashtags = listOf("parentmute")))
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onAllNodesWithText("parent secret #parentmute", useUnmergedTree = true).assertCountEquals(0)
+        compose.onAllNodesWithText("Quoted content hidden.", useUnmergedTree = true).assertCountEquals(0)
+        compose.onNodeWithTag("single_post_photo_pager", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test fun sameHiddenPostUsesTheSameQuoteDecisionInPhotoGridDetailAndPostRow() {
+        val quoted = Post(
+            EntityId("https://example.org", "shared-hidden-quote"), account,
+            "shared quote secret #mutedtag", 0, Audience.Public,
+            contentWarning = "Shared warning", attachments = listOf(image("shared-hidden-quote-media")),
+        )
+        val post = Post(
+            EntityId("https://example.org", "shared-hidden-parent"), account,
+            "shared parent", 0, Audience.Public, attachments = listOf(image("shared-parent-media")), quote = quoted,
+        )
+        val rules = ContentWarningRules(hideHashtags = listOf("mutedtag"))
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(OwnedPost(account.id, post), SinglePostPresentation.PhotoGrid, onClose = {}, contentWarningRules = rules)
+            }
+        }
+        compose.waitForIdle()
+        assertHiddenQuoteDecision("shared quote secret #mutedtag", "Shared warning", "shared-hidden-quote")
+
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(OwnedPost(account.id, post), SinglePostPresentation.Standard, onClose = {}, contentWarningRules = rules)
+            }
+        }
+        compose.waitForIdle()
+        assertHiddenQuoteDecision("shared quote secret #mutedtag", "Shared warning", "shared-hidden-quote")
+    }
+
+    @Test fun largeSystemFontScaleKeepsHiddenQuotePlaceholderAndHidesPreview() {
+        val quoted = Post(
+            EntityId("https://example.org", "large-hidden-quote"), account,
+            "large text secret #mutedtag", 0, Audience.Public, contentWarning = "Long translated warning",
+        )
+        val post = Post(EntityId("https://example.org", "large-parent"), account, "parent", 0, Audience.Public, quote = quoted)
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                val density = LocalDensity.current
+                CompositionLocalProvider(LocalDensity provides androidx.compose.ui.unit.Density(density.density, 2f)) {
+                    SinglePostScreen(OwnedPost(account.id, post), SinglePostPresentation.PhotoGrid, onClose = {},
+                        contentWarningRules = ContentWarningRules(hideHashtags = listOf("mutedtag")))
+                }
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Quoted content hidden.").assertIsDisplayed()
+        compose.onAllNodesWithText("large text secret #mutedtag", useUnmergedTree = true).assertCountEquals(0)
+        compose.onAllNodesWithText("Long translated warning", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test fun photoGridQuotePreviewHidesLocallyMutedQuoteTextFromSemantics() {
+        val quoted = Post(
+            EntityId("https://example.org", "quoted-hidden"), account, "secret #mutedtag", 0, Audience.Public,
+            contentWarning = "Sensitive topic",
+        )
+        val post = Post(
+            EntityId("https://example.org", "quote-hidden"), account, "parent", 0, Audience.Public,
+            attachments = listOf(image("quote-hidden")), quote = quoted,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(
+                    OwnedPost(account.id, post), SinglePostPresentation.PhotoGrid, onClose = {},
+                    contentWarningRules = ContentWarningRules(hideHashtags = listOf("mutedtag")),
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Quoted content hidden.").assertIsDisplayed()
+        compose.onAllNodesWithText("secret #mutedtag", useUnmergedTree = true).assertCountEquals(0)
+        compose.onAllNodesWithText("Sensitive topic", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test fun photoGridQuotePreviewShowsPlainQuoteBody() {
+        val quoted = Post(EntityId("https://example.org", "quoted-plain"), account, "plain quote body", 0, Audience.Public)
+        val post = Post(
+            EntityId("https://example.org", "quote-plain"), account, "parent", 0, Audience.Public,
+            attachments = listOf(image("quote-plain")), quote = quoted,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(OwnedPost(account.id, post), SinglePostPresentation.PhotoGrid, onClose = {})
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("plain quote body").assertIsDisplayed()
+    }
+
+    @Test fun postRowQuoteCharacterizationKeepsHiddenWarningAndPlainPreviews() {
+        val quoted = Post(
+            EntityId("https://example.org", "row-quoted"), account, "row secret #mutedtag", 0, Audience.Public,
+            contentWarning = "Sensitive topic",
+        )
+        val post = Post(EntityId("https://example.org", "row-parent"), account, "parent", 0, Audience.Public, quote = quoted)
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(
+                    OwnedPost(account.id, post), SinglePostPresentation.Standard, onClose = {},
+                    contentWarningRules = ContentWarningRules(hideHashtags = listOf("mutedtag")),
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Quoted content hidden.").assertIsDisplayed()
+        compose.onAllNodesWithText("row secret #mutedtag", useUnmergedTree = true).assertCountEquals(0)
+        compose.onAllNodesWithText("Sensitive topic", useUnmergedTree = true).assertCountEquals(0)
+
+        val plainQuote = Post(EntityId("https://example.org", "row-plain"), account, "row plain quote body", 0, Audience.Public)
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(
+                    OwnedPost(account.id, post.copy(quote = plainQuote)),
+                    SinglePostPresentation.Standard,
+                    onClose = {},
+                )
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithText("row plain quote body").assertIsDisplayed()
+    }
+
+    @Test fun misskeyPhotoGridQuoteUsesTheSameHiddenPlaceholderOutcome() {
+        val misskeyAccount = account.copy(
+            id = AccountId(Connection("https://misskey.example", Protocol.MISSKEY), "person"),
+        )
+        val quoted = Post(
+            EntityId("https://misskey.example", "misskey-quoted"), misskeyAccount,
+            "Misskey quote secret #mutedtag", 0, Audience.Public, contentWarning = "Sensitive topic",
+        )
+        val post = Post(
+            EntityId("https://misskey.example", "misskey-parent"), misskeyAccount,
+            "parent", 0, Audience.Public, attachments = listOf(image("misskey-quote")), quote = quoted,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(
+                    OwnedPost(misskeyAccount.id, post), SinglePostPresentation.PhotoGrid, onClose = {},
+                    contentWarningRules = ContentWarningRules(hideHashtags = listOf("mutedtag")),
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Quoted content hidden.").assertIsDisplayed()
+        compose.onAllNodesWithText("Misskey quote secret #mutedtag", useUnmergedTree = true).assertCountEquals(0)
+        compose.onAllNodesWithText("Sensitive topic", useUnmergedTree = true).assertCountEquals(0)
+    }
+
     @Test fun photoPostDetailShowsRepostConfirmation() {
         val post = Post(
             EntityId("https://example.org", "photo-repost"),
@@ -693,6 +911,13 @@ class SinglePostScreenTest {
         val bodyBounds = compose.onNodeWithText(body)
             .fetchSemanticsNode().boundsInRoot
         assertTrue(pager.bottom <= bodyBounds.top)
+    }
+
+    private fun assertHiddenQuoteDecision(secret: String, warning: String, quoteId: String) {
+        compose.onNodeWithText("Quoted content hidden.").assertIsDisplayed()
+        compose.onAllNodesWithText(secret, useUnmergedTree = true).assertCountEquals(0)
+        compose.onAllNodesWithText(warning, useUnmergedTree = true).assertCountEquals(0)
+        compose.onNodeWithTag("post_media_frame_${quoteId}_0", useUnmergedTree = true).assertDoesNotExist()
     }
 
     private fun image(id: String, width: Int? = 640, height: Int? = 480) = Attachment(
