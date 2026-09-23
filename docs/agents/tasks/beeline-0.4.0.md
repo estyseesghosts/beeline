@@ -31,7 +31,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Current slice
 
-Slice 1C is complete and ships with the current worktree. Row and Photo Grid quote cards share one stateless presentation. Hidden quote previews now show a placeholder in both surfaces. Current slice = `1D1 — Characterize two Misskey inbox streams and the read no-op with adapter and repository tests`; Next = 1D1. Last safe commit at 1C start = `c3802c9` (1B4). The 1C hash is recorded at the 1D1 boundary.
+Slice 1C is complete at the 1D1 start boundary. Its current HEAD is `71c6f7d`; last safe commit = `71c6f7d`. Slice 1D1 is complete and ships with this commit. Current slice = `1D2 — Implement composite inbox cursor and merge order in MisskeyDirectMessageService.kt`; Next = 1D2. The 1D1 hash is recorded at the 1D2 boundary.
 
 # Files involved
 
@@ -100,9 +100,9 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Completed += `Slice 1C — complete (ships with this commit)`; last safe commit = `c3802c9` (1B4). The 1C hash is recorded at the 1D1 boundary.
-Current slice = `1D1 — Characterize two Misskey inbox streams and the read no-op with adapter and repository tests`; Next = 1D1. 1B5 remains paused because its non-thread response-cap gate is unmet.
-Last safe commit = `c3802c9` (1B4); the 1C hash is recorded at the 1D1 boundary.
+Completed += `Slice 1D1 — complete (ships with this commit)`; the 1D1 hash is recorded at the 1D2 boundary.
+Current slice = `1D2 — Implement composite inbox cursor and merge order in MisskeyDirectMessageService.kt`; Next = 1D2. 1B5 remains paused because its non-thread response-cap gate is unmet.
+Last safe commit = `71c6f7d` (1C complete at 1D1 start); 1D1 hash is recorded at the 1D2 boundary.
 
 # Blockers
 
@@ -142,7 +142,23 @@ Last safe commit = `c3802c9` (1B4); the 1C hash is recorded at the 1D1 boundary.
 
 # Last safe commit
 
-`c3802c9` (1B4) is the last safe commit recorded at the 1C start boundary. The 1C hash is recorded at the 1D1 boundary.
+`71c6f7d` was the last safe commit at the 1D1 start boundary. The 1D1 hash is recorded at the 1D2 boundary.
+
+# 1D1 verification
+
+- Plan contract: “Characterize two Misskey inbox streams and the read no-op with adapter and repository tests.” The plan identifies `conversations` fan-out at `MisskeyDirectMessageService.kt:28-49`, `markConversationRead` at `:76-78` as a no-op, and the repository as owner of local read state. 1D1 changes tests and adds a source comment; runtime behavior does not change.
+- The streams are `notes/mentions` and `users/notes`, both POST requests made in that order by `MisskeyDirectMessageService.conversations`. Existing 404 fallback to `i/notifications` remains separate and unchanged.
+- `DirectMessageSourceTest.misskeyInboxStreamsShareUntilIdAndPreserveMappedTransportItems` checks exact POST routes and serialized request bodies, mapped post IDs/text, response ordering, continuation presence, and the decoded continuation value `mentioned`. `misskeyInboxCursorFansOutSameUntilIdAndMergesByTimestamp` uses unequal timestamps and asserts merged item order `m-new, s-new, m-old`; it checks both continuation POST methods, routes, and complete request bodies, including `untilId: m-old`. `misskeyReadValidationNoOpMakesNoRequestEvenWhenRepeated` asserts repeated valid reads make zero requests and blank/foreign-origin IDs throw `Unsupported("direct.read")` without requests. `misskeyInboxServerFailureMapsWithoutLeakingToken` checks HTTP 503 maps to `SourceError.ServerError` and walks every cause message for token absence. The fixture token is a non-secret test double asserted only as part of expected request-body bytes; production tokens never appear in tests or errors; error cause chains are asserted token-free.
+- `DirectMessageRepositoryTest` already covers preserving local read state during refetch, verified read dispatch, provisional local-only reads, and stale-writer behavior; these existing tests were included in the focused run.
+- Characterization notes for 1D2: the one cursor derived from the oldest timestamp across both streams fans out unchanged to both endpoints. The test preserves this current behavior; it does not assert a safe composite continuation. The inbox implementation concatenates mentions before sent notes, deduplicates, then groups and sorts conversations by timestamp. Opaque identifiers are not compared. The 404 mentions fallback, long child continuation limit, and malformed-cursor behavior remain for 1D2/1D3 as applicable.
+- `:app:testDebugUnitTest --tests "me.foxtails.palustris.DirectMessageSourceTest" --tests "me.foxtails.palustris.data.directmessages.DirectMessageRepositoryTest"`: exit 0; `BUILD SUCCESSFUL`.
+- The source-contract test class is `MisskeySourceContractTest`, declared in `SocialSourceContractTest.kt`; `MisskeyIntegrationTest` extends it.
+- `:app:testDebugUnitTest --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.MisskeySourceContractTest"`: exit 0; `BUILD SUCCESSFUL`.
+- `:app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
+- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 606 findings, no new baseline regressions.
+- Production behavior, Mastodon code, and shared/domain contracts did not change. Device and live-server checks remain unverified.
+- Start boundary: 1C was complete at `71c6f7d`; last safe commit = `71c6f7d`. The staged `docs/classic_navigation.md` and unrelated dirty paths remain untouched. No staging or commit occurred.
 
 # 1C verification
 

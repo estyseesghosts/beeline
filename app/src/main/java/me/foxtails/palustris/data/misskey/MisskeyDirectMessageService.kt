@@ -74,6 +74,7 @@ internal class MisskeyDirectMessageService(
     }
 
     suspend fun markConversationRead(id: ConversationId) {
+        // Keep this validation-only no-op until a verified server endpoint exists; reads stay local.
         validateConversationId(id, "direct.read")
     }
 

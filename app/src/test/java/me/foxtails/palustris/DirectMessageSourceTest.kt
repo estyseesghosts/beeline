@@ -23,6 +23,7 @@ import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
+import me.foxtails.palustris.domain.SourceError
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
@@ -37,6 +38,10 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class DirectMessageSourceTest {
+    private companion object {
+        const val FAKE_TOKEN = "secret-token"
+    }
+
     @Test
     fun misskeySendsSpecifiedRecipientsAndReply() = runBlocking {
         MockWebServer().use { server ->
@@ -265,6 +270,124 @@ class DirectMessageSourceTest {
             assertEquals("reply", conversation.lastPost.id.value)
             assertEquals("/api/notes/mentions", server.takeRequest().path)
             assertEquals("/api/users/notes", server.takeRequest().path)
+        }
+    }
+
+    @Test
+    fun misskeyInboxStreamsShareUntilIdAndPreserveMappedTransportItems() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody("[${createdMisskeyNote("mentioned")}]"))
+            server.enqueue(MockResponse().setBody("[${createdMisskeyNote("sent")}]"))
+            val source = MisskeySource(origin, FAKE_TOKEN, MisskeyApi(), accountId = owner, capabilityCache = CapabilityCache())
+
+            val page = source.conversations()
+
+            assertEquals(listOf("mentioned", "sent"), page.items.map { it.lastPost.id.value })
+            assertEquals(listOf("mentioned", "sent"), page.items.map { it.lastPost.text })
+            val mentions = server.takeRequest()
+            val sent = server.takeRequest()
+            assertEquals("POST", mentions.method)
+            assertEquals("/api/notes/mentions", mentions.path)
+            assertEquals("{\"i\":\"$FAKE_TOKEN\",\"limit\":30,\"markAsRead\":false}", mentions.body.readUtf8())
+            assertEquals("POST", sent.method)
+            assertEquals("/api/users/notes", sent.path)
+            assertEquals("{\"i\":\"$FAKE_TOKEN\",\"limit\":30,\"markAsRead\":false,\"userId\":\"owner\",\"includeReplies\":true}", sent.body.readUtf8())
+            assertTrue(page.nextCursor != null)
+            val cursorId = page.nextCursor!!.let { java.util.Base64.getUrlDecoder().decode(it).toString(Charsets.UTF_8) }
+                .let { JSONObject(it).getString("untilId") }
+            assertEquals("mentioned", cursorId)
+        }
+    }
+
+    @Test
+    fun misskeyInboxCursorFansOutSameUntilIdAndMergesByTimestamp() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody("[${createdMisskeyNote("m-new").replace("10:00", "12:00")},${createdMisskeyNote("m-old").replace("10:00", "09:00")}]"))
+            server.enqueue(MockResponse().setBody("[${createdMisskeyNote("s-new").replace("10:00", "11:00")}]"))
+            server.enqueue(MockResponse().setBody("[]"))
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = MisskeySource(origin, FAKE_TOKEN, MisskeyApi(), accountId = owner, capabilityCache = CapabilityCache())
+            val first = source.conversations()
+            assertEquals(listOf("m-new", "s-new", "m-old"), first.items.map { it.lastPost.id.value })
+            source.conversations(first.nextCursor)
+
+            val mentionsFirst = server.takeRequest()
+            val sentFirst = server.takeRequest()
+            assertEquals("POST", mentionsFirst.method)
+            assertEquals("POST", sentFirst.method)
+            val mentionsNext = server.takeRequest()
+            val sentNext = server.takeRequest()
+            val cursorId = first.nextCursor!!.let { java.util.Base64.getUrlDecoder().decode(it).toString(Charsets.UTF_8) }
+                .let { JSONObject(it).getString("untilId") }
+            assertEquals("m-old", cursorId)
+            assertEquals("POST", mentionsNext.method)
+            assertEquals("POST", sentNext.method)
+            assertEquals("{\"i\":\"$FAKE_TOKEN\",\"limit\":30,\"markAsRead\":false,\"untilId\":\"m-old\"}", mentionsNext.body.readUtf8())
+            assertEquals("{\"i\":\"$FAKE_TOKEN\",\"limit\":30,\"markAsRead\":false,\"untilId\":\"m-old\",\"userId\":\"owner\",\"includeReplies\":true}", sentNext.body.readUtf8())
+            assertEquals("/api/notes/mentions", mentionsNext.path)
+            assertEquals("/api/users/notes", sentNext.path)
+        }
+    }
+
+    @Test
+    fun misskeyReadValidationNoOpMakesNoRequestEvenWhenRepeated() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val source = MisskeySource(
+                origin, FAKE_TOKEN, MisskeyApi(),
+                accountId = AccountId(Connection(origin, Protocol.MISSKEY), "owner"),
+                capabilityCache = CapabilityCache(),
+            )
+
+            repeat(2) { source.markConversationRead(ConversationId(origin, "root")) }
+            listOf(
+                ConversationId(origin, " "),
+                ConversationId("https://foreign.example", "root"),
+            ).forEach { invalid ->
+                var failure: SourceError? = null
+                try {
+                    source.markConversationRead(invalid)
+                } catch (error: SourceError) {
+                    failure = error
+                }
+                assertEquals(SourceError.Unsupported("direct.read"), failure)
+            }
+
+            assertEquals(0, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyInboxServerFailureMapsWithoutLeakingToken() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            server.enqueue(MockResponse().setResponseCode(503).setBody("{\"error\":{\"code\":\"TEMPORARY\"},\"token\":\"$FAKE_TOKEN\"}"))
+            val source = MisskeySource(
+                origin, FAKE_TOKEN, MisskeyApi(),
+                accountId = AccountId(Connection(origin, Protocol.MISSKEY), "owner"),
+                capabilityCache = CapabilityCache(),
+            )
+
+            var failure: Exception? = null
+            try {
+                source.conversations()
+            } catch (error: Exception) {
+                failure = error
+            }
+
+            assertTrue(failure is SourceError.ServerError)
+            var cause: Throwable? = failure
+            while (cause != null) {
+                assertFalse(cause.message.orEmpty().contains(FAKE_TOKEN))
+                cause = cause.cause
+            }
+            val request = server.takeRequest()
+            assertEquals("POST", request.method)
+            assertEquals("/api/notes/mentions", request.path)
         }
     }
 

@@ -22,18 +22,18 @@ Historical records stay linked as history, never as a queue. See [Plan 04 archiv
 - The earlier ditch decision `b0d3ddd` is dated history in the archive, not current status.
 - Photo Grid detail photo sizing is committed in `e25c0e5` and `736a26f`. Coverage lives in `SinglePostScreenTest`.
 - Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`. Slice 1B1 is complete at `5207a96`. Slice 1B2 is complete at `9e29ef4`. Slice 1B3 is complete at `d21280e`. Slice 1B4 is complete at `c3802c9`.
-- Slice 1C is implemented and verified in the current worktree. Its hash is recorded at the 1D1 boundary.
+- Slice 1C completed at `71c6f7d`, the start boundary and last safe commit for 1D1. Slice 1D1 is complete in the current worktree; its hash is recorded at the 1D2 boundary.
 - Retention has source- and test-level characterization only. Heap, disk, and Room measurements were never collected and remain unverified.
 
 ## Last Safe Commit
 
-`c3802c9` (1B4) was the last safe commit at the start of 1C. The 1C hash is recorded at the 1D1 boundary.
+`71c6f7d` (1C complete) was the last safe commit at the start of 1D1. The 1D1 hash is recorded at the 1D2 boundary.
 
 ## Next Slice
 
-Completed += `Slice 1C — complete (ships with this commit)`; last safe commit = `c3802c9` (1B4). The 1C hash is recorded at the 1D1 boundary.
-Current slice = `1D1 — Characterize two Misskey inbox streams and the read no-op with adapter and repository tests`; Next = 1D1. 1B5 remains paused because its non-thread response-cap gate is unmet.
-Last safe commit = `c3802c9` (1B4); the 1C hash is recorded at the 1D1 boundary.
+Completed += `Slice 1D1 — complete (ships with this commit)`; the 1D1 hash is recorded at the 1D2 boundary.
+Current slice = `1D2 — Implement composite inbox cursor and merge order in MisskeyDirectMessageService.kt`; Next = 1D2. 1B5 remains paused because its non-thread response-cap gate is unmet.
+Last safe commit = `71c6f7d` (1C complete at 1D1 start); the 1D1 hash is recorded at the 1D2 boundary.
 
 ## Historical work and open verification
 
@@ -43,6 +43,7 @@ S1, P1, Q1, T1, Plan 03, and Plan 04 are complete historical series. See the [ar
 
 - 1B3 moderation cursors pin `/api/v1/accounts/blocked` or `/api/v1/accounts/muted`. Continuations allow one nonblank `max_id`, `since_id`, or `min_id`; a missing `limit` is valid, and a present `limit` must occur once with value exactly `40`. Cursor state is in-memory; no persistence migration is needed.
 - 1B4 uses the existing `encodePathSegment()` helper for unfavorite IDs. `MastodonIntegrationTest.unfavoriteEncodesReservedIdCharactersAndPreservesPlainIdPath` checks literal paths, POST methods, and bearer headers for a plain ID and a composite reserved-character ID. Verification and raw-interpolation grep findings are recorded in the task state.
+- 1D1 tests assert the decoded `mentioned` cursor value, timestamp-merged order `m-new, s-new, m-old` with unequal fixture timestamps, and both continuation POST methods and complete bodies with `untilId: m-old`. Read tests keep repeated valid calls request-free and require blank/foreign-origin IDs to throw `Unsupported("direct.read")` without requests. The server-failure test walks every cause message for token absence. The fixture token is a non-secret test double asserted only as part of expected request-body bytes; production tokens never appear in tests or errors; error cause chains are asserted token-free. Production behavior did not change apart from a comment documenting the validation-only no-op until a verified endpoint exists.
 - `MastodonSource` calls moderation service methods without a preceding capability refresh or other I/O. Cursor rejection occurs before network work.
 - `ModerationServiceTest.mastodonBlockedAndMutedPagesUseOpaqueRouteBoundCursors` checks GET method and bearer authorization on both pages, routes, encoded opaque continuation bytes, and exact returned item order. `mastodonModerationRejectsTamperedAndLegacyCursorsBeforeRequest` checks invalid query shapes and payload tampering with unchanged request counts. Link rejection and loop checks remain in `mastodonModerationRejectsInvalidLinksAndCurrentUrlLoop`.
 - `mastodonModerationRejectsValuelessLimitLinksAndAllowsMissingLimit` rejects valueless, empty, and duplicate `limit` Link values and accepts a missing `limit`. Only a present value other than exactly `40` is invalid.
@@ -62,6 +63,7 @@ S1, P1, Q1, T1, Plan 03, and Plan 04 are complete historical series. See the [ar
 - 1C review repair now queries the complete hidden quote body in the Remove absence assertion. The sibling consistency and font-scale assertions already use their complete fixture bodies; focused test, Python, and architecture audit reruns passed.
 - The 1B3 review repair gates passed: focused moderation tests, adapter integration/contracts, lint, Python tests, and architecture audit. Exact outcomes are in the task state and task log.
 - The 1B4 slice consists of `MastodonSource.kt`, `MastodonIntegrationTest.kt`, and these two records; the whole-worktree diff also lists unrelated pre-existing changes that are never staged or committed with a slice.
+- 1D1 focused adapter/repository tests passed. Python, architecture, lint, and protocol regression results are recorded in the active task state and task log.
 
 ## Known Blockers
 
