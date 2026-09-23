@@ -7,7 +7,7 @@ test verified. C-01 closed the connected-identity gap. C-03 closed the direct-me
 C-06c closed the draft removal gap. Slice 04-E3 added the direct-message conversation identity and
 the verified-only server mark-read.
 
-**Last reviewed:** 2026-09-20.
+**Last reviewed:** 2026-09-23.
 
 **Source baseline:** Slice 16: `SessionLifecycle.kt` owns durable session transitions, and
 `AccountManager.kt` owns session presentation and authentication UI state.
@@ -88,6 +88,21 @@ reaches the user.
 `domain/Connection.kt` requires an HTTPS origin. `isValid()` rejects credentials, paths, queries,
 and fragments. Validate the origin before an authenticated request. Validate pagination origins and
 entity origins before account actions.
+
+Mastodon timeline continuations use adapter-owned opaque cursors in
+`data/mastodon/MastodonPageCursor.kt`. They bind origin, account, session revision, source instance,
+protocol variant, route, and query. The timeline page client validates Link URLs before it returns
+a cursor and validates decoded cursors before it sends a request. Cursor validation runs before the
+capability probe and before any authenticated continuation request. Legacy raw-URL cursors are
+rejected.
+
+Bookmark and hashtag continuations still replay raw server Links through the temporary legacy path
+in `MastodonSource.kt:340-347` and `MastodonSource.kt:429-436`, using
+`MastodonPageClient.kt:27-34`. That path checks same-origin, credentials, and fragments. It does not
+bind the cursor to account, query, route, or variant. Slice 1B2 will bind these continuations and
+remove the legacy path. Owners: `MastodonPageCursor.kt`, `MastodonPageClient.kt`,
+`MastodonTimelineService.kt`, and `MastodonSource.kt`; regression coverage:
+`MastodonIntegrationTest`.
 
 `MisskeySource` validates every entity identity through `validatePostId(id, feature)` before it
 builds an authenticated request. The validator rejects a foreign connection origin and a blank

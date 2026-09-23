@@ -2,6 +2,7 @@ package me.foxtails.palustris.data.mastodon
 
 import java.io.InputStream
 import java.net.URLEncoder
+import java.util.UUID
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -97,7 +98,8 @@ class MastodonSource(
     private val pushService = MastodonPushService(origin, token, api, accountId)
     private val streamService = MastodonStreamService(origin, token, api, accountId)
     private val threadService = MastodonThreadService(origin, token, api, accountId, sessionRevision)
-    private val pageClient = MastodonPageClient(origin, token, api)
+    private val sourceInstance = UUID.randomUUID().toString()
+    private val pageClient = MastodonPageClient(origin, token, api, accountId.localId, sessionRevision, sourceInstance)
     private val timelineService = MastodonTimelineService(pageClient, origin)
     override val capabilities: ServerCapabilities get() = _capabilities.value
     override fun observeCapabilities(): Flow<ServerCapabilities> = _capabilities
@@ -111,6 +113,8 @@ class MastodonSource(
     private var capabilitiesRetryNotBefore = 0L
 
     override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = request {
+        // Reject invalid continuations before capability refresh can issue its own probe.
+        timelineService.validateCursor(timeline, cursor)
         refreshCapabilities()
         timelineService.timeline(timeline, cursor, capabilities)
     }
@@ -338,7 +342,7 @@ class MastodonSource(
     }
 
     override suspend fun savedPosts(cursor: String?): Page<Post> = request {
-        val response = pageClient.getPage("v1/bookmarks?limit=40", cursor)
+        val response = pageClient.getPageLegacyRawReplay("v1/bookmarks?limit=40", cursor)
         val statuses = JSONArray(response.body)
         Page(
             items = (0 until statuses.length()).map { MastodonMapper.post(statuses.getJSONObject(it), origin) },
@@ -427,7 +431,7 @@ class MastodonSource(
     override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> = request {
         val normalized = hashtagBody(tag)
         val encodedTag = URLEncoder.encode(normalized, Charsets.UTF_8.name())
-        val response = pageClient.getPage("v1/timelines/tag/$encodedTag?limit=40", cursor)
+        val response = pageClient.getPageLegacyRawReplay("v1/timelines/tag/$encodedTag?limit=40", cursor)
         val statuses = JSONArray(response.body)
         Page(
             items = (0 until statuses.length()).map { MastodonMapper.post(statuses.getJSONObject(it), origin) },

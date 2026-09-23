@@ -236,11 +236,231 @@ class MastodonIntegrationTest {
 
         assertEquals("newest", first.items.single().id.value)
         assertEquals("older", second.items.single().id.value)
+        assertTrue(first.nextCursor!!.startsWith("http://").not())
         val firstRequest = server.takeRequest()
         val secondRequest = server.takeRequest()
         assertEquals("/api/v1/timelines/home", firstRequest.path)
         assertEquals("/api/v1/timelines/home?max_id=newest", secondRequest.path)
         assertEquals("Bearer token", secondRequest.getHeader("Authorization"))
+    }
+
+    @Test
+    fun timelineLocalAndFederatedKeepTheirRouteFiltersOnSecondPage() = runBlocking {
+        val source = source()
+        server.enqueue(MockResponse().setBody("[${status("local-one")}]" ).addHeader(
+            "Link", "<$origin/api/v1/timelines/public?local=true&max_id=local-one>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody("[]"))
+        val local = source.timeline(me.foxtails.palustris.domain.Timeline.Local)
+        source.timeline(me.foxtails.palustris.domain.Timeline.Local, local.nextCursor)
+        assertEquals("/api/v1/timelines/public?local=true", server.takeRequest().path)
+        val localSecond = server.takeRequest()
+        assertEquals("/api/v1/timelines/public?local=true&max_id=local-one", localSecond.path)
+        assertEquals("Bearer token", localSecond.getHeader("Authorization"))
+
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/public?max_id=fed-one>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody("[]"))
+        val federated = source.timeline(me.foxtails.palustris.domain.Timeline.Federated)
+        source.timeline(me.foxtails.palustris.domain.Timeline.Federated, federated.nextCursor)
+        assertEquals("/api/v1/timelines/public", server.takeRequest().path)
+        val federatedSecond = server.takeRequest()
+        assertEquals("/api/v1/timelines/public?max_id=fed-one", federatedSecond.path)
+        assertEquals("Bearer token", federatedSecond.getHeader("Authorization"))
+    }
+
+    @Test
+    fun timelineRejectsRawAndCrossRouteCursorsBeforeAnotherRequest() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/public?local=true&max_id=x>; rel=\"next\"",
+        ))
+        val source = source()
+        val local = source.timeline(me.foxtails.palustris.domain.Timeline.Local)
+        val count = server.requestCount
+        for (cursor in listOf(local.nextCursor!!, "$origin/api/v1/timelines/home?max_id=x", "v1/timelines/home?max_id=x")) {
+            try {
+                source.timeline(me.foxtails.palustris.domain.Timeline.Federated, cursor)
+                throw AssertionError("Invalid pagination cursor should fail")
+            } catch (error: SourceError.Unsupported) {
+                assertEquals("pagination.cursor", error.feature)
+            }
+            assertEquals(count, server.requestCount)
+        }
+    }
+
+    @Test
+    fun timelineRejectsInvalidLocalLinkBeforeReturningCursor() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/public?max_id=x>; rel=\"next\"",
+        ))
+        try {
+            source().timeline(me.foxtails.palustris.domain.Timeline.Local)
+            throw AssertionError("Invalid Link should fail")
+        } catch (error: SourceError.Unsupported) {
+            assertEquals("pagination.link", error.feature)
+        }
+        assertEquals(1, server.requestCount)
+    }
+
+    @Test
+    fun timelineCursorIsBoundToAccountSessionAndSourceInstance() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/home?max_id=x>; rel=\"next\"",
+        ))
+        val sourceA = source()
+        val cursor = sourceA.timeline(me.foxtails.palustris.domain.Timeline.Home).nextCursor!!
+        val count = server.requestCount
+        val otherAccount = MastodonSource(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "other"))
+        val otherSession = MastodonSource(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "local-user"), sessionRevision = 1L)
+        val otherInstance = source()
+        listOf(otherAccount, otherSession, otherInstance).forEach { other ->
+            val error = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { other.timeline(me.foxtails.palustris.domain.Timeline.Home, cursor) }
+            }
+            assertEquals("pagination.cursor", error.feature)
+            assertEquals(count, server.requestCount)
+        }
+    }
+
+    @Test
+    fun timelineCursorRejectsUnsafeDecodedUrlsAndHardenedQueries() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/home?max_id=x>; rel=\"next\"",
+        ))
+        val source = source()
+        val cursor = source.timeline(me.foxtails.palustris.domain.Timeline.Home).nextCursor!!
+        val json = JSONObject(String(java.util.Base64.getUrlDecoder().decode(cursor), Charsets.UTF_8))
+        val badUrls = listOf(
+            "$origin:${server.port + 1}/api/v1/timelines/home?max_id=x",
+            "${origin.replace("http://", "http://user:pass@")}/api/v1/timelines/home?max_id=x",
+            "$origin/api/v1/timelines/home?max_id=x#fragment",
+            "${origin.replace("http://", "https://")}/api/v1/timelines/home?max_id=x",
+            "$origin/api/v1/elsewhere?max_id=x",
+            "$origin/api/v1/timelines/home?max_id=x&unknown=y",
+            "$origin/api/v1/timelines/home?max_id=x&max_id=y",
+            "$origin/api/v1/timelines/home?max_id=",
+        )
+        val count = server.requestCount
+        badUrls.forEach { url ->
+            val payload = JSONObject(json.toString()).put("url", url).toString().toByteArray(Charsets.UTF_8)
+            val tampered = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(payload)
+            val error = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { source.timeline(me.foxtails.palustris.domain.Timeline.Home, tampered) }
+            }
+            assertEquals("pagination.cursor", error.feature)
+            assertEquals(count, server.requestCount)
+        }
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/public?local=true&max_id=x>; rel=\"next\"",
+        ))
+        val local = source.timeline(me.foxtails.palustris.domain.Timeline.Local)
+        val localJson = JSONObject(String(java.util.Base64.getUrlDecoder().decode(local.nextCursor!!), Charsets.UTF_8))
+            .put("url", "$origin/api/v1/timelines/public?local=false&max_id=x")
+        val tamperedLocal = java.util.Base64.getUrlEncoder().withoutPadding()
+            .encodeToString(localJson.toString().toByteArray(Charsets.UTF_8))
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source.timeline(me.foxtails.palustris.domain.Timeline.Local, tamperedLocal) }
+        }
+        assertEquals("pagination.cursor", error.feature)
+        assertEquals(count + 1, server.requestCount)
+    }
+
+    @Test
+    fun timelineRejectsMalformedCursorsAndStopsWhenLinkIsMissing() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]"))
+        val source = source()
+        val page = source.timeline(me.foxtails.palustris.domain.Timeline.Home)
+        assertNull(page.nextCursor)
+        val count = server.requestCount
+        val versionPayload = JSONObject().put("version", 2).put("variant", "mastodon-page-v1")
+            .put("origin", origin).put("account", "local-user").put("sessionRevision", 0)
+            .put("sourceInstance", "instance").put("route", "timeline:Home").put("query", "Home")
+            .put("url", "$origin/api/v1/timelines/home?max_id=x").toString().toByteArray(Charsets.UTF_8)
+        val unknownVersion = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(versionPayload)
+        val malformed = listOf("%%%", "eyJ2ZXJzaW9uIjo", unknownVersion)
+        malformed.forEach { value ->
+            val error = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { source.timeline(me.foxtails.palustris.domain.Timeline.Home, value) }
+            }
+            assertEquals("pagination.cursor", error.feature)
+            assertEquals(count, server.requestCount)
+        }
+    }
+
+    @Test
+    fun invalidCursorSkipsCapabilityProbeWhileValidCursorRefreshesAndPages() = runBlocking {
+        val invalidSource = staleSchemaSource(MastodonCapabilityProbe(MisskeyApi()))
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { invalidSource.timeline(me.foxtails.palustris.domain.Timeline.Home, "not-a-cursor") }
+        }
+        assertEquals("pagination.cursor", error.feature)
+        assertEquals(0, server.requestCount)
+
+        server.enqueue(MockResponse().setBody(JSONObject()
+            .put("pleroma", JSONObject().put("metadata", JSONObject()
+                .put("features", JSONArray().put("pleroma_emoji_reactions"))))
+            .toString()))
+        server.enqueue(MockResponse().setBody("[${status("newest")}]" ).addHeader(
+            "Link", "<$origin/api/v1/timelines/home?max_id=newest>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody("[${status("older")}]"))
+        val validSource = staleSchemaSource(MastodonCapabilityProbe(MisskeyApi()))
+        val first = validSource.timeline(me.foxtails.palustris.domain.Timeline.Home)
+        val second = validSource.timeline(me.foxtails.palustris.domain.Timeline.Home, first.nextCursor)
+
+        assertEquals(listOf("newest", "older"), listOf(first.items.single().id.value, second.items.single().id.value))
+        assertEquals(3, server.requestCount)
+        assertEquals("/api/v2/instance", server.takeRequest().path)
+        assertEquals("/api/v1/timelines/home", server.takeRequest().path)
+        val continuation = server.takeRequest()
+        assertEquals("/api/v1/timelines/home?max_id=newest", continuation.path)
+        assertEquals("Bearer token", continuation.getHeader("Authorization"))
+    }
+
+    @Test
+    fun cursorEqualToCurrentRequestUrlIsRejectedBeforeRequest() = runBlocking {
+        val route = MastodonPageRoute(
+            "timeline:Home", "v1/timelines/home", "/api/v1/timelines/home", "Home", "timeline",
+        )
+        val cursor = MastodonPageCursor.encode(
+            MastodonPageCursor.Identity(origin, "local-user", 0L, "instance", route.name, route.query),
+            "$origin/api/v1/timelines/home",
+        )
+        val pageClient = MastodonPageClient(origin, "token", MisskeyApi(), "local-user", 0L, "instance")
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { pageClient.getPage(route, cursor) }
+        }
+        assertEquals("pagination.cursor", error.feature)
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
+    fun cursorPayloadTamperingAndInvalidQueryShapesAreRejectedWithoutRequests() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/home?max_id=x>; rel=\"next\"",
+        ))
+        val source = source()
+        val valid = source.timeline(me.foxtails.palustris.domain.Timeline.Home).nextCursor!!
+        val original = JSONObject(String(java.util.Base64.getUrlDecoder().decode(valid), Charsets.UTF_8))
+        val count = server.requestCount
+        val payloads = listOf(
+            JSONObject(original.toString()).put("query", "Local"),
+            JSONObject(original.toString()).put("variant", "other"),
+            JSONObject(original.toString()).put("version", "1"),
+            JSONObject(original.toString()).put("url", "$origin/api/v1/timelines/home?max_id=x&since_id=y"),
+            JSONObject(original.toString()).put("url", "$origin/api/v1/timelines/home?max_id=x&local=true&local=true"),
+            JSONObject(original.toString()).put("url", "$origin/api/v1/timelines/home?max_id=x&local="),
+        )
+        payloads.forEach { json ->
+            val cursor = java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(json.toString().toByteArray(Charsets.UTF_8))
+            val error = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { source.timeline(me.foxtails.palustris.domain.Timeline.Home, cursor) }
+            }
+            assertEquals("pagination.cursor", error.feature)
+            assertEquals(count, server.requestCount)
+        }
     }
 
     @Test
@@ -921,6 +1141,7 @@ class MastodonIntegrationTest {
         clock = clock,
         onCapabilitiesUpdated = onCapabilitiesUpdated,
     )
+
 
     private fun profileResponse(id: String) = JSONObject()
         .put("id", id)

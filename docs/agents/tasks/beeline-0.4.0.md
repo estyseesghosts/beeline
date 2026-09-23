@@ -26,11 +26,12 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 - Slice 0A is complete at `ba3fe53`. Verification: 51 Python tests passed; architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline; all 120 relative links across 11 touched Markdown files resolve. No source changes occurred.
 - Slice 0B is complete (this record ships with the slice commit). Its commit hash is recorded at the 1A boundary. The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
-- Slice L0 is complete at `cbf8698`. Slice 1A is complete (ships with this commit). Record the 1A hash at the 1B1 boundary.
+- Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`.
+- Slice 1B1 is complete. Timeline cursors use opaque, identity-bound route tokens. Bookmarks and hashtags retain raw Link replay until 1B2. Record its hash at the 1B2 boundary.
 
 # Current slice
 
-Slice 1B1.
+Slice 1B2. Slice 1B1 review gaps are repaired in the current worktree; 1B2 remains next.
 
 # Files involved
 
@@ -41,7 +42,7 @@ Forward owner/caller/test map for phases 1-2. Paths are relative to `app/src/mai
 | Slice | Owner files | Key symbols / lines | Callers and boundary | Tests to run in that slice |
 | --- | --- | --- | --- | --- |
 | 1A | data/mastodon/MastodonModerationService.kt; data/misskey/MisskeyApi.kt (GET helper prefixes /api/) | relationship :74, profileRelationship :85, validateTarget :104; MisskeyApi.get :172 | MastodonSource.setBlocked/setMuted :156-162, removeBlockedAccount/removeMutedAccount :392-394 | ModerationServiceTest, data/mastodon/MastodonIntegrationTest; both adapters' moderation contracts + lint |
-| 1B1 | data/mastodon/MastodonPageClient.kt, MastodonTimelineService.kt; pattern sources MastodonProfileService.kt, MastodonNotificationCursorCodec.kt :17-59 | getPage :14-20, validatePaginationUrl :22-32; timeline :14-31 | MastodonSource.timeline :113-116; opaque adapter-owned cursor binds timeline kind, hashtag, account/session, variant | MastodonIntegrationTest :227-244, :822-844; MastodonSourceContractTest; wrong-path, relative, foreign-origin, cancellation cases |
+| 1B1 | data/mastodon/MastodonPageCursor.kt, MastodonPageClient.kt, MastodonTimelineService.kt; MastodonSource source-instance wiring | timeline route cursor binds timeline kind, account/session, instance, and variant; bookmark/hashtag calls temporarily use legacy replay | MastodonIntegrationTest; source contract regression set; cursor failures are rejected before another request |
 | 1B2 | data/mastodon/MastodonSource.kt | savedPosts :340-347, searchHashtag :427-436 | saved-post and hashtag UI through SocialSource; cursors stay opaque in UI | MastodonIntegrationTest :247-265; cross-account and cross-query reuse |
 | 1B3 | data/mastodon/MastodonModerationService.kt | list :55-59, decodeCursor :115-128, ModerationCursor in domain/ModerationModels.kt :13-18 | blocked/muted list pagination; retain ModerationCursor account/kind/variant fields | ModerationServiceTest :79-101; wrong-path and altered-filter Link cases |
 | 1B4 | data/mastodon/MastodonSource.kt | unfavorite :271-275 (raw id) vs favorite :263-267 (encodePathSegment :537-538) | SocialSource.unfavorite | MastodonSourceContractTest, MastodonIntegrationTest :778-786 pattern; reserved-character IDs |
@@ -98,7 +99,13 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Slice 1A is complete (ships with this commit). Current slice is 1B1. Next, bind Mastodon timeline cursors per plan. Record the 1A hash at the 1B1 boundary. L0 hash is `cbf8698`. Last safe commit is `cbf8698` (L0). The 1A hash does not exist yet.
+Slice 1B1 is complete. Its review repairs are verified in this worktree. Current and next slice is 1B2. Bind saved-post and hashtag cursors in `MastodonSource.kt`, then remove the temporary legacy replay path. Last safe commit is `af1f983`.
+
+Transitional rule: bookmarks and hashtags still replay raw Links until 1B2. Timeline cursors are fully bound in 1B1. The 1B1 hash will be recorded at the 1B2 boundary.
+
+Completed += `Slice 1B1 — complete`; its 1B1 hash is recorded at the 1B2 boundary.
+Current slice = `1B2`; Next = `1B2`.
+Last safe commit = `af1f983`. Do not treat review worktree changes as committed.
 
 # Blockers
 
@@ -110,9 +117,40 @@ Slice 1A is complete (ships with this commit). Current slice is 1B1. Next, bind 
 - Confirm `docs/260926_current_state.md` if a newer review input appears.
 - Tighten `AppLocaleControllerTest.everyLocaleResolvesATranslatedValueOrFallback` and `LocalizationResourceTest.localeCatalogMatchesResourcesEnumAndAndroidConfig` when catalogs return.
 - The residual 03-G ordering risk remains in the Plan 03 task state.
-- The full Gradle gate remains pending for the final release gate. No full gate has run for 0.4.0.
-- NavigationTest has two failures reproducible at base commit ba3fe53 with no source diff. The cause is not established. Investigate in a dedicated slice before phase 7 composer work.
+- No full green gate has passed. One full run executed during 1B1 and is red with 16 failures (above).
+- NavigationTest has two failures. Their pre-existing status is separately verified at `ba3fe53` with an empty `app/src` diff. The cause is not established. Investigate in a dedicated slice before phase 10.
+- The 14 failures are DraftActionsTest (2), CapabilityCacheTest (2), MisskeyThreadContinuationTest (5), and NotificationSyncOrchestratorTest (5). Their executed test and production sources are byte-identical to `af1f983`; `git diff af1f983 --name-only` lists none of them. Direct grep finds no reference from those classes and subjects to symbols changed by L0, 1A, or 1B1. Focused runs reproduce all 14 failures. Transitive closure was not exhaustively proven. Introduction commits were not bisected because `git worktree add` was blocked by permission. The baseline was not executed. Product-versus-environment cause is not established. These failures are not attributable to the 0.4.0 slices by available evidence. Do not weaken or skip tests. A dedicated investigation slice owns these failures.
+- Full unit suite is RED (16 failures in `test assembleRelease`). A dedicated investigation slice must restore full-suite green before the phase-10 release gate.
+- 1B5 gate unmet: source verification shows the only response caps routed through request{} are thread reads (Mastodon: MastodonThreadService; Misskey: MisskeySource thread paths). No non-thread capped path exists, so the plan's required non-thread failure test cannot be written without adding a new conservative response cap per adapter (a behavior change). 1B5 is paused pending an explicit decision. 1E1/1E2 do not depend on 1B5 and proceed.
+
+# 1B1 verification
+
+- `:app:testDebugUnitTest --tests "me.foxtails.palustris.data.mastodon.MastodonIntegrationTest"`: exit 0; `BUILD SUCCESSFUL` after the final loop-guard fix.
+- `:app:testDebugUnitTest --tests "me.foxtails.palustris.data.mastodon.MastodonSourceContractTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest"`: exit 0; `BUILD SUCCESSFUL`.
+- `:app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
+- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- Architecture audit `--check`: exit 0; 605 findings. No new regressions were reported.
+- Full `test assembleRelease`: exit 1. Release assembly completed, but 16 of 1,265 JVM tests failed. Failures: `DraftActionsTest.saveFailureReportsError`, `DraftActionsTest.deleteFailureStillCompletesAndReports`, `CapabilityCacheTest.oldSourceReadAfterReplacementMissesAndPublishesNothing`, `CapabilityCacheTest.lateProbeAfterRemoveAndReAddWithSameRevisionCannotPublish`, `MisskeyThreadContinuationTest.sourceRejectsForeignAccountAndFocalWithoutNetworkOrConsumption`, `MisskeyThreadContinuationTest.sourceContinuationTokenIsOpaqueUuidAndSingleUse`, `MisskeyThreadContinuationTest.sourceReleasesContinuationStoreBeforeNetworkWork`, `MisskeyThreadContinuationTest.sourcePreservesTransportOrderAcrossContinuations`, `MisskeyThreadContinuationTest.sourceValidatesSessionBeforeConsumingContinuation`, five `NotificationSyncOrchestratorTest` cases (`reAddRejectsOldTokenAndAcceptsReplacement`, `productionRemovalRejectsLateEventsAndDropsGenerationEntry`, `generationsStayMonotonicAcrossRepeatedRemoval`, `unregisterRejectsLateStreamEventsAndRemovesActiveEntry`, `removalRightAfterPublishCancelsPollWithoutOrphan`), and the two documented `NavigationTest` failures. The cause and pre-existing status of failures beyond the two documented NavigationTest cases are unverified.
+- Triage rerun of the four classes reproduced the same 14 failures in the focused run. The baseline identity, no-reference evidence, and conclusion are recorded in Blockers and `logs/BUGS.txt`; product-versus-environment cause and exact introduction commit remain unknown.
+- Added cursor regression tests: `timelineCursorIsBoundToAccountSessionAndSourceInstance` checks different account, session revision, and source instance each reject as `Unsupported("pagination.cursor")` with unchanged request count. `timelineCursorRejectsUnsafeDecodedUrlsAndHardenedQueries` checks hostile port, userinfo, fragment, scheme, path, unknown key, duplicate pagination key, empty pagination value, and `local=false` on Local before requests. `timelineRejectsMalformedCursorsAndStopsWhenLinkIsMissing` checks no-Link returns null and malformed Base64, truncated JSON, and unknown version reject with unchanged request count.
+- Final `git status --short`: exit 0; 1B1 changed source, test, handoff, and task-state files plus the new codec and ignored task logs. Existing unrelated changes and the staged `docs/classic_navigation.md` remain present. `git diff --stat` reports unrelated pre-existing dirty changes too. `git rev-parse --short HEAD`: exit 0; `af1f983`. Nothing was staged by this task.
+- Cancellation coverage was not added. Cancellation remains propagated by `MisskeyApi.execute`; this contract was not independently exercised here.
+- The first compile attempt exited 1 because the JSON library does not expose `keySet()`. The codec now reads keys through the iterator.
+- The tests assert an opaque timeline cursor, Local/Federated second-page wire routes, rejection of raw and cross-route cursors before another request, and rejection of an invalid Local Link before returning a cursor.
+- Raw URL cursors are rejected because a server-supplied URL must not choose an authenticated route.
+- Cancellation coverage was not added. Cancellation remains propagated by `MisskeyApi.execute`; it was not test-verified here.
+- Timeline response order remains server order. Opaque status IDs are not compared.
+- `NavigationTest` was excluded from the 0B focused gate; its two failures appear in the full-suite run. Device and live-server behavior remain unverified.
+- Review repair added `invalidCursorOnUnprimedSourceIsRejectedBeforeCapabilityProbe` (unsupported cursor and zero requests), `cursorEqualToCurrentRequestUrlIsRejectedBeforeRequest` (unsupported cursor and zero requests), and `cursorPayloadTamperingAndInvalidQueryShapesAreRejectedWithoutRequests` (changed query, variant, string version, multiple pagination keys, duplicate/empty local, all unsupported with unchanged request count). Local and Federated second-page cases assert the bearer header. These repair tests pass in the focused integration run.
 
 # Last safe commit
 
-`cbf8698` (L0) is the last safe commit. The 1A hash does not exist yet. Record its hash at the 1B1 boundary.
+`af1f983` (1A) is the last safe commit. Record the 1B1 hash at the 1B2 boundary.
+
+# 1B1 review repair verification
+
+- The capability-probe contrast uses the real `MastodonCapabilityProbe` with a stale schema snapshot. Invalid input returns `Unsupported("pagination.cursor")` with zero requests. Valid pagination requests the metadata endpoint, the first timeline page, and the second page. It checks second-page URL and bearer authorization.
+- Ownership text now states that timeline cursors are opaque, identity-bound, and checked before requests. Bookmark and hashtag cursors still use same-origin raw-Link replay with credential and fragment checks until 1B2.
+- Required Mastodon integration, adapter contract/moderation/Misskey integration, lint, Python, and architecture audit gates exited 0.
+- Full-suite red status remains tracked as its own blocker. The 14 unexplained failures are not reclassified. No full suite was run for this repair.
+- HEAD remains `af1f983`; the staged `docs/classic_navigation.md` remains untouched. Review changes are not committed. Record the 1B1 hash at the 1B2 boundary.
