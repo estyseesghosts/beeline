@@ -4,7 +4,7 @@
 
 **Owner:** Maintainers.
 
-**Last reviewed:** 2026-09-19.
+**Last reviewed:** 2026-09-23.
 
 **Stale when:** A document is added, removed, moved, or reclassified.
 
@@ -26,13 +26,15 @@ This page classifies every reviewed document. Use one of these classes: `current
 | `docs/agents/documentation-inventory.md` | current | This page. |
 | `docs/agents/app-shell-ownership.md` | current | Current shell ownership and gaps. |
 | `docs/agents/protocol-and-session-ownership.md` | current | Current source and session ownership. |
+| `docs/agents/retention-inventory.md` | current | Current long-lived state bounds, lifetimes, release rules, and retention risks. |
 | `docs/agents/decomposition-01-02-acceptance-matrix.md` | current | Status for every 01 and 02 exit condition. |
-| `docs/agents/handoff.md` | current | Short pointer to the active task. |
-| `docs/agents/tasks/_template.md` | current | Task-state template. The active folder keeps only this file. |
+| `docs/agents/handoff.md` | current | Continuation pointer to the active task state. |
+| `docs/agents/tasks/_template.md` | current | Task-state template. |
+| `docs/agents/tasks/beeline-0.4.0.md` | current | Active task state for the Beeline 0.4.0 execution (owner/caller/test map, decisions, slice progress). |
 | `docs/archive/agents/decomposition-01-02-completion.md` | historical | Completed 01/02 task. Kept as the durable record. |
 | `docs/archive/agents/plan03-gate-partials.md` | historical | Completed gate task. Kept as the slice record. |
 | `docs/archive/agents/plan03-protocol-notifications.md` | historical | Completed Plan 03 task. Kept as the durable record. |
-| `docs/archive/agents/plan04-utility-retention.md` | historical | Ditched Plan 04. 04-A through 04-E3 are committed. 04-F through 04-K will not run. |
+| `docs/archive/agents/plan04-utility-retention.md` | historical | 04-A through 04-K have committed work. The archive records the earlier ditch decision (`b0d3ddd`) as history. |
 | `docs/archive/agents/palustrisapp-decomposition.md` | historical | Completed S1 task. Kept as the durable record. |
 | `docs/archive/agents/ui-package-migration.md` | historical | Completed P1 task. Kept as the durable record. |
 | `docs/archive/agents/q1-static-analysis.md` | historical | Completed Q1 task. Kept as the durable record. |
@@ -47,10 +49,7 @@ This page classifies every reviewed document. Use one of these classes: `current
 | `docs/archive/agents/docs-archive.md` | historical | Completed archive task. Kept as the durable record. |
 | `docs/archive/README.md` | current | Archive index for superseded material. |
 
-Every former task file now lives in `docs/archive/agents/`. The Plan 04
-file is ditched, not complete: 04-A through 04-E3 are committed, and
-04-F through 04-K will not run. The localization file covers slices 1
-through 4 only.
+Completed historical task files live in `docs/archive/agents/`. Plan 04-A through 04-K have committed work. The archive preserves the earlier ditch decision (`b0d3ddd`) as history. The localization file covers slices 1 through 4 only.
 
 ## Decomposition Plans
 
@@ -62,7 +61,7 @@ through 4 only.
 | `docs/decomposition_3/02.md` | historical | State and lifecycle plan. Implemented through the completion slices. Plan 02 exits are met except blocked device verification. Kept in place as the planning record. Status: acceptance matrix and `03_corrected.md`. |
 | `docs/decomposition_3/03.md` | historical | Protocol and notification persistence plan. Rebased at `b715430`. Every chunk is implemented and test verified. Kept in place as the planning record. Status: `03_corrected.md`. |
 | `docs/decomposition_3/03_corrected.md` | reference | Corrected completion audit for Plans 01, 02, and 03. Source verified at `beefcb0`. |
-| `docs/decomposition_3/04.md` | planned | Utility ownership and retention plan. Rebase pending. |
+| `docs/decomposition_3/04.md` | historical | Historical planning record. 04-A through 04-K have committed work; the archive records the earlier ditch decision (`b0d3ddd`). See [`docs/archive/agents/plan04-utility-retention.md`](../archive/agents/plan04-utility-retention.md). Last reviewed 2026-09-20. |
 
 The earlier `docs/decomp/`, `docs/decomposition_2/`, and `docs/decomposition.md` material is
 historical and archived under `docs/archive/`. Do not cite it as current architecture.
@@ -74,13 +73,13 @@ historical and archived under `docs/archive/`. Do not cite it as current archite
 | `docs/wiki/README.md` | current | Human wiki index. |
 | `docs/wiki/overview.md` | current | Product overview. |
 | `docs/wiki/architecture.md` | current | Layer and owner map. |
-| `docs/wiki/accounts-and-sessions.md` | planned | Stub. No body yet. |
-| `docs/wiki/server-compatibility.md` | planned | Stub. No body yet. |
-| `docs/wiki/data-and-privacy.md` | planned | Stub. No body yet. |
-| `docs/wiki/ui-and-navigation.md` | planned | Stub. No body yet. |
-| `docs/wiki/notifications-and-direct-messages.md` | planned | Stub. No body yet. |
-| `docs/wiki/build-test-and-release.md` | planned | Stub. No body yet. |
-| `docs/wiki/troubleshooting-and-contribution.md` | planned | Stub. No body yet. |
+| `docs/wiki/accounts-and-sessions.md` | current | Session ownership, identity, removal, and verification limits. |
+| `docs/wiki/server-compatibility.md` | planned | Metadata and empty Purpose/Entries placeholders; no substantive body. |
+| `docs/wiki/data-and-privacy.md` | current | Partial body: emoji asset storage and retention; guide incomplete. |
+| `docs/wiki/ui-and-navigation.md` | current | Partial body: Profiles and Photo Grid detail media are documented; guide incomplete. |
+| `docs/wiki/notifications-and-direct-messages.md` | current | Partial body: direct-message threads are documented; guide incomplete. |
+| `docs/wiki/build-test-and-release.md` | planned | Metadata and empty Purpose/Entries placeholders; no substantive body. |
+| `docs/wiki/troubleshooting-and-contribution.md` | planned | Metadata and empty Purpose/Entries placeholders; no substantive body. |
 
 ## Root Documents
 

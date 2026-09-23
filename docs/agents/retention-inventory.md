@@ -114,8 +114,8 @@ closure through measurement.
 
 ## Plan 04 status
 
-Historical Plan 04 remains ditched. The archive records that 04-A through 04-E3 completed and
-04-F through 04-K will not run.
+Plan 04-A through 04-K have committed work. The archive records the earlier ditch decision
+(`b0d3ddd`) as history.
 
 ## Slice 9 closure
 
@@ -123,15 +123,15 @@ Slice 9 closes the retention inventory at the source and test level. Every long-
 mutable structure above carries either a tested bound or a documented correctness
 lifetime. The four rows that previously carried `known risk` now close as follows:
 
-* Dismissed IDs close as correctness-lifetime tombstones. They release on account removal
+* Dismissed IDs close as correctness-lifetime tombstones at source and test level. They release on account removal
 or storage reset. Source verified in `NotificationRepository`; test verified in
 `NotificationRepositoryTest`.
-* Checkpoints close as one entry per stable query key. They release on account removal or
+* Checkpoints close as one entry per stable query key at source and test level. They release on account removal or
 storage reset. Source verified; test verified in `NotificationRepositoryTest`.
-* Delivery records close for the retry lifetime. Claim expiry bounds posting claims, and
+* Delivery records close for the retry lifetime at source and test level. Claim expiry bounds posting claims, and
 dismissal or removal releases records. Source verified; test verified in
 `NotificationRepositoryTest`.
-* Repository generations and retired tombstones close as removal-lifetime state. The key
+* Repository generations and retired tombstones close as removal-lifetime state at source and test level. The key
 set spans distinct accounts, and `maxOf` keeps repeated removal monotonic. Source
 verified; test verified in `NotificationRepositoryTest`.
 

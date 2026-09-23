@@ -87,7 +87,7 @@ saveable snapshot. A session replacement clears restored reply and quote targets
 control, the editor bindings, publish with its confirmation message, and tracking cleanup. The
 shell keeps the placement condition with open, guarded close, and emoji-picker target requests.
 
-Test code binds test-only recorders in `app/src/test/java/me/foxtails/palustris/AppShellFixtures.kt`.
+Test code binds test-only recorders in `app/src/test/java/me/foxtails/palustris/ui/shell/AppShellFixtures.kt`.
 
 | Contract | Owner | State | Actions |
 | --- | --- | --- | --- |

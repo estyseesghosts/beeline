@@ -1,8 +1,8 @@
 # Notifications and Direct Messages
 
-Status: planned  
+Status: current, partial coverage  
 Owner: Notifications and messaging maintainers  
-Last reviewed: 2026-09-16  
+Last reviewed: 2026-09-23  
 Stale when: Notification delivery or direct-message behavior changes.
 
 Sources: `AGENTS.md`, `data/notifications/`, `data/directmessages/`, notification tests, and messaging tests.

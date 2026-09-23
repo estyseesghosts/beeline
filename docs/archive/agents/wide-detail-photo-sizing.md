@@ -1,10 +1,10 @@
 # Task State: Wide Detail Photo Sizing
 
-**Status:** complete, uncommitted. The Photo Grid detail pager uses aspect-aware heights in compact and wide layouts.
+**Status:** complete and committed in `e25c0e5` and `736a26f`. The Photo Grid detail pager uses aspect-aware heights in compact and wide layouts.
 
-**Source verified:** `ui/SinglePostScreen.kt`, `ui/photogrid/PhotoPagerSizing.kt`, `ui/AppLargeDetailPane.kt`, and `ui/large/LargeScreenShell.kt`.
+**Source verified:** `ui/posts/SinglePostScreen.kt`, `ui/photogrid/PhotoPagerSizing.kt`, `ui/shell/AppLargeDetailPane.kt`, and `ui/large/LargeScreenShell.kt`.
 
-**Test verified:** `SinglePostScreenTest` (23 tests, 0 failures) covers 1:1, 4:5, 16:9, wider-than-16:9, taller-than-4:5, limited viewport, missing dimensions, invalid dimensions, and shared multi-photo height. `ktlintCheck` and `test assembleRelease` pass.
+**Test verified:** Coverage lives in `SinglePostScreenTest` and includes 1:1, 4:5, 16:9, wider-than-16:9, taller-than-4:5, limited viewport, missing dimensions, invalid dimensions, and shared multi-photo height. `ktlintCheck` and `test assembleRelease` pass.
 
 **Device verified:** unavailable. Physical compact and wide rendering remains unverified.
 
@@ -37,20 +37,20 @@ Remove vertical letterboxing for wide media in Photo Grid detail. Keep full page
 ## Files Involved
 
 - `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoPagerSizing.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/SinglePostScreen.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/posts/SinglePostScreen.kt`
 - `app/src/test/java/me/foxtails/palustris/ui/SinglePostScreenTest.kt`
 - `docs/wiki/ui-and-navigation.md`
 
 ## Verification
 
-- `testDebugUnitTest --tests SinglePostScreenTest`: 23 tests, 0 failures.
+- `testDebugUnitTest --tests SinglePostScreenTest`: focused test suite passed.
 - `ktlintCheck`: pass.
 - `test assembleRelease`: pass.
 - Physical device rendering stays device-dependent and unverified.
 
 ## Next
 
-- Run the focused UI tests. Fix failures. Run the full gate. Commit one slice.
+- Historical note: the focused UI tests and full gate ran before commits `e25c0e5` and `736a26f`.
 - Preserve unrelated worktree deletions and untracked files. Stage only slice files.
 
 ## Blockers

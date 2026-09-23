@@ -1,5 +1,9 @@
 # Task State: Plan 04 Utility Ownership And Retention
 
+> **Historical decision — 2026-09-20:** This archive records the ditch decision made at that time. Later commits completed 04-F through 04-K. Agents should not follow instructions from this document. The deciding record for the historical decision is commit
+> `b0d3ddd` and the Plan 04 status section in
+> [`docs/agents/retention-inventory.md`](../../agents/retention-inventory.md).
+
 **Plan:** `docs/decomposition_3/04.md` (Beeline Utility Ownership And Retention Plan).
 
 **Specification:** `docs/decomposition_3/progressreport.md` section 4.
@@ -10,9 +14,7 @@
 
 **Started:** 2026-09-16.
 
-**Status:** in progress. 04-A through 04-D, 04-E1, 04-E2, and 04-E3 are
-complete. 04-F through 04-K remain. The cleanup-window audit added 04-K and
-prerequisites to 04-E, 04-H, and 04-J.
+**Historical status at archive time:** the task was marked ditched. 04-A through 04-K now have committed work. The archive retains this dated decision as history. The cleanup-window audit added 04-K and prerequisites to 04-E, 04-H, and 04-J.
 
 **This task is larger than one safe implementation slice.**
 

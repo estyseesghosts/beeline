@@ -45,13 +45,13 @@ Rebuild the TODO list from these items.
 
 ## Current tasks
 
-None. The active `tasks/` folder keeps only
-[tasks/_template.md](tasks/_template.md). Start the next task from it.
+The active task is [Beeline 0.4.0](tasks/beeline-0.4.0.md). Keep the
+[task template](tasks/_template.md) for new task states.
 
 ## Historical tasks
 
 - [Docs archive](../archive/agents/docs-archive.md)
-- [Plan 04 utility ownership and retention](../archive/agents/plan04-utility-retention.md) (ditched; 04-A through 04-E3 complete, 04-F through 04-K will not run)
+- [Plan 04 utility ownership and retention](../archive/agents/plan04-utility-retention.md) (historical; 04-A through 04-K have committed work; archive records earlier ditch decision)
 - [Plan 03 protocol and notification persistence](../archive/agents/plan03-protocol-notifications.md)
 - [Plan 03 gate partials](../archive/agents/plan03-gate-partials.md)
 - [Decomposition 01 and 02 completion](../archive/agents/decomposition-01-02-completion.md)
@@ -75,3 +75,4 @@ None. The active `tasks/` folder keeps only
 - [Acceptance matrix](decomposition-01-02-acceptance-matrix.md)
 - [App shell ownership](app-shell-ownership.md)
 - [Protocol and session ownership](protocol-and-session-ownership.md)
+- [Retention inventory](retention-inventory.md)

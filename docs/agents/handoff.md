@@ -1,319 +1,57 @@
 # Handoff
 
-**Status:** current pointer. The durable record for the completed wide detail interaction fix is
-`docs/archive/agents/wide-detail-interaction-fix.md`. The durable record for the completed 01/02 series is
-`docs/archive/agents/decomposition-01-02-completion.md`. The durable record for the completed
-Plan 03 work is `docs/archive/agents/plan03-protocol-notifications.md`. The corrected audit of
-Plans 01, 02, and 03 is `docs/decomposition_3/03_corrected.md` (git-ignored planning material,
-do not force-add). The durable record for the completed S1 work is
-`docs/archive/agents/palustrisapp-decomposition.md`. The durable record for
-the completed P1 work is `docs/archive/agents/ui-package-migration.md`. The
-durable record for the completed Q1 work is
-`docs/archive/agents/q1-static-analysis.md`. The durable record for the
-completed T1 work is `docs/archive/agents/t1-test-mirror.md`. Plan 04 is ditched.
-Slices 04-A through 04-D and 04-E1 through 04-E3 are complete and
-committed. Slices 04-F through 04-K will not run. The ditched
-task file lives at `docs/archive/agents/plan04-utility-retention.md`
-(unchanged, historical). The completed docs archive work is
-`docs/archive/agents/docs-archive.md`. The Plan 04 source is
-`docs/decomposition_3/04.md` (git-ignored planning material, do not force-add).
+**Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state for Beeline 0.4.0.
+
+Historical records stay linked as history, never as a queue. See [Plan 04 archive](../archive/agents/plan04-utility-retention.md), [wide detail photo sizing](../archive/agents/wide-detail-photo-sizing.md), and [docs archive](../archive/agents/docs-archive.md).
 
 ## Where To Start
 
-Read these in order. Treat the repository as the authority.
-
 1. `AGENTS.md`.
-2. `docs/archive/agents/docs-archive.md`.
-3. `docs/decomposition_3/03_corrected.md`.
-4. `docs/agents/app-shell-ownership.md` and `docs/agents/protocol-and-session-ownership.md`.
-5. `docs/agents/decomposition-01-02-acceptance-matrix.md`.
-6. `logs/BUGS.txt`.
-7. `git status` and recent commits.
+2. `docs/agents/tasks/beeline-0.4.0.md`.
+3. `git status` and the current diff.
+4. Recent commits.
+5. `docs/beeline_0.4.0.md` (active plan; git-ignored planning material under `docs/` unless explicitly added).
+6. `docs/260923_current_state.md` (active cleanup review; also git-ignored).
+7. `docs/agents/app-shell-ownership.md` and `docs/agents/protocol-and-session-ownership.md`.
+8. `logs/BUGS.txt`.
 
 ## Current Position
 
-- Plan 03 is complete. Every chunk from `03-A1` through `03-J` is committed
-  and test verified. The last Plan 03 slice is `5609f3c`.
-- The corrected audit is written at `docs/decomposition_3/03_corrected.md`.
-  Its main finding: Plan 01 Step 13 is only half met because
-  `ui/PalustrisApp.kt` is still 1078 lines and still coordinates feature
-  state. All other Plan 01, 02, and 03 slices are complete except blocked
-  device verification.
-- Stale status claims are fixed outside `docs/decomposition_3/`: the
-  documentation inventory reclassifies `01.md`, `02.md`, and `03.md` as
-  historical, the Plan 03 task is historical in the agent index, and the
-  root README no longer calls block, mute, and report unimplemented.
-  `01.md`, `02.md`, and `03.md` themselves were not touched.
-- S1a (extract transient overlay state into `ui/shell/ShellOverlayPresenter.kt`)
-  is committed and test verified. The slice commit is `ced43f2`.
-- S1b (extract the destination tree into `ui/shell/ShellDestinationContent.kt`)
-  is committed and test verified. The slice commit is `101be82`.
-- S1c (extract overlay, dialog, and bubble hosting into
-  `ui/shell/ShellOverlayHost.kt`) is committed and test verified. The
-  slice commit is `4c97d43`.
-- S1 (split `PalustrisApp.kt`) is complete. The shell is 622 lines and
-  owns navigation and placement. Feature state lives in the overlay
-  holder, the destination content, and the overlay host.
-- P1f (group the destination callbacks into post, draft, and
-  navigation bundles) is committed and test verified. `ShellDestinationContent`
-  takes 27 parameters instead of 38. The slice commit is `138a404`.
-- P1 (finish the `ui/` package migration and group the destination
-  callbacks) is complete. Every slice P1a through P1f is committed and
-  test verified. The durable record is
-  `docs/archive/agents/ui-package-migration.md`.
-- CI is green on run `35053164957`: unit/lint/build plus the API 29 smoke
-  job, 10 of 10 instrumented tests pass. Fixes: fresh AVD, 3-attempt
-  single-line retry loop, KVM hardware acceleration, default system
-  image without Google APIs, repaired `Api29StartupInstrumentedTest`
-  call. The CI repair slice is `b62f8c6`.
-- `v0.2.7` is released as a GitHub pre-release with the signed
-  `app-release.apk`, title `Beeline 0.2.7`, notes `Making the pain
-  worth it.` Tag `v0.2.7` points at `45e2275`. Release run
-  `35054197234` is green. The handoff record commit is `11d5ba1`. The
-  last safe commit is `11d5ba1`.
-- `v0.2.8` is released as a GitHub pre-release with the signed
-  `app-release.apk` (65,663,876 bytes), title `Beeline 0.2.8`, notes
-  `Making the pain worth it.` Tag `v0.2.8` points at `5a7aae5`.
-  Release run `35184242661` is green. The version slice is `503e711`.
-  The locale-key fix slice is `5a7aae5`. The first tag push failed
-  checks on two unit tests: `LocalizationResourceTest.
-  localeResourcesMatchTheDefaultCatalog` (stale keys in six locale
-  catalogs) and `NotificationsViewModelTest.
-  dismissRemovesRowWhenProtocolHasNoServerDismissEndpoint`
-  (`UncaughtExceptionsBeforeTest`, passes alone, known isolation flake).
-  The fix slice removes 29 stale lines and the rerun is green.
-- Q1 (ktlint gate and wildcard removal) is complete. Slices: `39cfec3`
-  (gate and baseline), `6c3f4f5` (clear the icon commit findings),
-  `e5c77ad` (restore the Direct messages label and cover the unfollow
-  confirmation), `99bc0ed` (main wildcard imports), `37d8cac` (test
-  wildcard imports). The baseline holds zero `no-wildcard-imports`
-  entries. `ktlintCheck`, `test assembleRelease`, and `lintDebug` pass.
-  The durable record is `docs/archive/agents/q1-static-analysis.md`.
-- Plan 01 and Plan 02 exit conditions are met except blocked device
-  verification.
-- T1a (merge the duplicate test classes into mirrored packages) is
-  committed and test verified. `ui/emoji/EmojiCatalogViewModelTest`
-  holds 8 tests and `ui/posts/PostPopupOwnerTest` holds 5 tests. The
-  two root copies and the misplaced `ui/EmojiCatalogViewModelTest` are
-  gone. Focused tests, `test assembleRelease`, and `ktlintCheck` pass.
-  The slice commit is `7018105`.
-- T1b (move 43 data and domain owner tests into mirrored packages) is
-  committed and test verified. Each move changes the package line only.
-  The slice also regenerates `app/ktlint-baseline.xml` because the moves
-  exposed pre-existing style debt under new paths. `test assembleRelease`
-  and `ktlintCheck` pass. The slice commit is `f65a10a`.
-- T1c (move 17 UI feature tests into mirrored packages) is committed and
-  test verified. Physical files and package lines move together. The 8
-  fixture users gain `AppShellFixtures`, `ComposerFeatureFixtures` or
-  `HomeFeatureFixtures`, and `MainActivity` imports because those
-  declarations stay in the root package. The slice also regenerates
-  `app/ktlint-baseline.xml` under the new paths. `RichTextModelTest`
-  moves to `domain` because it exercises only domain classes. Focused
-  tests, `test assembleRelease`, and `ktlintCheck` pass. The slice commit
-  is `42e85e7`.
-- T1d (move the three shared test fixtures into mirrored packages) is
-  committed and test verified. `AppShellFixtures` -> `ui.shell`,
-  `ComposerFeatureFixtures` -> `ui.composer`, `HomeFeatureFixtures` ->
-  `ui.feed`. The eight users point at the new packages and drop the now
-  same-package imports. The slice also regenerates
-  `app/ktlint-baseline.xml` under the new paths. Focused tests,
-  `test assembleRelease`, `ktlintCheck`, and `lintDebug` pass. The slice
-  commit is `404b356`.
-- T1e (move 34 single-owner root tests into mirrored packages) is
-  committed and test verified. The tests move to `ui.localization`,
-  `ui.session`, `ui.directmessages`, `ui.feed`, `ui.settings`, `ui.large`,
-  `ui.media`, `ui.motion`, `ui.notifications`, `ui.photogrid`,
-  `ui.profile`, `ui.saved`, `ui.thread`, `ui.navigation`, `ui.composer`,
-  flat `ui`, and `data.notifications.push`. Eight screen tests gain a
-  `MainActivity` import. The slice also regenerates
-  `app/ktlint-baseline.xml` under the new paths. Focused tests,
-  `test assembleRelease`, `ktlintCheck`, and `lintDebug` pass. The slice
-  commit is `00a49ff`.
-- T1f (move the adapter-specific source tests into mirrored packages) is
-  committed and test verified. `MastodonIntegrationTest`,
-  `MastodonNotificationSyncTest`, and `MastodonSourceContractTest` move
-  to `data.mastodon`. `MisskeyIntegrationTest` moves to `data.misskey`.
-  The shared `SocialSourceContractTest` base stays at the root package.
-  Twelve cross-adapter, cross-cutting, and platform tests also stay at
-  the root package because no single production package owns them. The
-  slice also regenerates `app/ktlint-baseline.xml`. Focused tests,
-  `test assembleRelease`, `ktlintCheck`, and `lintDebug` pass. The slice
-  commit is `aecab82`. T1 is complete.
-- 04-A (complete external-link ownership) is committed and test
-  verified. `ExternalLinkHandler.open` holds the full browser operation,
-  the `ui.openExternal` declaration and imports are gone, and the eight
-  feature calls use the handler. `ExternalLinkHandlerTest` is new. The
-  slice commit is `ee52ba9`.
-- 04-B (separate the Unicode catalog from picker presentation) is
-  committed and test verified. `DefaultUnicodeEmojis` moves unchanged to
-  `ui/emoji/DefaultUnicodeEmoji.kt`. Both consumers stay in the
-  `ui.emoji` package, so no caller changed. `DefaultUnicodeEmojiTest`
-  pins the order with a fixed snapshot resource. The slice commit is
-  `6a87c76`.
-- 04-C (replace the emoji URL locks with fixed stripes) is committed and
-  test verified. `EmojiAssetStore.urlLocks` is a fixed 64-lock array.
-  `stripeIndex` uses `hashCode() and mask`, so the index stays
-  nonnegative without `abs`. Canonicalization stays before
-  coordination. Revised `EmojiAssetStoreTest` covers concurrent
-  same-URL requests, deliberate collisions, independent stripes,
-  failure and retry, cancellation, and 10,000 unique URLs against the
-  constant structure. The slice also regenerates
-  `app/ktlint-baseline.xml` for the shifted annotated declaration. The
-  slice commit is `633cd7a`.
-- 04-D (enforce emoji mapping and byte retention with reader leases) is
-  committed and test verified. `EmojiAssetStore` bounds inactive URL
-  mappings at 4,096 and inactive content at 128 MiB through injectable
-  constructor limits. Mapping eviction uses the referenced asset
-  `lastUsedEpochMillis` access order. `EmojiAssetLease` is closeable and
-  `EmojiAssetFetcher` passes it as the Coil `ImageSource` closeable, so
-  Coil releases it on decode success, failure, or cancellation. Open
-  leases and writes are exempt from eviction, so overage is temporary.
-  The wiki privacy and architecture pages record the rule. The slice
-  commit is `f0735df`.
-- 04-E1 (require the shared direct-message write authority) is committed
-  and test verified. `DirectMessageWriteAuthority` is a required
-  constructor dependency of `DirectMessageViewModel` and
-  `DirectMessageRepository`. Source verified: the Hilt-assisted factory
-  already injected the singleton, so production wiring was shared; the
-  private defaults only fired on direct construction. The slice removes
-  both. `DirectMessageViewModelTest.revokedSharedAuthorityStopsThe
-  ViewModelWrite` covers the revoked path. The ownership page records the
-  rule. The slice commit is `b04b2e8`.
-- 04-E2 (carry a validated thread anchor and remove the DM last-post cache)
-  is committed and test verified. `DirectThreadRequest` carries the
-  conversation identity and a separate post anchor. The repository fills
-  the anchor from the stored conversation. The Mastodon adapter loads the
-  anchor through `GET /api/v1/statuses/:id` and its context, never the
-  undocumented conversation GET, and normalizes 403, 404, and 410. The
-  Misskey adapter keeps its reply-rooted root. `directLastPosts` and the
-  send-path insertion are gone. Its slice and this record share one
-  commit.
-- 04-E3 (give provisional conversations an explicit identity and send mark read
-  only for verified server identity) is committed and test verified.
-  `ConversationIdentity { Verified, Provisional }` is in the domain.
-  `DirectConversation` carries a required `identity`. The Room entity adds
-  `identity TEXT NOT NULL DEFAULT 'PROVISIONAL'`; the database is version 2,
-  exports its schema, registers `MIGRATION_1_2`, and keeps the released version-1
-  schema as `1.json`. The repository calls `markConversationRead` only for a
-  verified conversation, so no guessed identity reaches the server. A legacy or
-  unrecognized identity decodes as provisional. Its slice and this record share
-  one commit.
-- Localization string extraction is complete through slice 4 (data layer error
-  messages). `data/AppMessages.kt` is the Context-backed resolver for data-layer
-  owners. `ui/SourceErrorMessage.kt` localizes feature identifiers. The durable
-  record is `docs/archive/agents/localization-string-extraction.md`. Its slice and
-  this record share one commit.
-- The Profile Liked tab is committed and test verified. `ProfileTimelineTab.Liked`
-  and `ProfileCategory.Liked` exist. The category order is Posts, Replies, Media,
-  Reposts, Liked. The Liked tab is available for the signed-in account on either
-  protocol, for another Misskey account, and not for another Mastodon account.
-  The orphaned global Likes page and its model are removed: `LocalPage.Likes`,
-  `LikesContract`, `SavedPostsCollection`, the liked `SavedPostsViewModel`
-  instance, `LargePostOrigin.Liked`, and `SocialSource.likedPosts` are gone.
-  `SavedPostsViewModel` owns bookmarks only. The durable record is
-  `docs/archive/agents/profile-liked-tab.md`.
-- The Profile Featured tab is committed and test verified. `ProfileCategory.Featured`
-  leads the category row only when the profile has more than one pinned post. A
-  single pinned post shows at the top of the Posts feed with no Featured tab.
-  Pinned posts stay out of every other profile feed. Featured renders the pinned
-  posts the profile already loaded, so it adds no request and no pager tab. The
-  durable record is `docs/archive/agents/profile-featured-tab.md`.
+- Plan 04-A through 04-K have committed work: 04-A `ee52ba9`, 04-B `6a87c76`, 04-C `633cd7a`, 04-D `f0735df`, 04-E1 `b04b2e8`, 04-F `9a1b055`, 04-G `d5f694c`, 04-H1 `cc900d9`, 04-H2 `fab0131`, 04-I `51351a7`, 04-J1 `dc9ae5f`, 04-J2 `c6a2ed0`, 04-J3 `484b995`, and 04-K `9e9a0d7`.
+- The earlier ditch decision `b0d3ddd` is dated history in the archive, not current status.
+- Photo Grid detail photo sizing is committed in `e25c0e5` and `736a26f`. Coverage lives in `SinglePostScreenTest`.
+- Slice 0A is complete. This record ships together with the slice commit. The commit hash is recorded at the next slice boundary (0B). Slice 0B is the current and next slice.
+- Retention has source- and test-level characterization only. Heap, disk, and Room measurements were never collected and remain unverified.
+
+## Last Safe Commit
+
+`8c964a3` is the last safe commit before 0A. Record this slice's own commit hash at the 0B boundary.
 
 ## Next Slice
 
-No docs work is open. The docs archive is complete. The owner picks
-the next feature task. Start it from `docs/agents/tasks/_template.md`.
-The completion record is `docs/archive/agents/docs-archive.md`.
+Slice 0B (capture UI requirements and baselines per `docs/beeline_0.4.0.md`) follows `docs/agents/tasks/beeline-0.4.0.md`. Slice 0A passed 51 Python tests, and the architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline. All 120 relative links across 11 touched Markdown files resolve. No source changes occurred. Gradle was not run. Device and live-server checks remain unverified.
 
-The wide detail interaction fix is complete in the current slice. Photo Grid wide detail routes
-focal mutations through `PostThreadViewModel` and synchronizes the matching navigator snapshot after
-optimistic updates. `SinglePostScreenTest.wideMisskeyDetailRendersAllUpdatedInteractionStates`
-covers the full-width image presentation, and focused detail/thread tests pass. Device verification
-remains unavailable. Continue with Plan 04 after preserving unrelated worktree changes.
+## Historical work and open verification
 
-The Photo Grid detail photo sizing slice is complete and uncommitted. Photo Grid
-detail uses aspect-aware heights from known attachment dimensions in compact
-and wide layouts (`ui/photogrid/PhotoPagerSizing.kt`, `ui/posts/SinglePostScreen.kt`).
-Square through 4:5 uses the natural height. Media at or wider than 16:9 uses
-the natural short height. Media taller than 4:5 stays capped at 4:5. Short
-viewports clamp to the available height. Unknown dimensions use the square to
-5:4 fallback. Multi-photo posts share the smallest height across pages.
-`SinglePostScreenTest` covers 1:1, 4:5, 16:9, wider-than-16:9, taller-than-4:5,
-limited viewport, missing dimensions, invalid dimensions, and shared height.
-`SinglePostScreenTest` (23 tests), `ktlintCheck`, and `test assembleRelease`
-pass. The durable record is
-`docs/archive/agents/wide-detail-photo-sizing.md`. Device rendering remains
-unverified.
+S1, P1, Q1, T1, Plan 03, and Plan 04 are complete historical series. See the [archive index](../archive/README.md) and the [Plan 04 archive](../archive/agents/plan04-utility-retention.md). V1 device verification, live-server behavior, and signed-release checks remain open.
 
-V1 stays device-blocked: repair `RoomNotificationStoreInstrumentedTest` and
-de-flake the two known timing tests when a device or emulator exists. The
-`Api29StartupInstrumentedTest` repair is already done in `b62f8c6`. Record
-blocked device checks honestly. The fully-qualified-name cleanup stays deferred
-to its own task.
+## Known Blockers
 
-## Remaining Migration Queue
-
-The S1, P1, and Q1 series are complete. T1 is complete. Plan 04 is in
-progress. Do these in order. Each needs its own task-state file and
-verification.
-
-1. Q1 — Done. ktlint gate with a baseline. Wildcard imports are gone.
-2. T1 — Done. T1a through T1f are complete. Merge of the two
-    duplicate-named test classes (`EmojiCatalogViewModelTest`,
-    `PostPopupOwnerTest`) is in `7018105`. Data and domain owner moves
-    are in `f65a10a`. UI feature moves are in `42e85e7`. Fixture moves
-    are in `404b356`. Single-owner root test moves are in `00a49ff`.
-    Adapter-specific source test moves are in `aecab82`.
-3. V1 — Blocked on a device or emulator. Repair
-   `RoomNotificationStoreInstrumentedTest` and de-flake the two known timing
-   tests. The `Api29StartupInstrumentedTest` repair is already done in
-   `b62f8c6`. Record blocked device checks honestly.
-4. Plan 04 — Ditched on 2026-09-19. The task file lives at
-   `docs/archive/agents/plan04-utility-retention.md` (unchanged,
-   historical). 04-A is complete at `ee52ba9`, 04-B at `6a87c76`, 04-C
-   at `633cd7a`, 04-D at `f0735df`, 04-E1 at `b04b2e8`, and 04-E2/04-E3
-   with their record. Slices 04-F through 04-K will not run. Their
-   unbounded owners stay open. A later task claims them when an owner
-   needs them. The docs archive at
-   `docs/archive/agents/docs-archive.md` is complete. The active
-   `tasks/` folder keeps only `_template.md`.
-5. Device, live-server, and signed-release verification when a device and
-   signing inputs exist.
+- No emulator or device is reachable. Connected instrumentation remains unverified.
+- Live-server and signed-release behavior remain unverified.
+- The Android 15 system-bar instrumentation failure remains in `logs/BUGS.txt`.
+- Git-ignored planning material under `docs/decomposition_3/` and directly under `docs/` must not be force-added.
+- Two localization tests must be tightened when catalogs return: `AppLocaleControllerTest.everyLocaleResolvesATranslatedValueOrFallback` and `LocalizationResourceTest.localeCatalogMatchesResourcesEnumAndAndroidConfig`.
+- The residual 03-G ordering risk remains recorded in the Plan 03 task state.
+- The full Gradle gate remains pending for the final release gate. No full gate has run for 0.4.0.
 
 ## Process Rules
 
-- One slice, one behavior, one commit. Include the task-state file, the task
-  log, the handoff, and the affected documentation in that commit. Do not make a
-  separate record commit. Do not commit a slice whose tests are not green, and do
-  not leave a green slice uncommitted.
-- Rewrite this handoff after each completed slice, per `AGENTS.md`.
-- Keep the ownership pages current in the same slice.
-- Stage only files that belong to the slice. Preserve unrelated worktree changes.
-- Keep `PalustrisApp`'s signature and `AppShellFixtures.app()` stable
-  through S1. Change internals only.
+- Keep one slice, one behavior, and one commit. Include current task state, task log, handoff, and affected documentation.
+- Rewrite the handoff at each slice boundary.
+- Keep ownership pages current in the same slice when their boundary changes.
+- Stage only slice files. Preserve unrelated worktree changes.
 - Use Beeline in user-facing text. Keep the internal codename out of user-facing content.
 - Keep protocol behavior in adapters. Keep account secrets and tokens out of presentation contracts.
 - Do not change a stored format without a migration in the same slice.
 - Do not use subagents unless the user asks.
-
-## Known Blockers
-
-- No emulator or device is reachable. Connected instrumentation stays unverified.
-- Live-server and signed-release behavior stay unverified.
-- The Android 15 system-bar instrumentation failure stays in `logs/BUGS.txt`.
-- The planning material under `docs/decomposition_3/` is git-ignored. Do not
-  force-add `01.md`, `02.md`, `03.md`, `03_corrected.md`, or `04.md`. The
-  ditched Plan 04 task file lives in `docs/archive/agents/plan04-utility-retention.md`.
-- The worktree holds the untracked `appsvg/` directory. Do not commit it.
-- Slice 15 is complete: the secondary `AccountManager` constructor was removed, and the shared
-  `AccountManagerFixtures` factory migrated 12 test sites.
-- Slice 15 verification passed: focused session, connected-session, and notification tests, plus
-  `compileDebugKotlin`/UnitTest, passed during implementation.
-- The full Gradle gate remains pending for the final release gate.
-- All non-English string catalogs are removed from the app for now. Two
-  localization tests were relaxed to tolerate missing catalogs and must be
-  tightened again when the catalogs return:
-  `AppLocaleControllerTest.everyLocaleResolvesATranslatedValueOrFallback` and
-  `LocalizationResourceTest.localeCatalogMatchesResourcesEnumAndAndroidConfig`.
-- The residual 03-G ordering risk (disk write after revocation, before row
-  deletion) stays in the Plan 03 task state.
