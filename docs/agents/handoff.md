@@ -20,7 +20,7 @@ The plan is git-ignored planning material directly under `docs/`. Do not force-a
 
 ## Current position and last safe code-slice commit
 
-Last safe code-slice commit: `fa087d0` (1D2). The last records commit is `f43cc8e`. R0 records are pending commit. Records commits `0b3214b` and `4f28a69` precede `f43cc8e`. None of the prior commits has been pushed.
+Last safe code-slice commit: `fa087d0` (1D2). The last records commit is `f43cc8e`. R0 records are `412fc02`. Records commits `0b3214b` and `4f28a69` precede `f43cc8e`. None of the prior commits has been pushed.
 
 Executed order, oldest to newest:
 

@@ -34,7 +34,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Current slice
 
-R0 records the completed phases 0 and 1 re-traversal audit. This slice changes no source. R0 is pending commit. The last safe code-slice commit is `fa087d0`. Records commits `0b3214b`, `4f28a69`, and `f43cc8e` precede R0. `e46e44c` is the historical 1D1 completion and 1D2 start boundary.
+R0 records the completed phases 0 and 1 re-traversal audit. This slice changes no source. R0 is `412fc02`. The last safe code-slice commit is `fa087d0`. Records commits `0b3214b`, `4f28a69`, `f43cc8e`, and R0 `412fc02`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary.
 
 ## Re-traversal audit
 
