@@ -21,16 +21,16 @@ Historical records stay linked as history, never as a queue. See [Plan 04 archiv
 - Plan 04-A through 04-K have committed work: 04-A `ee52ba9`, 04-B `6a87c76`, 04-C `633cd7a`, 04-D `f0735df`, 04-E1 `b04b2e8`, 04-F `9a1b055`, 04-G `d5f694c`, 04-H1 `cc900d9`, 04-H2 `fab0131`, 04-I `51351a7`, 04-J1 `dc9ae5f`, 04-J2 `c6a2ed0`, 04-J3 `484b995`, and 04-K `9e9a0d7`.
 - The earlier ditch decision `b0d3ddd` is dated history in the archive, not current status.
 - Photo Grid detail photo sizing is committed in `e25c0e5` and `736a26f`. Coverage lives in `SinglePostScreenTest`.
-- Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`. Slice 1B1 is complete at `5207a96`.
+- Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`. Slice 1B1 is complete at `5207a96`. Slice 1B2 is complete at `9e29ef4`.
 - Retention has source- and test-level characterization only. Heap, disk, and Room measurements were never collected and remain unverified.
 
 ## Last Safe Commit
 
-`5207a96` (1B1) is the last safe commit. Record the 1B2 hash at the 1B3 boundary.
+`9e29ef4` (1B2) is the last safe commit. Record the 1B3 hash at the 1B4 boundary.
 
 ## Next Slice
 
-Slice 1B2 is complete in the worktree. It binds bookmarks and hashtags to opaque route cursors and removes raw-Link replay. Current and next slice is 1B3: pin moderation list routes and test wrong-path and altered-filter Links. Last safe commit is `5207a96` until the 1B2 commit boundary. Keep the red full-suite health blocker distinct from 1B5 and device/live blockers.
+Slice 1B3 is complete in the worktree. It binds Mastodon moderation list cursors to blocked/muted routes and validates Links before returning cursors. Current and next slice is 1B4: encode unfavorite IDs and test reserved characters. Last safe commit is `9e29ef4`. Keep the red full-suite health blocker distinct from 1B5 and device/live blockers.
 
 ## Historical work and open verification
 
@@ -38,11 +38,19 @@ S1, P1, Q1, T1, Plan 03, and Plan 04 are complete historical series. See the [ar
 
 ## Verification
 
+- 1B3 moderation cursors pin `/api/v1/accounts/blocked` or `/api/v1/accounts/muted`. Continuations allow one nonblank `max_id`, `since_id`, or `min_id`; a missing `limit` is valid, and a present `limit` must occur once with value exactly `40`. Cursor state is in-memory; no persistence migration is needed.
+- `MastodonSource` calls moderation service methods without a preceding capability refresh or other I/O. Cursor rejection occurs before network work.
+- `ModerationServiceTest.mastodonBlockedAndMutedPagesUseOpaqueRouteBoundCursors` checks GET method and bearer authorization on both pages, routes, encoded opaque continuation bytes, and exact returned item order. `mastodonModerationRejectsTamperedAndLegacyCursorsBeforeRequest` checks invalid query shapes and payload tampering with unchanged request counts. Link rejection and loop checks remain in `mastodonModerationRejectsInvalidLinksAndCurrentUrlLoop`.
+- `mastodonModerationRejectsValuelessLimitLinksAndAllowsMissingLimit` rejects valueless, empty, and duplicate `limit` Link values and accepts a missing `limit`. Only a present value other than exactly `40` is invalid.
+- 1B3 focused moderation, Mastodon integration/source contract/Misskey integration, lint, Python, and architecture gates passed. Review repair outcomes are recorded in the task state and task log.
+- The moderation cursor binds origin/account/kind/variant/route/query, but not `sessionRevision` or `sourceInstance`, unlike `MastodonPageCursor`. The ViewModel keeps cursors in memory and paging checks `AccountSourceRegistry.isCurrent`. A direct `SocialSource` caller can replay a same-account cursor after source replacement. Session/source-instance binding was consciously deferred because cursors have an in-memory lifetime and paging has the current-account guard.
+
 - `hashtagCursorRejectsAnotherQueryWithoutChangingTheCursor` uses a real cats Link cursor unchanged with `searchHashtag("dogs", cursor)`. It asserts `Unsupported("pagination.cursor")` and no additional request.
 - `bookmarkCursorRejectsTimelineRouteBeforeCapabilityProbe` uses a real bookmark Link cursor with `timeline(Home, cursor)` on a source with the real capability probe. It asserts `Unsupported("pagination.cursor")` and no additional request.
 - The earlier mixed case is now named `hashtagCursorPayloadTamperingAndOtherRoutesAreRejected`; its tampered query payload has a cats path and proves tampering/path validation, not unchanged-cursor cross-query rejection.
-- Both required Gradle focused gates, Python unittest, and architecture audit exited 0. `lintDebug` was not rerun because this repair changes tests and records only; no main source changed.
-- HEAD remains `5207a96`. The staged `docs/classic_navigation.md` and unrelated worktree changes remain untouched. Existing blockers remain unchanged.
+- Those outcomes apply to the 1B2 review repair, which changed tests and records only. The 1B3 source lint gate passed separately above.
+- Current HEAD remains `9e29ef4`. The staged `docs/classic_navigation.md` and unrelated worktree changes remain untouched. Existing blockers remain unchanged.
+- The 1B3 review repair gates passed: focused moderation tests, adapter integration/contracts, lint, Python tests, and architecture audit. Exact outcomes are in the task state and task log.
 
 ## Known Blockers
 

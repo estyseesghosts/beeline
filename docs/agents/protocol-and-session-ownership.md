@@ -98,6 +98,18 @@ page client validates a continuation. Legacy raw-URL cursors are rejected on eve
 `MastodonPageCursor.kt`, `MastodonPageClient.kt`, `MastodonTimelineService.kt`, and
 `MastodonSource.kt`; regression coverage: `MastodonIntegrationTest`.
 
+Mastodon moderation cursors use an adapter-owned Base64url payload in `MastodonModerationService`.
+Blocked and muted routes bind account, kind, variant, route, and URL. Their continuations allow one
+nonblank `max_id`, `since_id`, or `min_id`, plus `limit=40` when present. Link URLs are checked
+against the exact route and query policy before becoming cursors. The cursor exists only in UI
+memory and has no persisted-format migration. `MastodonSource` performs no I/O before moderation
+cursor validation. `ModerationServiceTest` covers replay and Link rejection. Unlike
+`MastodonPageCursor`, this payload does not bind `sessionRevision` or `sourceInstance`. The
+ModerationViewModel keeps cursors in memory, and paging checks `AccountSourceRegistry.isCurrent`;
+a direct `SocialSource` caller can replay a same-account cursor after source replacement. Session
+and source-instance binding was consciously deferred because of the in-memory lifetime and the
+current-account guard.
+
 `MisskeySource` validates every entity identity through `validatePostId(id, feature)` before it
 builds an authenticated request. The validator rejects a foreign connection origin and a blank
 value. `post` and `delete` now call it, as do thread reads, reactions, favourites, reposts, saves,

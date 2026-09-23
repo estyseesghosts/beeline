@@ -3,6 +3,7 @@ package me.foxtails.palustris.data.mastodon
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import java.util.Base64
 import org.json.JSONArray
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.domain.AccountId
@@ -54,15 +55,25 @@ class MastodonModerationService(
 
     private suspend fun list(kind: ModerationListKind, cursor: ModerationCursor?): ModerationPage<ModerationAccount> {
         val variant = "mastodon-${kind.name.lowercase()}-v1"
-        val url = cursor?.let { decodeCursor(it, kind, variant) }
-        val endpoint = "v1/accounts/${if (kind == ModerationListKind.Blocked) "blocked" else "muted"}?limit=40"
+        val route = if (kind == ModerationListKind.Blocked) "blocked" else "muted"
+        val path = "/api/v1/accounts/$route"
+        val endpoint = "v1/accounts/$route?limit=40"
+        val url = cursor?.let { decodeCursor(it, kind, variant, route, path) }
+        val current = url ?: origin.toHttpUrl().resolve("/api/$endpoint")!!
         val response = if (url == null) api.get(origin, endpoint, token) else api.getUrl(url.toString(), token)
         val values = JSONArray(response.body)
         val items = (0 until values.length()).mapNotNull { index ->
             val account = runCatching { MastodonMapper.account(values.getJSONObject(index), origin) }.getOrNull() ?: return@mapNotNull null
             ModerationAccount(account = account, relationshipId = account.id.localId)
         }
-        val next = response.linkHeaderCursor()?.let { encodeCursor(kind, variant, it) }
+        val next = response.linkHeaderCursor()?.let {
+            val link = try {
+                validateUrl(it, path, current.toString())
+            } catch (_: Exception) {
+                throw SourceError.Unsupported("pagination.link")
+            }
+            encodeCursor(kind, variant, route, link.toString())
+        }
         return ModerationPage(items, next)
     }
 
@@ -121,18 +132,53 @@ class MastodonModerationService(
         if (targetOrigin != origin) throw SourceError.ForeignOrigin(feature)
     }
 
-    private fun decodeCursor(cursor: ModerationCursor, kind: ModerationListKind, variant: String): HttpUrl {
+    private fun decodeCursor(cursor: ModerationCursor, kind: ModerationListKind, variant: String, route: String, path: String): HttpUrl {
         if (cursor.accountId != accountId || cursor.query.kind != kind || cursor.protocolVariant != variant) {
             throw SourceError.Unsupported("moderation.cursor")
         }
-        val page = cursor.value.toHttpUrlOrNull() ?: throw SourceError.Unsupported("moderation.cursor")
+        val payload = try {
+            if (cursor.value.contains("://")) throw IllegalArgumentException()
+            JSONObject(String(Base64.getUrlDecoder().decode(cursor.value), Charsets.UTF_8))
+        } catch (_: Exception) {
+            throw SourceError.Unsupported("moderation.cursor")
+        }
+        val keys = setOf("version", "variant", "route", "kind", "account", "url")
+        if (payload.keys().asSequence().toSet() != keys || payload.opt("version") !is Int ||
+            payload.opt("variant") !is String || payload.opt("route") !is String ||
+            payload.opt("kind") !is String || payload.opt("account") !is String || payload.opt("url") !is String ||
+            payload.getInt("version") != 1 || payload.getString("variant") != variant ||
+            payload.getString("route") != route || payload.getString("kind") != kind.name ||
+            payload.getString("account") != accountId.localId
+        ) throw SourceError.Unsupported("moderation.cursor")
+        val page = payload.getString("url").toHttpUrlOrNull() ?: throw SourceError.Unsupported("moderation.cursor")
+        return try {
+            validateUrl(page.toString(), path, null)
+        } catch (_: Exception) {
+            throw SourceError.Unsupported("moderation.cursor")
+        }
+    }
+
+    private fun validateUrl(value: String, path: String, current: String?): HttpUrl {
+        val page = value.toHttpUrlOrNull() ?: throw IllegalArgumentException()
         val authenticated = origin.toHttpUrl()
         if (page.scheme != authenticated.scheme || page.host != authenticated.host || page.port != authenticated.port ||
-            page.username.isNotEmpty() || page.password.isNotEmpty() || page.fragment != null
-        ) throw SourceError.ForeignOrigin("moderation.cursor")
+            page.username.isNotEmpty() || page.password.isNotEmpty() || page.fragment != null ||
+            page.encodedPath != path || page.toString() == current
+        ) throw IllegalArgumentException()
+        val names = page.queryParameterNames
+        val pagination = listOf("max_id", "since_id", "min_id").filter {
+            page.queryParameterValues(it).size == 1 && !page.queryParameter(it).isNullOrBlank()
+        }
+        if (names.any { it !in setOf("max_id", "since_id", "min_id", "limit") } || pagination.size != 1 ||
+            names.any { page.queryParameterValues(it).size != 1 } ||
+            ("limit" in names && page.queryParameterValues("limit") != listOf("40"))
+        ) throw IllegalArgumentException()
         return page
     }
 
-    private fun encodeCursor(kind: ModerationListKind, variant: String, value: String) =
-        ModerationCursor(accountId, me.foxtails.palustris.domain.ModerationListQuery(kind), variant, value)
+    private fun encodeCursor(kind: ModerationListKind, variant: String, route: String, value: String) =
+        ModerationCursor(accountId, me.foxtails.palustris.domain.ModerationListQuery(kind), variant,
+            Base64.getUrlEncoder().withoutPadding().encodeToString(JSONObject().put("version", 1)
+                .put("variant", variant).put("route", route).put("kind", kind.name)
+                .put("account", accountId.localId).put("url", value).toString().toByteArray(Charsets.UTF_8)))
 }

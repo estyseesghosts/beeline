@@ -102,6 +102,139 @@ class ModerationServiceTest {
     }
 
     @Test
+    fun mastodonBlockedAndMutedPagesUseOpaqueRouteBoundCursors() {
+        runBlocking {
+            val origin = server.url("/").toString().removeSuffix("/")
+            val token = "page-token"
+            val service = MastodonModerationService(origin, token, MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
+            for (route in listOf("blocked", "muted")) {
+                val firstId = "$route-first"
+                val secondId = "$route-second"
+                server.enqueue(MockResponse().setBody("[${mastodonUser(firstId)}]").addHeader("Link", "<$origin/api/v1/accounts/$route?limit=40&max_id=opaque%2Fid>; rel=\"next\""))
+                server.enqueue(MockResponse().setBody("[${mastodonUser(secondId)}]"))
+                val first = if (route == "blocked") service.blocked() else service.muted()
+                assertEquals(listOf(firstId), first.items.map { it.account.id.localId })
+                assertTrue(first.nextCursor!!.value.none { it == '/' })
+                val secondPage = if (route == "blocked") service.blocked(first.nextCursor) else service.muted(first.nextCursor)
+                assertEquals(listOf(secondId), secondPage.items.map { it.account.id.localId })
+                assertEquals(listOf(firstId, secondId), first.items.map { it.account.id.localId } + secondPage.items.map { it.account.id.localId })
+                val firstRequest = server.takeRequest()
+                assertEquals("GET", firstRequest.method)
+                assertEquals("/api/v1/accounts/$route?limit=40", firstRequest.path)
+                assertEquals("Bearer $token", firstRequest.getHeader("Authorization"))
+                val second = server.takeRequest()
+                assertEquals("GET", second.method)
+                assertEquals("/api/v1/accounts/$route?limit=40&max_id=opaque%2Fid", second.path)
+                assertEquals("Bearer $token", second.getHeader("Authorization"))
+            }
+        }
+    }
+
+    @Test
+    fun mastodonModerationRejectsTamperedAndLegacyCursorsBeforeRequest() {
+        runBlocking {
+            val origin = server.url("/").toString().removeSuffix("/")
+            val account = AccountId(Connection(origin, Protocol.MASTODON), "viewer")
+            val service = MastodonModerationService(origin, "token", MisskeyApi(), account)
+            server.enqueue(MockResponse().setBody("[]").addHeader("Link", "<$origin/api/v1/accounts/blocked?limit=40&max_id=x>; rel=\"next\""))
+            val valid = service.blocked().nextCursor!!
+            val raw = JSONObject(String(java.util.Base64.getUrlDecoder().decode(valid.value), Charsets.UTF_8))
+            val count = server.requestCount
+            val urls = listOf(
+                "$origin/api/v1/accounts/notifications?max_id=x", "$origin/api/v1/accounts/blocked?limit=41&max_id=x",
+                "$origin/api/v1/accounts/blocked?limit=40&max_id=x&unknown=y", "$origin/api/v1/accounts/blocked?limit=40&max_id=x&max_id=y",
+                "$origin/api/v1/accounts/blocked?limit=40&max_id=", "$origin/api/v1/accounts/blocked?limit=40&max_id=x#frag",
+                "$origin/api/v1/accounts/blocked?max_id=x&limit", "$origin/api/v1/accounts/blocked?max_id=x&limit=",
+                "$origin/api/v1/accounts/blocked?max_id=x&limit=40&limit=40",
+                "$origin/api/v1/accounts/blocked?max_id=x&since_id=y",
+                "${origin.replace("http://", "https://")}/api/v1/accounts/blocked?limit=40&max_id=x",
+                server.url("/").newBuilder()
+                    .port(if (server.port == 65535) 65534 else 65535)
+                    .encodedPath("/api/v1/accounts/blocked")
+                    .encodedQuery("limit=40&max_id=x")
+                    .build().toString(),
+                "${origin.replace("http://", "http://u:p@")}/api/v1/accounts/blocked?limit=40&max_id=x",
+            )
+            val bad = urls.map { url ->
+                val payload = JSONObject(raw.toString()).put("url", url).toString().toByteArray(Charsets.UTF_8)
+                valid.copy(value = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(payload))
+            } + listOf(valid.copy(value = "$origin/api/v1/accounts/blocked?max_id=x"), valid.copy(value = "v1/accounts/blocked?max_id=x")) +
+                listOf(
+                    JSONObject(raw.toString()).put("version", 2),
+                    JSONObject(raw.toString()).put("version", "1"),
+                    JSONObject(raw.toString()).apply { remove("route") },
+                    JSONObject(raw.toString()).put("url", 42),
+                ).map { payload ->
+                    valid.copy(value = java.util.Base64.getUrlEncoder().withoutPadding()
+                        .encodeToString(payload.toString().toByteArray(Charsets.UTF_8)))
+                }
+            bad.forEach { cursor ->
+                val error = assertThrows(SourceError.Unsupported::class.java) { runBlocking { service.blocked(cursor) } }
+                assertEquals("moderation.cursor", error.feature)
+                assertEquals(count, server.requestCount)
+            }
+            val wrongKind = assertThrows(SourceError.Unsupported::class.java) { runBlocking { service.muted(valid) } }
+            assertEquals("moderation.cursor", wrongKind.feature)
+            assertEquals(count, server.requestCount)
+            val wrongVariant = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { service.blocked(valid.copy(protocolVariant = "mastodon-blocked-v2")) }
+            }
+            assertEquals("moderation.cursor", wrongVariant.feature)
+            assertEquals(count, server.requestCount)
+            listOf("variant" to "other", "route" to "muted").forEach { (key, value) ->
+                val payload = JSONObject(raw.toString()).put(key, value).toString().toByteArray(Charsets.UTF_8)
+                val tampered = valid.copy(value = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(payload))
+                val error = assertThrows(SourceError.Unsupported::class.java) { runBlocking { service.blocked(tampered) } }
+                assertEquals("moderation.cursor", error.feature)
+                assertEquals(count, server.requestCount)
+            }
+            val other = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "other"))
+            assertThrows(SourceError.Unsupported::class.java) { runBlocking { other.blocked(valid) } }
+            assertEquals(count, server.requestCount)
+        }
+    }
+
+    @Test
+    fun mastodonModerationRejectsInvalidLinksAndCurrentUrlLoop() {
+        runBlocking {
+            val origin = server.url("/").toString().removeSuffix("/")
+            val service = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
+            server.enqueue(MockResponse().setBody("[]").addHeader("Link", "<$origin/api/v1/accounts/muted?max_id=x&local=true>; rel=\"next\""))
+            val invalid = assertThrows(SourceError.Unsupported::class.java) { runBlocking { service.muted() } }
+            assertEquals("pagination.link", invalid.feature)
+            val count = server.requestCount
+            server.enqueue(MockResponse().setBody("[]").addHeader("Link", "<$origin/api/v1/accounts/blocked?limit=40>; rel=\"next\""))
+            val loopService = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
+            val loop = assertThrows(SourceError.Unsupported::class.java) { runBlocking { loopService.blocked() } }
+            assertEquals("pagination.link", loop.feature)
+            assertEquals(count + 1, server.requestCount)
+        }
+    }
+
+    @Test
+    fun mastodonModerationRejectsValuelessLimitLinksAndAllowsMissingLimit() {
+        runBlocking {
+            val origin = server.url("/").toString().removeSuffix("/")
+            val service = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
+            for (query in listOf("max_id=x&limit", "max_id=x&limit=", "max_id=x&limit=40&limit=40")) {
+                val count = server.requestCount
+                server.enqueue(MockResponse().setBody("[]").addHeader(
+                    "Link", "<$origin/api/v1/accounts/blocked?$query>; rel=\"next\"",
+                ))
+                val error = assertThrows(SourceError.Unsupported::class.java) { runBlocking { service.blocked() } }
+                assertEquals("pagination.link", error.feature)
+                assertEquals(count + 1, server.requestCount)
+            }
+            val count = server.requestCount
+            server.enqueue(MockResponse().setBody("[]").addHeader(
+                "Link", "<$origin/api/v1/accounts/blocked?max_id=x>; rel=\"next\"",
+            ))
+            assertTrue(service.blocked().nextCursor != null)
+            assertEquals(count + 1, server.requestCount)
+        }
+    }
+
+    @Test
     fun mastodonRejectsForeignMutationBeforeRequest() {
         val origin = server.url("/").toString().removeSuffix("/")
         val service = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))

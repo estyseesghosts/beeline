@@ -31,7 +31,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Current slice
 
-Slice 1B2 is complete in the current worktree. Its required focused gates passed. Slice 1B1 is committed at `5207a96`.
+Slice 1B3 is complete in the current worktree. Its focused moderation gate passed after correcting an invalid test assumption. Last safe commit is `9e29ef4`.
 
 # Files involved
 
@@ -99,13 +99,9 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Slice 1B2 is complete in the worktree. Continue with 1B3. Last safe commit is `5207a96` until the 1B2 commit boundary.
-
-The temporary raw-Link replay rule is resolved in 1B2. All Mastodon page routes use validated opaque cursors.
-
-Completed += `Slice 1B2 — complete (ships with this commit)`; 1B1 commit = `5207a96`.
-Current slice = `1B3`; Next = 1B3 (pin moderation list routes and test wrong-path and altered-filter Link).
-Last safe commit = `5207a96`. The 1B2 hash is recorded at the 1B3 boundary.
+Completed += `Slice 1B3 — complete (ships with this commit)`; 1B2 commit = `9e29ef4`.
+Current slice = `1B4`; Next = 1B4 (encode unfavorite ID in MastodonSource.kt and test reserved characters).
+Last safe commit = `9e29ef4`. Record the 1B3 hash at the 1B4 boundary.
 
 # Blockers
 
@@ -145,7 +141,7 @@ Last safe commit = `5207a96`. The 1B2 hash is recorded at the 1B3 boundary.
 
 # Last safe commit
 
-`5207a96` (1B1) is the last safe commit. The 1B2 hash is recorded at the 1B3 boundary.
+`9e29ef4` (1B2) is the last safe commit. Record the 1B3 hash at the 1B4 boundary.
 
 # 1B2 verification
 
@@ -159,6 +155,22 @@ Last safe commit = `5207a96`. The 1B2 hash is recorded at the 1B3 boundary.
 - The existing hashtag second-page test changes only cursor representation expectations; request paths, bearer headers, and response order remain unchanged. New cases cover bookmark paging, normalized `#cats`/`cats` identity, account/session/source-instance and route mismatch, altered route/query values, malformed and raw values, and invalid Link rejection.
 - Final status preserves staged `docs/classic_navigation.md`; HEAD is `5207a96`. No staging or commit occurred. Device and live-server checks remain unverified.
 - An early test attempt failed because the normalized hashtag replay lacked a queued response. The corrected test queues that response and passes. An initial loop test used a valid continuation URL; the final test uses the route's current first-page URL and confirms rejection before request.
+
+# 1B3 verification
+
+- Routes: `blocked` pins `/api/v1/accounts/blocked`; `muted` pins `/api/v1/accounts/muted`. Both allow one nonblank `max_id`, `since_id`, or `min_id`; `limit` is optional but must equal `40`. Unknown, duplicate, empty, or extra keys fail. Neither route has another first-page filter.
+- Cursor payload fields are `version`, `variant`, `route`, `kind`, `account`, and `url`. The cursor retains the existing `ModerationCursor` account, query-kind, and protocol-variant bindings. Base64url is unpadded. The cursor is passed through moderation UI state only; no persistence path was found, so no migration is needed.
+- `MastodonSource.blockedAccounts` and `mutedAccounts` call the moderation service directly inside `request`; they do not refresh capabilities or perform other I/O before cursor decoding. Invalid cursors therefore fail before any request.
+- `ModerationServiceTest.mastodonBlockedAndMutedPagesUseOpaqueRouteBoundCursors` checks GET method and bearer authorization on both pages, both route paths, opaque `max_id` wire bytes, and exact returned item order.
+- `ModerationServiceTest.mastodonModerationRejectsTamperedAndLegacyCursorsBeforeRequest` checks wrong path, changed limit, unknown and duplicate query keys, empty pagination values, valueless/empty/duplicate `limit`, combined pagination keys, raw and relative cursor values, wrong route/kind/variant, cross-account replay, and payload tampering (unknown or string version, missing field, wrong field type). Each rejection checks unchanged request count. A missing `limit` remains valid; only a present value other than exactly `40` is rejected.
+- `ModerationServiceTest.mastodonModerationRejectsInvalidLinksAndCurrentUrlLoop` checks invalid response Link yields `Unsupported("pagination.link")`, and a Link equal to the current request URL is rejected.
+- The first moderation test run exited 1 because `since_id` was incorrectly treated as an invalid pagination key. The test was corrected: the contract allows exactly one of `max_id`, `since_id`, or `min_id`.
+- Cursor failures retain the existing `moderation.cursor` feature string. Invalid response Links use `pagination.link`.
+- `ModerationServiceTest`: latest focused run exited 0; runner reported `BUILD SUCCESSFUL` but did not print a test count; the file contains 13 `@Test` methods. The initial run failed because `since_id` is a valid continuation key; the corrected assertions passed.
+- Mastodon integration/source contract and Misskey integration command: exit 0; `BUILD SUCCESSFUL`. Grep found no other tests asserting Mastodon moderation-list paging or `/v1/lists` routes.
+- `:app:lintDebug`: exit 0. Python unittest: exit 0; 51 tests. Architecture audit `--check`: exit 0; 605 findings, no baseline regression.
+- Invalid cursor failures retain `moderation.cursor`, as asserted by the existing test. Invalid server Links use `pagination.link`.
+- HEAD remains `9e29ef4`; no staging or commit occurred. Device and live-server behavior remain unverified. The full-suite, NavigationTest, 14-failure, and paused 1B5 blockers remain unchanged.
 - Review repair adds `hashtagCursorRejectsAnotherQueryWithoutChangingTheCursor`: it obtains a cats cursor from a real cats Link response, passes that unchanged cursor to `searchHashtag("dogs", cursor)`, and asserts `Unsupported("pagination.cursor")` with no additional request.
 - Review repair adds `bookmarkCursorRejectsTimelineRouteBeforeCapabilityProbe`: it obtains a bookmark cursor from a real bookmarks Link response, passes it to `timeline(Home, cursor)` on a source with the real capability probe, and asserts `Unsupported("pagination.cursor")` with no additional request.
 - Renamed the earlier mixed tampering case to `hashtagCursorPayloadTamperingAndOtherRoutesAreRejected`. Its changed query payload has a cats path, so that case proves payload tampering/path validation, not unchanged-cursor cross-query rejection.
@@ -172,3 +184,18 @@ Last safe commit = `5207a96`. The 1B2 hash is recorded at the 1B3 boundary.
 - Required Mastodon integration, adapter contract/moderation/Misskey integration, lint, Python, and architecture audit gates exited 0.
 - Full-suite red status remains tracked as its own blocker. The 14 unexplained failures are not reclassified. No full suite was run for this repair.
 - HEAD remains `af1f983`; the staged `docs/classic_navigation.md` remains untouched. Review changes are not committed. Record the 1B1 hash at the 1B2 boundary.
+
+# 1B3 review repair
+
+- Root cause: OkHttp `HttpUrl.queryParameter("limit")` returns null for a valueless key. `queryParameterValues("limit")` distinguishes valueless (`null`) from assigned-empty (`""`) values. Validation now checks presence in `queryParameterNames`, then requires the complete values list to equal exactly `["40"]`; this also rejects duplicates. Link and replay use the same validator and preserve `pagination.link` and `moderation.cursor` errors.
+- `mastodonBlockedAndMutedPagesUseOpaqueRouteBoundCursors` now checks each page method, bearer token, route, and exact mapped item order.
+- `mastodonModerationRejectsTamperedAndLegacyCursorsBeforeRequest` now checks valueless, empty, and duplicate `limit`; multiple pagination keys; a genuinely different port; unknown-version value, string version, missing field, and wrong field type. Rejections assert unchanged request count.
+- `mastodonModerationRejectsValuelessLimitLinksAndAllowsMissingLimit` checks those three invalid Link query forms return `Unsupported("pagination.link")`, and confirms missing `limit` is accepted.
+- `mastodonModerationRejectsInvalidLinksAndCurrentUrlLoop` retains the invalid-Link and current-URL loop assertions.
+- `:app:testDebugUnitTest --tests "me.foxtails.palustris.ModerationServiceTest"`: exit 0; `BUILD SUCCESSFUL`.
+- Mastodon integration/source contract/Misskey integration gate: exit 0; `BUILD SUCCESSFUL`.
+- `:app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
+- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- Architecture audit `--check`: exit 0; 605 findings and no new baseline regressions.
+- The moderation cursor binds origin/account/kind/variant/route/query, but not `sessionRevision` or `sourceInstance`. ViewModel memory lifetime and `AccountSourceRegistry.isCurrent` guard normal paging. A direct same-account `SocialSource` replay after source replacement remains possible. Stronger binding was consciously deferred; no code change was made for this NIT.
+- Last safe commit remains `9e29ef4`; 1B3 remains complete, 1B4 remains current/next, and the 1B3 hash remains due at the 1B4 boundary. No staging or commit occurred. Existing blockers remain unchanged.
