@@ -22,18 +22,18 @@ Historical records stay linked as history, never as a queue. See [Plan 04 archiv
 - The earlier ditch decision `b0d3ddd` is dated history in the archive, not current status.
 - Photo Grid detail photo sizing is committed in `e25c0e5` and `736a26f`. Coverage lives in `SinglePostScreenTest`.
 - Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`. Slice 1B1 is complete at `5207a96`. Slice 1B2 is complete at `9e29ef4`. Slice 1B3 is complete at `d21280e`. Slice 1B4 is complete at `c3802c9`.
-- Slice 1C completed at `71c6f7d`, the start boundary and last safe commit for 1D1. Slice 1D1 is complete in the current worktree; its hash is recorded at the 1D2 boundary.
+- Slice 1C completed at `71c6f7d`. Slice 1D1 completed at `e46e44c`. Slice 1D2 is complete in the worktree and pending its 1D2 commit.
 - Retention has source- and test-level characterization only. Heap, disk, and Room measurements were never collected and remain unverified.
 
 ## Last Safe Commit
 
-`71c6f7d` (1C complete) was the last safe commit at the start of 1D1. The 1D1 hash is recorded at the 1D2 boundary.
+`e46e44c` (1D1 complete) was the last safe commit at the start of 1D2.
 
 ## Next Slice
 
-Completed += `Slice 1D1 — complete (ships with this commit)`; the 1D1 hash is recorded at the 1D2 boundary.
-Current slice = `1D2 — Implement composite inbox cursor and merge order in MisskeyDirectMessageService.kt`; Next = 1D2. 1B5 remains paused because its non-thread response-cap gate is unmet.
-Last safe commit = `71c6f7d` (1C complete at 1D1 start); the 1D1 hash is recorded at the 1D2 boundary.
+Slice 1D2 is complete in the worktree, verified by the recorded focused gates, and pending its 1D2 commit; no 1D2 commit hash exists yet.
+
+Start boundary and last safe commit are both `e46e44c`. Current slice = `1D2`; next = `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it.` No staging or commit occurred.
 
 ## Historical work and open verification
 
@@ -64,6 +64,21 @@ S1, P1, Q1, T1, Plan 03, and Plan 04 are complete historical series. See the [ar
 - The 1B3 review repair gates passed: focused moderation tests, adapter integration/contracts, lint, Python tests, and architecture audit. Exact outcomes are in the task state and task log.
 - The 1B4 slice consists of `MastodonSource.kt`, `MastodonIntegrationTest.kt`, and these two records; the whole-worktree diff also lists unrelated pre-existing changes that are never staged or committed with a slice.
 - 1D1 focused adapter/repository tests passed. Python, architecture, lint, and protocol regression results are recorded in the active task state and task log.
+- 1D2 source inspection confirms strict identity-bound per-endpoint cursors, explicit exhaustion, id-less-page termination, a latched notification fallback with its own ID space, and mentions-first endpoint-order merge/dedup. Cursor payload account field is `account`, matching `MastodonPageCursor`. Fresh repair verification is complete; see the task state for exact results.
+- Misskey conversation identity is verified only when a returned parentless post establishes the reply root; a reply without its returned root remains provisional. The focused regression asserts the anchor and two expected requests. Independent account, session-revision, and source-instance cursor rejections each return `Unsupported("direct.pagination")` without increasing request count beyond 2.
+- The two aborted 1D2 sessions did not establish a verification gate. Their reported gate claims are withdrawn; only the fresh command results listed here count as 1D2 verification.
+- The first repair gate-1 run exited 1 because of a `NetworkUnavailable` fixture-count mistake, which was corrected. A prior hang came from a fallback test waiting for a skipped sent-stream request. The corrected request sequence is 3/4/6. The final helper covers every request-consuming wait.
+- Gate 1, `.\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.DirectMessageSourceTest" --tests "me.foxtails.palustris.data.directmessages.DirectMessageRepositoryTest"`: exit 0; `BUILD SUCCESSFUL`.
+- Gate 2, `.\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.MisskeySourceContractTest"`: exit 0; `BUILD SUCCESSFUL`.
+- Gate 3, `.\gradlew.bat --no-daemon --console=plain :app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
+- Gate 4, `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- Gate 5, `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 607 findings and no new baseline regressions.
+- Gate 6, `git diff --check`: exit 1 only for documented pre-existing trailing whitespace in `.opencode/agents/orchestrator.md` and `.opencode/agents/targeted_fixer.md`; no 1D2 path appears in findings.
+- Gate 7, `git status --short`: exit 0; `docs/classic_navigation.md` is the only staged path. Existing unrelated dirty and untracked paths remain.
+- Gate 8, `git rev-parse --short HEAD`: exit 0; `e46e44c`.
+- Identity-evidence and independent cursor-dimension regression gates are included in the fresh focused reruns; exact results appear below after execution.
+- The 1D2 cursor contract is documented in the task state. Full suite, device, foldable, RTL, TalkBack, and live-server checks remain unverified.
+- After the identity-evidence and independent-dimension regressions, Gates 1–3 exited 0 (`BUILD SUCCESSFUL`); Python exited 0 with 51 tests; architecture audit exited 0 with 607 findings and no baseline regression. See task-state verification for exact commands and elapsed times.
 
 ## Known Blockers
 

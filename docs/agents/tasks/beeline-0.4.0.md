@@ -31,7 +31,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Current slice
 
-Slice 1C is complete at the 1D1 start boundary. Its current HEAD is `71c6f7d`; last safe commit = `71c6f7d`. Slice 1D1 is complete and ships with this commit. Current slice = `1D2 — Implement composite inbox cursor and merge order in MisskeyDirectMessageService.kt`; Next = 1D2. The 1D1 hash is recorded at the 1D2 boundary.
+Slice 1D2 is complete in the worktree, verified by the recorded focused gates, and pending its 1D2 commit; no 1D2 commit hash exists yet. Start boundary and last safe commit are both `e46e44c`. Current slice = `1D2`; next = `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it.`
 
 # Files involved
 
@@ -49,7 +49,7 @@ Forward owner/caller/test map for phases 1-2. Paths are relative to `app/src/mai
 | 1B5 | MastodonSource.kt first, then MisskeySource.kt — separate commit per adapter | request wrapper :474-488 (ResponseLimitExceeded -> ResourceLimit("thread") :479-480); Misskey :616-637 (:632-633) | adapter error normalization for shared UI | each adapter's integration/contract tests; characterize a capped non-thread operation first |
 | 1C | ui/posts/PostRow.kt, ui/posts/SinglePostScreen.kt; inspect ui/photogrid/PhotoPagerSizing.kt | row quote card :163-186, warningDecision :89-91; detail PhotoGrid branch :190-313, unconditional detail quote :295-311 | Home/Search/Profile rows and Photo Grid detail share the visibility decision; photo geometry stays distinct; grid filtering PhotoGridScreen.kt :99-114 | ui/SinglePostScreenTest, ui/PostTextPresentationTest, domain/ContentWarningPolicyTest; hidden quotes, CW, muted tags, placeholder/omit, no semantics leak |
 | 1D1 | data/misskey/MisskeyDirectMessageService.kt | conversations :28-49, cursor :48, conversationThread :51-66, markConversationRead :76-78 no-op, 404 fallback :80-84, encode/decodeCursor :110-115 | MisskeySource.conversations :384-391; repository owns local read state; compare MastodonDirectMessageService separately | DirectMessageSourceTest, data/directmessages/DirectMessageRepositoryTest, ui/directmessages/DirectMessageViewModelTest |
-| 1D2 | data/misskey/MisskeyDirectMessageService.kt | single untilId fan-out :31-34, min-by-time cursor :48 | composite adapter-owned cursor binding both endpoint continuations per account | DirectMessageSourceTest; asymmetric pages, duplicates, malformed/foreign cursor, 404 fallback |
+| 1D2 | data/misskey/MisskeyDirectMessageService.kt | per-stream raw-item continuations, exhaustion, notification-ID fallback, cursor identity binding | independent last-raw-item cursors and exhaustion per stream; 404 fallback with notification IDs and latched mode; binding to account/origin/sessionRevision/sourceInstance/variant; mentions-first endpoint order with deduplication after merge; identity is verified only when a returned parentless post establishes the reply root, otherwise provisional | DirectMessageSourceTest; asymmetric pages, duplicates, malformed/foreign cursor, 404 fallback; independent account/revision/instance rejection; bounded request waits in tests |
 | 1D3 | MisskeyDirectMessageService.kt conversationThread; DM repository/ViewModel if contract expands | children single fetch :62 (limit 30, no continuation) | long reply-rooted conversations need bounded continuation + visible partial/retry | DirectMessageSourceTest, DirectMessageRepositoryTest, DirectMessageViewModelTest; long thread, failure, account replacement |
 | 1E1 | data/misskey/MisskeySource.kt, data/mastodon/MastodonSource.kt | Misskey :690 DIRECT_PAGE_LIMIT, :704-708 SECURE_CREDENTIAL_FAILURE_CODES, :709 MISSING_PUSH_REGISTRATION_CODES (all declaration-only; live values in MisskeyPushService :34/:46/:49); Mastodon :491 DEFAULT_NOTIFICATION_LIMIT, :535 DIRECT_CONVERSATION_LIMIT (live in MastodonNotificationService :146/:180, MastodonDirectMessageService :116/:129) | facade residue only; compare live service values before deleting | both adapter integration/contract suites; compilation + lint |
 | 1E2 | data/mastodon/MastodonMapper.kt | editableProfile :88 and legacyEditableProfile :117 take unused origin param | callers MastodonSelfProfileService.kt :31,:69,:33,:71; output must be unchanged | MastodonIntegrationTest self-profile tests; mapper fixtures; adapter contracts |
@@ -100,9 +100,8 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Completed += `Slice 1D1 — complete (ships with this commit)`; the 1D1 hash is recorded at the 1D2 boundary.
-Current slice = `1D2 — Implement composite inbox cursor and merge order in MisskeyDirectMessageService.kt`; Next = 1D2. 1B5 remains paused because its non-thread response-cap gate is unmet.
-Last safe commit = `71c6f7d` (1C complete at 1D1 start); 1D1 hash is recorded at the 1D2 boundary.
+Slice 1D2 is complete in the worktree, verified by the recorded focused gates, and pending its 1D2 commit; no 1D2 commit hash exists yet. Start boundary and last safe commit are both `e46e44c`. Current slice = `1D2`; next = `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it.` 1B5 remains paused because its non-thread response-cap gate is unmet.
+Last safe commit = `e46e44c` (1D1 complete at 1D2 start); no commit was created in this dispatch.
 
 # Blockers
 
@@ -142,7 +141,7 @@ Last safe commit = `71c6f7d` (1C complete at 1D1 start); 1D1 hash is recorded at
 
 # Last safe commit
 
-`71c6f7d` was the last safe commit at the 1D1 start boundary. The 1D1 hash is recorded at the 1D2 boundary.
+`e46e44c` (1D1 complete) is the last safe commit and the 1D2 start boundary. `71c6f7d` was the historical 1D1 start boundary.
 
 # 1D1 verification
 
@@ -150,7 +149,7 @@ Last safe commit = `71c6f7d` (1C complete at 1D1 start); 1D1 hash is recorded at
 - The streams are `notes/mentions` and `users/notes`, both POST requests made in that order by `MisskeyDirectMessageService.conversations`. Existing 404 fallback to `i/notifications` remains separate and unchanged.
 - `DirectMessageSourceTest.misskeyInboxStreamsShareUntilIdAndPreserveMappedTransportItems` checks exact POST routes and serialized request bodies, mapped post IDs/text, response ordering, continuation presence, and the decoded continuation value `mentioned`. `misskeyInboxCursorFansOutSameUntilIdAndMergesByTimestamp` uses unequal timestamps and asserts merged item order `m-new, s-new, m-old`; it checks both continuation POST methods, routes, and complete request bodies, including `untilId: m-old`. `misskeyReadValidationNoOpMakesNoRequestEvenWhenRepeated` asserts repeated valid reads make zero requests and blank/foreign-origin IDs throw `Unsupported("direct.read")` without requests. `misskeyInboxServerFailureMapsWithoutLeakingToken` checks HTTP 503 maps to `SourceError.ServerError` and walks every cause message for token absence. The fixture token is a non-secret test double asserted only as part of expected request-body bytes; production tokens never appear in tests or errors; error cause chains are asserted token-free.
 - `DirectMessageRepositoryTest` already covers preserving local read state during refetch, verified read dispatch, provisional local-only reads, and stale-writer behavior; these existing tests were included in the focused run.
-- Characterization notes for 1D2: the one cursor derived from the oldest timestamp across both streams fans out unchanged to both endpoints. The test preserves this current behavior; it does not assert a safe composite continuation. The inbox implementation concatenates mentions before sent notes, deduplicates, then groups and sorts conversations by timestamp. Opaque identifiers are not compared. The 404 mentions fallback, long child continuation limit, and malformed-cursor behavior remain for 1D2/1D3 as applicable.
+- Historical 1D1 characterization: one cursor derived from the oldest timestamp across both streams fanned out unchanged to both endpoints. 1D2 replaced that behavior with per-stream raw-item continuations. Opaque identifiers are not compared. Long child continuation remains 1D3 scope.
 - `:app:testDebugUnitTest --tests "me.foxtails.palustris.DirectMessageSourceTest" --tests "me.foxtails.palustris.data.directmessages.DirectMessageRepositoryTest"`: exit 0; `BUILD SUCCESSFUL`.
 - The source-contract test class is `MisskeySourceContractTest`, declared in `SocialSourceContractTest.kt`; `MisskeyIntegrationTest` extends it.
 - `:app:testDebugUnitTest --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.MisskeySourceContractTest"`: exit 0; `BUILD SUCCESSFUL`.
@@ -159,6 +158,55 @@ Last safe commit = `71c6f7d` (1C complete at 1D1 start); 1D1 hash is recorded at
 - `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 606 findings, no new baseline regressions.
 - Production behavior, Mastodon code, and shared/domain contracts did not change. Device and live-server checks remain unverified.
 - Start boundary: 1C was complete at `71c6f7d`; last safe commit = `71c6f7d`. The staged `docs/classic_navigation.md` and unrelated dirty paths remain untouched. No staging or commit occurred.
+
+# 1D2 review repair
+
+- Requirement/root cause: one timestamp-selected cursor was fanned out to both Misskey inbox streams. A stream's oldest item could incorrectly advance the other stream and skip posts.
+- Identity decision: `SocialSourceFactory` supplies `sessionRevision` to `MisskeySource` from `Session`; `MisskeySource` creates one UUID source-instance identity per source, matching the 1B1 Mastodon ownership pattern. No new authority was added. `MisskeyDirectMessageService` is constructed once as a source-owned property.
+- Owner/caller/test boundary: `SocialSourceFactory.create` passes session identity and revision to `MisskeySource`; `MisskeySource` owns the service and cursor identity; `DirectMessageRepository.conversations` passes the opaque cursor through; `DirectMessageViewModel.loadMore` stops at null and blocks repeated cursors. `DirectMessageSourceTest` verifies the Misskey wire and cursor contract; repository and ViewModel tests cover pass-through and paging state.
+- Cursor fields bind version, variant, origin, account, session revision, source instance, mentions mode and feed progress, fallback notification progress, and sent progress. Exhaustion is explicit. JSON value types are strict.
+- Each continuation comes from that endpoint's last raw returned item, before direct-message filtering. Empty pages or nonempty pages without a usable last ID exhaust only that stream. Later pages skip exhausted streams.
+- A 404 latches mentions to filtered `i/notifications`, with a separate notification-ID continuation. Later pages do not retry `notes/mentions`; a fresh null cursor retries it. Other failures keep normal mapping and do not latch.
+- Merge order is mentions endpoint order followed by sent endpoint order, then deduplication; the mentions copy wins. Conversation groups retain first-seen group order. Each group's displayed last post remains its latest post. This replaces 1D1's timestamp-sorted cross-stream expectation as directed by the plan: “Use returned endpoint order and deduplicate after merging.”
+- Legacy cursors without stream binding reject as `Unsupported("direct.pagination")` before requests. Cross-account, cross-session-revision, and cross-source-instance cursors also reject before requests. Account replacement lifecycle behavior remains 1D3 scope.
+- Plan-directed assertion change: `misskeyInboxCursorKeepsPerStreamProgressAndUsesEndpointOrderInsteadOfTimestamp` now expects `m-new, m-old, s-new` rather than 1D1's `m-new, s-new, m-old`. The duplicate test proves the mentions copy wins despite different content and time. Per-endpoint body checks retain independent returned IDs.
+- The opaque JSON payload uses `account`, consistent with `MastodonPageCursor`.
+- Added tests for stream exhaustion, id-less-page stop, notification-ID fallback wire continuation and mode latch, fresh-cursor retry, strict numeric and ID field types, raw progress for filtered pages, and distinguishable dedup copies. Existing wire-byte, identity-rejection, read no-op, and token-safe failure assertions remain.
+- `docs/wiki/notifications-and-direct-messages.md` already covered direct-message threads but not pagination. Added the current inbox cursor and fallback contract. No dedicated agent DM pagination page exists; the active task state covers this boundary.
+- The two aborted 1D2 sessions did not establish a verification gate. Their reported gate claims are withdrawn; only the fresh command results listed here count as 1D2 verification.
+- Historical repair attempt: this gate timed out twice (900000 ms and 1800000 ms) without a test result. The bounded-wait repair and successful later run are recorded in the 1D2 request-wait repair verification below; this timeout is not a current blocker.
+- `:app:testDebugUnitTest --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.MisskeySourceContractTest"`: exit 0; Gradle reported `BUILD SUCCESSFUL`.
+- `:app:lintDebug`: exit 0; Gradle reported `BUILD SUCCESSFUL`.
+- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 607 findings and no new baseline regressions.
+- `git diff --check`: exit 1 because of trailing whitespace in pre-existing `.opencode/agents/orchestrator.md` and `.opencode/agents/targeted_fixer.md` changes; those unrelated files remain untouched.
+- `git status --short`: exit 0; existing staged `docs/classic_navigation.md` and unrelated dirty work remain present.
+- `git rev-parse --short HEAD`: exit 0; `e46e44c`.
+- The mandated full-suite/release gate was not run because this dispatch explicitly prohibited running the full suite. Existing task-level full-suite red status remains open.
+- Start boundary: 1D1 complete at `e46e44c`; last safe commit = `e46e44c`. This repair session did not stage or commit. Existing staged `docs/classic_navigation.md` and unrelated dirty work remain untouched.
+
+## 1D2 request-wait repair verification
+
+Slice 1D2 is complete in the worktree, verified by the recorded focused gates, and pending its 1D2 commit; no 1D2 commit hash exists yet.
+
+- The aborted sessions' gate claims are withdrawn. The first repair gate-1 run exited 1 because of a `NetworkUnavailable` fixture-count mistake, which was corrected. A prior hang came from a fallback test waiting for a skipped sent-stream request. The corrected request sequence is 3/4/6. The final helper now covers every request-consuming wait.
+- `DirectMessageSourceTest.kt` now uses `recordedRequest(server)` at both remaining unbounded sites. Searching the whole test file finds only `server.takeRequest(5, TimeUnit.SECONDS)` inside that helper. Assertions and fixtures are unchanged by this repair.
+- Identity evidence rule: a returned Misskey post without `replyTo` establishes the reply root. A reply whose parent is absent from the merged page, including a cyclic chain, remains provisional. The selected post ID remains the thread anchor.
+- `misskeyInboxReplyWithoutReturnedRootIsProvisional` asserts provisional identity, anchor IDs, both expected routes, and exactly two requests. `misskeySpecifiedNotesBecomeReplyRootedConversations` and `misskeyInboxStreamsHaveIndependentCursorValuesAndPreserveMappedTransportItems` assert verified identity for a returned root chain and a parentless post.
+- `misskeyInboxCursorRejectsEachIdentityDimensionIndependentlyBeforeRequests` changes only `account`, then only numeric `sessionRevision`, and finally replays the unchanged cursor on a same-account/revision replacement source. Every case asserts `Unsupported("direct.pagination")` and request count 2.
+- Gate 1, `.\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.DirectMessageSourceTest" --tests "me.foxtails.palustris.data.directmessages.DirectMessageRepositoryTest"`: exit 0; `BUILD SUCCESSFUL`.
+- Gate 2, `.\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.MisskeySourceContractTest"`: exit 0; `BUILD SUCCESSFUL`.
+- Gate 3, `.\gradlew.bat --no-daemon --console=plain :app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
+- Gate 4, `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- Gate 5, `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 607 findings and no new baseline regressions.
+- Gate 6, `git diff --check`: exit 1 only for documented pre-existing trailing whitespace in `.opencode/agents/orchestrator.md` and `.opencode/agents/targeted_fixer.md`; no 1D2 path appears in findings.
+- Gate 7, `git status --short`: exit 0; `docs/classic_navigation.md` is the only staged path. Existing unrelated dirty and untracked paths remain.
+- Gate 8, `git rev-parse --short HEAD`: exit 0; `e46e44c`.
+- Start boundary and last safe commit are `e46e44c`. Current slice is `1D2`. Next slice: `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it.` No staging or commit occurred.
+- Blockers remain: task-level red full suite; two `NavigationTest` failures; the 14-failure investigation; paused 1B5; and unverified device, foldable, RTL, TalkBack, and live-server checks.
+- Focused mocked HTTP tests do not verify live-server behavior or physical rendering.
+- Repair reruns after the identity-evidence and independent-dimension tests: Gate 1 exited 0 (`BUILD SUCCESSFUL`, 35s); Gate 2 exited 0 (`BUILD SUCCESSFUL`, 1m15s); Gate 3 exited 0 (`BUILD SUCCESSFUL`, 1m43s).
+- Repair Gate 4 exited 0; 51 Python tests passed. Repair Gate 5 exited 0; architecture audit reported 607 findings and no baseline regression.
 
 # 1C verification
 

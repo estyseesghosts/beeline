@@ -89,6 +89,7 @@ class MisskeySource(
     private val appMessages: AppMessages = AppMessages.Default,
     private val monotonicClock: () -> Long = System::nanoTime,
 ) : SocialSource, DirectMessageSource {
+    private val sourceInstance = UUID.randomUUID().toString()
     private val cacheKey = CapabilityCacheKey(
         origin,
         accountId ?: AccountId(Connection(origin, Protocol.MISSKEY), "anonymous"),
@@ -97,7 +98,7 @@ class MisskeySource(
     private val _capabilities = MutableStateFlow(initialCapabilities)
     val capabilitiesFlow: StateFlow<ServerCapabilities> = _capabilities
     private val profileService = MisskeyProfileService(origin, token, api, accountId)
-    private val directMessageService = MisskeyDirectMessageService(origin, token, api, accountId) { id -> post(id) }
+    private val directMessageService = MisskeyDirectMessageService(origin, token, api, accountId, sessionRevision, sourceInstance) { id -> post(id) }
     private val notificationService = MisskeyNotificationService(origin, token, api, accountId, clock)
     private val moderationService = accountId?.let { MisskeyModerationService(origin, token, api, it) }
     private val pushService = MisskeyPushService(origin, token, api, accountId)
