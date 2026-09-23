@@ -342,11 +342,13 @@ class MastodonSource(
     }
 
     override suspend fun savedPosts(cursor: String?): Page<Post> = request {
-        val response = pageClient.getPageLegacyRawReplay("v1/bookmarks?limit=40", cursor)
+        val route = MastodonPageRoute("bookmarks", "v1/bookmarks?limit=40", "/api/v1/bookmarks", "", "bookmarks")
+        val currentUrl = pageClient.currentUrl(route, cursor)
+        val response = pageClient.getPage(route, cursor)
         val statuses = JSONArray(response.body)
         Page(
             items = (0 until statuses.length()).map { MastodonMapper.post(statuses.getJSONObject(it), origin) },
-            nextCursor = response.linkHeaderCursor(),
+            nextCursor = pageClient.nextCursor(response, route, currentUrl),
         )
     }
 
@@ -431,11 +433,15 @@ class MastodonSource(
     override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> = request {
         val normalized = hashtagBody(tag)
         val encodedTag = URLEncoder.encode(normalized, Charsets.UTF_8.name())
-        val response = pageClient.getPageLegacyRawReplay("v1/timelines/tag/$encodedTag?limit=40", cursor)
+        val route = MastodonPageRoute(
+            "hashtag", "v1/timelines/tag/$encodedTag?limit=40", "/api/v1/timelines/tag/$encodedTag", normalized, "tag",
+        )
+        val currentUrl = pageClient.currentUrl(route, cursor)
+        val response = pageClient.getPage(route, cursor)
         val statuses = JSONArray(response.body)
         Page(
             items = (0 until statuses.length()).map { MastodonMapper.post(statuses.getJSONObject(it), origin) },
-            nextCursor = response.linkHeaderCursor(),
+            nextCursor = pageClient.nextCursor(response, route, currentUrl),
         )
     }
 

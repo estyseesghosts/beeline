@@ -21,20 +21,28 @@ Historical records stay linked as history, never as a queue. See [Plan 04 archiv
 - Plan 04-A through 04-K have committed work: 04-A `ee52ba9`, 04-B `6a87c76`, 04-C `633cd7a`, 04-D `f0735df`, 04-E1 `b04b2e8`, 04-F `9a1b055`, 04-G `d5f694c`, 04-H1 `cc900d9`, 04-H2 `fab0131`, 04-I `51351a7`, 04-J1 `dc9ae5f`, 04-J2 `c6a2ed0`, 04-J3 `484b995`, and 04-K `9e9a0d7`.
 - The earlier ditch decision `b0d3ddd` is dated history in the archive, not current status.
 - Photo Grid detail photo sizing is committed in `e25c0e5` and `736a26f`. Coverage lives in `SinglePostScreenTest`.
-- Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`. Slice 1B1 is complete; record its hash at the 1B2 boundary.
+- Slice 0A is complete at `ba3fe53`. Slice 0B is complete at `72fafc4`. Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`. Slice 1B1 is complete at `5207a96`.
 - Retention has source- and test-level characterization only. Heap, disk, and Room measurements were never collected and remain unverified.
 
 ## Last Safe Commit
 
-`af1f983` (1A) is the last safe commit. Record the 1B1 hash at the 1B2 boundary.
+`5207a96` (1B1) is the last safe commit. Record the 1B2 hash at the 1B3 boundary.
 
 ## Next Slice
 
-Slice 1B1 is complete. Its review repairs are complete in the current worktree. Current and next slice is 1B2: bind saved-post and hashtag cursors in `MastodonSource.kt` and remove the temporary legacy replay path. Bookmarks and hashtags still replay raw Links until 1B2; timeline cursors are route-bound. Record the 1B1 hash at the 1B2 boundary. Last safe commit is `af1f983`. Keep the red full-suite health blocker distinct from 1B2, 1B5, and device/live blockers.
+Slice 1B2 is complete in the worktree. It binds bookmarks and hashtags to opaque route cursors and removes raw-Link replay. Current and next slice is 1B3: pin moderation list routes and test wrong-path and altered-filter Links. Last safe commit is `5207a96` until the 1B2 commit boundary. Keep the red full-suite health blocker distinct from 1B5 and device/live blockers.
 
 ## Historical work and open verification
 
 S1, P1, Q1, T1, Plan 03, and Plan 04 are complete historical series. See the [archive index](../archive/README.md) and the [Plan 04 archive](../archive/agents/plan04-utility-retention.md). V1 device verification, live-server behavior, and signed-release checks remain open.
+
+## Verification
+
+- `hashtagCursorRejectsAnotherQueryWithoutChangingTheCursor` uses a real cats Link cursor unchanged with `searchHashtag("dogs", cursor)`. It asserts `Unsupported("pagination.cursor")` and no additional request.
+- `bookmarkCursorRejectsTimelineRouteBeforeCapabilityProbe` uses a real bookmark Link cursor with `timeline(Home, cursor)` on a source with the real capability probe. It asserts `Unsupported("pagination.cursor")` and no additional request.
+- The earlier mixed case is now named `hashtagCursorPayloadTamperingAndOtherRoutesAreRejected`; its tampered query payload has a cats path and proves tampering/path validation, not unchanged-cursor cross-query rejection.
+- Both required Gradle focused gates, Python unittest, and architecture audit exited 0. `lintDebug` was not rerun because this repair changes tests and records only; no main source changed.
+- HEAD remains `5207a96`. The staged `docs/classic_navigation.md` and unrelated worktree changes remain untouched. Existing blockers remain unchanged.
 
 ## Known Blockers
 

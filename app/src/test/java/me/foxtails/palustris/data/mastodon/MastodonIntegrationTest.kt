@@ -476,12 +476,182 @@ class MastodonIntegrationTest {
 
         assertEquals("tag-newest", first.items.single().id.value)
         assertEquals("tag-older", second.items.single().id.value)
+        assertTrue(first.nextCursor!!.startsWith("http://").not())
         val firstRequest = server.takeRequest()
         val secondRequest = server.takeRequest()
         assertEquals("/api/v1/timelines/tag/cats?limit=40", firstRequest.path)
         assertEquals("/api/v1/timelines/tag/cats?limit=40&max_id=tag-newest", secondRequest.path)
         assertEquals("Bearer token", firstRequest.getHeader("Authorization"))
         assertEquals("Bearer token", secondRequest.getHeader("Authorization"))
+    }
+
+    @Test
+    fun bookmarksUseOpaqueRouteBoundCursorAndPreserveTransportOrder() = runBlocking {
+        server.enqueue(MockResponse().setBody("[${status("newest")},${status("middle")}]" ).addHeader(
+            "Link", "<$origin/api/v1/bookmarks?limit=40&max_id=middle>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody("[${status("older")}]"))
+        val source = source()
+
+        val first = source.savedPosts()
+        val second = source.savedPosts(first.nextCursor)
+
+        assertEquals(listOf("newest", "middle"), first.items.map { it.id.value })
+        assertEquals(listOf("older"), second.items.map { it.id.value })
+        assertTrue(first.nextCursor!!.startsWith("http://").not())
+        assertEquals("/api/v1/bookmarks?limit=40", server.takeRequest().path)
+        val continuation = server.takeRequest()
+        assertEquals("/api/v1/bookmarks?limit=40&max_id=middle", continuation.path)
+        assertEquals("Bearer token", continuation.getHeader("Authorization"))
+        val count = server.requestCount
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source.searchHashtag("cats", first.nextCursor) }
+        }
+        assertEquals("pagination.cursor", error.feature)
+        assertEquals(count, server.requestCount)
+    }
+
+    @Test
+    fun hashtagCursorPayloadTamperingAndOtherRoutesAreRejected() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/tag/cats?limit=40&max_id=x>; rel=\"next\"",
+        ))
+        val source = source()
+        val cursor = source.searchHashtag("#cats").nextCursor!!
+        val count = server.requestCount
+        server.enqueue(MockResponse().setBody("[]"))
+        assertEquals(0, source.searchHashtag("cats", cursor).items.size)
+        assertEquals("/api/v1/timelines/tag/cats?limit=40", server.takeRequest().path)
+        val continuation = server.takeRequest()
+        assertEquals("/api/v1/timelines/tag/cats?limit=40&max_id=x", continuation.path)
+        assertEquals("Bearer token", continuation.getHeader("Authorization"))
+        val replayCount = server.requestCount
+        for (invalid in listOf(sourceCursorTamper(cursor, "query", "dogs"), "%%%", "$origin/api/v1/timelines/tag/cats?max_id=x")) {
+            val error = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { source.searchHashtag("dogs", invalid) }
+            }
+            assertEquals("pagination.cursor", error.feature)
+            assertEquals(replayCount, server.requestCount)
+        }
+        val otherSources = listOf(
+            MastodonSource(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "other")),
+            MastodonSource(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "local-user"), sessionRevision = 1L),
+            source(),
+        )
+        otherSources.forEach { other ->
+            val error = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { other.searchHashtag("cats", cursor) }
+            }
+            assertEquals("pagination.cursor", error.feature)
+            assertEquals(replayCount, server.requestCount)
+        }
+        assertEquals(count + 1, replayCount)
+    }
+
+    @Test
+    fun hashtagCursorRejectsAnotherQueryWithoutChangingTheCursor() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/tag/cats?limit=40&max_id=x>; rel=\"next\"",
+        ))
+        val source = source()
+        val cursor = source.searchHashtag("cats").nextCursor!!
+        val requestCount = server.requestCount
+
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source.searchHashtag("dogs", cursor) }
+        }
+
+        assertEquals("pagination.cursor", error.feature)
+        assertEquals(requestCount, server.requestCount)
+    }
+
+    @Test
+    fun bookmarkCursorRejectsTimelineRouteBeforeCapabilityProbe() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/bookmarks?limit=40&max_id=x>; rel=\"next\"",
+        ))
+        val source = staleSchemaSource(MastodonCapabilityProbe(MisskeyApi()))
+        val cursor = source.savedPosts().nextCursor!!
+        val requestCount = server.requestCount
+
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source.timeline(me.foxtails.palustris.domain.Timeline.Home, cursor) }
+        }
+
+        assertEquals("pagination.cursor", error.feature)
+        assertEquals(requestCount, server.requestCount)
+    }
+
+    @Test
+    fun invalidBookmarkAndHashtagLinksFailBeforeReturningPages() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/elsewhere?max_id=x>; rel=\"next\"",
+        ))
+        val bookmarkError = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source().savedPosts() }
+        }
+        assertEquals("pagination.link", bookmarkError.feature)
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/tag/dogs?limit=41&max_id=x>; rel=\"next\"",
+        ))
+        val hashtagError = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source().searchHashtag("cats") }
+        }
+        assertEquals("pagination.link", hashtagError.feature)
+        assertEquals(2, server.requestCount)
+    }
+
+    @Test
+    fun bookmarkCursorRejectsAlteredPathsQueriesLoopsAndLegacyValuesBeforeRequests() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/bookmarks?limit=40&max_id=x>; rel=\"next\"",
+        ))
+        val source = source()
+        val cursor = source.savedPosts().nextCursor!!
+        val count = server.requestCount
+        val original = JSONObject(String(java.util.Base64.getUrlDecoder().decode(cursor), Charsets.UTF_8))
+        val badUrls = listOf(
+            "$origin/api/v1/elsewhere?max_id=x",
+            "$origin/api/v1/bookmarks?limit=41&max_id=x",
+            "$origin/api/v1/bookmarks?limit=40&max_id=x&local=true",
+            "$origin/api/v1/bookmarks?limit=40&max_id=x&max_id=y",
+            "$origin/api/v1/bookmarks?limit=40&max_id=",
+            "$origin/api/v1/bookmarks?limit=40&max_id=x&since_id=y",
+            "$origin/api/v1/bookmarks?limit=40&max_id=x#fragment",
+        )
+        badUrls.forEach { badUrl ->
+            val altered = sourceCursorTamper(cursor, "url", badUrl)
+            val error = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { source.savedPosts(altered) }
+            }
+            assertEquals("pagination.cursor", error.feature)
+            assertEquals(count, server.requestCount)
+        }
+        for (legacy in listOf("$origin/api/v1/bookmarks?limit=40&max_id=x", "v1/bookmarks?limit=40&max_id=x", "%%%")) {
+            val error = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { source.savedPosts(legacy) }
+            }
+            assertEquals("pagination.cursor", error.feature)
+            assertEquals(count, server.requestCount)
+        }
+        val route = MastodonPageRoute("bookmarks", "v1/bookmarks?limit=40", "/api/v1/bookmarks", "", "bookmarks")
+        val loop = MastodonPageCursor.encode(
+            MastodonPageCursor.Identity(origin, "local-user", 0L, "instance", route.name, route.query),
+            "$origin/api/v1/bookmarks?limit=40",
+        )
+        val loopError = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { MastodonPageClient(origin, "token", MisskeyApi(), "local-user", 0L, "instance").getPage(route, loop) }
+        }
+        assertEquals("pagination.cursor", loopError.feature)
+        assertEquals(count, server.requestCount)
+        assertEquals("bookmarks", original.getString("route"))
+    }
+
+    private fun sourceCursorTamper(cursor: String, key: String, value: String): String {
+        val json = JSONObject(String(java.util.Base64.getUrlDecoder().decode(cursor), Charsets.UTF_8))
+            .put(key, value)
+        return java.util.Base64.getUrlEncoder().withoutPadding()
+            .encodeToString(json.toString().toByteArray(Charsets.UTF_8))
     }
 
     @Test

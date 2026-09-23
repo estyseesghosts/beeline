@@ -27,11 +27,11 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 - Slice 0A is complete at `ba3fe53`. Verification: 51 Python tests passed; architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline; all 120 relative links across 11 touched Markdown files resolve. No source changes occurred.
 - Slice 0B is complete (this record ships with the slice commit). Its commit hash is recorded at the 1A boundary. The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
 - Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`.
-- Slice 1B1 is complete. Timeline cursors use opaque, identity-bound route tokens. Bookmarks and hashtags retain raw Link replay until 1B2. Record its hash at the 1B2 boundary.
+- Slice 1B1 is complete at `5207a96`. Timeline cursors use opaque, identity-bound route tokens.
 
 # Current slice
 
-Slice 1B2. Slice 1B1 review gaps are repaired in the current worktree; 1B2 remains next.
+Slice 1B2 is complete in the current worktree. Its required focused gates passed. Slice 1B1 is committed at `5207a96`.
 
 # Files involved
 
@@ -42,8 +42,8 @@ Forward owner/caller/test map for phases 1-2. Paths are relative to `app/src/mai
 | Slice | Owner files | Key symbols / lines | Callers and boundary | Tests to run in that slice |
 | --- | --- | --- | --- | --- |
 | 1A | data/mastodon/MastodonModerationService.kt; data/misskey/MisskeyApi.kt (GET helper prefixes /api/) | relationship :74, profileRelationship :85, validateTarget :104; MisskeyApi.get :172 | MastodonSource.setBlocked/setMuted :156-162, removeBlockedAccount/removeMutedAccount :392-394 | ModerationServiceTest, data/mastodon/MastodonIntegrationTest; both adapters' moderation contracts + lint |
-| 1B1 | data/mastodon/MastodonPageCursor.kt, MastodonPageClient.kt, MastodonTimelineService.kt; MastodonSource source-instance wiring | timeline route cursor binds timeline kind, account/session, instance, and variant; bookmark/hashtag calls temporarily use legacy replay | MastodonIntegrationTest; source contract regression set; cursor failures are rejected before another request |
-| 1B2 | data/mastodon/MastodonSource.kt | savedPosts :340-347, searchHashtag :427-436 | saved-post and hashtag UI through SocialSource; cursors stay opaque in UI | MastodonIntegrationTest :247-265; cross-account and cross-query reuse |
+| 1B1 | data/mastodon/MastodonPageCursor.kt, MastodonPageClient.kt, MastodonTimelineService.kt; MastodonSource source-instance wiring | timeline route cursor binds timeline kind, account/session, instance, and variant | MastodonIntegrationTest; source contract regression set; cursor failures are rejected before another request |
+| 1B2 | data/mastodon/MastodonSource.kt, MastodonPageClient.kt, MastodonIntegrationTest.kt | savedPosts and searchHashtag use route-bound opaque cursors; legacy raw replay removed | saved-post and hashtag UI through SocialSource; route, query, account, path, and allowlist validation |
 | 1B3 | data/mastodon/MastodonModerationService.kt | list :55-59, decodeCursor :115-128, ModerationCursor in domain/ModerationModels.kt :13-18 | blocked/muted list pagination; retain ModerationCursor account/kind/variant fields | ModerationServiceTest :79-101; wrong-path and altered-filter Link cases |
 | 1B4 | data/mastodon/MastodonSource.kt | unfavorite :271-275 (raw id) vs favorite :263-267 (encodePathSegment :537-538) | SocialSource.unfavorite | MastodonSourceContractTest, MastodonIntegrationTest :778-786 pattern; reserved-character IDs |
 | 1B5 | MastodonSource.kt first, then MisskeySource.kt — separate commit per adapter | request wrapper :474-488 (ResponseLimitExceeded -> ResourceLimit("thread") :479-480); Misskey :616-637 (:632-633) | adapter error normalization for shared UI | each adapter's integration/contract tests; characterize a capped non-thread operation first |
@@ -99,13 +99,13 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Slice 1B1 is complete. Its review repairs are verified in this worktree. Current and next slice is 1B2. Bind saved-post and hashtag cursors in `MastodonSource.kt`, then remove the temporary legacy replay path. Last safe commit is `af1f983`.
+Slice 1B2 is complete in the worktree. Continue with 1B3. Last safe commit is `5207a96` until the 1B2 commit boundary.
 
-Transitional rule: bookmarks and hashtags still replay raw Links until 1B2. Timeline cursors are fully bound in 1B1. The 1B1 hash will be recorded at the 1B2 boundary.
+The temporary raw-Link replay rule is resolved in 1B2. All Mastodon page routes use validated opaque cursors.
 
-Completed += `Slice 1B1 — complete`; its 1B1 hash is recorded at the 1B2 boundary.
-Current slice = `1B2`; Next = `1B2`.
-Last safe commit = `af1f983`. Do not treat review worktree changes as committed.
+Completed += `Slice 1B2 — complete (ships with this commit)`; 1B1 commit = `5207a96`.
+Current slice = `1B3`; Next = 1B3 (pin moderation list routes and test wrong-path and altered-filter Link).
+Last safe commit = `5207a96`. The 1B2 hash is recorded at the 1B3 boundary.
 
 # Blockers
 
@@ -145,12 +145,30 @@ Last safe commit = `af1f983`. Do not treat review worktree changes as committed.
 
 # Last safe commit
 
-`af1f983` (1A) is the last safe commit. Record the 1B1 hash at the 1B2 boundary.
+`5207a96` (1B1) is the last safe commit. The 1B2 hash is recorded at the 1B3 boundary.
+
+# 1B2 verification
+
+- `MastodonIntegrationTest` focused gate: exit 0; Gradle reported `BUILD SUCCESSFUL` (53 tests).
+- Source-contract/moderation/Misskey integration gate: exit 0; Gradle reported `BUILD SUCCESSFUL`.
+- `:app:lintDebug`: exit 0; Gradle reported `BUILD SUCCESSFUL`.
+- Python unittest: exit 0; 51 tests passed. Architecture audit `--check`: exit 0; 605 findings with no new regressions.
+- Grep for `getPageLegacyRawReplay`, `Temporary: raw Link replay`, `raw Link replay`, and `replay raw server Links` in Mastodon source returned no matches.
+- Test search found only `MastodonIntegrationTest` assertions for `timelines/tag`; no test asserted `v1/bookmarks` before this slice.
+- `savedPosts` and `searchHashtag` perform no capability or network work before `pageClient.currentUrl` validates a non-null cursor and `pageClient.getPage` revalidates it. No pre-page contrast test is needed.
+- The existing hashtag second-page test changes only cursor representation expectations; request paths, bearer headers, and response order remain unchanged. New cases cover bookmark paging, normalized `#cats`/`cats` identity, account/session/source-instance and route mismatch, altered route/query values, malformed and raw values, and invalid Link rejection.
+- Final status preserves staged `docs/classic_navigation.md`; HEAD is `5207a96`. No staging or commit occurred. Device and live-server checks remain unverified.
+- An early test attempt failed because the normalized hashtag replay lacked a queued response. The corrected test queues that response and passes. An initial loop test used a valid continuation URL; the final test uses the route's current first-page URL and confirms rejection before request.
+- Review repair adds `hashtagCursorRejectsAnotherQueryWithoutChangingTheCursor`: it obtains a cats cursor from a real cats Link response, passes that unchanged cursor to `searchHashtag("dogs", cursor)`, and asserts `Unsupported("pagination.cursor")` with no additional request.
+- Review repair adds `bookmarkCursorRejectsTimelineRouteBeforeCapabilityProbe`: it obtains a bookmark cursor from a real bookmarks Link response, passes it to `timeline(Home, cursor)` on a source with the real capability probe, and asserts `Unsupported("pagination.cursor")` with no additional request.
+- Renamed the earlier mixed tampering case to `hashtagCursorPayloadTamperingAndOtherRoutesAreRejected`. Its changed query payload has a cats path, so that case proves payload tampering/path validation, not unchanged-cursor cross-query rejection.
+- Both required Gradle focused gates, Python unittest, and architecture audit exited 0. `lintDebug` was not rerun because this repair changes tests and records only; no main source changed.
+- HEAD remains `5207a96`; staged `docs/classic_navigation.md` and unrelated worktree changes remain untouched. No staging or commit occurred. Existing blockers remain unchanged.
 
 # 1B1 review repair verification
 
 - The capability-probe contrast uses the real `MastodonCapabilityProbe` with a stale schema snapshot. Invalid input returns `Unsupported("pagination.cursor")` with zero requests. Valid pagination requests the metadata endpoint, the first timeline page, and the second page. It checks second-page URL and bearer authorization.
-- Ownership text now states that timeline cursors are opaque, identity-bound, and checked before requests. Bookmark and hashtag cursors still use same-origin raw-Link replay with credential and fragment checks until 1B2.
+- At the 1B1 boundary, the ownership text still described temporary bookmark and hashtag raw-Link replay. Slice 1B2 resolved that transitional behavior; the current ownership contract covers all page routes.
 - Required Mastodon integration, adapter contract/moderation/Misskey integration, lint, Python, and architecture audit gates exited 0.
 - Full-suite red status remains tracked as its own blocker. The 14 unexplained failures are not reclassified. No full suite was run for this repair.
 - HEAD remains `af1f983`; the staged `docs/classic_navigation.md` remains untouched. Review changes are not committed. Record the 1B1 hash at the 1B2 boundary.

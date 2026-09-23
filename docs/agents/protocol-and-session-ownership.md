@@ -89,20 +89,14 @@ reaches the user.
 and fragments. Validate the origin before an authenticated request. Validate pagination origins and
 entity origins before account actions.
 
-Mastodon timeline continuations use adapter-owned opaque cursors in
+All Mastodon page routes (timeline, bookmarks, and hashtags) use adapter-owned opaque cursors in
 `data/mastodon/MastodonPageCursor.kt`. They bind origin, account, session revision, source instance,
-protocol variant, route, and query. The timeline page client validates Link URLs before it returns
-a cursor and validates decoded cursors before it sends a request. Cursor validation runs before the
-capability probe and before any authenticated continuation request. Legacy raw-URL cursors are
-rejected.
-
-Bookmark and hashtag continuations still replay raw server Links through the temporary legacy path
-in `MastodonSource.kt:340-347` and `MastodonSource.kt:429-436`, using
-`MastodonPageClient.kt:27-34`. That path checks same-origin, credentials, and fragments. It does not
-bind the cursor to account, query, route, or variant. Slice 1B2 will bind these continuations and
-remove the legacy path. Owners: `MastodonPageCursor.kt`, `MastodonPageClient.kt`,
-`MastodonTimelineService.kt`, and `MastodonSource.kt`; regression coverage:
-`MastodonIntegrationTest`.
+protocol variant, route, and query. The page client validates server Link URLs before it returns a
+cursor and validates decoded cursors before authenticated replay. Timeline validation runs before
+the capability probe. Bookmark and hashtag paths perform no capability or network work before the
+page client validates a continuation. Legacy raw-URL cursors are rejected on every route. Owners:
+`MastodonPageCursor.kt`, `MastodonPageClient.kt`, `MastodonTimelineService.kt`, and
+`MastodonSource.kt`; regression coverage: `MastodonIntegrationTest`.
 
 `MisskeySource` validates every entity identity through `validatePostId(id, feature)` before it
 builds an authenticated request. The validator rejects a foreign connection origin and a blank
