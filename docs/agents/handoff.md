@@ -2,21 +2,25 @@
 
 **Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state. This file is the next-agent pointer.
 
-## Start here — maintainer directive
+## Start here — R0 audit complete
 
 1. Read `AGENTS.md` and `importantdocs/writing_style.md`.
 2. Reread `docs/beeline_0.4.0.md` in full, including its updated requirements, packet table, and execution map.
 3. Read `docs/agents/tasks/beeline-0.4.0.md`, `docs/agents/beeline-0.4.0-ui-baseline.md`, and `logs/BUGS.txt`.
 4. Check `git log --oneline -12`, `git status --short`, HEAD, and the current diff.
-5. Obtain the maintainer's specified changes to phases 0 and 1. If they are not available, stop and ask.
+5. Continue with the approved slice queue below. Do not request a 260926 review input.
 
-The maintainer requires one more traversal of phases 0 and 1 before later packets continue. Treat the updated `docs/beeline_0.4.0.md` requirements as authoritative when an executed slice conflicts with them. Do not assume existing commits satisfy the revised plan. Map changes to owners, tests, and commit-sized packets before implementation. The changes remain unspecified and outstanding.
+The phases 0 and 1 audit against executed commits is complete. The resolved review input is `docs/260923_current_state.md`; 260926 was a maintainer typo. No additional unspecified changes were requested.
+
+- Meets: 0A, L0, 1A, 1B1, 1B2, 1B3, 1B4, 1D1, and 1D2.
+- Gaps: 0B register says four buttons instead of six; the capture matrix is partial and geometry measures lack approval. 1B needs independent cancellation and failed-next-page-retains-rows checks. 1C requires a quote-level `Remove` policy decision. 1B5 needs the approved caps and operation labels.
+- Not executed: 1D3, 1E1, and 1E2.
 
 The plan is git-ignored planning material directly under `docs/`. Do not force-add it as part of an unrelated slice. Also check `docs/260923_current_state.md`, `docs/agents/app-shell-ownership.md`, and `docs/agents/protocol-and-session-ownership.md` when the next packet touches their boundaries. Historical Plan 04 and retention records are not a work queue.
 
 ## Current position and last safe code-slice commit
 
-Last safe code-slice commit: `fa087d0` (1D2). The records-sync commit is `0b3214b`. This documentation-only foldable device-verification slice is complete in the worktree; its commit is pending. None of the prior 11 listed commits has been pushed.
+Last safe code-slice commit: `fa087d0` (1D2). The last records commit is `f43cc8e`. R0 records are pending commit. Records commits `0b3214b` and `4f28a69` precede `f43cc8e`. None of the prior commits has been pushed.
 
 Executed order, oldest to newest:
 
@@ -45,14 +49,21 @@ Executed order, oldest to newest:
 
 ## Next slices and packet gates
 
-**Next action:** Re-traverse phases 0 and 1 against the full updated plan and the maintainer's specified changes. Confirm which earlier results still meet the requirements. Define and verify any new work in separate packets before resuming this queue.
+**Next action:** Complete the 0B register, capture matrix, and geometry approval. The emulator verifies posture rendering, not six-button geometry approval.
 
-After that review and its required packets:
+Approved slice queue:
 
-1. **1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it.** Gate: after 1D2. Split adapter and UI into two commits when needed. Cover long threads, failures, account replacement, and visible partial/retry state.
-2. **1E1 — Remove only unused source constants.** Gate: after 1B and 1D. Compare live service values before deletion.
-3. **1E2 — Remove unused mapper arguments and update mapper callers/tests.** It can run parallel with 1E1 only on separate branches.
-4. **1B5 — Attribute response-size failures to the correct operation in `MastodonSource.kt` and then `MisskeySource.kt`.** PAUSED. Its gate requires a characterized non-thread capped failure. Source inspection found no non-thread capped path in either adapter. Await an explicit maintainer decision to approve a new conservative cap per adapter, which changes behavior, or to drop or continue pausing this packet. The plan requires separate adapter commits after its gate is met. Do not block independent 1E work on this decision.
+1. **0B completion:** correct four buttons to six, complete labeled Pixel Fold captures, and obtain maintainer measure approval. Keep 0B open until signed off.
+2. **1B characterization:** inspect `FeedViewModelRequestTest.failedPageKeepsCursorForARetry` and `MastodonIntegrationTest.kt`. Add one test commit only if coverage is missing.
+3. **1C repair:** add `SinglePostScreenTest` and warning-policy checks after the maintainer decides quote-level `Remove` behavior.
+4. **1B5-M:** add the approved 4 MiB Mastodon response cap and operation labeling. Run focused integration/contract tests and lint.
+5. **1B5-K:** add the approved 4 MiB Misskey response cap and operation labeling. Run focused integration/contract tests and lint. The Misskey thread path catches some failures internally before they reach the source wrapper. `MisskeyErrorMapper.kt:17-22` maps a remaining escaping `IOException` to `NetworkUnavailable`. The 1B5-K commit must add the non-thread cap and operation labeling without changing this separate thread contract.
+6. **1D3 adapter:** add bounded child continuation and an explicit partial result through `DirectMessageSource`. Run adapter/repository contracts and lint.
+7. **1D3 UI:** add partial/retry state to the ViewModel and conversation screen. Run ViewModel and Compose tests.
+8. **1E1:** remove proven-unused source constants. Run both adapter contract sets and lint.
+9. **1E2:** remove unused `origin` arguments from mapper and self-profile callers. Run Mastodon fixtures and lint.
+
+The full gate `test assembleRelease` remains RED with 16 of 1,265 failures. Restore full-suite green before declaring the coding task complete.
 
 Phase 2 follows the phase-1 source fixes and 0B gate, subject to the maintainer review:
 
@@ -83,12 +94,14 @@ Use exactly one command per shell call. Do not chain commands with `;`, `&&`, `|
 
 - The task-level full `test assembleRelease` gate is RED. During 1B1, release assembly completed, but 16 of 1,265 JVM tests failed. Two `NavigationTest` failures were separately reproduced at `ba3fe53` with an empty `app/src` diff; their cause is unknown.
 - The other 14 failures are `DraftActionsTest` (2), `CapabilityCacheTest` (2), `MisskeyThreadContinuationTest` (5), and `NotificationSyncOrchestratorTest` (5). Focused runs reproduced them. Byte identity, changed-symbol non-reachability checks, and provenance evidence do not attribute them to the 0.4.0 slices. Transitive closure was not fully proved. Introduction commits were not bisected because `git worktree add` was permission-blocked. Product versus environment cause is unknown. A dedicated investigation slice must restore full-suite green before phase 10. Do not skip or weaken tests.
-- 1B5 remains paused for the explicit decision above.
+- The approved 1B5 cap is 4 MiB per adapter. Label `ResponseLimitExceeded` with the operation. Neither adapter commit exists yet.
+- The Misskey thread path catches some failures internally before they reach the source wrapper. `MisskeyErrorMapper.kt:17-22` maps a remaining escaping `IOException` to `NetworkUnavailable`. The 1B5-K commit must add the non-thread cap and operation labeling without changing this separate thread contract.
 - Foldable posture rendering on the Pixel Fold emulator is device verified. Physical-device, API 29, real RTL-device, TalkBack, dark and pure-black themes, font scale 200%, animator scale 0, mixed-direction content, IME-open states, and signed-release behavior remain unverified. Live-server evidence covers sign-in, timelines, notifications, profiles, and Photo Grid media for both protocols. The historical Android 15 system-bar instrumentation concern is in `logs/BUGS.txt`.
+- Live-server behavior for the approved response cap (1B5-M/1B5-K) and direct-message child continuation (1D3) remains unverified.
 - Notifications and media-viewer tests have historical flakes. Investigate if they reproduce; do not label one old isolated failure a new regression.
 - Focused mocked HTTP tests do not prove live-server behavior. Compose and Robolectric tests do not prove physical rendering. Report a gate as independently verified only if the reviewing agent actually ran it; otherwise identify the agent-reported result and the reviewer's inspection limit.
 - Retention has source/test characterization, not heap, disk, or Room measurements. Keep other historical limits and risks in the task state and `logs/BUGS.txt`.
-- The emulator pass does not measure or approve any 0B geometry decision. Physical foldable rendering remains unverified.
+- The emulator pass does not measure or approve any 0B geometry decision. The baseline register correction and capture matrix remain open. Physical foldable rendering remains unverified.
 
 ## Worktree hygiene and records
 

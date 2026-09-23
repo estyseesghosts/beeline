@@ -16,7 +16,9 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Decisions
 
-- `docs/260923_current_state.md` is the active review input. `docs/260926_current_state.md` does not exist. Confirm if a newer review appears.
+- `docs/260923_current_state.md` is the resolved review input for the phases 0 and 1 re-traversal. The 260926 reference was a maintainer typo. This input decision is closed.
+- 1B5 is approved as a behavior change: add a conservative 4 MiB response cap per adapter and label `ResponseLimitExceeded` with the operation. Commit Mastodon first, then Misskey. Keep protocol failure behavior explicit.
+- The phases 0 and 1 re-traversal audit is complete. It requested no additional unspecified changes.
 - Slice 2E is conditional on a later UI change that needs it. Phases 0-2 do not trigger it. Record it as not triggered and confirm before running.
 - A Pixel Fold emulator is reachable. Foldable posture rendering is device verified (emulator); physical-device, API 29, RTL-device, TalkBack, theme/font/animator capture axes, and signed-release checks remain unverified. Live-server evidence covers sign-in, timelines, notifications, profiles, and Photo Grid media on mstdn.ca and dvd.chat.
 - Architecture audit exit 0 means no new regressions against the baseline. It does not mean architecture completion.
@@ -25,18 +27,22 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 # Completed
 
 - Slice 0A is complete at `ba3fe53`. Verification: 51 Python tests passed; architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline; all 120 relative links across 11 touched Markdown files resolve. No source changes occurred.
-- Slice 0B is complete at `72fafc4`. The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
+- Slice 0B requirements-classification work is recorded as executed at `72fafc4`; the foldable emulator posture pass is recorded at `4f28a69`. The re-traversal audit re-opened 0B: the register needs the four-to-six wide-button correction, captures are partial, and geometry approval is pending (queued as slice 2). The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
 - Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`.
 - Slice 1B1 is complete at `5207a96`. Timeline cursors use opaque, identity-bound route tokens.
 - The foldable emulator device-verification slice is complete as a documentation-only slice with no source changes. Pixel Fold API 36 posture rendering, compact and wide navigation, primary-surface navigation in both postures, and Photo Grid `Local` grouped-memory preservation across three posture changes passed. Live sign-in and feed evidence covers Mastodon `jmjmjm` on mstdn.ca and Misskey `ctr` on dvd.chat. Screenshots remain git-ignored evidence under `docs/`.
 
 # Current slice
 
-Slice 1D2 is committed at `fa087d0`. The foldable emulator device pass is complete, and its documentation records are ready for the records commit. The last safe code-slice commit is `fa087d0`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary. The maintainer-directed phase 0/1 re-traversal remains the next implementation work; its specified changes remain outstanding.
+R0 records the completed phases 0 and 1 re-traversal audit. This slice changes no source. R0 is pending commit. The last safe code-slice commit is `fa087d0`. Records commits `0b3214b`, `4f28a69`, and `f43cc8e` precede R0. `e46e44c` is the historical 1D1 completion and 1D2 start boundary.
 
-## Maintainer directive
+## Re-traversal audit
 
-Traverse phases 0 and 1 one more time before starting 1D3, 1E, or phase 2. The next agent must reread the complete updated `docs/beeline_0.4.0.md` first and obtain the maintainer's specified changes. Treat those requirements as authoritative over conflicting earlier slice claims. Record resulting packets and gates before implementation. The changes remain unspecified and are not implemented here. If they are unavailable, stop and ask the maintainer.
+The audit compared phases 0 and 1 of `docs/beeline_0.4.0.md` with executed commits. The resolved review input is `docs/260923_current_state.md`. No additional unspecified changes were requested.
+
+- Meets: 0A, L0, 1A, 1B1, 1B2, 1B3, 1B4, 1D1, and 1D2.
+- Gaps: 0B has a four-button register where the plan requires six; its capture matrix is partial and no geometry measures have approval. 1B needs independent cancellation and failed-next-page-retains-rows evidence. 1C needs a decision about quote-level `Remove` behavior before repair. 1B5 lacks the approved response caps and operation labels.
+- Not executed: 1D3, 1E1, and 1E2.
 
 # Files involved
 
@@ -105,22 +111,25 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Slice 1D2 is committed at `fa087d0`, the last safe code-slice commit. `e46e44c` remains the historical 1D1 completion and 1D2 start boundary. Next: the maintainer-directed review of phases 0 and 1 against the complete updated plan. 1B5 remains paused because its non-thread response-cap gate is unmet. 1D3, 1E1, 1E2, and phase 2 remain prospective. The Pixel Fold emulator is available for later device checks; use `adb shell cmd device_state state 0|2` and the reliable shell screencap plus `adb pull` method recorded in the baseline.
+Next queue: (1) 0B completion; (2) 1B characterization, only if existing coverage is missing; (3) 1C repair after the quote-level `Remove` policy decision; (4) 1B5-M; (5) 1B5-K; (6) 1D3 adapter; (7) 1D3 UI; (8) 1E1; (9) 1E2. Phase 2 follows the phase-1 fixes and 0B gate. The Pixel Fold emulator is available for later device checks; use `adb shell cmd device_state state 0|2` and the reliable shell screencap plus `adb pull` method recorded in the baseline.
 
 # Blockers
 
-- Foldable-emulator posture rendering and live sign-in/feed loading on mstdn.ca and dvd.chat are device/live verified (emulator pass 2026-09-23). Physical-device, API 29, theme/font/animator/RTL/TalkBack, signed-release, and broad live-server behavior remain unverified.
+- Foldable-emulator posture rendering and live sign-in/feed loading on mstdn.ca and dvd.chat are device/live verified (emulator pass 2026-09-23). Physical-device, API 29, theme/font/animator/RTL/TalkBack, signed-release, and broad live-server behavior remain unverified. Live-server behavior for the approved response cap (1B5-M/1B5-K) and direct-message child continuation (1D3) remains unverified.
 - The Android 15 system-bar instrumentation failure remains recorded in `logs/BUGS.txt`.
 - No empirical retention measurements exist.
-- 0B device measures remain pending.
-- Confirm `docs/260926_current_state.md` if a newer review input appears.
+- 0B remains open. Correct the four-button register to six, complete the capture matrix, and obtain maintainer approval for geometry measures. The emulator pass verifies posture rendering, not six-button geometry approval.
 - Tighten `AppLocaleControllerTest.everyLocaleResolvesATranslatedValueOrFallback` and `LocalizationResourceTest.localeCatalogMatchesResourcesEnumAndAndroidConfig` when catalogs return.
 - The residual 03-G ordering risk remains in the Plan 03 task state.
 - No full green gate has passed. One full run executed during 1B1 and is red with 16 failures (above).
 - NavigationTest has two failures. Their pre-existing status is separately verified at `ba3fe53` with an empty `app/src` diff. The cause is not established. Investigate in a dedicated slice before phase 10.
 - The 14 failures are DraftActionsTest (2), CapabilityCacheTest (2), MisskeyThreadContinuationTest (5), and NotificationSyncOrchestratorTest (5). Their executed test and production sources are byte-identical to `af1f983`; `git diff af1f983 --name-only` lists none of them. Direct grep finds no reference from those classes and subjects to symbols changed by L0, 1A, or 1B1. Focused runs reproduce all 14 failures. Transitive closure was not exhaustively proven. Introduction commits were not bisected because `git worktree add` was blocked by permission. The baseline was not executed. Product-versus-environment cause is not established. These failures are not attributable to the 0.4.0 slices by available evidence. Do not weaken or skip tests. A dedicated investigation slice owns these failures.
 - Full unit suite is RED (16 failures in `test assembleRelease`). A dedicated investigation slice must restore full-suite green before the phase-10 release gate.
-- 1B5 gate unmet: source verification shows the only response caps routed through request{} are thread reads (Mastodon: MastodonThreadService; Misskey: MisskeySource thread paths). No non-thread capped path exists, so the plan's required non-thread failure test cannot be written without adding a new conservative response cap per adapter (a behavior change). 1B5 is paused pending an explicit decision. 1E1/1E2 do not depend on 1B5 and proceed.
+- The approved 1B5 work is queued as two adapter commits: Mastodon first, then Misskey. Each adds a conservative 4 MiB cap and operation labeling. Neither commit exists yet.
+- The Misskey thread path catches some failures internally before they reach the source wrapper. `MisskeyErrorMapper.kt:17-22` maps a remaining escaping `IOException` to `NetworkUnavailable`. The 1B5-K commit must add the non-thread cap and operation labeling without changing this separate thread contract.
+- 1D3, 1E1, and 1E2 have not been executed.
+- 1B characterization is conditional. Inspect `FeedViewModelRequestTest.failedPageKeepsCursorForARetry` and `MastodonIntegrationTest.kt` before adding tests.
+- 1C repair waits for a maintainer decision about quote-level `Remove` behavior. `QuotePreviewCard.kt` does not receive `LocalMutedHashtags`; detail checks muted hashtags only for the parent post.
 
 # 1B1 verification
 
@@ -208,7 +217,7 @@ The following results were recorded before 1D2 was committed later as `fa087d0`.
 - Gate 7, `git status --short`: exit 0; `docs/classic_navigation.md` is the only staged path. Existing unrelated dirty and untracked paths remain.
 - Gate 8, `git rev-parse --short HEAD`: exit 0; `e46e44c`.
 - At the 1D2 repair-gate run, the start boundary and last safe commit were `e46e44c`, the current slice was `1D2`, the next slice was `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it`, and no staging or commit occurred. These are historical observations, not the current queue or Git state.
-- Blockers remain: task-level red full suite; two `NavigationTest` failures; the 14-failure investigation; paused 1B5; and unverified device, foldable, RTL, TalkBack, and live-server checks.
+- Historical 1C boundary status: task-level red full suite; two `NavigationTest` failures; the 14-failure investigation; then-paused 1B5; and unverified device, foldable, RTL, TalkBack, and live-server checks. The current re-traversal audit found a 1C gap; see above.
 - Focused mocked HTTP tests do not verify live-server behavior or physical rendering.
 - Repair reruns after the identity-evidence and independent-dimension tests: Gate 1 exited 0 (`BUILD SUCCESSFUL`, 35s); Gate 2 exited 0 (`BUILD SUCCESSFUL`, 1m15s); Gate 3 exited 0 (`BUILD SUCCESSFUL`, 1m43s).
 - Repair Gate 4 exited 0; 51 Python tests passed. Repair Gate 5 exited 0; architecture audit reported 607 findings and no baseline regression.
@@ -226,7 +235,7 @@ The following results were recorded before 1D2 was committed later as `fa087d0`.
 - The full `test assembleRelease` gate did not run for 1C. Its red state remains tracked as the task-level blocker below.
 - The first compile attempt found a removed `ContentWarningPolicy` import. The import was restored. The next compile found an unavailable assertion import; tests now use `assertCountEquals(0)`. Final focused gates pass.
 - At 1C start, HEAD and last safe commit were `c3802c9`; staged `docs/classic_navigation.md` and unrelated dirty work were preserved. No staging or commit occurred. `PhotoPagerSizing.kt` and `PhotoGridScreen.kt` remain unchanged.
-- Device, live-server, foldable, RTL, and TalkBack checks remain unverified. Existing full-suite red, NavigationTest failures, 14-failure investigation, and paused 1B5 blockers remain unchanged.
+- Device, live-server, foldable, RTL, and TalkBack checks remain unverified. At this historical boundary, full-suite red, NavigationTest failures, the 14-failure investigation, and paused 1B5 remained open. The current 1B5 decision is recorded above.
 - Review repair uses the complete hidden quote body `secret quote body #secret` in the Remove absence assertion; sibling consistency and font-scale tests already query complete bodies. The focused test, Python suite, and architecture audit reruns passed.
 
 # 1B4 verification
@@ -243,7 +252,7 @@ The following results were recorded before 1D2 was committed later as `fa087d0`.
 - No other test asserts unfavorite wire bytes, and there is no unfavourite alias. No prior raw-path assertion needed updating.
 - The helper is `URLEncoder.encode(value, UTF_8).replace("+", "%20")`. Plain IDs retain identical path bytes. Reserved characters `/`, `?`, space, `%`, and `#` serialize as `%2F`, `%3F`, `%20`, `%25`, and `%23`.
 - `git status --short`: exit 0; `docs/classic_navigation.md` remains staged, and unrelated dirty paths remain untouched. `git rev-parse --short HEAD`: exit 0; `d21280e`. No staging or commit occurred.
-- Device and live-server behavior remain unverified. Full-suite red, NavigationTest, 14-failure investigation, and paused 1B5 blockers remain unchanged.
+- Device and live-server behavior remain unverified. At this historical boundary, full-suite red, NavigationTest, and the 14-failure investigation remained open. 1B5 was paused then; its approved current status is recorded above.
 
 # 1B2 verification
 
@@ -272,12 +281,12 @@ The following results were recorded before 1D2 was committed later as `fa087d0`.
 - Mastodon integration/source contract and Misskey integration command: exit 0; `BUILD SUCCESSFUL`. Grep found no other tests asserting Mastodon moderation-list paging or `/v1/lists` routes.
 - `:app:lintDebug`: exit 0. Python unittest: exit 0; 51 tests. Architecture audit `--check`: exit 0; 605 findings, no baseline regression.
 - Invalid cursor failures retain `moderation.cursor`, as asserted by the existing test. Invalid server Links use `pagination.link`.
-- At the 1B2 boundary, HEAD was `9e29ef4`; no staging or commit occurred. Device and live-server behavior remain unverified. The full-suite, NavigationTest, 14-failure, and paused 1B5 blockers remain unchanged.
+- At the 1B2 boundary, HEAD was `9e29ef4`; no staging or commit occurred. Device and live-server behavior remain unverified. The full-suite, NavigationTest, and 14-failure blockers remain unchanged. 1B5 was paused then; the approved current status is recorded above.
 - Review repair adds `hashtagCursorRejectsAnotherQueryWithoutChangingTheCursor`: it obtains a cats cursor from a real cats Link response, passes that unchanged cursor to `searchHashtag("dogs", cursor)`, and asserts `Unsupported("pagination.cursor")` with no additional request.
 - Review repair adds `bookmarkCursorRejectsTimelineRouteBeforeCapabilityProbe`: it obtains a bookmark cursor from a real bookmarks Link response, passes it to `timeline(Home, cursor)` on a source with the real capability probe, and asserts `Unsupported("pagination.cursor")` with no additional request.
 - Renamed the earlier mixed tampering case to `hashtagCursorPayloadTamperingAndOtherRoutesAreRejected`. Its changed query payload has a cats path, so that case proves payload tampering/path validation, not unchanged-cursor cross-query rejection.
 - Both required Gradle focused gates, Python unittest, and architecture audit exited 0. `lintDebug` was not rerun because this repair changes tests and records only; no main source changed.
-- At the 1B2 boundary, HEAD was `5207a96`; staged `docs/classic_navigation.md` and unrelated worktree changes remained untouched. No staging or commit occurred. Existing blockers remain unchanged.
+- At the 1B2 boundary, HEAD was `5207a96`; staged `docs/classic_navigation.md` and unrelated worktree changes remained untouched. No staging or commit occurred. The recorded boundary blockers were unchanged then; see current blockers above.
 
 # 1B1 review repair verification
 
