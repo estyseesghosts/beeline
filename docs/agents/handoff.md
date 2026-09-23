@@ -31,7 +31,7 @@ Executed order, oldest to newest:
 - 1C `71c6f7d`: shared quote visibility in `QuotePreviewCard` across rows and Photo Grid detail.
 - 1D1 `e46e44c`: characterized Misskey inbox streams and the validation-only read no-op.
 - 1D2 `fa087d0`: added the identity-bound composite Misskey inbox cursor, per-stream progress, fallback progress, and endpoint-order merge.
-- Foldable emulator device pass `pending commit`: recorded verified emulator posture rendering, navigation, grouped memory, and capture limits; documentation only, no source changes.
+- Foldable emulator device pass `4f28a69`: recorded verified emulator posture rendering, navigation, grouped memory, and capture limits; documentation only, no source changes.
 
 `e46e44c` is the historical 1D2 start boundary, not current HEAD. The 1D2 focused gate results are in the task state. Emulator device and live-server evidence is recorded in the UI baseline; physical foldable rendering remains unverified.
 
