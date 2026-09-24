@@ -124,7 +124,7 @@ class MastodonSource(
 
     override suspend fun post(id: EntityId): Post = request("post") {
         validatePostId(id, "post")
-        MastodonMapper.post(api.get(origin, "v1/statuses/${id.value.encodePathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(), origin)
+        MastodonMapper.post(api.get(origin, "v1/statuses/${id.value.encodeMastodonPathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(), origin)
     }
 
     override suspend fun threadContext(
@@ -269,7 +269,7 @@ class MastodonSource(
 
     override suspend fun favorite(id: EntityId) = request("favorite") {
         validatePostId(id, "favorite")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/favourite", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodeMastodonPathSegment()}/favourite", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
@@ -277,7 +277,7 @@ class MastodonSource(
 
     override suspend fun unfavorite(id: EntityId, favouriteEmoji: String?) = request("favorite") {
         validatePostId(id, "favorite")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/unfavourite", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodeMastodonPathSegment()}/unfavourite", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
@@ -288,7 +288,7 @@ class MastodonSource(
     ): PostActionResult = request("favorite") {
         validatePostId(id, "favorite")
         val endpoint = if (selected) "favourite" else "unfavourite"
-        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/$endpoint", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodeMastodonPathSegment()}/$endpoint", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         PostActionResult(
             post = response.optionalPost(origin),
             selected = selected,
@@ -297,20 +297,20 @@ class MastodonSource(
 
     override suspend fun renote(id: EntityId) = request("renote") {
         validatePostId(id, "renote")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/reblog", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodeMastodonPathSegment()}/reblog", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
     override suspend fun unrenote(id: EntityId, ownRepostId: EntityId?) = request("renote") {
         validatePostId(id, "renote")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/unreblog", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodeMastodonPathSegment()}/unreblog", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
     override suspend fun setReshared(id: EntityId, selected: Boolean, ownRepostId: EntityId?): PostActionResult = request("renote") {
         validatePostId(id, "renote")
         val endpoint = if (selected) "reblog" else "unreblog"
-        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/$endpoint", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodeMastodonPathSegment()}/$endpoint", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         val mapped = response.optionalPost(origin)
         PostActionResult(
             post = mapped,
@@ -321,20 +321,20 @@ class MastodonSource(
 
     override suspend fun save(id: EntityId) = request("save") {
         validatePostId(id, "save")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/bookmark", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodeMastodonPathSegment()}/bookmark", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
     override suspend fun unsave(id: EntityId) = request("save") {
         validatePostId(id, "save")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/unbookmark", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodeMastodonPathSegment()}/unbookmark", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
     override suspend fun setSaved(id: EntityId, selected: Boolean): PostActionResult = request("save") {
         validatePostId(id, "save")
         val endpoint = if (selected) "bookmark" else "unbookmark"
-        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/$endpoint", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodeMastodonPathSegment()}/$endpoint", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         val mapped = response.optionalPost(origin)
         PostActionResult(post = mapped, selected = selected)
     }
@@ -543,8 +543,5 @@ private fun Audience.toMastodonVisibility(): String = when (this) {
     Audience.Followers -> "private"
     Audience.Direct -> "direct"
 }
-
-private fun String.encodePathSegment(): String =
-    java.net.URLEncoder.encode(this, Charsets.UTF_8.name()).replace("+", "%20")
 
 private fun String.toJson(): JSONObject = JSONObject(this)

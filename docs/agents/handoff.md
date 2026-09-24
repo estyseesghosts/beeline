@@ -4,19 +4,19 @@
 
 ## Current boundary
 
-1D3 UI is complete and reviewed. 1E1 adapter residue cleanup is committed as d5da867 with message "Remove unused adapter constants". 1E2 mapper argument cleanup is implemented and verified in the worktree and uncommitted. The slice removes the unused `origin` parameters from `MastodonMapper.editableProfile` and `MastodonMapper.legacyEditableProfile` and updates every current caller in `MastodonSelfProfileService` and `MastodonMapperTest`. It changes no behavior.
+1D3 UI is complete and reviewed. 1E1 adapter residue cleanup and 1E2 mapper argument cleanup are committed. 1E3 path-encoder cleanup is implemented and verified in the worktree and uncommitted. The slice adds internal `String.encodeMastodonPathSegment` in `data/mastodon/MastodonPathEncoding.kt` and replaces the four duplicate private helpers and their call sites in `MastodonDirectMessageService`, `MastodonNotificationService`, `MastodonSource`, and `MastodonThreadService`. It keeps the `URLEncoder` import in `MastodonSource` for query encoders. It changes no behavior.
 
 ## Next slice
 
-The 1E2 slice is verified and ready for commit through `git_handler`. After the 1E2 commit, the next implementation slice is 1E3 (Review the remaining Phase 1 Mastodon path encoders and JSON parsers in their call sites, per `docs/beeline_0.4.0.md` section 1E).
+The 1E3 slice is verified and ready for commit through `git_handler`. After the 1E3 commit, the next step is the Phase 1 closure audit. The audit confirms the 1A, 1B, 1C, 1D, and 1E gates, including the pending 1C-c review, before 2A starts.
 
 ## Changed ownership
 
-Ownership is unchanged by 1E2. Thread fields live in `DirectMessageUiState`. The ViewModel owns guarded `runThreadPage`, `continueThread` and `retryThread`, plus a separate `markReadJob` and `threadError`. The conversation footer is stateless and derives from thread state. The 1E2 slice keeps the service `origin` field and all origin validation and request behavior unchanged. Used mapper `origin` parameters stay untouched.
+Ownership is unchanged by 1E3. Thread fields live in `DirectMessageUiState`. The ViewModel owns guarded `runThreadPage`, `continueThread` and `retryThread`, plus a separate `markReadJob` and `threadError`. The conversation footer is stateless and derives from thread state. The 1E3 slice keeps all used `origin` parameters, all origin validation, and all request behavior unchanged. JSON parser review found no extraction because each `String.toJson` helper is a thin constructor alias with no distinct responsibility.
 
 ## Verification evidence
 
-`MastodonMapperTest` 12 passed; `MastodonIntegrationTest` 58 passed; `MastodonSourceContractTest` 6 passed; zero failures, errors, or skips in all three suites; `:app:lintDebug` passed with BUILD SUCCESSFUL and zero Error-severity issues. Full `test assembleRelease` remains known red and was not run, per slice scope. The Python tool suite was not run because source changes touch no tool.
+`MastodonPathEncodingTest` 8 passed; `MastodonIntegrationTest` 58 passed; `MastodonSourceContractTest` 6 passed; `MastodonMapperTest` 12 passed; `ModerationServiceTest` 13 passed; zero failures, errors, or skips in all five suites; `:app:lintDebug` passed with BUILD SUCCESSFUL. Full `test assembleRelease` remains known red and was not run, per slice scope. The Python tool suite was not run because source changes touch no tool. The tool shell offers no `GRADLE_OPTS` or stdin control. No `GRADLE_OPTS` was set. One PowerShell file probe was rejected. Verification continued through Gradle output and test XML reads.
 
 ## Known limits
 
@@ -28,4 +28,4 @@ Full `test assembleRelease` remains known red and was not run. Physical-device r
 
 ## Last safe boundary
 
-The committed 1E1 commit d5da867 with message "Remove unused adapter constants" is the last safe committed boundary. The verified 1E2 work is uncommitted in the worktree. Git history is authoritative.
+The committed HEAD de5d58d with message "Remove unused mapper parameters" is the last safe committed boundary. The verified 1E3 work is uncommitted in the worktree. Git history is authoritative.

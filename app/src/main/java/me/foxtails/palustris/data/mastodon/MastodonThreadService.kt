@@ -24,7 +24,7 @@ internal class MastodonThreadService(
         if (continuation != null && continuation.sessionKey != key) {
             throw me.foxtails.palustris.domain.SourceError.Unsupported("thread.continuation")
         }
-        val path = "v1/statuses/${focalId.value.encodePathSegment()}"
+        val path = "v1/statuses/${focalId.value.encodeMastodonPathSegment()}"
         val focal = MastodonMapper.post(
             api.get(origin, path, token, MAX_RESPONSE_BYTES).body.toJson(),
             origin,
@@ -59,8 +59,5 @@ private fun parseRefreshHint(header: String?): ThreadRefreshHint? {
     val retrySeconds = match.groupValues[1].toLongOrNull() ?: return null
     return ThreadRefreshHint(retrySeconds * 1_000L)
 }
-
-private fun String.encodePathSegment(): String =
-    java.net.URLEncoder.encode(this, Charsets.UTF_8.name()).replace("+", "%20")
 
 private fun String.toJson(): JSONObject = JSONObject(this)

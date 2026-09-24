@@ -21,7 +21,6 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.URLEncoder
 
 internal class MastodonDirectMessageService(
     private val origin: String,
@@ -50,7 +49,7 @@ internal class MastodonDirectMessageService(
         val anchor = loadAnchor(request.anchor)
         val context = JSONObject(api.get(
             origin,
-            "v1/statuses/${anchor.id.value.encodePathSegment()}/context",
+            "v1/statuses/${anchor.id.value.encodeMastodonPathSegment()}/context",
             token,
             MASTODON_MAX_RESPONSE_BYTES,
         ).body)
@@ -75,7 +74,7 @@ internal class MastodonDirectMessageService(
             throw SourceError.Unsupported("direct.thread")
         }
         val body = try {
-            api.get(origin, "v1/statuses/${anchor.value.encodePathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES).body
+            api.get(origin, "v1/statuses/${anchor.value.encodeMastodonPathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES).body
         } catch (error: ApiFailure) {
             if (error.status == 403 || error.status == 404 || error.status == 410) {
                 throw SourceError.Unsupported("direct.thread")
@@ -102,7 +101,7 @@ internal class MastodonDirectMessageService(
 
     suspend fun markConversationRead(id: ConversationId) {
         validateConversationId(id, "direct.read")
-        api.postForm(origin, "api/v1/conversations/${id.value.encodePathSegment()}/read", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        api.postForm(origin, "api/v1/conversations/${id.value.encodeMastodonPathSegment()}/read", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
     }
 
     private fun validateDirectMessageRequest(request: DirectMessageRequest) {
@@ -135,8 +134,6 @@ internal class MastodonDirectMessageService(
 
     private companion object { const val DIRECT_CONVERSATION_LIMIT = 40 }
 }
-
-private fun String.encodePathSegment(): String = URLEncoder.encode(this, Charsets.UTF_8.name()).replace("+", "%20")
 
 private fun String.toJson(): JSONObject = JSONObject(this)
 

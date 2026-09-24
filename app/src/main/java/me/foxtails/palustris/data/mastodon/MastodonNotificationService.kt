@@ -69,11 +69,11 @@ internal class MastodonNotificationService(
             targetAccountId.localId.isBlank()
         ) throw SourceError.Unsupported("notifications.followRequest")
         val action = if (accept) "authorize" else "reject"
-        api.postForm(origin, "api/v1/follow_requests/${targetAccountId.localId.encodePathSegment()}/$action", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        api.postForm(origin, "api/v1/follow_requests/${targetAccountId.localId.encodeMastodonPathSegment()}/$action", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
     }
 
     suspend fun dismiss(id: EntityId) {
-        api.postForm(origin, "api/v1/notifications/${id.value.encodePathSegment()}/dismiss", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
+        api.postForm(origin, "api/v1/notifications/${id.value.encodeMastodonPathSegment()}/dismiss", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
     }
 
     private suspend fun loadNotifications(query: NotificationQuery, cursor: NotificationCursor?, direction: MastodonNotificationCursorDirection): NotificationPage {
@@ -192,6 +192,5 @@ private fun NotificationQuery.mastodonTypes(): List<String> {
     } }.distinct().sorted()
 }
 
-private fun String.encodePathSegment(): String = java.net.URLEncoder.encode(this, Charsets.UTF_8.name()).replace("+", "%20")
 private fun JSONArray?.toAccounts(origin: String): Map<String, Account> = if (this == null) emptyMap() else (0 until length()).mapNotNull { runCatching { MastodonMapper.account(getJSONObject(it), origin) }.getOrNull() }.associateBy { it.id.localId }
 private fun JSONArray?.toPosts(origin: String): Map<String, me.foxtails.palustris.domain.Post> = if (this == null) emptyMap() else (0 until length()).mapNotNull { runCatching { MastodonMapper.post(getJSONObject(it), origin) }.getOrNull() }.associateBy { it.id.value }
