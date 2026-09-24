@@ -193,12 +193,12 @@ class DirectMessageViewModel @AssistedInject constructor(
                 if (cached.isNotEmpty()) {
                     _state.value = _state.value.copy(thread = mergeThread(_state.value.thread, cached))
                 }
-                val thread = repo.thread(id)
+                val result = repo.thread(id)
                 if (selection != selectionEpoch || stopped) return@launch
                 val current = _state.value
                 if (current.selectedConversationId != id) return@launch
                 _state.value = current.copy(
-                    thread = mergeThread(current.thread, thread),
+                    thread = mergeThread(current.thread, result.posts),
                     loadingThread = false,
                 )
                 try {

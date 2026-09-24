@@ -9,6 +9,7 @@ import me.foxtails.palustris.data.directmessages.DirectMessageWriteAuthority
 import me.foxtails.palustris.data.directmessages.InMemoryDirectMessageStore
 import me.foxtails.palustris.data.mastodon.MastodonSource
 import me.foxtails.palustris.data.misskey.CapabilityCache
+import me.foxtails.palustris.data.misskey.MISSKEY_MAX_RESPONSE_BYTES
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.domain.Account
@@ -25,6 +26,8 @@ import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SourceError
+import me.foxtails.palustris.domain.ThreadAcquisitionState
+import me.foxtails.palustris.domain.ThreadLimitation
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
@@ -140,11 +143,14 @@ class DirectMessageSourceTest {
             server.enqueue(MockResponse().setBody(context.toString()))
             val source = mastodonSource(origin)
 
-            val thread = source.conversationThread(
+            val result = source.conversationThread(
                 DirectThreadRequest(ConversationId(origin, "conversation"), EntityId(origin, "last")),
             )
 
-            assertEquals(listOf("first", "last", "reply"), thread.map { it.id.value })
+            assertEquals(listOf("first", "last", "reply"), result.posts.map { it.id.value })
+            assertEquals(null, result.nextCursor)
+            assertEquals(me.foxtails.palustris.domain.ThreadAcquisitionState.Finished, result.acquisitionState)
+            assertTrue(result.limitations.isEmpty())
             assertEquals("/api/v1/statuses/last", recordedRequest(server).path)
             assertEquals("/api/v1/statuses/last/context", recordedRequest(server).path)
             assertEquals(2, server.requestCount)
@@ -222,6 +228,976 @@ class DirectMessageSourceTest {
         AccountId(Connection(origin, Protocol.MASTODON), "owner"),
         initialCapabilities = ServerCapabilities(),
     )
+
+    private fun misskeySource(
+        origin: String,
+        owner: AccountId,
+        sessionRevision: Long = 0L,
+    ): MisskeySource = MisskeySource(
+        origin, "token", MisskeyApi(), accountId = owner,
+        capabilityCache = CapabilityCache(), sessionRevision = sessionRevision,
+    )
+
+    private fun childrenBody(vararg ids: String): String =
+        "[${ids.joinToString(",") { createdMisskeyNote(it) }}]"
+
+    private fun childrenOf(parent: String, vararg ids: String): String =
+        "[${ids.joinToString(",") { createdMisskeyNote(it, parent) }}]"
+
+    private fun threadCursorJson(cursor: String): JSONObject =
+        JSONObject(String(java.util.Base64.getUrlDecoder().decode(cursor), Charsets.UTF_8))
+
+    private fun threadPending(cursor: String): org.json.JSONArray =
+        threadCursorJson(cursor).getJSONArray("pending")
+
+    @Test
+    fun misskeyThreadLoadsRootAndOneChildrenPageWithExactRequests() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", "c1", "c2")))
+            // Bounded BFS expands each direct child once. Grandchildren are empty.
+            server.enqueue(MockResponse().setBody("[]"))
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            assertEquals(listOf("root", "c1", "c2"), result.posts.map { it.id.value })
+            assertEquals(null, result.nextCursor)
+            assertEquals(ThreadAcquisitionState.Finished, result.acquisitionState)
+            assertTrue(result.limitations.isEmpty())
+            val show = recordedRequest(server)
+            assertEquals("/api/notes/show", show.path)
+            assertEquals("root", JSONObject(show.body.readUtf8()).getString("noteId"))
+            val children = recordedRequest(server)
+            assertEquals("/api/notes/children", children.path)
+            val childrenBodyJson = JSONObject(children.body.readUtf8())
+            assertEquals("root", childrenBodyJson.getString("noteId"))
+            assertEquals(30, childrenBodyJson.getInt("limit"))
+            assertFalse(childrenBodyJson.has("untilId"))
+            // Grandchild expansions for c1 and c2 follow in transport order.
+            assertEquals("c1", JSONObject(recordedRequest(server).body.readUtf8()).getString("noteId"))
+            assertEquals("c2", JSONObject(recordedRequest(server).body.readUtf8()).getString("noteId"))
+            assertEquals(4, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadPagesChildrenBeyondThirtyWithRawLastId() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            val firstIds = (1..30).map { "c$it" }.toTypedArray()
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *firstIds)))
+            server.enqueue(MockResponse().setBody(childrenOf("root", "c31", "c32")))
+            // The third descendant request expands the first child. It is empty.
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            // Bounded BFS uses 3 descendant requests: two root pages plus one
+            // child expansion. Remaining grandchildren stay in the continuation.
+            assertEquals(33, result.posts.size)
+            assertEquals("root", result.posts.first().id.value)
+            assertEquals(ThreadAcquisitionState.HasContinuation, result.acquisitionState)
+            assertTrue(result.nextCursor != null)
+            recordedRequest(server)
+            recordedRequest(server)
+            val second = recordedRequest(server)
+            assertEquals("/api/notes/children", second.path)
+            assertEquals("c30", JSONObject(second.body.readUtf8()).getString("untilId"))
+            assertEquals(4, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadContinuationLoadsOnlyTheNextBatch() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(31..60).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(61..90).map { "c$it" }.toTypedArray())))
+            val source = misskeySource(origin, owner)
+
+            val first = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            assertEquals(ThreadAcquisitionState.HasContinuation, first.acquisitionState)
+            assertTrue(first.nextCursor != null)
+            // The pending work carries the root pagination with the raw last ID.
+            val pending = threadPending(first.nextCursor!!)
+            assertTrue((0 until pending.length()).any { index ->
+                val item = pending.getJSONObject(index)
+                item.getString("parentId") == "root" && item.getString("untilId") == "c90"
+            })
+            assertEquals(4, server.requestCount)
+            repeat(4) { recordedRequest(server) }
+            server.enqueue(MockResponse().setBody(childrenOf("root", "c91", "c92")))
+            server.enqueue(MockResponse().setBody("[]"))
+            server.enqueue(MockResponse().setBody("[]"))
+            val second = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+                first.nextCursor,
+            )
+            assertEquals(listOf("c91", "c92"), second.posts.map { it.id.value })
+            // Child expansions for the next grandchildren keep pending work.
+            assertEquals(ThreadAcquisitionState.HasContinuation, second.acquisitionState)
+            assertTrue(second.nextCursor != null)
+            // A continuation never reloads the root or its ancestors.
+            val continued = recordedRequest(server)
+            assertEquals("/api/notes/children", continued.path)
+            assertEquals("c90", JSONObject(continued.body.readUtf8()).getString("untilId"))
+            assertEquals(7, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadContinuationRejectsEachIdentityDimensionBeforeRequests() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(31..60).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(61..90).map { "c$it" }.toTypedArray())))
+            val original = misskeySource(origin, owner, sessionRevision = 1)
+            val cursor = original.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            ).nextCursor!!
+            assertEquals(4, server.requestCount)
+            val valid = threadCursorJson(cursor)
+            val request = DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor"))
+            fun tampered(mutator: (JSONObject) -> Unit): String {
+                val copy = JSONObject(valid.toString())
+                mutator(copy)
+                return java.util.Base64.getUrlEncoder().withoutPadding()
+                    .encodeToString(copy.toString().toByteArray(Charsets.UTF_8))
+            }
+            fun tamperedPending(mutator: (JSONObject) -> Unit): String {
+                val copy = JSONObject(valid.toString())
+                val pending = copy.getJSONArray("pending")
+                mutator(pending.getJSONObject(0))
+                return java.util.Base64.getUrlEncoder().withoutPadding()
+                    .encodeToString(copy.toString().toByteArray(Charsets.UTF_8))
+            }
+            fun tamperedLimitations(mutator: (org.json.JSONArray) -> Unit): String {
+                val copy = JSONObject(valid.toString())
+                mutator(copy.getJSONArray("limitations"))
+                return java.util.Base64.getUrlEncoder().withoutPadding()
+                    .encodeToString(copy.toString().toByteArray(Charsets.UTF_8))
+            }
+            fun tamperedAccepted(mutator: (org.json.JSONArray) -> Unit): String {
+                val copy = JSONObject(valid.toString())
+                mutator(copy.getJSONArray("accepted"))
+                return java.util.Base64.getUrlEncoder().withoutPadding()
+                    .encodeToString(copy.toString().toByteArray(Charsets.UTF_8))
+            }
+            val invalid = listOf(
+                "not-base64!",
+                tampered { it.put("account", "other") },
+                tampered { it.put("sessionRevision", 2L) },
+                tampered { it.put("origin", "https://other.example") },
+                tampered { it.put("sourceInstance", "other-instance") },
+                tampered { it.put("conversationId", "other-root") },
+                tampered { it.put("variant", "other-variant") },
+                tampered { it.put("version", 3) },
+                tampered { it.put("version", "4") },
+                tampered { it.put("extra", "field") },
+                tampered { it.remove("pending") },
+                tampered { it.remove("loaded") },
+                tampered { it.put("loaded", "many") },
+                tampered { it.put("loaded", -1) },
+                tampered { it.put("loaded", 201) },
+                tampered { it.put("loaded", 1.5) },
+                tampered { it.put("loaded", 0) },
+                tampered { it.remove("accepted") },
+                tampered { it.put("accepted", "ids") },
+                tampered { it.remove("limitations") },
+                tampered { it.put("limitations", "limits") },
+                tampered {
+                    val overflow = org.json.JSONArray()
+                    repeat(65) { overflow.put(JSONObject().put("type", "uncertain")) }
+                    it.put("limitations", overflow)
+                },
+                tampered { it.remove("requestsUsed") },
+                tampered { it.put("requestsUsed", "many") },
+                tampered { it.put("requestsUsed", -1) },
+                tampered { it.put("requestsUsed", 41) },
+                tampered { it.put("requestsUsed", 1.5) },
+                tampered { it.put("pending", org.json.JSONArray()) },
+                tampered { it.put("pending", "work") },
+                tampered {
+                    val overflow = org.json.JSONArray()
+                    repeat(201) { index ->
+                        overflow.put(JSONObject().put("parentId", "p$index").put("depth", 1).put("untilId", JSONObject.NULL))
+                    }
+                    it.put("pending", overflow)
+                },
+                tamperedPending { it.put("parentId", "") },
+                tamperedPending { it.put("parentId", 1) },
+                tamperedPending { it.put("depth", 0) },
+                tamperedPending { it.put("depth", 11) },
+                tamperedPending { it.put("depth", "1") },
+                tamperedPending { it.put("untilId", "") },
+                tamperedPending { it.put("untilId", 1) },
+                tamperedPending { it.put("extra", "field") },
+                tamperedAccepted { it.put("duplicate-of-c1") },
+                tamperedAccepted { it.put(42) },
+                tampered { it.put("accepted", run {
+                    val overflow = org.json.JSONArray()
+                    repeat(201) { index -> overflow.put("a$index") }
+                    overflow
+                }) },
+                tampered {
+                    val accepted = it.getJSONArray("accepted")
+                    accepted.put(accepted.getString(0))
+                    it.put("loaded", accepted.length())
+                },
+                tamperedLimitations { it.put(JSONObject().put("type", "batchTime")) },
+                tamperedLimitations { it.put(JSONObject().put("type", "branch").put("parentId", "p")) },
+                tamperedLimitations { it.put(JSONObject().put("type", "other")) },
+                tamperedLimitations { it.put(JSONObject().put("type", "uncertain").put("extra", 1)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "node").put("loaded", "many").put("maximum", 200)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "node").put("loaded", 1).put("maximum", 199)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "pending").put("pending", "many").put("maximum", 200)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "pending").put("pending", -1).put("maximum", 200)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "pending").put("pending", 201).put("maximum", 200)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "pending").put("pending", 1).put("maximum", 199)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "pending").put("pending", 1)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "pending").put("pending", 1).put("maximum", 200).put("extra", 1)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "depth").put("depth", 11).put("maximum", 9)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "ancestor").put("loaded", 1).put("maximum", 19)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "unavailableParent").put("parentId", "")) },
+                tamperedLimitations { it.put(JSONObject().put("type", "unavailableParent")) },
+                tamperedLimitations { it.put(JSONObject().put("type", "request").put("used", 41).put("maximum", 40)) },
+                tamperedLimitations { it.put(JSONObject().put("type", "request").put("used", 1).put("maximum", 39)) },
+                tamperedLimitations { it.put("not-an-object") },
+            )
+            invalid.forEach { bad ->
+                var failure: SourceError? = null
+                try {
+                    original.conversationThread(request, bad)
+                } catch (error: SourceError) {
+                    failure = error
+                }
+                assertEquals(SourceError.Unsupported("direct.thread.continuation"), failure)
+                assertEquals(4, server.requestCount)
+            }
+            // A replaced source owns a new instance identity, so the old cursor is stale.
+            val replacement = misskeySource(origin, owner, sessionRevision = 1)
+            var failure: SourceError? = null
+            try {
+                replacement.conversationThread(request, cursor)
+            } catch (error: SourceError) {
+                failure = error
+            }
+            assertEquals(SourceError.Unsupported("direct.thread.continuation"), failure)
+            assertEquals(4, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadIdlessFullPageKeepsUncertainLimitationWithContinuation() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            val ids = (1..29).map { "c$it" }.toTypedArray()
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody("[${childrenOf("root", *ids).removeSurrounding("[", "]")},{}]"))
+            server.enqueue(MockResponse().setBody("[]"))
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            // The idless full page cannot paginate the root branch, but the
+            // enqueued grandchildren keep pending work for a continuation.
+            assertTrue(result.nextCursor != null)
+            assertEquals(ThreadAcquisitionState.HasContinuation, result.acquisitionState)
+            assertTrue(result.limitations.contains(ThreadLimitation.UncertainServerTruncation))
+            assertEquals(4, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadNonAdvancingPageKeepsUncertainLimitationWithContinuation() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            // The server repeats the same last ID instead of advancing.
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            assertTrue(result.nextCursor != null)
+            assertEquals(ThreadAcquisitionState.HasContinuation, result.acquisitionState)
+            assertTrue(result.limitations.contains(ThreadLimitation.UncertainServerTruncation))
+            assertEquals(4, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadBoundsAncestorsAtTwenty() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            // A 25-deep reply chain needs only 21 reads: the root plus 20 parents.
+            for (index in 0..20) {
+                server.enqueue(MockResponse().setBody(createdMisskeyNote("n$index", "n${index + 1}")))
+            }
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "n0"), EntityId(origin, "anchor")),
+            )
+
+            assertEquals(21, result.posts.size)
+            assertEquals("n20", result.posts.first().id.value)
+            assertEquals("n0", result.posts[20].id.value)
+            assertTrue(result.limitations.any { it is ThreadLimitation.AncestorLimit })
+            assertEquals(ThreadAcquisitionState.Limited, result.acquisitionState)
+            assertEquals(22, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadUnavailableParentContinuesToChildren() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root", "missing-parent")))
+            server.enqueue(MockResponse().setResponseCode(404))
+            server.enqueue(MockResponse().setBody(childrenOf("root", "c1")))
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            assertEquals(listOf("root", "c1"), result.posts.map { it.id.value })
+            assertEquals(1, result.limitations.size)
+            assertTrue(result.limitations.single() is ThreadLimitation.UnavailableParent)
+            assertEquals(ThreadAcquisitionState.Limited, result.acquisitionState)
+            assertEquals(null, result.nextCursor)
+            assertEquals(4, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadAncestorNetworkFailureRethrowsWithoutLimitation() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root", "missing-parent")))
+            server.enqueue(MockResponse().setResponseCode(500).setBody("{\"error\":{\"code\":\"INTERNAL\"}}"))
+            val source = misskeySource(origin, owner)
+
+            var failure: SourceError? = null
+            try {
+                source.conversationThread(
+                    DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+                )
+            } catch (error: SourceError) {
+                failure = error
+            }
+
+            // Only structural absence becomes UnavailableParent. A server
+            // failure rethrows and never becomes a limitation.
+            assertTrue(failure is SourceError.ServerError)
+            assertEquals(2, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadDuplicateAcrossPagesDeduplicatesWithinTheBatch() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            val firstIds = (1..30).map { "c$it" }.toTypedArray()
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *firstIds)))
+            // The next page repeats c30 with a new raw last ID. Identity differs
+            // from the pagination cursor, so the widened no-progress guard does
+            // not fire, but the repeated post stays deduplicated in the batch.
+            server.enqueue(MockResponse().setBody(childrenOf("root", "c30", "c31")))
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            val ids = result.posts.map { it.id.value }
+            assertEquals(ids.size, ids.distinct().size)
+            assertTrue(ids.contains("c30"))
+            assertTrue(ids.contains("c31"))
+            assertEquals(ThreadAcquisitionState.HasContinuation, result.acquisitionState)
+            assertEquals(4, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadDepthBeyondTenRecordsDepthLimit() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(31..60).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(61..90).map { "c$it" }.toTypedArray())))
+            val source = misskeySource(origin, owner)
+            val request = DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor"))
+            val cursor = source.conversationThread(request).nextCursor!!
+            assertEquals(4, server.requestCount)
+            repeat(4) { recordedRequest(server) }
+            // A crafted continuation queues a depth-10 parent. Its child would
+            // exceed the fixed depth limit of 10 and must record DepthLimit.
+            val decoded = threadCursorJson(cursor)
+            val deep = JSONObject(decoded.toString())
+            val pending = org.json.JSONArray()
+            pending.put(JSONObject().put("parentId", "deep-parent").put("depth", 10).put("untilId", JSONObject.NULL))
+            deep.put("pending", pending)
+            val deepCursor = java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(deep.toString().toByteArray(Charsets.UTF_8))
+            server.enqueue(MockResponse().setBody(childrenOf("deep-parent", "grandchild")))
+
+            val result = source.conversationThread(request, deepCursor)
+
+            assertEquals(listOf("grandchild"), result.posts.map { it.id.value })
+            assertTrue(result.limitations.any { it is ThreadLimitation.DepthLimit })
+            assertEquals(ThreadAcquisitionState.Limited, result.acquisitionState)
+            assertEquals(null, result.nextCursor)
+        }
+    }
+
+    @Test
+    fun misskeyThreadIgnoresUnrelatedDirectRow() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            val good = createdMisskeyNote("good", "root")
+            val forked = createdMisskeyNote("forked", "other-parent")
+            server.enqueue(MockResponse().setBody("[$good,$forked]"))
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            assertEquals(listOf("root", "good"), result.posts.map { it.id.value })
+            assertEquals(ThreadAcquisitionState.Finished, result.acquisitionState)
+            assertTrue(result.limitations.isEmpty())
+            assertEquals(3, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadFullNonDirectPageStillAdvancesToDirectChild() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            val publicPage = (1..30).joinToString(",") { index ->
+                createdMisskeyNote("n$index").replace("specified", "public")
+            }
+            server.enqueue(MockResponse().setBody("[$publicPage]"))
+            server.enqueue(MockResponse().setBody(childrenOf("root", "good")))
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            assertTrue(result.posts.map { it.id.value }.contains("good"))
+            assertTrue(result.limitations.contains(ThreadLimitation.UncertainServerTruncation))
+            assertEquals(4, server.requestCount)
+            recordedRequest(server)
+            recordedRequest(server)
+            val second = recordedRequest(server)
+            assertEquals("n30", JSONObject(second.body.readUtf8()).optString("untilId"))
+        }
+    }
+
+    @Test
+    fun misskeyThreadNodeLimitClearsPendingWork() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..100).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(101..200).map { "c$it" }.toTypedArray())))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            assertEquals(201, result.posts.size)
+            assertTrue(result.limitations.any { it is ThreadLimitation.NodeLimit })
+            assertTrue(result.limitations.none { it is ThreadLimitation.PendingLimit })
+            assertEquals(ThreadAcquisitionState.Limited, result.acquisitionState)
+            assertEquals(null, result.nextCursor)
+            assertEquals(3, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadPendingFrontierLimitStopsBatchWithoutContinuation() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(31..60).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(61..90).map { "c$it" }.toTypedArray())))
+            val source = misskeySource(origin, owner)
+            val request = DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor"))
+
+            val first = source.conversationThread(request)
+
+            assertEquals(ThreadAcquisitionState.HasContinuation, first.acquisitionState)
+            assertEquals(4, server.requestCount)
+            repeat(4) { recordedRequest(server) }
+            // Fill the 200-item frontier around one served parent. The two new
+            // children stay far below the 200-descendant cap, so only the
+            // frontier path can trigger.
+            val decoded = JSONObject(threadCursorJson(first.nextCursor!!).toString())
+            val fullPending = org.json.JSONArray()
+            fullPending.put(JSONObject().put("parentId", "c1").put("depth", 2).put("untilId", JSONObject.NULL))
+            repeat(199) { index ->
+                fullPending.put(JSONObject().put("parentId", "fill$index").put("depth", 2).put("untilId", JSONObject.NULL))
+            }
+            decoded.put("pending", fullPending)
+            val fullCursor = java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(decoded.toString().toByteArray(Charsets.UTF_8))
+            server.enqueue(MockResponse().setBody(childrenOf("c1", "n1", "n2", "n3")))
+
+            val second = source.conversationThread(request, fullCursor)
+
+            // The frontier records its actual size, clears pending work, ends
+            // the batch with no continuation, and never reports NodeLimit.
+            assertTrue(second.limitations.contains(ThreadLimitation.PendingLimit(200, 200)))
+            assertTrue(second.limitations.none { it is ThreadLimitation.NodeLimit })
+            assertEquals(ThreadAcquisitionState.Limited, second.acquisitionState)
+            assertEquals(null, second.nextCursor)
+            // One root read, three first-batch children requests, and one
+            // frontier request. The batch stops instead of draining the rest.
+            assertEquals(5, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadContinuationDoesNotReacceptConversationRoot() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(31..60).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(61..90).map { "c$it" }.toTypedArray())))
+            val source = misskeySource(origin, owner)
+            val request = DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor"))
+
+            val first = source.conversationThread(request)
+
+            assertEquals(4, server.requestCount)
+            repeat(4) { recordedRequest(server) }
+            // A hostile page returns the conversation root as a child of c1.
+            // The continuation seeds dedup with the root ID, so the row is
+            // skipped instead of counted a second time.
+            val decoded = JSONObject(threadCursorJson(first.nextCursor!!).toString())
+            val singlePending = org.json.JSONArray()
+            singlePending.put(JSONObject().put("parentId", "c1").put("depth", 2).put("untilId", JSONObject.NULL))
+            decoded.put("pending", singlePending)
+            val hostileCursor = java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(decoded.toString().toByteArray(Charsets.UTF_8))
+            server.enqueue(MockResponse().setBody(childrenOf("c1", "root")))
+
+            val second = source.conversationThread(request, hostileCursor)
+
+            assertTrue(second.posts.isEmpty())
+            assertTrue(second.limitations.none { it is ThreadLimitation.NodeLimit })
+            assertEquals(null, second.nextCursor)
+            assertEquals(5, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadPendingLimitationSurvivesAnEmptyContinuation() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(31..60).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(61..90).map { "c$it" }.toTypedArray())))
+            val source = misskeySource(origin, owner)
+            val request = DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor"))
+
+            val first = source.conversationThread(request)
+
+            assertEquals(4, server.requestCount)
+            repeat(4) { recordedRequest(server) }
+            // A carried pending-frontier limitation decodes strictly and keeps
+            // the drained terminal call Limited with no continuation.
+            val decoded = JSONObject(threadCursorJson(first.nextCursor!!).toString())
+            val carried = decoded.getJSONArray("limitations")
+            carried.put(JSONObject().put("type", "pending").put("pending", 200).put("maximum", 200))
+            val tail = JSONObject(decoded.toString())
+            val singlePending = org.json.JSONArray()
+            singlePending.put(tail.getJSONArray("pending").getJSONObject(0))
+            tail.put("pending", singlePending)
+            val carriedCursor = java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(tail.toString().toByteArray(Charsets.UTF_8))
+            server.enqueue(MockResponse().setBody("[]"))
+
+            val second = source.conversationThread(request, carriedCursor)
+
+            assertTrue(second.posts.isEmpty())
+            assertTrue(second.limitations.contains(ThreadLimitation.PendingLimit(200, 200)))
+            assertEquals(ThreadAcquisitionState.Limited, second.acquisitionState)
+            assertEquals(null, second.nextCursor)
+            assertEquals(5, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadContinuationRejectsBadLoadedCountBeforeRequests() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(31..60).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(61..90).map { "c$it" }.toTypedArray())))
+            val source = misskeySource(origin, owner, sessionRevision = 1)
+            val request = DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor"))
+            val cursor = source.conversationThread(request).nextCursor!!
+            assertEquals(4, server.requestCount)
+            val valid = threadCursorJson(cursor)
+            fun badLoaded(mutator: (JSONObject) -> Unit): String {
+                val copy = JSONObject(valid.toString())
+                mutator(copy)
+                return java.util.Base64.getUrlEncoder().withoutPadding()
+                    .encodeToString(copy.toString().toByteArray(Charsets.UTF_8))
+            }
+            listOf(
+                badLoaded { it.remove("loaded") },
+                badLoaded { it.put("loaded", "many") },
+                badLoaded { it.put("loaded", -1) },
+                badLoaded { it.put("loaded", 201) },
+                badLoaded { it.put("loaded", 1.5) },
+                // Loaded must equal the accepted ID count carried in the cursor.
+                badLoaded { it.put("loaded", 0) },
+                badLoaded { it.remove("accepted") },
+                badLoaded { it.put("accepted", "ids") },
+                badLoaded {
+                    val accepted = it.getJSONArray("accepted")
+                    accepted.put(accepted.getString(0))
+                    it.put("loaded", accepted.length())
+                },
+                badLoaded { it.remove("limitations") },
+                badLoaded {
+                    val limitations = it.getJSONArray("limitations")
+                    limitations.put(JSONObject().put("type", "other"))
+                },
+                badLoaded { it.remove("requestsUsed") },
+                badLoaded { it.put("requestsUsed", 41) },
+                badLoaded { it.put("version", 3) },
+            ).forEach { bad ->
+                var failure: SourceError? = null
+                try {
+                    source.conversationThread(request, bad)
+                } catch (error: SourceError) {
+                    failure = error
+                }
+                assertEquals(SourceError.Unsupported("direct.thread.continuation"), failure)
+                assertEquals(4, server.requestCount)
+            }
+        }
+    }
+
+    @Test
+    fun misskeyThreadCursorCarriesChainStateWithVersionFour() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(31..60).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(61..90).map { "c$it" }.toTypedArray())))
+            val source = misskeySource(origin, owner)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+            )
+
+            val cursor = threadCursorJson(result.nextCursor!!)
+            // The chain cursor binds the aggregate budget and the accepted
+            // descendant set. Loaded always equals the accepted ID count.
+            assertEquals(4, cursor.getInt("version"))
+            assertEquals(
+                setOf("version", "variant", "origin", "account", "sessionRevision", "sourceInstance",
+                    "conversationId", "loaded", "pending", "accepted", "limitations", "requestsUsed"),
+                cursor.keys().asSequence().toSet(),
+            )
+            assertEquals(90, cursor.getInt("loaded"))
+            assertEquals(90, cursor.getJSONArray("accepted").length())
+            // One root read plus three children requests.
+            assertEquals(4, cursor.getInt("requestsUsed"))
+        }
+    }
+
+    @Test
+    fun misskeyThreadLimitedBatchFollowedByEmptyContinuationStaysLimited() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            // The server repeats the same page instead of advancing.
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody("[]"))
+            val source = misskeySource(origin, owner)
+            val request = DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor"))
+
+            val first = source.conversationThread(request)
+
+            assertEquals(ThreadAcquisitionState.HasContinuation, first.acquisitionState)
+            assertTrue(first.limitations.contains(ThreadLimitation.UncertainServerTruncation))
+            assertEquals(4, server.requestCount)
+            // The empty continuation drains one queued grandchild per request.
+            // A single-item tail keeps the follow-up to one empty page.
+            val decoded = threadCursorJson(first.nextCursor!!)
+            val tail = JSONObject(decoded.toString())
+            val singlePending = org.json.JSONArray()
+            singlePending.put(tail.getJSONArray("pending").getJSONObject(0))
+            tail.put("pending", singlePending)
+            val tailCursor = java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(tail.toString().toByteArray(Charsets.UTF_8))
+            server.enqueue(MockResponse().setBody("[]"))
+
+            val second = source.conversationThread(request, tailCursor)
+
+            // The terminal call carries the earlier truncation and never
+            // reports Finished after prior truncation.
+            assertTrue(second.posts.isEmpty())
+            assertEquals(null, second.nextCursor)
+            assertTrue(second.limitations.contains(ThreadLimitation.UncertainServerTruncation))
+            assertEquals(ThreadAcquisitionState.Limited, second.acquisitionState)
+            assertEquals(5, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadOverlappingContinuationPagesDoNotInflateLoadedCount() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(31..60).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(61..90).map { "c$it" }.toTypedArray())))
+            val source = misskeySource(origin, owner)
+            val request = DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor"))
+
+            val first = source.conversationThread(request)
+
+            assertEquals(90, threadCursorJson(first.nextCursor!!).getInt("loaded"))
+            assertEquals(4, server.requestCount)
+            repeat(4) { recordedRequest(server) }
+            // The next root page repeats thirty accepted IDs and adds one new
+            // direct child. The repeated rows must not count or re-enqueue.
+            val overlapping = "[${(1..30).map { createdMisskeyNote("c$it", "root") }.joinToString(",")}," +
+                "${createdMisskeyNote("c91", "root")}]"
+            server.enqueue(MockResponse().setBody(overlapping))
+            server.enqueue(MockResponse().setBody("[]"))
+            server.enqueue(MockResponse().setBody("[]"))
+
+            val second = source.conversationThread(request, first.nextCursor)
+
+            assertEquals(listOf("c91"), second.posts.map { it.id.value })
+            val continued = threadCursorJson(second.nextCursor!!)
+            // Loaded stays equal to the distinct accepted descendant count.
+            assertEquals(91, continued.getInt("loaded"))
+            assertEquals(91, continued.getJSONArray("accepted").length())
+            val accepted = (0 until continued.getJSONArray("accepted").length())
+                .map { continued.getJSONArray("accepted").getString(it) }
+            assertEquals(accepted.size, accepted.distinct().size)
+            assertTrue(accepted.contains("c91"))
+            // The repeated rows never enqueue a second grandchild expansion.
+            val pendingParents = (0 until continued.getJSONArray("pending").length())
+                .map { continued.getJSONArray("pending").getJSONObject(it).getString("parentId") }
+            assertEquals(pendingParents.size, pendingParents.distinct().size)
+            assertEquals(7, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadAdvancingNonDirectPagesReachAnOlderDirectChildAcrossCalls() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            fun publicPage(prefix: String): String =
+                "[${(1..30).joinToString(",") { createdMisskeyNote("$prefix$it").replace("specified", "public") }}]"
+            server.enqueue(MockResponse().setBody(publicPage("a")))
+            server.enqueue(MockResponse().setBody(publicPage("b")))
+            server.enqueue(MockResponse().setBody(publicPage("c")))
+            val source = misskeySource(origin, owner)
+            val request = DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor"))
+
+            val first = source.conversationThread(request)
+
+            // Three full public pages advance the root pagination across the
+            // per-call budget without one accepted child.
+            assertTrue(first.posts.none { it.id.value == "good" })
+            assertEquals(ThreadAcquisitionState.HasContinuation, first.acquisitionState)
+            assertTrue(first.limitations.contains(ThreadLimitation.UncertainServerTruncation))
+            assertEquals(4, server.requestCount)
+            repeat(4) { recordedRequest(server) }
+            server.enqueue(MockResponse().setBody(childrenOf("root", "good")))
+            server.enqueue(MockResponse().setBody("[]"))
+
+            val second = source.conversationThread(request, first.nextCursor)
+
+            assertTrue(second.posts.map { it.id.value }.contains("good"))
+            // The carried truncation survives the successful follow-up page.
+            assertTrue(second.limitations.contains(ThreadLimitation.UncertainServerTruncation))
+            assertEquals(6, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadChildrenServerFailureThrowsWithoutAFabricatedLimitation() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setResponseCode(500).setBody("{\"error\":{\"code\":\"INTERNAL\"}}"))
+            val source = misskeySource(origin, owner)
+
+            var failure: SourceError? = null
+            try {
+                source.conversationThread(
+                    DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+                )
+            } catch (error: SourceError) {
+                failure = error
+            }
+
+            // A failed children request normalizes to ServerError. It never
+            // becomes an UncertainServerTruncation limitation.
+            assertTrue(failure is SourceError.ServerError)
+            assertEquals(2, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadTotalRequestLimitStopsTheChainWithoutContinuation() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(1..30).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(31..60).map { "c$it" }.toTypedArray())))
+            server.enqueue(MockResponse().setBody(childrenOf("root", *(61..90).map { "c$it" }.toTypedArray())))
+            val source = misskeySource(origin, owner)
+            val request = DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor"))
+
+            val first = source.conversationThread(request)
+
+            assertEquals(ThreadAcquisitionState.HasContinuation, first.acquisitionState)
+            assertEquals(4, server.requestCount)
+            repeat(4) { recordedRequest(server) }
+            // Move the chain budget near the 40-request total. The carried
+            // accepted set and loaded count stay consistent.
+            val decoded = threadCursorJson(first.nextCursor!!)
+            val nearCap = JSONObject(decoded.toString())
+            nearCap.put("requestsUsed", 38)
+            val nearCapCursor = java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(nearCap.toString().toByteArray(Charsets.UTF_8))
+            server.enqueue(MockResponse().setBody("[]"))
+            server.enqueue(MockResponse().setBody("[]"))
+
+            val capped = source.conversationThread(request, nearCapCursor)
+
+            // The 40th successful request stops the chain with RequestLimit
+            // and empty pending work, even though pages keep succeeding.
+            assertEquals(null, capped.nextCursor)
+            assertTrue(capped.limitations.any { it == ThreadLimitation.RequestLimit(40, 40) })
+            assertEquals(ThreadAcquisitionState.Limited, capped.acquisitionState)
+            assertEquals(6, server.requestCount)
+        }
+    }
+
+    @Test
+    fun mastodonThreadRejectsNonNullCursorBeforeAnyRequest() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val source = mastodonSource(origin)
+
+            var failure: SourceError? = null
+            try {
+                source.conversationThread(
+                    DirectThreadRequest(ConversationId(origin, "conversation"), EntityId(origin, "last")),
+                    "opaque-cursor",
+                )
+            } catch (error: SourceError) {
+                failure = error
+            }
+
+            assertEquals(SourceError.Unsupported("direct.thread.continuation"), failure)
+            assertEquals(0, server.requestCount)
+        }
+    }
+
+    @Test
+    fun misskeyThreadOversizedChildrenResponseKeepsDirectThreadLabel() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val owner = AccountId(Connection(origin, Protocol.MISSKEY), "owner")
+            server.enqueue(MockResponse().setBody(createdMisskeyNote("root")))
+            server.enqueue(MockResponse().setBody(" ".repeat((MISSKEY_MAX_RESPONSE_BYTES + 1).toInt())))
+            val source = misskeySource(origin, owner)
+
+            var failure: SourceError? = null
+            try {
+                source.conversationThread(
+                    DirectThreadRequest(ConversationId(origin, "root"), EntityId(origin, "anchor")),
+                )
+            } catch (error: SourceError) {
+                failure = error
+            }
+
+            assertEquals(SourceError.ResourceLimit("direct.thread"), failure)
+            assertEquals(2, server.requestCount)
+        }
+    }
 
     @Test
     fun mastodonRepliesMentionAllSuppliedParticipantsAndMarksServerConversationRead() = runBlocking {
@@ -646,7 +1622,8 @@ class DirectMessageSourceTest {
         val message = Account(first, "First", "@first@example.org")
         val source = object : me.foxtails.palustris.domain.DirectMessageSource {
             override suspend fun conversations(cursor: String?) = Page<DirectConversation>(emptyList())
-            override suspend fun conversationThread(request: DirectThreadRequest) = emptyList<Post>()
+            override suspend fun conversationThread(request: DirectThreadRequest, cursor: String?) =
+                me.foxtails.palustris.domain.DirectThreadResult(emptyList())
             override suspend fun sendDirectMessage(request: DirectMessageRequest) =
                 post(EntityId(origin, "post"), message)
             override suspend fun markConversationRead(id: ConversationId) = Unit
@@ -677,7 +1654,8 @@ class DirectMessageSourceTest {
         )
         val source = object : me.foxtails.palustris.domain.DirectMessageSource {
             override suspend fun conversations(cursor: String?) = Page(listOf(conversation))
-            override suspend fun conversationThread(request: DirectThreadRequest) = listOf(lastPost)
+            override suspend fun conversationThread(request: DirectThreadRequest, cursor: String?) =
+                me.foxtails.palustris.domain.DirectThreadResult(listOf(lastPost))
             override suspend fun sendDirectMessage(request: DirectMessageRequest) = lastPost
             override suspend fun markConversationRead(id: ConversationId) = Unit
         }

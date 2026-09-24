@@ -4,26 +4,28 @@
 
 ## Current boundary
 
-1B5-K is implemented, verified, low-reviewed, and recorded by the commit that includes these records. The base is `fc1f0da`. That commit includes the source, test, task-state, and handoff records. The task log and `logs/BUGS.txt` remain current on disk, unstaged, and outside the commit under `logs/*` hygiene.
+1D3 adapter is complete and reviewed. Visible 1D3 UI is not complete.
 
-`MisskeySource`, its six source-owned services, and all three capability-probe reads pass a 4 MiB response cap. The probe reads cover `meta`, `i`, and `notes/bubble-timeline`. `MisskeyApi` remains unchanged, and its nullable transport limits default to `null`. Each `MisskeySource.request` call has an explicit operation label. Thread inner catches and normalization remain unchanged. `MisskeyErrorMapper` remains unchanged. Stream behavior remains unchanged. The oversized `post` test asserts `ResourceLimit("post")`, one request, and `/api/notes/show`.
+## Next slice
 
-## Next steps
+The next implementation slice is 1D3 UI: visible partial-state and retry presentation for bounded direct-message thread continuation.
 
-The next implementation slice is 1D3 adapter work for Misskey direct-message child continuation. Git history is authoritative for the exact 1B5-K commit hash. Use `git log -1` at the start of the next session.
+## Changed ownership
 
-The focused `MisskeyIntegrationTest` and `MisskeySourceContractTest` passed. `MisskeyThreadContinuationTest` had five plain-JVM `org.json.JSONObject` setup failures. `:app:lintDebug` passed. Python tool tests passed (51 tests). Scoped `git diff --check` passed. The known-red full suite and `assembleRelease` were not run.
+`DirectThreadResult` and `ThreadLimitation.PendingLimit` in domain; bounded reply-rooted breadth-first descent with a strict version-4 cursor in `MisskeyDirectMessageService`; finished result with no continuation in the Mastodon adapter; continuation merge and preview rule in `DirectMessageRepository`; mechanical plumbing only in `DirectMessageViewModel`, with no visible UI change.
 
-`:app:assembleDebug` passed with `BUILD SUCCESSFUL`. The APK path is `app/build/outputs/apk/debug/app-debug.apk`. The exact architecture audit command exited 0 with 609 findings and no regression findings. The 1B5-M records also claimed 609 findings and exit 0.
+## Verification evidence
 
-The repaired 1B5-K APK was rebuilt with `gradlew.bat --no-daemon --console=plain :app:assembleDebug` and `GRADLE_OPTS=-Dorg.gradle.daemon=false`. The build passed. Pixel Fold emulator `emulator-5554` received the APK through `adb install -r`. The final direct adb pass verified committed CLOSED with hinge 0 and 1080x2092, then committed OPENED with hinge 180, no override, and 2208x1840. Wakeup and dismiss-keyguard succeeded in both states. `MainActivity` was RESUMED, visible, reportedDrawn, focused, and allDrawn. The keyguard was hidden, and the display was awake. No crash or ANR evidence appeared. This is final emulator rendering evidence for compact and wide layouts only.
+`DirectMessageSourceTest` 50 passed; `DirectMessageRepositoryTest` 19 passed; `DirectMessageViewModelTest` 16 passed; `MisskeyIntegrationTest` 48 passed; `MastodonIntegrationTest` 58 passed; `:app:lintDebug` passed. This session ran no new commands and claims no new results.
 
-Emulator evidence does not verify physical-device behavior. Physical-device, API 29, RTL, TalkBack, and signed-release checks remain unverified. Live oversized-response behavior remains unverified. Mocked HTTP tests do not prove live-server behavior.
+## Known limits
+
+Full `test assembleRelease` remains known red and was not run. Live Misskey and Sharkey ordering and device and UI behavior are unverified.
 
 ## Hygiene
 
-Keep `logs/*` unstaged. Leave staged `docs/classic_navigation.md` exactly as found and outside the 1B5-K commit. Preserve all unrelated dirty and untracked paths. Do not stage, commit, or amend during this records repair.
+Keep staged `docs/classic_navigation.md`, `.opencode/*`, `importantdocs/writing_style.md`, deleted PNGs, and untracked tools scripts and caches untouched and unstaged. Keep `logs/*` unstaged. Do not stage or commit during this records update.
 
 ## Last safe boundary
 
-The 1B5-K base is `fc1f0da`. Git history is authoritative for the exact boundary hash. The commit that includes these records also includes the source, test, task-state, and handoff records. The task log and `logs/BUGS.txt` remain unstaged outside that commit. Use `git log -1` at the start of the next session. The next implementation slice is 1D3 adapter.
+The last safe boundary is the commit that contains this record. Get the exact hash with `git log -1`. Git history is authoritative.

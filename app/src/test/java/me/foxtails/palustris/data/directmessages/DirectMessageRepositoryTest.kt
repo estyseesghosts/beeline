@@ -21,6 +21,7 @@ import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.DirectMessageRequest
 import me.foxtails.palustris.domain.DirectMessageSource
 import me.foxtails.palustris.domain.DirectThreadRequest
+import me.foxtails.palustris.domain.DirectThreadResult
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
@@ -60,9 +61,10 @@ class DirectMessageRepositoryTest {
 
     private class GatedSource : DirectMessageSource {
         private val inboxPending = ArrayDeque<CompletableDeferred<Page<DirectConversation>>>()
-        private val threadPending = ArrayDeque<CompletableDeferred<List<Post>>>()
+        private val threadPending = ArrayDeque<CompletableDeferred<DirectThreadResult>>()
         private val sendPending = ArrayDeque<CompletableDeferred<Post>>()
         val threadRequests = mutableListOf<DirectThreadRequest>()
+        val threadCursors = mutableListOf<String?>()
         var markReadCalls = 0
 
         override suspend fun conversations(cursor: String?): Page<DirectConversation> {
@@ -71,9 +73,10 @@ class DirectMessageRepositoryTest {
             return withContext(NonCancellable) { gate.await() }
         }
 
-        override suspend fun conversationThread(request: DirectThreadRequest): List<Post> {
+        override suspend fun conversationThread(request: DirectThreadRequest, cursor: String?): DirectThreadResult {
             threadRequests += request
-            val gate = CompletableDeferred<List<Post>>()
+            threadCursors += cursor
+            val gate = CompletableDeferred<DirectThreadResult>()
             threadPending += gate
             return withContext(NonCancellable) { gate.await() }
         }
@@ -89,7 +92,8 @@ class DirectMessageRepositoryTest {
         }
 
         fun completeInbox(index: Int, page: Page<DirectConversation>) { inboxPending[index].complete(page) }
-        fun completeThread(index: Int, thread: List<Post>) { threadPending[index].complete(thread) }
+        fun completeThread(index: Int, thread: List<Post>) { threadPending[index].complete(DirectThreadResult(thread)) }
+        fun completeThreadResult(index: Int, result: DirectThreadResult) { threadPending[index].complete(result) }
         fun completeSend(index: Int, post: Post) { sendPending[index].complete(post) }
     }
 
@@ -222,7 +226,7 @@ class DirectMessageRepositoryTest {
         advanceUntilIdle()
         // The thread response predates the send. It must not drop the sent message or preview.
         source.completeThread(0, listOf(post("old", recipient)))
-        val merged = loading.await()
+        val merged = loading.await().posts
         advanceUntilIdle()
 
         assertTrue(merged.map { it.id.value }.contains("sent"))
@@ -485,5 +489,133 @@ class DirectMessageRepositoryTest {
         val request = source.threadRequests.single()
         assertEquals(ConversationId(connection.origin, "same"), request.conversationId)
         assertEquals(EntityId(connection.origin, "same"), request.anchor)
+    }
+
+    @Test
+    fun threadPassesCursorAndReturnsContinuationState() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val authority = DirectMessageWriteAuthority()
+        val store = InMemoryDirectMessageStore()
+        val source = GatedSource()
+        val repository = repository(authority, store, source, authority.activate(accountId), dispatcher)
+        val id = ConversationId(connection.origin, "a")
+        store.save(accountId, conversation("a", "a-last"))
+        val remote = DirectThreadResult(
+            posts = listOf(post("fresh")),
+            nextCursor = "next",
+            limitations = emptyList(),
+            acquisitionState = me.foxtails.palustris.domain.ThreadAcquisitionState.HasContinuation,
+        )
+
+        val loading = async { repository.thread(id, "cursor-in") }
+        advanceUntilIdle()
+        source.completeThreadResult(0, remote)
+        val result = loading.await()
+        advanceUntilIdle()
+
+        assertEquals("cursor-in", source.threadCursors.single())
+        assertEquals("next", result.nextCursor)
+        assertEquals(me.foxtails.palustris.domain.ThreadAcquisitionState.HasContinuation, result.acquisitionState)
+        assertTrue(result.limitations.isEmpty())
+        assertTrue(result.posts.map { it.id.value }.contains("fresh"))
+    }
+
+    @Test
+    fun threadMergesRemotePostsWithCachedThread() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val authority = DirectMessageWriteAuthority()
+        val store = InMemoryDirectMessageStore()
+        val source = GatedSource()
+        val repository = repository(authority, store, source, authority.activate(accountId), dispatcher)
+        val id = ConversationId(connection.origin, "a")
+        store.save(accountId, conversation("a", "a-last"))
+        store.save(accountId, conversation("a", "a-last"), listOf(post("cached")))
+
+        val loading = async { repository.thread(id) }
+        advanceUntilIdle()
+        source.completeThreadResult(
+            0,
+            DirectThreadResult(
+                posts = listOf(post("fresh")),
+                limitations = listOf(me.foxtails.palustris.domain.ThreadLimitation.UncertainServerTruncation),
+                acquisitionState = me.foxtails.palustris.domain.ThreadAcquisitionState.Limited,
+            ),
+        )
+        val result = loading.await()
+        advanceUntilIdle()
+
+        assertEquals(listOf("fresh", "cached"), result.posts.map { it.id.value })
+        assertEquals(listOf("fresh", "cached"), store.thread(accountId, id).map { it.id.value })
+        assertEquals(me.foxtails.palustris.domain.ThreadAcquisitionState.Limited, result.acquisitionState)
+        assertEquals(
+            listOf(me.foxtails.palustris.domain.ThreadLimitation.UncertainServerTruncation),
+            result.limitations,
+        )
+    }
+
+    @Test
+    fun continuationBatchAppendsAfterCachedRowsAndSelectsNewestPreview() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val authority = DirectMessageWriteAuthority()
+        val store = InMemoryDirectMessageStore()
+        val source = GatedSource()
+        val repository = repository(authority, store, source, authority.activate(accountId), dispatcher)
+        val id = ConversationId(connection.origin, "a")
+        val cached = post("cached").copy(publishedAtEpochMillis = 100L)
+        val fresh = post("fresh").copy(publishedAtEpochMillis = 200L)
+        store.save(accountId, conversation("a", "cached").copy(lastPost = cached), listOf(cached))
+
+        val loading = async { repository.thread(id, "cursor-in") }
+        advanceUntilIdle()
+        source.completeThreadResult(
+            0,
+            DirectThreadResult(
+                // The continuation repeats the cached row and adds a newer post.
+                posts = listOf(cached, fresh),
+                nextCursor = null,
+                limitations = emptyList(),
+                acquisitionState = me.foxtails.palustris.domain.ThreadAcquisitionState.Finished,
+            ),
+        )
+        val result = loading.await()
+        advanceUntilIdle()
+
+        // Continuation batches append after stored rows with cross-call dedup.
+        assertEquals(listOf("cached", "fresh"), result.posts.map { it.id.value })
+        assertEquals(listOf("cached", "fresh"), store.thread(accountId, id).map { it.id.value })
+        // The preview follows the newest timestamp, not the last row position.
+        assertEquals("fresh", store.conversation(accountId, id)?.lastPost?.id?.value)
+    }
+
+    @Test
+    fun cachedNewerPreviewSurvivesOlderThreadRows() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val authority = DirectMessageWriteAuthority()
+        val store = InMemoryDirectMessageStore()
+        val source = GatedSource()
+        val repository = repository(authority, store, source, authority.activate(accountId), dispatcher)
+        val id = ConversationId(connection.origin, "a")
+        val cached = post("cached").copy(publishedAtEpochMillis = 300L)
+        val older = post("older").copy(publishedAtEpochMillis = 100L)
+        store.save(accountId, conversation("a", "cached").copy(lastPost = cached), listOf(cached))
+
+        val loading = async { repository.thread(id) }
+        advanceUntilIdle()
+        source.completeThreadResult(
+            0,
+            DirectThreadResult(
+                posts = listOf(older),
+                nextCursor = null,
+                limitations = emptyList(),
+                acquisitionState = me.foxtails.palustris.domain.ThreadAcquisitionState.Finished,
+            ),
+        )
+        val result = loading.await()
+        advanceUntilIdle()
+
+        // The inbox lastPost is newer than every returned row and may not exist
+        // in the bounded thread rows. It stays the persisted preview.
+        assertTrue(result.posts.map { it.id.value }.contains("cached"))
+        assertEquals("cached", store.conversation(accountId, id)?.lastPost?.id?.value)
     }
 }

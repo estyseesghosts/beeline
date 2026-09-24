@@ -41,3 +41,21 @@ data class DirectConversation(
     val rootPostId: EntityId? = null,
     val identity: ConversationIdentity,
 )
+
+/**
+ * Flat thread result for one bounded adapter call. [posts] keeps adapter
+ * transport order. [nextCursor] is an opaque adapter continuation or null.
+ * [limitations] uses the shared thread vocabulary. [acquisitionState] stays
+ * consistent with the cursor and the limitations. Visible partial and retry
+ * presentation remains planned and lives outside this contract.
+ */
+data class DirectThreadResult(
+    val posts: List<Post>,
+    val nextCursor: String? = null,
+    val limitations: List<ThreadLimitation> = emptyList(),
+    val acquisitionState: ThreadAcquisitionState = when {
+        nextCursor != null -> ThreadAcquisitionState.HasContinuation
+        limitations.isNotEmpty() -> ThreadAcquisitionState.Limited
+        else -> ThreadAcquisitionState.Finished
+    },
+)

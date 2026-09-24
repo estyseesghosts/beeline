@@ -7,7 +7,7 @@ test verified. C-01 closed the connected-identity gap. C-03 closed the direct-me
 C-06c closed the draft removal gap. Slice 04-E3 added the direct-message conversation identity and
 the verified-only server mark-read.
 
-**Last reviewed:** 2026-09-23.
+**Last reviewed:** 2026-09-24.
 
 **Source baseline:** Slice 16: `SessionLifecycle.kt` owns durable session transitions, and
 `AccountManager.kt` owns session presentation and authentication UI state.
@@ -267,14 +267,50 @@ A revoked writer writes nothing. Removal revokes the draft writer before it dele
 ## Direct-Message Thread Anchor
 
 `DirectMessageSource.conversationThread` takes
-`DirectThreadRequest(conversationId, anchor)`. The conversation identity and the post anchor are
+`DirectThreadRequest(conversationId, anchor)` and an optional opaque cursor. It
+returns `DirectThreadResult(posts, nextCursor, limitations, acquisitionState)`.
+The conversation identity and the post anchor are
 separate identity spaces. The repository fills the anchor from the account-scoped stored
 conversation `lastPost.id`. It throws `SourceError.Unsupported("direct.thread")` when no stored
-conversation exists.
+conversation exists. The repository merges remote posts with the cached thread
+and returns the continuation, the limitations, and the state. The ViewModel in
+this slice consumes only `result.posts`. Visible continuation and retry UI
+remains planned.
+
+The Misskey adapter validates a continuation before any request. The cursor
+binds version, variant, origin, account, session revision, source instance,
+conversation, accepted descendant IDs, cumulative limitations, the chain
+request count, and pending breadth-first work. A bad cursor throws
+`SourceError.Unsupported("direct.thread.continuation")` with zero requests. A
+fresh call loads the reply root, walks at most 20 ancestors with a cycle guard,
+then runs a bounded breadth-first descent of at most 3 `notes/children`
+requests. At most 40 authenticated thread requests run across the whole chain,
+including the root and ancestor reads. The fresh call queues the root at depth 1. Each mapped direct child
+is enqueued at depth plus one, up to a fixed depth limit of 10. Accepted IDs
+travel in the cursor so overlapping pages never count twice, and carried
+limitations keep a terminal call limited after earlier truncation. At most
+200 accepted descendants are kept; the cap records `NodeLimit` with no
+continuation. The bounded breadth-first frontier holds at most 200 pending
+parents; a child that would exceed the frontier records `PendingLimit` with
+the actual frontier size, clears pending work, and ends the batch with no
+continuation and no parent re-queue. A drained terminal call with any carried
+limitation reports `Limited`. Skipped depth
+work records `DepthLimit`. A page that cannot advance records
+`UncertainServerTruncation`. Source semantics follow the existing Misskey
+`untilId` implementation. Live Misskey/Sharkey ordering is unverified. Only
+structural absence or denied support becomes `UnavailableParent`. Cancellation
+and the response limit propagate and never become limitations. Other child
+failures throw normalized errors, so the repository keeps prior rows on a
+failed call. A continuation call resumes the queued breadth-first work with
+dedup seeded by the conversation root and the carried accepted IDs, so a
+cyclic or hostile root row is never reaccepted. Visible
+continuation and retry UI remains planned. Source-level acquisition state is
+not user-visible yet.
 
 The Mastodon adapter loads the anchor through `GET /api/v1/statuses/:id` and its context through
 `/context`. It never calls `GET /api/v1/conversations/:id`. It normalizes 403, 404, and 410 to the
-same unsupported error and rejects a non-direct anchor. The Misskey adapter keeps
+same unsupported error and rejects a non-direct anchor. It returns the result
+as finished with no cursor and adds no continuation. The Misskey adapter keeps
 `conversationId.value` as the reply root and does not adopt Mastodon conversation identity.
 
 Slice 04-E2 removed the adapter `directLastPosts` map and the send-path insertion. The adapter

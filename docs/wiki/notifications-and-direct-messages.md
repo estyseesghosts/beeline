@@ -2,7 +2,7 @@
 
 Status: current, partial coverage  
 Owner: Notifications and messaging maintainers  
-Last reviewed: 2026-09-23  
+Last reviewed: 2026-09-24  
 Stale when: Notification delivery or direct-message behavior changes.
 
 Sources: `AGENTS.md`, `data/notifications/`, `data/directmessages/`, notification tests, and messaging tests.
@@ -24,6 +24,35 @@ Source: `data/directmessages/DirectMessageRepository.kt`,
 - A conversation thread loads from a known post anchor in the stored conversation. A returned
   Misskey post with no parent establishes its reply root; a reply without its returned root stays
   provisional.
+- A thread call returns a flat result with posts, an opaque continuation, limitations, and an
+  acquisition state. Source semantics follow the existing Misskey `untilId`
+  implementation. Live Misskey/Sharkey ordering is unverified. A fresh Misskey
+  call loads the reply root, at most 20 ancestors, and a bounded breadth-first
+  descent of at most 3 `notes/children` requests. The fresh call queues the root
+  at depth 1. Each mapped direct child is enqueued at depth plus one, up to a
+  fixed depth limit of 10. Pending work travels in the continuation, so the next
+  call resumes the same breadth-first acquisition. Accepted descendant IDs also
+  travel in the continuation, so overlapping pages never count or enqueue the
+  same descendant twice, and loaded always equals the accepted ID count.
+  Limitations accumulate across the chain, so a terminal call stays limited
+  after any earlier truncation. At most 40 authenticated thread requests run
+  across the whole chain, including the root and ancestor reads. A chain that
+  reaches the total stops with a request limit and no continuation, even when
+  pages keep advancing. At most 200 accepted descendants are kept; the cap
+  records a node limit with no continuation. The bounded breadth-first
+  frontier holds at most 200 pending parents; a child that would exceed the
+  frontier records a pending-frontier limit with the actual frontier size,
+  clears pending work, and ends the batch with no continuation and no parent
+  re-queue. A drained terminal call with any carried limitation reports a
+  limited acquisition state. A full page after the call
+  budget returns a continuation. A full page with no usable last ID, a page that
+  does not advance, or a nonempty page with no new mapped post IDs returns
+  uncertain server truncation. The thread cursor binds origin, account, session
+  revision, source instance, conversation, accepted IDs, limitations, and the
+  chain request count. A bad cursor fails
+  before any request. The Mastodon adapter returns its anchor and context result
+  as finished with no cursor. Visible partial and retry presentation remains
+  planned. Source-level acquisition state is not user-visible yet.
 - A conversation keeps an explicit identity. A server-issued identity may receive a server
   mark-read. A provisional local conversation clears unread state on this device and sends no
   server request until the server confirms the conversation.

@@ -16,6 +16,13 @@ data class ThreadContinuation(
 sealed interface ThreadLimitation {
     data class RequestLimit(val used: Int, val maximum: Int) : ThreadLimitation
     data class NodeLimit(val loaded: Int, val maximum: Int) : ThreadLimitation
+    /**
+     * The bounded breadth-first frontier cannot accept more work without
+     * dropping branches. [pending] is the current frontier size and
+     * [maximum] is the frontier capacity. This is a truthful frontier state,
+     * not a claim about the total descendant count.
+     */
+    data class PendingLimit(val pending: Int, val maximum: Int) : ThreadLimitation
     data class AncestorLimit(val loaded: Int, val maximum: Int) : ThreadLimitation
     data class DepthLimit(val depth: Int, val maximum: Int) : ThreadLimitation
     data class UnavailableParent(val parentId: EntityId) : ThreadLimitation

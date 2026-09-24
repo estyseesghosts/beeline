@@ -13,6 +13,7 @@ import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.DirectMessageRequest
 import me.foxtails.palustris.domain.DirectMessageSource
 import me.foxtails.palustris.domain.DirectThreadRequest
+import me.foxtails.palustris.domain.DirectThreadResult
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
@@ -64,7 +65,7 @@ class DirectMessageRepository(
         } ?: throw StaleDirectMessageWriter()
     }
 
-    suspend fun thread(id: ConversationId): List<Post> = withContext(ioDispatcher) {
+    suspend fun thread(id: ConversationId, cursor: String? = null): DirectThreadResult = withContext(ioDispatcher) {
         // Capture the local preview before the request. A send accepted during the request is
         // newer than the response and must win the preview merge.
         val beforeLastPostId = store.conversation(accountId, id)?.lastPost?.id
@@ -72,21 +73,30 @@ class DirectMessageRepository(
         // there is no identity to load, so the result is a normalized unsupported error instead
         // of a guessed conversation lookup.
         val anchor = beforeLastPostId ?: throw SourceError.Unsupported("direct.thread")
-        val remote = source.conversationThread(DirectThreadRequest(id, anchor))
+        val remote = source.conversationThread(DirectThreadRequest(id, anchor), cursor)
         authority.commitIfCurrent(accountId, writeGeneration) {
             val current = store.conversation(accountId, id) ?: return@commitIfCurrent remote
             val storedThread = store.thread(accountId, id)
-            // Merge with the stored thread so a late response cannot drop a cached post. Adapter
-            // order stays first. Absence from the response is not proof of chronology.
-            val merged = (remote + storedThread).distinctBy { it.id }
+            // Merge with the stored thread so a late response cannot drop a cached post.
+            // A continuation batch appends after stored rows. A fresh call keeps
+            // adapter transport order first. Absence from the response is not
+            // proof of chronology.
+            val merged = if (cursor != null) {
+                (storedThread + remote.posts).distinctBy { it.id }
+            } else {
+                (remote.posts + storedThread).distinctBy { it.id }
+            }
             val localSendDuringRequest = current.lastPost.id != beforeLastPostId
-            val lastPost = when {
-                localSendDuringRequest -> current.lastPost
-                remote.isNotEmpty() -> remote.last()
-                else -> current.lastPost
+            // Include the incumbent preview in the newest-post candidates. The
+            // bounded thread rows may omit the inbox lastPost, and absence is
+            // not proof of age. A send during the request still wins outright.
+            val lastPost = if (localSendDuringRequest) {
+                current.lastPost
+            } else {
+                (merged + current.lastPost).maxByOrNull(Post::publishedAtEpochMillis) ?: current.lastPost
             }
             store.save(accountId, current.copy(lastPost = lastPost), merged)
-            merged
+            remote.copy(posts = merged)
         } ?: throw StaleDirectMessageWriter()
     }
 

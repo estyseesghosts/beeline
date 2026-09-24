@@ -9,11 +9,13 @@ import me.foxtails.palustris.domain.ConversationId
 import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.DirectMessageRequest
 import me.foxtails.palustris.domain.DirectThreadRequest
+import me.foxtails.palustris.domain.DirectThreadResult
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.SourceError
+import me.foxtails.palustris.domain.ThreadAcquisitionState
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -42,7 +44,8 @@ internal class MastodonDirectMessageService(
         return Page(items, response.linkHeaderCursor())
     }
 
-    suspend fun conversationThread(request: DirectThreadRequest): List<Post> {
+    suspend fun conversationThread(request: DirectThreadRequest, cursor: String? = null): DirectThreadResult {
+        if (cursor != null) throw SourceError.Unsupported("direct.thread.continuation")
         validateConversationId(request.conversationId, "direct.thread")
         val anchor = loadAnchor(request.anchor)
         val context = JSONObject(api.get(
@@ -53,9 +56,12 @@ internal class MastodonDirectMessageService(
         ).body)
         val ancestors = context.optJSONArray("ancestors").toPostList(origin)
         val descendants = context.optJSONArray("descendants").toPostList(origin)
-        return (ancestors + listOf(anchor) + descendants)
+        val posts = (ancestors + listOf(anchor) + descendants)
             .filter { it.audience == Audience.Direct }
             .distinctBy { it.id }
+        // Mastodon context returns the full thread in two requests. It has no
+        // continuation, so every call finishes with no cursor.
+        return DirectThreadResult(posts = posts, acquisitionState = ThreadAcquisitionState.Finished)
     }
 
     /**

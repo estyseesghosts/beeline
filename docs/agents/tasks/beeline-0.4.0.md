@@ -1,342 +1,74 @@
-# Objective
+# Beeline 0.4.0 task state — 1D3 adapter boundary
 
-Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1C, 1D1-1D3, 1E1, 1E2, 2A1-2A4, 2B1-2B3, 2C1-2C3, and 2D1-2D3. Phase 2E is conditional.
+## Objective
 
-# Invariants
+Execute Beeline 0.4.0 plan phases 0-2 in verified slices. This record covers the reviewed 1D3 adapter slice only.
+
+## Invariants
 
 - Keep one authoritative state owner per lifetime.
 - Bind opaque cursors to account, query, route, and variant.
 - Validate origins before authenticated requests.
 - Keep protocol branches in adapters.
-- Keep Photo Grid state independent of Home.
-- Do not expose hidden quote or media content before reveal.
-- Do not claim measured retention without heap, disk, and Room measurements.
+- Do not compare opaque identifiers.
 - Preserve unrelated worktree changes.
 - Keep one slice to one commit.
 
-# Decisions
+## Current boundary
 
-- `docs/260923_current_state.md` is the resolved review input for the phases 0 and 1 re-traversal. The 260926 reference was a maintainer typo. This input decision is closed.
-- Option C approved (2026-09-24): a quote matching account-local muted hashtags shows a CW-style revealable `muted word: #tag` warning (tag mutes only). Muted WORDS deferred — no client-side word data exists (Mastodon `filtered` arrives stripped of the matched term; Misskey `isHidden` provides none; no adapter fetches filter/word-mute definitions). Re-entry requires a separately approved adapter/domain slice with Mastodon and Misskey semantics verified independently.
-- 1B5 is approved as a behavior change: each adapter applies a conservative 4 MiB response cap per operation and labels `ResponseLimitExceeded`. The separate Mastodon and Misskey slices are complete. Neutral transport response limits default to `null`.
-- The phases 0 and 1 re-traversal audit is complete. It requested no additional unspecified changes.
-- Slice 2E is conditional on a later UI change that needs it. Phases 0-2 do not trigger it. Record it as not triggered and confirm before running.
-- A Pixel Fold emulator is reachable. Foldable posture rendering and theme/font/animator emulator captures are recorded; physical-device, API 29, RTL, TalkBack, and signed-release checks remain unverified. Live-server evidence covers sign-in, timelines, notifications, profiles, and Photo Grid media on mstdn.ca and dvd.chat.
-- Architecture audit exit 0 means no new regressions against the baseline. It does not mean architecture completion.
-- Research for 0A and 0B can run in parallel. Keep commits ordered 0A, then 0B.
-- Five 200% text-scale decisions are recorded: tab scroll+caret approved; profile stats stacking approved; overlay priority approved; the large-font compact-tall variant is on hold awaiting a maintainer UI prototype; a new pending high-font measure row is approved. The full text lives in `docs/beeline_0.4.0.md` section "0B decisions".
-- The RTL axis is blocked: Beeline's in-app language catalog has 18 locales and none are RTL. `cmd locale set-app-locales me.foxtails.palustris --locales ar-XB` stored the locale, but the running app stayed `en_US/ldltr`; the override was reset to `[]`. RTL stays unverified. Evidence: `docs/rtl-attempt-notmirrored.png`.
-- Packets 3C1–3C3, amended 4D1, and 4E1–4E2 are registered in the plan as the 200% workstream. They are phase 3/4 work, outside the current phases 0–2 objective. No fix has been implemented.
+1D3 adapter is complete and reviewed. Visible 1D3 UI is not complete. The next implementation slice is 1D3 UI: visible partial-state and retry presentation for bounded direct-message thread continuation.
 
-# Completed
+The shared `DirectThreadResult` contract and mechanical repository and ViewModel plumbing are implemented. The ViewModel currently consumes only posts. It exposes no visible continuation or retry UI. That UI remains planned work, not implemented behavior.
 
-- Slice 1B characterization: `FeedViewModelRequestTest.failedPageKeepsCursorForARetry` already verified retained rows and cursor after a failed request, then retry; added an assertion that the failure is surfaced. Added `MastodonIntegrationTest.cancelingTimelinePageCancelsRequestAndAllowsRetry` for in-flight cancellation, no delivered page, and a subsequent successful retry.
-- Slice 0A is complete at `ba3fe53`. Verification: 51 Python tests passed; architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline; all 120 relative links across 11 touched Markdown files resolve. No source changes occurred.
-- Slice 0B requirements-classification work is recorded as executed at `72fafc4`; the foldable emulator posture pass is recorded at `4f28a69`. The re-traversal audit re-opened 0B: the register needs the four-to-six wide-button correction, captures are partial, and geometry approval is pending (queued as slice 2). The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
-- Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`.
-- 1C is complete across three commits: 1C-a `ec12ed1` (domain selector), 1C-b `6b33e3d` (presentation), and 1C-c (parity tests, honest names, and records; this slice).
-- Slice 1B1 is complete at `5207a96`. Timeline cursors use opaque, identity-bound route tokens.
-- The foldable emulator device-verification slice is complete as a documentation-only slice with no source changes. Pixel Fold API 36 posture rendering, compact and wide navigation, primary-surface navigation in both postures, and Photo Grid `Local` grouped-memory preservation across three posture changes passed. Live sign-in and feed evidence covers Mastodon `jmjmjm` on mstdn.ca and Misskey `ctr` on dvd.chat. Screenshots remain git-ignored evidence under `docs/`.
-- Measure sign-off arrived 2026-09-23 (maintainer): the emulator-observed values in baseline section 6 are approved. Three rows remain pending for missing device evidence: media dismissal threshold, physical-left caret, and physical-bottom-right wide action. With records commit `4fcaecd` (captures + register + decisions) and this approval, slice 0B is complete. The approval commit hash will be recorded at the slice boundary.
+## Final 1D3 adapter contract and bounds
 
-# Current boundary
+- Misskey thread acquisition is reply-rooted bounded breadth-first descent.
+- Fresh calls run at most 20 ancestor reads plus at most 3 `notes/children` requests.
+- Depth limit is 10. Accepted descendant cap is 200. Pending frontier cap is 200.
+- Total chain budget is 40 authenticated thread requests, including root and ancestor reads.
+- The thread cursor is version 4, variant `misskey-direct-thread-v2`. It carries accepted descendant IDs, cumulative limitations, loaded count, pending work, and chain request count.
+- Decode validates exact keys, value types, version, identity binding, loaded consistency, and limitation bounds before any request. Bad cursors reject as `Unsupported("direct.thread.continuation")` with zero requests.
+- Limitations accumulate across calls: uncertain truncation, node limit, depth limit, pending-frontier limit, ancestor limit, unavailable parent, and request limit.
+- Failed requests throw normalized errors. They never become limitations. Cancellation and `ResponseLimitExceeded` propagate.
+- Mastodon returns a finished result with no continuation.
+- Live Misskey and Sharkey child ordering is unverified.
 
-1B5-K is implemented, verified, low-reviewed, and recorded by the commit that includes these records. The base is `fc1f0da`. That commit includes the source, test, task-state, and handoff records. The task log and `logs/BUGS.txt` remain current on disk, unstaged, and outside the commit under `logs/*` hygiene.
+## Changed ownership
 
-`MisskeySource`, the six source-owned services, and the three capability-probe reads pass a 4 MiB cap to response reads. `MisskeyApi` remains unchanged, with nullable transport parameters defaulting to `null`. Every `MisskeySource.request` call has an explicit operation label. Thread acquisition keeps its `MAX_THREAD_RESPONSE_BYTES` arguments and inner error normalization. `MisskeyErrorMapper` remains unchanged. Streams remain unchanged. The focused oversized-post test asserts `SourceError.ResourceLimit("post")`, exactly one request, and `/api/notes/show`.
+- `domain/DirectMessageModels.kt`: `DirectThreadResult` and `ThreadLimitation.PendingLimit`.
+- `domain/DirectMessageSource.kt`: `conversationThread` returns cursor plus `DirectThreadResult`.
+- `data/misskey/MisskeyDirectMessageService.kt`: bounded BFS, v4 cursor, cumulative limitations.
+- `data/misskey/MisskeySource.kt`: thread call propagation.
+- `data/mastodon/MastodonDirectMessageService.kt` and `data/mastodon/MastodonSource.kt`: finished result, no continuation.
+- `data/directmessages/DirectMessageRepository.kt`: continuation merge and preview rule.
+- `ui/directmessages/DirectMessageViewModel.kt`: mechanical plumbing only; no visible UI change.
+- `DirectMessageSourceTest`, `DirectMessageRepositoryTest`, `DirectMessageViewModelTest`: focused coverage.
+- `docs/wiki/notifications-and-direct-messages.md` and `docs/agents/protocol-and-session-ownership.md`: contract notes.
 
-The low reviewer found no source defects. No UI behavior changed. The next implementation slice is 1D3 adapter work. The full unit suite remains known red with 16 failures documented below. Pixel Fold emulator rendering is device verified for compact and wide layouts. Physical-device, API 29, RTL, TalkBack, signed-release, and live-server oversized-response behavior remain unverified.
+## Verification
 
-The repaired 1B5-K APK was rebuilt with `gradlew.bat --no-daemon --console=plain :app:assembleDebug` and `GRADLE_OPTS=-Dorg.gradle.daemon=false`. The build passed. Pixel Fold emulator `emulator-5554` received the APK through `adb install -r`. The final direct adb pass verified committed CLOSED with hinge 0 and 1080x2092, then committed OPENED with hinge 180, no override, and 2208x1840. Wakeup and dismiss-keyguard succeeded in both states. `MainActivity` was RESUMED, visible, reportedDrawn, focused, and allDrawn. The keyguard was hidden, and the display was awake. No crash or ANR evidence appeared. This is final emulator rendering evidence for compact and wide layouts only. Live oversized-response, physical-device, API 29, RTL, TalkBack, and signed-release behavior remain unverified.
+Prior repair evidence, carried forward without new commands from this session:
 
-Verification from the 1B5-K base `fc1f0da`: focused `MisskeyIntegrationTest` passed. `MisskeySourceContractTest` passed. `MisskeyThreadContinuationTest` had five known plain-JVM `org.json.JSONObject` setup failures. `:app:lintDebug` passed. Python tool tests passed (51 tests). Scoped `git diff --check` passed. `:app:assembleDebug` passed with `BUILD SUCCESSFUL`; APK: `app/build/outputs/apk/debug/app-debug.apk`. The exact architecture audit command exited 0 and reported 609 findings, with no regression findings. The known-red full suite and `assembleRelease` were not run. Live oversized-response behavior was not exercised.
+- `DirectMessageSourceTest`: 50 passed.
+- `DirectMessageRepositoryTest`: 19 passed.
+- `DirectMessageViewModelTest`: 16 passed.
+- `MisskeyIntegrationTest`: 48 passed.
+- `MastodonIntegrationTest`: 58 passed.
+- `:app:lintDebug`: passed.
+- Full `test assembleRelease` remains known red and was not run.
 
-## Re-traversal audit
+## Not verified
 
-The audit compared phases 0 and 1 of `docs/beeline_0.4.0.md` with executed commits. The resolved review input is `docs/260923_current_state.md`. No additional unspecified changes were requested.
+- Live Misskey and Sharkey thread ordering.
+- Device rendering and visible continuation or retry behavior.
+- Physical-device, API 29, RTL, TalkBack, and signed-release checks.
 
-- Meets: 0A, L0, 1A, 1B1, 1B2, 1B3, 1B4, 1D1, and 1D2.
-- Gaps found at audit time: 0B had a four-button register where the plan requires six, a partial capture matrix, and no approved geometry measures. The register now records six wide destinations, the capture matrix is populated for theme/font/animator/IME/hinge/landscape axes, 200% failures are registered, and the approved emulator measures are recorded. The three pending measure rows are media dismissal threshold, physical-left caret, and physical-bottom-right wide action. The other audit gaps remain: 1B needs independent cancellation and failed-next-page-retains-rows evidence. The separate 1B5 response-cap and operation-label gap is resolved by 1B5-M and 1B5-K.
-- Not executed: 1D3, 1E1, and 1E2.
+## Hygiene
 
-# Files involved
+- Staged `docs/classic_navigation.md`, `.opencode/*`, `importantdocs/writing_style.md`, deleted PNGs, and untracked tools scripts and caches remain untouched and unstaged.
+- The task log at `logs/260924-180000.txt` remains ignored and unstaged.
+- This session ran no commands, staged nothing, and committed nothing.
 
-0B documentation: `docs/agents/beeline-0.4.0-ui-baseline.md`, `docs/agents/documentation-inventory.md`, `docs/agents/README.md`, this task state, `docs/agents/handoff.md`, and `logs/260923-035132.txt`. Later source files and tests appear in the owner map below.
+## Last safe boundary
 
-Forward owner/caller/test map for phases 1-2. Paths are relative to `app/src/main/java/me/foxtails/palustris/` unless noted. Tests are under `app/src/test/java/me/foxtails/palustris/`. These are planned checks, not 0A results.
-
-| Slice | Owner files | Key symbols / lines | Callers and boundary | Tests to run in that slice |
-| --- | --- | --- | --- | --- |
-| 1A | data/mastodon/MastodonModerationService.kt; data/misskey/MisskeyApi.kt (GET helper prefixes /api/) | relationship :74, profileRelationship :85, validateTarget :104; MisskeyApi.get :172 | MastodonSource.setBlocked/setMuted :156-162, removeBlockedAccount/removeMutedAccount :392-394 | ModerationServiceTest, data/mastodon/MastodonIntegrationTest; both adapters' moderation contracts + lint |
-| 1B1 | data/mastodon/MastodonPageCursor.kt, MastodonPageClient.kt, MastodonTimelineService.kt; MastodonSource source-instance wiring | timeline route cursor binds timeline kind, account/session, instance, and variant | MastodonIntegrationTest; source contract regression set; cursor failures are rejected before another request |
-| 1B2 | data/mastodon/MastodonSource.kt, MastodonPageClient.kt, MastodonIntegrationTest.kt | savedPosts and searchHashtag use route-bound opaque cursors; legacy raw replay removed | saved-post and hashtag UI through SocialSource; route, query, account, path, and allowlist validation |
-| 1B3 | data/mastodon/MastodonModerationService.kt | list :55-59, decodeCursor :115-128, ModerationCursor in domain/ModerationModels.kt :13-18 | blocked/muted list pagination; retain ModerationCursor account/kind/variant fields | ModerationServiceTest :79-101; wrong-path and altered-filter Link cases |
-| 1B4 | data/mastodon/MastodonSource.kt | unfavorite :271-275 (raw id) vs favorite :263-267 (encodePathSegment :537-538) | SocialSource.unfavorite | MastodonSourceContractTest, MastodonIntegrationTest :778-786 pattern; reserved-character IDs |
-| 1B5 | MastodonSource.kt first, then MisskeySource.kt — separate commit per adapter | request wrapper :474-488 (ResponseLimitExceeded -> ResourceLimit("thread") :479-480); Misskey :616-637 (:632-633) | adapter error normalization for shared UI | each adapter's integration/contract tests; characterize a capped non-thread operation first |
-| 1C | ui/posts/PostRow.kt, ui/posts/SinglePostScreen.kt; inspect ui/photogrid/PhotoPagerSizing.kt | row quote card :163-186, warningDecision :89-91; detail PhotoGrid branch :190-313, unconditional detail quote :295-311 | Home/Search/Profile rows and Photo Grid detail share the visibility decision; photo geometry stays distinct; grid filtering PhotoGridScreen.kt :99-114 | ui/SinglePostScreenTest, ui/PostTextPresentationTest, domain/ContentWarningPolicyTest; hidden quotes, CW, muted tags, placeholder/omit, no semantics leak |
-| 1D1 | data/misskey/MisskeyDirectMessageService.kt | conversations :28-49, cursor :48, conversationThread :51-66, markConversationRead :76-78 no-op, 404 fallback :80-84, encode/decodeCursor :110-115 | MisskeySource.conversations :384-391; repository owns local read state; compare MastodonDirectMessageService separately | DirectMessageSourceTest, data/directmessages/DirectMessageRepositoryTest, ui/directmessages/DirectMessageViewModelTest |
-| 1D2 | data/misskey/MisskeyDirectMessageService.kt | per-stream raw-item continuations, exhaustion, notification-ID fallback, cursor identity binding | independent last-raw-item cursors and exhaustion per stream; 404 fallback with notification IDs and latched mode; binding to account/origin/sessionRevision/sourceInstance/variant; mentions-first endpoint order with deduplication after merge; identity is verified only when a returned parentless post establishes the reply root, otherwise provisional | DirectMessageSourceTest; asymmetric pages, duplicates, malformed/foreign cursor, 404 fallback; independent account/revision/instance rejection; bounded request waits in tests |
-| 1D3 | MisskeyDirectMessageService.kt conversationThread; DM repository/ViewModel if contract expands | children single fetch :62 (limit 30, no continuation) | long reply-rooted conversations need bounded continuation + visible partial/retry | DirectMessageSourceTest, DirectMessageRepositoryTest, DirectMessageViewModelTest; long thread, failure, account replacement |
-| 1E1 | data/misskey/MisskeySource.kt, data/mastodon/MastodonSource.kt | Misskey :690 DIRECT_PAGE_LIMIT, :704-708 SECURE_CREDENTIAL_FAILURE_CODES, :709 MISSING_PUSH_REGISTRATION_CODES (all declaration-only; live values in MisskeyPushService :34/:46/:49); Mastodon :491 DEFAULT_NOTIFICATION_LIMIT, :535 DIRECT_CONVERSATION_LIMIT (live in MastodonNotificationService :146/:180, MastodonDirectMessageService :116/:129) | facade residue only; compare live service values before deleting | both adapter integration/contract suites; compilation + lint |
-| 1E2 | data/mastodon/MastodonMapper.kt | editableProfile :88 and legacyEditableProfile :117 take unused origin param | callers MastodonSelfProfileService.kt :31,:69,:33,:71; output must be unchanged | MastodonIntegrationTest self-profile tests; mapper fixtures; adapter contracts |
-| 2A1 | data/misskey/MisskeyApi.kt, HttpClientPool.kt, HttpResponse.kt; Mastodon/auth/DI consumers | ServerAddress.normalize :33-43, execute :211-231, readBody :233-248, HttpLayerConfig :8, clientFor :23-49, linkHeaderCursor :10-18 | importers: SourceFactory.kt :4-5, auth/MisskeyAuth :4-5, auth/MastodonAuth :4-6, 11 Mastodon services, di/AppModule :31,:89, tests (HttpClientPoolTest, WebSocketTransportTest, MisskeyIntegrationTest, ModerationServiceTest, DirectMessageSourceTest, ProfileSourceContractTest, NotificationAdapterContractTest, SocialSourceContractTest, CrossCuttingTest, SessionLifecycleTest, PushCancellationTest, AccountManagerFixtures) | HttpClientPoolTest, WebSocketTransportTest, Api29CompatibilityTest, both adapter integration suites |
-| 2A2 | move HttpClientPool + HttpResponse + neutral primitives to new data/transport/ | no behavior change | update imports across Mastodon/auth/DI/tests | 2A1 characterization set + both adapter contracts + auth tests |
-| 2A3 | data/transport/ neutral authenticated request client; Misskey JSON and /api/ prefix stay in data/misskey/MisskeyApi.kt | get :172-182 and post :57-66 are the Misskey-prefixing helpers; postForm/patch/put/delete/postMultipart/getUrl/webSocket are already neutral; WebSocket :191-209 | migrate Mastodon callers; preserve exact URL shapes, bearer, redirect-off, timeout, size-limit, cancellation | MastodonIntegrationTest, MastodonSourceContractTest, WebSocketTransportTest, lint |
-| 2A4 | data/auth/*, di/AppModule.kt, data/SourceFactory.kt; remove old generic transport placement | MisskeyAuth :31-34, MastodonAuth :30-44, AppModule :89,:101-125,:221-230, SourceFactory :16,:25,:44 | authentication, source creation, capabilities, remaining shared callers | AuthGateway tests, both adapter suites, transport tests, lint + architecture audit; update docs/agents/protocol-and-session-ownership.md |
-| 2B1 | ui/notifications/NotificationLaunchRouter.kt; data/notifications/AndroidNotificationPresenter.kt, AndroidNotificationDismissReceiver.kt; MainActivity.kt | NotificationLaunch :18-21, prefs notification_launch keys origin/account_local_id/protocol/notification_id :23-63, parse :109-129, intentFor/launchKey :131-154; presenter prepare :52-86, present :129-168 (PendingIntent identity = AndroidNotificationIds requestCode + data URI + UPDATE_CURRENT\|IMMUTABLE); receiver :12-29; MainActivity :41,:74,:162-174 | tap/dismiss intents -> router -> NotificationLaunchHost :23-54 acceptance + acknowledgement | ui/notifications/NotificationLaunchRouterTest, NotificationLaunchHostTest, data/notifications/NotificationPresentationTest |
-| 2B2 | move NotificationLaunch value, codec, store below UI into data/notifications/; host keeps navigation acceptance/ack | data imports of ui.notifications today: AndroidNotificationPresenter.kt :23-25, AndroidNotificationDismissReceiver.kt :12 | preserve prefs file name/keys, intent extras, pending-intent identity, process-recreation survival | 2B1 tests + stale/foreign intent + upgrade-survival cases; lint |
-| 2B3 | data/notifications/AndroidNotificationPresenter.kt formatting split | NotificationPresentationFactory uses R.string; ui/notifications/NotificationLabelText.kt :35 text extension imported by data | data must import no ui.notifications symbol; pass prepared text instead | NotificationPresentationTest, NotificationLaunchRouterTest; notification repository tests + lint + audit |
-| 2C1 | move AccountSearchState from ui/feed/FeedState.kt :34-43 to ui/search/ | FeedState :15 field, FeedViewModel :91 controller, imports in SearchContract/SearchScreen | move type only; test imports updated | FeedViewModelRequestTest, SearchPanelRestorationTest; compile |
-| 2C2 | ui/search/SearchController.kt lifetime; ui/feed/FeedViewModel.kt, FeedHost.kt, ui/session/ConnectedEntryStore.kt | controller ctor :17-28, feed search delegation :289-299, stop :350-361, FeedHost VM key feed-$accountId-$sessionGeneration :53-72, entry store :24-58 | explicit connected lifetime, release, projection subscription; mirror-state hazard noted (controller _state + FeedState.accountSearch) | FeedViewModelRequestTest, SearchPanelRestorationTest, PostProjectionCoordinatorTest, ConnectedEntryStoreTest |
-| 2C3 | ui/photogrid/PhotoGridController.kt, PhotoGridFeedState.kt lifetime | controller ctor :27-43, preferences FilePhotoGridPreferencesRepository :31-60 (photo-grid-preferences.json), stop :190-197 | independent Photo Grid feed/timeline/hashtags/prefs/pager; do not reuse Home state | PhotoGridFeedViewModelTest, PhotoGridScreenTest, projection + session tests |
-| 2D1 | ui/thread/PostThreadViewModel.kt | default private InMemoryPostPreferencesRepository() :50, import :16, assisted factory :668-671, binding AppModule :160-162 | ThreadHost + 16 test constructions must pass an explicit repository | ui/thread/PostThreadViewModelTest; session replacement + prefs refresh |
-| 2D2 | ui/profile/ProfileViewModel.kt; domain/ServerCapabilities.kt + both capability probes if correct owner | likedAvailable rule :486-496 (self: capabilities.likedPosts != Unsupported :491-493; other: protocol == MISSKEY :494-495), import :26; probes set likedPosts Supported (MisskeyCapabilityProbe :61, MastodonCapabilityProbe :198) with no self/other signal | adapter/source-owned eligibility; keep signed-in Liked on both protocols, other-Misskey yes, other-Mastodon no; unknown/denied/unsupported distinct | ProfileViewModelTest :100-143, ProfileScreenTest :262, adapter contract tests + lint |
-| 2D3 | ui/posts/PostRow.kt favouriteIconFor :238-245, import Protocol :42 | PostRowPresentation (PostRowCallSurface.kt :30-38) has no style field; capabilities.primaryFavourite mode is mutation semantics, not artwork | supplied presentation rule replaces Protocol.MASTODON branch; favourites stay distinct from emoji reactions | new focused tests (favouriteIconFor has zero coverage today), SinglePostScreenTest, adapter contracts |
-| 2E | conditional: ui/shell/ShellContent.kt (295 lines), ShellDestinationContent.kt (358), DestinationCallbacks.kt bundles :16-44 | three callback bundles already exist; parameter count is the residual surface | shell stays composition root; extract only if a later UI change needs it | ShellCharacterizationTest, HomeFeedTest, ProfileScreenTest — only if triggered |
-
-# Phases 3-10 map
-
-This slice did not derive a detailed owner/caller/test map for phases 3-10. See `docs/beeline_0.4.0.md`, section "File-to-slice locator". Recheck source and tests before each later slice.
-
-# Verification
-
-- 1B characterization corrected combined command ` .\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.data.mastodon.MastodonIntegrationTest" --tests "me.foxtails.palustris.MisskeySourceContractTest" --tests "me.foxtails.palustris.ui.feed.FeedViewModelRequestTest"`: exit 0; `BUILD SUCCESSFUL`; 73 tests completed (MastodonIntegrationTest 57, MisskeySourceContractTest 6, FeedViewModelRequestTest 10). The earlier recorded total of 63 reflected only the first two classes; the incorrect feed selector did not run the feed class.
-- 1B characterization feed-only command ` .\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.ui.feed.FeedViewModelRequestTest"`: exit 0; `BUILD SUCCESSFUL`; 10 tests completed.
-- XML results confirm `MastodonIntegrationTest.cancelingTimelinePageCancelsRequestAndAllowsRetry` and `FeedViewModelRequestTest.failedPageKeepsCursorForARetry` both executed with no failures.
-- 1B characterization ` .\gradlew.bat --no-daemon --console=plain :app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
-- 1B characterization `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- 1B characterization `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 607 findings, no reported baseline regression.
-- Cancellation test initial attempt failed because the bounded request read consumed the queued first-page request. The test now consumes the first-page request before asserting the canceled continuation; the final focused gate passes.
-- The mocked integration test does not verify live-server cancellation behavior. Device behavior was not required or tested.
-
-- The 1B4 slice consists of `MastodonSource.kt`, `MastodonIntegrationTest.kt`, and these two records; the whole-worktree diff also lists unrelated pre-existing changes that are never staged or committed with a slice.
-- 0A verification is recorded above: 51 Python tests; architecture audit exit 0 with 605 findings and no new regressions; 120 relative links resolved.
-- The initial focused Gradle run exited 1 with two `NavigationTest` failures. `NavigationTest` then failed standalone at base commit `ba3fe53` with an empty `app/src` diff; this pre-existing issue is logged in `logs/BUGS.txt` and the task-state blockers. The final 0B gate excluded `NavigationTest` and passed the seven-class set: exit 0, 79 tests across `MotionTokensTest`, `SpringyInteractionsTest`, `LargeLayoutModeTest`, `WideNavigationTest`, `HomeFeedTest`, `AppShellStateTest`, and `SettingsDisplayTest`.
-- `NavigationTest.closingComposerAutosavesUnsavedText` and `NavigationTest.draftsSurviveActivityRecreationAndCanBeDeleted` fail when run standalone and in the combined set. Both failures reproduce at base commit `ba3fe53` with an empty `app/src` diff. This is a pre-existing open defect; its cause is not established. The failures are excluded from the 0B gate for that reason only and are tracked in `logs/BUGS.txt`.
-- 0B `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- 0B architecture audit `--check`: exit 0; 605 findings, no new regressions against baseline.
-- 1A review rerun `ModerationServiceTest`: exit 0; Gradle reported `BUILD SUCCESSFUL`.
-- 1A review rerun adapter integration and contract tests: exit 0; Gradle reported `BUILD SUCCESSFUL`.
-- 1A Mastodon integration/source contract and Misskey integration tests: exit 0; Gradle reported `BUILD SUCCESSFUL`. The test task did not print a test count.
-- 1A initial `:app:lintDebug`: exit 1; 1 error, 92 warnings, and 2 hints. The `UnusedBoxWithConstraintsScope` finding was outside the 1A diff and is resolved by L0 below.
-- L0 `:app:lintDebug`: exit 0; Gradle reported `BUILD SUCCESSFUL` after replacing the unused `BoxWithConstraints` with `Box`.
-- L0 shell regression tests (`ShellCharacterizationTest`, `AppShellStateTest`): exit 0; Gradle reported `BUILD SUCCESSFUL`.
-- L0 `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- L0 architecture audit `--check`: exit 0; 605 findings, with no new regressions against the baseline.
-- 1A `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- 1A architecture audit `--check`: exit 0; 605 findings, with no new regressions against the baseline.
-- Review rerun `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- Review rerun architecture audit `--check`: exit 0; 605 findings, with no new regressions against the baseline.
-- `lintDebug` was not rerun. L0 lint passed, and the only main-source change was a comment.
-- Final `git status --short`: exit 0; staged `docs/classic_navigation.md` and unrelated dirty files remain unchanged. `git rev-parse --short HEAD`: exit 0; `cbf8698`.
-- 0B Markdown links: eight baseline-file targets were checked against direct file reads and glob; all eight targets resolve. Source/test directory links resolve by glob.
-- Register: 68 rows — 29 binding-specification rows, 26 proposal rows, and 13 polish research/reference rows. Binding clauses restated in proposal rows remain part of those proposal rows and do not add separate register rows or change the binding status of the original specification clauses. Several proposal rows also flag unverified device measures.
-- No source changes occurred. Foldable-emulator posture rendering and live sign-in/feed loading on mstdn.ca and dvd.chat are device/live verified (emulator pass 2026-09-23). Physical-device, API 29, theme/font/animator/RTL/TalkBack, signed-release, and broad live-server behavior remain unverified.
-
-# Next
-
-Next: 1D3 adapter, the Misskey direct-message child-continuation slice. Later queued work includes 1D3 UI, 1E1, and 1E2. Muted-word data remains deferred pending approval and separate protocol-semantic review. The decision-4 UI prototype remains the only awaited input for its separate workstream.
-
-# Blockers
-
-- Foldable-emulator posture rendering and live sign-in/feed loading on mstdn.ca and dvd.chat are device/live verified (emulator pass 2026-09-23). Physical-device, API 29, RTL, TalkBack, signed-release, and broad live-server behavior remain unverified. Live-server behavior for the approved response cap (1B5-M/1B5-K) and direct-message child continuation (1D3) remains unverified.
-- The Android 15 system-bar instrumentation failure remains recorded in `logs/BUGS.txt`.
-- No empirical retention measurements exist.
-- 0B measure sign-off is received. Media dismissal threshold, physical-left caret, and physical-bottom-right wide action remain pending for lack of device evidence. RTL, TalkBack, physical-device, API 29, and signed-release checks remain unverified as listed above.
-- RTL remains unverified. The app has no RTL locale; the per-app `ar-XB` override does not flip layout. Evidence: `docs/rtl-attempt-notmirrored.png`.
-- The observed 200% failures are registered as 3C/4E packets and are not fixed. A maintainer UI prototype for the large-font variant is awaited (decision 4).
-- Tighten `AppLocaleControllerTest.everyLocaleResolvesATranslatedValueOrFallback` and `LocalizationResourceTest.localeCatalogMatchesResourcesEnumAndAndroidConfig` when catalogs return.
-- The residual 03-G ordering risk remains in the Plan 03 task state.
-- No full green gate has passed. One full run executed during 1B1 and is red with 16 failures (above).
-- NavigationTest has two failures. Their pre-existing status is separately verified at `ba3fe53` with an empty `app/src` diff. The cause is not established. Investigate in a dedicated slice before phase 10.
-- The 14 failures are DraftActionsTest (2), CapabilityCacheTest (2), MisskeyThreadContinuationTest (5), and NotificationSyncOrchestratorTest (5). Their executed test and production sources are byte-identical to `af1f983`; `git diff af1f983 --name-only` lists none of them. Direct grep finds no reference from those classes and subjects to symbols changed by L0, 1A, or 1B1. Focused runs reproduce all 14 failures. Transitive closure was not exhaustively proven. Introduction commits were not bisected because `git worktree add` was blocked by permission. The baseline was not executed. Product-versus-environment cause is not established. These failures are not attributable to the 0.4.0 slices by available evidence. Do not weaken or skip tests. A dedicated investigation slice owns these failures.
-- Full unit suite is RED (16 failures in `test assembleRelease`). A dedicated investigation slice must restore full-suite green before the phase-10 release gate.
-- The intended 1B5-K slice boundary was the source, test, task-state, and handoff updates, recorded by the commit that includes these records.
-- `MisskeyThreadContinuationTest` still has five plain-JVM failures because `org.json.JSONObject` calls are not mocked. These failures were not caused by the 1B5-K changes. Do not weaken or skip these tests.
-- 1D3, 1E1, and 1E2 have not been executed.
-- 1B characterization is complete. The feed-level failed-page case already asserts retained rows and cursor; Mastodon cancellation is independently covered by `cancelingTimelinePageCancelsRequestAndAllowsRetry`.
-
-# 1B1 verification
-
-- `:app:testDebugUnitTest --tests "me.foxtails.palustris.data.mastodon.MastodonIntegrationTest"`: exit 0; `BUILD SUCCESSFUL` after the final loop-guard fix.
-- `:app:testDebugUnitTest --tests "me.foxtails.palustris.data.mastodon.MastodonSourceContractTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest"`: exit 0; `BUILD SUCCESSFUL`.
-- `:app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
-- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- Architecture audit `--check`: exit 0; 605 findings. No new regressions were reported.
-- Full `test assembleRelease`: exit 1. Release assembly completed, but 16 of 1,265 JVM tests failed. Failures: `DraftActionsTest.saveFailureReportsError`, `DraftActionsTest.deleteFailureStillCompletesAndReports`, `CapabilityCacheTest.oldSourceReadAfterReplacementMissesAndPublishesNothing`, `CapabilityCacheTest.lateProbeAfterRemoveAndReAddWithSameRevisionCannotPublish`, `MisskeyThreadContinuationTest.sourceRejectsForeignAccountAndFocalWithoutNetworkOrConsumption`, `MisskeyThreadContinuationTest.sourceContinuationTokenIsOpaqueUuidAndSingleUse`, `MisskeyThreadContinuationTest.sourceReleasesContinuationStoreBeforeNetworkWork`, `MisskeyThreadContinuationTest.sourcePreservesTransportOrderAcrossContinuations`, `MisskeyThreadContinuationTest.sourceValidatesSessionBeforeConsumingContinuation`, five `NotificationSyncOrchestratorTest` cases (`reAddRejectsOldTokenAndAcceptsReplacement`, `productionRemovalRejectsLateEventsAndDropsGenerationEntry`, `generationsStayMonotonicAcrossRepeatedRemoval`, `unregisterRejectsLateStreamEventsAndRemovesActiveEntry`, `removalRightAfterPublishCancelsPollWithoutOrphan`), and the two documented `NavigationTest` failures. The cause and pre-existing status of failures beyond the two documented NavigationTest cases are unverified.
-- Triage rerun of the four classes reproduced the same 14 failures in the focused run. The baseline identity, no-reference evidence, and conclusion are recorded in Blockers and `logs/BUGS.txt`; product-versus-environment cause and exact introduction commit remain unknown.
-- Added cursor regression tests: `timelineCursorIsBoundToAccountSessionAndSourceInstance` checks different account, session revision, and source instance each reject as `Unsupported("pagination.cursor")` with unchanged request count. `timelineCursorRejectsUnsafeDecodedUrlsAndHardenedQueries` checks hostile port, userinfo, fragment, scheme, path, unknown key, duplicate pagination key, empty pagination value, and `local=false` on Local before requests. `timelineRejectsMalformedCursorsAndStopsWhenLinkIsMissing` checks no-Link returns null and malformed Base64, truncated JSON, and unknown version reject with unchanged request count.
-- Final `git status --short`: exit 0; 1B1 changed source, test, handoff, and task-state files plus the new codec and ignored task logs. Existing unrelated changes and the staged `docs/classic_navigation.md` remain present. `git diff --stat` reports unrelated pre-existing dirty changes too. `git rev-parse --short HEAD`: exit 0; `af1f983`. Nothing was staged by this task.
-- Cancellation coverage was not added. Cancellation remains propagated by `MisskeyApi.execute`; this contract was not independently exercised here.
-- The first compile attempt exited 1 because the JSON library does not expose `keySet()`. The codec now reads keys through the iterator.
-- The tests assert an opaque timeline cursor, Local/Federated second-page wire routes, rejection of raw and cross-route cursors before another request, and rejection of an invalid Local Link before returning a cursor.
-- Raw URL cursors are rejected because a server-supplied URL must not choose an authenticated route.
-- Cancellation coverage was not added. Cancellation remains propagated by `MisskeyApi.execute`; it was not test-verified here.
-- Timeline response order remains server order. Opaque status IDs are not compared.
-- `NavigationTest` was excluded from the 0B focused gate; its two failures appear in the full-suite run. Device and live-server behavior remain unverified.
-- Review repair added `invalidCursorOnUnprimedSourceIsRejectedBeforeCapabilityProbe` (unsupported cursor and zero requests), `cursorEqualToCurrentRequestUrlIsRejectedBeforeRequest` (unsupported cursor and zero requests), and `cursorPayloadTamperingAndInvalidQueryShapesAreRejectedWithoutRequests` (changed query, variant, string version, multiple pagination keys, duplicate/empty local, all unsupported with unchanged request count). Local and Federated second-page cases assert the bearer header. These repair tests pass in the focused integration run.
-
-# Last safe commit
-
-1B5-K base: `fc1f0da`. Git history is authoritative for the exact boundary hash. The commit that includes these records also includes the source, test, task-state, and handoff records. The task log and `logs/BUGS.txt` remain current on disk, unstaged, and outside the commit under `logs/*` hygiene. Keep staged `docs/classic_navigation.md` exactly as found and outside that commit. Use `git log -1` at the start of the next session. The next implementation slice is 1D3 adapter.
-
-# 1D1 verification
-
-- Plan contract: “Characterize two Misskey inbox streams and the read no-op with adapter and repository tests.” The plan identifies `conversations` fan-out at `MisskeyDirectMessageService.kt:28-49`, `markConversationRead` at `:76-78` as a no-op, and the repository as owner of local read state. 1D1 changes tests and adds a source comment; runtime behavior does not change.
-- The streams are `notes/mentions` and `users/notes`, both POST requests made in that order by `MisskeyDirectMessageService.conversations`. Existing 404 fallback to `i/notifications` remains separate and unchanged.
-- `DirectMessageSourceTest.misskeyInboxStreamsShareUntilIdAndPreserveMappedTransportItems` checks exact POST routes and serialized request bodies, mapped post IDs/text, response ordering, continuation presence, and the decoded continuation value `mentioned`. `misskeyInboxCursorFansOutSameUntilIdAndMergesByTimestamp` uses unequal timestamps and asserts merged item order `m-new, s-new, m-old`; it checks both continuation POST methods, routes, and complete request bodies, including `untilId: m-old`. `misskeyReadValidationNoOpMakesNoRequestEvenWhenRepeated` asserts repeated valid reads make zero requests and blank/foreign-origin IDs throw `Unsupported("direct.read")` without requests. `misskeyInboxServerFailureMapsWithoutLeakingToken` checks HTTP 503 maps to `SourceError.ServerError` and walks every cause message for token absence. The fixture token is a non-secret test double asserted only as part of expected request-body bytes; production tokens never appear in tests or errors; error cause chains are asserted token-free.
-- `DirectMessageRepositoryTest` already covers preserving local read state during refetch, verified read dispatch, provisional local-only reads, and stale-writer behavior; these existing tests were included in the focused run.
-- Historical 1D1 characterization: one cursor derived from the oldest timestamp across both streams fanned out unchanged to both endpoints. 1D2 replaced that behavior with per-stream raw-item continuations. Opaque identifiers are not compared. Long child continuation remains 1D3 scope.
-- `:app:testDebugUnitTest --tests "me.foxtails.palustris.DirectMessageSourceTest" --tests "me.foxtails.palustris.data.directmessages.DirectMessageRepositoryTest"`: exit 0; `BUILD SUCCESSFUL`.
-- The source-contract test class is `MisskeySourceContractTest`, declared in `SocialSourceContractTest.kt`; `MisskeyIntegrationTest` extends it.
-- `:app:testDebugUnitTest --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.MisskeySourceContractTest"`: exit 0; `BUILD SUCCESSFUL`.
-- `:app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
-- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 606 findings, no new baseline regressions.
-- Production behavior, Mastodon code, and shared/domain contracts did not change. Device and live-server checks remain unverified.
-- Start boundary: 1C was complete at `71c6f7d`; last safe commit = `71c6f7d`. The staged `docs/classic_navigation.md` and unrelated dirty paths remain untouched. No staging or commit occurred.
-
-# 1D2 review repair
-
-- Requirement/root cause: one timestamp-selected cursor was fanned out to both Misskey inbox streams. A stream's oldest item could incorrectly advance the other stream and skip posts.
-- Identity decision: `SocialSourceFactory` supplies `sessionRevision` to `MisskeySource` from `Session`; `MisskeySource` creates one UUID source-instance identity per source, matching the 1B1 Mastodon ownership pattern. No new authority was added. `MisskeyDirectMessageService` is constructed once as a source-owned property.
-- Owner/caller/test boundary: `SocialSourceFactory.create` passes session identity and revision to `MisskeySource`; `MisskeySource` owns the service and cursor identity; `DirectMessageRepository.conversations` passes the opaque cursor through; `DirectMessageViewModel.loadMore` stops at null and blocks repeated cursors. `DirectMessageSourceTest` verifies the Misskey wire and cursor contract; repository and ViewModel tests cover pass-through and paging state.
-- Cursor fields bind version, variant, origin, account, session revision, source instance, mentions mode and feed progress, fallback notification progress, and sent progress. Exhaustion is explicit. JSON value types are strict.
-- Each continuation comes from that endpoint's last raw returned item, before direct-message filtering. Empty pages or nonempty pages without a usable last ID exhaust only that stream. Later pages skip exhausted streams.
-- A 404 latches mentions to filtered `i/notifications`, with a separate notification-ID continuation. Later pages do not retry `notes/mentions`; a fresh null cursor retries it. Other failures keep normal mapping and do not latch.
-- Merge order is mentions endpoint order followed by sent endpoint order, then deduplication; the mentions copy wins. Conversation groups retain first-seen group order. Each group's displayed last post remains its latest post. This replaces 1D1's timestamp-sorted cross-stream expectation as directed by the plan: “Use returned endpoint order and deduplicate after merging.”
-- Legacy cursors without stream binding reject as `Unsupported("direct.pagination")` before requests. Cross-account, cross-session-revision, and cross-source-instance cursors also reject before requests. Account replacement lifecycle behavior remains 1D3 scope.
-- Plan-directed assertion change: `misskeyInboxCursorKeepsPerStreamProgressAndUsesEndpointOrderInsteadOfTimestamp` now expects `m-new, m-old, s-new` rather than 1D1's `m-new, s-new, m-old`. The duplicate test proves the mentions copy wins despite different content and time. Per-endpoint body checks retain independent returned IDs.
-- The opaque JSON payload uses `account`, consistent with `MastodonPageCursor`.
-- Added tests for stream exhaustion, id-less-page stop, notification-ID fallback wire continuation and mode latch, fresh-cursor retry, strict numeric and ID field types, raw progress for filtered pages, and distinguishable dedup copies. Existing wire-byte, identity-rejection, read no-op, and token-safe failure assertions remain.
-- `docs/wiki/notifications-and-direct-messages.md` already covered direct-message threads but not pagination. Added the current inbox cursor and fallback contract. No dedicated agent DM pagination page exists; the active task state covers this boundary.
-- The two aborted 1D2 sessions did not establish a verification gate. Their reported gate claims are withdrawn; only the fresh command results listed here count as 1D2 verification.
-- Historical repair attempt: this gate timed out twice (900000 ms and 1800000 ms) without a test result. The bounded-wait repair and successful later run are recorded in the 1D2 request-wait repair verification below; this timeout is not a current blocker.
-- `:app:testDebugUnitTest --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.MisskeySourceContractTest"`: exit 0; Gradle reported `BUILD SUCCESSFUL`.
-- `:app:lintDebug`: exit 0; Gradle reported `BUILD SUCCESSFUL`.
-- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 607 findings and no new baseline regressions.
-- `git diff --check`: exit 1 because of trailing whitespace in pre-existing `.opencode/agents/orchestrator.md` and `.opencode/agents/targeted_fixer.md` changes; those unrelated files remain untouched.
-- `git status --short`: exit 0; existing staged `docs/classic_navigation.md` and unrelated dirty work remain present.
-- `git rev-parse --short HEAD`: exit 0; `e46e44c`.
-- The mandated full-suite/release gate was not run because this dispatch explicitly prohibited running the full suite. Existing task-level full-suite red status remains open.
-- Start boundary: 1D1 complete at `e46e44c`; last safe commit = `e46e44c`. This repair session did not stage or commit. Existing staged `docs/classic_navigation.md` and unrelated dirty work remain untouched.
-
-## 1D2 request-wait repair verification
-
-### Historical pre-commit 1D2 verification
-
-The following results were recorded before 1D2 was committed later as `fa087d0`.
-
-- The aborted sessions' gate claims are withdrawn. The first repair gate-1 run exited 1 because of a `NetworkUnavailable` fixture-count mistake, which was corrected. A prior hang came from a fallback test waiting for a skipped sent-stream request. The corrected request sequence is 3/4/6. The final helper now covers every request-consuming wait.
-- `DirectMessageSourceTest.kt` now uses `recordedRequest(server)` at both remaining unbounded sites. Searching the whole test file finds only `server.takeRequest(5, TimeUnit.SECONDS)` inside that helper. Assertions and fixtures are unchanged by this repair.
-- Identity evidence rule: a returned Misskey post without `replyTo` establishes the reply root. A reply whose parent is absent from the merged page, including a cyclic chain, remains provisional. The selected post ID remains the thread anchor.
-- `misskeyInboxReplyWithoutReturnedRootIsProvisional` asserts provisional identity, anchor IDs, both expected routes, and exactly two requests. `misskeySpecifiedNotesBecomeReplyRootedConversations` and `misskeyInboxStreamsHaveIndependentCursorValuesAndPreserveMappedTransportItems` assert verified identity for a returned root chain and a parentless post.
-- `misskeyInboxCursorRejectsEachIdentityDimensionIndependentlyBeforeRequests` changes only `account`, then only numeric `sessionRevision`, and finally replays the unchanged cursor on a same-account/revision replacement source. Every case asserts `Unsupported("direct.pagination")` and request count 2.
-- Gate 1, `.\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.DirectMessageSourceTest" --tests "me.foxtails.palustris.data.directmessages.DirectMessageRepositoryTest"`: exit 0; `BUILD SUCCESSFUL`.
-- Gate 2, `.\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.data.misskey.MisskeyIntegrationTest" --tests "me.foxtails.palustris.ModerationServiceTest" --tests "me.foxtails.palustris.MisskeySourceContractTest"`: exit 0; `BUILD SUCCESSFUL`.
-- Gate 3, `.\gradlew.bat --no-daemon --console=plain :app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
-- Gate 4, `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- Gate 5, `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 607 findings and no new baseline regressions.
-- Gate 6, `git diff --check`: exit 1 only for documented pre-existing trailing whitespace in `.opencode/agents/orchestrator.md` and `.opencode/agents/targeted_fixer.md`; no 1D2 path appears in findings.
-- Gate 7, `git status --short`: exit 0; `docs/classic_navigation.md` is the only staged path. Existing unrelated dirty and untracked paths remain.
-- Gate 8, `git rev-parse --short HEAD`: exit 0; `e46e44c`.
-- At the 1D2 repair-gate run, the start boundary and last safe commit were `e46e44c`, the current slice was `1D2`, the next slice was `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it`, and no staging or commit occurred. These are historical observations, not the current queue or Git state.
-- Historical 1C boundary status (at that boundary): task-level red full suite; two `NavigationTest` failures; the 14-failure investigation; then-paused 1B5; and unverified device, foldable, RTL, TalkBack, and live-server checks. The re-traversal audit's 1C gap was resolved by the Option C implementation (1C-a/b/c, complete).
-- Focused mocked HTTP tests do not verify live-server behavior or physical rendering.
-- Repair reruns after the identity-evidence and independent-dimension tests: Gate 1 exited 0 (`BUILD SUCCESSFUL`, 35s); Gate 2 exited 0 (`BUILD SUCCESSFUL`, 1m15s); Gate 3 exited 0 (`BUILD SUCCESSFUL`, 1m43s).
-- Repair Gate 4 exited 0; 51 Python tests passed. Repair Gate 5 exited 0; architecture audit reported 607 findings and no baseline regression.
-
-# 1C verification
-
-- 1C is complete across three commits: 1C-a `ec12ed1` (domain selector), 1C-b `6b33e3d` (presentation), and 1C-c (parity tests, honest names, and records). This records slice starts at base `6b33e3d`.
-- 1C-c adds Standard/PostRow versus Photo Grid muted-tag parity and reveal coverage, a Misskey-family muted quote warning case, and an empty-muted-set no-match case.
-- Focused trio (`SinglePostScreenTest`, `ContentWarningPolicyTest`, `PostTextPresentationTest`): exit 0. `:app:lintDebug`: exit 0. `python -m unittest discover -s tools/tests`: exit 0, 51 tests. `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0.
-- The focused tests, lint, Python suite, and architecture audit passed with `GRADLE_OPTS=-Dorg.gradle.daemon=false`. Full `test assembleRelease` remains task-level red and was not run in this slice.
-- Muted-tag parity tests run through Standard detail's PostRow path and Photo Grid detail. Device and live-server behavior remain unverified.
-
-- Shared owner: `ui/posts/QuotePreviewCard.kt`. Its KDoc says: “Keeps hidden quote text out of composition while preserving the quote card and its action.” Both surfaces call it with their existing label resource and caller-owned URL callback.
-- Quote decisions apply parent content-warning rules before server-hidden quote content, muted-tag warning, quote content warning, and body presentation. Muted-tag reveal does not expose a quote body hidden by a content warning.
-- Decision: detail aligns to row behavior. Hidden quote cards remain visible with placeholder. `HiddenContentPresentation.Remove` remains parent-post and Photo Grid filtering behavior only. Parent content-warning handling is untouched. `PhotoPagerSizing.kt` and `PhotoGridScreen.kt` are untouched.
-- `SinglePostScreenTest` covers CW-only previews, local muted-tag warning and reveal, plain quote bodies, server-hidden precedence, Remove behavior, quote media omission, both surface paths, Misskey-family fixtures, and font scale 2.0. The cross-surface cases use Standard mode for PostRow and Photo Grid mode for the detail branch.
-- No other test class composes `PostRow`; the cross-surface characterization uses `SinglePostScreen` Standard mode because that mode delegates its focal post to `PostRow`, while Photo Grid exercises the detail branch.
-- `docs/wiki/ui-and-navigation.md` documents the shared quote preview, muted-tag warning, precedence, and deferred muted-word limit.
-- The 1C-c gate rerun passed: focused trio exit 0; `:app:lintDebug` exit 0; Python unittest exit 0 with 51 tests; architecture audit exit 0 with 608 findings and no baseline regression.
-- The full `test assembleRelease` gate did not run for 1C. Its red state remains tracked as the task-level blocker below.
-- The first compile attempt found a removed `ContentWarningPolicy` import. The import was restored. The next compile found an unavailable assertion import; tests now use `assertCountEquals(0)`. Final focused gates pass.
-- The 1C-c start base is `6b33e3d`. No staging or commit occurred. `PhotoPagerSizing.kt` and `PhotoGridScreen.kt` remain unchanged.
-- Device, live-server, foldable, RTL, and TalkBack checks remain unverified. At this historical boundary, full-suite red, NavigationTest failures, the 14-failure investigation, and paused 1B5 remained open. The current 1B5 decision is recorded above.
-- Review repair uses the complete hidden quote body `secret quote body #secret` in the Remove absence assertion; sibling consistency and font-scale tests already query complete bodies. The focused test, Python suite, and architecture audit reruns passed.
-
-# 1B4 verification
-
-- Changed only the `unfavorite` path to call the existing `encodePathSegment()` helper. `setPrimaryFavourite` already uses that same helper for both selected and unselected mutations.
-- `MastodonSource.kt` raw-ID interpolation grep found a single raw ID in a request path: `unfavorite` at its prior line 277. Other matched path interpolations encode the ID. Query parameters use builders and are not part of this path finding.
-- `MastodonIntegrationTest.unfavoriteEncodesReservedIdCharactersAndPreservesPlainIdPath` checks POST, bearer authorization, exact `/api/v1/statuses/plain-id/unfavourite` path, and exact `/api/v1/statuses/slash%2F%3F%20space%25%23/unfavourite` path. No unfavourite alias exists. No raw-path assertion needed updating.
-- Response error mapping is unchanged. SourceError behavior was not modified.
-- Integration gate: exit 0; `MastodonIntegrationTest` passed, including the new unfavorite wire-path case.
-- Source-contract/moderation/Misskey integration gate: exit 0; Gradle reported `BUILD SUCCESSFUL`.
-- `:app:lintDebug`: exit 0; Gradle reported `BUILD SUCCESSFUL`.
-- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- Architecture audit `--check`: exit 0; 605 findings and no new baseline regressions.
-- No other test asserts unfavorite wire bytes, and there is no unfavourite alias. No prior raw-path assertion needed updating.
-- The helper is `URLEncoder.encode(value, UTF_8).replace("+", "%20")`. Plain IDs retain identical path bytes. Reserved characters `/`, `?`, space, `%`, and `#` serialize as `%2F`, `%3F`, `%20`, `%25`, and `%23`.
-- `git status --short`: exit 0; `docs/classic_navigation.md` remains staged, and unrelated dirty paths remain untouched. `git rev-parse --short HEAD`: exit 0; `d21280e`. No staging or commit occurred.
-- Device and live-server behavior remain unverified. At this historical boundary, full-suite red, NavigationTest, and the 14-failure investigation remained open. 1B5 was paused then; its approved current status is recorded above.
-
-# 1B2 verification
-
-- `MastodonIntegrationTest` focused gate: exit 0; Gradle reported `BUILD SUCCESSFUL` (53 tests).
-- Source-contract/moderation/Misskey integration gate: exit 0; Gradle reported `BUILD SUCCESSFUL`.
-- `:app:lintDebug`: exit 0; Gradle reported `BUILD SUCCESSFUL`.
-- Python unittest: exit 0; 51 tests passed. Architecture audit `--check`: exit 0; 605 findings with no new regressions.
-- Grep for `getPageLegacyRawReplay`, `Temporary: raw Link replay`, `raw Link replay`, and `replay raw server Links` in Mastodon source returned no matches.
-- Test search found only `MastodonIntegrationTest` assertions for `timelines/tag`; no test asserted `v1/bookmarks` before this slice.
-- `savedPosts` and `searchHashtag` perform no capability or network work before `pageClient.currentUrl` validates a non-null cursor and `pageClient.getPage` revalidates it. No pre-page contrast test is needed.
-- The existing hashtag second-page test changes only cursor representation expectations; request paths, bearer headers, and response order remain unchanged. New cases cover bookmark paging, normalized `#cats`/`cats` identity, account/session/source-instance and route mismatch, altered route/query values, malformed and raw values, and invalid Link rejection.
-- Final status preserves staged `docs/classic_navigation.md`; HEAD is `5207a96`. No staging or commit occurred. Device and live-server checks remain unverified.
-- An early test attempt failed because the normalized hashtag replay lacked a queued response. The corrected test queues that response and passes. An initial loop test used a valid continuation URL; the final test uses the route's current first-page URL and confirms rejection before request.
-
-# 1B3 verification
-
-- Routes: `blocked` pins `/api/v1/accounts/blocked`; `muted` pins `/api/v1/accounts/muted`. Both allow one nonblank `max_id`, `since_id`, or `min_id`; `limit` is optional but must equal `40`. Unknown, duplicate, empty, or extra keys fail. Neither route has another first-page filter.
-- Cursor payload fields are `version`, `variant`, `route`, `kind`, `account`, and `url`. The cursor retains the existing `ModerationCursor` account, query-kind, and protocol-variant bindings. Base64url is unpadded. The cursor is passed through moderation UI state only; no persistence path was found, so no migration is needed.
-- `MastodonSource.blockedAccounts` and `mutedAccounts` call the moderation service directly inside `request`; they do not refresh capabilities or perform other I/O before cursor decoding. Invalid cursors therefore fail before any request.
-- `ModerationServiceTest.mastodonBlockedAndMutedPagesUseOpaqueRouteBoundCursors` checks GET method and bearer authorization on both pages, both route paths, opaque `max_id` wire bytes, and exact returned item order.
-- `ModerationServiceTest.mastodonModerationRejectsTamperedAndLegacyCursorsBeforeRequest` checks wrong path, changed limit, unknown and duplicate query keys, empty pagination values, valueless/empty/duplicate `limit`, combined pagination keys, raw and relative cursor values, wrong route/kind/variant, cross-account replay, and payload tampering (unknown or string version, missing field, wrong field type). Each rejection checks unchanged request count. A missing `limit` remains valid; only a present value other than exactly `40` is rejected.
-- `ModerationServiceTest.mastodonModerationRejectsInvalidLinksAndCurrentUrlLoop` checks invalid response Link yields `Unsupported("pagination.link")`, and a Link equal to the current request URL is rejected.
-- The first moderation test run exited 1 because `since_id` was incorrectly treated as an invalid pagination key. The test was corrected: the contract allows exactly one of `max_id`, `since_id`, or `min_id`.
-- Cursor failures retain the existing `moderation.cursor` feature string. Invalid response Links use `pagination.link`.
-- `ModerationServiceTest`: latest focused run exited 0; runner reported `BUILD SUCCESSFUL` but did not print a test count; the file contains 13 `@Test` methods. The initial run failed because `since_id` is a valid continuation key; the corrected assertions passed.
-- Mastodon integration/source contract and Misskey integration command: exit 0; `BUILD SUCCESSFUL`. Grep found no other tests asserting Mastodon moderation-list paging or `/v1/lists` routes.
-- `:app:lintDebug`: exit 0. Python unittest: exit 0; 51 tests. Architecture audit `--check`: exit 0; 605 findings, no baseline regression.
-- Invalid cursor failures retain `moderation.cursor`, as asserted by the existing test. Invalid server Links use `pagination.link`.
-- At the 1B2 boundary, HEAD was `9e29ef4`; no staging or commit occurred. Device and live-server behavior remain unverified. The full-suite, NavigationTest, and 14-failure blockers remain unchanged. 1B5 was paused then; the approved current status is recorded above.
-- Review repair adds `hashtagCursorRejectsAnotherQueryWithoutChangingTheCursor`: it obtains a cats cursor from a real cats Link response, passes that unchanged cursor to `searchHashtag("dogs", cursor)`, and asserts `Unsupported("pagination.cursor")` with no additional request.
-- Review repair adds `bookmarkCursorRejectsTimelineRouteBeforeCapabilityProbe`: it obtains a bookmark cursor from a real bookmarks Link response, passes it to `timeline(Home, cursor)` on a source with the real capability probe, and asserts `Unsupported("pagination.cursor")` with no additional request.
-- Renamed the earlier mixed tampering case to `hashtagCursorPayloadTamperingAndOtherRoutesAreRejected`. Its changed query payload has a cats path, so that case proves payload tampering/path validation, not unchanged-cursor cross-query rejection.
-- Both required Gradle focused gates, Python unittest, and architecture audit exited 0. `lintDebug` was not rerun because this repair changes tests and records only; no main source changed.
-- At the 1B2 boundary, HEAD was `5207a96`; staged `docs/classic_navigation.md` and unrelated worktree changes remained untouched. No staging or commit occurred. The recorded boundary blockers were unchanged then; see current blockers above.
-
-# 1B1 review repair verification
-
-- The capability-probe contrast uses the real `MastodonCapabilityProbe` with a stale schema snapshot. Invalid input returns `Unsupported("pagination.cursor")` with zero requests. Valid pagination requests the metadata endpoint, the first timeline page, and the second page. It checks second-page URL and bearer authorization.
-- At the 1B1 boundary, the ownership text still described temporary bookmark and hashtag raw-Link replay. Slice 1B2 resolved that transitional behavior; the current ownership contract covers all page routes.
-- Required Mastodon integration, adapter contract/moderation/Misskey integration, lint, Python, and architecture audit gates exited 0.
-- Full-suite red status remains tracked as its own blocker. The 14 unexplained failures are not reclassified. No full suite was run for this repair.
-- At the 1B1 review boundary, HEAD was `af1f983`; the staged `docs/classic_navigation.md` remained untouched. Review changes were not committed. The 1B1 hash is recorded at the 1B2 boundary.
-
-# 1B3 review repair
-
-- Root cause: OkHttp `HttpUrl.queryParameter("limit")` returns null for a valueless key. `queryParameterValues("limit")` distinguishes valueless (`null`) from assigned-empty (`""`) values. Validation now checks presence in `queryParameterNames`, then requires the complete values list to equal exactly `["40"]`; this also rejects duplicates. Link and replay use the same validator and preserve `pagination.link` and `moderation.cursor` errors.
-- `mastodonBlockedAndMutedPagesUseOpaqueRouteBoundCursors` now checks each page method, bearer token, route, and exact mapped item order.
-- `mastodonModerationRejectsTamperedAndLegacyCursorsBeforeRequest` now checks valueless, empty, and duplicate `limit`; multiple pagination keys; a genuinely different port; unknown-version value, string version, missing field, and wrong field type. Rejections assert unchanged request count.
-- `mastodonModerationRejectsValuelessLimitLinksAndAllowsMissingLimit` checks those three invalid Link query forms return `Unsupported("pagination.link")`, and confirms missing `limit` is accepted.
-- `mastodonModerationRejectsInvalidLinksAndCurrentUrlLoop` retains the invalid-Link and current-URL loop assertions.
-- `:app:testDebugUnitTest --tests "me.foxtails.palustris.ModerationServiceTest"`: exit 0; `BUILD SUCCESSFUL`.
-- Mastodon integration/source contract/Misskey integration gate: exit 0; `BUILD SUCCESSFUL`.
-- `:app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
-- `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
-- Architecture audit `--check`: exit 0; 605 findings and no new baseline regressions.
-- The moderation cursor binds origin/account/kind/variant/route/query, but not `sessionRevision` or `sourceInstance`. ViewModel memory lifetime and `AccountSourceRegistry.isCurrent` guard normal paging. A direct same-account `SocialSource` replay after source replacement remains possible. Stronger binding was consciously deferred; no code change was made for this NIT.
-- At the 1B3 review boundary, `9e29ef4` was recorded as its last safe commit. `d21280e` was the 1B3 hash and last safe commit at that review boundary; 1B4 was complete and shipped with its commit. The slice was 1B5 PAUSED and the next slice was 1C; the 1B4 hash was to be recorded at that next boundary. No staging or commit occurred at that review boundary. Existing blockers remain unchanged.
+The last safe boundary is the commit that contains this record. Get the exact hash with `git log -1`. Git history is authoritative. The next implementation slice is 1D3 UI.

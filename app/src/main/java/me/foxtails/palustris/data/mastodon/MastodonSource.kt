@@ -25,6 +25,7 @@ import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.DirectMessageRequest
 import me.foxtails.palustris.domain.DirectMessageSource
 import me.foxtails.palustris.domain.DirectThreadRequest
+import me.foxtails.palustris.domain.DirectThreadResult
 import me.foxtails.palustris.domain.EditableProfile
 import me.foxtails.palustris.domain.EditableProfilePatch
 import me.foxtails.palustris.domain.EmojiCapabilities
@@ -193,8 +194,8 @@ class MastodonSource(
 
     override suspend fun conversations(cursor: String?): Page<DirectConversation> = request("direct.conversations") { directMessageService.conversations(cursor) }
 
-    override suspend fun conversationThread(request: DirectThreadRequest): List<Post> =
-        this.request("direct.thread") { directMessageService.conversationThread(request) }
+    override suspend fun conversationThread(request: DirectThreadRequest, cursor: String?): DirectThreadResult =
+        this.request("direct.thread") { directMessageService.conversationThread(request, cursor) }
 
     override suspend fun sendDirectMessage(request: DirectMessageRequest): Post = request("direct.send") { directMessageService.sendDirectMessage(request) }
 

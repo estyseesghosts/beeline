@@ -21,6 +21,7 @@ import me.foxtails.palustris.domain.ConversationIdentity
 import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.DirectMessageRequest
 import me.foxtails.palustris.domain.DirectThreadRequest
+import me.foxtails.palustris.domain.DirectThreadResult
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
@@ -72,7 +73,7 @@ class DirectMessageViewModelTest {
         val sendRequests = mutableListOf<DirectMessageRequest>()
         var markReadCalls = 0
         private val inboxPending = ArrayDeque<CompletableDeferred<Page<DirectConversation>>>()
-        private val threadPending = ArrayDeque<CompletableDeferred<List<Post>>>()
+        private val threadPending = ArrayDeque<CompletableDeferred<DirectThreadResult>>()
         private val sendPending = ArrayDeque<CompletableDeferred<Post>>()
 
         override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = Page(emptyList())
@@ -85,9 +86,9 @@ class DirectMessageViewModelTest {
             return withContext(NonCancellable) { gate.await() }
         }
 
-        override suspend fun conversationThread(request: DirectThreadRequest): List<Post> {
+        override suspend fun conversationThread(request: DirectThreadRequest, cursor: String?): DirectThreadResult {
             threadRequests += request
-            val gate = CompletableDeferred<List<Post>>()
+            val gate = CompletableDeferred<DirectThreadResult>()
             threadPending += gate
             return withContext(NonCancellable) { gate.await() }
         }
@@ -105,7 +106,7 @@ class DirectMessageViewModelTest {
 
         fun completeInbox(index: Int, page: Page<DirectConversation>) { inboxPending[index].complete(page) }
         fun failInbox(index: Int, error: Exception) { inboxPending[index].completeExceptionally(error) }
-        fun completeThread(index: Int, thread: List<Post>) { threadPending[index].complete(thread) }
+        fun completeThread(index: Int, thread: List<Post>) { threadPending[index].complete(DirectThreadResult(thread)) }
         fun failThread(index: Int, error: Exception) { threadPending[index].completeExceptionally(error) }
         fun completeSend(index: Int, post: Post) { sendPending[index].complete(post) }
         fun failSend(index: Int, error: Exception) { sendPending[index].completeExceptionally(error) }
@@ -599,6 +600,31 @@ class DirectMessageViewModelTest {
             advanceUntilIdle()
 
             assertTrue(store.conversation(accountId, conversationA.id)?.unread == true)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun threadResultShowsPostsAndClearsLoading() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            assertTrue(model.state.value.loadingThread)
+            source.completeThread(0, listOf(post("a-1", recipientA), post("a-2", recipientA)))
+            advanceUntilIdle()
+
+            assertEquals(listOf("a-1", "a-2"), model.state.value.thread.map { it.id.value })
+            assertFalse(model.state.value.loadingThread)
+            assertNull(model.state.value.error)
         } finally {
             Dispatchers.resetMain()
         }
