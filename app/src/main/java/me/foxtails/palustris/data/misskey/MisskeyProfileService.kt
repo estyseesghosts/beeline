@@ -20,6 +20,7 @@ class MisskeyProfileService(
     private val token: String,
     private val api: MisskeyApi,
     private val authenticatedAccountId: AccountId?,
+    private val maxResponseBytes: Long = MISSKEY_MAX_RESPONSE_BYTES,
 ) {
     suspend fun profile(id: AccountId): Account {
         validateTarget(id, "profile.details")
@@ -41,7 +42,7 @@ class MisskeyProfileService(
             ProfileTimelineTab.Replies -> body.put("withReplies", true).put("withRenotes", false)
             ProfileTimelineTab.Liked -> Unit
         }
-        val notes = JSONArray(api.post(origin, "users/notes", body).body)
+        val notes = JSONArray(api.post(origin, "users/notes", body, maxResponseBytes).body)
         val nextCursor = notes.optJSONObject(notes.length() - 1)?.optString("id")
             ?.takeIf { it.isNotBlank() }
         val items = (0 until notes.length())
@@ -61,7 +62,7 @@ class MisskeyProfileService(
             .put("userId", profileId.localId)
             .put("limit", PROFILE_PAGE_SIZE)
         cursor?.let { body.put("untilId", it) }
-        val values = JSONArray(api.post(origin, "users/reactions", body).body)
+        val values = JSONArray(api.post(origin, "users/reactions", body, maxResponseBytes).body)
         val items = (0 until values.length()).mapNotNull { index ->
             val wrapper = values.optJSONObject(index) ?: return@mapNotNull null
             val note = wrapper.optJSONObject("note") ?: return@mapNotNull null
@@ -78,26 +79,27 @@ class MisskeyProfileService(
             origin,
             "users/relation",
             JSONObject().put("i", token).put("userId", id.localId),
+            maxResponseBytes,
         )
         return parseRelationship(response.body, id)
     }
 
     suspend fun follow(id: AccountId): ProfileRelationship {
         validateTarget(id, "profile.follow")
-        api.post(origin, "following/create", JSONObject().put("i", token).put("userId", id.localId))
+        api.post(origin, "following/create", JSONObject().put("i", token).put("userId", id.localId), maxResponseBytes)
         return relationship(id)
     }
 
     suspend fun unfollow(id: AccountId): ProfileRelationship {
         validateTarget(id, "profile.unfollow")
-        api.post(origin, "following/delete", JSONObject().put("i", token).put("userId", id.localId))
+        api.post(origin, "following/delete", JSONObject().put("i", token).put("userId", id.localId), maxResponseBytes)
         return relationship(id)
     }
 
     suspend fun pinnedPosts(id: AccountId): List<Post> {
         validateTarget(id, "profile.pinned")
         val profile = try {
-            JSONObject(api.post(origin, "users/show", JSONObject().put("i", token).put("userId", id.localId)).body)
+            JSONObject(api.post(origin, "users/show", JSONObject().put("i", token).put("userId", id.localId), maxResponseBytes).body)
         } catch (error: ApiFailure) {
             if (error.status in setOf(400, 404, 422)) return emptyList()
             throw error
@@ -121,7 +123,7 @@ class MisskeyProfileService(
             ?: return emptyList()
         return noteIds.take(MAX_PINNED_NOTES).mapNotNull { noteId ->
             runCatching {
-                val response = api.post(origin, "notes/show", JSONObject().put("i", token).put("noteId", noteId))
+                val response = api.post(origin, "notes/show", JSONObject().put("i", token).put("noteId", noteId), maxResponseBytes)
                 MisskeyMapper.post(JSONObject(response.body), origin)
             }.getOrNull()
         }.filter { it.author.id == id }
@@ -132,6 +134,7 @@ class MisskeyProfileService(
             origin,
             "users/show",
             JSONObject().put("i", token).put("userId", id.localId),
+            maxResponseBytes,
         ).body)
         val account = MisskeyMapper.account(profile, origin)
         val movedTo = profile.nullableString("movedTo")?.let { resolveMovedTo(it) }
@@ -145,6 +148,7 @@ class MisskeyProfileService(
                     origin,
                     "ap/show",
                     JSONObject().put("i", token).put("uri", value),
+                    maxResponseBytes,
                 )
                 val envelope = JSONObject(response.body)
                 if (envelope.optString("type") != "User") return null
@@ -154,6 +158,7 @@ class MisskeyProfileService(
                     origin,
                     "users/show",
                     JSONObject().put("i", token).put("userId", value),
+                    maxResponseBytes,
                 )
                 MisskeyMapper.account(JSONObject(response.body), origin, movedTo = null)
             }

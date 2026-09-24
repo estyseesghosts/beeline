@@ -23,13 +23,14 @@ import org.json.JSONObject
 class MisskeyCapabilityProbe(
     private val api: MisskeyApi,
     private val token: String? = null,
+    private val maxResponseBytes: Long = MISSKEY_MAX_RESPONSE_BYTES,
 ) : CapabilityProbe {
     override suspend fun probeCapabilities(connection: Connection): ServerCapabilities {
         // Misskey's HTTP API is POST-based, including the unauthenticated meta endpoint.
-        val meta = JSONObject(api.post(connection.origin, "meta").body)
+        val meta = JSONObject(api.post(connection.origin, "meta", maxResponseBytes = maxResponseBytes).body)
         require(meta.optString("version").isNotBlank()) { "This server did not return Misskey-compatible information." }
         val policies = token?.takeIf(String::isNotBlank)?.let { credential ->
-            JSONObject(api.post(connection.origin, "i", JSONObject().put("i", credential)).body)
+            JSONObject(api.post(connection.origin, "i", JSONObject().put("i", credential), maxResponseBytes).body)
                 .optJSONObject("policies")
         }
         val localFallback = if (meta.has("disableLocalTimeline")) {
@@ -94,7 +95,7 @@ class MisskeyCapabilityProbe(
         token: String,
         policies: JSONObject?,
     ): CapabilityStatus = try {
-        api.post(origin, "notes/bubble-timeline", JSONObject().put("i", token).put("limit", 1))
+        api.post(origin, "notes/bubble-timeline", JSONObject().put("i", token).put("limit", 1), maxResponseBytes)
         policyStatus(policies, "btlAvailable", CapabilityStatus.Supported)
     } catch (e: ApiFailure) {
         when (e.code?.uppercase()) {

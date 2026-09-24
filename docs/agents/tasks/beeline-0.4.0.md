@@ -18,7 +18,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 - `docs/260923_current_state.md` is the resolved review input for the phases 0 and 1 re-traversal. The 260926 reference was a maintainer typo. This input decision is closed.
 - Option C approved (2026-09-24): a quote matching account-local muted hashtags shows a CW-style revealable `muted word: #tag` warning (tag mutes only). Muted WORDS deferred — no client-side word data exists (Mastodon `filtered` arrives stripped of the matched term; Misskey `isHidden` provides none; no adapter fetches filter/word-mute definitions). Re-entry requires a separately approved adapter/domain slice with Mastodon and Misskey semantics verified independently.
-- 1B5 is approved as a behavior change: each adapter applies a conservative 4 MiB response cap per operation and labels `ResponseLimitExceeded`. Mastodon is complete; Misskey remains the separate 1B5-K slice. Neutral transport response limits default to `null`.
+- 1B5 is approved as a behavior change: each adapter applies a conservative 4 MiB response cap per operation and labels `ResponseLimitExceeded`. The separate Mastodon and Misskey slices are complete. Neutral transport response limits default to `null`.
 - The phases 0 and 1 re-traversal audit is complete. It requested no additional unspecified changes.
 - Slice 2E is conditional on a later UI change that needs it. Phases 0-2 do not trigger it. Record it as not triggered and confirm before running.
 - A Pixel Fold emulator is reachable. Foldable posture rendering and theme/font/animator emulator captures are recorded; physical-device, API 29, RTL, TalkBack, and signed-release checks remain unverified. Live-server evidence covers sign-in, timelines, notifications, profiles, and Photo Grid media on mstdn.ca and dvd.chat.
@@ -41,22 +41,22 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Current boundary
 
-Slice 1B5-M is implemented, verified, low-reviewed, and recorded by the commit that includes these records, from base `9e977de`. The commit includes the source, test, task-state, and handoff records. The task log remains current on disk, unstaged, and outside the commit under the `logs/*` rule.
+1B5-K is implemented, verified, low-reviewed, and recorded by the commit that includes these records. The base is `fc1f0da`. That commit includes the source, test, task-state, and handoff records. The task log and `logs/BUGS.txt` remain current on disk, unstaged, and outside the commit under `logs/*` hygiene.
 
-The source owner is `MastodonSource` and the Mastodon transport response-limit parameters in `MisskeyApi`. The 4 MiB limit reaches source operations and service/page response reads. `MastodonThreadService`, capability probes, and streams remain unchanged. Misskey call sites retain the default null limit.
+`MisskeySource`, the six source-owned services, and the three capability-probe reads pass a 4 MiB cap to response reads. `MisskeyApi` remains unchanged, with nullable transport parameters defaulting to `null`. Every `MisskeySource.request` call has an explicit operation label. Thread acquisition keeps its `MAX_THREAD_RESPONSE_BYTES` arguments and inner error normalization. `MisskeyErrorMapper` remains unchanged. Streams remain unchanged. The focused oversized-post test asserts `SourceError.ResourceLimit("post")`, exactly one request, and `/api/notes/show`.
 
-The test owner is `MastodonIntegrationTest`, with `MastodonSourceContractTest` as the focused contract gate. The oversized non-thread post test asserts `ResourceLimit("post")` and no post result. No UI behavior changed.
+The low reviewer found no source defects. No UI behavior changed. The next implementation slice is 1D3 adapter work. The full unit suite remains known red with 16 failures documented below. Pixel Fold emulator rendering is device verified for compact and wide layouts. Physical-device, API 29, RTL, TalkBack, signed-release, and live-server oversized-response behavior remain unverified.
 
-The next slice is 1B5-K, the separate Misskey adapter implementation. The full unit suite remains known red with 16 failures documented below. Pixel Fold emulator rendering is device verified for compact and wide layouts. Physical-device, API 29, RTL, TalkBack, signed-release, and live-server oversized-response behavior remain unverified.
+The repaired 1B5-K APK was rebuilt with `gradlew.bat --no-daemon --console=plain :app:assembleDebug` and `GRADLE_OPTS=-Dorg.gradle.daemon=false`. The build passed. Pixel Fold emulator `emulator-5554` received the APK through `adb install -r`. The final direct adb pass verified committed CLOSED with hinge 0 and 1080x2092, then committed OPENED with hinge 180, no override, and 2208x1840. Wakeup and dismiss-keyguard succeeded in both states. `MainActivity` was RESUMED, visible, reportedDrawn, focused, and allDrawn. The keyguard was hidden, and the display was awake. No crash or ANR evidence appeared. This is final emulator rendering evidence for compact and wide layouts only. Live oversized-response, physical-device, API 29, RTL, TalkBack, and signed-release behavior remain unverified.
 
-Verification: the focused Mastodon integration and source-contract tests passed after the final source edit. `:app:lintDebug`, Python unittest discovery (51 tests), architecture audit `--check` (609 findings; exit 0), scoped `git diff --check`, and `:app:assembleDebug` passed. APK: `app/build/outputs/apk/debug/app-debug.apk`. Pixel Fold emulator `emulator-5554` installed this APK and passed both committed postures after a five-second adb-shell wait. Folded/CLOSED: hinge 0.0, 1080x2092, `MainActivity` RESUMED, visible narrow single-column feed and bottom navigation. Unfolded/OPENED: hinge 180.0, 2208x1840, `MainActivity` RESUMED, visible two-pane layout with navigation rail and detail pane. No crash or ANR evidence appeared. This verifies emulator rendering only. The known-red full suite and `assembleRelease` were not run. Live oversized-response behavior was not exercised.
+Verification from the 1B5-K base `fc1f0da`: focused `MisskeyIntegrationTest` passed. `MisskeySourceContractTest` passed. `MisskeyThreadContinuationTest` had five known plain-JVM `org.json.JSONObject` setup failures. `:app:lintDebug` passed. Python tool tests passed (51 tests). Scoped `git diff --check` passed. `:app:assembleDebug` passed with `BUILD SUCCESSFUL`; APK: `app/build/outputs/apk/debug/app-debug.apk`. The exact architecture audit command exited 0 and reported 609 findings, with no regression findings. The known-red full suite and `assembleRelease` were not run. Live oversized-response behavior was not exercised.
 
 ## Re-traversal audit
 
 The audit compared phases 0 and 1 of `docs/beeline_0.4.0.md` with executed commits. The resolved review input is `docs/260923_current_state.md`. No additional unspecified changes were requested.
 
 - Meets: 0A, L0, 1A, 1B1, 1B2, 1B3, 1B4, 1D1, and 1D2.
-- Gaps found at audit time: 0B had a four-button register where the plan requires six, a partial capture matrix, and no approved geometry measures. The register now records six wide destinations, the capture matrix is populated for theme/font/animator/IME/hinge/landscape axes, 200% failures are registered, and the approved emulator measures are recorded. The three pending measure rows are media dismissal threshold, physical-left caret, and physical-bottom-right wide action. The other audit gaps remain: 1B needs independent cancellation and failed-next-page-retains-rows evidence; 1B5 lacks the approved response caps and operation labels.
+- Gaps found at audit time: 0B had a four-button register where the plan requires six, a partial capture matrix, and no approved geometry measures. The register now records six wide destinations, the capture matrix is populated for theme/font/animator/IME/hinge/landscape axes, 200% failures are registered, and the approved emulator measures are recorded. The three pending measure rows are media dismissal threshold, physical-left caret, and physical-bottom-right wide action. The other audit gaps remain: 1B needs independent cancellation and failed-next-page-retains-rows evidence. The separate 1B5 response-cap and operation-label gap is resolved by 1B5-M and 1B5-K.
 - Not executed: 1D3, 1E1, and 1E2.
 
 # Files involved
@@ -135,7 +135,7 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Next: 1B5-K, the separate Misskey response-cap and operation-label slice. Later queued work includes 1D3 adapter, 1D3 UI, 1E1, and 1E2. Muted-word data remains deferred pending approval and separate protocol-semantic review. The decision-4 UI prototype remains the only awaited input for its separate workstream.
+Next: 1D3 adapter, the Misskey direct-message child-continuation slice. Later queued work includes 1D3 UI, 1E1, and 1E2. Muted-word data remains deferred pending approval and separate protocol-semantic review. The decision-4 UI prototype remains the only awaited input for its separate workstream.
 
 # Blockers
 
@@ -151,8 +151,8 @@ Next: 1B5-K, the separate Misskey response-cap and operation-label slice. Later 
 - NavigationTest has two failures. Their pre-existing status is separately verified at `ba3fe53` with an empty `app/src` diff. The cause is not established. Investigate in a dedicated slice before phase 10.
 - The 14 failures are DraftActionsTest (2), CapabilityCacheTest (2), MisskeyThreadContinuationTest (5), and NotificationSyncOrchestratorTest (5). Their executed test and production sources are byte-identical to `af1f983`; `git diff af1f983 --name-only` lists none of them. Direct grep finds no reference from those classes and subjects to symbols changed by L0, 1A, or 1B1. Focused runs reproduce all 14 failures. Transitive closure was not exhaustively proven. Introduction commits were not bisected because `git worktree add` was blocked by permission. The baseline was not executed. Product-versus-environment cause is not established. These failures are not attributable to the 0.4.0 slices by available evidence. Do not weaken or skip tests. A dedicated investigation slice owns these failures.
 - Full unit suite is RED (16 failures in `test assembleRelease`). A dedicated investigation slice must restore full-suite green before the phase-10 release gate.
-- 1B5-M is implemented, verified, and low-reviewed from base `9e977de`; the commit containing these records defines its slice boundary. 1B5-K remains unimplemented and separate.
-- The Misskey thread path catches some failures internally before they reach the source wrapper. `MisskeyErrorMapper.kt:17-22` maps a remaining escaping `IOException` to `NetworkUnavailable`. The 1B5-K commit must add the non-thread cap and operation labeling without changing this separate thread contract.
+- The intended 1B5-K slice boundary was the source, test, task-state, and handoff updates, recorded by the commit that includes these records.
+- `MisskeyThreadContinuationTest` still has five plain-JVM failures because `org.json.JSONObject` calls are not mocked. These failures were not caused by the 1B5-K changes. Do not weaken or skip these tests.
 - 1D3, 1E1, and 1E2 have not been executed.
 - 1B characterization is complete. The feed-level failed-page case already asserts retained rows and cursor; Mastodon cancellation is independently covered by `cancelingTimelinePageCancelsRequestAndAllowsRetry`.
 
@@ -178,7 +178,7 @@ Next: 1B5-K, the separate Misskey response-cap and operation-label slice. Later 
 
 # Last safe commit
 
-Base boundary: `9e977de`. Git history is authoritative for the exact hash. The commit that includes this handoff is the 1B5-M slice boundary and includes source, test, task-state, and handoff records. The task log remains current on disk, unstaged, and outside the commit under the `logs/*` rule. At the start of the next session, use `git log -1` to read the 1B5-M boundary hash. Never stage `logs/*`.
+1B5-K base: `fc1f0da`. Git history is authoritative for the exact boundary hash. The commit that includes these records also includes the source, test, task-state, and handoff records. The task log and `logs/BUGS.txt` remain current on disk, unstaged, and outside the commit under `logs/*` hygiene. Keep staged `docs/classic_navigation.md` exactly as found and outside that commit. Use `git log -1` at the start of the next session. The next implementation slice is 1D3 adapter.
 
 # 1D1 verification
 

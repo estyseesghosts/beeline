@@ -25,6 +25,7 @@ internal class MisskeyDirectMessageService(
     private val accountId: AccountId?,
     private val sessionRevision: Long,
     private val sourceInstance: String,
+    private val maxResponseBytes: Long = MISSKEY_MAX_RESPONSE_BYTES,
     private val postLoader: suspend (EntityId) -> Post,
 ) {
     suspend fun conversations(cursor: String?): Page<DirectConversation> {
@@ -37,7 +38,7 @@ internal class MisskeyDirectMessageService(
                 continuations?.sentUntilId?.let { put("untilId", it) }
                 put("userId", account.localId).put("includeReplies", true)
             }
-            val raw = JSONArray(api.post(origin, "users/notes", sentBody).body)
+            val raw = JSONArray(api.post(origin, "users/notes", sentBody, maxResponseBytes).body)
             val sentUntilId = raw.lastOrNullJson()?.optString("id")?.takeIf(String::isNotBlank)
             StreamPage(
                 posts = directPosts(raw),
@@ -94,7 +95,7 @@ internal class MisskeyDirectMessageService(
                 val parent = postLoader(current.replyTo!!); ancestors += parent; current = parent
             }
             ancestors.reverse()
-            val children = JSONArray(api.post(origin, "notes/children", JSONObject().put("i", token).put("noteId", root.id.value).put("limit", 30)).body)
+            val children = JSONArray(api.post(origin, "notes/children", JSONObject().put("i", token).put("noteId", root.id.value).put("limit", 30), maxResponseBytes).body)
             val descendants = (0 until children.length()).map { MisskeyMapper.post(children.getJSONObject(it), origin) }
             (ancestors + root + descendants).distinctBy { it.id }.filter { it.audience == Audience.Direct }
         }
@@ -105,7 +106,7 @@ internal class MisskeyDirectMessageService(
         val body = JSONObject().put("i", token).put("text", message.text.trim()).put("visibility", "specified")
             .put("visibleUserIds", JSONArray(message.recipients.map(AccountId::localId)))
         message.replyTo?.let { body.put("replyId", it.value) }
-        return MisskeyMapper.post(JSONObject(api.post(origin, "notes/create", body).body).getJSONObject("createdNote"), origin)
+        return MisskeyMapper.post(JSONObject(api.post(origin, "notes/create", body, maxResponseBytes).body).getJSONObject("createdNote"), origin)
     }
 
     suspend fun markConversationRead(id: ConversationId) {
@@ -120,9 +121,9 @@ internal class MisskeyDirectMessageService(
             if (fallback) put("includeTypes", JSONArray(listOf("mention", "reply")))
         }
         val response = if (fallback) {
-            api.post(origin, "i/notifications", body)
+            api.post(origin, "i/notifications", body, maxResponseBytes)
         } else try {
-            api.post(origin, "notes/mentions", body)
+            api.post(origin, "notes/mentions", body, maxResponseBytes)
         } catch (error: ApiFailure) {
             if (error.status != 404) throw error
             // The documented degradation for a missing notes/mentions route filters notifications;
@@ -150,7 +151,7 @@ internal class MisskeyDirectMessageService(
             cursor?.mentionsFallbackUntilId?.let { put("untilId", it) }
             put("includeTypes", JSONArray(listOf("mention", "reply")))
         }
-        val values = JSONArray(api.post(origin, "i/notifications", body).body)
+        val values = JSONArray(api.post(origin, "i/notifications", body, maxResponseBytes).body)
         val lastId = values.lastOrNullJson()?.optString("id")?.takeIf(String::isNotBlank)
         // No usable continuation ID ends this stream; replaying page one would repeat items forever.
         val posts = (0 until values.length()).mapNotNull { index ->

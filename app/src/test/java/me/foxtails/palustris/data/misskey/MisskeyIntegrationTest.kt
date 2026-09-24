@@ -612,6 +612,22 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         }
     }
 
+    @Test fun misskeyPostRejectsOversizedResponseWithOperationLimit() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody(" ".repeat((MISSKEY_MAX_RESPONSE_BYTES + 1).toInt())))
+            val origin = server.url("/").toString().removeSuffix("/")
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
+
+            val error = assertThrows(SourceError.ResourceLimit::class.java) {
+                runBlocking { source.post(EntityId(origin, "large-post")) }
+            }
+
+            assertEquals("post", error.feature)
+            assertEquals(1, server.requestCount)
+            assertEquals("/api/notes/show", server.takeRequest().path)
+        }
+    }
+
     @Test fun misskeyCreateRejectsForeignAndBlankQuoteBeforeNetwork() = runBlocking {
         MockWebServer().use { server ->
             val origin = server.url("/").toString().removeSuffix("/")

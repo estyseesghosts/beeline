@@ -71,13 +71,15 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 
+internal const val MISSKEY_MAX_RESPONSE_BYTES = 4L * 1024 * 1024
+
 class MisskeySource(
     private val origin: String,
     private val token: String,
     private val api: MisskeyApi,
     private val initialCapabilities: ServerCapabilities = ServerCapabilities(timelines = setOf(Timeline.Home)),
     private val accountId: AccountId? = null,
-    private val capabilityProbe: CapabilityProbe = MisskeyCapabilityProbe(api, token.takeIf { accountId != null }),
+    private val capabilityProbe: CapabilityProbe = MisskeyCapabilityProbe(api, token.takeIf { accountId != null }, MISSKEY_MAX_RESPONSE_BYTES),
     private val capabilityCache: CapabilityCache,
     private val clock: () -> Long = System::currentTimeMillis,
     private val sessionRevision: Long = 0L,
@@ -97,70 +99,70 @@ class MisskeySource(
     )
     private val _capabilities = MutableStateFlow(initialCapabilities)
     val capabilitiesFlow: StateFlow<ServerCapabilities> = _capabilities
-    private val profileService = MisskeyProfileService(origin, token, api, accountId)
-    private val directMessageService = MisskeyDirectMessageService(origin, token, api, accountId, sessionRevision, sourceInstance) { id -> post(id) }
-    private val notificationService = MisskeyNotificationService(origin, token, api, accountId, clock)
-    private val moderationService = accountId?.let { MisskeyModerationService(origin, token, api, it) }
-    private val pushService = MisskeyPushService(origin, token, api, accountId)
+    private val profileService = MisskeyProfileService(origin, token, api, accountId, MISSKEY_MAX_RESPONSE_BYTES)
+    private val directMessageService = MisskeyDirectMessageService(origin, token, api, accountId, sessionRevision, sourceInstance, MISSKEY_MAX_RESPONSE_BYTES) { id -> post(id) }
+    private val notificationService = MisskeyNotificationService(origin, token, api, accountId, clock, MISSKEY_MAX_RESPONSE_BYTES)
+    private val moderationService = accountId?.let { MisskeyModerationService(origin, token, api, it, MISSKEY_MAX_RESPONSE_BYTES) }
+    private val pushService = MisskeyPushService(origin, token, api, accountId, MISSKEY_MAX_RESPONSE_BYTES)
     private val streamService = MisskeyStreamService(origin, token, api, accountId)
-    private val timelineService = MisskeyTimelineService(origin, token, api)
+    private val timelineService = MisskeyTimelineService(origin, token, api, MISSKEY_MAX_RESPONSE_BYTES)
     private val continuationStore = MisskeyThreadContinuationStore(monotonicClock)
     override val capabilities: ServerCapabilities get() = _capabilities.value
     override fun observeCapabilities(): Flow<ServerCapabilities> = capabilitiesFlow
 
-    override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = request(invalidateCapabilitiesOnNotFound = true) {
+    override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = request("timeline", invalidateCapabilitiesOnNotFound = true) {
             refreshCapabilities()
             timelineService.timeline(timeline, cursor, capabilities)
     }
 
-    override suspend fun post(id: EntityId): Post = request {
+    override suspend fun post(id: EntityId): Post = request("post") {
         validatePostId(id, "post")
-        val response = api.post(origin, "notes/show", JSONObject().put("i", token).put("noteId", id.value))
+        val response = api.post(origin, "notes/show", JSONObject().put("i", token).put("noteId", id.value), MISSKEY_MAX_RESPONSE_BYTES)
         MisskeyMapper.post(JSONObject(response.body), origin)
     }
 
-    override suspend fun profile(id: AccountId): Account = request { profileService.profile(id) }
+    override suspend fun profile(id: AccountId): Account = request("profile.details") { profileService.profile(id) }
 
-    override suspend fun profileTimeline(query: ProfileTimelineQuery, cursor: String?): Page<Post> = request {
+    override suspend fun profileTimeline(query: ProfileTimelineQuery, cursor: String?): Page<Post> = request("profile.timeline") {
         profileService.timeline(query, cursor)
     }
 
-    override suspend fun profileRelationship(id: AccountId): ProfileRelationship = request {
+    override suspend fun profileRelationship(id: AccountId): ProfileRelationship = request("profile.relationship") {
         profileService.relationship(id)
     }
 
-    override suspend fun followProfile(id: AccountId): ProfileRelationship = request {
+    override suspend fun followProfile(id: AccountId): ProfileRelationship = request("profile.follow") {
         profileService.follow(id)
     }
 
-    override suspend fun unfollowProfile(id: AccountId): ProfileRelationship = request {
+    override suspend fun unfollowProfile(id: AccountId): ProfileRelationship = request("profile.unfollow") {
         profileService.unfollow(id)
     }
 
-    override suspend fun setBlocked(id: AccountId, blocked: Boolean): ProfileRelationship = request {
+    override suspend fun setBlocked(id: AccountId, blocked: Boolean): ProfileRelationship = request("profile.block") {
         moderationService?.setBlocked(id, blocked) ?: unsupported("profile.block")
     }
 
-    override suspend fun setMuted(id: AccountId, muted: Boolean): ProfileRelationship = request {
+    override suspend fun setMuted(id: AccountId, muted: Boolean): ProfileRelationship = request("profile.mute") {
         moderationService?.setMuted(id, muted) ?: unsupported("profile.mute")
     }
 
-    override suspend fun pinnedPosts(id: AccountId): List<Post> = request { profileService.pinnedPosts(id) }
+    override suspend fun pinnedPosts(id: AccountId): List<Post> = request("profile.pinned") { profileService.pinnedPosts(id) }
 
-    override suspend fun searchAccounts(query: String): List<Account> = request {
+    override suspend fun searchAccounts(query: String): List<Account> = request("search.accounts") {
         val parts = query.trim().removePrefix("@").split('@')
         require(parts.size in 1..2 && parts[0].isNotBlank()) { appMessages.webfingerHandleInvalid() }
         val body = JSONObject().put("i", token).put("username", parts[0])
         parts.getOrNull(1)?.takeIf { it.isNotBlank() && !it.equals(java.net.URI(origin).host, ignoreCase = true) }
             ?.let { body.put("host", it) }
-        listOf(MisskeyMapper.account(JSONObject(api.post(origin, "users/show", body).body), origin))
+        listOf(MisskeyMapper.account(JSONObject(api.post(origin, "users/show", body, MISSKEY_MAX_RESPONSE_BYTES).body), origin))
     }
 
-    override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> = request {
+    override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> = request("search.hashtag") {
         val normalized = hashtagBody(tag)
         val body = JSONObject().put("i", token).put("tag", normalized).put("limit", 30)
         cursor?.let { body.put("untilId", it) }
-        val notes = JSONArray(api.post(origin, "notes/search-by-tag", body).body)
+        val notes = JSONArray(api.post(origin, "notes/search-by-tag", body, MISSKEY_MAX_RESPONSE_BYTES).body)
         Page(
             items = (0 until notes.length()).map { MisskeyMapper.post(notes.getJSONObject(it), origin) },
             nextCursor = notes.optJSONObject(notes.length() - 1)?.optString("id")?.takeIf { it.isNotBlank() },
@@ -170,7 +172,7 @@ class MisskeySource(
     override suspend fun threadContext(
         focalId: EntityId,
         continuation: ThreadContinuation?,
-    ): ThreadContext = request {
+    ): ThreadContext = request("thread") {
         validatePostId(focalId, "thread")
         val key = ThreadSessionKey(fetchingAccount(), sessionRevision, focalId)
         val state = continuation?.let { continuationState(it, key) } ?: beginThreadAcquisition(focalId, key)
@@ -358,7 +360,7 @@ class MisskeySource(
         else -> MisskeyErrorMapper.map(error)
     }
 
-    override suspend fun create(post: CreatePostRequest): Post = request {
+    override suspend fun create(post: CreatePostRequest): Post = request("create") {
         if (post.attachments.isNotEmpty()) throw SourceError.Unsupported("create.attachments")
         post.replyTo?.let { validatePostId(it, "create.reply-origin") }
         val body = JSONObject()
@@ -378,61 +380,61 @@ class MisskeySource(
                 .put("multiple", poll.multiple)
                 .apply { poll.expiresAt?.let { put("expiresAt", it.toEpochMilli()) } })
         }
-        val response = JSONObject(api.post(origin, "notes/create", body).body)
+        val response = JSONObject(api.post(origin, "notes/create", body, MISSKEY_MAX_RESPONSE_BYTES).body)
         MisskeyMapper.post(response.getJSONObject("createdNote"), origin)
     }
 
-    override suspend fun conversations(cursor: String?): Page<DirectConversation> = request { directMessageService.conversations(cursor) }
+    override suspend fun conversations(cursor: String?): Page<DirectConversation> = request("direct.conversations") { directMessageService.conversations(cursor) }
 
     override suspend fun conversationThread(request: DirectThreadRequest): List<Post> =
-        this.request { directMessageService.conversationThread(request) }
+        this.request("direct.thread") { directMessageService.conversationThread(request) }
 
-    override suspend fun sendDirectMessage(request: DirectMessageRequest): Post = request { directMessageService.send(request) }
+    override suspend fun sendDirectMessage(request: DirectMessageRequest): Post = request("direct.send") { directMessageService.send(request) }
 
-    override suspend fun markConversationRead(id: ConversationId) = request { directMessageService.markConversationRead(id) }
+    override suspend fun markConversationRead(id: ConversationId) = request("direct.read") { directMessageService.markConversationRead(id) }
 
-    override suspend fun react(id: EntityId, emoji: String) = request {
+    override suspend fun react(id: EntityId, emoji: String) = request("react") {
         validatePostId(id, "react")
         val reaction = emoji.trim().takeIf { it.isNotBlank() }
             ?: throw SourceError.Unsupported("react.emoji")
         api.post(origin, "notes/reactions/create", JSONObject()
             .put("i", token)
             .put("noteId", id.value)
-            .put("reaction", reaction))
+            .put("reaction", reaction), MISSKEY_MAX_RESPONSE_BYTES)
         Unit
     }
 
-    override suspend fun react(id: EntityId, choice: EmojiChoice) = request {
+    override suspend fun react(id: EntityId, choice: EmojiChoice) = request("react") {
         validatePostId(id, "react")
         val reaction = choice.submissionValue.takeIf { it.isNotBlank() }
             ?: throw SourceError.Unsupported("react.emoji")
         api.post(origin, "notes/reactions/create", JSONObject()
             .put("i", token)
             .put("noteId", id.value)
-            .put("reaction", reaction))
+            .put("reaction", reaction), MISSKEY_MAX_RESPONSE_BYTES)
         Unit
     }
 
-    override suspend fun removeReaction(id: EntityId, emoji: String) = request {
+    override suspend fun removeReaction(id: EntityId, emoji: String) = request("react") {
         validatePostId(id, "react")
-        api.post(origin, "notes/reactions/delete", JSONObject().put("i", token).put("noteId", id.value))
+        api.post(origin, "notes/reactions/delete", JSONObject().put("i", token).put("noteId", id.value), MISSKEY_MAX_RESPONSE_BYTES)
         Unit
     }
 
-    override suspend fun removeReaction(id: EntityId, choice: EmojiChoice) = request {
+    override suspend fun removeReaction(id: EntityId, choice: EmojiChoice) = request("react") {
         validatePostId(id, "react")
-        api.post(origin, "notes/reactions/delete", JSONObject().put("i", token).put("noteId", id.value))
+        api.post(origin, "notes/reactions/delete", JSONObject().put("i", token).put("noteId", id.value), MISSKEY_MAX_RESPONSE_BYTES)
         Unit
     }
 
     override suspend fun favorite(id: EntityId) = favorite(id, me.foxtails.palustris.domain.DEFAULT_FAVOURITE_EMOJI)
 
-    override suspend fun favorite(id: EntityId, favouriteEmoji: String) = request {
+    override suspend fun favorite(id: EntityId, favouriteEmoji: String) = request("favorite") {
         validatePostId(id, "favorite")
         react(id, normalizeFavouriteEmoji(favouriteEmoji))
     }
 
-    override suspend fun unfavorite(id: EntityId, favouriteEmoji: String?) = request {
+    override suspend fun unfavorite(id: EntityId, favouriteEmoji: String?) = request("favorite") {
         validatePostId(id, "favorite")
         removeReaction(id, favouriteEmoji.orEmpty())
     }
@@ -446,20 +448,20 @@ class MisskeySource(
         return PostActionResult(selected = selected)
     }
 
-    override suspend fun renote(id: EntityId) = request {
+    override suspend fun renote(id: EntityId) = request("renote") {
         validatePostId(id, "renote")
-        api.post(origin, "notes/create", JSONObject().put("i", token).put("renoteId", id.value))
+        api.post(origin, "notes/create", JSONObject().put("i", token).put("renoteId", id.value), MISSKEY_MAX_RESPONSE_BYTES)
         Unit
     }
 
-    override suspend fun unrenote(id: EntityId, ownRepostId: EntityId?) = request {
+    override suspend fun unrenote(id: EntityId, ownRepostId: EntityId?) = request("renote.undo") {
         val repostId = ownRepostId ?: throw SourceError.Unsupported("renote.undo")
         validatePostId(repostId, "renote.undo")
-        api.post(origin, "notes/delete", JSONObject().put("i", token).put("noteId", repostId.value))
+        api.post(origin, "notes/delete", JSONObject().put("i", token).put("noteId", repostId.value), MISSKEY_MAX_RESPONSE_BYTES)
         Unit
     }
 
-    override suspend fun setReshared(id: EntityId, selected: Boolean, ownRepostId: EntityId?): PostActionResult = request {
+    override suspend fun setReshared(id: EntityId, selected: Boolean, ownRepostId: EntityId?): PostActionResult = request("renote") {
         validatePostId(id, "renote")
         if (!selected) {
             unrenote(id, ownRepostId)
@@ -467,22 +469,22 @@ class MisskeySource(
         }
         val response = JSONObject(api.post(origin, "notes/create", JSONObject()
             .put("i", token)
-            .put("renoteId", id.value)).body)
+            .put("renoteId", id.value), MISSKEY_MAX_RESPONSE_BYTES).body)
         val created = response.optJSONObject("createdNote")
             ?: throw SourceError.ServerError("Misskey did not return the created renote")
         val createdId = created.optString("id").takeIf { it.isNotBlank() }?.let { EntityId(origin, it) }
         PostActionResult(selected = true, createdRepostId = createdId)
     }
 
-    override suspend fun save(id: EntityId) = request {
+    override suspend fun save(id: EntityId) = request("save") {
         validatePostId(id, "save")
-        api.post(origin, "notes/favorites/create", JSONObject().put("i", token).put("noteId", id.value))
+        api.post(origin, "notes/favorites/create", JSONObject().put("i", token).put("noteId", id.value), MISSKEY_MAX_RESPONSE_BYTES)
         Unit
     }
 
-    override suspend fun unsave(id: EntityId) = request {
+    override suspend fun unsave(id: EntityId) = request("save") {
         validatePostId(id, "save")
-        api.post(origin, "notes/favorites/delete", JSONObject().put("i", token).put("noteId", id.value))
+        api.post(origin, "notes/favorites/delete", JSONObject().put("i", token).put("noteId", id.value), MISSKEY_MAX_RESPONSE_BYTES)
         Unit
     }
 
@@ -491,10 +493,10 @@ class MisskeySource(
         return PostActionResult(selected = selected)
     }
 
-    override suspend fun savedPosts(cursor: String?): Page<Post> = request {
+    override suspend fun savedPosts(cursor: String?): Page<Post> = request("saved.posts") {
         val body = JSONObject().put("i", token).put("limit", 30)
         cursor?.takeIf(String::isNotBlank)?.let { body.put("untilId", it) }
-        val values = JSONArray(api.post(origin, "i/favorites", body).body)
+        val values = JSONArray(api.post(origin, "i/favorites", body, MISSKEY_MAX_RESPONSE_BYTES).body)
         val items = (0 until values.length()).mapNotNull { index ->
             val wrapper = values.optJSONObject(index) ?: return@mapNotNull null
             val note = wrapper.optJSONObject("note") ?: wrapper
@@ -510,9 +512,9 @@ class MisskeySource(
         if (id.value.isBlank()) throw SourceError.Unsupported(feature)
     }
 
-    override suspend fun loadEditableProfile(): EditableProfile = request {
+    override suspend fun loadEditableProfile(): EditableProfile = request("profile.editable") {
         val localId = requireAccountId().localId
-        val json = JSONObject(api.post(origin, "i", JSONObject().put("i", token)).body)
+        val json = JSONObject(api.post(origin, "i", JSONObject().put("i", token), MISSKEY_MAX_RESPONSE_BYTES).body)
         EditableProfile(
             id = localId,
             displayName = json.optString("name"),
@@ -520,13 +522,13 @@ class MisskeySource(
         )
     }
 
-    override suspend fun updateEditableProfile(patch: EditableProfilePatch): EditableProfile = request {
+    override suspend fun updateEditableProfile(patch: EditableProfilePatch): EditableProfile = request("profile.editable.update") {
         val unsupported = patch != EditableProfilePatch(displayName = patch.displayName, biography = patch.biography)
         if (unsupported) throw SourceError.Unsupported("profile.editable.update")
         val body = JSONObject().put("i", token)
         patch.displayName?.let { body.put("name", it) }
         patch.biography?.let { body.put("description", it) }
-        val json = JSONObject(api.post(origin, "i/update", body).body)
+        val json = JSONObject(api.post(origin, "i/update", body, MISSKEY_MAX_RESPONSE_BYTES).body)
         val returnedId = json.optString("id").takeIf { it.isNotBlank() }
         val expectedId = accountId?.localId
         if (expectedId != null && returnedId != null && returnedId != expectedId) {
@@ -539,82 +541,83 @@ class MisskeySource(
         )
     }
 
-    override suspend fun customEmojis(): List<CustomEmoji> = request {
-        val response = api.post(origin, "emojis", JSONObject().put("i", token))
+    override suspend fun customEmojis(): List<CustomEmoji> = request("emoji.catalog") {
+        val response = api.post(origin, "emojis", JSONObject().put("i", token), MISSKEY_MAX_RESPONSE_BYTES)
         MisskeyEmojiMapper.parseCatalog(response.body, origin)
     }
 
-    override suspend fun delete(id: EntityId) = request {
+    override suspend fun delete(id: EntityId) = request("delete") {
         validatePostId(id, "delete")
-        api.post(origin, "notes/delete", JSONObject().put("i", token).put("noteId", id.value))
+        api.post(origin, "notes/delete", JSONObject().put("i", token).put("noteId", id.value), MISSKEY_MAX_RESPONSE_BYTES)
         Unit
     }
 
     override fun streamEvents(): Flow<Event> = streamService.events()
 
-    override suspend fun notifications(cursor: String?): Page<Notification> = request { notificationService.notifications(cursor) }
+    override suspend fun notifications(cursor: String?): Page<Notification> = request("notifications") { notificationService.notifications(cursor) }
 
-    override suspend fun notifications(query: NotificationQuery, cursor: NotificationCursor?): NotificationPage = request { notificationService.notifications(query, cursor) }
+    override suspend fun notifications(query: NotificationQuery, cursor: NotificationCursor?): NotificationPage = request("notifications") { notificationService.notifications(query, cursor) }
 
-    override suspend fun fetchNewerNotifications(query: NotificationQuery, checkpoint: NotificationCheckpoint): NotificationPage = request {
+    override suspend fun fetchNewerNotifications(query: NotificationQuery, checkpoint: NotificationCheckpoint): NotificationPage = request("notifications.newer") {
         notificationService.fetchNewer(query, checkpoint)
     }
 
-    override suspend fun fetchOlderNotifications(query: NotificationQuery, checkpoint: NotificationCheckpoint): NotificationPage = request {
+    override suspend fun fetchOlderNotifications(query: NotificationQuery, checkpoint: NotificationCheckpoint): NotificationPage = request("notifications.older") {
         notificationService.fetchOlder(query, checkpoint)
     }
 
-    override suspend fun notificationUnreadState(): NotificationUnreadState = request { notificationService.unreadState() }
+    override suspend fun notificationUnreadState(): NotificationUnreadState = request("notifications.unread") { notificationService.unreadState() }
 
-    override suspend fun pushProviderInfo(): PushProviderInfo = request { pushService.providerInfo() }
+    override suspend fun pushProviderInfo(): PushProviderInfo = request("notifications.push.provider") { pushService.providerInfo() }
 
-    override suspend fun acknowledgeNotifications(): NotificationAcknowledgement = request { notificationService.acknowledge() }
+    override suspend fun acknowledgeNotifications(): NotificationAcknowledgement = request("notifications.acknowledge") { notificationService.acknowledge() }
 
-    override suspend fun queryOwnedPushSubscription(knownEndpoint: ValidatedUrl?): PushSubscription? = request { pushService.query(knownEndpoint) }
+    override suspend fun queryOwnedPushSubscription(knownEndpoint: ValidatedUrl?): PushSubscription? = request("notifications.push.query") { pushService.query(knownEndpoint) }
 
     override suspend fun createOrReplacePushSubscription(
         spec: PushSubscriptionSpec,
         previous: PushSubscription?,
-    ): PushSubscription = request { pushService.createOrReplace(spec, previous) }
+    ): PushSubscription = request("notifications.push.create") { pushService.createOrReplace(spec, previous) }
 
     override suspend fun updatePushAlertPolicy(
         subscription: PushSubscription,
         alerts: Set<NotificationCategory>,
-    ): PushSubscription = request { pushService.updatePolicy(subscription, alerts) }
+    ): PushSubscription = request("notifications.push.update") { pushService.updatePolicy(subscription, alerts) }
 
-    override suspend fun removePushSubscription(subscription: PushSubscription) = request { pushService.remove(subscription) }
+    override suspend fun removePushSubscription(subscription: PushSubscription) = request("notifications.push.remove") { pushService.remove(subscription) }
 
-    override suspend fun respondToFollowRequest(targetAccountId: AccountId, accept: Boolean) = request {
+    override suspend fun respondToFollowRequest(targetAccountId: AccountId, accept: Boolean) = request("notifications.followRequest") {
         notificationService.respondToFollowRequest(targetAccountId, accept)
     }
 
-    override suspend fun blockedAccounts(cursor: ModerationCursor?): ModerationPage<ModerationAccount> = request {
+    override suspend fun blockedAccounts(cursor: ModerationCursor?): ModerationPage<ModerationAccount> = request("moderation.blocked") {
         moderationService?.blocked(cursor) ?: unsupported("moderation.blocked")
     }
 
-    override suspend fun mutedAccounts(cursor: ModerationCursor?): ModerationPage<ModerationAccount> = request {
+    override suspend fun mutedAccounts(cursor: ModerationCursor?): ModerationPage<ModerationAccount> = request("moderation.muted") {
         moderationService?.muted(cursor) ?: unsupported("moderation.muted")
     }
 
-    override suspend fun mutedHashtags(cursor: ModerationCursor?): ModerationPage<MutedHashtag> = request {
+    override suspend fun mutedHashtags(cursor: ModerationCursor?): ModerationPage<MutedHashtag> = request("moderation.hashtags") {
         moderationService?.hashtags(cursor) ?: unsupported("moderation.hashtags")
     }
 
-    override suspend fun removeBlockedAccount(entry: ModerationAccount) = request {
+    override suspend fun removeBlockedAccount(entry: ModerationAccount) = request("moderation.blocked.remove") {
         moderationService?.removeBlocked(entry) ?: unsupported<Unit>("moderation.blocked.remove")
     }
 
-    override suspend fun removeMutedAccount(entry: ModerationAccount) = request {
+    override suspend fun removeMutedAccount(entry: ModerationAccount) = request("moderation.muted.remove") {
         moderationService?.removeMuted(entry) ?: unsupported<Unit>("moderation.muted.remove")
     }
 
-    override suspend fun report(request: ReportRequest) = request {
+    override suspend fun report(request: ReportRequest) = request("moderation.report") {
         moderationService?.report(request) ?: unsupported<Unit>("moderation.report")
     }
 
     private fun requireAccountId(): AccountId = accountId ?: throw SourceError.Unsupported("notifications.account")
 
     private suspend fun <T> request(
+        operation: String,
         invalidateCapabilitiesOnNotFound: Boolean = false,
         block: suspend () -> T,
     ): T = withContext(Dispatchers.IO) {
@@ -631,7 +634,7 @@ class MisskeySource(
             }
             throw MisskeyErrorMapper.map(e)
         } catch (_: ResponseLimitExceeded) {
-            throw SourceError.ResourceLimit("thread")
+            throw SourceError.ResourceLimit(operation)
         } catch (e: Exception) {
             throw MisskeyErrorMapper.map(e)
         }
@@ -696,7 +699,7 @@ class MisskeySource(
         const val MAX_REQUESTS = 40
         const val MAX_BATCH_TIME_MILLIS = 15_000L
         const val CHILDREN_PAGE_LIMIT = 30
-        const val MAX_THREAD_RESPONSE_BYTES = 4L * 1024L * 1024L
+        const val MAX_THREAD_RESPONSE_BYTES = MISSKEY_MAX_RESPONSE_BYTES
         const val CAPABILITIES_TTL_MILLIS = 5 * 60 * 1000L
 
         // Misskey's secure push endpoints return ACCESS_DENIED for MiAuth/app

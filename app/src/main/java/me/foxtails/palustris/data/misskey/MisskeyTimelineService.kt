@@ -14,6 +14,7 @@ internal class MisskeyTimelineService(
     private val origin: String,
     private val token: String,
     private val api: MisskeyApi,
+    private val maxResponseBytes: Long = MISSKEY_MAX_RESPONSE_BYTES,
 ) {
     suspend fun timeline(timeline: Timeline, cursor: String?, capabilities: ServerCapabilities): Page<Post> {
         when (capabilities.timelineStatus(timeline)) {
@@ -33,7 +34,7 @@ internal class MisskeyTimelineService(
             Timeline.Federated -> "notes/global-timeline"
         }
         params.put("withFiles", true)
-        val notes = JSONArray(api.post(origin, endpoint, params).body)
+        val notes = JSONArray(api.post(origin, endpoint, params, maxResponseBytes).body)
         return Page(
             (0 until notes.length()).map { MisskeyMapper.post(notes.getJSONObject(it), origin) },
             // Misskey paginates by the outer renote ID, not the displayed original note.

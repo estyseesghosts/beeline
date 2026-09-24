@@ -20,6 +20,7 @@ class MisskeyModerationService(
     private val token: String,
     private val api: MisskeyApi,
     private val accountId: AccountId,
+    private val maxResponseBytes: Long = MISSKEY_MAX_RESPONSE_BYTES,
 ) {
     suspend fun blocked(cursor: ModerationCursor? = null): ModerationPage<ModerationAccount> = list(ModerationListKind.Blocked, cursor)
     suspend fun muted(cursor: ModerationCursor? = null): ModerationPage<ModerationAccount> = list(ModerationListKind.Muted, cursor)
@@ -30,7 +31,7 @@ class MisskeyModerationService(
     suspend fun setBlocked(target: AccountId, blocked: Boolean): ProfileRelationship {
         validateTarget(target, "profile.block")
         if (blocked) {
-            api.post(origin, "blocking/create", JSONObject().put("i", token).put("userId", target.localId))
+            api.post(origin, "blocking/create", JSONObject().put("i", token).put("userId", target.localId), maxResponseBytes)
         } else {
             deleteByAccount("blocking", target)
         }
@@ -40,7 +41,7 @@ class MisskeyModerationService(
     suspend fun setMuted(target: AccountId, muted: Boolean): ProfileRelationship {
         validateTarget(target, "profile.mute")
         if (muted) {
-            api.post(origin, "mute/create", JSONObject().put("i", token).put("userId", target.localId))
+            api.post(origin, "mute/create", JSONObject().put("i", token).put("userId", target.localId), maxResponseBytes)
         } else {
             deleteByAccount("mute", target)
         }
@@ -58,6 +59,7 @@ class MisskeyModerationService(
                     .put("i", token)
                     .put("userId", request.targetAccountId.localId)
                     .put("comment", request.comment),
+                maxResponseBytes,
             )
         }
     }
@@ -75,7 +77,7 @@ class MisskeyModerationService(
             val decoded = decodeCursor(cursor, kind, variant)
             val body = JSONObject().put("i", token).put("limit", PAGE_LIMIT)
             decoded?.let { body.put("untilId", it) }
-            val values = JSONArray(api.post(origin, endpoint, body).body)
+            val values = JSONArray(api.post(origin, endpoint, body, maxResponseBytes).body)
             val items = (0 until values.length()).mapNotNull { index ->
                 val entry = values.optJSONObject(index) ?: return@mapNotNull null
                 val nested = entry.optJSONObject(if (kind == ModerationListKind.Blocked) "blockee" else "mutee")
@@ -97,7 +99,7 @@ class MisskeyModerationService(
         if (entry.account.id.connection.origin != origin || entry.relationshipId.isNullOrBlank()) {
             throw SourceError.ForeignOrigin("moderation.remove")
         }
-        api.post(origin, endpoint, JSONObject().put("i", token).put(parameter, entry.relationshipId))
+        api.post(origin, endpoint, JSONObject().put("i", token).put(parameter, entry.relationshipId), maxResponseBytes)
     }
 
     private suspend fun deleteByAccount(kind: String, target: AccountId) {
@@ -105,6 +107,7 @@ class MisskeyModerationService(
             origin,
             if (kind == "blocking") "blocking" else "mute/list",
             JSONObject().put("i", token).put("userId", target.localId).put("limit", PAGE_LIMIT),
+            maxResponseBytes,
         )
         val values = JSONArray(response.body)
         val relationId = (0 until values.length()).asSequence()
@@ -121,6 +124,7 @@ class MisskeyModerationService(
             origin,
             if (kind == "blocking") "blocking/delete" else "mute/delete",
             JSONObject().put("i", token).put(if (kind == "blocking") "blockId" else "muteId", relationId),
+            maxResponseBytes,
         )
     }
 
@@ -129,6 +133,7 @@ class MisskeyModerationService(
             origin,
             "users/relation",
             JSONObject().put("i", token).put("userId", target.localId),
+            maxResponseBytes,
         )
         return MisskeyMapper.relationship(JSONObject(response.body), target)
     }
