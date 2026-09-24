@@ -76,7 +76,7 @@ class MastodonMapperTest {
             .put("show_featured", false)
             .put("attribution_domains", JSONArray().put("example.org"))
 
-        val profile = MastodonMapper.editableProfile(json, "https://example.org")
+        val profile = MastodonMapper.editableProfile(json)
 
         assertEquals("self", profile.id)
         assertEquals("Self", profile.displayName)
@@ -106,7 +106,6 @@ class MastodonMapperTest {
                 .put("avatar_description", "A picture")
                 .put("header", "https://example.org/header.png")
                 .put("header_description", "A banner"),
-            "https://example.org",
         )
 
         assertEquals("https://example.org/avatar.png", profile.avatarUrl)
@@ -128,7 +127,7 @@ class MastodonMapperTest {
                 .put("fields", JSONArray()
                     .put(JSONObject().put("name", "Site").put("value", "https://example.org"))))
 
-        val profile = MastodonMapper.legacyEditableProfile(json, "https://example.org")
+        val profile = MastodonMapper.legacyEditableProfile(json)
 
         assertEquals("self", profile.id)
         assertEquals("Rendered name", profile.displayName)
@@ -145,7 +144,6 @@ class MastodonMapperTest {
                 .put("note", "<p>Rendered note</p>")
                 .put("fields", JSONArray()
                     .put(JSONObject().put("name", "Site").put("value", "<a href=\"https://example.org\">site</a>"))),
-            "https://example.org",
         )
 
         assertEquals("Rendered name", profile.displayName)

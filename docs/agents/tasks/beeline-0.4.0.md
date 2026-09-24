@@ -1,8 +1,8 @@
-# Beeline 0.4.0 task state — 1E1 boundary
+# Beeline 0.4.0 task state — 1E2 boundary
 
 ## Objective
 
-Execute Beeline 0.4.0 plan phases 0-2 in verified slices. This record covers the reviewed 1D3 adapter and 1D3 UI slices plus the completed 1E1 adapter residue cleanup.
+Execute Beeline 0.4.0 plan phases 0-2 in verified slices. This record covers the reviewed 1D3 adapter and 1D3 UI slices, the completed 1E1 adapter residue cleanup, and the 1E2 mapper argument cleanup.
 
 ## Invariants
 
@@ -16,20 +16,21 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices. This record covers the
 
 ## Current boundary
 
-1D3 adapter and 1D3 UI are complete and reviewed. 1E1 adapter residue cleanup is committed as the current commit with message "Remove unused adapter constants". The next implementation slice is 1E2 (Remove unused mapper arguments and update mapper callers/tests).
+1D3 adapter and 1D3 UI are complete and reviewed. 1E1 adapter residue cleanup is committed as commit d5da867 with message "Remove unused adapter constants". 1E2 mapper argument cleanup is implemented and verified in the worktree and awaits commit. The next implementation slice after 1E2 is 1E3 (Review the remaining Phase 1 Mastodon path encoders and JSON parsers).
 
-The visible footer and retry behavior from 1D3 stays unchanged. The 1E1 slice removes only proven-unused private constants from the two source facades. It changes no behavior, no protocol branch, and no shared UI or domain code.
+The visible footer and retry behavior from 1D3 stays unchanged. The 1E1 slice removes only proven-unused private constants from the two source facades. The 1E2 slice removes only the proven-unused origin parameters from the two self-profile mappers. Both slices change no behavior, no protocol branch, and no shared UI or domain code.
 
-## 1E1 change
+## 1E2 change
 
-- `data/misskey/MisskeySource.kt`: removed unused `DIRECT_PAGE_LIMIT`, `SECURE_CREDENTIAL_FAILURE_CODES`, and `MISSING_PUSH_REGISTRATION_CODES` from the facade companion. The live direct inbox limit stays in `MisskeyDirectMessageService.DIRECT_PAGE_LIMIT`, which still serves `requestBody`. Live push ownership stays in `MisskeyPushService.SECURE_CODES` and `MisskeyPushService.MISSING_CODES`, which still serve push registration reads and secure-credential mapping.
-- `data/mastodon/MastodonSource.kt`: removed unused `DEFAULT_NOTIFICATION_LIMIT` from the companion and the unused file-private `DIRECT_CONVERSATION_LIMIT`. The live limits stay in `MastodonNotificationService` and `MastodonDirectMessageService`, which still serve notification and conversation requests.
-- Repo-wide caller recheck before removal found references only at the removed declaration sites and at the live service constants. No test, resource, or adapter references the removed names.
-- No new test was required. Removal of unreferenced private constants has no behavior path.
+- `data/mastodon/MastodonMapper.kt`: removed the unused `origin` parameter from `editableProfile(json)` and `legacyEditableProfile(json)`. Both bodies never read `origin`. Output is unchanged.
+- `data/mastodon/MastodonSelfProfileService.kt`: updated the four mapper call sites in `load` and `update`. The service keeps its own `origin` field. Origin validation, account matching, and request behavior stay unchanged.
+- `data/mastodon/MastodonMapperTest.kt`: updated the four mapper call sites in the editable-profile tests. Assertions stay unchanged.
+- Repo-wide caller recheck found mapper callers only in `MastodonSelfProfileService` and `MastodonMapperTest`. `ProfileViewModelTest` defines a local helper with a similar name. It does not call the mapper. It stays untouched.
+- All other used `origin` parameters stay untouched. Query encoders stay untouched. Misskey code stays untouched. Shared domain and UI code stay untouched. No new abstraction was added.
 
 ## Changed ownership
 
-Ownership is unchanged by 1E1. For the record, 1D3 ownership still stands:
+Ownership is unchanged by 1E2. For the record, 1D3 ownership still stands:
 
 - `domain/DirectMessageModels.kt`: `DirectThreadResult` and `ThreadLimitation.PendingLimit`. Presentation is owned by the UI layer. The contract stays protocol-neutral.
 - `domain/DirectMessageSource.kt`: `conversationThread` returns cursor plus `DirectThreadResult`.
@@ -46,19 +47,19 @@ Ownership is unchanged by 1E1. For the record, 1D3 ownership still stands:
 
 ## Protocol neutrality
 
-- 1E1 keeps all protocol behavior in adapters. It removes no live service constant and moves no logic between adapters.
+- 1E2 keeps all protocol behavior in adapters. It moves no logic between adapters.
 - The footer still derives from `DirectThreadResult` state only. No protocol branch exists in generic Compose UI or the generic ViewModel.
 - Mastodon `Finished` has no extra control.
 - Misskey continuation and limited states stay visible through the same footer.
 
 ## Verification
 
-Focused gate evidence from this 1E1 session, run after the removal:
+Focused gate evidence from this 1E2 session, run after the removal:
 
-- `DirectMessageSourceTest`: 50 passed, 0 failed.
-- `MisskeyIntegrationTest`: 48 passed, 0 failed.
-- `MastodonIntegrationTest`: 58 passed, 0 failed.
-- `:app:lintDebug`: passed.
+- `MastodonMapperTest`: 12 passed, 0 failed, 0 errors, 0 skipped.
+- `MastodonIntegrationTest`: 58 passed, 0 failed, 0 errors, 0 skipped.
+- `MastodonSourceContractTest`: 6 passed, 0 failed, 0 errors, 0 skipped.
+- `:app:lintDebug`: passed with BUILD SUCCESSFUL and zero Error-severity issues.
 - Full `test assembleRelease` remains known red and was not run, per slice scope.
 - The Python tool suite was not run. Source changes touch no tool.
 
@@ -72,9 +73,10 @@ Focused gate evidence from this 1E1 session, run after the removal:
 ## Hygiene
 
 - `docs/classic_navigation.md` remains staged and untouched. All other unrelated changes remain unstaged or untracked: modified `.opencode/*` and `importantdocs/writing_style.md`, deleted PNGs, and untracked `.opencode/agents` helpers, tools scripts, and caches.
-- The task log at `logs/260924-1E1-slice.txt` remains ignored and unstaged.
+- The task logs at `logs/260924-1E1-slice.txt` and `logs/260924-1E2-slice.txt` remain ignored and unstaged.
+- `docs/beeline_0.4.0.md` stays untouched.
 - This records update stages nothing, commits nothing, amends nothing, and pushes nothing.
 
 ## Last safe boundary
 
-The current 1E1 commit with message "Remove unused adapter constants" is the safe boundary. The next session must get its exact hash with `git log -1`. Git history is authoritative. The next implementation slice after this boundary is 1E2.
+The committed 1E1 commit d5da867 with message "Remove unused adapter constants" is the last safe committed boundary. The verified 1E2 work is implemented in the worktree and uncommitted. Git history is authoritative. The next implementation slice after this boundary is 1E3.

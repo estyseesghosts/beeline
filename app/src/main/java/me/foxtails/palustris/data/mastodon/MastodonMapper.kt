@@ -85,7 +85,7 @@ object MastodonMapper {
     }
 
     /** API 8 self-profile responses carry raw values; no HTML or Markdown conversion. */
-    fun editableProfile(json: JSONObject, origin: String): EditableProfile = EditableProfile(
+    fun editableProfile(json: JSONObject): EditableProfile = EditableProfile(
         id = json.optString("id"),
         displayName = json.optString("display_name"),
         biography = json.optString("note"),
@@ -114,7 +114,7 @@ object MastodonMapper {
     )
 
     /** Legacy verify-credentials responses prefer plaintext source values over rendered ones. */
-    fun legacyEditableProfile(json: JSONObject, origin: String): EditableProfile {
+    fun legacyEditableProfile(json: JSONObject): EditableProfile {
         val source = json.optJSONObject("source")
         val renderedFields = json.optJSONArray("fields")?.let { values ->
             (0 until values.length()).mapNotNull { index ->

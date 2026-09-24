@@ -28,9 +28,9 @@ class MastodonSelfProfileService(
         val json = JSONObject(body)
         requireMatchingAccount(json)
         return if (capabilities.read == CapabilityStatus.Supported) {
-            MastodonMapper.editableProfile(json, origin)
+            MastodonMapper.editableProfile(json)
         } else {
-            MastodonMapper.legacyEditableProfile(json, origin)
+            MastodonMapper.legacyEditableProfile(json)
         }
     }
 
@@ -66,9 +66,9 @@ class MastodonSelfProfileService(
         val json = JSONObject(response.body)
         requireMatchingAccount(json)
         return if (capabilities.update == CapabilityStatus.Supported) {
-            MastodonMapper.editableProfile(json, origin)
+            MastodonMapper.editableProfile(json)
         } else {
-            MastodonMapper.legacyEditableProfile(json, origin)
+            MastodonMapper.legacyEditableProfile(json)
         }
     }
 
