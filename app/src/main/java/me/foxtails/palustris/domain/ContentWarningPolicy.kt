@@ -9,6 +9,15 @@ enum class ContentWarningDecision {
 
 /** Applies server visibility first, then local hide rules, then local expansion rules. */
 object ContentWarningPolicy {
+    /**
+     * Selects the first matching tag in input order, independent of mute-set iteration order.
+     * Hashtags and mutes are protocol-neutral local data.
+     */
+    fun firstMatchingMutedHashtag(hashtags: List<String>, mutedHashtags: Set<String>): String? {
+        if (hashtags.isEmpty() || mutedHashtags.isEmpty()) return null
+        return hashtags.firstOrNull { tag -> matchesHashtagMute(listOf(tag), mutedHashtags) }
+    }
+
     fun matchesHashtagMute(hashtags: Collection<String>, mutedHashtags: Collection<String>): Boolean {
         if (hashtags.isEmpty() || mutedHashtags.isEmpty()) return false
         val normalizedHashtags = hashtags.map { it.trim().removePrefix("#").lowercase() }.toSet()
