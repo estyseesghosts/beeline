@@ -16,7 +16,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices. This record covers the
 
 ## Current boundary
 
-1D3 adapter and 1D3 UI are complete and reviewed. 1E1 adapter residue cleanup is committed. 1E2 mapper argument cleanup is committed. 1E3 path-encoder cleanup is implemented and verified in the worktree and awaits commit. The next step after 1E3 is the Phase 1 closure audit. The audit confirms the 1A, 1B, 1C, 1D, and 1E gates, including the pending 1C-c review, before 2A starts.
+1D3 adapter and 1D3 UI are complete and reviewed. 1E1 adapter residue cleanup is committed. 1E2 mapper argument cleanup is committed. 1E3 path-encoder cleanup is committed as HEAD 4bae97d. The 1C-c review finding has a test-only repair in the worktree, uncommitted, with fresh review pending verification. The next step after the 1C-c repair is the Phase 1 closure audit. The audit confirms the 1A, 1B, 1C, 1D, and 1E gates before 2A starts.
 
 The visible footer and retry behavior from 1D3 stays unchanged. The 1E1 slice removes only proven-unused private constants from the two source facades. The 1E2 slice removes only proven-unused origin parameters from the two self-profile mappers. The 1E3 slice replaces only the four duplicate Mastodon path encoders with one helper. All three slices change no behavior, no protocol branch, and no shared UI or domain code.
 
@@ -77,13 +77,23 @@ Focused gate evidence from this 1E3 session, run after the replacement:
 - Physical-device, API 29, RTL, and signed-release checks.
 - Live-server behavior.
 
+## 1C-c repair
+
+- The fresh review found that `SinglePostScreenTest.mutedQuoteWarningAndRevealMatchAcrossPostRowAndPhotoGridDetail` built its parent post without image attachments. `SinglePostScreen` routes PhotoGrid presentation with empty photos through `PostRow`, so the PhotoGrid half never exercised the detail branch.
+- Test-only repair in `app/src/test/java/me/foxtails/palustris/ui/SinglePostScreenTest.kt`: the parent fixture gains `attachments = listOf(image("muted-parity-parent"))`, matching the `sameHiddenPostUsesTheSameQuoteDecisionInPhotoGridDetailAndPostRow` pattern. The test name and purpose are unchanged.
+- The PhotoGrid half asserts `single_post_photo_pager` is displayed, which proves the detail branch renders. Both halves assert the muted quote body is absent before reveal and present after `Show content`.
+- Production behavior is unchanged. No unrelated test is changed.
+- Verification: `SinglePostScreenTest` 40 passed; `ContentWarningPolicyTest` 3 passed; zero failures, errors, or skips in both suites; `:app:lintDebug` passed with BUILD SUCCESSFUL. Full `test assembleRelease` remains known red and was not run, per scope.
+- Status: 1C-c is no longer pending. It has a repair and fresh review pending verification. Detail is in ignored `logs/260924-1C-c-repair.txt`.
+
 ## Hygiene
 
 - `docs/classic_navigation.md` remains staged and untouched. All other unrelated changes remain unstaged or untracked: modified `.opencode/*` and `importantdocs/writing_style.md`, deleted PNGs, and untracked `.opencode/agents` helpers, tools scripts, and caches.
-- The task logs at `logs/260924-1E1-slice.txt`, `logs/260924-1E2-slice.txt`, and `logs/260924-1E3-slice.txt` remain ignored and unstaged.
+- The task logs at `logs/260924-1E1-slice.txt`, `logs/260924-1E2-slice.txt`, `logs/260924-1E3-slice.txt`, and `logs/260924-1C-c-repair.txt` remain ignored and unstaged.
+- The uncommitted 1C-c test repair in `SinglePostScreenTest.kt` remains unstaged.
 - `docs/beeline_0.4.0.md` stays untouched.
 - This records update stages nothing, commits nothing, amends nothing, and pushes nothing.
 
 ## Last safe boundary
 
-The committed HEAD de5d58d with message "Remove unused mapper parameters" is the last safe committed boundary. The verified 1E3 work is implemented in the worktree and uncommitted. Git history is authoritative. The next step after this boundary is the Phase 1 closure audit.
+The committed HEAD 4bae97d with message "Extract Mastodon path encoding" is the last safe committed boundary. The 1C-c test repair is implemented in the worktree and uncommitted. Git history is authoritative. The next step after this boundary is the fresh review of the 1C-c repair, then the Phase 1 closure audit.

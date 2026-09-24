@@ -826,7 +826,8 @@ class SinglePostScreenTest {
         )
         val post = Post(
             EntityId("https://example.org", "muted-parity-parent"), account,
-            "parent", 0, Audience.Public, quote = quoted,
+            "parent", 0, Audience.Public,
+            attachments = listOf(image("muted-parity-parent")), quote = quoted,
         )
         fun show(presentation: SinglePostPresentation) {
             compose.activity.runOnUiThread {
@@ -843,12 +844,15 @@ class SinglePostScreenTest {
 
         show(SinglePostPresentation.Standard)
         compose.onNodeWithText("muted word: #muted").assertIsDisplayed()
+        compose.onAllNodesWithText("parity quote body #muted", useUnmergedTree = true).assertCountEquals(0)
         compose.onNodeWithText("Show content").performClick()
         compose.waitForIdle()
         compose.onNodeWithText("parity quote body #muted").assertIsDisplayed()
 
         show(SinglePostPresentation.PhotoGrid)
+        compose.onNodeWithTag("single_post_photo_pager", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithText("muted word: #muted").assertIsDisplayed()
+        compose.onAllNodesWithText("parity quote body #muted", useUnmergedTree = true).assertCountEquals(0)
         compose.onNodeWithText("Show content").performClick()
         compose.waitForIdle()
         compose.onNodeWithText("parity quote body #muted").assertIsDisplayed()
