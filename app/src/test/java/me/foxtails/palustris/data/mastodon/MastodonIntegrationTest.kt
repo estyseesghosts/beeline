@@ -1,8 +1,13 @@
 package me.foxtails.palustris.data.mastodon
 
 import java.io.ByteArrayInputStream
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.cancelAndJoin
 import me.foxtails.palustris.data.mastodon.MastodonMapper
 import me.foxtails.palustris.data.mastodon.MastodonSource
 import me.foxtails.palustris.data.misskey.MisskeyApi
@@ -242,6 +247,38 @@ class MastodonIntegrationTest {
         assertEquals("/api/v1/timelines/home", firstRequest.path)
         assertEquals("/api/v1/timelines/home?max_id=newest", secondRequest.path)
         assertEquals("Bearer token", secondRequest.getHeader("Authorization"))
+    }
+
+    @Test
+    fun cancelingTimelinePageCancelsRequestAndAllowsRetry() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]").addHeader(
+            "Link", "<$origin/api/v1/timelines/home?max_id=next>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody("[]").setBodyDelay(5, TimeUnit.SECONDS))
+        server.enqueue(MockResponse().setBody("[${status("retried")}]"))
+        val source = source()
+        val cursor = source.timeline(me.foxtails.palustris.domain.Timeline.Home).nextCursor
+        assertNotNull(cursor)
+        assertEquals("/api/v1/timelines/home", server.takeRequest(5, TimeUnit.SECONDS)?.path)
+
+        val pending = async(Dispatchers.IO) {
+            source.timeline(me.foxtails.palustris.domain.Timeline.Home, cursor)
+        }
+        val request = server.takeRequest(5, TimeUnit.SECONDS)
+        assertNotNull("The second-page request should reach the server", request)
+        assertEquals("/api/v1/timelines/home?max_id=next", request!!.path)
+        pending.cancelAndJoin()
+        assertTrue(pending.isCancelled)
+        try {
+            pending.await()
+            throw AssertionError("Canceled page must not deliver a result")
+        } catch (_: CancellationException) {
+            // Cancellation is the expected result, not a mapped page failure.
+        }
+
+        val retry = source.timeline(me.foxtails.palustris.domain.Timeline.Home, cursor)
+        assertEquals(listOf("retried"), retry.items.map { it.id.value })
+        assertEquals("/api/v1/timelines/home?max_id=next", server.takeRequest(5, TimeUnit.SECONDS)?.path)
     }
 
     @Test

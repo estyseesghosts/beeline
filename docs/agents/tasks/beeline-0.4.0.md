@@ -29,6 +29,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Completed
 
+- Slice 1B characterization: `FeedViewModelRequestTest.failedPageKeepsCursorForARetry` already verified retained rows and cursor after a failed request, then retry; added an assertion that the failure is surfaced. Added `MastodonIntegrationTest.cancelingTimelinePageCancelsRequestAndAllowsRetry` for in-flight cancellation, no delivered page, and a subsequent successful retry.
 - Slice 0A is complete at `ba3fe53`. Verification: 51 Python tests passed; architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline; all 120 relative links across 11 touched Markdown files resolve. No source changes occurred.
 - Slice 0B requirements-classification work is recorded as executed at `72fafc4`; the foldable emulator posture pass is recorded at `4f28a69`. The re-traversal audit re-opened 0B: the register needs the four-to-six wide-button correction, captures are partial, and geometry approval is pending (queued as slice 2). The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
 - Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`.
@@ -38,7 +39,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Current slice
 
-This slice records the 0B measure approval (documentation only). Base/last safe commit before this commit is `4fcaecd`.
+This slice completes 1B characterization. Base HEAD is `d4f448d`; no staging or commit occurred.
 
 R0 records the completed phases 0 and 1 re-traversal audit. The last safe code-slice commit is `fa087d0`. R0 records are `412fc02`. The current HEAD at the start of this records slice was `209e13a`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary.
 
@@ -91,6 +92,15 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Verification
 
+- 1B characterization corrected combined command ` .\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.data.mastodon.MastodonIntegrationTest" --tests "me.foxtails.palustris.MisskeySourceContractTest" --tests "me.foxtails.palustris.ui.feed.FeedViewModelRequestTest"`: exit 0; `BUILD SUCCESSFUL`; 73 tests completed (MastodonIntegrationTest 57, MisskeySourceContractTest 6, FeedViewModelRequestTest 10). The earlier recorded total of 63 reflected only the first two classes; the incorrect feed selector did not run the feed class.
+- 1B characterization feed-only command ` .\gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "me.foxtails.palustris.ui.feed.FeedViewModelRequestTest"`: exit 0; `BUILD SUCCESSFUL`; 10 tests completed.
+- XML results confirm `MastodonIntegrationTest.cancelingTimelinePageCancelsRequestAndAllowsRetry` and `FeedViewModelRequestTest.failedPageKeepsCursorForARetry` both executed with no failures.
+- 1B characterization ` .\gradlew.bat --no-daemon --console=plain :app:lintDebug`: exit 0; `BUILD SUCCESSFUL`.
+- 1B characterization `python -m unittest discover -s tools/tests`: exit 0; 51 tests passed.
+- 1B characterization `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0; 607 findings, no reported baseline regression.
+- Cancellation test initial attempt failed because the bounded request read consumed the queued first-page request. The test now consumes the first-page request before asserting the canceled continuation; the final focused gate passes.
+- The mocked integration test does not verify live-server cancellation behavior. Device behavior was not required or tested.
+
 - The 1B4 slice consists of `MastodonSource.kt`, `MastodonIntegrationTest.kt`, and these two records; the whole-worktree diff also lists unrelated pre-existing changes that are never staged or committed with a slice.
 - 0A verification is recorded above: 51 Python tests; architecture audit exit 0 with 605 findings and no new regressions; 120 relative links resolved.
 - The initial focused Gradle run exited 1 with two `NavigationTest` failures. `NavigationTest` then failed standalone at base commit `ba3fe53` with an empty `app/src` diff; this pre-existing issue is logged in `logs/BUGS.txt` and the task-state blockers. The final 0B gate excluded `NavigationTest` and passed the seven-class set: exit 0, 79 tests across `MotionTokensTest`, `SpringyInteractionsTest`, `LargeLayoutModeTest`, `WideNavigationTest`, `HomeFeedTest`, `AppShellStateTest`, and `SettingsDisplayTest`.
@@ -117,7 +127,7 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-0B is complete. Next: 1B characterization. Inspect `FeedViewModelRequestTest.failedPageKeepsCursorForARetry` and `MastodonIntegrationTest.kt` first. Add independent cancellation and failed-next-page-retains-rows evidence only if missing. Then continue the unchanged queue: 1C after the quote-level `Remove` policy decision; 1B5-M; 1B5-K; 1D3 adapter; 1D3 UI; 1E1; 1E2. The 200% packets belong to phases 3–4, after the current objective. Phase 2 follows the phase-1 fixes and 0B gate. The Pixel Fold emulator is available for later device checks; use `adb shell cmd device_state state 0|2` and the reliable shell screencap plus `adb pull` method recorded in the baseline.
+1B characterization is complete. Next: 1C after the quote-level `Remove` policy decision; 1B5-M; 1B5-K; 1D3 adapter; 1D3 UI; 1E1; 1E2. The 200% packets belong to phases 3–4, after the current objective. Phase 2 follows the phase-1 fixes and 0B gate. The Pixel Fold emulator is available for later device checks; use `adb shell cmd device_state state 0|2` and the reliable shell screencap plus `adb pull` method recorded in the baseline.
 
 # Blockers
 
@@ -136,7 +146,7 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 - The approved 1B5 work is queued as two adapter commits: Mastodon first, then Misskey. Each adds a conservative 4 MiB cap and operation labeling. Neither commit exists yet.
 - The Misskey thread path catches some failures internally before they reach the source wrapper. `MisskeyErrorMapper.kt:17-22` maps a remaining escaping `IOException` to `NetworkUnavailable`. The 1B5-K commit must add the non-thread cap and operation labeling without changing this separate thread contract.
 - 1D3, 1E1, and 1E2 have not been executed.
-- 1B characterization is conditional. Inspect `FeedViewModelRequestTest.failedPageKeepsCursorForARetry` and `MastodonIntegrationTest.kt` before adding tests.
+- 1B characterization is complete. The feed-level failed-page case already asserts retained rows and cursor; Mastodon cancellation is independently covered by `cancelingTimelinePageCancelsRequestAndAllowsRetry`.
 - 1C repair waits for a maintainer decision about quote-level `Remove` behavior. `QuotePreviewCard.kt` does not receive `LocalMutedHashtags`; detail checks muted hashtags only for the parent post.
 
 # 1B1 verification

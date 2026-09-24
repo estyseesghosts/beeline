@@ -26,6 +26,7 @@ import me.foxtails.palustris.data.notifications.NotificationSyncOrchestrator
 import me.foxtails.palustris.ui.feed.FeedViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -328,6 +329,7 @@ class FeedViewModelRequestTest {
 
             assertEquals(listOf("a"), rows(model))
             assertEquals("c1", model.feed.value.nextCursor)
+            assertNotNull(model.feed.value.error)
 
             model.loadMore()
             advanceUntilIdle()
