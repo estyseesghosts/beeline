@@ -158,7 +158,14 @@ internal fun PostRow(
                 }
             }
             post.quote?.let { quote ->
-                QuotePreviewCard(quote, contentWarningRules, R.string.post_view_quoted) {
+                QuotePreviewCard(
+                    quote,
+                    contentWarningRules,
+                    LocalMutedHashtags.current,
+                    "${ownedPost.sessionRevision}:${post.id.connection}:${post.id.value}",
+                    ownedPost.fetchedBy.toString(),
+                    R.string.post_view_quoted,
+                ) {
                     ExternalLinkHandler.open(context, quote.url)
                 }
             }

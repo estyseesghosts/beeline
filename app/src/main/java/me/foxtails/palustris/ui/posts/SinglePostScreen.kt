@@ -292,7 +292,14 @@ internal fun SinglePostScreen(
                 }
             }
             post.quote?.let { quote ->
-                QuotePreviewCard(quote, contentWarningRules, R.string.single_post_view_quote) {
+                QuotePreviewCard(
+                    quote,
+                    contentWarningRules,
+                    LocalMutedHashtags.current,
+                    "${ownedPost.sessionRevision}:${post.id.connection}:${post.id.value}",
+                    ownedPost.fetchedBy.toString(),
+                    R.string.single_post_view_quote,
+                ) {
                     ExternalLinkHandler.open(context, quote.url)
                 }
             }

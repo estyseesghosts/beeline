@@ -8,7 +8,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,21 +31,43 @@ import me.foxtails.palustris.ui.emoji.InlineEmojiText
 internal fun QuotePreviewCard(
     quote: Post,
     contentWarningRules: ContentWarningRules,
+    mutedHashtags: Set<String>,
+    parentIdentity: String,
+    accountIdentity: String,
     labelResource: Int,
     onOpenQuote: () -> Unit,
 ) {
+    val hashtags = postHashtags(quote.text, quote.emoji)
     val decision = ContentWarningPolicy.decide(
         quote.contentWarning,
-        postHashtags(quote.text, quote.emoji),
+        hashtags,
         contentWarningRules,
+        quote.contentVisibility,
         bodyText = quote.text,
     )
+    val matchedTag = if (decision == ContentWarningDecision.Hidden) null else
+        ContentWarningPolicy.firstMatchingMutedHashtag(hashtags, mutedHashtags)
+    // Reveal is card-local and must not cross quote, parent, account, session, or matched-tag changes.
+    var revealed by rememberSaveable(quote.id.connection, quote.id.value, parentIdentity, accountIdentity, matchedTag) {
+        mutableStateOf(false)
+    }
     OutlinedCard(modifier = Modifier.fillMaxWidth().padding(16.dp), onClick = onOpenQuote) {
         Column(Modifier.padding(16.dp)) {
             AccountDisplayName(quote.author, style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
             if (decision == ContentWarningDecision.Hidden) {
                 Text(stringResource(R.string.content_hidden_quoted), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else if (matchedTag != null && !revealed) {
+                Text(
+                    stringResource(R.string.quote_muted_word_warning, "#${matchedTag.removePrefix("#")}"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                TextButton(onClick = { revealed = true }) { Text(stringResource(R.string.content_warning_show)) }
+            } else if (matchedTag != null && quote.contentWarning != null) {
+                InlineEmojiText(
+                    quote.contentWarning.ifBlank { stringResource(R.string.content_warning) }, quote.emoji,
+                    style = MaterialTheme.typography.bodyMedium, maxLines = 5, overflow = TextOverflow.Ellipsis,
+                )
             } else {
                 InlineEmojiText(
                     quote.contentWarning?.ifBlank { stringResource(R.string.content_warning) } ?: quote.text,

@@ -60,6 +60,7 @@
     <string name="content_hidden_local_hashtag">Post hidden by a local hashtag mute.</string>
     <string name="content_hidden_local_rule">Content hidden by local rule.</string>
     <string name="content_hidden_quoted">Quoted content hidden.</string>
+    <string name="quote_muted_word_warning">muted word: %1$s</string>
     <string name="content_hidden_settings">Content hidden by your settings.</string>
     <string name="content_warning">Content warning</string>
     <string name="content_warning_hide">Hide content</string>
