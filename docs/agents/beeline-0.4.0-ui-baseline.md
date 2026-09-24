@@ -6,7 +6,7 @@ Last reviewed: 2026-09-23
 Verification: Pixel Fold AVD (`emulator-5554`), API 36, debug `app-debug.apk` version 0.2.8 (versionCode 2008), installed 2026-09-23. Theme (light/dark/pure-black), font 200%, animator-0, IME-open, hinge, and narrow-landscape captures now exist from the 2026-09-23 emulator runs; PNG dimensions were verified per posture. RTL remains blocked (see section 8). TalkBack, tablet/split-screen, and signed release remain unverified. The four adb helper scripts were fixed on 2026-09-23 (adb auto-resolve, multi-display PNG-warning stripping, optional `--display`); old claims that scripts failed or exec-out was unusable are superseded. The initial focused Gradle run exited 1 with two `NavigationTest` failures. `NavigationTest` then failed standalone at base commit `ba3fe53` with an empty `app/src` diff; this pre-existing issue is logged in `logs/BUGS.txt` and the task-state blockers. The final 0B gate excluded `NavigationTest` and passed the seven-class set: exit 0, 79 tests. Python unittest passed 51 tests; architecture audit `--check` exited 0.
 Stale when: design specification, screen owner, navigation route, theme policy, account/session rule, device evidence, or measured geometry changes.  
 Authorities: [UI upgrades](../ui_upgrades.md), [design specification](../designspecification.md), [polish research](../polishreport.md), [UI and navigation wiki](../wiki/ui-and-navigation.md), [notifications and direct messages wiki](../wiki/notifications-and-direct-messages.md), [AGENTS.md](../../AGENTS.md), source `app/src/main/java/me/foxtails/palustris/ui/`, tests `app/src/test/java/me/foxtails/palustris/ui/`.  
-Approval: requirement classification complete. Capture matrix theme/font/animator/geometry cells are now populated for the six primary surfaces. Measure approval remains pending.
+Approval: measure sign-off received 2026-09-23 for the emulator-observed values in section 6 (compact capsule/targets/inset, wide rail targets, chip row heights, detail split, and IME anchors). Media dismissal threshold, physical-left caret, and physical-bottom-right wide action remain pending for lack of device evidence. The capture matrix remains incomplete for post detail, media viewer, saved/settings, and setup surfaces. RTL and TalkBack remain unverified.
 
 ## 1. Requirement classification rules
 
@@ -98,7 +98,7 @@ Rows below preserve the operative requirements. Ranges group inseparable clauses
 5. **Chips and indicators:** current chips lack the specified caret and edge-to-edge behavior. Compact navigation mounts one indicator per selected item, not one traveling indicator.
 6. **Theme:** `AppColorSchemes.kt` implements theme selection. It does not provide screenshot evidence.
 7. **Wiki status:** both relevant wiki pages carry `Status: current, partial coverage` after slice 0A. This record does not change that status.
-8. **Approval:** emulator posture rendering is verified, but no measure value is approved. Keep the remaining screenshot and measure gates open.
+8. **Approval:** the emulator-observed values listed in section 6 are approved as prototype baselines. Media dismissal threshold, physical-left caret, and physical-bottom-right wide action remain pending. Keep the remaining screenshot and device-verification gates open.
 9. **Review input:** `docs/260926_current_state.md` does not exist. `docs/260923_current_state.md` is the active review input.
 
 ## 4. Screen, owner, and test inventory
@@ -151,30 +151,30 @@ Expand each row across these axes: theme = light/dark/pure-black; geometry = com
 
 ## 6. Measure decisions
 
-Posture screenshots exist, but this pass measured or approved no value. Every measure below remains pending.
+The approved values below are Pixel Fold emulator observations at 420 dpi (density 2.625 px/dp). Physical-device verification remains unverified.
 
 | Measure | Applies to | Proposed prototype method | Owner | Approved value | Status |
 | --- | --- | --- | --- | --- | --- |
-| High-font compact obstruction and usable content | Compact navigation and scroll content at 200% | Measure overlay hit bounds vs final scroll item with IME open and closed; both postures | UI maintainers | pending device prototype | pending device measurement |
-| Compact floating height | Compact navigation | Prototype with content and IME; check reach and overlap | UI maintainers | pending device prototype | pending device measurement |
-| Compact edge clearance | Compact navigation and content | Measure system bars, gesture regions, and last-row reach | UI maintainers | pending device prototype | pending device measurement |
-| Wide/foldable safe-pane clearance | Wide dock/navigation | Test separating hinge and system insets on both panes | UI maintainers | pending device prototype | pending device measurement |
-| High-font tab collapse | Universal tab bar | Test translated labels and 200% font with focus and edge gestures | UI maintainers | pending device prototype | pending device measurement |
-| Media dismissal threshold | Media viewer | Test distance and velocity across compact/wide devices | UI maintainers | pending device prototype | pending device measurement |
-| Physical-left caret | Universal tab bar | Verify physical anchor and hit target in real RTL locale | UI maintainers | pending device prototype | pending device measurement |
-| Physical-bottom-right wide action | Wide navigation | Verify physical anchor, hinge safe pane, and RTL | UI maintainers | pending device prototype | pending device measurement |
+| High-font compact obstruction and usable content | Compact navigation and scroll content at 200% | Measure overlay hit bounds vs final scroll item with IME open and closed; both postures | UI maintainers | contract approved via decisions 1-3 and 5; numeric targets derived in packet 4E1 from the approved clearance anchors | contract approved 2026-09-23; numeric targets pending 4E1 |
+| Compact floating height | Compact navigation | Prototype with content and IME; check reach and overlap | UI maintainers | 212 x 56 dp capsule; four 48 dp targets; 56 dp contextual button (emulator-observed) | approved 2026-09-23 (emulator); physical device unverified |
+| Compact edge clearance | Compact navigation and content | Measure system bars, gesture regions, and last-row reach | UI maintainers | 36 dp bottom inset; end and final-item clearance inside scroll content anchored to this inset | approved 2026-09-23 (emulator); physical device unverified |
+| Wide/foldable safe-pane clearance | Wide dock/navigation | Test separating hinge and system insets on both panes | UI maintainers | 80 dp rail width; 56 dp rail targets; detail split at 50 percent of 2208 px; wide layout renders at 2208x1840 including half-folded | approved 2026-09-23 (emulator); physical device unverified |
+| High-font tab collapse | Universal tab bar | Test translated labels and 200% font with focus and edge gestures | UI maintainers | chip row 48 dp at font 1.0, 56 dp at font 200 (heights approved) | heights approved 2026-09-23; collapse behavior prototype required per 0B decision 1 before 4D1 |
+| Media dismissal threshold | Media viewer | Test distance and velocity across compact/wide devices | UI maintainers | pending; media viewer not captured | pending device measurement |
+| Physical-left caret | Universal tab bar | Verify physical anchor and hit target in real RTL locale | UI maintainers | pending; RTL blocked | pending device measurement |
+| Physical-bottom-right wide action | Wide navigation | Verify physical anchor, hinge safe pane, and RTL | UI maintainers | pending; dock not built until 4C | pending device measurement |
 
-Decisions 1–3 and 5 from the plan's "0B decisions" section constrain this prototype: horizontal scrolling tabs with a caret; stacked profile stats; Search field and navigation stay visible; content clears overlays. No numeric value is approved.
+Decisions 1–3 and 5 from the plan's "0B decisions" section constrain this prototype: horizontal scrolling tabs with a caret; stacked profile stats; Search field and navigation stay visible; content clears overlays.
 
-Proposed observed emulator bounds (not approved):
+Approved prototype baseline values (approved 2026-09-23; emulator-observed at 420 dpi, density 2.625 px/dp; physical device unverified):
 
-- Compact bottom capsule: 212 x 56 dp with four 48 dp targets and a 56 dp contextual button — observed, pending approval.
-- Bottom inset: 36 dp — observed, pending approval.
-- Wide left rail: 80 dp wide with 56 dp targets — observed, pending approval.
-- Chip row height: 48 dp at font 1.0 and 56 dp at font 200% — observed, pending approval.
-- Wide detail split: 50 percent of 2208 px — observed, pending approval.
-- Search field to IME clearance: 47 px (18 dp) at font 1.0; nav capsule 136/147 px under the IME frame — observed, pending approval.
-- These observations use 420 dpi (density 2.625 px/dp) — observed, pending approval.
+- Compact bottom capsule: 212 x 56 dp with four 48 dp targets and a 56 dp contextual button — approved 2026-09-23 (emulator-observed).
+- Bottom inset: 36 dp — approved 2026-09-23 (emulator-observed).
+- Wide left rail: 80 dp wide with 56 dp targets — approved 2026-09-23 (emulator-observed).
+- Chip row height: 48 dp at font 1.0 and 56 dp at font 200% — approved 2026-09-23 (emulator-observed); collapse behavior still needs the decision 1 prototype.
+- Wide detail split: 50 percent of 2208 px — approved 2026-09-23 (emulator-observed).
+- Search field to IME clearance: 47 px (18 dp) at font 1.0 — approved 2026-09-23 (emulator-observed).
+- IME failure evidence: nav capsule 136/147 px under the IME frame. This fails decision 3, which requires navigation to stay visible with the IME open; packet 4E1 will fix it. This is not an approved design value.
 
 Motion timings belong to existing `ui/motion/MotionTokens.kt` in a later slice. Slice 0B writes no timing values.
 
@@ -209,7 +209,7 @@ Verification: device verified (emulator) for folded and opened posture rendering
 ### Still unverified
 
 - Physical-device rendering, a real RTL locale, mixed-direction content, TalkBack, API 29 physical hardware, and signed-release behavior remain unverified. Dark and pure-black themes, 200% font scale, animator scale 0, and IME-open captures now exist on the emulator; these captures do not approve geometry or demonstrate fixes.
-- No approved values exist for compact floating height, compact edge clearance, wide/foldable safe-pane clearance, high-font tab collapse, media dismissal threshold, physical-left caret, or physical-bottom-right wide action. This pass did not measure or approve these values.
+- Approved emulator values are listed in section 6. Media dismissal threshold, physical-left caret, and physical-bottom-right wide action remain pending for lack of device evidence. High-font tab collapse heights are approved, but collapse behavior needs the decision 1 prototype before 4D1.
 - Foldable evidence is emulator-only. Physical foldable rendering remains unverified.
 
 ## 8. Capture axis inventory and 200% failure evidence (2026-09-23)

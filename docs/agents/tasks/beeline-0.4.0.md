@@ -34,10 +34,11 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 - Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`.
 - Slice 1B1 is complete at `5207a96`. Timeline cursors use opaque, identity-bound route tokens.
 - The foldable emulator device-verification slice is complete as a documentation-only slice with no source changes. Pixel Fold API 36 posture rendering, compact and wide navigation, primary-surface navigation in both postures, and Photo Grid `Local` grouped-memory preservation across three posture changes passed. Live sign-in and feed evidence covers Mastodon `jmjmjm` on mstdn.ca and Misskey `ctr` on dvd.chat. Screenshots remain git-ignored evidence under `docs/`.
+- Measure sign-off arrived 2026-09-23 (maintainer): the emulator-observed values in baseline section 6 are approved. Three rows remain pending for missing device evidence: media dismissal threshold, physical-left caret, and physical-bottom-right wide action. With records commit `4fcaecd` (captures + register + decisions) and this approval, slice 0B is complete. The approval commit hash will be recorded at the slice boundary.
 
 # Current slice
 
-0B records is the current documentation-only slice. Theme axes light/dark/pure-black were captured for six surfaces in both postures. Font 200% was captured for six surfaces in both postures, with failures recorded. Animator-0 was captured folded and unfolded, with navigation verified and settings restored. IME-open was captured; the Search field stayed visible and the navigation capsule sat under the IME frame. Hinge HALF_FOLDED was captured (wide rail + split panes at 2208x1840). Narrow landscape was captured (2092x1080, existing left rail, no compact-tall fallback). PNG dimensions were verified against posture. The active account for these runs was `ctr` on dvd.chat (Misskey family); the earlier light posture pass covered both accounts. The device was restored to FOLDED, Home, LTR, rotation 0, font 1.0, theme Default, and original animator settings.
+This slice records the 0B measure approval (documentation only). Base/last safe commit before this commit is `4fcaecd`.
 
 R0 records the completed phases 0 and 1 re-traversal audit. The last safe code-slice commit is `fa087d0`. R0 records are `412fc02`. The current HEAD at the start of this records slice was `209e13a`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary.
 
@@ -46,7 +47,7 @@ R0 records the completed phases 0 and 1 re-traversal audit. The last safe code-s
 The audit compared phases 0 and 1 of `docs/beeline_0.4.0.md` with executed commits. The resolved review input is `docs/260923_current_state.md`. No additional unspecified changes were requested.
 
 - Meets: 0A, L0, 1A, 1B1, 1B2, 1B3, 1B4, 1D1, and 1D2.
-- Gaps found at audit time: 0B had a four-button register where the plan requires six, a partial capture matrix, and no approved geometry measures. Since resolved in the 0B records slice: the register now records six wide destinations, the capture matrix is populated for the theme/font/animator/IME/hinge/landscape axes, and 200% failures are registered as packets 3C1–3C3, amended 4D1, and 4E1–4E2. Measure sign-off remains pending. The other audit gaps remain: 1B needs independent cancellation and failed-next-page-retains-rows evidence; 1C needs a decision about quote-level `Remove` behavior before repair; 1B5 lacks the approved response caps and operation labels.
+- Gaps found at audit time: 0B had a four-button register where the plan requires six, a partial capture matrix, and no approved geometry measures. The register now records six wide destinations, the capture matrix is populated for theme/font/animator/IME/hinge/landscape axes, 200% failures are registered, and the approved emulator measures are recorded. The three pending measure rows are media dismissal threshold, physical-left caret, and physical-bottom-right wide action. The other audit gaps remain: 1B needs independent cancellation and failed-next-page-retains-rows evidence; 1C needs a decision about quote-level `Remove` behavior before repair; 1B5 lacks the approved response caps and operation labels.
 - Not executed: 1D3, 1E1, and 1E2.
 
 # Files involved
@@ -116,14 +117,14 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Next queue: (1) 0B maintainer measure sign-off; (2) 1B characterization, only if existing coverage is missing; (3) 1C repair after the quote-level `Remove` policy decision; (4) 1B5-M; (5) 1B5-K; (6) 1D3 adapter; (7) 1D3 UI; (8) 1E1; (9) 1E2. The 200% packets belong to phases 3–4, after the current objective. Phase 2 follows the phase-1 fixes and 0B gate. The Pixel Fold emulator is available for later device checks; use `adb shell cmd device_state state 0|2` and the reliable shell screencap plus `adb pull` method recorded in the baseline.
+0B is complete. Next: 1B characterization. Inspect `FeedViewModelRequestTest.failedPageKeepsCursorForARetry` and `MastodonIntegrationTest.kt` first. Add independent cancellation and failed-next-page-retains-rows evidence only if missing. Then continue the unchanged queue: 1C after the quote-level `Remove` policy decision; 1B5-M; 1B5-K; 1D3 adapter; 1D3 UI; 1E1; 1E2. The 200% packets belong to phases 3–4, after the current objective. Phase 2 follows the phase-1 fixes and 0B gate. The Pixel Fold emulator is available for later device checks; use `adb shell cmd device_state state 0|2` and the reliable shell screencap plus `adb pull` method recorded in the baseline.
 
 # Blockers
 
 - Foldable-emulator posture rendering and live sign-in/feed loading on mstdn.ca and dvd.chat are device/live verified (emulator pass 2026-09-23). Physical-device, API 29, RTL, TalkBack, signed-release, and broad live-server behavior remain unverified. Live-server behavior for the approved response cap (1B5-M/1B5-K) and direct-message child continuation (1D3) remains unverified.
 - The Android 15 system-bar instrumentation failure remains recorded in `logs/BUGS.txt`.
 - No empirical retention measurements exist.
-- 0B captures and register correction are done. Maintainer sign-off on proposed measures and geometry prototype values remains open. The emulator pass does not approve geometry values.
+- 0B measure sign-off is received. Media dismissal threshold, physical-left caret, and physical-bottom-right wide action remain pending for lack of device evidence. RTL, TalkBack, physical-device, API 29, and signed-release checks remain unverified as listed above.
 - RTL remains unverified. The app has no RTL locale; the per-app `ar-XB` override does not flip layout. Evidence: `docs/rtl-attempt-notmirrored.png`.
 - The observed 200% failures are registered as 3C/4E packets and are not fixed. A maintainer UI prototype for the large-font variant is awaited (decision 4).
 - Tighten `AppLocaleControllerTest.everyLocaleResolvesATranslatedValueOrFallback` and `LocalizationResourceTest.localeCatalogMatchesResourcesEnumAndAndroidConfig` when catalogs return.

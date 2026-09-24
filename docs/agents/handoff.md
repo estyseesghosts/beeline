@@ -2,33 +2,33 @@
 
 **Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state. This file is the next-agent pointer.
 
-## Current slice: 0B records
+## Current slice: 0B measure approval records
 
-This is a documentation-only slice. It records all capture axes with inventory and PNG dimension verification, 200% failure evidence, five maintainer decisions, the D29 four-to-six correction, capture matrix updates, proposed but unapproved geometry observations, and the RTL blocker with evidence.
+This is a documentation-only slice. Measure approval completes 0B with this commit. Base HEAD before this slice is `4fcaecd`.
 
-Files touched by this slice:
+The maintainer approved emulator-observed prototype baselines: compact capsule and targets, 36 dp inset, wide rail targets, chip row heights, detail split, and IME anchors. The values are Pixel Fold emulator observations at 420 dpi. Physical-device verification remains unverified. The IME navigation-capsule observation is failure evidence under decision 3, not an approved design value; packet 4E1 will fix it.
 
-- `docs/beeline_0.4.0.md` (git-ignored plan; edit content only, never add it to Git).
-- `docs/agents/tasks/beeline-0.4.0.md`.
-- `docs/agents/beeline-0.4.0-ui-baseline.md`.
-- `docs/agents/handoff.md`.
-- `logs/BUGS.txt` (git-ignored local log; never stage it).
-
-Last safe code-slice commit: `fa087d0`. R0 records commit: `412fc02`. Current HEAD at this slice boundary: `209e13a`.
+Three measure rows remain pending for lack of device evidence: media dismissal threshold (media viewer not captured), physical-left caret (RTL blocked), and physical-bottom-right wide action (dock built in 4C).
 
 ## Next steps
 
-1. Review this diff.
-2. Commit the 0B records slice.
-3. Obtain maintainer sign-off on the proposed measures in section 6 of the UI baseline.
-4. Resume the phase-1 queue in order: 1B characterization; 1C after the quote-level `Remove` decision; 1B5-M; 1B5-K; 1D3 adapter; 1D3 UI; 1E1; 1E2.
+1. Commit this slice.
+2. Start 1B characterization. Inspect `FeedViewModelRequestTest.failedPageKeepsCursorForARetry` and `MastodonIntegrationTest.kt` first. Add independent cancellation and failed-next-page-retains-rows evidence only if missing.
+3. Start 1C repair after the maintainer's quote-level `Remove` decision.
+4. Start 1B5-M.
+5. Start 1B5-K.
+6. Start 1D3 adapter.
+7. Start 1D3 UI.
+8. Start 1E1.
+9. Start 1E2.
+10. Run the full `test assembleRelease` gate.
 
-The 200% packets belong to phases 3–4, after the current objective. The large-font variant awaits a maintainer UI prototype for decision 4. The quote-level `Remove` decision for 1C also remains open.
+Awaited inputs: maintainer UI prototype for decision 4; quote-level `Remove` decision for 1C.
 
 ## Hygiene rules
 
-Never stage `docs/beeline_0.4.0.md`, `docs/260923_current_state.md`, `docs/*.png`, `tools/scripts/*`, `.opencode/*`, `logs/*`, or pre-existing staged/deleted files. Preserve all unrelated worktree changes.
+Never stage `docs/beeline_0.4.0.md`, `docs/260923_current_state.md`, `docs/*.png`, `tools/scripts/*`, `.opencode/*`, `logs/*`, or any pre-existing dirty or staged file. Preserve all unrelated worktree changes.
 
 ## Device state
 
-The emulator is left FOLDED, Home, LTR, rotation 0, font 1.0, theme Default, with original animator settings.
+The emulator is FOLDED, Home, LTR, font 1.0, theme Default, rotation 0, with original animator settings.
