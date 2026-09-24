@@ -4,19 +4,19 @@
 
 ## Current boundary
 
-1D3 UI is complete and reviewed. 1D3 adapter and 1D3 UI are both done. The visible footer and retry behavior is implemented.
+1D3 UI is complete and reviewed. 1E1 adapter residue cleanup is committed as the current commit with message "Remove unused adapter constants". The slice removes five proven-unused private constants from `MisskeySource` and `MastodonSource` and changes no behavior.
 
 ## Next slice
 
-The next implementation slice is 1E1: adapter residue cleanup.
+The next implementation slice is 1E2 (Remove unused mapper arguments and update mapper callers/tests).
 
 ## Changed ownership
 
-Thread fields live in `DirectMessageUiState`. The ViewModel owns guarded `runThreadPage`, `continueThread` and `retryThread`, plus a separate `markReadJob` and `threadError`. The conversation footer is stateless and derives from thread state. Contract plumbing, default resources, tests, and docs are updated. Selection, start, and close reset the thread fields. Stop cancels thread and read jobs and advances selection authority, but does not reset state fields.
+Ownership is unchanged by 1E1. Thread fields live in `DirectMessageUiState`. The ViewModel owns guarded `runThreadPage`, `continueThread` and `retryThread`, plus a separate `markReadJob` and `threadError`. The conversation footer is stateless and derives from thread state. Live service constants stay with their services: `MisskeyDirectMessageService.DIRECT_PAGE_LIMIT`, `MastodonNotificationService.DEFAULT_NOTIFICATION_LIMIT`, and `MastodonDirectMessageService.DIRECT_CONVERSATION_LIMIT`. Live push ownership stays in `MisskeyPushService`: `SECURE_CODES` and `MISSING_CODES` still serve push registration reads and secure-credential mapping. The removed facade sets were residue with no callers.
 
 ## Verification evidence
 
-`DirectMessageViewModelTest` 26 passed; `DirectMessageScreenTest` 13 passed with compact and wide Compose coverage; `DirectMessageSourceTest` 50 passed; `DirectMessageRepositoryTest` 19 passed; `DirectMessageWriteAuthorityTest` 8 passed; `DirectMessageDatabaseSchemaTest` 3 passed; `MisskeyIntegrationTest` 48 passed; `MastodonIntegrationTest` 58 passed; `:app:lintDebug` passed. This records session ran no new commands and claims no new results.
+`DirectMessageSourceTest` 50 passed; `MisskeyIntegrationTest` 48 passed; `MastodonIntegrationTest` 58 passed; `:app:lintDebug` passed. Full `test assembleRelease` remains known red and was not run, per slice scope. The Python tool suite was not run because source changes touch no tool.
 
 ## Known limits
 
@@ -24,8 +24,8 @@ Full `test assembleRelease` remains known red and was not run. Physical-device r
 
 ## Hygiene
 
-Keep staged `docs/classic_navigation.md`, `.opencode/*`, `importantdocs/writing_style.md`, deleted PNGs, and untracked tools scripts and caches untouched and unstaged. Keep `logs/*` unstaged. Do not stage or commit during this records update.
+`docs/classic_navigation.md` remains staged and untouched. All other unrelated changes remain unstaged or untracked: modified `.opencode/*` and `importantdocs/writing_style.md`, deleted PNGs, and untracked `.opencode/agents` helpers, tools scripts, and caches. Keep `logs/*` unstaged. Do not stage, commit, amend, or push.
 
 ## Last safe boundary
 
-The last safe boundary is the commit that contains this record. The next session must get the exact last safe hash with `git log -1`. Git history is authoritative.
+The current 1E1 commit with message "Remove unused adapter constants" is the safe boundary. The next session must get its exact hash with `git log -1`. Git history is authoritative.

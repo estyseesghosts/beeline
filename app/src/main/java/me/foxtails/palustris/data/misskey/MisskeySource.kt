@@ -692,7 +692,6 @@ class MisskeySource(
     }
 
     private companion object {
-        const val DIRECT_PAGE_LIMIT = 30
         const val MAX_DESCENDANTS = 200
         const val MAX_ANCESTORS = 20
         const val MAX_DESCENDANT_DEPTH = 10
@@ -702,16 +701,6 @@ class MisskeySource(
         const val CHILDREN_PAGE_LIMIT = 30
         const val MAX_THREAD_RESPONSE_BYTES = MISSKEY_MAX_RESPONSE_BYTES
         const val CAPABILITIES_TTL_MILLIS = 5 * 60 * 1000L
-
-        // Misskey's secure push endpoints return ACCESS_DENIED for MiAuth/app
-        // credentials. Those tokens can authenticate ordinary API calls, but
-        // cannot satisfy an endpoint declared secure:true (native user token).
-        val SECURE_CREDENTIAL_FAILURE_CODES = setOf(
-            "ACCESS_DENIED",
-            "AUTHENTICATION_FAILED",
-            "SECURE_CREDENTIAL_REQUIRED",
-        )
-        val MISSING_PUSH_REGISTRATION_CODES = setOf("NOT_FOUND", "NO_SUCH_REGISTRATION", "REGISTRATION_NOT_FOUND")
     }
 }
 private fun NotificationCapabilities.takeVerifiedOr(previous: NotificationCapabilities): NotificationCapabilities =

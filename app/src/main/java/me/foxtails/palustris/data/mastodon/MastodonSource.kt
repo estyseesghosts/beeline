@@ -501,7 +501,6 @@ class MastodonSource(
     }
 
     private companion object {
-        const val DEFAULT_NOTIFICATION_LIMIT = 30
         const val CAPABILITIES_TTL_MILLIS = 5 * 60 * 1000L
 
         /** Minimum delay before a failed capability probe retries. Bounds outage traffic. */
@@ -544,8 +543,6 @@ private fun Audience.toMastodonVisibility(): String = when (this) {
     Audience.Followers -> "private"
     Audience.Direct -> "direct"
 }
-
-private const val DIRECT_CONVERSATION_LIMIT = 40
 
 private fun String.encodePathSegment(): String =
     java.net.URLEncoder.encode(this, Charsets.UTF_8.name()).replace("+", "%20")
