@@ -3,10 +3,10 @@
 Status: planned — requirements classified; Pixel Fold emulator posture rendering is partially verified (device verified (emulator)); all other device behavior remains unverified  
 Owner: Beeline UI maintainers  
 Last reviewed: 2026-09-23  
-Verification: Pixel Fold AVD (`emulator-5554`), API 36, debug `app-debug.apk` version 0.2.8 (versionCode 2008), installed 2026-09-23. Folded 1080x2092 and opened 2208x1840 posture rendering is device verified (emulator). Other capture axes and physical foldable behavior remain unverified. `adb exec-out screencap -p` produced stale or undecodable captures; helper scripts failed because `adb` is not on PATH. The initial focused Gradle run exited 1 with two `NavigationTest` failures. `NavigationTest` then failed standalone at base commit `ba3fe53` with an empty `app/src` diff; this pre-existing issue is logged in `logs/BUGS.txt` and the task-state blockers. The final 0B gate excluded `NavigationTest` and passed the seven-class set: exit 0, 79 tests. Python unittest passed 51 tests; architecture audit `--check` exited 0.
+Verification: Pixel Fold AVD (`emulator-5554`), API 36, debug `app-debug.apk` version 0.2.8 (versionCode 2008), installed 2026-09-23. Theme (light/dark/pure-black), font 200%, animator-0, IME-open, hinge, and narrow-landscape captures now exist from the 2026-09-23 emulator runs; PNG dimensions were verified per posture. RTL remains blocked (see section 8). TalkBack, tablet/split-screen, and signed release remain unverified. The four adb helper scripts were fixed on 2026-09-23 (adb auto-resolve, multi-display PNG-warning stripping, optional `--display`); old claims that scripts failed or exec-out was unusable are superseded. The initial focused Gradle run exited 1 with two `NavigationTest` failures. `NavigationTest` then failed standalone at base commit `ba3fe53` with an empty `app/src` diff; this pre-existing issue is logged in `logs/BUGS.txt` and the task-state blockers. The final 0B gate excluded `NavigationTest` and passed the seven-class set: exit 0, 79 tests. Python unittest passed 51 tests; architecture audit `--check` exited 0.
 Stale when: design specification, screen owner, navigation route, theme policy, account/session rule, device evidence, or measured geometry changes.  
 Authorities: [UI upgrades](../ui_upgrades.md), [design specification](../designspecification.md), [polish research](../polishreport.md), [UI and navigation wiki](../wiki/ui-and-navigation.md), [notifications and direct messages wiki](../wiki/notifications-and-direct-messages.md), [AGENTS.md](../../AGENTS.md), source `app/src/main/java/me/foxtails/palustris/ui/`, tests `app/src/test/java/me/foxtails/palustris/ui/`.  
-Approval: requirement classification complete. Posture screenshots and grouped-memory/preservation checks are captured. Measure approval and the rest of the capture matrix remain pending.
+Approval: requirement classification complete. Capture matrix theme/font/animator/geometry cells are now populated for the six primary surfaces. Measure approval remains pending.
 
 ## 1. Requirement classification rules
 
@@ -48,7 +48,7 @@ Rows below preserve the operative requirements. Ranges group inseparable clauses
 | D26 | Closing entry preserves query, shrinks/returns, and keeps text visible | designspecification.md:176-183 | binding | Search state restoration exists; visual transition remains. | Search | SearchPanelRestorationTest | unverified |
 | D27 | Reuse bubble styling and animation for initial sign-in text field | designspecification.md:185-187 | binding | The sign-in screen lives in `ui/setup/SignInScreen.kt`; its `SetupServerField` input lives in `ui/setup/SetupScreens.kt`. | Setup/sign-in | SignInScreenTest | unverified |
 | D28 | Shared motion vocabulary: tap, state changes, button/card expand/collapse, bubbles, position, size, pin/unpin | designspecification.md:189-205 | binding | MotionTokens.kt and SpringyInteractions.kt exist; coverage is not complete for each primitive. | Shared interaction surfaces | MotionTokensTest, SpringyInteractionsTest | unverified |
-| D29 | Large layouts use same floating navigation vertically; contextual action bottom-right; four primary buttons above | designspecification.md:207 | binding + unverified device measure | LargeNavigationRail.kt currently implements a rail. | Wide/folding shell | LargeLayoutModeTest, WideNavigationTest | unverified |
+| D29 | Large layouts use the same floating navigation vertically; contextual action bottom-right; six independent destinations above | designspecification.md:207 | binding + unverified device measure | Compact tall keeps four grouped positions (Home, Search/Photo Grid, Notifications/Direct Messages, Profile) plus a separate contextual action. Wide layouts use six direct destinations plus a separate contextual action. The 0.4.0 plan corrects the earlier four-button wide register to six destinations. | Compact and wide/folding shell | LargeLayoutModeTest, WideNavigationTest | unverified |
 | U01 | Quiet content-first visual hierarchy, density varies by Home/thread, Photo Grid, and DM | ui_upgrades.md:32-36 | proposal | Existing theme/tokens are not screenshot validation. | Home, Photo Grid, DM | HomeFeedTest, PhotoGridScreenTest, DirectMessageScreenTest | unverified |
 | U02 | Paired-circle/path selection motif | ui_upgrades.md:38 | proposal | No approved asset requirement. | Navigation, bubbles | NavigationTest | unverified |
 | U03 | Stable primary navigation; one moving selection indicator; unread state does not grow bar | ui_upgrades.md:40-44 | proposal; nav mode persistence binding (D03 restated) | CompactAppNavigation mounts one indicator per selected item; mode persistence exists. | Four destinations | NavigationTest, WideNavigationTest | unverified |
@@ -136,14 +136,14 @@ No dedicated `CompactOverlayMetricsTest` exists. Adjacent coverage is `HomeFeedT
 
 ## 5. Capture matrix — partial emulator captures
 
-Expand each row across these axes: theme = light/dark/pure-black; geometry = compact/wide/folding with separating hinge; locale = LTR plus a real RTL locale and mixed-direction content; font = normal/200%; animator = normal/0; state = loading/populated/empty/failed/selected/overlay-open/sensitive-covered/IME-open where applicable. Capture both Mastodon and Misskey account states on shared screens. Use test accounts and redact before publication. Folded and unfolded posture captures for both protocol accounts exist from the 2026-09-23 emulator pass. Theme, locale, font, and animator axes remain `unverified - no capture`.
+Expand each row across these axes: theme = light/dark/pure-black; geometry = compact/wide/folding with separating hinge; locale = LTR plus a real RTL locale and mixed-direction content; font = normal/200%; animator = normal/0; state = loading/populated/empty/failed/selected/overlay-open/sensitive-covered/IME-open where applicable. Capture both Mastodon and Misskey account states on shared screens. Use test accounts and redact before publication. Folded and unfolded posture captures for both protocol accounts exist from the 2026-09-23 emulator pass. RTL remains unverified.
 
 | Screen | Account identity + protocol | Theme | Size/posture | Locale/direction | Font scale | Animator scale | State | Screenshot path | Date/device/build | Reviewer | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Home | test account; Mastodon + Misskey | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/empty/failed/selected/overlay/sensitive/IME as applicable | docs/ (git-ignored posture captures, see section 7) | 2026-09-23; Pixel Fold emulator (emulator-5554, API 36); versionCode 2008 | Beeline agent device pass | device verified (emulator) - folded and opened posture captures for both protocol accounts; theme/locale/font/animator axes unverified |
-| Search + Photo Grid | test account; Mastodon + Misskey | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/empty/failed/selected/overlay/IME as applicable | docs/ (git-ignored posture captures, see section 7) | 2026-09-23; Pixel Fold emulator (emulator-5554, API 36); versionCode 2008 | Beeline agent device pass | device verified (emulator) - folded and opened posture captures for both protocol accounts; theme/locale/font/animator axes unverified |
-| Notifications + Direct Messages | test account; Mastodon + Misskey | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/empty/failed/selected/overlay/IME as applicable | docs/ (git-ignored posture captures, see section 7) | 2026-09-23; Pixel Fold emulator (emulator-5554, API 36); versionCode 2008 | Beeline agent device pass | device verified (emulator) - folded and opened posture captures for both protocol accounts; theme/locale/font/animator axes unverified |
-| Profile + editor | test account; Mastodon + Misskey | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/empty/failed/selected/IME as applicable | docs/ (Profile-only git-ignored posture captures, see section 7) | 2026-09-23; Pixel Fold emulator (emulator-5554, API 36); versionCode 2008 | Beeline agent device pass | device verified (emulator) - Profile captured in folded and opened postures for both protocol accounts; profile editor not captured; theme/locale/font/animator axes unverified |
+| Home | test account; Mastodon + Misskey | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/empty/failed/selected/overlay/sensitive/IME as applicable | docs/ (git-ignored posture captures, see sections 7–8) | 2026-09-23; Pixel Fold emulator (emulator-5554, API 36); versionCode 2008 | Beeline agent device pass | Theme light/dark/pure-black both postures; font normal/200% both postures (200% failure evidence, section 8); animator 0 captured; IME-open captured; hinge and narrow landscape captured for Home/Search; RTL unverified; account `ctr@dvd.chat` (Misskey) for these axis runs; both accounts in posture pass. |
+| Search + Photo Grid | test account; Mastodon + Misskey | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/empty/failed/selected/overlay/IME as applicable | docs/ (git-ignored posture captures, see sections 7–8) | 2026-09-23; Pixel Fold emulator (emulator-5554, API 36); versionCode 2008 | Beeline agent device pass | Theme light/dark/pure-black both postures; font normal/200% both postures (200% failure evidence, section 8); animator 0 captured; IME-open captured where applicable; hinge and narrow landscape captured for Home/Search; RTL unverified; account `ctr@dvd.chat` (Misskey) for these axis runs; both accounts in posture pass. |
+| Notifications + Direct Messages | test account; Mastodon + Misskey | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/empty/failed/selected/overlay/IME as applicable | docs/ (git-ignored posture captures, see sections 7–8) | 2026-09-23; Pixel Fold emulator (emulator-5554, API 36); versionCode 2008 | Beeline agent device pass | Theme light/dark/pure-black both postures; font normal/200% both postures (200% failure evidence, section 8); animator 0 captured; IME-open captured where applicable; hinge captured; RTL unverified; account `ctr@dvd.chat` (Misskey) for these axis runs; both accounts in posture pass. |
+| Profile + editor | test account; Mastodon + Misskey | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/empty/failed/selected/IME as applicable | docs/ (git-ignored posture captures, see sections 7–8) | 2026-09-23; Pixel Fold emulator (emulator-5554, API 36); versionCode 2008 | Beeline agent device pass | Theme light/dark/pure-black both postures; font normal/200% both postures (200% failure evidence, section 8); animator 0 captured; IME-open where applicable; RTL unverified; account `ctr@dvd.chat` (Misskey) for these axis runs; both accounts in posture pass. Profile editor not captured. |
 | Post/thread detail | test account; Mastodon + Misskey | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/empty/failed/selected/sensitive-covered/overlay as applicable | not captured | pending | pending | unverified - no capture |
 | Media viewer | test account; Mastodon + Misskey | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/failed/selected/sensitive-covered/overlay as applicable | not captured | pending | pending | unverified - no capture |
 | Saved posts/drafts/About/settings/notification detail | test account; protocol as applicable | light/dark/pure-black | compact/wide/folding + hinge | LTR/real RTL/mixed | normal/200% | normal/0 | loading/populated/empty/failed/selected/overlay/IME as applicable | not captured | pending | pending | unverified - no capture |
@@ -155,6 +155,7 @@ Posture screenshots exist, but this pass measured or approved no value. Every me
 
 | Measure | Applies to | Proposed prototype method | Owner | Approved value | Status |
 | --- | --- | --- | --- | --- | --- |
+| High-font compact obstruction and usable content | Compact navigation and scroll content at 200% | Measure overlay hit bounds vs final scroll item with IME open and closed; both postures | UI maintainers | pending device prototype | pending device measurement |
 | Compact floating height | Compact navigation | Prototype with content and IME; check reach and overlap | UI maintainers | pending device prototype | pending device measurement |
 | Compact edge clearance | Compact navigation and content | Measure system bars, gesture regions, and last-row reach | UI maintainers | pending device prototype | pending device measurement |
 | Wide/foldable safe-pane clearance | Wide dock/navigation | Test separating hinge and system insets on both panes | UI maintainers | pending device prototype | pending device measurement |
@@ -162,6 +163,18 @@ Posture screenshots exist, but this pass measured or approved no value. Every me
 | Media dismissal threshold | Media viewer | Test distance and velocity across compact/wide devices | UI maintainers | pending device prototype | pending device measurement |
 | Physical-left caret | Universal tab bar | Verify physical anchor and hit target in real RTL locale | UI maintainers | pending device prototype | pending device measurement |
 | Physical-bottom-right wide action | Wide navigation | Verify physical anchor, hinge safe pane, and RTL | UI maintainers | pending device prototype | pending device measurement |
+
+Decisions 1–3 and 5 from the plan's "0B decisions" section constrain this prototype: horizontal scrolling tabs with a caret; stacked profile stats; Search field and navigation stay visible; content clears overlays. No numeric value is approved.
+
+Proposed observed emulator bounds (not approved):
+
+- Compact bottom capsule: 212 x 56 dp with four 48 dp targets and a 56 dp contextual button — observed, pending approval.
+- Bottom inset: 36 dp — observed, pending approval.
+- Wide left rail: 80 dp wide with 56 dp targets — observed, pending approval.
+- Chip row height: 48 dp at font 1.0 and 56 dp at font 200% — observed, pending approval.
+- Wide detail split: 50 percent of 2208 px — observed, pending approval.
+- Search field to IME clearance: 47 px (18 dp) at font 1.0; nav capsule 136/147 px under the IME frame — observed, pending approval.
+- These observations use 420 dpi (density 2.625 px/dp) — observed, pending approval.
 
 Motion timings belong to existing `ui/motion/MotionTokens.kt` in a later slice. Slice 0B writes no timing values.
 
@@ -191,9 +204,45 @@ Verification: device verified (emulator) for folded and opened posture rendering
 - Git-ignored screenshots under `docs/` cover the `folded-01` through `folded-17` family, the `unfolded-10` through `unfolded-19` family, and `step-*.png` sign-in flow evidence. These are evidence for this pass, not published artifacts.
 - `adb exec-out screencap -p > file` produced stale or undecodable captures. Use `adb shell screencap -p /sdcard/shot.png` followed by `adb pull` instead.
 - `tools/scripts/adb_control.py`, `adb_flow.py`, `adb_screenshot.py`, and `adb_inspect.py` failed with `error: adb not found: adb` because `adb` is not on PATH. These helpers were unusable in this pass.
+- The helper-script failures were fixed on 2026-09-23: scripts now auto-resolve adb, strip multi-display PNG warnings, and support optional `--display`. The historical limitation above no longer holds.
 
 ### Still unverified
 
-- Dark and pure-black themes, 200% font scale, animator scale 0, a real RTL locale, mixed-direction content, IME-open states, TalkBack, API 29 physical hardware, and signed-release behavior remain unverified.
+- Physical-device rendering, a real RTL locale, mixed-direction content, TalkBack, API 29 physical hardware, and signed-release behavior remain unverified. Dark and pure-black themes, 200% font scale, animator scale 0, and IME-open captures now exist on the emulator; these captures do not approve geometry or demonstrate fixes.
 - No approved values exist for compact floating height, compact edge clearance, wide/foldable safe-pane clearance, high-font tab collapse, media dismissal threshold, physical-left caret, or physical-bottom-right wide action. This pass did not measure or approve these values.
 - Foldable evidence is emulator-only. Physical foldable rendering remains unverified.
+
+## 8. Capture axis inventory and 200% failure evidence (2026-09-23)
+
+Capture inventory (all files are git-ignored under `docs/`):
+
+- Theme dark: `folded-dark-01..06` and `unfolded-dark-01..06`.
+- Theme pure-black: `folded-black-01..06` and `unfolded-black-01..06`; the captures were visually verified as true black.
+- Font 200%: `folded-font200-01..06` and `unfolded-font200-01..06`.
+- Animator-0: `folded-animator0-01/02` and `unfolded-animator0-01`; navigation was verified under animator 0.
+- IME: `folded-ime-search-open`.
+- Hinge: `hinge-half-01/02`.
+- Narrow landscape: `landscape-home-01` and `landscape-search-02`.
+- RTL attempt: `rtl-attempt-notmirrored` and `rtl-step-*` process shots.
+- PNG header dimensions were verified against the claimed posture for every file.
+
+The RTL axis is blocked. Beeline's in-app language catalog has 18 locales and none are RTL. `cmd locale set-app-locales me.foxtails.palustris --locales ar-XB` stored the locale, but the running app stayed `en_US/ldltr`. The override was reset to `[]`. RTL remains unverified.
+
+Observed 200% failure evidence, grouped by failure class:
+
+- Tiny-width text clips instead of wrapping or ellipsizing. `Federated` and `Reposts` labels render at 19 px; `#misskey +2` clips to `#micek`; Photo Grid displays `Fec`; a notification `@ctr` mention node is 3 px high.
+- Floating chrome overlaps scroll content. Timeline chips and filter rows cover posts, grid tiles, and notification cards. Search subtitle overlaps. Post actions clip to 7 px behind the navigation capsule.
+- Chip rows do not adapt. Category chips overflow past the right edge. Rows do not wrap, collapse, or re-measure. Cells exceed parent bounds.
+- Single-line assumptions break. Profile stats wrap character by character in both postures. Notification rows grow past their cards. Post action rows clip behind navigation.
+- IME coverage hides navigation. Search field stays visible with about 18 dp clearance, but the bottom capsule is about 92 percent covered by the IME frame.
+
+Source owner hints for later repair:
+
+- `ProfileStats` in `ProfileScreen.kt` uses a `Row` of three unrestricted `Text` nodes.
+- Inspect `NotificationRow.kt` before changing its text geometry.
+- `CategoryChips.kt` `FilterChipRow` uses a fixed 48 dp height with no large-text policy.
+- `HomeTimelineTabs.kt` is separate and uses single-line ellipsis.
+- `CompactOverlayMetrics.kt` derives clearance from fixed heights. `ShellContent.kt` pins Home tabs to `CompactTimelineTabsHeight`.
+- Search measures its wide dock but not its compact dock. `SearchField` sets `singleLine = true` while a 306 px two-line field was observed; investigate before attributing this behavior.
+
+This evidence schedules repair as plan packets 3C1–3C3, amended 4D1, and 4E1–4E2. No fix is implemented yet.

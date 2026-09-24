@@ -20,9 +20,12 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 - 1B5 is approved as a behavior change: add a conservative 4 MiB response cap per adapter and label `ResponseLimitExceeded` with the operation. Commit Mastodon first, then Misskey. Keep protocol failure behavior explicit.
 - The phases 0 and 1 re-traversal audit is complete. It requested no additional unspecified changes.
 - Slice 2E is conditional on a later UI change that needs it. Phases 0-2 do not trigger it. Record it as not triggered and confirm before running.
-- A Pixel Fold emulator is reachable. Foldable posture rendering is device verified (emulator); physical-device, API 29, RTL-device, TalkBack, theme/font/animator capture axes, and signed-release checks remain unverified. Live-server evidence covers sign-in, timelines, notifications, profiles, and Photo Grid media on mstdn.ca and dvd.chat.
+- A Pixel Fold emulator is reachable. Foldable posture rendering and theme/font/animator emulator captures are recorded; physical-device, API 29, RTL, TalkBack, and signed-release checks remain unverified. Live-server evidence covers sign-in, timelines, notifications, profiles, and Photo Grid media on mstdn.ca and dvd.chat.
 - Architecture audit exit 0 means no new regressions against the baseline. It does not mean architecture completion.
 - Research for 0A and 0B can run in parallel. Keep commits ordered 0A, then 0B.
+- Five 200% text-scale decisions are recorded: tab scroll+caret approved; profile stats stacking approved; overlay priority approved; the large-font compact-tall variant is on hold awaiting a maintainer UI prototype; a new pending high-font measure row is approved. The full text lives in `docs/beeline_0.4.0.md` section "0B decisions".
+- The RTL axis is blocked: Beeline's in-app language catalog has 18 locales and none are RTL. `cmd locale set-app-locales me.foxtails.palustris --locales ar-XB` stored the locale, but the running app stayed `en_US/ldltr`; the override was reset to `[]`. RTL stays unverified. Evidence: `docs/rtl-attempt-notmirrored.png`.
+- Packets 3C1–3C3, amended 4D1, and 4E1–4E2 are registered in the plan as the 200% workstream. They are phase 3/4 work, outside the current phases 0–2 objective. No fix has been implemented.
 
 # Completed
 
@@ -34,14 +37,16 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 # Current slice
 
-R0 records the completed phases 0 and 1 re-traversal audit. This slice changes no source. R0 is `412fc02`. The last safe code-slice commit is `fa087d0`. Records commits `0b3214b`, `4f28a69`, `f43cc8e`, and R0 `412fc02`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary.
+0B records is the current documentation-only slice. Theme axes light/dark/pure-black were captured for six surfaces in both postures. Font 200% was captured for six surfaces in both postures, with failures recorded. Animator-0 was captured folded and unfolded, with navigation verified and settings restored. IME-open was captured; the Search field stayed visible and the navigation capsule sat under the IME frame. Hinge HALF_FOLDED was captured (wide rail + split panes at 2208x1840). Narrow landscape was captured (2092x1080, existing left rail, no compact-tall fallback). PNG dimensions were verified against posture. The active account for these runs was `ctr` on dvd.chat (Misskey family); the earlier light posture pass covered both accounts. The device was restored to FOLDED, Home, LTR, rotation 0, font 1.0, theme Default, and original animator settings.
+
+R0 records the completed phases 0 and 1 re-traversal audit. The last safe code-slice commit is `fa087d0`. R0 records are `412fc02`. The current HEAD at the start of this records slice was `209e13a`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary.
 
 ## Re-traversal audit
 
 The audit compared phases 0 and 1 of `docs/beeline_0.4.0.md` with executed commits. The resolved review input is `docs/260923_current_state.md`. No additional unspecified changes were requested.
 
 - Meets: 0A, L0, 1A, 1B1, 1B2, 1B3, 1B4, 1D1, and 1D2.
-- Gaps: 0B has a four-button register where the plan requires six; its capture matrix is partial and no geometry measures have approval. 1B needs independent cancellation and failed-next-page-retains-rows evidence. 1C needs a decision about quote-level `Remove` behavior before repair. 1B5 lacks the approved response caps and operation labels.
+- Gaps found at audit time: 0B had a four-button register where the plan requires six, a partial capture matrix, and no approved geometry measures. Since resolved in the 0B records slice: the register now records six wide destinations, the capture matrix is populated for the theme/font/animator/IME/hinge/landscape axes, and 200% failures are registered as packets 3C1–3C3, amended 4D1, and 4E1–4E2. Measure sign-off remains pending. The other audit gaps remain: 1B needs independent cancellation and failed-next-page-retains-rows evidence; 1C needs a decision about quote-level `Remove` behavior before repair; 1B5 lacks the approved response caps and operation labels.
 - Not executed: 1D3, 1E1, and 1E2.
 
 # Files involved
@@ -111,14 +116,16 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-Next queue: (1) 0B completion; (2) 1B characterization, only if existing coverage is missing; (3) 1C repair after the quote-level `Remove` policy decision; (4) 1B5-M; (5) 1B5-K; (6) 1D3 adapter; (7) 1D3 UI; (8) 1E1; (9) 1E2. Phase 2 follows the phase-1 fixes and 0B gate. The Pixel Fold emulator is available for later device checks; use `adb shell cmd device_state state 0|2` and the reliable shell screencap plus `adb pull` method recorded in the baseline.
+Next queue: (1) 0B maintainer measure sign-off; (2) 1B characterization, only if existing coverage is missing; (3) 1C repair after the quote-level `Remove` policy decision; (4) 1B5-M; (5) 1B5-K; (6) 1D3 adapter; (7) 1D3 UI; (8) 1E1; (9) 1E2. The 200% packets belong to phases 3–4, after the current objective. Phase 2 follows the phase-1 fixes and 0B gate. The Pixel Fold emulator is available for later device checks; use `adb shell cmd device_state state 0|2` and the reliable shell screencap plus `adb pull` method recorded in the baseline.
 
 # Blockers
 
-- Foldable-emulator posture rendering and live sign-in/feed loading on mstdn.ca and dvd.chat are device/live verified (emulator pass 2026-09-23). Physical-device, API 29, theme/font/animator/RTL/TalkBack, signed-release, and broad live-server behavior remain unverified. Live-server behavior for the approved response cap (1B5-M/1B5-K) and direct-message child continuation (1D3) remains unverified.
+- Foldable-emulator posture rendering and live sign-in/feed loading on mstdn.ca and dvd.chat are device/live verified (emulator pass 2026-09-23). Physical-device, API 29, RTL, TalkBack, signed-release, and broad live-server behavior remain unverified. Live-server behavior for the approved response cap (1B5-M/1B5-K) and direct-message child continuation (1D3) remains unverified.
 - The Android 15 system-bar instrumentation failure remains recorded in `logs/BUGS.txt`.
 - No empirical retention measurements exist.
-- 0B remains open. Correct the four-button register to six, complete the capture matrix, and obtain maintainer approval for geometry measures. The emulator pass verifies posture rendering, not six-button geometry approval.
+- 0B captures and register correction are done. Maintainer sign-off on proposed measures and geometry prototype values remains open. The emulator pass does not approve geometry values.
+- RTL remains unverified. The app has no RTL locale; the per-app `ar-XB` override does not flip layout. Evidence: `docs/rtl-attempt-notmirrored.png`.
+- The observed 200% failures are registered as 3C/4E packets and are not fixed. A maintainer UI prototype for the large-font variant is awaited (decision 4).
 - Tighten `AppLocaleControllerTest.everyLocaleResolvesATranslatedValueOrFallback` and `LocalizationResourceTest.localeCatalogMatchesResourcesEnumAndAndroidConfig` when catalogs return.
 - The residual 03-G ordering risk remains in the Plan 03 task state.
 - No full green gate has passed. One full run executed during 1B1 and is red with 16 failures (above).
