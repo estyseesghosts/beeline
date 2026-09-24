@@ -300,6 +300,8 @@ internal fun ShellDestinationContent(
                                 onBackDirectConversation = directMessages.actions::closeConversation,
                                 onEditorTextChange = directMessages.actions::updateEditor,
                                 onSendDirectMessage = directMessages.actions::send,
+                                onContinueDirectThread = directMessages.actions::continueThread,
+                                onRetryDirectThread = directMessages.actions::retryThread,
                             )
                             Destination.Profile -> ProfileScreen(
                                 account = displayedProfile,

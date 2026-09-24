@@ -273,9 +273,7 @@ The conversation identity and the post anchor are
 separate identity spaces. The repository fills the anchor from the account-scoped stored
 conversation `lastPost.id`. It throws `SourceError.Unsupported("direct.thread")` when no stored
 conversation exists. The repository merges remote posts with the cached thread
-and returns the continuation, the limitations, and the state. The ViewModel in
-this slice consumes only `result.posts`. Visible continuation and retry UI
-remains planned.
+and returns the continuation, the limitations, and the state. The ViewModel owns the open-thread cursor, limitations, continuing flag, and a thread error separate from inbox and send errors. The conversation screen owns the trailing footer. Selection, start, and close reset the thread fields; stop cancels thread and read jobs and advances selection authority, but does not reset state fields.
 
 The Misskey adapter validates a continuation before any request. The cursor
 binds version, variant, origin, account, session revision, source instance,
@@ -303,9 +301,7 @@ and the response limit propagate and never become limitations. Other child
 failures throw normalized errors, so the repository keeps prior rows on a
 failed call. A continuation call resumes the queued breadth-first work with
 dedup seeded by the conversation root and the carried accepted IDs, so a
-cyclic or hostile root row is never reaccepted. Visible
-continuation and retry UI remains planned. Source-level acquisition state is
-not user-visible yet.
+cyclic or hostile root row is never reaccepted. The conversation footer shows spinner, retry, load-more, and static partial states. A rejected continuation cursor clears so retry falls back to fresh. A finished Mastodon result shows no extra control.
 
 The Mastodon adapter loads the anchor through `GET /api/v1/statuses/:id` and its context through
 `/context`. It never calls `GET /api/v1/conversations/:id`. It normalizes 403, 404, and 410 to the

@@ -43,6 +43,8 @@ internal fun AppNotificationsDestinationContent(
     onBackDirectConversation: () -> Unit,
     onEditorTextChange: (String) -> Unit,
     onSendDirectMessage: () -> Unit,
+    onContinueDirectThread: () -> Unit,
+    onRetryDirectThread: () -> Unit,
     contentWarningRules: ContentWarningRules = LocalContentWarningRules.current,
 ) {
     AnimatedStatePane(
@@ -81,6 +83,8 @@ internal fun AppNotificationsDestinationContent(
                 onBack = onBackDirectConversation,
                 onEditorTextChange = onEditorTextChange,
                 onSend = onSendDirectMessage,
+                onContinueThread = onContinueDirectThread,
+                onRetryThread = onRetryDirectThread,
             )
         } else {
             DirectMessageInboxScreen(

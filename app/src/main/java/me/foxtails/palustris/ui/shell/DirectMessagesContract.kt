@@ -23,6 +23,8 @@ data class DirectMessagesContract(
         fun startConversation(account: Account)
         fun updateEditor(text: String)
         fun send()
+        fun continueThread()
+        fun retryThread()
     }
 
     companion object {
@@ -38,4 +40,6 @@ private object DirectMessagesEmptyActions : DirectMessagesContract.Actions {
     override fun startConversation(account: Account) = Unit
     override fun updateEditor(text: String) = Unit
     override fun send() = Unit
+    override fun continueThread() = Unit
+    override fun retryThread() = Unit
 }

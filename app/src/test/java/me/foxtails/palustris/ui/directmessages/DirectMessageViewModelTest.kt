@@ -27,7 +27,9 @@ import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
+import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.ThreadLimitation
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.directmessages.DirectMessageViewModel
 import org.junit.Assert.assertEquals
@@ -70,8 +72,12 @@ class DirectMessageViewModelTest {
         override val capabilities = ServerCapabilities()
         val inboxRequests = mutableListOf<String?>()
         val threadRequests = mutableListOf<DirectThreadRequest>()
+        val threadCursors = mutableListOf<String?>()
         val sendRequests = mutableListOf<DirectMessageRequest>()
         var markReadCalls = 0
+        // When set, read acknowledgement waits here. Thread publication has
+        // already happened, so this exposes the open/continue race.
+        var markReadGate: CompletableDeferred<Unit>? = null
         private val inboxPending = ArrayDeque<CompletableDeferred<Page<DirectConversation>>>()
         private val threadPending = ArrayDeque<CompletableDeferred<DirectThreadResult>>()
         private val sendPending = ArrayDeque<CompletableDeferred<Post>>()
@@ -88,6 +94,7 @@ class DirectMessageViewModelTest {
 
         override suspend fun conversationThread(request: DirectThreadRequest, cursor: String?): DirectThreadResult {
             threadRequests += request
+            threadCursors += cursor
             val gate = CompletableDeferred<DirectThreadResult>()
             threadPending += gate
             return withContext(NonCancellable) { gate.await() }
@@ -102,11 +109,13 @@ class DirectMessageViewModelTest {
 
         override suspend fun markConversationRead(id: ConversationId) {
             markReadCalls += 1
+            markReadGate?.await()
         }
 
         fun completeInbox(index: Int, page: Page<DirectConversation>) { inboxPending[index].complete(page) }
         fun failInbox(index: Int, error: Exception) { inboxPending[index].completeExceptionally(error) }
         fun completeThread(index: Int, thread: List<Post>) { threadPending[index].complete(DirectThreadResult(thread)) }
+        fun completeThreadResult(index: Int, result: DirectThreadResult) { threadPending[index].complete(result) }
         fun failThread(index: Int, error: Exception) { threadPending[index].completeExceptionally(error) }
         fun completeSend(index: Int, post: Post) { sendPending[index].complete(post) }
         fun failSend(index: Int, error: Exception) { sendPending[index].completeExceptionally(error) }
@@ -600,6 +609,361 @@ class DirectMessageViewModelTest {
             advanceUntilIdle()
 
             assertTrue(store.conversation(accountId, conversationA.id)?.unread == true)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun continuationSuccessMergesPostsAndStoresCursor() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.completeThreadResult(0, DirectThreadResult(listOf(post("a-1", recipientA)), nextCursor = "c1"))
+            advanceUntilIdle()
+
+            assertEquals("c1", model.state.value.threadCursor)
+            assertNull(model.state.value.threadError)
+            assertFalse(model.state.value.threadContinuing)
+            assertFalse(model.state.value.loadingThread)
+            assertEquals(1, source.markReadCalls)
+
+            model.continueThread()
+            advanceUntilIdle()
+            assertTrue(model.state.value.threadContinuing)
+            assertEquals("c1", source.threadCursors[1])
+            source.completeThreadResult(1, DirectThreadResult(listOf(post("a-2", recipientA))))
+            advanceUntilIdle()
+
+            assertEquals(listOf("a-1", "a-2"), model.state.value.thread.map { it.id.value })
+            assertNull(model.state.value.threadCursor)
+            assertNull(model.state.value.threadError)
+            assertFalse(model.state.value.threadContinuing)
+            assertFalse(model.state.value.loadingThread)
+            // Continuation never re-runs read acknowledgement.
+            assertEquals(1, source.markReadCalls)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun limitedResultKeepsStaticLimitations() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.completeThreadResult(
+                0,
+                DirectThreadResult(
+                    listOf(post("a-1", recipientA)),
+                    limitations = listOf(ThreadLimitation.UncertainServerTruncation),
+                ),
+            )
+            advanceUntilIdle()
+
+            assertNull(model.state.value.threadCursor)
+            assertEquals(1, model.state.value.threadLimitations.size)
+            assertNull(model.state.value.threadError)
+            assertFalse(model.state.value.threadContinuing)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun continuationFailurePreservesPostsAndCursor() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.completeThreadResult(0, DirectThreadResult(listOf(post("a-1", recipientA)), nextCursor = "c1"))
+            advanceUntilIdle()
+
+            model.continueThread()
+            advanceUntilIdle()
+            source.failThread(1, java.io.IOException("page failed"))
+            advanceUntilIdle()
+
+            assertEquals(listOf("a-1"), model.state.value.thread.map { it.id.value })
+            assertEquals("c1", model.state.value.threadCursor)
+            assertTrue(model.state.value.threadError != null)
+            assertNull(model.state.value.error)
+            assertFalse(model.state.value.threadContinuing)
+            assertFalse(model.state.value.loadingThread)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun retryReissuesStoredCursor() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.completeThreadResult(0, DirectThreadResult(listOf(post("a-1", recipientA)), nextCursor = "c1"))
+            advanceUntilIdle()
+
+            model.continueThread()
+            advanceUntilIdle()
+            source.failThread(1, java.io.IOException("page failed"))
+            advanceUntilIdle()
+
+            model.retryThread()
+            advanceUntilIdle()
+            assertEquals("c1", source.threadCursors[2])
+            source.completeThreadResult(2, DirectThreadResult(listOf(post("a-2", recipientA))))
+            advanceUntilIdle()
+
+            assertEquals(listOf("a-1", "a-2"), model.state.value.thread.map { it.id.value })
+            assertNull(model.state.value.threadError)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun retryFallsBackToFreshWhenCursorNull() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.failThread(0, java.io.IOException("fresh failed"))
+            advanceUntilIdle()
+
+            assertTrue(model.state.value.threadError != null)
+            assertNull(model.state.value.threadCursor)
+
+            model.retryThread()
+            advanceUntilIdle()
+            assertNull(source.threadCursors[1])
+            source.completeThread(1, listOf(post("a-1", recipientA)))
+            advanceUntilIdle()
+
+            assertEquals(listOf("a-1"), model.state.value.thread.map { it.id.value })
+            assertNull(model.state.value.threadError)
+            assertFalse(model.state.value.loadingThread)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun unsupportedContinuationClearsCursor() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.completeThreadResult(0, DirectThreadResult(listOf(post("a-1", recipientA)), nextCursor = "c1"))
+            advanceUntilIdle()
+
+            model.continueThread()
+            advanceUntilIdle()
+            source.failThread(1, SourceError.Unsupported("direct.thread.continuation"))
+            advanceUntilIdle()
+
+            assertNull(model.state.value.threadCursor)
+            assertTrue(model.state.value.threadError != null)
+            assertEquals(listOf("a-1"), model.state.value.thread.map { it.id.value })
+
+            model.retryThread()
+            advanceUntilIdle()
+            assertNull(source.threadCursors[2])
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun continuationGuardsDoubleStartAndNullCursor() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.completeThreadResult(0, DirectThreadResult(listOf(post("a-1", recipientA)), nextCursor = "c1"))
+            advanceUntilIdle()
+
+            model.continueThread()
+            advanceUntilIdle()
+            // A second start while the page is in flight issues no request.
+            model.continueThread()
+            model.retryThread()
+            advanceUntilIdle()
+            assertEquals(2, source.threadCursors.size)
+            source.completeThreadResult(1, DirectThreadResult(listOf(post("a-2", recipientA))))
+            advanceUntilIdle()
+
+            // Finished threads offer no continuation.
+            model.continueThread()
+            advanceUntilIdle()
+            assertEquals(2, source.threadCursors.size)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun lateContinuationAfterCloseIsIgnored() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.completeThreadResult(0, DirectThreadResult(listOf(post("a-1", recipientA)), nextCursor = "c1"))
+            advanceUntilIdle()
+
+            model.continueThread()
+            advanceUntilIdle()
+            model.closeConversation()
+            advanceUntilIdle()
+            source.completeThreadResult(1, DirectThreadResult(listOf(post("late", recipientA))))
+            advanceUntilIdle()
+
+            assertNull(model.state.value.selectedConversationId)
+            assertTrue(model.state.value.thread.isEmpty())
+            assertNull(model.state.value.threadCursor)
+            assertNull(model.state.value.threadError)
+            assertFalse(model.state.value.threadContinuing)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun threadAndInboxErrorsStaySeparate() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.completeThreadResult(0, DirectThreadResult(listOf(post("a-1", recipientA)), nextCursor = "c1"))
+            advanceUntilIdle()
+
+            model.refresh()
+            advanceUntilIdle()
+            source.failInbox(1, java.io.IOException("inbox failed"))
+            advanceUntilIdle()
+
+            assertTrue(model.state.value.error != null)
+            assertNull(model.state.value.threadError)
+            assertEquals("c1", model.state.value.threadCursor)
+
+            model.continueThread()
+            advanceUntilIdle()
+            source.failThread(1, java.io.IOException("thread failed"))
+            advanceUntilIdle()
+
+            // Thread failure keeps the inbox error and prior posts and cursor.
+            assertTrue(model.state.value.error != null)
+            assertTrue(model.state.value.threadError != null)
+            assertEquals("c1", model.state.value.threadCursor)
+            assertEquals(listOf("a-1"), model.state.value.thread.map { it.id.value })
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun continueThreadStartsWhileReadAcknowledgementRuns() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            source.markReadGate = CompletableDeferred()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.completeThreadResult(0, DirectThreadResult(listOf(post("a-1", recipientA)), nextCursor = "c1"))
+            advanceUntilIdle()
+
+            // First page published while read acknowledgement still waits.
+            assertEquals(listOf("a-1"), model.state.value.thread.map { it.id.value })
+            assertEquals("c1", model.state.value.threadCursor)
+            assertFalse(model.state.value.loadingThread)
+
+            // Continue must start despite the active acknowledgement.
+            model.continueThread()
+            advanceUntilIdle()
+            assertEquals(2, source.threadCursors.size)
+            assertEquals("c1", source.threadCursors[1])
+            assertTrue(model.state.value.threadContinuing)
+
+            source.completeThreadResult(1, DirectThreadResult(listOf(post("a-2", recipientA))))
+            advanceUntilIdle()
+            assertEquals(listOf("a-1", "a-2"), model.state.value.thread.map { it.id.value })
+
+            // Release the acknowledgement. It never rewrites thread state.
+            source.markReadGate?.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(listOf("a-1", "a-2"), model.state.value.thread.map { it.id.value })
+            assertEquals(1, source.markReadCalls)
         } finally {
             Dispatchers.resetMain()
         }

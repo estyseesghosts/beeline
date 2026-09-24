@@ -51,8 +51,8 @@ Source: `data/directmessages/DirectMessageRepository.kt`,
   revision, source instance, conversation, accepted IDs, limitations, and the
   chain request count. A bad cursor fails
   before any request. The Mastodon adapter returns its anchor and context result
-  as finished with no cursor. Visible partial and retry presentation remains
-  planned. Source-level acquisition state is not user-visible yet.
+  as finished with no cursor. The conversation footer shows one trailing status: spinner while loading or continuing; error with Retry when any thread acquisition fails, fresh load or continuation; Load more messages when a cursor remains; static partial notice when limitations remain with no cursor; nothing when finished. Retry reuses the stored cursor or reloads fresh when none remains; a rejected continuation cursor clears so retry falls back to fresh. Thread errors stay separate from inbox and send errors. A finished Mastodon result shows no extra control.
+  DirectMessageViewModelTest and DirectMessageScreenTest cover the footer states.
 - A conversation keeps an explicit identity. A server-issued identity may receive a server
   mark-read. A provisional local conversation clears unread state on this device and sends no
   server request until the server confirms the conversation.

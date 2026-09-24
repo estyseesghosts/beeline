@@ -25,6 +25,7 @@ import me.foxtails.palustris.domain.ConversationIdentity
 import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.DirectMessageRequest
 import me.foxtails.palustris.domain.DirectMessageSource
+import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.ui.UiStrings
 
@@ -49,6 +50,10 @@ class DirectMessageViewModel @AssistedInject constructor(
     val state = _state.asStateFlow()
     private var refreshJob: Job? = null
     private var threadJob: Job? = null
+    // Read acknowledgement owns a separate lifetime. It starts only after the
+    // first thread page publishes, so an active markRead never blocks a tap on
+    // Continue behind the threadJob guard. Best effort only. Never writes UI.
+    private var markReadJob: Job? = null
     private var sendJob: Job? = null
     private var stopped = false
 
@@ -163,11 +168,16 @@ class DirectMessageViewModel @AssistedInject constructor(
         val selection = ++selectionEpoch
         composeTarget = null
         threadJob?.cancel()
+        markReadJob?.cancel()
         _state.value = _state.value.copy(
             selectedConversationId = id,
             selectedConversation = conversation.copy(unread = false),
             recipient = conversation.participants.firstOrNull { it.id != accountId },
             thread = emptyList(),
+            threadCursor = null,
+            threadLimitations = emptyList(),
+            threadContinuing = false,
+            threadError = null,
             loadingThread = true,
             sending = false,
             error = null,
@@ -181,7 +191,7 @@ class DirectMessageViewModel @AssistedInject constructor(
         if (repo == null) {
             _state.value = _state.value.copy(
                 loadingThread = false,
-                error = uiStrings.directMessagesUnsupported(),
+                threadError = uiStrings.directMessagesUnsupported(),
             )
             return
         }
@@ -199,23 +209,122 @@ class DirectMessageViewModel @AssistedInject constructor(
                 if (current.selectedConversationId != id) return@launch
                 _state.value = current.copy(
                     thread = mergeThread(current.thread, result.posts),
+                    threadCursor = result.nextCursor,
+                    threadLimitations = result.limitations,
                     loadingThread = false,
+                    threadContinuing = false,
+                    threadError = null,
                 )
-                try {
-                    repo.markRead(id)
-                } catch (error: CancellationException) {
-                    throw error
-                } catch (_: Exception) {
-                    // Keep the loaded thread. Read acknowledgement stays recoverable.
+                // Hand read acknowledgement to its own job after publication.
+                // This returns the thread slot, so Continue can start while the
+                // acknowledgement runs. Best effort. Never touches thread state.
+                val readSelection = selection
+                markReadJob = viewModelScope.launch {
+                    try {
+                        if (readSelection != selectionEpoch || stopped) return@launch
+                        if (_state.value.selectedConversationId != id) return@launch
+                        repo.markRead(id)
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (_: Exception) {
+                        // Keep the loaded thread. Read acknowledgement stays recoverable.
+                    }
                 }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
                 if (selection != selectionEpoch || stopped) return@launch
                 if (_state.value.selectedConversationId != id) return@launch
-                _state.value = _state.value.copy(loadingThread = false, error = uiStrings.sourceError(error))
+                applyThreadFailure(error)
             }
         }
+    }
+
+    /** Loads the next thread page with the stored opaque cursor. */
+    fun continueThread() {
+        if (stopped) return
+        val current = _state.value
+        val id = current.selectedConversationId ?: return
+        val cursor = current.threadCursor ?: return
+        runThreadPage(id, cursor)
+    }
+
+    /**
+     * Retries the thread with the stored cursor when present. Falls back to a
+     * fresh load when no cursor exists.
+     */
+    fun retryThread() {
+        if (stopped) return
+        val current = _state.value
+        val id = current.selectedConversationId ?: return
+        runThreadPage(id, current.threadCursor)
+    }
+
+    /**
+     * Starts one guarded continuation or fresh retry page. The cursor stays
+     * opaque and travels only to the repository. A null cursor means a fresh
+     * load. Read acknowledgement runs only for fresh open loads, never here.
+     */
+    private fun runThreadPage(id: ConversationId, cursor: String?) {
+        if (stopped) return
+        val selection = selectionEpoch
+        val current = _state.value
+        if (current.selectedConversationId != id) return
+        if (current.loadingThread || current.threadContinuing) return
+        if (threadJob?.isActive == true) return
+        val repo = repository
+        if (repo == null) {
+            _state.value = current.copy(
+                loadingThread = false,
+                threadContinuing = false,
+                threadError = uiStrings.directMessagesUnsupported(),
+            )
+            return
+        }
+        _state.value = current.copy(
+            loadingThread = cursor == null,
+            threadContinuing = cursor != null,
+            threadError = null,
+        )
+        threadJob = viewModelScope.launch {
+            try {
+                val result = repo.thread(id, cursor)
+                if (selection != selectionEpoch || stopped) return@launch
+                if (_state.value.selectedConversationId != id) return@launch
+                val latest = _state.value
+                _state.value = latest.copy(
+                    thread = mergeThread(latest.thread, result.posts),
+                    threadCursor = result.nextCursor,
+                    threadLimitations = result.limitations,
+                    loadingThread = false,
+                    threadContinuing = false,
+                    threadError = null,
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                if (selection != selectionEpoch || stopped) return@launch
+                if (_state.value.selectedConversationId != id) return@launch
+                applyThreadFailure(error)
+            }
+        }
+    }
+
+    /**
+     * Records a thread acquisition failure. Prior posts and the stored cursor
+     * survive, and the shared inbox and send error stays untouched. A rejected
+     * continuation cursor is cleared so retry falls back to a fresh load.
+     */
+    private fun applyThreadFailure(error: Exception) {
+        val unsupportedContinuation =
+            (error as? SourceError.Unsupported)?.feature == "direct.thread.continuation"
+        val latest = _state.value
+        _state.value = latest.copy(
+            loadingThread = false,
+            threadContinuing = false,
+            threadError = uiStrings.sourceError(error),
+            threadCursor = if (unsupportedContinuation) null else latest.threadCursor,
+        )
     }
 
     fun startConversation(account: Account) {
@@ -224,11 +333,16 @@ class DirectMessageViewModel @AssistedInject constructor(
         composeGeneration += 1
         composeTarget = account
         threadJob?.cancel()
+        markReadJob?.cancel()
         _state.value = _state.value.copy(
             selectedConversationId = null,
             selectedConversation = null,
             recipient = account,
             thread = emptyList(),
+            threadCursor = null,
+            threadLimitations = emptyList(),
+            threadContinuing = false,
+            threadError = null,
             loadingThread = false,
             sending = false,
             error = null,
@@ -242,11 +356,16 @@ class DirectMessageViewModel @AssistedInject constructor(
         selectionEpoch += 1
         composeTarget = null
         threadJob?.cancel()
+        markReadJob?.cancel()
         _state.value = _state.value.copy(
             selectedConversationId = null,
             selectedConversation = null,
             recipient = null,
             thread = emptyList(),
+            threadCursor = null,
+            threadLimitations = emptyList(),
+            threadContinuing = false,
+            threadError = null,
             loadingThread = false,
             sending = false,
             error = null,
@@ -349,6 +468,7 @@ class DirectMessageViewModel @AssistedInject constructor(
         selectionEpoch += 1
         refreshJob?.cancel()
         threadJob?.cancel()
+        markReadJob?.cancel()
         sendJob?.cancel()
     }
 

@@ -87,6 +87,8 @@
     <string name="dm_private_message">Private message</string>
     <string name="dm_private_post">Private post</string>
     <string name="dm_send">Send direct message</string>
+    <string name="dm_thread_continue">Load more messages</string>
+    <string name="dm_thread_partial">Some messages could not be loaded</string>
     <string name="dm_title">Messages</string>
     <string name="dm_up_to_date">You\'re up to date</string>
     <string name="draft_continue">Tap to continue editing</string>

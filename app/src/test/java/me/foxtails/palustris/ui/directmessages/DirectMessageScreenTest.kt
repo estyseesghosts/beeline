@@ -23,6 +23,7 @@ import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.ThreadLimitation
 import me.foxtails.palustris.ui.PalustrisTheme
 import me.foxtails.palustris.ui.directmessages.DirectMessageConversationScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageInboxScreen
@@ -112,6 +113,223 @@ class DirectMessageScreenTest {
         compose.onNodeWithTag("profile_message_action").performClick()
 
         assertEquals(recipient.id, messaged?.id)
+    }
+
+    @Test
+    fun compactContinuationControlInvokesContinue() {
+        var continued = 0
+        show {
+            DirectMessageConversationScreen(
+                accountId = owner.id,
+                state = DirectMessageUiState(
+                    selectedConversationId = conversation.id,
+                    selectedConversation = conversation,
+                    recipient = recipient,
+                    thread = listOf(conversation.lastPost),
+                    threadCursor = "c1",
+                ),
+                compactLayout = true,
+                onContinueThread = { continued += 1 },
+            )
+        }
+
+        compose.onNodeWithTag("direct_message_thread_continue").assertIsDisplayed().performClick()
+        assertEquals(1, continued)
+    }
+
+    @Test
+    fun wideContinuationControlInvokesContinue() {
+        var continued = 0
+        show {
+            DirectMessageConversationScreen(
+                accountId = owner.id,
+                state = DirectMessageUiState(
+                    selectedConversationId = conversation.id,
+                    selectedConversation = conversation,
+                    recipient = recipient,
+                    thread = listOf(conversation.lastPost),
+                    threadCursor = "c1",
+                ),
+                compactLayout = false,
+                onContinueThread = { continued += 1 },
+            )
+        }
+
+        compose.onNodeWithTag("direct_message_thread_continue").assertIsDisplayed().performClick()
+        assertEquals(1, continued)
+    }
+
+    @Test
+    fun threadRetryAfterErrorInvokesRetry() {
+        var retried = 0
+        show {
+            DirectMessageConversationScreen(
+                accountId = owner.id,
+                state = DirectMessageUiState(
+                    selectedConversationId = conversation.id,
+                    selectedConversation = conversation,
+                    recipient = recipient,
+                    thread = listOf(conversation.lastPost),
+                    threadCursor = "c1",
+                    threadError = "Thread failed",
+                ),
+                compactLayout = false,
+                onRetryThread = { retried += 1 },
+            )
+        }
+
+        compose.onNodeWithText("Thread failed").assertIsDisplayed()
+        compose.onNodeWithTag("direct_message_thread_retry").assertIsDisplayed().performClick()
+        assertEquals(1, retried)
+    }
+
+    @Test
+    fun compactRetryFooterInvokesRetry() {
+        var retried = 0
+        show {
+            DirectMessageConversationScreen(
+                accountId = owner.id,
+                state = DirectMessageUiState(
+                    selectedConversationId = conversation.id,
+                    selectedConversation = conversation,
+                    recipient = recipient,
+                    thread = listOf(conversation.lastPost),
+                    threadError = "Thread failed",
+                ),
+                compactLayout = true,
+                onRetryThread = { retried += 1 },
+            )
+        }
+
+        compose.onNodeWithText("Thread failed").assertIsDisplayed()
+        compose.onNodeWithTag("direct_message_thread_retry").assertIsDisplayed().performClick()
+        assertEquals(1, retried)
+    }
+
+    @Test
+    fun retryErrorHidesContinue() {
+        show {
+            DirectMessageConversationScreen(
+                accountId = owner.id,
+                state = DirectMessageUiState(
+                    selectedConversationId = conversation.id,
+                    selectedConversation = conversation,
+                    recipient = recipient,
+                    thread = listOf(conversation.lastPost),
+                    threadCursor = "c1",
+                    threadError = "Thread failed",
+                ),
+                compactLayout = true,
+            )
+        }
+
+        compose.onNodeWithTag("direct_message_thread_retry").assertIsDisplayed()
+        compose.onNodeWithTag("direct_message_thread_continue").assertDoesNotExist()
+    }
+
+    @Test
+    fun continuingSpinnerShowsLoading() {
+        show {
+            DirectMessageConversationScreen(
+                accountId = owner.id,
+                state = DirectMessageUiState(
+                    selectedConversationId = conversation.id,
+                    selectedConversation = conversation,
+                    recipient = recipient,
+                    thread = listOf(conversation.lastPost),
+                    threadCursor = "c1",
+                    threadContinuing = true,
+                ),
+                compactLayout = true,
+            )
+        }
+
+        compose.onNodeWithTag("direct_message_thread_loading").assertIsDisplayed()
+        compose.onNodeWithTag("direct_message_thread_continue").assertDoesNotExist()
+        compose.onNodeWithTag("direct_message_thread_retry").assertDoesNotExist()
+    }
+
+    @Test
+    fun cursorPlusLimitationsShowsContinueNotPartial() {
+        show {
+            DirectMessageConversationScreen(
+                accountId = owner.id,
+                state = DirectMessageUiState(
+                    selectedConversationId = conversation.id,
+                    selectedConversation = conversation,
+                    recipient = recipient,
+                    thread = listOf(conversation.lastPost),
+                    threadCursor = "c1",
+                    threadLimitations = listOf(ThreadLimitation.UncertainServerTruncation),
+                ),
+                compactLayout = true,
+            )
+        }
+
+        compose.onNodeWithTag("direct_message_thread_continue").assertIsDisplayed()
+        compose.onNodeWithText("Some messages could not be loaded").assertDoesNotExist()
+    }
+
+    @Test
+    fun compactLimitedNoticeShowsStaticText() {
+        show {
+            DirectMessageConversationScreen(
+                accountId = owner.id,
+                state = DirectMessageUiState(
+                    selectedConversationId = conversation.id,
+                    selectedConversation = conversation,
+                    recipient = recipient,
+                    thread = listOf(conversation.lastPost),
+                    threadLimitations = listOf(ThreadLimitation.UncertainServerTruncation),
+                ),
+                compactLayout = true,
+            )
+        }
+
+        compose.onNodeWithText("Some messages could not be loaded").assertIsDisplayed()
+        compose.onNodeWithTag("direct_message_thread_continue").assertDoesNotExist()
+        compose.onNodeWithTag("direct_message_thread_retry").assertDoesNotExist()
+    }
+
+    @Test
+    fun finishedThreadShowsNoExtraControl() {
+        show {
+            DirectMessageConversationScreen(
+                accountId = owner.id,
+                state = DirectMessageUiState(
+                    selectedConversationId = conversation.id,
+                    selectedConversation = conversation,
+                    recipient = recipient,
+                    thread = listOf(conversation.lastPost),
+                ),
+                compactLayout = false,
+            )
+        }
+
+        compose.onNodeWithTag("direct_message_thread_continue").assertDoesNotExist()
+        compose.onNodeWithTag("direct_message_thread_retry").assertDoesNotExist()
+        compose.onNodeWithText("Some messages could not be loaded").assertDoesNotExist()
+    }
+
+    @Test
+    fun limitedThreadShowsStaticNotice() {
+        show {
+            DirectMessageConversationScreen(
+                accountId = owner.id,
+                state = DirectMessageUiState(
+                    selectedConversationId = conversation.id,
+                    selectedConversation = conversation,
+                    recipient = recipient,
+                    thread = listOf(conversation.lastPost),
+                    threadLimitations = listOf(ThreadLimitation.UncertainServerTruncation),
+                ),
+                compactLayout = false,
+            )
+        }
+
+        compose.onNodeWithText("Some messages could not be loaded").assertIsDisplayed()
+        compose.onNodeWithTag("direct_message_thread_continue").assertDoesNotExist()
+        compose.onNodeWithTag("direct_message_thread_retry").assertDoesNotExist()
     }
 
     private fun show(content: @Composable () -> Unit) {

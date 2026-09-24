@@ -47,7 +47,8 @@ data class DirectConversation(
  * transport order. [nextCursor] is an opaque adapter continuation or null.
  * [limitations] uses the shared thread vocabulary. [acquisitionState] stays
  * consistent with the cursor and the limitations. Visible partial and retry
- * presentation remains planned and lives outside this contract.
+ * presentation is owned by the UI layer. This contract stays protocol-neutral
+ * and never names a presentation control.
  */
 data class DirectThreadResult(
     val posts: List<Post>,

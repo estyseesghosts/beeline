@@ -4,6 +4,7 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.ConversationId
 import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.ThreadLimitation
 
 data class DirectMessageUiState(
     val conversations: List<DirectConversation> = emptyList(),
@@ -17,6 +18,14 @@ data class DirectMessageUiState(
     val loadingMore: Boolean = false,
     val sending: Boolean = false,
     val error: String? = null,
+    /** Opaque adapter continuation for the open thread. Null means finished. */
+    val threadCursor: String? = null,
+    /** Accumulated adapter limitations for the open thread. */
+    val threadLimitations: List<ThreadLimitation> = emptyList(),
+    /** True while a continuation page is in flight. Separate from fresh load. */
+    val threadContinuing: Boolean = false,
+    /** Thread acquisition failure. Separate from inbox and send errors. */
+    val threadError: String? = null,
     /** Composer text for the active editor target. The feature owner, not the screen, holds it. */
     val editorText: String = "",
     /** Binds accepted send completion to the text it submitted. A newer edit must survive. */

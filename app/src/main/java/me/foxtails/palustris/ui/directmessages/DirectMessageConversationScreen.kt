@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +51,8 @@ fun DirectMessageConversationScreen(
     onBack: () -> Unit = {},
     onEditorTextChange: (String) -> Unit = {},
     onSend: () -> Unit = {},
+    onContinueThread: () -> Unit = {},
+    onRetryThread: () -> Unit = {},
 ) {
     val recipient = state.recipient
     val title = state.selectedConversation?.participants
@@ -92,9 +95,46 @@ fun DirectMessageConversationScreen(
             items(state.thread, key = { "${it.id.connection}/${it.id.value}" }) { post ->
                 DirectMessageRow(accountId, post)
             }
-            if (state.loadingThread) item {
+            if (state.loadingThread || state.threadContinuing) item {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(Modifier.size(24.dp))
+                    CircularProgressIndicator(Modifier.size(24.dp).testTag("direct_message_thread_loading"))
+                }
+            } else if (state.threadError != null) item {
+                // Thread acquisition failed. Prior posts stay. Retry reuses the
+                // stored cursor, or reloads fresh when no cursor remains.
+                Column(
+                    Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        state.threadError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    TextButton(
+                        onClick = onRetryThread,
+                        modifier = Modifier.testTag("direct_message_thread_retry"),
+                    ) {
+                        Text(stringResource(R.string.notifications_retry))
+                    }
+                }
+            } else if (state.threadCursor != null) item {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    TextButton(
+                        onClick = onContinueThread,
+                        modifier = Modifier.testTag("direct_message_thread_continue"),
+                    ) {
+                        Text(stringResource(R.string.dm_thread_continue))
+                    }
+                }
+            } else if (state.threadLimitations.isNotEmpty()) item {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text(
+                        stringResource(R.string.dm_thread_partial),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }

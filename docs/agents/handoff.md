@@ -4,23 +4,23 @@
 
 ## Current boundary
 
-1D3 adapter is complete and reviewed. Visible 1D3 UI is not complete.
+1D3 UI is complete and reviewed. 1D3 adapter and 1D3 UI are both done. The visible footer and retry behavior is implemented.
 
 ## Next slice
 
-The next implementation slice is 1D3 UI: visible partial-state and retry presentation for bounded direct-message thread continuation.
+The next implementation slice is 1E1: adapter residue cleanup.
 
 ## Changed ownership
 
-`DirectThreadResult` and `ThreadLimitation.PendingLimit` in domain; bounded reply-rooted breadth-first descent with a strict version-4 cursor in `MisskeyDirectMessageService`; finished result with no continuation in the Mastodon adapter; continuation merge and preview rule in `DirectMessageRepository`; mechanical plumbing only in `DirectMessageViewModel`, with no visible UI change.
+Thread fields live in `DirectMessageUiState`. The ViewModel owns guarded `runThreadPage`, `continueThread` and `retryThread`, plus a separate `markReadJob` and `threadError`. The conversation footer is stateless and derives from thread state. Contract plumbing, default resources, tests, and docs are updated. Selection, start, and close reset the thread fields. Stop cancels thread and read jobs and advances selection authority, but does not reset state fields.
 
 ## Verification evidence
 
-`DirectMessageSourceTest` 50 passed; `DirectMessageRepositoryTest` 19 passed; `DirectMessageViewModelTest` 16 passed; `MisskeyIntegrationTest` 48 passed; `MastodonIntegrationTest` 58 passed; `:app:lintDebug` passed. This session ran no new commands and claims no new results.
+`DirectMessageViewModelTest` 26 passed; `DirectMessageScreenTest` 13 passed with compact and wide Compose coverage; `DirectMessageSourceTest` 50 passed; `DirectMessageRepositoryTest` 19 passed; `DirectMessageWriteAuthorityTest` 8 passed; `DirectMessageDatabaseSchemaTest` 3 passed; `MisskeyIntegrationTest` 48 passed; `MastodonIntegrationTest` 58 passed; `:app:lintDebug` passed. This records session ran no new commands and claims no new results.
 
 ## Known limits
 
-Full `test assembleRelease` remains known red and was not run. Live Misskey and Sharkey ordering and device and UI behavior are unverified.
+Full `test assembleRelease` remains known red and was not run. Physical-device rendering, font-scale behavior, TalkBack order, and live-server behavior are unverified.
 
 ## Hygiene
 
@@ -28,4 +28,4 @@ Keep staged `docs/classic_navigation.md`, `.opencode/*`, `importantdocs/writing_
 
 ## Last safe boundary
 
-The last safe boundary is the commit that contains this record. Get the exact hash with `git log -1`. Git history is authoritative.
+The last safe boundary is the commit that contains this record. The next session must get the exact last safe hash with `git log -1`. Git history is authoritative.
