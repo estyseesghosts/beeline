@@ -28,12 +28,12 @@ internal class MastodonPushService(
 
     suspend fun createOrReplace(spec: PushSubscriptionSpec, previous: PushSubscription?): PushSubscription {
         validateSpec(spec); previous?.let(::validateSubscription)
-        return confirmed(api.postForm(origin, "api/v1/push/subscription", createFields(spec), token).body, spec.endpoint)
+        return confirmed(api.postForm(origin, "api/v1/push/subscription", createFields(spec), token, MASTODON_MAX_RESPONSE_BYTES).body, spec.endpoint)
     }
 
     suspend fun updatePolicy(subscription: PushSubscription, alerts: Set<NotificationCategory>): PushSubscription {
         validateSubscription(subscription)
-        val confirmed = confirmed(api.putForm(origin, "api/v1/push/subscription", alertFields(alerts), token).body, subscription.endpoint)
+        val confirmed = confirmed(api.putForm(origin, "api/v1/push/subscription", alertFields(alerts), token, MASTODON_MAX_RESPONSE_BYTES).body, subscription.endpoint)
         if (!sameIdentity(confirmed, subscription)) throw SourceError.ServerError("notifications.push.identity-changed")
         return confirmed
     }
@@ -42,14 +42,14 @@ internal class MastodonPushService(
         validateSubscription(subscription)
         val current = readOwned() ?: return
         if (!sameIdentity(current, subscription)) throw SourceError.ServerError("notifications.push.identity-changed")
-        api.delete(origin, "api/v1/push/subscription", token)
+        api.delete(origin, "api/v1/push/subscription", token, MASTODON_MAX_RESPONSE_BYTES)
     }
 
     private fun validateSpec(spec: PushSubscriptionSpec) {
         if (spec.accountId != accountId || spec.publicKey.isBlank() || spec.authSecret.isBlank()) throw SourceError.Unsupported("notifications.push.spec")
     }
     private suspend fun readOwned(): PushSubscription? = try {
-        confirmed(api.get(origin, "v1/push/subscription", token).body)
+        confirmed(api.get(origin, "v1/push/subscription", token, MASTODON_MAX_RESPONSE_BYTES).body)
     } catch (error: ApiFailure) { if (error.status == 404) null else throw error }
     private fun confirmed(body: String, expectedEndpoint: ValidatedUrl? = null): PushSubscription {
         val json = JSONObject(body); val endpoint = ValidatedUrl.https(json.optString("endpoint")) ?: throw SourceError.ServerError("notifications.push.confirmation")

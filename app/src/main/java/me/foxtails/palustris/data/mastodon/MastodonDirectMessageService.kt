@@ -30,9 +30,9 @@ internal class MastodonDirectMessageService(
 ) {
     suspend fun conversations(cursor: String?): Page<DirectConversation> {
         val response = if (cursor == null) {
-            api.getUrl(directConversationsUrl().toString(), token)
+            api.getUrl(directConversationsUrl().toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         } else {
-            api.getUrl(validateDirectConversationsUrl(cursor).toString(), token)
+            api.getUrl(validateDirectConversationsUrl(cursor).toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         }
         val values = JSONArray(response.body)
         val items = (0 until values.length()).mapNotNull { index ->
@@ -49,6 +49,7 @@ internal class MastodonDirectMessageService(
             origin,
             "v1/statuses/${anchor.id.value.encodePathSegment()}/context",
             token,
+            MASTODON_MAX_RESPONSE_BYTES,
         ).body)
         val ancestors = context.optJSONArray("ancestors").toPostList(origin)
         val descendants = context.optJSONArray("descendants").toPostList(origin)
@@ -68,7 +69,7 @@ internal class MastodonDirectMessageService(
             throw SourceError.Unsupported("direct.thread")
         }
         val body = try {
-            api.get(origin, "v1/statuses/${anchor.value.encodePathSegment()}", token).body
+            api.get(origin, "v1/statuses/${anchor.value.encodePathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES).body
         } catch (error: ApiFailure) {
             if (error.status == 403 || error.status == 404 || error.status == 410) {
                 throw SourceError.Unsupported("direct.thread")
@@ -90,12 +91,12 @@ internal class MastodonDirectMessageService(
             add("visibility" to "direct")
             request.replyTo?.let { add("in_reply_to_id" to it.value) }
         }
-        return MastodonMapper.post(api.postForm(origin, "api/v1/statuses", fields, token).body.toJson(), origin)
+        return MastodonMapper.post(api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(), origin)
     }
 
     suspend fun markConversationRead(id: ConversationId) {
         validateConversationId(id, "direct.read")
-        api.postForm(origin, "api/v1/conversations/${id.value.encodePathSegment()}/read", emptyList(), token)
+        api.postForm(origin, "api/v1/conversations/${id.value.encodePathSegment()}/read", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
     }
 
     private fun validateDirectMessageRequest(request: DirectMessageRequest) {

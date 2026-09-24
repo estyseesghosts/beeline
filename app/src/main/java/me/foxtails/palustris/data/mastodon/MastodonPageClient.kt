@@ -15,10 +15,10 @@ internal class MastodonPageClient(
     private val sourceInstance: String,
 ) {
     suspend fun getPage(route: MastodonPageRoute, cursor: String?) = if (cursor == null) {
-        api.get(origin, route.endpoint, token)
+        api.get(origin, route.endpoint, token, MASTODON_MAX_RESPONSE_BYTES)
     } else {
         val url = decodeAndValidate(route, cursor)
-        api.getUrl(url.toString(), token)
+        api.getUrl(url.toString(), token, MASTODON_MAX_RESPONSE_BYTES)
     }
 
     fun validateCursor(route: MastodonPageRoute, cursor: String?): HttpUrl? =

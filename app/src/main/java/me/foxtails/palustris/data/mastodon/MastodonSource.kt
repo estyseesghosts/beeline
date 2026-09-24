@@ -70,6 +70,8 @@ import me.foxtails.palustris.domain.ValidatedUrl
 import org.json.JSONArray
 import org.json.JSONObject
 
+internal const val MASTODON_MAX_RESPONSE_BYTES = 4L * 1024 * 1024
+
 class MastodonSource(
     private val origin: String,
     private val token: String,
@@ -112,22 +114,22 @@ class MastodonSource(
     @Volatile
     private var capabilitiesRetryNotBefore = 0L
 
-    override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = request {
+    override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = request("timeline") {
         // Reject invalid continuations before capability refresh can issue its own probe.
         timelineService.validateCursor(timeline, cursor)
         refreshCapabilities()
         timelineService.timeline(timeline, cursor, capabilities)
     }
 
-    override suspend fun post(id: EntityId): Post = request {
+    override suspend fun post(id: EntityId): Post = request("post") {
         validatePostId(id, "post")
-        MastodonMapper.post(api.get(origin, "v1/statuses/${id.value.encodePathSegment()}", token).body.toJson(), origin)
+        MastodonMapper.post(api.get(origin, "v1/statuses/${id.value.encodePathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(), origin)
     }
 
     override suspend fun threadContext(
         focalId: EntityId,
         continuation: ThreadContinuation?,
-    ): ThreadContext = request {
+    ): ThreadContext = request("thread") {
         validatePostId(focalId, "thread")
         if (capabilities.threads == CapabilityStatus.Unsupported || capabilities.threads == CapabilityStatus.Denied) {
             throw SourceError.Unsupported("thread")
@@ -139,35 +141,35 @@ class MastodonSource(
         threadService.context(focalId, continuation)
     }
 
-    override suspend fun profile(id: AccountId): Account = request { profileService.profile(id) }
+    override suspend fun profile(id: AccountId): Account = request("profile.details") { profileService.profile(id) }
 
-    override suspend fun profileTimeline(query: ProfileTimelineQuery, cursor: String?): Page<Post> = request {
+    override suspend fun profileTimeline(query: ProfileTimelineQuery, cursor: String?): Page<Post> = request("profile.timeline") {
         profileService.timeline(query, cursor)
     }
 
-    override suspend fun profileRelationship(id: AccountId): ProfileRelationship = request {
+    override suspend fun profileRelationship(id: AccountId): ProfileRelationship = request("profile.relationship") {
         profileService.relationship(id)
     }
 
-    override suspend fun followProfile(id: AccountId): ProfileRelationship = request {
+    override suspend fun followProfile(id: AccountId): ProfileRelationship = request("profile.follow") {
         profileService.follow(id)
     }
 
-    override suspend fun unfollowProfile(id: AccountId): ProfileRelationship = request {
+    override suspend fun unfollowProfile(id: AccountId): ProfileRelationship = request("profile.unfollow") {
         profileService.unfollow(id)
     }
 
-    override suspend fun setBlocked(id: AccountId, blocked: Boolean): ProfileRelationship = request {
+    override suspend fun setBlocked(id: AccountId, blocked: Boolean): ProfileRelationship = request("profile.block") {
         moderationService.setBlocked(id, blocked)
     }
 
-    override suspend fun setMuted(id: AccountId, muted: Boolean): ProfileRelationship = request {
+    override suspend fun setMuted(id: AccountId, muted: Boolean): ProfileRelationship = request("profile.mute") {
         moderationService.setMuted(id, muted)
     }
 
-    override suspend fun pinnedPosts(id: AccountId): List<Post> = request { profileService.pinnedPosts(id) }
+    override suspend fun pinnedPosts(id: AccountId): List<Post> = request("profile.pinned") { profileService.pinnedPosts(id) }
 
-    override suspend fun create(post: CreatePostRequest): Post = request {
+    override suspend fun create(post: CreatePostRequest): Post = request("create") {
         if (post.replyTo != null && post.quoteOf != null) throw SourceError.Unsupported("create.reply.quote")
         post.replyTo?.let { validatePostId(it, "create.reply-origin") }
         post.quoteOf?.let { validatePostId(it, "create.quote-origin") }
@@ -186,33 +188,33 @@ class MastodonSource(
             post.replyTo?.let { add("in_reply_to_id" to it.value) }
             post.quoteOf?.let { add("quoted_status_id" to it.value) }
         }
-        MastodonMapper.post(api.postForm(origin, "api/v1/statuses", fields, token).body.toJson(), origin)
+        MastodonMapper.post(api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(), origin)
     }
 
-    override suspend fun conversations(cursor: String?): Page<DirectConversation> = request { directMessageService.conversations(cursor) }
+    override suspend fun conversations(cursor: String?): Page<DirectConversation> = request("direct.conversations") { directMessageService.conversations(cursor) }
 
     override suspend fun conversationThread(request: DirectThreadRequest): List<Post> =
-        this.request { directMessageService.conversationThread(request) }
+        this.request("direct.thread") { directMessageService.conversationThread(request) }
 
-    override suspend fun sendDirectMessage(request: DirectMessageRequest): Post = request { directMessageService.sendDirectMessage(request) }
+    override suspend fun sendDirectMessage(request: DirectMessageRequest): Post = request("direct.send") { directMessageService.sendDirectMessage(request) }
 
-    override suspend fun markConversationRead(id: ConversationId) = request { directMessageService.markConversationRead(id) }
+    override suspend fun markConversationRead(id: ConversationId) = request("direct.read") { directMessageService.markConversationRead(id) }
 
-    override suspend fun loadEditableProfile(): EditableProfile = request {
+    override suspend fun loadEditableProfile(): EditableProfile = request("profile.editable.load") {
         refreshCapabilities()
         selfProfileService.load(capabilities.profile.editable)
     }
 
-    override suspend fun updateEditableProfile(patch: EditableProfilePatch): EditableProfile = request {
+    override suspend fun updateEditableProfile(patch: EditableProfilePatch): EditableProfile = request("profile.editable.update") {
         refreshCapabilities()
         selfProfileService.update(patch, capabilities.profile.editable)
     }
 
-    override suspend fun customEmojis(): List<CustomEmoji> = request {
-        MastodonEmojiMapper.parseCatalog(api.get(origin, "v1/custom_emojis", token).body, origin)
+    override suspend fun customEmojis(): List<CustomEmoji> = request("emoji.catalog") {
+        MastodonEmojiMapper.parseCatalog(api.get(origin, "v1/custom_emojis", token, MASTODON_MAX_RESPONSE_BYTES).body, origin)
     }
 
-    override suspend fun react(id: EntityId, choice: EmojiChoice) = request {
+    override suspend fun react(id: EntityId, choice: EmojiChoice) = request("react") {
         validatePostId(id, "react")
         requireReactionMutation()
         // A failed mutation returns its normalized error. A resource 404 is not proof that
@@ -222,7 +224,7 @@ class MastodonSource(
         Unit
     }
 
-    override suspend fun removeReaction(id: EntityId, choice: EmojiChoice) = request {
+    override suspend fun removeReaction(id: EntityId, choice: EmojiChoice) = request("react") {
         validatePostId(id, "react")
         requireReactionMutation()
         mutateEmojiReaction(id, choice.submissionValue, selected = false)
@@ -241,9 +243,9 @@ class MastodonSource(
         selected: Boolean,
     ): PostActionResult {
         val response = if (selected) {
-            api.putForm(origin, emojiReactionEndpoint(id, submission), emptyList(), token)
+            api.putForm(origin, emojiReactionEndpoint(id, submission), emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         } else {
-            api.delete(origin, emojiReactionEndpoint(id, submission), token)
+            api.delete(origin, emojiReactionEndpoint(id, submission), token, MASTODON_MAX_RESPONSE_BYTES)
         }
         return PostActionResult(
             post = response.optionalPost(origin),
@@ -264,17 +266,17 @@ class MastodonSource(
             .encodedPath
             .removePrefix("/")
 
-    override suspend fun favorite(id: EntityId) = request {
+    override suspend fun favorite(id: EntityId) = request("favorite") {
         validatePostId(id, "favorite")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/favourite", emptyList(), token)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/favourite", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
     override suspend fun favorite(id: EntityId, favouriteEmoji: String) = favorite(id)
 
-    override suspend fun unfavorite(id: EntityId, favouriteEmoji: String?) = request {
+    override suspend fun unfavorite(id: EntityId, favouriteEmoji: String?) = request("favorite") {
         validatePostId(id, "favorite")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/unfavourite", emptyList(), token)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/unfavourite", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
@@ -282,32 +284,32 @@ class MastodonSource(
         id: EntityId,
         favouriteEmoji: String,
         selected: Boolean,
-    ): PostActionResult = request {
+    ): PostActionResult = request("favorite") {
         validatePostId(id, "favorite")
         val endpoint = if (selected) "favourite" else "unfavourite"
-        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/$endpoint", emptyList(), token)
+        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/$endpoint", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         PostActionResult(
             post = response.optionalPost(origin),
             selected = selected,
         )
     }
 
-    override suspend fun renote(id: EntityId) = request {
+    override suspend fun renote(id: EntityId) = request("renote") {
         validatePostId(id, "renote")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/reblog", emptyList(), token)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/reblog", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
-    override suspend fun unrenote(id: EntityId, ownRepostId: EntityId?) = request {
+    override suspend fun unrenote(id: EntityId, ownRepostId: EntityId?) = request("renote") {
         validatePostId(id, "renote")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/unreblog", emptyList(), token)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/unreblog", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
-    override suspend fun setReshared(id: EntityId, selected: Boolean, ownRepostId: EntityId?): PostActionResult = request {
+    override suspend fun setReshared(id: EntityId, selected: Boolean, ownRepostId: EntityId?): PostActionResult = request("renote") {
         validatePostId(id, "renote")
         val endpoint = if (selected) "reblog" else "unreblog"
-        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/$endpoint", emptyList(), token)
+        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/$endpoint", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         val mapped = response.optionalPost(origin)
         PostActionResult(
             post = mapped,
@@ -316,22 +318,22 @@ class MastodonSource(
         )
     }
 
-    override suspend fun save(id: EntityId) = request {
+    override suspend fun save(id: EntityId) = request("save") {
         validatePostId(id, "save")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/bookmark", emptyList(), token)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/bookmark", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
-    override suspend fun unsave(id: EntityId) = request {
+    override suspend fun unsave(id: EntityId) = request("save") {
         validatePostId(id, "save")
-        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/unbookmark", emptyList(), token)
+        api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/unbookmark", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
-    override suspend fun setSaved(id: EntityId, selected: Boolean): PostActionResult = request {
+    override suspend fun setSaved(id: EntityId, selected: Boolean): PostActionResult = request("save") {
         validatePostId(id, "save")
         val endpoint = if (selected) "bookmark" else "unbookmark"
-        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/$endpoint", emptyList(), token)
+        val response = api.postForm(origin, "api/v1/statuses/${id.value.encodePathSegment()}/$endpoint", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         val mapped = response.optionalPost(origin)
         PostActionResult(post = mapped, selected = selected)
     }
@@ -341,7 +343,7 @@ class MastodonSource(
         create(CreatePostRequest(text = text, quoteOf = id))
     }
 
-    override suspend fun savedPosts(cursor: String?): Page<Post> = request {
+    override suspend fun savedPosts(cursor: String?): Page<Post> = request("bookmarks") {
         val route = MastodonPageRoute("bookmarks", "v1/bookmarks?limit=40", "/api/v1/bookmarks", "", "bookmarks")
         val currentUrl = pageClient.currentUrl(route, cursor)
         val response = pageClient.getPage(route, cursor)
@@ -352,27 +354,27 @@ class MastodonSource(
         )
     }
 
-    override suspend fun notifications(cursor: String?): Page<me.foxtails.palustris.domain.Notification> = request { notificationService.notifications(cursor) }
+    override suspend fun notifications(cursor: String?): Page<me.foxtails.palustris.domain.Notification> = request("notifications") { notificationService.notifications(cursor) }
 
-    override suspend fun notifications(query: NotificationQuery, cursor: NotificationCursor?): NotificationPage = request {
+    override suspend fun notifications(query: NotificationQuery, cursor: NotificationCursor?): NotificationPage = request("notifications") {
         notificationService.notifications(query, cursor)
     }
 
-    override suspend fun fetchNewerNotifications(query: NotificationQuery, checkpoint: NotificationCheckpoint): NotificationPage = request {
+    override suspend fun fetchNewerNotifications(query: NotificationQuery, checkpoint: NotificationCheckpoint): NotificationPage = request("notifications") {
         notificationService.fetchNewerNotifications(query, checkpoint)
     }
 
-    override suspend fun fetchOlderNotifications(query: NotificationQuery, checkpoint: NotificationCheckpoint): NotificationPage = request {
+    override suspend fun fetchOlderNotifications(query: NotificationQuery, checkpoint: NotificationCheckpoint): NotificationPage = request("notifications") {
         notificationService.fetchOlderNotifications(query, checkpoint)
     }
 
-    override suspend fun notificationUnreadState(): NotificationUnreadState = request { notificationService.unreadState() }
+    override suspend fun notificationUnreadState(): NotificationUnreadState = request("notifications.unread") { notificationService.unreadState() }
 
-    override suspend fun pushProviderInfo(): PushProviderInfo = request { pushService.providerInfo() }
+    override suspend fun pushProviderInfo(): PushProviderInfo = request("notifications.push.info") { pushService.providerInfo() }
 
-    override suspend fun acknowledgeNotifications(): NotificationAcknowledgement = request { notificationService.acknowledge() }
+    override suspend fun acknowledgeNotifications(): NotificationAcknowledgement = request("notifications.acknowledge") { notificationService.acknowledge() }
 
-    override suspend fun respondToFollowRequest(targetAccountId: AccountId, accept: Boolean) = request {
+    override suspend fun respondToFollowRequest(targetAccountId: AccountId, accept: Boolean) = request("notifications.followRequest") {
         notificationService.respondToFollowRequest(targetAccountId, accept)
     }
 
@@ -381,56 +383,56 @@ class MastodonSource(
         if (id.value.isBlank()) throw SourceError.Unsupported(feature)
     }
 
-    override suspend fun dismissNotification(id: EntityId) = request { notificationService.dismiss(id) }
+    override suspend fun dismissNotification(id: EntityId) = request("notifications.dismiss") { notificationService.dismiss(id) }
 
-    override suspend fun blockedAccounts(cursor: ModerationCursor?): ModerationPage<ModerationAccount> = request {
+    override suspend fun blockedAccounts(cursor: ModerationCursor?): ModerationPage<ModerationAccount> = request("moderation.blocked") {
         moderationService.blocked(cursor)
     }
 
-    override suspend fun mutedAccounts(cursor: ModerationCursor?): ModerationPage<ModerationAccount> = request {
+    override suspend fun mutedAccounts(cursor: ModerationCursor?): ModerationPage<ModerationAccount> = request("moderation.muted") {
         moderationService.muted(cursor)
     }
 
-    override suspend fun mutedHashtags(cursor: ModerationCursor?): ModerationPage<MutedHashtag> = request {
+    override suspend fun mutedHashtags(cursor: ModerationCursor?): ModerationPage<MutedHashtag> = request("moderation.hashtags") {
         moderationService.hashtags(cursor)
     }
 
-    override suspend fun removeBlockedAccount(entry: ModerationAccount) = request { moderationService.removeBlocked(entry) }
+    override suspend fun removeBlockedAccount(entry: ModerationAccount) = request("moderation.removeBlocked") { moderationService.removeBlocked(entry) }
 
-    override suspend fun removeMutedAccount(entry: ModerationAccount) = request { moderationService.removeMuted(entry) }
+    override suspend fun removeMutedAccount(entry: ModerationAccount) = request("moderation.removeMuted") { moderationService.removeMuted(entry) }
 
-    override suspend fun report(request: ReportRequest) = request { moderationService.report(request) }
+    override suspend fun report(request: ReportRequest) = request("moderation.report") { moderationService.report(request) }
 
-    override suspend fun queryOwnedPushSubscription(knownEndpoint: ValidatedUrl?): PushSubscription? = request {
+    override suspend fun queryOwnedPushSubscription(knownEndpoint: ValidatedUrl?): PushSubscription? = request("notifications.push.query") {
         pushService.query(knownEndpoint)
     }
 
     override suspend fun createOrReplacePushSubscription(
         spec: PushSubscriptionSpec,
         previous: PushSubscription?,
-    ): PushSubscription = request { pushService.createOrReplace(spec, previous) }
+    ): PushSubscription = request("notifications.push.create") { pushService.createOrReplace(spec, previous) }
 
     override suspend fun updatePushAlertPolicy(
         subscription: PushSubscription,
         alerts: Set<NotificationCategory>,
-    ): PushSubscription = request { pushService.updatePolicy(subscription, alerts) }
+    ): PushSubscription = request("notifications.push.update") { pushService.updatePolicy(subscription, alerts) }
 
-    override suspend fun removePushSubscription(subscription: PushSubscription) = request { pushService.remove(subscription) }
+    override suspend fun removePushSubscription(subscription: PushSubscription) = request("notifications.push.remove") { pushService.remove(subscription) }
 
     override fun streamEvents(): Flow<Event> = streamService.events()
 
-    override suspend fun uploadMedia(file: InputStream, mimeType: String) = request {
-        MastodonMapper.attachment(api.postMultipart(origin, "api/v1/media", file, mimeType, bearerToken = token).body.toJson())
+    override suspend fun uploadMedia(file: InputStream, mimeType: String) = request("media.upload") {
+        MastodonMapper.attachment(api.postMultipart(origin, "api/v1/media", file, mimeType, bearerToken = token, maxResponseBytes = MASTODON_MAX_RESPONSE_BYTES).body.toJson())
     }
 
-    override suspend fun search(query: String): List<Post> = request {
+    override suspend fun search(query: String): List<Post> = request("search") {
         val encodedQuery = URLEncoder.encode(query, Charsets.UTF_8.name())
-        val statuses = JSONObject(api.get(origin, "v2/search?q=$encodedQuery", token).body)
+        val statuses = JSONObject(api.get(origin, "v2/search?q=$encodedQuery", token, MASTODON_MAX_RESPONSE_BYTES).body)
             .optJSONArray("statuses") ?: JSONArray()
         (0 until statuses.length()).map { MastodonMapper.post(statuses.getJSONObject(it), origin) }
     }
 
-    override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> = request {
+    override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> = request("search.hashtag") {
         val normalized = hashtagBody(tag)
         val encodedTag = URLEncoder.encode(normalized, Charsets.UTF_8.name())
         val route = MastodonPageRoute(
@@ -445,11 +447,11 @@ class MastodonSource(
         )
     }
 
-    override suspend fun searchAccounts(query: String): List<Account> = request {
+    override suspend fun searchAccounts(query: String): List<Account> = request("search.accounts") {
         val handle = query.trim().removePrefix("@").takeIf { it.isNotBlank() }
             ?: throw SourceError.Unsupported("account search")
         listOf(MastodonMapper.account(
-            api.get(origin, "v1/accounts/lookup?acct=${URLEncoder.encode(handle, Charsets.UTF_8.name())}", token)
+            api.get(origin, "v1/accounts/lookup?acct=${URLEncoder.encode(handle, Charsets.UTF_8.name())}", token, MASTODON_MAX_RESPONSE_BYTES)
                 .body.toJson(), origin,
         ))
     }
@@ -481,13 +483,13 @@ class MastodonSource(
         }
     }
 
-    private suspend fun <T> request(block: suspend () -> T): T = withContext(Dispatchers.IO) {
+    private suspend fun <T> request(operation: String, block: suspend () -> T): T = withContext(Dispatchers.IO) {
         try {
             block()
         } catch (e: CancellationException) {
             throw e
         } catch (_: ResponseLimitExceeded) {
-            throw SourceError.ResourceLimit("thread")
+            throw SourceError.ResourceLimit(operation)
         } catch (e: SourceError) {
             throw e
         } catch (e: ApiFailure) {

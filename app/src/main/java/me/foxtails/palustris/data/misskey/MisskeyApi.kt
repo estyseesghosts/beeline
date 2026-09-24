@@ -70,68 +70,75 @@ class MisskeyApi(
         endpoint: String,
         fields: Map<String, String>,
         bearerToken: String? = null,
-    ): HttpResponse = postForm(origin, endpoint, fields.entries.map { it.key to it.value }, bearerToken)
+        maxResponseBytes: Long? = null,
+    ): HttpResponse = postForm(origin, endpoint, fields.entries.map { it.key to it.value }, bearerToken, maxResponseBytes)
 
     suspend fun postForm(
         origin: String,
         endpoint: String,
         fields: List<Pair<String, String>>,
         bearerToken: String? = null,
-    ): HttpResponse = postForm(endpointUrl = "$origin/$endpoint", fields = fields, bearerToken = bearerToken)
+        maxResponseBytes: Long? = null,
+    ): HttpResponse = postForm(endpointUrl = "$origin/$endpoint", fields = fields, bearerToken = bearerToken, maxResponseBytes = maxResponseBytes)
 
     /** Uses a fully built URL so callers can keep opaque path/query values encoded safely. */
     suspend fun postForm(
         endpointUrl: HttpUrl,
         fields: List<Pair<String, String>>,
         bearerToken: String? = null,
-    ): HttpResponse = postForm(endpointUrl.toString(), fields, bearerToken)
+        maxResponseBytes: Long? = null,
+    ): HttpResponse = postForm(endpointUrl.toString(), fields, bearerToken, maxResponseBytes)
 
     private suspend fun postForm(
         endpointUrl: String,
         fields: List<Pair<String, String>>,
         bearerToken: String?,
+        maxResponseBytes: Long?,
     ): HttpResponse =
         execute(Request.Builder().url(endpointUrl)
             .header("Accept", "application/json")
             .header("User-Agent", ProductIdentity.userAgent)
             .apply { bearerToken?.let { header("Authorization", "Bearer $it") } }
             .post(FormBody.Builder().apply { fields.forEach { (key, value) -> add(key, value) } }.build())
-            .build())
+            .build(), maxResponseBytes)
 
     suspend fun patchForm(
         origin: String,
         endpoint: String,
         fields: List<Pair<String, String>>,
         bearerToken: String? = null,
+        maxResponseBytes: Long? = null,
     ): HttpResponse = execute(Request.Builder().url("$origin/$endpoint")
         .header("Accept", "application/json")
         .header("User-Agent", ProductIdentity.userAgent)
         .apply { bearerToken?.let { header("Authorization", "Bearer $it") } }
         .patch(FormBody.Builder().apply { fields.forEach { (key, value) -> add(key, value) } }.build())
-        .build())
+        .build(), maxResponseBytes)
 
     suspend fun putForm(
         origin: String,
         endpoint: String,
         fields: List<Pair<String, String>>,
         bearerToken: String? = null,
+        maxResponseBytes: Long? = null,
     ): HttpResponse = execute(Request.Builder().url("$origin/$endpoint")
         .header("Accept", "application/json")
         .header("User-Agent", ProductIdentity.userAgent)
         .apply { bearerToken?.let { header("Authorization", "Bearer $it") } }
         .put(FormBody.Builder().apply { fields.forEach { (key, value) -> add(key, value) } }.build())
-        .build())
+        .build(), maxResponseBytes)
 
     suspend fun delete(
         origin: String,
         endpoint: String,
         bearerToken: String? = null,
+        maxResponseBytes: Long? = null,
     ): HttpResponse = execute(Request.Builder().url("$origin/$endpoint")
         .header("Accept", "application/json")
         .header("User-Agent", ProductIdentity.userAgent)
         .apply { bearerToken?.let { header("Authorization", "Bearer $it") } }
         .delete()
-        .build())
+        .build(), maxResponseBytes)
 
     suspend fun postMultipart(
         origin: String,
@@ -140,6 +147,7 @@ class MisskeyApi(
         mimeType: String,
         fileName: String = "upload",
         bearerToken: String? = null,
+        maxResponseBytes: Long? = null,
     ): HttpResponse = execute(Request.Builder().url("$origin/$endpoint")
         .header("Accept", "application/json")
         .header("User-Agent", ProductIdentity.userAgent)
@@ -147,7 +155,7 @@ class MisskeyApi(
         .post(MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("file", fileName, file.readBytes().toRequestBody(mimeType.toMediaType()))
             .build())
-        .build())
+        .build(), maxResponseBytes)
 
     /** PATCH multipart for avatar and header bytes; application-owned streams close after the request. */
     suspend fun patchMultipart(

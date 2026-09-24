@@ -52,15 +52,15 @@ internal class MastodonNotificationService(
     }
 
     suspend fun unreadState(): NotificationUnreadState {
-        val count = JSONObject(api.get(origin, "v1/notifications/unread_count", token).body).optInt("count", -1)
+        val count = JSONObject(api.get(origin, "v1/notifications/unread_count", token, MASTODON_MAX_RESPONSE_BYTES).body).optInt("count", -1)
         return if (count < 0) NotificationUnreadState.Unknown else NotificationUnreadState.AtLeast(count)
     }
 
     suspend fun acknowledge(): NotificationAcknowledgement {
-        val latest = api.get(origin, "v1/notifications?limit=1", token)
+        val latest = api.get(origin, "v1/notifications?limit=1", token, MASTODON_MAX_RESPONSE_BYTES)
             .let { JSONArray(it.body).optJSONObject(0)?.optString("id").orEmpty() }
         if (latest.isBlank()) return NotificationAcknowledgement(accountId, NotificationUnreadState.None, clock())
-        api.postForm(origin, "api/v1/markers", listOf("notifications[last_read_id]" to latest), token)
+        api.postForm(origin, "api/v1/markers", listOf("notifications[last_read_id]" to latest), token, MASTODON_MAX_RESPONSE_BYTES)
         return NotificationAcknowledgement(accountId, NotificationUnreadState.None, clock())
     }
 
@@ -69,18 +69,18 @@ internal class MastodonNotificationService(
             targetAccountId.localId.isBlank()
         ) throw SourceError.Unsupported("notifications.followRequest")
         val action = if (accept) "authorize" else "reject"
-        api.postForm(origin, "api/v1/follow_requests/${targetAccountId.localId.encodePathSegment()}/$action", emptyList(), token)
+        api.postForm(origin, "api/v1/follow_requests/${targetAccountId.localId.encodePathSegment()}/$action", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
     }
 
     suspend fun dismiss(id: EntityId) {
-        api.postForm(origin, "api/v1/notifications/${id.value.encodePathSegment()}/dismiss", emptyList(), token)
+        api.postForm(origin, "api/v1/notifications/${id.value.encodePathSegment()}/dismiss", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
     }
 
     private suspend fun loadNotifications(query: NotificationQuery, cursor: NotificationCursor?, direction: MastodonNotificationCursorDirection): NotificationPage {
         val variant = if (query.grouped) MastodonNotificationApiVariant.V2 else MastodonNotificationApiVariant.V1
         val decodedCursor = cursor?.let { decodeCursor(it, query, variant, direction) }
-        val response = if (decodedCursor == null) api.getUrl(notificationUrl(query, variant).toString(), token)
-        else api.getUrl(validateNotificationPaginationUrl(decodedCursor.url, variant).toString(), token)
+        val response = if (decodedCursor == null) api.getUrl(notificationUrl(query, variant).toString(), token, MASTODON_MAX_RESPONSE_BYTES)
+        else api.getUrl(validateNotificationPaginationUrl(decodedCursor.url, variant).toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         return if (variant == MastodonNotificationApiVariant.V1) {
             val values = JSONArray(response.body)
             val items = (0 until values.length()).map { MastodonNotificationMapper.notification(values.getJSONObject(it), origin, accountId) }

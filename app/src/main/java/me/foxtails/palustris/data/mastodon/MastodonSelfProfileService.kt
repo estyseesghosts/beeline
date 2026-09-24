@@ -21,9 +21,9 @@ class MastodonSelfProfileService(
             throw SourceError.Unsupported("profile.editable.load")
         }
         val body = if (capabilities.read == CapabilityStatus.Supported) {
-            api.get(origin, "v1/profile", token).body
+            api.get(origin, "v1/profile", token, MASTODON_MAX_RESPONSE_BYTES).body
         } else {
-            api.get(origin, "v1/accounts/verify_credentials", token).body
+            api.get(origin, "v1/accounts/verify_credentials", token, MASTODON_MAX_RESPONSE_BYTES).body
         }
         val json = JSONObject(body)
         requireMatchingAccount(json)
@@ -59,9 +59,9 @@ class MastodonSelfProfileService(
             patch.attributionDomains?.forEach { domain -> add("attribution_domains[]" to domain) }
         }
         val response = if (capabilities.update == CapabilityStatus.Supported) {
-            api.patchForm(origin, "api/v1/profile", fields, token)
+            api.patchForm(origin, "api/v1/profile", fields, token, MASTODON_MAX_RESPONSE_BYTES)
         } else {
-            api.patchForm(origin, "api/v1/accounts/update_credentials", fields, token)
+            api.patchForm(origin, "api/v1/accounts/update_credentials", fields, token, MASTODON_MAX_RESPONSE_BYTES)
         }
         val json = JSONObject(response.body)
         requireMatchingAccount(json)

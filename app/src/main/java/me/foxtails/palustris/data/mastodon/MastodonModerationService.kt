@@ -50,7 +50,7 @@ class MastodonModerationService(
             request.postId?.let { add("status_ids[]" to it.value) }
             if (request.comment.isNotBlank()) add("comment" to request.comment)
         }
-        api.postForm(origin, "api/v1/reports", fields, token)
+        api.postForm(origin, "api/v1/reports", fields, token, MASTODON_MAX_RESPONSE_BYTES)
     }
 
     private suspend fun list(kind: ModerationListKind, cursor: ModerationCursor?): ModerationPage<ModerationAccount> {
@@ -60,7 +60,7 @@ class MastodonModerationService(
         val endpoint = "v1/accounts/$route?limit=40"
         val url = cursor?.let { decodeCursor(it, kind, variant, route, path) }
         val current = url ?: origin.toHttpUrl().resolve("/api/$endpoint")!!
-        val response = if (url == null) api.get(origin, endpoint, token) else api.getUrl(url.toString(), token)
+        val response = if (url == null) api.get(origin, endpoint, token, MASTODON_MAX_RESPONSE_BYTES) else api.getUrl(url.toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         val values = JSONArray(response.body)
         val items = (0 until values.length()).mapNotNull { index ->
             val account = runCatching { MastodonMapper.account(values.getJSONObject(index), origin) }.getOrNull() ?: return@mapNotNull null
@@ -79,15 +79,15 @@ class MastodonModerationService(
 
     private suspend fun remove(action: String, target: AccountId) {
         validateOrigin(target.connection.origin, "moderation.remove")
-        api.delete(origin, accountPath(target, action), token)
+        api.delete(origin, accountPath(target, action), token, MASTODON_MAX_RESPONSE_BYTES)
     }
 
     private suspend fun relationship(target: AccountId, action: String): ProfileRelationship {
         validateTarget(target, "profile.$action")
         val response = if (action == "block" || action == "mute") {
-            api.postForm(origin, accountPath(target, action), emptyList(), token)
+            api.postForm(origin, accountPath(target, action), emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         } else {
-            api.delete(origin, accountPath(target, action), token)
+            api.delete(origin, accountPath(target, action), token, MASTODON_MAX_RESPONSE_BYTES)
         }
         return runCatching { parseRelationship(response.body, target) }
             .getOrElse { profileRelationship(target) }
@@ -99,7 +99,7 @@ class MastodonModerationService(
             .addPathSegments("api/v1/accounts/relationships")
             .addQueryParameter("id[]", target.localId)
             .build()
-        val response = api.getUrl(url.toString(), token)
+        val response = api.getUrl(url.toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         return parseRelationship(response.body, target)
     }
 

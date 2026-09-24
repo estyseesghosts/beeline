@@ -26,16 +26,16 @@ class MastodonProfileService(
 ) {
     suspend fun profile(id: AccountId): Account {
         validateTarget(id, "profile.details")
-        return MastodonMapper.account(api.getUrl(accountUrl(id).toString(), token).body.toJson(), origin)
+        return MastodonMapper.account(api.getUrl(accountUrl(id).toString(), token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(), origin)
     }
 
     suspend fun timeline(query: ProfileTimelineQuery, cursor: String? = null): Page<Post> {
         validateTarget(query.profileId, "profile.timeline")
         if (query.tab == ProfileTimelineTab.Liked) return likedTimeline(query.profileId, cursor)
         val response = if (cursor == null) {
-            api.getUrl(timelineUrl(query.profileId, query).toString(), token)
+            api.getUrl(timelineUrl(query.profileId, query).toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         } else {
-            api.getUrl(validatePaginationUrl(cursor, query.profileId).toString(), token)
+            api.getUrl(validatePaginationUrl(cursor, query.profileId).toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         }
         val statuses = JSONArray(response.body)
         val items = (0 until statuses.length())
@@ -51,9 +51,9 @@ class MastodonProfileService(
     private suspend fun likedTimeline(profileId: AccountId, cursor: String?): Page<Post> {
         if (profileId != authenticatedAccountId) throw SourceError.Unsupported("profile.liked")
         val response = if (cursor == null) {
-            api.get(origin, "v1/favourites?limit=$PROFILE_PAGE_SIZE", token)
+            api.get(origin, "v1/favourites?limit=$PROFILE_PAGE_SIZE", token, MASTODON_MAX_RESPONSE_BYTES)
         } else {
-            api.getUrl(validateFavouritesPaginationUrl(cursor).toString(), token)
+            api.getUrl(validateFavouritesPaginationUrl(cursor).toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         }
         val statuses = JSONArray(response.body)
         val items = (0 until statuses.length()).map { MastodonMapper.post(statuses.getJSONObject(it), origin) }
@@ -62,7 +62,7 @@ class MastodonProfileService(
 
     suspend fun relationship(id: AccountId): ProfileRelationship {
         validateTarget(id, "profile.relationship")
-        val response = api.getUrl(relationshipUrl(id).toString(), token)
+        val response = api.getUrl(relationshipUrl(id).toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         return parseRelationship(response.body, id)
     }
 
@@ -73,7 +73,7 @@ class MastodonProfileService(
     suspend fun pinnedPosts(id: AccountId): List<Post> {
         validateTarget(id, "profile.pinned")
         val response = try {
-            api.getUrl(pinnedUrl(id).toString(), token)
+            api.getUrl(pinnedUrl(id).toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         } catch (error: ApiFailure) {
             if (error.status in setOf(400, 404, 422)) return emptyList()
             throw error
@@ -86,7 +86,7 @@ class MastodonProfileService(
 
     private suspend fun mutateRelationship(id: AccountId, action: String): ProfileRelationship {
         validateTarget(id, "profile.$action")
-        val response = api.postForm(actionUrl(id, action), emptyList(), token)
+        val response = api.postForm(actionUrl(id, action), emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
         return runCatching { parseRelationship(response.body, id) }
             .getOrElse { relationship(id) }
     }

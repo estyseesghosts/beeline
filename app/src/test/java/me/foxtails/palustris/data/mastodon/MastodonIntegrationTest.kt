@@ -250,6 +250,19 @@ class MastodonIntegrationTest {
     }
 
     @Test
+    fun oversizedPostResponseFailsWithPostResourceLimit() = runBlocking {
+        server.enqueue(MockResponse().setBody(" ".repeat(4 * 1024 * 1024 + 1)))
+        val source = source()
+
+        val error = assertThrows(SourceError.ResourceLimit::class.java) {
+            runBlocking { source.post(EntityId(origin, "large-post")) }
+        }
+
+        assertEquals("post", error.feature)
+        assertEquals("/api/v1/statuses/large-post", server.takeRequest().path)
+    }
+
+    @Test
     fun cancelingTimelinePageCancelsRequestAndAllowsRetry() = runBlocking {
         server.enqueue(MockResponse().setBody("[]").addHeader(
             "Link", "<$origin/api/v1/timelines/home?max_id=next>; rel=\"next\"",

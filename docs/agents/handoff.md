@@ -4,22 +4,26 @@
 
 ## Current boundary
 
-Slice 1C is complete across 1C-a `ec12ed1`, 1C-b `6b33e3d`, and 1C-c from base `6b33e3d`. This sub-slice adds parity and edge tests, honest test names, and records. Do not stage or commit.
+Slice 1B5-M is implemented, verified, low-reviewed, and recorded by the commit that includes these records, from base `9e977de`. The focused `MastodonIntegrationTest` and `MastodonSourceContractTest` gates passed. No UI behavior changed.
+
+The implementation changed Mastodon response reads to use a 4 MiB operation cap. Neutral transport response-limit parameters default to `null`, so existing Misskey call sites retain their behavior. The oversized post test asserts `ResourceLimit("post")`.
 
 ## Next steps
 
-Continue with 1B5-M, 1B5-K, 1D3 adapter, 1D3 UI, 1E1, and 1E2. Muted-word data is deferred and requires maintainer approval plus independent Mastodon and Misskey semantics review.
+The 1B5-M verification gates passed. The next implementation slice is 1B5-K for Misskey. Do not combine the adapters.
 
-Awaited input: decision-4 maintainer UI prototype only.
+The full unit suite is known red with 16 failures. Do not run the known-red `test assembleRelease` gate for this slice. Pixel Fold emulator `emulator-5554` verified compact and wide rendering in CLOSED and OPENED postures. This does not verify physical-device behavior or live oversized-response handling. Physical-device, API 29, RTL, TalkBack, signed-release, and live-server oversized-response behavior remain unverified.
+
+The emulator installed `app/build/outputs/apk/debug/app-debug.apk` with `adb install -r`. After a five-second adb-shell wait, CLOSED showed hinge 0.0, 1080x2092, `MainActivity` RESUMED, and the narrow single-column feed with bottom navigation. OPENED showed hinge 180.0, 2208x1840, `MainActivity` RESUMED, and the two-pane layout with navigation rail and detail pane. No crash or ANR evidence appeared.
 
 ## Hygiene
 
-Never stage `docs/beeline_0.4.0.md`, `docs/260923_current_state.md`, `docs/*.png`, `tools/scripts/*`, `.opencode/*`, `logs/*`, or pre-existing dirty files. Preserve staged `docs/classic_navigation.md` and all unrelated worktree changes.
+Never stage `docs/beeline_0.4.0.md`, `docs/260923_current_state.md`, `docs/*.png`, `tools/scripts/*`, `.opencode/*`, `logs/*`, or pre-existing dirty files. Leave `docs/classic_navigation.md` staged exactly as found and do not include it in the 1B5-M commit. Preserve all unrelated worktree changes.
 
-## Device state
+## Verification scope
 
-Emulator: FOLDED, Home, LTR, font scale 1.0, Default theme, rotation 0. Animator settings remain at their original values. No device check was performed for this sub-slice. Physical-device, API 29, RTL, TalkBack, and signed-release checks remain unverified.
+`:app:lintDebug`, Python tool tests, the architecture audit with `--check`, scoped diff checks, and `:app:assembleDebug` passed. The APK is `app/build/outputs/apk/debug/app-debug.apk`. The Gradle commands used `--no-daemon --console=plain` and explicit timeouts. The adb-only compact/foldable emulator check passed; live oversized-response behavior remains unverified.
 
 ## Last safe boundary
 
-Base HEAD: `6b33e3d`. The 1C-c changes remain uncommitted and unstaged.
+Git history is authoritative for the exact hash. The commit that includes this handoff is the 1B5-M slice boundary. It includes source, test, task-state, and handoff records. The task log remains current on disk, unstaged, and outside the commit under the `logs/*` rule. The base is `9e977de`. At the start of the next session, use `git log -1` to read the 1B5-M boundary hash. The next implementation slice is 1B5-K.

@@ -18,7 +18,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 
 - `docs/260923_current_state.md` is the resolved review input for the phases 0 and 1 re-traversal. The 260926 reference was a maintainer typo. This input decision is closed.
 - Option C approved (2026-09-24): a quote matching account-local muted hashtags shows a CW-style revealable `muted word: #tag` warning (tag mutes only). Muted WORDS deferred — no client-side word data exists (Mastodon `filtered` arrives stripped of the matched term; Misskey `isHidden` provides none; no adapter fetches filter/word-mute definitions). Re-entry requires a separately approved adapter/domain slice with Mastodon and Misskey semantics verified independently.
-- 1B5 is approved as a behavior change: add a conservative 4 MiB response cap per adapter and label `ResponseLimitExceeded` with the operation. Commit Mastodon first, then Misskey. Keep protocol failure behavior explicit.
+- 1B5 is approved as a behavior change: each adapter applies a conservative 4 MiB response cap per operation and labels `ResponseLimitExceeded`. Mastodon is complete; Misskey remains the separate 1B5-K slice. Neutral transport response limits default to `null`.
 - The phases 0 and 1 re-traversal audit is complete. It requested no additional unspecified changes.
 - Slice 2E is conditional on a later UI change that needs it. Phases 0-2 do not trigger it. Record it as not triggered and confirm before running.
 - A Pixel Fold emulator is reachable. Foldable posture rendering and theme/font/animator emulator captures are recorded; physical-device, API 29, RTL, TalkBack, and signed-release checks remain unverified. Live-server evidence covers sign-in, timelines, notifications, profiles, and Photo Grid media on mstdn.ca and dvd.chat.
@@ -39,11 +39,17 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 - The foldable emulator device-verification slice is complete as a documentation-only slice with no source changes. Pixel Fold API 36 posture rendering, compact and wide navigation, primary-surface navigation in both postures, and Photo Grid `Local` grouped-memory preservation across three posture changes passed. Live sign-in and feed evidence covers Mastodon `jmjmjm` on mstdn.ca and Misskey `ctr` on dvd.chat. Screenshots remain git-ignored evidence under `docs/`.
 - Measure sign-off arrived 2026-09-23 (maintainer): the emulator-observed values in baseline section 6 are approved. Three rows remain pending for missing device evidence: media dismissal threshold, physical-left caret, and physical-bottom-right wide action. With records commit `4fcaecd` (captures + register + decisions) and this approval, slice 0B is complete. The approval commit hash will be recorded at the slice boundary.
 
-# Current slice
+# Current boundary
 
-Slice 1C-c adds parity and edge coverage, corrects test names, and updates records. Base HEAD is `6b33e3d`; no staging or commit occurred.
+Slice 1B5-M is implemented, verified, low-reviewed, and recorded by the commit that includes these records, from base `9e977de`. The commit includes the source, test, task-state, and handoff records. The task log remains current on disk, unstaged, and outside the commit under the `logs/*` rule.
 
-R0 records the completed phases 0 and 1 re-traversal audit. The last safe code-slice commit is `fa087d0`. R0 records are `412fc02`. The current HEAD at the start of this records slice was `209e13a`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary.
+The source owner is `MastodonSource` and the Mastodon transport response-limit parameters in `MisskeyApi`. The 4 MiB limit reaches source operations and service/page response reads. `MastodonThreadService`, capability probes, and streams remain unchanged. Misskey call sites retain the default null limit.
+
+The test owner is `MastodonIntegrationTest`, with `MastodonSourceContractTest` as the focused contract gate. The oversized non-thread post test asserts `ResourceLimit("post")` and no post result. No UI behavior changed.
+
+The next slice is 1B5-K, the separate Misskey adapter implementation. The full unit suite remains known red with 16 failures documented below. Pixel Fold emulator rendering is device verified for compact and wide layouts. Physical-device, API 29, RTL, TalkBack, signed-release, and live-server oversized-response behavior remain unverified.
+
+Verification: the focused Mastodon integration and source-contract tests passed after the final source edit. `:app:lintDebug`, Python unittest discovery (51 tests), architecture audit `--check` (609 findings; exit 0), scoped `git diff --check`, and `:app:assembleDebug` passed. APK: `app/build/outputs/apk/debug/app-debug.apk`. Pixel Fold emulator `emulator-5554` installed this APK and passed both committed postures after a five-second adb-shell wait. Folded/CLOSED: hinge 0.0, 1080x2092, `MainActivity` RESUMED, visible narrow single-column feed and bottom navigation. Unfolded/OPENED: hinge 180.0, 2208x1840, `MainActivity` RESUMED, visible two-pane layout with navigation rail and detail pane. No crash or ANR evidence appeared. This verifies emulator rendering only. The known-red full suite and `assembleRelease` were not run. Live oversized-response behavior was not exercised.
 
 ## Re-traversal audit
 
@@ -129,7 +135,7 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-1C is complete. Next: 1B5-M; 1B5-K; 1D3 adapter; 1D3 UI; 1E1; 1E2. Muted-word data is deferred (2026-09-24; requires maintainer approval and separately verified Mastodon/Misskey adapter semantics). The decision-4 UI prototype is the only awaited input. The 200% packets belong to phases 3–4. The Pixel Fold emulator is available for later device checks.
+Next: 1B5-K, the separate Misskey response-cap and operation-label slice. Later queued work includes 1D3 adapter, 1D3 UI, 1E1, and 1E2. Muted-word data remains deferred pending approval and separate protocol-semantic review. The decision-4 UI prototype remains the only awaited input for its separate workstream.
 
 # Blockers
 
@@ -145,7 +151,7 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 - NavigationTest has two failures. Their pre-existing status is separately verified at `ba3fe53` with an empty `app/src` diff. The cause is not established. Investigate in a dedicated slice before phase 10.
 - The 14 failures are DraftActionsTest (2), CapabilityCacheTest (2), MisskeyThreadContinuationTest (5), and NotificationSyncOrchestratorTest (5). Their executed test and production sources are byte-identical to `af1f983`; `git diff af1f983 --name-only` lists none of them. Direct grep finds no reference from those classes and subjects to symbols changed by L0, 1A, or 1B1. Focused runs reproduce all 14 failures. Transitive closure was not exhaustively proven. Introduction commits were not bisected because `git worktree add` was blocked by permission. The baseline was not executed. Product-versus-environment cause is not established. These failures are not attributable to the 0.4.0 slices by available evidence. Do not weaken or skip tests. A dedicated investigation slice owns these failures.
 - Full unit suite is RED (16 failures in `test assembleRelease`). A dedicated investigation slice must restore full-suite green before the phase-10 release gate.
-- The approved 1B5 work is queued as two adapter commits: Mastodon first, then Misskey. Each adds a conservative 4 MiB cap and operation labeling. Neither commit exists yet.
+- 1B5-M is implemented, verified, and low-reviewed from base `9e977de`; the commit containing these records defines its slice boundary. 1B5-K remains unimplemented and separate.
 - The Misskey thread path catches some failures internally before they reach the source wrapper. `MisskeyErrorMapper.kt:17-22` maps a remaining escaping `IOException` to `NetworkUnavailable`. The 1B5-K commit must add the non-thread cap and operation labeling without changing this separate thread contract.
 - 1D3, 1E1, and 1E2 have not been executed.
 - 1B characterization is complete. The feed-level failed-page case already asserts retained rows and cursor; Mastodon cancellation is independently covered by `cancelingTimelinePageCancelsRequestAndAllowsRetry`.
@@ -172,7 +178,7 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Last safe commit
 
-`fa087d0` is the last safe code-slice commit (1D2). `e46e44c` is the historical 1D1 completion and 1D2 start boundary. `71c6f7d` was the historical 1D1 start boundary.
+Base boundary: `9e977de`. Git history is authoritative for the exact hash. The commit that includes this handoff is the 1B5-M slice boundary and includes source, test, task-state, and handoff records. The task log remains current on disk, unstaged, and outside the commit under the `logs/*` rule. At the start of the next session, use `git log -1` to read the 1B5-M boundary hash. Never stage `logs/*`.
 
 # 1D1 verification
 
