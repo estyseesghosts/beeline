@@ -1,29 +1,25 @@
 # Handoff
 
-**Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state. This file is the next-agent pointer.
+**Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state.
 
 ## Current boundary
 
-Slice 1B characterization starts from base HEAD `d4f448d`. The feed test already proves that a failed next page keeps loaded rows and its cursor for retry. The Mastodon integration suite now tests request cancellation and a successful subsequent retry.
-
-No staging or commit occurred in this slice. Preserve staged `docs/classic_navigation.md`, modified `.opencode/agents/*`, `importantdocs/writing_style.md`, deleted PNGs, and untracked `tools/scripts/*` and `__pycache__` paths.
+Slice 1C is complete across 1C-a `ec12ed1`, 1C-b `6b33e3d`, and 1C-c from base `6b33e3d`. This sub-slice adds parity and edge tests, honest test names, and records. Do not stage or commit.
 
 ## Next steps
 
-1. Continue with 1C after the quote-level `Remove` decision.
-2. Start 1B5-M.
-3. Start 1B5-K.
-4. Start 1D3 adapter.
-5. Start 1D3 UI.
-6. Start 1E1.
-7. Start 1E2.
+Continue with 1B5-M, 1B5-K, 1D3 adapter, 1D3 UI, 1E1, and 1E2. Muted-word data is deferred and requires maintainer approval plus independent Mastodon and Misskey semantics review.
 
-Awaited inputs: quote-level `Remove` decision and the decision-4 large-font prototype.
+Awaited input: decision-4 maintainer UI prototype only.
 
 ## Hygiene
 
-Never stage `docs/beeline_0.4.0.md`, `docs/260923_current_state.md`, `docs/*.png`, `tools/scripts/*`, `.opencode/*`, `logs/*`, or any pre-existing dirty or staged file.
+Never stage `docs/beeline_0.4.0.md`, `docs/260923_current_state.md`, `docs/*.png`, `tools/scripts/*`, `.opencode/*`, `logs/*`, or pre-existing dirty files. Preserve staged `docs/classic_navigation.md` and all unrelated worktree changes.
 
 ## Device state
 
-The emulator is FOLDED, Home, LTR, font 1.0, theme Default, rotation 0, with original animator settings. Physical-device, API 29, RTL, TalkBack, and signed-release checks remain unverified.
+Emulator: FOLDED, Home, LTR, font scale 1.0, Default theme, rotation 0. Animator settings remain at their original values. No device check was performed for this sub-slice. Physical-device, API 29, RTL, TalkBack, and signed-release checks remain unverified.
+
+## Last safe boundary
+
+Base HEAD: `6b33e3d`. The 1C-c changes remain uncommitted and unstaged.

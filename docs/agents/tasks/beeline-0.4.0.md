@@ -17,6 +17,7 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 # Decisions
 
 - `docs/260923_current_state.md` is the resolved review input for the phases 0 and 1 re-traversal. The 260926 reference was a maintainer typo. This input decision is closed.
+- Option C approved (2026-09-24): a quote matching account-local muted hashtags shows a CW-style revealable `muted word: #tag` warning (tag mutes only). Muted WORDS deferred — no client-side word data exists (Mastodon `filtered` arrives stripped of the matched term; Misskey `isHidden` provides none; no adapter fetches filter/word-mute definitions). Re-entry requires a separately approved adapter/domain slice with Mastodon and Misskey semantics verified independently.
 - 1B5 is approved as a behavior change: add a conservative 4 MiB response cap per adapter and label `ResponseLimitExceeded` with the operation. Commit Mastodon first, then Misskey. Keep protocol failure behavior explicit.
 - The phases 0 and 1 re-traversal audit is complete. It requested no additional unspecified changes.
 - Slice 2E is conditional on a later UI change that needs it. Phases 0-2 do not trigger it. Record it as not triggered and confirm before running.
@@ -33,13 +34,14 @@ Execute Beeline 0.4.0 plan phases 0-2 in verified slices: 0A, 0B, 1A, 1B1-1B5, 1
 - Slice 0A is complete at `ba3fe53`. Verification: 51 Python tests passed; architecture audit `--check` exited 0 with 605 findings and no new regressions against baseline; all 120 relative links across 11 touched Markdown files resolve. No source changes occurred.
 - Slice 0B requirements-classification work is recorded as executed at `72fafc4`; the foldable emulator posture pass is recorded at `4f28a69`. The re-traversal audit re-opened 0B: the register needs the four-to-six wide-button correction, captures are partial, and geometry approval is pending (queued as slice 2). The focused Gradle baseline set passed 79 tests across seven classes. Python unittest passed 51 tests. Architecture audit exited 0 with 605 findings and no new regressions. Eight baseline-file link targets resolve. No source changes occurred.
 - Slice L0 is complete at `cbf8698`. Slice 1A is complete at `af1f983`.
+- 1C is complete across three commits: 1C-a `ec12ed1` (domain selector), 1C-b `6b33e3d` (presentation), and 1C-c (parity tests, honest names, and records; this slice).
 - Slice 1B1 is complete at `5207a96`. Timeline cursors use opaque, identity-bound route tokens.
 - The foldable emulator device-verification slice is complete as a documentation-only slice with no source changes. Pixel Fold API 36 posture rendering, compact and wide navigation, primary-surface navigation in both postures, and Photo Grid `Local` grouped-memory preservation across three posture changes passed. Live sign-in and feed evidence covers Mastodon `jmjmjm` on mstdn.ca and Misskey `ctr` on dvd.chat. Screenshots remain git-ignored evidence under `docs/`.
 - Measure sign-off arrived 2026-09-23 (maintainer): the emulator-observed values in baseline section 6 are approved. Three rows remain pending for missing device evidence: media dismissal threshold, physical-left caret, and physical-bottom-right wide action. With records commit `4fcaecd` (captures + register + decisions) and this approval, slice 0B is complete. The approval commit hash will be recorded at the slice boundary.
 
 # Current slice
 
-This slice completes 1B characterization. Base HEAD is `d4f448d`; no staging or commit occurred.
+Slice 1C-c adds parity and edge coverage, corrects test names, and updates records. Base HEAD is `6b33e3d`; no staging or commit occurred.
 
 R0 records the completed phases 0 and 1 re-traversal audit. The last safe code-slice commit is `fa087d0`. R0 records are `412fc02`. The current HEAD at the start of this records slice was `209e13a`. `e46e44c` is the historical 1D1 completion and 1D2 start boundary.
 
@@ -48,7 +50,7 @@ R0 records the completed phases 0 and 1 re-traversal audit. The last safe code-s
 The audit compared phases 0 and 1 of `docs/beeline_0.4.0.md` with executed commits. The resolved review input is `docs/260923_current_state.md`. No additional unspecified changes were requested.
 
 - Meets: 0A, L0, 1A, 1B1, 1B2, 1B3, 1B4, 1D1, and 1D2.
-- Gaps found at audit time: 0B had a four-button register where the plan requires six, a partial capture matrix, and no approved geometry measures. The register now records six wide destinations, the capture matrix is populated for theme/font/animator/IME/hinge/landscape axes, 200% failures are registered, and the approved emulator measures are recorded. The three pending measure rows are media dismissal threshold, physical-left caret, and physical-bottom-right wide action. The other audit gaps remain: 1B needs independent cancellation and failed-next-page-retains-rows evidence; 1C needs a decision about quote-level `Remove` behavior before repair; 1B5 lacks the approved response caps and operation labels.
+- Gaps found at audit time: 0B had a four-button register where the plan requires six, a partial capture matrix, and no approved geometry measures. The register now records six wide destinations, the capture matrix is populated for theme/font/animator/IME/hinge/landscape axes, 200% failures are registered, and the approved emulator measures are recorded. The three pending measure rows are media dismissal threshold, physical-left caret, and physical-bottom-right wide action. The other audit gaps remain: 1B needs independent cancellation and failed-next-page-retains-rows evidence; 1B5 lacks the approved response caps and operation labels.
 - Not executed: 1D3, 1E1, and 1E2.
 
 # Files involved
@@ -127,7 +129,7 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 
 # Next
 
-1B characterization is complete. Next: 1C after the quote-level `Remove` policy decision; 1B5-M; 1B5-K; 1D3 adapter; 1D3 UI; 1E1; 1E2. The 200% packets belong to phases 3–4, after the current objective. Phase 2 follows the phase-1 fixes and 0B gate. The Pixel Fold emulator is available for later device checks; use `adb shell cmd device_state state 0|2` and the reliable shell screencap plus `adb pull` method recorded in the baseline.
+1C is complete. Next: 1B5-M; 1B5-K; 1D3 adapter; 1D3 UI; 1E1; 1E2. Muted-word data is deferred (2026-09-24; requires maintainer approval and separately verified Mastodon/Misskey adapter semantics). The decision-4 UI prototype is the only awaited input. The 200% packets belong to phases 3–4. The Pixel Fold emulator is available for later device checks.
 
 # Blockers
 
@@ -147,7 +149,6 @@ This slice did not derive a detailed owner/caller/test map for phases 3-10. See 
 - The Misskey thread path catches some failures internally before they reach the source wrapper. `MisskeyErrorMapper.kt:17-22` maps a remaining escaping `IOException` to `NetworkUnavailable`. The 1B5-K commit must add the non-thread cap and operation labeling without changing this separate thread contract.
 - 1D3, 1E1, and 1E2 have not been executed.
 - 1B characterization is complete. The feed-level failed-page case already asserts retained rows and cursor; Mastodon cancellation is independently covered by `cancelingTimelinePageCancelsRequestAndAllowsRetry`.
-- 1C repair waits for a maintainer decision about quote-level `Remove` behavior. `QuotePreviewCard.kt` does not receive `LocalMutedHashtags`; detail checks muted hashtags only for the parent post.
 
 # 1B1 verification
 
@@ -235,24 +236,29 @@ The following results were recorded before 1D2 was committed later as `fa087d0`.
 - Gate 7, `git status --short`: exit 0; `docs/classic_navigation.md` is the only staged path. Existing unrelated dirty and untracked paths remain.
 - Gate 8, `git rev-parse --short HEAD`: exit 0; `e46e44c`.
 - At the 1D2 repair-gate run, the start boundary and last safe commit were `e46e44c`, the current slice was `1D2`, the next slice was `1D3 — Add bounded conversation child continuation and UI partial/retry if the adapter contract supports it`, and no staging or commit occurred. These are historical observations, not the current queue or Git state.
-- Historical 1C boundary status: task-level red full suite; two `NavigationTest` failures; the 14-failure investigation; then-paused 1B5; and unverified device, foldable, RTL, TalkBack, and live-server checks. The current re-traversal audit found a 1C gap; see above.
+- Historical 1C boundary status (at that boundary): task-level red full suite; two `NavigationTest` failures; the 14-failure investigation; then-paused 1B5; and unverified device, foldable, RTL, TalkBack, and live-server checks. The re-traversal audit's 1C gap was resolved by the Option C implementation (1C-a/b/c, complete).
 - Focused mocked HTTP tests do not verify live-server behavior or physical rendering.
 - Repair reruns after the identity-evidence and independent-dimension tests: Gate 1 exited 0 (`BUILD SUCCESSFUL`, 35s); Gate 2 exited 0 (`BUILD SUCCESSFUL`, 1m15s); Gate 3 exited 0 (`BUILD SUCCESSFUL`, 1m43s).
 - Repair Gate 4 exited 0; 51 Python tests passed. Repair Gate 5 exited 0; architecture audit reported 607 findings and no baseline regression.
 
 # 1C verification
 
+- 1C is complete across three commits: 1C-a `ec12ed1` (domain selector), 1C-b `6b33e3d` (presentation), and 1C-c (parity tests, honest names, and records). This records slice starts at base `6b33e3d`.
+- 1C-c adds Standard/PostRow versus Photo Grid muted-tag parity and reveal coverage, a Misskey-family muted quote warning case, and an empty-muted-set no-match case.
+- Focused trio (`SinglePostScreenTest`, `ContentWarningPolicyTest`, `PostTextPresentationTest`): exit 0. `:app:lintDebug`: exit 0. `python -m unittest discover -s tools/tests`: exit 0, 51 tests. `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`: exit 0.
+- The focused tests, lint, Python suite, and architecture audit passed with `GRADLE_OPTS=-Dorg.gradle.daemon=false`. Full `test assembleRelease` remains task-level red and was not run in this slice.
+- Muted-tag parity tests run through Standard detail's PostRow path and Photo Grid detail. Device and live-server behavior remain unverified.
+
 - Shared owner: `ui/posts/QuotePreviewCard.kt`. Its KDoc says: “Keeps hidden quote text out of composition while preserving the quote card and its action.” Both surfaces call it with their existing label resource and caller-owned URL callback.
-- Quote decisions use the row’s current inputs: quote warning, quote hashtags, `contentWarningRules`, and quote body. Muted hashtags outside those rules were not added. Hidden decisions conditionally compose only the placeholder; other decisions retain the warning-text-or-body preview, five-line limit, and ellipsis.
+- Quote decisions apply parent content-warning rules before server-hidden quote content, muted-tag warning, quote content warning, and body presentation. Muted-tag reveal does not expose a quote body hidden by a content warning.
 - Decision: detail aligns to row behavior. Hidden quote cards remain visible with placeholder. `HiddenContentPresentation.Remove` remains parent-post and Photo Grid filtering behavior only. Parent content-warning handling is untouched. `PhotoPagerSizing.kt` and `PhotoGridScreen.kt` are untouched.
-- Characterization and regression tests in `SinglePostScreenTest`: `photoGridQuotePreviewShowsWarningButNotWarningBody` checks CW display and excludes quote body from unmerged semantics; `photoGridQuotePreviewHidesLocallyMutedQuoteTextFromSemantics` checks placeholder and excludes warning/body; `photoGridQuotePreviewShowsPlainQuoteBody` checks plain body; `postRowQuoteCharacterizationKeepsHiddenWarningAndPlainPreviews` pins the row placeholder and plain preview; `misskeyPhotoGridQuoteUsesTheSameHiddenPlaceholderOutcome` checks the same hidden outcome for a Misskey-family fixture. Review additions test Remove behavior and quote media omission, identical normalized post decisions through both surfaces, and font scale 2.0. Existing geometry and action tests remain unchanged.
+- `SinglePostScreenTest` covers CW-only previews, local muted-tag warning and reveal, plain quote bodies, server-hidden precedence, Remove behavior, quote media omission, both surface paths, Misskey-family fixtures, and font scale 2.0. The cross-surface cases use Standard mode for PostRow and Photo Grid mode for the detail branch.
 - No other test class composes `PostRow`; the cross-surface characterization uses `SinglePostScreen` Standard mode because that mode delegates its focal post to `PostRow`, while Photo Grid exercises the detail branch.
-- Wiki review found no dedicated posts/quote feature page. Updated `docs/wiki/ui-and-navigation.md`, the existing UI feature page, with the shared quote preview rule.
-- Implementing agent reported exit 0 for `SinglePostScreenTest`, `ContentWarningPolicyTest`, `PostTextPresentationTest`, `:app:lintDebug`, Python unittest (51 tests), and architecture audit `--check` (606 findings, no baseline regression). These are reported results from that agent, not independent reruns here.
-- Independent reviewer confirmation was limited to source and diff inspection. The reviewer's shell denied Python and Gradle reruns, so those gates were not independently confirmed.
+- `docs/wiki/ui-and-navigation.md` documents the shared quote preview, muted-tag warning, precedence, and deferred muted-word limit.
+- The 1C-c gate rerun passed: focused trio exit 0; `:app:lintDebug` exit 0; Python unittest exit 0 with 51 tests; architecture audit exit 0 with 608 findings and no baseline regression.
 - The full `test assembleRelease` gate did not run for 1C. Its red state remains tracked as the task-level blocker below.
 - The first compile attempt found a removed `ContentWarningPolicy` import. The import was restored. The next compile found an unavailable assertion import; tests now use `assertCountEquals(0)`. Final focused gates pass.
-- At 1C start, HEAD and last safe commit were `c3802c9`; staged `docs/classic_navigation.md` and unrelated dirty work were preserved. No staging or commit occurred. `PhotoPagerSizing.kt` and `PhotoGridScreen.kt` remain unchanged.
+- The 1C-c start base is `6b33e3d`. No staging or commit occurred. `PhotoPagerSizing.kt` and `PhotoGridScreen.kt` remain unchanged.
 - Device, live-server, foldable, RTL, and TalkBack checks remain unverified. At this historical boundary, full-suite red, NavigationTest failures, the 14-failure investigation, and paused 1B5 remained open. The current 1B5 decision is recorded above.
 - Review repair uses the complete hidden quote body `secret quote body #secret` in the Remove absence assertion; sibling consistency and font-scale tests already query complete bodies. The focused test, Python suite, and architecture audit reruns passed.
 

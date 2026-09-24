@@ -59,7 +59,7 @@ Sources: `ui/posts/SinglePostScreen.kt`, `ui/photogrid/PhotoPagerSizing.kt`,
 
 ## Post Quote Previews
 
-Rows and Photo Grid detail use one quote preview presentation. Local content-warning rules hide the quote preview text and show a placeholder, while the quote card, author, label, and open action remain available. Other warning decisions keep the warning-text-or-body preview. The hidden-content Remove preference applies to parent posts and Photo Grid filtering, not quote cards.
+Rows and Photo Grid detail use one quote preview presentation. The precedence is parent content-warning rules, server-hidden content, a muted-tag warning, the quote content warning, then the quote body. Server-hidden quotes keep a non-revealable placeholder. A quote with an account-local muted hashtag shows a revealable `muted word: #tag` warning before its text or media is composed. After reveal, a quote content warning still hides its body. Muted words remain deferred because no client-side matched-word data exists; re-entry requires approved adapter and domain work with Mastodon and Misskey semantics verified independently. The hidden-content Remove preference applies to parent posts and Photo Grid filtering, not quote cards.
 
 Sources: `ui/posts/QuotePreviewCard.kt`, `ui/posts/PostRow.kt`,
 `ui/posts/SinglePostScreen.kt`, `SinglePostScreenTest`.

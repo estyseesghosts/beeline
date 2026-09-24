@@ -756,7 +756,7 @@ class SinglePostScreenTest {
         compose.onNodeWithText("plain quote body").assertIsDisplayed()
     }
 
-    @Test fun postRowQuoteCharacterizationKeepsHiddenWarningAndPlainPreviews() {
+    @Test fun postRowQuoteCharacterizationKeepsMutedWarningAndPlainPreviews() {
         val quoted = Post(
             EntityId("https://example.org", "row-quoted"), account, "row secret #mutedtag", 0, Audience.Public,
             contentWarning = "Sensitive topic",
@@ -792,7 +792,7 @@ class SinglePostScreenTest {
         compose.onNodeWithText("row plain quote body").assertIsDisplayed()
     }
 
-    @Test fun misskeyPhotoGridQuoteUsesTheSameHiddenPlaceholderOutcome() {
+    @Test fun misskeyPhotoGridQuoteUsesContentWarningRulesForHiddenPlaceholder() {
         val misskeyAccount = account.copy(
             id = AccountId(Connection("https://misskey.example", Protocol.MISSKEY), "person"),
         )
@@ -817,6 +817,94 @@ class SinglePostScreenTest {
         compose.onNodeWithText("Quoted content hidden.").assertIsDisplayed()
         compose.onAllNodesWithText("Misskey quote secret #mutedtag", useUnmergedTree = true).assertCountEquals(0)
         compose.onAllNodesWithText("Sensitive topic", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test fun mutedQuoteWarningAndRevealMatchAcrossPostRowAndPhotoGridDetail() {
+        val quoted = Post(
+            EntityId("https://example.org", "muted-parity-quote"), account,
+            "parity quote body #muted", 0, Audience.Public,
+        )
+        val post = Post(
+            EntityId("https://example.org", "muted-parity-parent"), account,
+            "parent", 0, Audience.Public, quote = quoted,
+        )
+        fun show(presentation: SinglePostPresentation) {
+            compose.activity.runOnUiThread {
+                compose.activity.setContent {
+                    CompositionLocalProvider(
+                        me.foxtails.palustris.ui.posts.LocalMutedHashtags provides setOf("muted"),
+                    ) {
+                        SinglePostScreen(OwnedPost(account.id, post), presentation, onClose = {})
+                    }
+                }
+            }
+            compose.waitForIdle()
+        }
+
+        show(SinglePostPresentation.Standard)
+        compose.onNodeWithText("muted word: #muted").assertIsDisplayed()
+        compose.onNodeWithText("Show content").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("parity quote body #muted").assertIsDisplayed()
+
+        show(SinglePostPresentation.PhotoGrid)
+        compose.onNodeWithText("muted word: #muted").assertIsDisplayed()
+        compose.onNodeWithText("Show content").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("parity quote body #muted").assertIsDisplayed()
+    }
+
+    @Test fun misskeyMutedQuoteShowsRevealableWarning() {
+        val misskeyAccount = account.copy(
+            id = AccountId(Connection("https://misskey.example", Protocol.MISSKEY), "person"),
+        )
+        val quoted = Post(
+            EntityId("https://misskey.example", "misskey-muted-quote"), misskeyAccount,
+            "Misskey quote #muted", 0, Audience.Public,
+        )
+        val post = Post(
+            EntityId("https://misskey.example", "misskey-muted-parent"), misskeyAccount,
+            "parent", 0, Audience.Public, quote = quoted,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                CompositionLocalProvider(
+                    me.foxtails.palustris.ui.posts.LocalMutedHashtags provides setOf("muted"),
+                ) {
+                    SinglePostScreen(OwnedPost(misskeyAccount.id, post), SinglePostPresentation.PhotoGrid, onClose = {})
+                }
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("muted word: #muted").assertIsDisplayed()
+        compose.onNodeWithText("Show content").assertIsDisplayed()
+        compose.onAllNodesWithText("Misskey quote #muted", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test fun emptyMutedHashtagSetShowsUnmatchedQuoteBody() {
+        val quoted = Post(
+            EntityId("https://example.org", "unmatched-quote"), account,
+            "ordinary quote body #unmatched", 0, Audience.Public,
+        )
+        val post = Post(
+            EntityId("https://example.org", "unmatched-parent"), account,
+            "parent", 0, Audience.Public, quote = quoted,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                CompositionLocalProvider(
+                    me.foxtails.palustris.ui.posts.LocalMutedHashtags provides emptySet(),
+                ) {
+                    SinglePostScreen(OwnedPost(account.id, post), SinglePostPresentation.PhotoGrid, onClose = {})
+                }
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("ordinary quote body #unmatched").assertIsDisplayed()
+        compose.onAllNodesWithText("muted word:", substring = true).assertCountEquals(0)
+        compose.onAllNodesWithText("Show content").assertCountEquals(0)
     }
 
     @Test fun photoPostDetailShowsRepostConfirmation() {
