@@ -4,16 +4,17 @@
 
 ## Current position
 
-Slice 2A4 removes the authentication and DI bridges to `MisskeyApi`. Authentication uses the
-neutral client. `MisskeyApi` remains the Misskey adapter and owns only its prefix and error mapping.
-No staging, commit, or push occurred.
+Slice 2B1 adds notification launch characterization tests. No production file changed. No staging,
+commit, or push occurred.
 
 ## Verification
 
-The focused authentication, Misskey integration, API, pool, adapter contract, WebSocket, and
-session/source revision tests pass. Compilation and lint pass. The audit command exited 0 with 612
-findings and zero regression lines against the 613-finding 2A3 baseline. The audit record contains
-no row list, so the removed finding cannot be identified from it.
+The implementer reports that 20 focused router, host, and presentation tests passed. The implementer
+reports that lint passed. The required architecture audit command was
+`python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`.
+The implementer reports that it exited 0 with 612 findings and zero `regression:` lines. The count
+matches the 2A baseline. This review did not independently rerun the focused tests, lint, or audit.
+The ignored audit output record is `logs/architecture-audit-2b1.txt`.
 
 The fully qualified Mastodon failure was
 `me.foxtails.palustris.data.mastodon.MastodonIntegrationTest.cancelingTimelinePageCancelsRequestAndAllowsRetry`.
@@ -27,41 +28,39 @@ The focused run failed at `MisskeyApiTest.kt:140` with `java.lang.AssertionError
 `assertTrue(canceledCall.get())`. The test passed when rerun alone.
 
 The previous slice reported two isolated cancellation failures. This slice does not weaken those
-tests. The combined `test assembleRelease` command completed release assembly but failed the 16 tests
-listed in the task state. Test-result XML files are unavailable in this workspace, so the names are
-not XML-verified and remain unattributed. No failure delta is attributed to this slice.
+tests. The full gate remains unresolved. The implementer reports that the combined `test
+assembleRelease` command completed release assembly but reported 16 failures. Test-result XML files
+are unavailable, so the names remain unresolved and unattributed. The 2A4 record lists them by
+category: DraftActions (2), CapabilityCache (2), MisskeyThreadContinuation (5),
+NotificationSyncOrchestrator (5), and Navigation (2). The names were text-compared with
+`logs/BUGS.txt` and `logs/260928-2a4.txt`. This does not prove that they predate 2B1.
+No failure delta is attributed to this slice.
+
+The implementer reports that the presentation test remains on Robolectric SDK 32 because SDK 35
+requires runtime notification permission that this test does not grant. This reason is not
+independently verified here.
 
 ## Next slice
 
-Review the full-suite failures with their owners. Inspect the diff. Use the explicit pathspec in the
-task state if a parent later stages this slice.
+Review the 16 full-suite failures against the previous baseline. Then begin 2B2 using the
+characterization tests and the explicit pathspec in the task state.
 
 ## Staging boundary
 
-The exact staging pathspec is listed in `docs/agents/tasks/beeline-0.4.0.md`. The five production
-files, one test file, and three documentation files are currently UNSTAGED worktree changes. The
-index currently holds only unrelated staged `docs/classic_navigation.md`. `git_handler` must stage
-and commit the slice with the explicit nine-path pathspec, which excludes `docs/classic_navigation.md`;
-do not reset the index.
+The exact staging pathspec is listed in `docs/agents/tasks/beeline-0.4.0.md`. The three test files
+and three documentation files are intended for this slice. The index still contains unrelated staged
+`docs/classic_navigation.md`. Do not reset the index.
 
-```text
-app/src/main/java/me/foxtails/palustris/data/SourceFactory.kt
-app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt
-app/src/main/java/me/foxtails/palustris/data/auth/MisskeyAuth.kt
-app/src/main/java/me/foxtails/palustris/data/misskey/MisskeyApi.kt
-app/src/main/java/me/foxtails/palustris/di/AppModule.kt
-app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyIntegrationTest.kt
-docs/agents/protocol-and-session-ownership.md
-docs/agents/tasks/beeline-0.4.0.md
-docs/agents/handoff.md
-```
+Use the pathspec in the task state.
 
 Exclude staged `docs/classic_navigation.md`.
-Exclude the seven modified `.opencode/agents` files and the two untracked `.opencode/agents` helpers.
+Exclude all pre-existing dirty files, including the modified `.opencode/agents` files and helpers.
 Exclude modified `importantdocs/writing_style.md`.
 Exclude deleted `currentbehaviour.png` and `intendedbehaviour.png`.
 Exclude the four untracked helper scripts, both Python cache directories, and `screen.png`.
-Keep ignored `logs/*` outside staging, including the audit record.
+Keep ignored `logs/*` outside staging, including both 2B1 records and the 2A4 comparison record.
 
-`git diff --check` whitespace findings are limited to unrelated `.opencode` files and
-`docs/classic_navigation.md`; verify the slice with `git diff --check -- <slice paths>`.
+`git diff --check -- <slice pathspec>` is clean. Full `git diff --check` reports unrelated trailing
+whitespace in `.opencode/agents/orchestrator.md`, `.opencode/agents/targeted_fixer.md`, and staged
+`docs/classic_navigation.md`. These files are excluded from the slice and remain untouched. Do not
+claim that the full check is clean.

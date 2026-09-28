@@ -102,6 +102,32 @@ class NotificationLaunchHostTest {
     private fun manager(store: MemoryStore) = accountManagerFixture(store, auth, mainDispatcher)
 
     @Test
+    fun pendingLaunchDoesNotRouteWhileTheShellStarts() {
+        val store = MemoryStore()
+        val router = NotificationLaunchRouter()
+        val launch = launchFor(loginA, "event")
+        router.accept(NotificationLaunchRouter.intentFor(launch))
+        val routes = mutableListOf<AppRoute>()
+
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                NotificationLaunchHost(
+                    router = router,
+                    accountManager = manager(store),
+                    accounts = listOf(ref(loginA)),
+                    starting = true,
+                    activeAccountId = loginA.account.id,
+                    onRoute = { route -> routes += route; true },
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        assertTrue(routes.isEmpty())
+        assertEquals(launch, router.pending.value)
+    }
+
+    @Test
     fun deliveredLaunchIsAcknowledgedWhenAccepted() {
         val store = MemoryStore()
         val router = NotificationLaunchRouter()

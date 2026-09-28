@@ -1,114 +1,86 @@
-# Beeline 0.4.0 task state — slice 2A4
+# Beeline 0.4.0 task state — slice 2B1
 
 ## Objective
 
-Remove the remaining Misskey-owned authentication and dependency-injection bridges. Keep protocol
-routes, error mapping, token handling, source identity, capabilities, and session revisions unchanged.
+Characterize notification launch contracts before the 2B2 ownership move. This slice changes tests
+and engineering records only. Production files remain unchanged.
 
-## Status
+## Status sets
 
-- Source status: implemented and compile verified.
-- Focused status: authentication, Misskey integration, API, and pool tests passed.
-- Audit status: command exited 0 with 612 findings and zero regression lines. The 2A3 baseline had
-  613 findings. The ignored audit record preserves only the count, so it cannot identify the removed
-  finding row.
-- Device status: unverified.
-- Live-server status: unverified.
-- Release status: `assembleRelease` passed. The combined `test assembleRelease` command completed
-  release assembly but failed 16 unrelated full-suite tests.
+- Source status: unchanged.
+- Test status: The implementer reports 20 focused tests passed: 13 router, 5 host, and 2 presentation tests.
+- Instrumented intent status: unavailable in this environment. No device intent test ran.
+- Audit status: The implementer reports 612 findings and zero regression lines. This matches the 2A baseline.
+- Lint status: The implementer reports that lint passed.
+- Full gate status: unresolved. Release assembly passed, but the full test task timed out after
+  reporting 16 unattributed failures. The XML files are unavailable, so this slice does not claim
+  that they predate the slice.
+- Device and live-server status: unverified.
+
+## Characterized contracts
+
+- Tap intents use `ACTION_VIEW`, the `palustris://notification/open/<key>` URI, and four extras.
+- Misskey and Mastodon protocol enum values serialize and parse.
+- Blank, missing, invalid, foreign, malformed, and mismatched values reject without persistence.
+- Stored keys remain `origin`, `account_local_id`, `protocol`, and `notification_id`.
+- SharedPreferences recreation, partial data, corrupt data, clear, and dismiss parsing are covered.
+- The host waits during startup, switches to a non-active account, retains rejected launches, routes
+  missing accounts to unavailable, and clears only an accepted launch.
+- Tap and dismiss pending intents remain distinct and use the notification Android ID as request code.
+- Pending-intent flags remain `UPDATE_CURRENT | IMMUTABLE`.
 
 ## Changed files
 
-- `app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt`
-- `app/src/main/java/me/foxtails/palustris/data/auth/MisskeyAuth.kt`
-- `app/src/main/java/me/foxtails/palustris/di/AppModule.kt`
-- `app/src/main/java/me/foxtails/palustris/data/SourceFactory.kt`
-- `app/src/main/java/me/foxtails/palustris/data/misskey/MisskeyApi.kt`
-- `app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyIntegrationTest.kt`
-- `docs/agents/protocol-and-session-ownership.md`
+- `app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouterTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchHostTest.kt`
+- `app/src/test/java/me/foxtails/palustris/data/notifications/NotificationPresentationTest.kt`
+- `docs/wiki/notifications-and-direct-messages.md`
 - `docs/agents/tasks/beeline-0.4.0.md`
 - `docs/agents/handoff.md`
 
-The current working diff contains five production files, one test file, and three documentation
-files. No sixth production file appears in `git status` or `git diff`.
+## Verification
 
-Exact production pathspec:
+- Focused Gradle notification tests: The implementer reports that they passed.
+- `git diff --check -- <slice pathspec>` is clean. Full `git diff --check` reports unrelated trailing whitespace in
+  `.opencode/agents/orchestrator.md`, `.opencode/agents/targeted_fixer.md`, and staged
+  `docs/classic_navigation.md`. These files are excluded from the slice and remain untouched.
+- Architecture audit command: `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`.
+  The implementer reports that it exited 0 with 612 findings and zero `regression:` lines.
+- `:app:lintDebug`: The implementer reports that it passed.
+- `test assembleRelease`: The implementer reports that it timed out after `assembleRelease` passed. The separate `test` retry also
+  timed out after reporting the same 16 failures. The implementer reports that no focused notification test failed.
+- The 16 names remain unresolved and unattributed. They were recorded in the 2A4 log by category: DraftActions (2), CapabilityCache (2),
+  MisskeyThreadContinuation (5), NotificationSyncOrchestrator (5), and Navigation (2).
+  Test-result XML files remain unavailable. The names are unattributed and text-compared only with
+  `logs/BUGS.txt` and the 2A4 record; this is not proof that they predate 2B1.
+- The implementer reports that notification presentation tests remain on Robolectric SDK 32 because
+  SDK 35 requires runtime notification permission that this test does not grant. This reason is not
+  independently verified here.
+
+Ignored records:
+
+- `logs/260928-2b1-notification-launch.txt`
+- `logs/architecture-audit-2b1.txt`
+- `logs/260928-2a4.txt` (comparison record for the 16 names)
+
+## Staging pathspec
+
+Do not stage, commit, or push in this continuation. If a parent stages this slice, use only these
+paths:
 
 ```text
-app/src/main/java/me/foxtails/palustris/data/SourceFactory.kt
-app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt
-app/src/main/java/me/foxtails/palustris/data/auth/MisskeyAuth.kt
-app/src/main/java/me/foxtails/palustris/data/misskey/MisskeyApi.kt
-app/src/main/java/me/foxtails/palustris/di/AppModule.kt
-```
-
-Exact test pathspec:
-
-```text
-app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyIntegrationTest.kt
-```
-
-Exact documentation pathspec:
-
-```text
-docs/agents/protocol-and-session-ownership.md
+app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouterTest.kt
+app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchHostTest.kt
+app/src/test/java/me/foxtails/palustris/data/notifications/NotificationPresentationTest.kt
+docs/wiki/notifications-and-direct-messages.md
 docs/agents/tasks/beeline-0.4.0.md
 docs/agents/handoff.md
 ```
 
-`MastodonAuth` keeps the neutral and pooled constructors. `MisskeyAuth` now accepts the neutral
-client and adds its own `/api/` route prefix. `MisskeyApi` keeps Misskey mapping and prefix ownership.
-
-## Verification
-
-- `:app:compileDebugKotlin`: passed.
-- `:app:compileDebugUnitTestKotlin`: passed.
-- Focused auth, Misskey integration, API, and pool tests: passed.
-- `:app:lintDebug`: passed.
-- Adapter contracts, WebSocket transport, and session/source revision tests: passed.
-- Full `test assembleRelease`: failed 16 tests. Release assembly passed. Test-result XML files are
-  unavailable in this workspace, so the following recorded names are not XML-verified and remain
-  unattributed to this slice. A textual comparison with the 16 names in `logs/BUGS.txt` is not a
-  substitute for XML evidence:
-  - `me.foxtails.palustris.data.auth.DraftActionsTest.saveFailureReportsError`
-  - `me.foxtails.palustris.data.auth.DraftActionsTest.deleteFailureStillCompletesAndReports`
-  - `me.foxtails.palustris.data.misskey.CapabilityCacheTest.oldSourceReadAfterReplacementMissesAndPublishesNothing`
-  - `me.foxtails.palustris.data.misskey.CapabilityCacheTest.lateProbeAfterRemoveAndReAddWithSameRevisionCannotPublish`
-  - `me.foxtails.palustris.data.misskey.MisskeyThreadContinuationTest.sourceRejectsForeignAccountAndFocalWithoutNetworkOrConsumption`
-  - `me.foxtails.palustris.data.misskey.MisskeyThreadContinuationTest.sourceContinuationTokenIsOpaqueUuidAndSingleUse`
-  - `me.foxtails.palustris.data.misskey.MisskeyThreadContinuationTest.sourceReleasesContinuationStoreBeforeNetworkWork`
-  - `me.foxtails.palustris.data.misskey.MisskeyThreadContinuationTest.sourcePreservesTransportOrderAcrossContinuations`
-  - `me.foxtails.palustris.data.misskey.MisskeyThreadContinuationTest.sourceValidatesSessionBeforeConsumingContinuation`
-  - `me.foxtails.palustris.data.notifications.NotificationSyncOrchestratorTest.reAddRejectsOldTokenAndAcceptsReplacement`
-  - `me.foxtails.palustris.data.notifications.NotificationSyncOrchestratorTest.productionRemovalRejectsLateEventsAndDropsGenerationEntry`
-  - `me.foxtails.palustris.data.notifications.NotificationSyncOrchestratorTest.generationsStayMonotonicAcrossRepeatedRemoval`
-  - `me.foxtails.palustris.data.notifications.NotificationSyncOrchestratorTest.unregisterRejectsLateStreamEventsAndRemovesActiveEntry`
-  - `me.foxtails.palustris.data.notifications.NotificationSyncOrchestratorTest.removalRightAfterPublishCancelsPollWithoutOrphan`
-  - `me.foxtails.palustris.ui.navigation.NavigationTest.closingComposerAutosavesUnsavedText`
-  - `me.foxtails.palustris.ui.navigation.NavigationTest.draftsSurviveActivityRecreationAndCanBeDeleted`
-- The two known cancellation flakes passed when run alone. Mastodon teardown reported
-  `java.io.IOException: Gave up waiting for queue to shut down` from `MockWebServer.shutdown`;
-  Misskey reported `java.lang.AssertionError` at `MisskeyApiTest.kt:140` from
-  `assertTrue(canceledCall.get())`. The standalone reruns passed.
-- Audit record: `logs/architecture-audit-2a4.txt`, ignored and not staged. It records 612 findings
-  and zero regressions.
-
-## Staging boundary
-
-Do not stage, commit, or push in this continuation. The slice files are currently UNSTAGED
-worktree changes. The index currently holds only the unrelated staged `docs/classic_navigation.md`.
-If `git_handler` stages this slice, it must use the explicit pathspec below: the five production
-files, one test file, and three documentation files listed above. It must exclude staged
-`docs/classic_navigation.md` by using that pathspec for the commit; do not reset the index.
-
-Preserve all unrelated dirty work. Exclude modified `.opencode/agents/*`, `importantdocs/writing_style.md`,
-the deleted screenshots, `docs/classic_navigation.md`, helper scripts, Python caches, and `screen.png`.
-
-`git diff --check` reports whitespace in unrelated `.opencode` files and
-`docs/classic_navigation.md`. The slice paths are clean when checked explicitly with
-`git diff --check -- <slice paths>` using the nine paths above.
+Exclude all pre-existing dirty files, including staged `docs/classic_navigation.md`. Keep ignored
+logs outside staging.
 
 ## Limits
 
-Live-server, physical-device, API 29 physical, RTL, TalkBack, font-scale, signed-release, and
-credentialed authentication callback checks remain unverified.
+Live push, physical device, API 29, RTL, TalkBack, font scale, and signed-release checks remain
+unverified.

@@ -7,6 +7,19 @@ Stale when: Notification delivery or direct-message behavior changes.
 
 Sources: `AGENTS.md`, `data/notifications/`, `data/directmessages/`, notification tests, and messaging tests.
 
+### Notification launch handoff
+
+Source: `ui/notifications/NotificationLaunchRouter.kt`, `NotificationLaunchHost.kt`,
+`data/notifications/AndroidNotificationPresenter.kt`, and the notification launch tests.
+
+- Tap intents use the app-owned `palustris://notification/open/<key>` URI and four validated extras.
+- The pending launch stores its origin, local account ID, protocol, and notification ID in shared
+  preferences. Invalid or partial stored values do not produce a pending launch.
+- The host waits during startup and account switching. It clears a launch only after the shell accepts
+  its route. Missing accounts use the unavailable route.
+- Tap and dismiss pending intents use separate components and actions. Both use the stable Android
+  notification ID for their request code.
+
 ## Purpose
 
 <!-- Explain user-visible notification and direct-message behavior. -->
