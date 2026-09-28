@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui.notifications
+package me.foxtails.palustris.data.notifications
 
 import android.content.Intent
 import androidx.core.net.toUri
@@ -7,9 +7,6 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.ui.notifications.NotificationLaunch
-import me.foxtails.palustris.ui.notifications.NotificationLaunchRouter
-import me.foxtails.palustris.ui.notifications.InMemoryNotificationLaunchStore
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull

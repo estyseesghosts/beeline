@@ -18,12 +18,12 @@ import me.foxtails.palustris.data.AccountSourceRegistry
 import me.foxtails.palustris.data.auth.DraftStore
 import me.foxtails.palustris.data.auth.DraftWriteAuthority
 import me.foxtails.palustris.data.notifications.ForegroundNotificationStreamController
+import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.ui.session.AccountManager
 import me.foxtails.palustris.ui.ConnectedApp
-import me.foxtails.palustris.ui.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.ui.display.RefreshRateController
 import me.foxtails.palustris.ui.localization.AppLocaleController
 import me.foxtails.palustris.ui.localization.AppLocaleOwner

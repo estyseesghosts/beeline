@@ -14,8 +14,8 @@ import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActivity
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.ui.notifications.NotificationLaunch
-import me.foxtails.palustris.ui.notifications.NotificationLaunchRouter
+import me.foxtails.palustris.data.notifications.NotificationLaunch
+import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.MainActivity
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals

@@ -9,7 +9,8 @@ Sources: `AGENTS.md`, `data/notifications/`, `data/directmessages/`, notificatio
 
 ### Notification launch handoff
 
-Source: `ui/notifications/NotificationLaunchRouter.kt`, `NotificationLaunchHost.kt`,
+Source: `data/notifications/NotificationLaunch.kt`, `NotificationLaunchStore.kt`,
+`NotificationLaunchRouter.kt`, `ui/notifications/NotificationLaunchHost.kt`,
 `data/notifications/AndroidNotificationPresenter.kt`, and the notification launch tests.
 
 - Tap intents use the app-owned `palustris://notification/open/<key>` URI and four validated extras.

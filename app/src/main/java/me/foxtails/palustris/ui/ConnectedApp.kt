@@ -38,6 +38,7 @@ import me.foxtails.palustris.data.AccountSourceRegistry
 import me.foxtails.palustris.data.auth.DraftStore
 import me.foxtails.palustris.data.auth.DraftWriteAuthority
 import me.foxtails.palustris.data.notifications.NotificationStreamController
+import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.AppPreferencesState
 import me.foxtails.palustris.domain.PostPreferences
@@ -46,7 +47,6 @@ import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.motion.palustrisMotionScheme
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.notifications.NotificationLaunchHost
-import me.foxtails.palustris.ui.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.session.ConnectedSessionHost
 import me.foxtails.palustris.ui.session.AccountManager

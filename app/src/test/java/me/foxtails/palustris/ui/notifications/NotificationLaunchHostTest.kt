@@ -14,15 +14,15 @@ import me.foxtails.palustris.data.auth.AuthGateway
 import me.foxtails.palustris.data.auth.LoginSession
 import me.foxtails.palustris.data.auth.PendingLogin
 import me.foxtails.palustris.data.auth.SessionStore
+import me.foxtails.palustris.data.notifications.NotificationLaunch
+import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Session
 import me.foxtails.palustris.ui.session.accountManagerFixture
 import me.foxtails.palustris.ui.navigation.AppRoute
-import me.foxtails.palustris.ui.notifications.NotificationLaunch
 import me.foxtails.palustris.ui.notifications.NotificationLaunchHost
-import me.foxtails.palustris.ui.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.ui.notifications.NotificationRouteResolver
 import org.json.JSONObject
 import org.junit.After

@@ -20,8 +20,8 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActivity
-import me.foxtails.palustris.ui.notifications.NotificationLaunch
-import me.foxtails.palustris.ui.notifications.NotificationLaunchRouter
+import me.foxtails.palustris.data.notifications.NotificationLaunch
+import me.foxtails.palustris.data.notifications.NotificationLaunchCodec
 import me.foxtails.palustris.ui.notifications.text
 
 data class NotificationPresentation(
@@ -135,14 +135,14 @@ class AndroidNotificationPresenter @Inject constructor(
         val pendingIntent = PendingIntent.getActivity(
             context,
             presentation.androidId,
-            NotificationLaunchRouter.intentFor(launch).setClass(context, MainActivity::class.java),
+            NotificationLaunchCodec.intentFor(launch).setClass(context, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val deleteIntent = PendingIntent.getBroadcast(
             context,
             presentation.androidId,
-            NotificationLaunchRouter.intentFor(launch).apply {
-                action = NotificationLaunchRouter.ACTION_DISMISS
+            NotificationLaunchCodec.intentFor(launch).apply {
+                action = NotificationLaunchCodec.ACTION_DISMISS
                 setClass(context, AndroidNotificationDismissReceiver::class.java)
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
