@@ -15,15 +15,12 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.Timeline
-import me.foxtails.palustris.ui.photogrid.PhotoGridFeed
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.shell.HomeContract
 import me.foxtails.palustris.ui.shell.HomeFeedUiState
-import me.foxtails.palustris.ui.shell.PhotoGridContract
 import me.foxtails.palustris.ui.shell.PostInteractions
 import me.foxtails.palustris.ui.shell.PostProjectionCoordinator
-import me.foxtails.palustris.ui.shell.SearchContract
 
 /**
  * Owns the feed presentation for one connected session.
@@ -42,8 +39,6 @@ data class FeedComposerInputs(
 
 data class Feed(
     val home: HomeContract,
-    val search: SearchContract,
-    val photoGrid: PhotoGridContract,
     val postInteractions: PostInteractions,
     val composerInputs: FeedComposerInputs,
     val publish: (CreatePostRequest, (OwnedPost) -> Unit) -> Unit,
@@ -59,7 +54,6 @@ fun FeedHost(
     executionAuthority: PostInteractionExecutionAuthority,
     coordinator: PostProjectionCoordinator,
     entryStore: ConnectedEntryStore,
-    search: SearchContract,
 ): Feed {
     val feedModel = hiltViewModel<FeedViewModel, FeedViewModel.Factory>(
         key = "feed-$accountId-$sessionGeneration",
@@ -110,20 +104,6 @@ fun FeedHost(
             actions = postInteractionsActions,
         )
     }
-    val photoGridFeed by feedModel.photoGridFeed.collectAsStateWithLifecycle()
-    val photoGridActions = remember(feedModel) {
-        object : PhotoGridContract.Actions {
-            override fun ensureLoaded() { feedModel.ensurePhotoGridLoaded() }
-            override fun selectFeed(feed: PhotoGridFeed) { feedModel.selectPhotoGridFeed(feed) }
-            override fun refresh() { feedModel.refreshPhotoGrid() }
-            override fun loadMore() { feedModel.loadMorePhotoGrid() }
-            override fun addHashtag(value: String, onSuccess: () -> Unit) { feedModel.addPhotoGridHashtag(value, onSuccess) }
-            override fun clearPreferenceError() { feedModel.clearPhotoGridPreferenceError() }
-        }
-    }
-    val photoGrid = remember(photoGridFeed, photoGridActions) {
-        PhotoGridContract(state = photoGridFeed, actions = photoGridActions)
-    }
     val postReaction = remember(feedModel) {
         { post: OwnedPost, choice: EmojiChoice -> feedModel.react(post, choice) }
     }
@@ -161,11 +141,9 @@ fun FeedHost(
             }
         }
     }
-    return remember(home, search, photoGrid, postInteractions, composerInputs, publish, postReaction) {
+    return remember(home, postInteractions, composerInputs, publish, postReaction) {
         Feed(
             home = home,
-            search = search,
-            photoGrid = photoGrid,
             postInteractions = postInteractions,
             composerInputs = composerInputs,
             publish = publish,

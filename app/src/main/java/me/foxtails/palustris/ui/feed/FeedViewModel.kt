@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import me.foxtails.palustris.data.notifications.NotificationSyncOrchestrator
-import me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository
 import me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
@@ -22,7 +21,6 @@ import me.foxtails.palustris.domain.DEFAULT_FAVOURITE_EMOJI
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostPreferencesRepository
@@ -33,8 +31,6 @@ import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.mergeExternalActionFields
 import me.foxtails.palustris.ui.UiStrings
-import me.foxtails.palustris.ui.photogrid.PhotoGridController
-import me.foxtails.palustris.ui.photogrid.PhotoGridFeed
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.posts.PostInteractionMutationOwner
 import me.foxtails.palustris.ui.requiresSignIn
@@ -45,7 +41,6 @@ class FeedViewModel @AssistedInject constructor(
     @Assisted private val source: SocialSource,
     private val syncCoordinator: NotificationSyncOrchestrator,
     private val postPreferencesRepository: PostPreferencesRepository,
-    private val photoGridPreferencesRepository: PhotoGridPreferencesRepository,
     @Assisted private val sessionRevision: Long,
     @Assisted private val executionAuthority: PostInteractionExecutionAuthority,
     private val uiStrings: UiStrings = UiStrings.Default,
@@ -77,17 +72,6 @@ class FeedViewModel @AssistedInject constructor(
         onFailure = ::feedFailure,
         executionAuthority = executionAuthority,
     )
-    private val photoGridController = PhotoGridController(
-        accountId = accountId,
-        source = source,
-        sessionRevision = sessionRevision,
-        scope = viewModelScope,
-        preferencesRepository = photoGridPreferencesRepository,
-        applyFavouritePreference = ::applyFavouritePreference,
-        uiStrings = uiStrings,
-    )
-    val photoGridFeed = photoGridController.state
-
     init {
         setupJob = viewModelScope.launch {
             if (!stopped) {
@@ -232,30 +216,6 @@ class FeedViewModel @AssistedInject constructor(
         return merged
     }
 
-    fun ensurePhotoGridLoaded() {
-        photoGridController.ensureLoaded()
-    }
-
-    fun selectPhotoGridFeed(feed: PhotoGridFeed) {
-        photoGridController.selectFeed(feed)
-    }
-
-    fun refreshPhotoGrid() {
-        photoGridController.refresh()
-    }
-
-    fun loadMorePhotoGrid() {
-        photoGridController.loadMore()
-    }
-
-    fun addPhotoGridHashtag(value: String, onSuccess: () -> Unit = {}) {
-        photoGridController.addHashtag(value, onSuccess)
-    }
-
-    fun clearPhotoGridPreferenceError() {
-        photoGridController.clearPreferenceError()
-    }
-
     fun create(request: CreatePostRequest, onSuccess: (OwnedPost) -> Unit = {}) {
         if (stopped || _feed.value.publishing) return
         publishJob?.cancel()
@@ -335,7 +295,6 @@ class FeedViewModel @AssistedInject constructor(
         publishJob?.cancel()
         preferencesJob?.cancel()
         interactionMutations.stop()
-        photoGridController.stop()
     }
 
     private fun effectiveActions(): Set<PostAction> = buildSet {
@@ -378,7 +337,6 @@ class FeedViewModel @AssistedInject constructor(
         )
         updatedOwnedPosts.filterIndexed { index, owned -> owned !== currentOwnedPosts[index] }
             .forEach { updated -> postProjectionListeners.toList().forEach { it(updated) } }
-        photoGridController.updatePost(id, transform)
         if (!hasMatchingHomePost) postProjectionListeners.toList().forEach { it(selectedProjection) }
     }
 
@@ -393,7 +351,6 @@ class FeedViewModel @AssistedInject constructor(
             posts = _feed.value.posts.map { if (it.id == id || it.actionTargetId == id) transform(it) else it },
             ownedPosts = updated,
         )
-        photoGridController.updatePost(id, transform)
     }
 
     private fun updateExternalPost(target: EntityId, incoming: Post) {
@@ -407,7 +364,6 @@ class FeedViewModel @AssistedInject constructor(
                 } else owned
             },
         )
-        photoGridController.updateExternalPost(target, incoming)
     }
 
     private fun mergeExternalActionFields(existing: Post, incoming: Post): Post =
@@ -421,7 +377,6 @@ class FeedViewModel @AssistedInject constructor(
                 if (owned.fetchedBy == accountId) owned.copy(post = transformed[owned.post.id] ?: owned.post) else owned
             },
         )
-        photoGridController.updatePosts(transform)
     }
 
     private fun feedFailure(e: Exception) {

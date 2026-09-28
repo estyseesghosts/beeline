@@ -130,6 +130,22 @@ class PostProjectionCoordinatorTest {
     }
 
     @Test
+    fun recompositionDoesNotRegisterTheSameSinkTwice() {
+        val coordinator = PostProjectionCoordinator(owner, 7L)
+        val sink = RecordingSink("sink")
+        coordinator.register(sink)
+        coordinator.register(sink)
+
+        coordinator.forwardExternalPost(sink, owned("post"))
+
+        assertTrue(sink.external.isEmpty())
+        val other = RecordingSink("other")
+        coordinator.register(other)
+        coordinator.forwardExternalPost(other, owned("next"))
+        assertEquals(listOf("next@sink"), sink.external)
+    }
+
+    @Test
     fun retiredCoordinatorDeliversNothingAndAcceptsNoSinks() {
         val coordinator = PostProjectionCoordinator(owner, 7L)
         val saved = RecordingSink("saved")

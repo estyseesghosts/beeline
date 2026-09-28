@@ -97,4 +97,34 @@ class ConnectedEntryStoreTest {
 
         assertEquals(1, retired)
     }
+
+    @Test
+    fun replacingPhotoGridEntryReleasesTheOldOwnerBeforeLateResultsArrive() {
+        val store = ConnectedEntryStore()
+        var oldReleased = false
+        var oldLateResultAccepted = true
+        store.beginEntry(1L)
+        store.register(1L, "photo-grid-owner") {
+            oldReleased = true
+            oldLateResultAccepted = false
+        }
+
+        store.beginEntry(2L)
+
+        assertEquals(true, oldReleased)
+        assertEquals(false, oldLateResultAccepted)
+    }
+
+    @Test
+    fun recompositionWithTheSameConnectedEntryRegistersOneStableOwnerTeardown() {
+        val store = ConnectedEntryStore()
+        var releases = 0
+        store.beginEntry(4L)
+        store.register(4L, "photo-grid-owner") { releases++ }
+        store.register(4L, "photo-grid-owner") { releases++ }
+
+        store.retireAll()
+
+        assertEquals(1, releases)
+    }
 }

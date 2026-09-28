@@ -37,7 +37,8 @@ Focused feature hosts own their model, state, actions, and projection registrati
 
 | Host | Owner | Contract |
 | --- | --- | --- |
-| `ui/feed/FeedHost.kt` | Home and Photo Grid `FeedViewModel` | `HomeContract`, `PhotoGridContract`, `PostInteractions` |
+| `ui/feed/FeedHost.kt` | Home `FeedViewModel` | `HomeContract`, `PostInteractions` |
+| `ui/photogrid/PhotoGridHost.kt` | `PhotoGridOwner` | `PhotoGridContract` |
 | `ui/search/SearchHost.kt` | connected-session `SearchOwner` | `SearchContract` |
 | `ui/saved/SavedCollectionsHost.kt` | bookmark `SavedPostsViewModel` | `SavedCollections` |
 | `ui/profile/ProfileHost.kt` | `ProfileViewModel` | `ProfileContract` |
@@ -100,7 +101,7 @@ Test code binds test-only recorders in `app/src/test/java/me/foxtails/palustris/
 | `DirectMessagesContract` | `DirectMessageViewModel` | Inbox, selection, send, composer editor | Refresh, paging, open, close, start, update editor, send |
 | `ProfileContract` | `ProfileViewModel` | Target, categories, relationship, editor | Open, category, paging, follow, react, editor |
 | `ThreadContract` | `PostThreadViewModel` | Selected thread | Activate, deactivate, paging, mutations |
-| `PhotoGridContract` | Photo Grid `FeedViewModel` | Independent Photo Grid feed | Load, select, refresh, paging, hashtag, error |
+| `PhotoGridContract` | `PhotoGridOwner` | Independent Photo Grid feed | Load, select, refresh, paging, hashtag, error |
 | `SearchContract` | `ui/search/SearchOwner.kt` | Account and hashtag search state | Search, paging |
 | `ComposerContract` | `ui/composer/ComposerOwner.kt` | Editor fields, dirty snapshot, drafts, reply, quote | Update editor, save, delete draft, publish |
 | `DraftsContract` | account draft store | Saved drafts for the active account | Load, save, delete |
@@ -173,7 +174,7 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   slot. A busy family rejects its second caller without waiting.
 - The popup owner and the projection coordinator retire with the connected entry. A retired
   popup has no authority. A retired coordinator delivers nothing.
-- Photo Grid keeps independent feed state and selection from Home.
+- Photo Grid keeps independent feed state, selection, preferences, and projection sink from Home.
 - Search keeps account and session-revision state outside `FeedViewModel`. Its connected owner and
   projection sink release through `ConnectedEntryStore`, and repeated registration uses one key.
 - Home paging demand resets on filter identity and request epoch changes. Only accepted pages

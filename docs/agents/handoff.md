@@ -1,65 +1,68 @@
 # Handoff
 
-**Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state.
+**Status:** Slice 2C3 is implemented in the worktree and remains uncommitted.
 
 ## Current position
 
-The Mastodon callback repair is implemented in:
+Photo Grid now has an explicit connected-session owner. `PhotoGridHost` observes account-scoped
+preferences, registers an independent projection sink, and releases through `ConnectedEntryStore`.
+`ConnectedSessionHost` wires Photo Grid beside Search. Home retains its own feed mutations and
+publication path.
 
-- `app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt`
-- `app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonErrorMapper.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt`
+## Durable task state
 
-Focused tests are:
-
-- `app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt`
-- `app/src/test/java/me/foxtails/palustris/data/mastodon/MastodonIntegrationTest.kt`
-- `app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyIntegrationTest.kt`
-- `app/src/test/java/me/foxtails/palustris/data/transport/AuthenticatedHttpClientTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt`
-
-No resource files changed. The duplicate test checks the code and pending state before completion.
-
-The repair uses `/api/v1/accounts/verify_credentials`, root `/oauth/token`, `/api/v1/apps`, and
-`/api/v2/instance`. Stage-aware authentication 404 errors remain distinct from unsupported
-capabilities. Misskey behavior remains unchanged.
-
-The welcome scaling slice is in commit `47dbc36`. It replaces the fixed `520.dp` logo height
-with a shared box using aspect ratio `1.25`. Scroll content keeps status-bar and navigation-bar
-padding, and the server form keeps IME padding. Buttons use `64.dp` height and `480.dp` maximum
-width. Tests cover compact, large, and pending states.
+Use `docs/agents/tasks/beeline-0.4.0.md`.
 
 ## Verification
 
-Sixteen session tests, three auth gateway tests, 59 Mastodon integration tests, and 48 Misskey
-integration tests passed. The prior `lintDebug` run passed after the test change. The command
-`python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`
-exited 0 with 611 findings and zero baseline regressions. Historical slice counts of 610, 611, 612,
-and 613 occurred across worktree states. Treat them as unstable count-only measurements, not
-regressions or proof. The related logs are ignored by `/logs/*.txt`: `logs/260928-oauth-callback.txt`
-and `logs/260928-mastodon-callback-repair.txt`. The full gate remains unresolved because the known
-baseline suite reports unrelated failures.
+- Focused Photo Grid, store, Home, session, projection, restoration, and shell tests passed.
+- The Photo Grid, store, and projection focused run passed 26 tests.
+- `:app:lintDebug` passed.
+- The architecture audit command `python tools/scripts/architecture_audit.py . --baseline
+  tools/architecture-baseline.json --check` exited 0 and reported 611 findings with zero baseline
+  regressions. This is a count-only result. Counts can vary across worktree states, so 611 versus
+  610 is not itself a regression. The audit record is `logs/architecture-audit-2c3.txt`.
+- `assembleRelease` passed.
+- The full `test assembleRelease` gate is not green. It reported 16 known unrelated baseline unit-test
+  failures. The 2A4, 2B, and 2C records repeat this result, which remains unresolved per
+  `logs/BUGS.txt`. Phase 10 owns the green full gate; this slice does not claim it passed.
+- Authenticated Photo Grid device verification remains blocked pending fresh user approval.
 
-The device installed the debug APK and passed welcome and dummy callback dispatch checks.
-It had no pending request, so it did not perform an exchange. A fresh user approval remains needed.
+## Modified slice files
 
-A portrait device check at `1848x2448` passed for the welcome layout. The card stayed below the
-status bar, the logo stayed centered, and the buttons stayed above the navigation bar. Wide,
-foldable, large-font, and landscape checks remain unverified. The code reviewer reported no
-`BLOCKING` or `REQUIRED` findings.
+- `app/src/main/java/me/foxtails/palustris/ui/ConnectedApp.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedHost.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridController.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridHost.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridOwner.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/feed/FeedViewModelReactionTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/feed/FeedViewModelRequestTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridOwnerTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/session/ConnectedEntryStoreTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/shell/PostProjectionCoordinatorTest.kt`
+- `docs/agents/app-shell-ownership.md`
 
-The architecture audit reported 611 findings against a 610 baseline. Treat this as a count-only
-measurement. The full gate timed out, and known unrelated baseline test failures remain unresolved.
-OAuth commit `80bfd25` and the preserved `MainActivity` lines remain intact. The interrupted 2C3
-PhotoGrid work remains interrupted.
+OAuth, welcome, and staged navigation work remains preserved. No source files were staged or committed.
+
+## Focused regression evidence
+
+- `:app:testDebugUnitTest --tests me.foxtails.palustris.ui.photogrid.PhotoGridOwnerTest --tests
+  me.foxtails.palustris.ui.session.ConnectedEntryStoreTest` passed after the Photo Grid coverage
+  extension.
+- Coverage now includes refresh invalidation and late results, account preference separation,
+  external and optimistic row preservation, unsupported or denied capability handling, temporary
+  errors, sign-in-required errors, store retirement, and a fresh owner after session replacement.
 
 ## Next slice
 
-Use a fresh device approval to verify the real Mastodon exchange and verify request.
-Continue the interrupted 2C3 PhotoGrid work separately.
+Review the 2C3 diff. Then use the exact path list in the task-state file to stage this slice in the
+parent session. That list includes
+`app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridController.kt`.
 
-## Staging pathspec
+## Known limits
 
-Use the exact Mastodon pathspec in `docs/agents/tasks/beeline-0.4.0.md`.
-Exclude welcome UI, 2C3 PhotoGrid and Search, `docs/classic_navigation.md`, and unrelated dirty files.
-Do not stage or commit in this subagent session.
+Live-server, API 29 physical, RTL, TalkBack, font-scale, signed, and wide or foldable authenticated
+checks remain unverified.

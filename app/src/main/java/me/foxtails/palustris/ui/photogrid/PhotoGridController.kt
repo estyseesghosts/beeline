@@ -58,7 +58,12 @@ internal class PhotoGridController(
     fun ensureLoaded() {
         if (stopped || _state.value.initialLoadComplete || loadingJob?.isActive == true) return
         val selected = _state.value.selectedFeed
-        _state.value = _state.value.copy(availableTimelines = availableTimelines())
+        val available = availableTimelines()
+        _state.value = _state.value.copy(availableTimelines = available)
+        if (!isValidFeed(selected)) {
+            _state.value = _state.value.copy(initialLoadComplete = true)
+            return
+        }
         startRequest(selected, ++generation, cursor = null)
     }
 
@@ -88,7 +93,9 @@ internal class PhotoGridController(
         loadingJob?.cancel()
         consumedCursors.clear()
         val nextGeneration = ++generation
+        val available = availableTimelines()
         _state.value = _state.value.copy(
+            availableTimelines = available,
             posts = emptyList(),
             initialLoadComplete = false,
             loading = true,
@@ -97,6 +104,10 @@ internal class PhotoGridController(
             error = null,
             needsSignIn = false,
         )
+        if (!isValidFeed(selected)) {
+            _state.value = _state.value.copy(initialLoadComplete = true, loading = false)
+            return
+        }
         startRequest(selected, nextGeneration, cursor = null)
     }
 
@@ -207,7 +218,7 @@ internal class PhotoGridController(
         val available = timelineDisplayOrder.filter {
             it in source.capabilities.timelines && source.capabilities.timelineStatus(it) == CapabilityStatus.Supported
         }
-        return available.ifEmpty { listOf(Timeline.Home) }
+        return available
     }
 
     private fun startRequest(feed: PhotoGridFeed, requestGeneration: Long, cursor: String?) {

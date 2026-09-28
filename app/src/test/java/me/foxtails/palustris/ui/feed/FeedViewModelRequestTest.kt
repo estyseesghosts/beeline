@@ -74,7 +74,7 @@ class FeedViewModelRequestTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = GatedSource()
-            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             source.complete(0, Page(listOf(post("a")), nextCursor = "c1"))
             advanceUntilIdle()
@@ -102,7 +102,7 @@ class FeedViewModelRequestTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = GatedSource()
-            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             source.complete(0, Page(listOf(post("a")), nextCursor = "c1"))
             advanceUntilIdle()
@@ -141,7 +141,7 @@ class FeedViewModelRequestTest {
         }
         val coordinator = NotificationSyncOrchestrator()
         try {
-            val model = FeedViewModel(accountId, failing, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, failing, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             val firstEpoch = model.feed.value.requestEpoch
 
@@ -162,7 +162,7 @@ class FeedViewModelRequestTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = GatedSource()
-            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             source.complete(0, Page(listOf(post("a")), nextCursor = "c1"))
             advanceUntilIdle()
@@ -189,7 +189,7 @@ class FeedViewModelRequestTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = GatedSource()
-            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             source.complete(0, Page(listOf(post("a")), nextCursor = "c1"))
             advanceUntilIdle()
@@ -217,7 +217,7 @@ class FeedViewModelRequestTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = GatedSource()
-            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             model.stop()
             source.complete(0, Page(listOf(post("late")), nextCursor = "c1"))
@@ -238,7 +238,7 @@ class FeedViewModelRequestTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = GatedSource()
-            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             source.complete(0, Page(listOf(post("a")), nextCursor = "c1"))
             advanceUntilIdle()
@@ -262,7 +262,7 @@ class FeedViewModelRequestTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = GatedSource()
-            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             source.complete(0, Page(listOf(post("a")), nextCursor = "c1"))
             advanceUntilIdle()
@@ -292,7 +292,7 @@ class FeedViewModelRequestTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = GatedSource()
-            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             source.complete(0, Page(listOf(post("a")), nextCursor = "c1"))
             advanceUntilIdle()
@@ -317,7 +317,7 @@ class FeedViewModelRequestTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = GatedSource()
-            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             source.complete(0, Page(listOf(post("a")), nextCursor = "c1"))
             advanceUntilIdle()

@@ -21,6 +21,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostPreferences
+import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.ui.PalustrisApp
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.composer.asDraftsContract
@@ -35,6 +36,7 @@ import me.foxtails.palustris.ui.posts.PostPopupOwner
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.profile.ProfileHost
 import me.foxtails.palustris.ui.saved.SavedCollectionsHost
+import me.foxtails.palustris.ui.photogrid.PhotoGridHost
 import me.foxtails.palustris.ui.search.SearchHost
 import me.foxtails.palustris.ui.shell.AccountSwitcher
 import me.foxtails.palustris.ui.shell.ComposerContract
@@ -59,6 +61,7 @@ fun ConnectedSessionHost(
     notificationStreamController: NotificationStreamController,
     accountIndex: AccountIndex,
     postPreferences: PostPreferences,
+    photoGridPreferences: PhotoGridPreferencesRepository,
     initialNotificationRoute: AppRoute?,
     onOpenSettings: () -> Unit,
 ) {
@@ -123,6 +126,16 @@ fun ConnectedSessionHost(
         coordinator = projectionCoordinator,
         entryStore = entryStore,
     )
+    val photoGrid = PhotoGridHost(
+        accountId = accountId,
+        sessionGeneration = sessionGeneration,
+        sessionRevision = sessionRevision,
+        source = sharedSource,
+        postPreferences = postPreferences,
+        preferencesRepository = photoGridPreferences,
+        coordinator = projectionCoordinator,
+        entryStore = entryStore,
+    )
     val feed = FeedHost(
         accountId = accountId,
         sessionGeneration = sessionGeneration,
@@ -131,7 +144,6 @@ fun ConnectedSessionHost(
         executionAuthority = postInteractionAuthority,
         coordinator = projectionCoordinator,
         entryStore = entryStore,
-        search = search,
     )
     val savedCollections = SavedCollectionsHost(
         accountId = accountId,
@@ -248,7 +260,7 @@ fun ConnectedSessionHost(
             sessionGeneration = sessionGeneration,
             sessionRevision = sessionRevision,
             home = feed.home,
-            photoGrid = feed.photoGrid,
+            photoGrid = photoGrid,
             accountSwitcher = accountSwitcher,
             composer = composer,
             thread = thread,

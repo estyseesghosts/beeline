@@ -118,7 +118,7 @@ class FeedViewModelReactionTest {
                 ),
                 ReactionSelectionMode.Single,
             )
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
             model.react(model.feed.value.ownedPosts.single(), EmojiChoice("👍", "👍", null))
@@ -155,7 +155,7 @@ class FeedViewModelReactionTest {
                 ),
                 ReactionSelectionMode.Independent,
             )
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
             val owned = model.feed.value.ownedPosts.single()
@@ -192,7 +192,7 @@ class FeedViewModelReactionTest {
                 ),
                 ReactionSelectionMode.Single,
             )
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
             model.react(model.feed.value.ownedPosts.single(), EmojiChoice(":blob:", ":blob:", blob))
@@ -215,7 +215,7 @@ class FeedViewModelReactionTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = ReactionSource(post(), ReactionSelectionMode.Single)
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
             source.reactError = java.io.IOException("network down")
@@ -237,7 +237,7 @@ class FeedViewModelReactionTest {
         try {
             val source = ReactionSource(post(), ReactionSelectionMode.Single)
             source.reactGate = CompletableDeferred()
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
             val owned = model.feed.value.ownedPosts.single()
 
@@ -260,7 +260,7 @@ class FeedViewModelReactionTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = ReactionSource(post(), ReactionSelectionMode.Single)
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             val projections = mutableListOf<OwnedPost>()
             model.addPostProjectionListener { projections += it }
             advanceUntilIdle()
@@ -284,7 +284,7 @@ class FeedViewModelReactionTest {
                 post(reactions = listOf(Reaction("❤️", 1, selected = true))),
                 ReactionSelectionMode.Single,
             )
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
             model.react(model.feed.value.ownedPosts.single(), EmojiChoice("❤️", "❤️", null))
@@ -306,7 +306,7 @@ class FeedViewModelReactionTest {
                 post(reactions = listOf(Reaction(":blob:", 1, selected = true, emojiMetadata = blob))),
                 ReactionSelectionMode.Single,
             )
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
             model.react(model.feed.value.ownedPosts.single(), EmojiChoice(":blob:", ":blob:", blob))
@@ -336,7 +336,7 @@ class FeedViewModelReactionTest {
                 ),
                 ReactionSelectionMode.Single,
             )
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
             model.react(model.feed.value.ownedPosts.single(), EmojiChoice("👍", "👍"))
@@ -357,7 +357,7 @@ class FeedViewModelReactionTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = ReactionSource(post(), ReactionSelectionMode.Independent)
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
             model.react(model.feed.value.ownedPosts.single(), EmojiChoice("👍", "👍"))
@@ -374,7 +374,7 @@ class FeedViewModelReactionTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = ReactionSource(post(), ReactionSelectionMode.Single)
-             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
             model.react(model.feed.value.ownedPosts.single(), EmojiChoice("👍", "👍", null))

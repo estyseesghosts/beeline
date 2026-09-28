@@ -43,6 +43,7 @@ import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.AppPreferencesState
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostPreferencesRepository
+import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.motion.palustrisMotionScheme
 import me.foxtails.palustris.ui.navigation.AppRoute
@@ -66,6 +67,7 @@ fun ConnectedApp(
     notificationStreamController: NotificationStreamController,
     appPreferencesRepository: AppPreferencesRepository,
     postPreferencesRepository: PostPreferencesRepository,
+    photoGridPreferencesRepository: PhotoGridPreferencesRepository,
 ) {
     val state by accountManager.session.collectAsStateWithLifecycle()
     val accountIndex by accountManager.accountIndex.collectAsStateWithLifecycle()
@@ -178,6 +180,7 @@ fun ConnectedApp(
                     notificationStreamController = notificationStreamController,
                     accountIndex = accountIndex,
                     postPreferences = postPreferences,
+                    photoGridPreferences = photoGridPreferencesRepository,
                     initialNotificationRoute = initialNotificationRoute,
                     onOpenSettings = { settingsVisible = true },
                 )

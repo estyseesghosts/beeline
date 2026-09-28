@@ -197,7 +197,7 @@ class SessionViewModelTest {
             val store = MemoryStore(Session(login.account.id, login.token, ServerCapabilities()), login.account)
             val source = Source()
             val accountManager = accountManagerFixture(store, auth(login), StandardTestDispatcher(testScheduler))
-            val feedModel = FeedViewModel(login.account.id, source, NotificationSyncOrchestrator(), me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val feedModel = FeedViewModel(login.account.id, source, NotificationSyncOrchestrator(), me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             owner.put("account", accountManager)
             owner.put("feed", feedModel)
             advanceUntilIdle()
@@ -375,7 +375,7 @@ class SessionViewModelTest {
         try {
             val store = MemoryStore(Session(login.account.id, login.token, ServerCapabilities()), login.account)
             val source = Source()
-            val model = FeedViewModel(login.account.id, source, NotificationSyncOrchestrator(), me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val model = FeedViewModel(login.account.id, source, NotificationSyncOrchestrator(), me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             owner.put("feed", model)
             advanceUntilIdle()
 
@@ -406,7 +406,7 @@ class SessionViewModelTest {
                     canPublish = true,
                 ),
             )
-            val model = FeedViewModel(login.account.id, source, NotificationSyncOrchestrator(), me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val model = FeedViewModel(login.account.id, source, NotificationSyncOrchestrator(), me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             owner.put("feed", model)
             advanceUntilIdle()
 
@@ -443,7 +443,7 @@ class SessionViewModelTest {
                     canPublish = true,
                 ),
             )
-            val model = FeedViewModel(login.account.id, source, NotificationSyncOrchestrator(), me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val model = FeedViewModel(login.account.id, source, NotificationSyncOrchestrator(), me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             owner.put("feed", model)
             advanceUntilIdle()
             val previous = model.feed.value
@@ -468,7 +468,7 @@ class SessionViewModelTest {
         val coordinator = NotificationSyncOrchestrator()
         try {
             val source = ActionSource()
-            val model = FeedViewModel(login.account.id, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val model = FeedViewModel(login.account.id, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             owner.put("feed", model)
             advanceUntilIdle()
 
@@ -535,7 +535,7 @@ class SessionViewModelTest {
                     canPublish = true,
                 ),
             )
-            val firstFeed = FeedViewModel(login.account.id, firstSource, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val firstFeed = FeedViewModel(login.account.id, firstSource, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             owner.put("first-feed", firstFeed)
             advanceUntilIdle()
             assertEquals(login.account.id, firstFeed.feed.value.ownedPosts.single().fetchedBy)
@@ -555,7 +555,7 @@ class SessionViewModelTest {
                     actions = setOf(PostAction.Reshare),
                 ),
             )
-            val secondFeed = FeedViewModel(secondLogin.account.id, secondSource, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val secondFeed = FeedViewModel(secondLogin.account.id, secondSource, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             owner.put("second-feed", secondFeed)
             advanceUntilIdle()
 
@@ -579,7 +579,7 @@ class SessionViewModelTest {
             val store = MemoryStore(Session(login.account.id, login.token, ServerCapabilities()), login.account)
             val source = Source()
             coordinator.register(login.account.id, source)
-            val model = FeedViewModel(login.account.id, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val model = FeedViewModel(login.account.id, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             owner.put("feed", model)
             advanceUntilIdle()
             assertTrue(model.sync.value.isActive)
@@ -600,7 +600,7 @@ class SessionViewModelTest {
         try {
             val store = MemoryStore(Session(login.account.id, login.token, ServerCapabilities()), login.account)
             val source = Source()
-            val model = FeedViewModel(login.account.id, source, NotificationSyncOrchestrator(), me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            val model = FeedViewModel(login.account.id, source, NotificationSyncOrchestrator(), me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             owner.put("feed", model)
             advanceUntilIdle()
             source.timelineCalls.clear()

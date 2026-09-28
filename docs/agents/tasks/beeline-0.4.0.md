@@ -1,79 +1,86 @@
-# Beeline 0.4.0 task state — Mastodon callback repair
+# Beeline 0.4.0 task state — Photo Grid connected lifetime
 
 ## Objective
 
-Repair Mastodon OAuth verification and callback handling without changing Misskey behavior.
+Give Photo Grid an explicit connected-session lifetime without changing routes, layouts, or protocol behavior.
 
 ## Status sets
 
-- Source status: Mastodon verify uses `/api/v1/accounts/verify_credentials`.
-  Token exchange uses root `/oauth/token`. Registration uses `/api/v1/apps`.
-  The capability probe uses `/api/v2/instance`. Authentication 404 errors keep their stage.
-  Generic capability 404 errors remain unsupported. Unknown errors remain unknown.
-- Callback status: PKCE, form encoding, redirect validation, origin validation, and strict state
-  matching remain intact. Duplicate valid callbacks start one exchange and preserve the pending code.
-- Test status: 16 session tests, 3 auth gateway tests, 59 Mastodon integration tests, and 48
-  Misskey integration tests pass. Live-server exchange proof remains unverified.
+- Photo Grid status: `PhotoGridOwner` owns account and session-revision state. `PhotoGridHost` owns
+  preference observation, projection registration, and connected teardown. `FeedViewModel` and
+  `FeedHost` retain Home behavior only.
+- OAuth status: Mastodon verification uses `/api/v1/accounts/verify_credentials`. Token exchange uses
+  root `/oauth/token`. Registration uses `/api/v1/apps`. The capability probe uses `/api/v2/instance`.
+  Existing callback validation and Misskey behavior remain intact.
+- Focused test status: `:app:testDebugUnitTest --tests
+  me.foxtails.palustris.ui.photogrid.PhotoGridOwnerTest --tests
+  me.foxtails.palustris.ui.session.ConnectedEntryStoreTest` passed 26 tests. The extended focused
+  Home, projection, restoration, session, and Photo Grid screen set also passed.
 - Audit status: `python tools/scripts/architecture_audit.py . --baseline
   tools/architecture-baseline.json --check` exited 0 and reported 611 findings with zero baseline
-  regressions. Historical slice counts of 610, 611, 612, and 613 occurred across worktree states.
-  Treat these counts as unstable count-only measurements, not regressions or proof. The related
-  logs are ignored by `/logs/*.txt`: `logs/260928-oauth-callback.txt` and
-  `logs/260928-mastodon-callback-repair.txt`.
-- Device status: the debug APK installed successfully. Welcome layout and dummy callback dispatch
-  passed. No exchange occurred because the device had no pending request.
-- Live-server status: a fresh user approval remains required to prove the exchange and verify flow.
+  regressions. This is a count-only result from `logs/architecture-audit-2c3.txt`. Counts can vary
+  across worktree states, so 611 versus 610 is not itself a regression.
+- Build status: `:app:lintDebug` passed after the regression coverage update. `assembleRelease` passed.
+  The full `test assembleRelease` gate is not green: it reported 16 known unrelated baseline unit-test
+  failures. This repeated result appears in the 2A4, 2B, and 2C records and remains unresolved per
+  `logs/BUGS.txt`. Phase 10 owns the green full gate; this slice does not claim it passed.
+- Device status: the debug APK passed the welcome and dummy callback checks. Authenticated Photo Grid
+  verification requires fresh user approval and remains blocked.
 
-## Welcome scaling record
+## Slice 2C3 files
 
-- Commit `47dbc36` removes the fixed `520.dp` welcome logo height. The shared box uses an
-  aspect ratio of `1.25`.
-- The scroll content applies status-bar and navigation-bar padding. The IME padding remains
-  intact for the server form.
-- Welcome buttons use consistent `64.dp` height and `480.dp` maximum width.
-- `SignInScreenTest` covers compact, large, and pending states.
-- The code reviewer reported no `BLOCKING` or `REQUIRED` findings.
-- A portrait device check passed on `1848x2448`. The card stayed below the status bar, the logo
-  stayed centered, and the buttons stayed above the navigation bar.
-- Wide, foldable, large-font, and landscape checks remain unverified.
-- The architecture audit reported 611 findings against a 610 baseline. This is a count-only
-  measurement and does not prove a regression.
-- The full gate timed out. Known unrelated baseline test failures remain unresolved.
-- OAuth commit `80bfd25` and the preserved `MainActivity` lines remain intact.
-- The interrupted 2C3 PhotoGrid work remains interrupted.
+- `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridOwner.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridHost.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/ConnectedApp.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedHost.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridController.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridOwnerTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/session/ConnectedEntryStoreTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/shell/PostProjectionCoordinatorTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/feed/FeedViewModelRequestTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/feed/FeedViewModelReactionTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt`
+- `docs/agents/app-shell-ownership.md`
 
-## Exact Mastodon staging pathspec
+## Preservation
 
-Stage only the Mastodon repair files and its focused tests:
+- OAuth diagnostics from commits `5140d64`, `80bfd25`, `47dbc36`, and `2b67bf9` remain preserved.
+- Staged `docs/classic_navigation.md` and unrelated dirty files remain untouched.
+- No source files were staged or committed in this session.
 
-```text
-git add -- app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonErrorMapper.kt app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt app/src/test/java/me/foxtails/palustris/data/mastodon/MastodonIntegrationTest.kt app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyIntegrationTest.kt app/src/test/java/me/foxtails/palustris/data/transport/AuthenticatedHttpClientTest.kt app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt docs/agents/tasks/beeline-0.4.0.md docs/agents/handoff.md
-```
+## Exact staging pathspec for the parent session
 
-Exclude welcome UI files, the 2C3 PhotoGrid and Search files, and staged `docs/classic_navigation.md`.
-Exclude unrelated `.opencode`, writing, image, helper, cache, and log files.
+Stage only the 2C3 slice with:
 
-## Verification record
+`app/src/main/java/me/foxtails/palustris/ui/ConnectedApp.kt`
+`app/src/main/java/me/foxtails/palustris/ui/feed/FeedHost.kt`
+`app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt`
+`app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridController.kt`
+`app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridHost.kt`
+`app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridOwner.kt`
+`app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt`
+`app/src/test/java/me/foxtails/palustris/ui/feed/FeedViewModelReactionTest.kt`
+`app/src/test/java/me/foxtails/palustris/ui/feed/FeedViewModelRequestTest.kt`
+`app/src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridOwnerTest.kt`
+`app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt`
+`app/src/test/java/me/foxtails/palustris/ui/session/ConnectedEntryStoreTest.kt`
+`app/src/test/java/me/foxtails/palustris/ui/shell/PostProjectionCoordinatorTest.kt`
+`docs/agents/app-shell-ownership.md`
+`docs/agents/handoff.md`
+`docs/agents/tasks/beeline-0.4.0.md`
 
-- Focused auth, Mastodon integration, capability, transport, and session tests passed.
-- `:app:lintDebug` passed after the duplicate-callback test change.
-- The full gate remains unresolved because the known baseline suite reports unrelated failures.
-- The audit command exited 0 and reported 611 findings with zero baseline regressions. Historical
-  counts of 610, 611, 612, and 613 are unstable count-only measurements across worktree states.
+This excludes committed OAuth and welcome work, staged `docs/classic_navigation.md`, unrelated
+worktree files, and audit or task logs.
 
-## Boundaries
+## Verification limits
 
-The repair changes Mastodon authentication and its session callback guard only.
-The implementation paths are `MastodonAuth.kt`, `MastodonErrorMapper.kt`, and `AccountManager.kt`.
-The focused test paths are `AuthGatewayTest.kt`, `MastodonIntegrationTest.kt`,
-`MisskeyIntegrationTest.kt`, `AuthenticatedHttpClientTest.kt`, and `SessionViewModelTest.kt`.
-No resource files changed. Misskey transport, the welcome UI, PhotoGrid, Search, and navigation
-remain outside this slice.
+Live-server behavior remains unverified. API 29 physical, RTL, TalkBack, font-scale, signed, and
+wide or foldable authenticated checks remain unverified.
 
 ## Records
 
-- Implementation log: `logs/260928-mastodon-callback-repair.txt`.
-- Audit source: `logs/260928-oauth-callback.txt`.
-- Welcome scaling record: commit `47dbc36`; the ignored implementation log is
-  `logs/260928-welcome-signin-ui.txt`.
+- Implementation log: `logs/260928-photogrid-lifetime.txt`.
+- Audit record: `logs/architecture-audit-2c3.txt`.
 - No secrets, tokens, callback values, or response bodies belong in these records.
