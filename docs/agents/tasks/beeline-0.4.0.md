@@ -1,90 +1,97 @@
-# Beeline 0.4.0 task state — slice 2A1
+# Beeline 0.4.0 task state — slice 2A2
 
 ## Objective
 
-Characterize the existing shared transport contracts after Phase 1. This slice changes tests
-only. It does not move transport code or change request, response, origin, Link, WebSocket,
-cancellation, or failure behavior.
+Move the generic HTTP client pool and response from `data/misskey` to `data/transport`.
 
 ## Boundary
 
-Phase 1 remains closed at commit `a189ab5` (`Fix Photo Grid parity coverage`). Slice 2A1 is the
-current uncommitted test-only boundary. Slice 2A2 remains the next planned change.
+Slice 2A1 is committed as `5db0d1a`. Slice 2A2 changes transport ownership only. Slice 2A3
+still owns the future `MisskeyApi` move. Slice 2A4 still owns authentication and dependency
+injection redesign.
 
-## Characterized owners
+## Changes
 
-- `data/misskey/MisskeyApi.kt` owns request execution, headers, bodies, bearer placement,
-  cancellation, failure mapping, response limits, and WebSocket construction.
-- `data/misskey/HttpClientPool.kt` owns credential-free client reuse, timeouts, redirects, and
-  bounded LRU retention.
-- `data/misskey/HttpResponse.kt` owns adapter-facing body and header representation and current
-  Link parsing.
-- `ServerAddress.normalize` owns HTTPS origin normalization and rejection.
-- Mastodon and Misskey adapters retain protocol-specific mapping and cursor policy.
-
-## Slice changes
-
-- Added `MisskeyApiTest` for JSON and non-JSON responses, request verbs and paths, query values,
-  content types, caller headers, bearer placement, ApiFailure details, cancellation, and upload
-  stream closure.
-- Extended `HttpClientPoolTest` for the 4 MiB below/at/above boundary and origin normalization.
-- Extended `MastodonIntegrationTest` with current Link relation, whitespace, malformed, case, and
-  repeated-header characterization.
-- Extended `WebSocketTransportTest` with invalid-origin rejection and adapter cancellation.
-- `Api29CompatibilityTest` required no change because transport has no API-29-specific claim.
+- Moved `HttpClientPool` and `HttpLayerConfig` to `data/transport`.
+- Moved `HttpResponse` and its generic Link cursor parser to `data/transport`.
+- Preserved timeouts, disabled redirects, the maximum of 16 clients, connection keying, and
+  singleton wiring.
+- Updated Misskey, Mastodon, authentication, source, dependency injection, and test imports.
+- Kept `MisskeyApi`, Misskey failures, response limits, JSON bodies, and prefixes in `data/misskey`.
+- Exhaustive grep found no old fully qualified transport type references.
 
 ## Verification
 
-- `MisskeyApiTest`: 5 passed.
-- `HttpClientPoolTest`: 9 passed.
-- `WebSocketTransportTest`: 6 passed.
-- `Api29CompatibilityTest`: 3 passed.
-- `MastodonIntegrationTest`: 59 passed.
-- `MisskeyIntegrationTest`: 48 passed.
-- `MastodonSourceContractTest`: 6 passed.
-- `AuthGatewayTest`: 2 passed.
-- `:app:lintDebug`: passed.
-- The exact audit command was `python tools/scripts/architecture_audit.py . --baseline
-  tools/architecture-baseline.json --check`.
-- The audit exited 0 and reported 613 findings.
-- The audit reported no `regression:` lines. The count is 4 above the prior 609 result.
-- The stored 609 result has no row list, so the four additional file and symbol names cannot be
-  reconstructed. The current output names production files and symbols only.
-- The audit scans `app/src/main`; the 2A1 diff changes test files and agent records only. No extra
-  finding can come from the 2A1 test-only diff.
-- The full audit output is in ignored `logs/architecture-audit-2a1.txt`.
-- `test assembleRelease` ran and failed at `:app:testDebugUnitTest`: 1,385 tests completed and 16
-  known baseline tests failed. `:app:assembleRelease` completed successfully. `logs/BUGS.txt`
-  records these baseline failures.
+- The post-edit focused command passed 142 tests: MisskeyApiTest (5), HttpClientPoolTest (9),
+  WebSocketTransportTest (6), MastodonIntegrationTest (59), MisskeyIntegrationTest (48), and
+  SessionLifecycleTest (15). It exited 0 with zero regressions.
+- The complete focused evidence remains 23 transport tests, 113 adapter tests, and 17 authentication
+  tests. The earlier adapter rerun passed after one queue-shutdown timeout.
+- The cancellation test passed when rerun alone:
+  `MisskeyApiTest.cancellationCancelsTheInFlightCallAndDoesNotBecomeApiFailure`.
+- `:app:lintDebug` passed after the cosmetic import edit.
+- `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`
+  exited 0 and reported 613 findings. It reported zero `regression:` lines. Output is in ignored
+  `logs/architecture-audit-2a2.txt`. This matches the 2A1 count of 613.
+- The full `test assembleRelease` gate ran past the 180-second limit. The test task reported 1,385
+  tests and 17 failures before the command timed out. The 2A1 baseline records 16 failures in
+  `logs/BUGS.txt`. The retained output does not identify the seventeenth test, failure message, or
+  test XML. The cancellation test passed alone, so the seventeenth failure remains unexplained and
+  unattributed. It is not documented as a baseline failure or a proven flake. A separate
+  `:app:assembleRelease` run passed.
 
-## Not verified
+## Documentation
 
-Live-server behavior, authenticated redirect wire behavior, physical-device rendering, API 29
-physical behavior, RTL, TalkBack, font-scale behavior, and signed release behavior remain
-unverified.
+`docs/agents/protocol-and-session-ownership.md` now names `data/transport` as the owner for the
+generic pool and response. It does not claim that slices 2A3 or 2A4 are complete.
 
 ## Hygiene
 
-Production files and `docs/agents/protocol-and-session-ownership.md` remain unchanged. No commit,
-staging, or push was performed.
-
-The separate `git status --short` command observed these sets:
+No slice files are staged, committed, or pushed by this slice. The separate status command observed:
 
 - Staged: `docs/classic_navigation.md`.
-- Modified: `.opencode/agents/code_reviewer_high.md`, `.opencode/agents/code_reviewer_low.md`,
-  `.opencode/agents/git_handler.md`, `.opencode/agents/orchestrator.md`,
-  `.opencode/agents/problem_solver_high.md`, `.opencode/agents/problem_solver_low.md`,
-  `.opencode/agents/targeted_fixer.md`, `app/src/test/java/me/foxtails/palustris/WebSocketTransportTest.kt`,
+- Modified slice files: the two moved source files, their updated callers and tests, and
+  `docs/agents/protocol-and-session-ownership.md`, this task file, and `docs/agents/handoff.md`.
+- Modified unrelated files: seven `.opencode/agents/*.md` files and `importantdocs/writing_style.md`.
+- Deleted unrelated files: `currentbehaviour.png` and `intendedbehaviour.png`.
+- Untracked unrelated files: two `.opencode/agents/*.md` files, `screen.png`, three helper scripts,
+  and two Python cache directories.
+- Ignored files: `logs/260928-000000.txt`, `logs/architecture-audit-2a2.txt`, and prior ignored logs.
+
+The intended staging set contains exactly these files:
+
+- Moved production files: `app/src/main/java/me/foxtails/palustris/data/misskey/HttpClientPool.kt`
+  to `app/src/main/java/me/foxtails/palustris/data/transport/HttpClientPool.kt`, and
+  `app/src/main/java/me/foxtails/palustris/data/misskey/HttpResponse.kt` to
+  `app/src/main/java/me/foxtails/palustris/data/transport/HttpResponse.kt`.
+- Updated production files: `app/src/main/java/me/foxtails/palustris/data/SourceFactory.kt`,
+  `app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt`,
+  `app/src/main/java/me/foxtails/palustris/data/auth/MisskeyAuth.kt`,
+  `app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonNotificationService.kt`,
+  `app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonPageClient.kt`,
+  `app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonSource.kt`,
+  `app/src/main/java/me/foxtails/palustris/data/misskey/MisskeyApi.kt`,
+  `app/src/main/java/me/foxtails/palustris/data/misskey/MisskeyPushService.kt`, and
+  `app/src/main/java/me/foxtails/palustris/di/AppModule.kt`.
+- Updated test files: `app/src/test/java/me/foxtails/palustris/CrossCuttingTest.kt`,
+  `app/src/test/java/me/foxtails/palustris/data/auth/SessionLifecycleTest.kt`,
   `app/src/test/java/me/foxtails/palustris/data/mastodon/MastodonIntegrationTest.kt`,
   `app/src/test/java/me/foxtails/palustris/data/misskey/HttpClientPoolTest.kt`,
-  `docs/agents/handoff.md`, `docs/agents/tasks/beeline-0.4.0.md`, `importantdocs/writing_style.md`.
-- Deleted: `currentbehaviour.png`, `intendedbehaviour.png`.
-- Untracked: `.opencode/agents/adb_handler.md`, `.opencode/agents/codebase_explorer_android.md`,
-  `app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyApiTest.kt`, `screen.png`,
-  `tools/scripts/__pycache__/`, `tools/scripts/adb_control.py`, `tools/scripts/adb_flow.py`,
-  `tools/scripts/adb_inspect.py`, `tools/scripts/adb_screenshot.py`, `tools/tests/__pycache__/`.
+  `app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyIntegrationTest.kt`,
+  `app/src/test/java/me/foxtails/palustris/data/notifications/push/PushCancellationTest.kt`, and
+  `app/src/test/java/me/foxtails/palustris/ui/session/AccountManagerFixtures.kt`.
+- Documentation files: `docs/agents/protocol-and-session-ownership.md`,
+  `docs/agents/tasks/beeline-0.4.0.md`, and `docs/agents/handoff.md`.
 
-Ignored and unstaged: `logs/260927-000000.txt` and `logs/architecture-audit-2a1.txt`.
-The proposed staging set contains only the four 2A1 test files and these two docs files:
-`docs/agents/tasks/beeline-0.4.0.md` and `docs/agents/handoff.md`.
-The staged `docs/classic_navigation.md` and all other unrelated sets stay untouched.
+Use an explicit pathspec list for `git add` and `git commit`. The commit pathspec list must contain
+only the files above, which excludes the already staged `docs/classic_navigation.md`.
+
+Exclude these unrelated sets: staged `docs/classic_navigation.md`; seven modified `.opencode/agents`
+files and modified `importantdocs/writing_style.md`; deleted `currentbehaviour.png` and
+`intendedbehaviour.png`; untracked helper scripts, Python caches, and `screen.png`; and ignored
+`logs/*` files.
+
+## Limits
+
+Live-server, physical-device, API 29 physical, RTL, TalkBack, font-scale, and signed-release
+behavior remain unverified.

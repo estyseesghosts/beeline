@@ -13,7 +13,7 @@ import me.foxtails.palustris.data.directmessages.InMemoryDirectMessageStore
 import me.foxtails.palustris.data.emoji.InMemoryEmojiCatalogRepository
 import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.CapabilityCacheKey
-import me.foxtails.palustris.data.misskey.HttpClientPool
+import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.notifications.NoOpNotificationStreamController
 import me.foxtails.palustris.data.notifications.NoOpNotificationSyncController
 import me.foxtails.palustris.data.notifications.NotificationStreamController

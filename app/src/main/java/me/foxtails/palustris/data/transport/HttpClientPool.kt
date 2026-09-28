@@ -1,4 +1,4 @@
-package me.foxtails.palustris.data.misskey
+package me.foxtails.palustris.data.transport
 
 import me.foxtails.palustris.domain.Connection
 import okhttp3.OkHttpClient

@@ -15,7 +15,7 @@ import me.foxtails.palustris.data.auth.EncryptedSessionStore
 import me.foxtails.palustris.data.auth.PendingLogin
 import me.foxtails.palustris.data.auth.toAccount
 import me.foxtails.palustris.data.misskey.CapabilityCache
-import me.foxtails.palustris.data.misskey.HttpClientPool
+import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.domain.AccountId

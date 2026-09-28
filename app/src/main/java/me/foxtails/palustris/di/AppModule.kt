@@ -28,7 +28,7 @@ import me.foxtails.palustris.data.auth.EncryptedDraftStore
 import me.foxtails.palustris.data.auth.MastodonAuth
 import me.foxtails.palustris.data.auth.MisskeyAuth
 import me.foxtails.palustris.data.auth.SessionStore
-import me.foxtails.palustris.data.misskey.HttpClientPool
+import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.media.MediaImageLoader

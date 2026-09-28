@@ -3,6 +3,7 @@ package me.foxtails.palustris.data.misskey
 import kotlinx.coroutines.Dispatchers
 import me.foxtails.palustris.ProductIdentity
 import me.foxtails.palustris.data.AppMessages
+import me.foxtails.palustris.data.transport.HttpResponse
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.Call

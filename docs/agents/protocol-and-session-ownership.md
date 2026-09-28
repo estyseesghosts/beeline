@@ -21,6 +21,9 @@ Device and live-server behavior remain unverified.
 ## Source Ownership
 
 - `domain/SocialSource.kt` is the only transport contract. Each adapter implements it.
+- `data/transport/HttpClientPool.kt` owns credential-free HTTP client reuse, timeouts, redirects,
+  connection keying, and bounded retention for both protocol adapters.
+- `data/transport/HttpResponse.kt` owns the generic HTTP body, headers, and Link cursor parsing.
 - `data/misskey/MisskeySource` and `data/mastodon/MastodonSource` are the two adapters.
 - `data/SourceFactory.kt` creates one source for a session. It branches on `Protocol` only there.
 - `data/AccountSourceRegistry.kt` stores one source for each `AccountId` together with a

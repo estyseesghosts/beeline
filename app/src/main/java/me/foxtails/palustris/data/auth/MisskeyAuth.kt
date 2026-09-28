@@ -1,7 +1,7 @@
 package me.foxtails.palustris.data.auth
 
 import me.foxtails.palustris.data.AppMessages
-import me.foxtails.palustris.data.misskey.HttpClientPool
+import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeyErrorMapper
 import me.foxtails.palustris.data.misskey.MisskeyMapper

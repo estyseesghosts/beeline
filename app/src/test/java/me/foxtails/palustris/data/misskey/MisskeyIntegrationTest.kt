@@ -9,7 +9,7 @@ import me.foxtails.palustris.data.auth.MisskeyAuth
 import me.foxtails.palustris.data.auth.PendingLogin
 import me.foxtails.palustris.data.mastodon.MastodonErrorMapper
 import me.foxtails.palustris.data.misskey.ApiFailure
-import me.foxtails.palustris.data.misskey.HttpResponse
+import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeyCapabilityProbe
 import me.foxtails.palustris.data.misskey.MisskeyErrorMapper

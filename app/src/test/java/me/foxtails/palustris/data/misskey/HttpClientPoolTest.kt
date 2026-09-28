@@ -1,5 +1,7 @@
 package me.foxtails.palustris.data.misskey
 
+import me.foxtails.palustris.data.transport.HttpClientPool
+import me.foxtails.palustris.data.transport.HttpLayerConfig
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors

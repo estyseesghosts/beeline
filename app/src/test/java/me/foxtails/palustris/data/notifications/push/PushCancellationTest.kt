@@ -17,7 +17,7 @@ import me.foxtails.palustris.data.SocialSourceFactory
 import me.foxtails.palustris.data.auth.AccountIndex
 import me.foxtails.palustris.data.auth.SessionStore
 import me.foxtails.palustris.data.misskey.CapabilityCache
-import me.foxtails.palustris.data.misskey.HttpClientPool
+import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.notifications.InMemoryNotificationStore
 import me.foxtails.palustris.data.notifications.NotificationPermissionController
 import me.foxtails.palustris.data.notifications.NotificationPresentation

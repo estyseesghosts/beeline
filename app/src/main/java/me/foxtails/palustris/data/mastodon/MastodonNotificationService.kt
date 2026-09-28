@@ -1,6 +1,6 @@
 package me.foxtails.palustris.data.mastodon
 
-import me.foxtails.palustris.data.misskey.HttpResponse
+import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId

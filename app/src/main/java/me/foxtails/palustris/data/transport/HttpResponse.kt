@@ -1,4 +1,4 @@
-package me.foxtails.palustris.data.misskey
+package me.foxtails.palustris.data.transport
 
 import okhttp3.Headers
 

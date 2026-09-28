@@ -1,5 +1,6 @@
 package me.foxtails.palustris.data.misskey
 
+import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.PushProviderInfo

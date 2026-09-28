@@ -4,6 +4,7 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.domain.SourceError
 
 internal class MastodonPageClient(
@@ -24,7 +25,7 @@ internal class MastodonPageClient(
     fun validateCursor(route: MastodonPageRoute, cursor: String?): HttpUrl? =
         cursor?.let { decodeAndValidate(route, it) }
 
-    fun nextCursor(response: me.foxtails.palustris.data.misskey.HttpResponse, route: MastodonPageRoute, currentUrl: String): String? {
+    fun nextCursor(response: HttpResponse, route: MastodonPageRoute, currentUrl: String): String? {
         val link = response.linkHeaderCursor() ?: return null
         val url = try {
             validateUrl(route, link, currentUrl)

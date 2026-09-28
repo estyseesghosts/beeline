@@ -11,7 +11,7 @@ import kotlinx.coroutines.cancelAndJoin
 import me.foxtails.palustris.data.mastodon.MastodonMapper
 import me.foxtails.palustris.data.mastodon.MastodonSource
 import me.foxtails.palustris.data.misskey.MisskeyApi
-import me.foxtails.palustris.data.misskey.HttpResponse
+import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityProbe

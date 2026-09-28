@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import me.foxtails.palustris.data.misskey.ApiFailure
-import me.foxtails.palustris.data.misskey.HttpResponse
+import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.ResponseLimitExceeded
 import me.foxtails.palustris.domain.Audience

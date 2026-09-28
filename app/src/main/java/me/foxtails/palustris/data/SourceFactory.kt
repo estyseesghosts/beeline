@@ -1,7 +1,7 @@
 package me.foxtails.palustris.data
 
 import javax.inject.Inject
-import me.foxtails.palustris.data.misskey.HttpClientPool
+import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.data.misskey.CapabilityCache
