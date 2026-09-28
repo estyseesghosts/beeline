@@ -19,10 +19,8 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Notification
-import me.foxtails.palustris.domain.NotificationActivity
 import me.foxtails.palustris.data.notifications.NotificationLaunch
 import me.foxtails.palustris.data.notifications.NotificationLaunchCodec
-import me.foxtails.palustris.ui.notifications.text
 
 data class NotificationPresentation(
     val accountId: AccountId,
@@ -53,26 +51,15 @@ interface NotificationPresenter {
 class NotificationPresentationFactory @Inject constructor(
     @param:ApplicationContext private val context: Context,
 ) {
+    private val textResolver = NotificationTextResolver(context)
+
     fun prepare(
         notification: Notification,
         showPreview: Boolean,
         channel: NotificationChannelKind,
     ): NotificationPresentation {
-        val title = activityTitle(notification.activity)
-        val actorLabel = notification.group?.actorPreviews?.map { it.displayName }
-            ?.takeIf { it.isNotEmpty() }
-            ?.joinToString()
-            ?: notification.actors.map { it.displayName }.filter(String::isNotBlank).joinToString()
-        val safeActorLabel = actorLabel.ifBlank { context.getString(R.string.notifications_actorless) }
-        val body = when {
-            !showPreview -> safeActorLabel
-            notification.post?.contentWarning != null -> notification.post.contentWarning
-                .takeUnless(String::isNullOrBlank)
-                ?.let { context.getString(R.string.notifications_content_warning_with_text, it) }
-                ?: context.getString(R.string.notifications_content_warning)
-            !notification.post?.text.isNullOrBlank() -> notification.post?.text.orEmpty()
-            else -> safeActorLabel
-        }
+        val title = textResolver.title(notification.activity)
+        val body = textResolver.body(notification, showPreview)
         return NotificationPresentation(
             accountId = notification.accountId,
             notificationId = notification.id,
@@ -85,24 +72,6 @@ class NotificationPresentationFactory @Inject constructor(
         )
     }
 
-    private fun activityTitle(activity: NotificationActivity): String = when (activity) {
-        NotificationActivity.Mention -> context.getString(R.string.notification_activity_mention)
-        NotificationActivity.Reply -> context.getString(R.string.notification_activity_reply)
-        NotificationActivity.Reshare -> context.getString(R.string.notification_activity_reshare)
-        NotificationActivity.Quote -> context.getString(R.string.notification_activity_quote)
-        NotificationActivity.Favourite -> context.getString(R.string.notification_activity_favourite)
-        is NotificationActivity.EmojiReaction -> context.getString(R.string.notification_activity_reaction, activity.reaction.fallbackText.text(context))
-        NotificationActivity.Follow -> context.getString(R.string.notification_activity_follow)
-        NotificationActivity.FollowRequest -> context.getString(R.string.notification_activity_follow_request)
-        NotificationActivity.AcceptedRequest -> context.getString(R.string.notification_activity_accepted_request)
-        NotificationActivity.SubscribedPost -> context.getString(R.string.notification_activity_subscribed_post)
-        is NotificationActivity.PollResult -> context.getString(R.string.notification_activity_poll_result)
-        NotificationActivity.PostUpdate -> context.getString(R.string.notification_activity_post_update)
-        NotificationActivity.QuotedPostUpdate -> context.getString(R.string.notification_activity_quoted_post_update)
-        NotificationActivity.DirectMessage -> context.getString(R.string.notification_activity_direct_message)
-        is NotificationActivity.System -> context.getString(R.string.notifications_detail_title)
-        is NotificationActivity.Unknown -> context.getString(R.string.notifications_detail_title)
-    }
 }
 
 @Singleton

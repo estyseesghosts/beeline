@@ -21,6 +21,15 @@ Source: `data/notifications/NotificationLaunch.kt`, `NotificationLaunchStore.kt`
 - Tap and dismiss pending intents use separate components and actions. Both use the stable Android
   notification ID for their request code.
 
+### Prepared Android notification text
+
+Source: `data/notifications/NotificationTextResolver.kt`,
+`data/notifications/AndroidNotificationPresenter.kt`, and `NotificationPresentationTest`.
+
+- The data notification boundary resolves localized Android title and body text.
+- The resolver keeps content-warning, actor, empty-preview, and reaction fallback precedence stable.
+- The Compose notification formatter remains in `ui.notifications` and is not imported by data code.
+
 ## Purpose
 
 <!-- Explain user-visible notification and direct-message behavior. -->

@@ -12,6 +12,8 @@ import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActivity
+import me.foxtails.palustris.domain.NotificationLabel
+import me.foxtails.palustris.domain.NotificationReaction
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.data.notifications.NotificationLaunch
@@ -32,6 +34,65 @@ import org.robolectric.shadows.ShadowPendingIntent
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [32])
 class NotificationPresentationTest {
+    @Test
+    fun reactionTitleUsesTheSameFallbackTextForPlainAndCodedLabels() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val account = AccountId(Connection("https://example.org", Protocol.MISSKEY), "receiver")
+        val base = notification(account)
+        val factory = NotificationPresentationFactory(context)
+
+        val plain = factory.prepare(
+            base.copy(activity = NotificationActivity.EmojiReaction(
+                NotificationReaction("heart", NotificationLabel.Plain("heart")),
+            )),
+            showPreview = true,
+            channel = NotificationChannelKind.Social,
+        )
+        val coded = factory.prepare(
+            base.copy(activity = NotificationActivity.EmojiReaction(
+                NotificationReaction("heart", NotificationLabel.Coded(me.foxtails.palustris.domain.NotificationLabelCode.Reaction)),
+            )),
+            showPreview = true,
+            channel = NotificationChannelKind.Social,
+        )
+
+        assertEquals("Reacted with heart", plain.title)
+        assertEquals("Reacted with Reaction", coded.title)
+    }
+
+    @Test
+    fun emptyPreviewFallsBackToActorsAndPreviewDisabledHidesPostText() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val account = AccountId(Connection("https://example.org", Protocol.MASTODON), "receiver")
+        val actor = Account(account.copy(localId = "actor"), "Actor", "@actor@example.org")
+        val notification = notification(account).copy(
+            actors = listOf(actor),
+            post = Post(
+                id = EntityId(account.connection.origin, "post"),
+                author = actor,
+                text = "post text",
+                publishedAtEpochMillis = 1L,
+                audience = Audience.Public,
+            ),
+        )
+        val factory = NotificationPresentationFactory(context)
+
+        assertEquals("post text", factory.prepare(notification, true, NotificationChannelKind.RepliesAndMentions).body)
+        assertEquals(
+            "Actor",
+            factory.prepare(
+                notification.copy(post = notification.post?.copy(text = "  ")),
+                true,
+                NotificationChannelKind.RepliesAndMentions,
+            ).body,
+        )
+        assertEquals("Actor", factory.prepare(notification, false, NotificationChannelKind.RepliesAndMentions).body)
+        assertEquals(
+            "Activity from your server",
+            factory.prepare(notification.copy(actors = emptyList(), post = null), true, NotificationChannelKind.RepliesAndMentions).body,
+        )
+    }
+
     @Test
     fun contentWarningTakesPrecedenceOverPublicPostText() {
         val account = AccountId(Connection("https://example.org", Protocol.MASTODON), "receiver")
@@ -120,4 +181,12 @@ class NotificationPresentationTest {
         assertEquals(firstId.value, updatedTapIntent.getStringExtra(NotificationLaunchRouter.EXTRA_NOTIFICATION_ID))
         assertEquals(firstId.connection, updatedTapIntent.getStringExtra(NotificationLaunchRouter.EXTRA_ORIGIN))
     }
+
+    private fun notification(account: AccountId): Notification = Notification(
+        id = EntityId(account.connection.origin, "event"),
+        accountId = account,
+        createdAtEpochMillis = 1L,
+        activity = NotificationActivity.Mention,
+        rawType = "mention",
+    )
 }

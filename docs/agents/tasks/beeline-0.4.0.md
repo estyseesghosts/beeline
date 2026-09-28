@@ -1,23 +1,37 @@
-# Beeline 0.4.0 task state — slice 2B2
+# Beeline 0.4.0 task state — slice 2B3
 
 ## Objective
 
-Move notification launch value, codec, storage, and pending-state ownership from UI to data.
-Preserve the 2B1 launch contract and storage format.
+Separate prepared notification text from UI formatting.
+Preserve notification content, launch behavior, and delivery state.
 
 ## Status sets
 
-- Source status: moved to `data.notifications` without behavior changes.
-- Test status: the implementer reports that focused router, host, and presentation tests passed.
+- Source status: `NotificationTextResolver` owns Android notification title and body resolution in `data.notifications`.
+- Test status: presentation tests cover reaction, fallback, content-warning, and preview contracts.
 - Instrumented intent status: unavailable in this environment. No device intent test ran.
-- Audit status: 609 findings and zero regression lines. The 612-finding 2B1 count reduced after the move.
+- Audit status: 608 findings and zero regression lines. The 2B2 count was 609.
 - Lint status: `:app:lintDebug` passed.
-- Full gate status: unresolved and unattributed. `test assembleRelease` timed out after reporting
-  only DraftActions (2), CapabilityCache (2), and MisskeyThreadContinuation (5). Sync (5) and
-  Navigation (2) were not visible before the timeout. No test-result XML was available. The 16-name
-  BUGS baseline therefore remains unresolved: 9 names were visible, and 7 names remain unknown.
-  No notification launch failure appeared in the visible output, but this does not prove full coverage.
+- Full gate status: not green. `test assembleRelease` reached `assembleRelease` but timed out after
+  reporting known DraftActions, CapabilityCache, MisskeyThreadContinuation, and
+  NotificationSyncOrchestrator failures. No failure is attributed to this slice.
 - Device and live-server status: unverified.
+
+Focused presentation tests passed. Repository and delivery planner tests passed.
+The architecture audit passed with 608 findings and zero regression lines.
+`test assembleRelease` reached `assembleRelease` but timed out at 120 seconds while the full test
+task reported known DraftActions, CapabilityCache, MisskeyThreadContinuation, and
+NotificationSyncOrchestrator failures. The full gate is not green.
+
+## Prepared text boundary
+
+`NotificationPresentationFactory` owns the resolver lifetime and passes its application context.
+It resolves resources in the current locale and does not depend on Compose or `ui.notifications`.
+The UI formatter remains the owner of Compose notification-row labels.
+
+Content warnings take precedence over post text. Empty and disabled previews use actor text.
+Empty actor text uses the actorless resource. Reaction fallback labels use the same resource or plain
+value for both protocols. `BigTextStyle` receives the prepared body without truncation.
 
 ## Characterized contracts
 
@@ -44,6 +58,7 @@ Preserve the 2B1 launch contract and storage format.
 - `app/src/test/java/me/foxtails/palustris/data/notifications/NotificationLaunchRouterTest.kt`
 - `app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchHostTest.kt`
 - `app/src/test/java/me/foxtails/palustris/data/notifications/NotificationPresentationTest.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationLabelText.kt`
 - `docs/wiki/notifications-and-direct-messages.md`
 - `docs/agents/tasks/beeline-0.4.0.md`
 - `docs/agents/handoff.md`
@@ -53,18 +68,31 @@ Deleted old paths:
 - `app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouter.kt`
 - `app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouterTest.kt`
 
+## Changed files for 2B3
+
+- `app/src/main/java/me/foxtails/palustris/data/notifications/NotificationTextResolver.kt`
+- `app/src/main/java/me/foxtails/palustris/data/notifications/AndroidNotificationPresenter.kt`
+- `app/src/test/java/me/foxtails/palustris/data/notifications/NotificationPresentationTest.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationLabelText.kt`
+- `docs/wiki/notifications-and-direct-messages.md`
+- `docs/agents/tasks/beeline-0.4.0.md`
+- `docs/agents/handoff.md`
+
 ## Verification
 
-- The implementer reports that focused Gradle notification tests passed.
+- Focused notification presentation, repository, and delivery planner tests passed after the blank
+  post-text fallback assertion was added.
 - `git diff --check -- <slice pathspec>` is clean. Full `git diff --check` reports unrelated trailing whitespace in
   `.opencode/agents/orchestrator.md`, `.opencode/agents/targeted_fixer.md`, and staged
   `docs/classic_navigation.md`. These files are excluded from the slice and remain untouched.
 - Architecture audit command: `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`.
-  The command exited 0 with 609 findings and zero `regression:` lines.
+  The command exited 0 with 608 findings and zero `regression:` lines. The ignored output is
+  `logs/architecture-audit-2b3.txt`.
 - `:app:lintDebug` passed.
-- `test assembleRelease` timed out at 120 seconds after reporting only three categories. Test-result
-  XML files are unavailable. Sync and Navigation remain unknown after the timeout. The full-suite
-  failure set remains unresolved and unattributed against the 16-name BUGS baseline.
+- `test assembleRelease` timed out at 120 seconds. Its report listed DraftActions, CapabilityCache,
+  MisskeyThreadContinuation, and NotificationSyncOrchestrator failures. Test-result XML files are
+  unavailable, so the full-suite failure set remains unresolved and unattributed against the
+  16-name BUGS baseline.
 - The implementer reports that notification presentation tests remain on Robolectric SDK 32 because
   SDK 35 requires runtime notification permission that this test does not grant. This reason is not
   independently verified here.
@@ -77,15 +105,25 @@ Ignored records:
 
 The audit records contain summaries only. `grep -nE 'rule|app/src/' logs/architecture-audit-2b1.txt`
 and the matching 2B2 command each exited 1 with zero matching lines. The records have 5 and 6 total
-summary lines. The 612-to-609 reduction is count-only and unexplained at rule level. No regression
-line appeared in either record.
+summary lines. The 612-to-609 and 609-to-608 reductions are count-only and unexplained at rule level.
+No regression line appeared in any record.
 
 ## Staging pathspec
 
-Do not stage, commit, or push in this continuation. If a parent stages this slice, use
-`git add --all -- <paths>` so deleted old paths and new paths remain in the index. Use explicit path
-arguments instead when the parent must avoid broad staging. The deleted old paths are listed after
-the add and modify paths. Git may display matching pairs as renames. Use only these paths:
+For 2B3, stage only the following paths if the parent requests staging:
+
+```text
+app/src/main/java/me/foxtails/palustris/data/notifications/NotificationTextResolver.kt
+app/src/main/java/me/foxtails/palustris/data/notifications/AndroidNotificationPresenter.kt
+app/src/test/java/me/foxtails/palustris/data/notifications/NotificationPresentationTest.kt
+docs/wiki/notifications-and-direct-messages.md
+docs/agents/tasks/beeline-0.4.0.md
+docs/agents/handoff.md
+```
+
+Do not stage, commit, or push in this continuation. Keep ignored verification logs outside staging.
+
+The previous 2B2 pathspec follows for historical reference. Do not use it for 2B3.
 
 ```text
 app/src/main/java/me/foxtails/palustris/data/notifications/NotificationLaunch.kt
