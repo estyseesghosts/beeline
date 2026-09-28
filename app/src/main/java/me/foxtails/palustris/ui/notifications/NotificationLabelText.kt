@@ -8,7 +8,7 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.NotificationLabel
 import me.foxtails.palustris.domain.NotificationLabelCode
 
-/** The bundled string for a label code. This is the only mapping from code to resource. */
+/** Maps label codes to resources for Compose notification-row labels. */
 @StringRes
 fun NotificationLabelCode.stringRes(): Int = when (this) {
     NotificationLabelCode.Reaction -> R.string.notification_label_reaction
