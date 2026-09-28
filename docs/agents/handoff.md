@@ -4,14 +4,16 @@
 
 ## Current position
 
-Slice 2A3 now uses `AuthenticatedHttpClient` for neutral authenticated HTTP execution. Mastodon
-production services no longer construct that client through `MisskeyApi`. The test suite uses a
-test-only neutral fixture. No staging, commit, or push occurred.
+Slice 2A4 removes the authentication and DI bridges to `MisskeyApi`. Authentication uses the
+neutral client. `MisskeyApi` remains the Misskey adapter and owns only its prefix and error mapping.
+No staging, commit, or push occurred.
 
 ## Verification
 
-The new transport test passes 6 tests. The requested focused adapter and transport set ran 260
-tests, with 258 passing and two cancellation failures.
+The focused authentication, Misskey integration, API, pool, adapter contract, WebSocket, and
+session/source revision tests pass. Compilation and lint pass. The audit command exited 0 with 612
+findings and zero regression lines against the 613-finding 2A3 baseline. The audit record contains
+no row list, so the removed finding cannot be identified from it.
 
 The fully qualified Mastodon failure was
 `me.foxtails.palustris.data.mastodon.MastodonIntegrationTest.cancelingTimelinePageCancelsRequestAndAllowsRetry`.
@@ -24,27 +26,35 @@ The fully qualified Misskey failure was
 The focused run failed at `MisskeyApiTest.kt:140` with `java.lang.AssertionError` from
 `assertTrue(canceledCall.get())`. The test passed when rerun alone.
 
-These failures are isolation or timing flakes. They are not a transport baseline failure.
-They need a test-isolation and timing stabilization owner. Do not weaken the tests.
-
-`AuthenticatedHttpClientTest.cancellationCancelsInFlightCallAndRemainsCancellationException`
-passed all 6 tests. The architecture audit exits 0 with 613 findings and zero regression lines.
-Its ignored record is `logs/architecture-audit-2a3.txt`.
-
-`:app:lintDebug` and `assembleRelease` pass. The combined `test assembleRelease` command timed out
-after unrelated full-suite failures. Full device and live-server checks remain unavailable. Earlier
-suites do not prove the new transport client without its new test.
+The previous slice reported two isolated cancellation failures. This slice does not weaken those
+tests. The combined `test assembleRelease` command completed release assembly but failed the 16 tests
+listed in the task state. Test-result XML files are unavailable in this workspace, so the names are
+not XML-verified and remain unattributed. No failure delta is attributed to this slice.
 
 ## Next slice
 
-Run the remaining gates. Inspect the diff. Use the explicit file-by-file pathspec in the task state
-if a parent agent later stages this slice. Keep `MastodonAuth` compatibility for 2A4 only.
+Review the full-suite failures with their owners. Inspect the diff. Use the explicit pathspec in the
+task state if a parent later stages this slice.
 
 ## Staging boundary
 
-The exact staging pathspec is listed in `docs/agents/tasks/beeline-0.4.0.md`.
-It contains two new transport production files, 17 migrated production files, 15 test files,
-and three documentation files.
+The exact staging pathspec is listed in `docs/agents/tasks/beeline-0.4.0.md`. The five production
+files, one test file, and three documentation files are currently UNSTAGED worktree changes. The
+index currently holds only unrelated staged `docs/classic_navigation.md`. `git_handler` must stage
+and commit the slice with the explicit nine-path pathspec, which excludes `docs/classic_navigation.md`;
+do not reset the index.
+
+```text
+app/src/main/java/me/foxtails/palustris/data/SourceFactory.kt
+app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt
+app/src/main/java/me/foxtails/palustris/data/auth/MisskeyAuth.kt
+app/src/main/java/me/foxtails/palustris/data/misskey/MisskeyApi.kt
+app/src/main/java/me/foxtails/palustris/di/AppModule.kt
+app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyIntegrationTest.kt
+docs/agents/protocol-and-session-ownership.md
+docs/agents/tasks/beeline-0.4.0.md
+docs/agents/handoff.md
+```
 
 Exclude staged `docs/classic_navigation.md`.
 Exclude the seven modified `.opencode/agents` files and the two untracked `.opencode/agents` helpers.
@@ -52,3 +62,6 @@ Exclude modified `importantdocs/writing_style.md`.
 Exclude deleted `currentbehaviour.png` and `intendedbehaviour.png`.
 Exclude the four untracked helper scripts, both Python cache directories, and `screen.png`.
 Keep ignored `logs/*` outside staging, including the audit record.
+
+`git diff --check` whitespace findings are limited to unrelated `.opencode` files and
+`docs/classic_navigation.md`; verify the slice with `git diff --check -- <slice paths>`.

@@ -3,7 +3,6 @@ package me.foxtails.palustris.data.auth
 import me.foxtails.palustris.data.AppMessages
 import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
-import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.ServerAddress
 import me.foxtails.palustris.data.mastodon.MastodonCapabilityProbe
 import me.foxtails.palustris.ProductIdentity
@@ -33,12 +32,6 @@ class MastodonAuth(
         appRegistrationCache: AppRegistrationCache,
         appMessages: AppMessages = AppMessages.Default,
     ) : this({ api }, appRegistrationCache, appMessages)
-
-    constructor(
-        api: MisskeyApi,
-        appRegistrationCache: AppRegistrationCache,
-        appMessages: AppMessages = AppMessages.Default,
-    ) : this(api.authenticatedClient(), appRegistrationCache, appMessages)
 
     constructor(
         clientPool: HttpClientPool,

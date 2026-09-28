@@ -10,6 +10,7 @@ import me.foxtails.palustris.data.auth.PendingLogin
 import me.foxtails.palustris.data.mastodon.MastodonErrorMapper
 import me.foxtails.palustris.data.misskey.ApiFailure
 import me.foxtails.palustris.data.transport.HttpResponse
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeyCapabilityProbe
 import me.foxtails.palustris.data.misskey.MisskeyErrorMapper
@@ -54,6 +55,7 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
+import okhttp3.OkHttpClient
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -151,7 +153,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
     @Test fun authRequestsNotificationAndRelationshipPermissions() = runBlocking {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody("""{"ok":true,"token":"test-token","user":$user}"""))
-            val auth = MisskeyAuth(MisskeyApi())
+            val auth = MisskeyAuth(AuthenticatedHttpClient(OkHttpClient()))
             val pending = PendingLogin(
                 origin = server.url("/").toString().removeSuffix("/"),
                 id = "test-session",
@@ -805,7 +807,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                 clientId = "client-id", clientSecret = "client-secret", codeVerifier = "verifier",
                 codeChallenge = "challenge", authorizationCode = "auth-code")
             assertTrue(AuthCallback.matches("palustris://auth/mastodon?code=auth-code&state=oauth-state", pending, System.currentTimeMillis()))
-            val auth = MastodonAuth(MisskeyApi(), AppRegistrationCache())
+            val auth = MastodonAuth(AuthenticatedHttpClient(OkHttpClient()), AppRegistrationCache())
             val result = auth.complete(pending)
             assertEquals("mastodon-token", result.token)
             assertEquals(Protocol.MASTODON, result.protocol)
@@ -824,7 +826,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
     @Test fun mastodonBrowserUrlIncludesPkceWhenAvailable() {
         val pending = PendingLogin("https://example.org", "state", System.currentTimeMillis(), Protocol.MASTODON,
             clientId = "client-id", codeChallenge = "challenge")
-        val url = MastodonAuth(MisskeyApi(), AppRegistrationCache()).browserUrl(pending).toHttpUrl()
+        val url = MastodonAuth(AuthenticatedHttpClient(OkHttpClient()), AppRegistrationCache()).browserUrl(pending).toHttpUrl()
         assertEquals("/oauth/authorize", url.encodedPath)
         assertEquals("client-id", url.queryParameter("client_id"))
         assertEquals("challenge", url.queryParameter("code_challenge"))

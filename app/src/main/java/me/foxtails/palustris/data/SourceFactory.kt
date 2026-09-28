@@ -43,7 +43,7 @@ class SocialSourceFactory @Inject constructor(
         )
         Protocol.MASTODON -> {
             val api = AuthenticatedHttpClient(
-                clientPool.clientFor(session.accountId.connection), session.accountId.connection.origin,
+                clientPool.clientFor(session.accountId.connection), expectedOrigin = session.accountId.connection.origin,
             )
             MastodonSource(
                 origin = session.accountId.connection.origin,

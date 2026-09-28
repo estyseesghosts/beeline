@@ -2,12 +2,10 @@
 
 **Owner:** Protocol, session, and persistence maintainers.
 
-**Status:** current. Source verified. Completion slices C-01, C-03, and C-06c are implemented and
-test verified. C-01 closed the connected-identity gap. C-03 closed the direct-message write gap.
-C-06c closed the draft removal gap. Slice 04-E3 added the direct-message conversation identity and
-the verified-only server mark-read.
+**Status:** current. Source verified. Slice 2A4 completes the authentication and dependency
+injection migration started in slice 2A3.
 
-**Last reviewed:** 2026-09-24.
+**Last reviewed:** 2026-09-28.
 
 **Source baseline:** Slice 16: `SessionLifecycle.kt` owns durable session transitions, and
 `AccountManager.kt` owns session presentation and authentication UI state.
@@ -29,8 +27,12 @@ Device and live-server behavior remain unverified.
 - `data/misskey/MisskeySource` and `data/mastodon/MastodonSource` are the two adapters.
 - `data/transport/AuthenticatedHttpClient` owns protocol-neutral authenticated execution, bounded
   bodies, cancellation, origin checks, and status failures. Adapters own paths and failure mapping.
-- `data/misskey/MisskeyApi` remains the Misskey JSON adapter. It owns the `/api/` prefix and
-  delegates execution to the neutral client. Slice 2A4 still owns full authentication and DI migration.
+- `data/misskey/MisskeyApi` remains the Misskey JSON adapter. It owns the `/api/` prefix, maps
+  Misskey error bodies, and delegates request execution to `AuthenticatedHttpClient`.
+- `data/auth/MisskeyAuth` uses the neutral client with explicit `/api/` routes. `MastodonAuth` uses
+  the neutral client and never constructs or accepts `MisskeyApi`.
+- `di/AppModule` probes Misskey through the neutral client. `SocialSourceFactory` creates the
+  Misskey adapter or Mastodon neutral client from the session connection protocol.
 - `data/SourceFactory.kt` creates one source for a session. It branches on `Protocol` only there.
 - `data/AccountSourceRegistry.kt` stores one source for each `AccountId` together with a
   generation from `NotificationSyncToken`.

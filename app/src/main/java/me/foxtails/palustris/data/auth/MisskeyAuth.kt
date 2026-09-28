@@ -2,7 +2,9 @@ package me.foxtails.palustris.data.auth
 
 import me.foxtails.palustris.data.AppMessages
 import me.foxtails.palustris.data.transport.HttpClientPool
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
+import me.foxtails.palustris.data.transport.HttpStatusFailure
+import me.foxtails.palustris.data.misskey.ApiFailure
 import me.foxtails.palustris.data.misskey.MisskeyErrorMapper
 import me.foxtails.palustris.data.misskey.MisskeyMapper
 import me.foxtails.palustris.data.misskey.ServerAddress
@@ -25,17 +27,17 @@ interface AuthGateway {
 }
 
 class MisskeyAuth(
-    private val apiFor: (String) -> MisskeyApi,
+    private val apiFor: (String) -> AuthenticatedHttpClient,
     private val appMessages: AppMessages = AppMessages.Default,
 ) : AuthGateway {
-    constructor(api: MisskeyApi, appMessages: AppMessages = AppMessages.Default) : this({ api }, appMessages)
+    constructor(api: AuthenticatedHttpClient, appMessages: AppMessages = AppMessages.Default) : this({ api }, appMessages)
     constructor(clientPool: HttpClientPool, appMessages: AppMessages = AppMessages.Default) : this({ origin ->
-        MisskeyApi(clientPool.clientFor(Connection(origin, Protocol.MISSKEY)), appMessages = appMessages)
+        AuthenticatedHttpClient(clientPool.clientFor(Connection(origin, Protocol.MISSKEY)), origin)
     }, appMessages)
 
     override suspend fun prepare(input: String): PendingLogin = try {
         val origin = ServerAddress.normalize(input, appMessages)
-        val meta = JSONObject(apiFor(origin).post(origin, "meta", JSONObject().put("detail", false)).body)
+        val meta = JSONObject(request(apiFor(origin), origin, "meta", JSONObject().put("detail", false)).body)
         require(!meta.nullableString("version").isNullOrBlank()) { appMessages.misskeyServerIncompatible() }
         PendingLogin(
             origin = origin,
@@ -56,7 +58,7 @@ class MisskeyAuth(
 
     override suspend fun complete(pending: PendingLogin): LoginSession = try {
         require(pending.isFresh(System.currentTimeMillis())) { appMessages.signInExpired() }
-        val result = JSONObject(apiFor(pending.origin).post(pending.origin, "miauth/${pending.id}/check").body)
+        val result = JSONObject(request(apiFor(pending.origin), pending.origin, "miauth/${pending.id}/check").body)
         if (!result.optBoolean("ok")) throw IllegalArgumentException(appMessages.signInNotApproved())
         val token = result.getString("token")
         require(token.isNotBlank())
@@ -78,6 +80,20 @@ class MisskeyAuth(
         throw e
     } catch (e: Exception) {
         throw MisskeyErrorMapper.map(e)
+    }
+
+    private suspend fun request(
+        api: AuthenticatedHttpClient,
+        origin: String,
+        endpoint: String,
+        body: JSONObject = JSONObject(),
+    ) = try {
+        api.post(origin, "api/$endpoint", body.toString())
+    } catch (failure: HttpStatusFailure) {
+        // Preserve Misskey error codes while the neutral client owns status and body transport.
+        val error = runCatching { JSONObject(failure.body).optJSONObject("error") }.getOrNull()
+        val code = error?.optString("code")?.takeIf(String::isNotBlank)
+        throw ApiFailure(failure.status, code, appMessages.serverRequestFailed(failure.status, code))
     }
 
     private companion object {

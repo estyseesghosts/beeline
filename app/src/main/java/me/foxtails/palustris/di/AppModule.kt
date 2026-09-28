@@ -29,7 +29,7 @@ import me.foxtails.palustris.data.auth.MastodonAuth
 import me.foxtails.palustris.data.auth.MisskeyAuth
 import me.foxtails.palustris.data.auth.SessionStore
 import me.foxtails.palustris.data.transport.HttpClientPool
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.media.MediaImageLoader
 import me.foxtails.palustris.data.notifications.NotificationRepository
@@ -120,8 +120,8 @@ object NetworkModule {
         misskey = misskey,
         mastodon = mastodon,
         detectsMisskey = { origin ->
-            val probe = MisskeyApi(clientPool.clientFor(Connection(origin, Protocol.MISSKEY)), appMessages = appMessages)
-            JSONObject(probe.post(origin, "meta").body).optString("version").isNotBlank()
+            val probe = AuthenticatedHttpClient(clientPool.clientFor(Connection(origin, Protocol.MISSKEY)), origin)
+            JSONObject(probe.post(origin, "api/meta").body).optString("version").isNotBlank()
         },
         appMessages = appMessages,
     )
