@@ -101,6 +101,23 @@ class PostProjectionCoordinatorTest {
     }
 
     @Test
+    fun publicationsFromAnotherAccountAreRejected() {
+        val coordinator = PostProjectionCoordinator(owner, 7L)
+        val saved = RecordingSink("saved")
+        coordinator.register(saved)
+
+        coordinator.forwardPublishedPost(
+            saved,
+            CreatePostRequest("hello"),
+            owned("created", fetchedBy = foreign),
+        )
+
+        assertEquals(0, saved.published)
+        assertEquals(0, saved.replies)
+        assertEquals(0, saved.quotes)
+    }
+
+    @Test
     fun updatesFromAnOldRevisionAreRejected() {
         val coordinator = PostProjectionCoordinator(owner, 7L)
         val saved = RecordingSink("saved")

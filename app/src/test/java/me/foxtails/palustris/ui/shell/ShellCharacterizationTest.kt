@@ -105,4 +105,47 @@ class ShellCharacterizationTest {
 
         assertEquals(original, request?.replyTo)
     }
+
+    @Test
+    fun compactShellRoutesToSearchWithoutReplacingTheHomeContract() {
+        val account = AppShellFixtures.account("compact-route")
+        val post = AppShellFixtures.post("compact-route-post", account, "Home remains available")
+        val feed = FeedState(posts = listOf(post))
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                AppShellFixtures.app(
+                    account = account,
+                    home = AppShellFixtures.home(feed),
+                    search = AppShellFixtures.search(feed),
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Home remains available").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Search").performClick()
+        compose.onNodeWithText("Find an account").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Home").performClick()
+        compose.onNodeWithText("Home remains available").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w900dp-h891dp-420dpi")
+    fun largeShellRoutesToSearchWithTheSameConnectedFixture() {
+        val account = AppShellFixtures.account("large-route")
+        val feed = FeedState(posts = listOf(AppShellFixtures.post("large-route-post", account)))
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                AppShellFixtures.app(
+                    account = account,
+                    home = AppShellFixtures.home(feed),
+                    search = AppShellFixtures.search(feed),
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithContentDescription("Search").performClick()
+        compose.onNodeWithText("Find an account").assertIsDisplayed()
+    }
 }

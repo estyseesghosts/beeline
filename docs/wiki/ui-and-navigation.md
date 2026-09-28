@@ -2,10 +2,22 @@
 
 Status: current, partial coverage
 Owner: UI maintainers
-Last reviewed: 2026-09-23
+Last reviewed: 2026-09-28
 Stale when: A destination, layout policy, restoration rule, or accessibility requirement changes.
 
 Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
+
+## Shell route and state ownership
+
+`ShellContent` owns compact and large presentation. `ShellDestinationContent` renders destination
+branches without owning feature state. Saveable shell holders pass through both presentations.
+Search, Photo Grid, direct messages, and profile state remain with their connected feature owners.
+The connected session host owns post projection and validates account and session revision before
+delivery. Characterization tests cover compact and large Search routes and profile editor and pager
+continuity.
+
+Sources: `ui/shell/ShellContent.kt`, `ui/shell/ShellDestinationContent.kt`,
+`ui/session/ConnectedSessionHost.kt`, `ShellCharacterizationTest`, `ProfileViewModelTest`.
 
 ## Search lifetime
 

@@ -112,6 +112,17 @@ suppresses nested forwarding. It retires with its connected entry and rejects re
 deliveries by created-post identity. `PostProjectionCoordinatorTest` covers origin exclusion, nested
 suppression, foreign accounts, old revisions, publications, duplicate rejection, and retirement.
 
+## Characterization Evidence
+
+Slice 2E inspected `ShellContent`, `ShellDestinationContent`, `DestinationCallbacks`, `HomeFeed`,
+`ProfileTimelineList`, `ProfileViewModel`, `ConnectedSessionHost`, and the Search, Photo Grid,
+and direct-message contracts. The shell keeps saveable holders and pager state. Feature owners keep
+editor state and session-bound models. The connected host keeps the explicit post authority.
+
+The characterization tests cover foreign publication rejection, retired projection rejection,
+compact and large Search routes, and profile editor and pager continuity. This slice makes no
+extraction because the current owners already enforce one mutable owner per connected lifetime.
+
 ## Known Gaps
 
 This table records each gap and its state. A row that names a completion slice is still open. The

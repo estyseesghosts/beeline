@@ -1,21 +1,27 @@
 # Handoff
 
-**Status:** 2D3 artwork wiring, contract tests, and records are implemented in the worktree and remain uncommitted.
+**Status:** 2E shell characterization tests and records are implemented in the worktree and remain uncommitted.
 
-The parent session must stage both record files as whole files. This is intentional.
+The parent session must stage only the 2E tests and documentation pathspec. This is intentional.
 The task-state file is `docs/agents/tasks/beeline-0.4.0.md`.
 
 ## Current position
 
-The SocialSource contract test now checks the default Heart artwork style.
-The artwork test covers reaction-only selection through `myReaction` and `selectedReactions`.
-The test preserves distinct Favorite and React action availability.
-Production artwork policy now flows from each source into feed and post presentation.
+The projection test rejects a foreign publication.
+The shell test covers compact and large Search routes.
+The profile ViewModel test keeps the editor draft while the pager changes tabs.
+No production source changed. No callback bundle was extracted.
 
 ## Verification
 
-- Focused artwork and Misskey contract tests passed. The selected task set contains 10 tests.
-- `lintDebug` passed.
+- Focused ShellCharacterizationTest passed with 4 tests.
+- Focused HomeFeed, ProfileScreen, ProfileViewModel, ProfileTimelinePager, projection, and session
+  tests passed.
+- Four new characterization tests were added.
+- The audit exited 0 with 612 findings and zero regressions.
+- `test assembleRelease` timed out after 120 seconds. Release assembly reached `assembleRelease`.
+  Existing baseline failures appeared in DraftActions, Mastodon artwork, CapabilityCache, Misskey
+  continuation, and NotificationSyncOrchestrator tests.
 - The audit command was `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`.
 - The audit exited 0 with 612 findings and zero regressions.
 - The earlier count was 611. The requested 614 count does not match this worktree result.
@@ -59,7 +65,7 @@ No files were staged or committed in this session.
 
 ## Next slice
 
-Preserve the complete path inventory and exclusions in the task state. Do not stage or commit this session.
+The parent session stages the 2E pathspec from the task state. Do not stage or commit this session.
 
 ## Known limits
 

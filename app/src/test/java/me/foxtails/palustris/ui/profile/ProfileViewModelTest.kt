@@ -356,6 +356,28 @@ class ProfileViewModelTest {
         assertFalse(model.state.value.editorDirty)
     }
 
+    @Test fun categorySelectionKeepsTheEditorDraftWhileThePagerChangesTabs() = runProfileTest {
+        val source = FakeSource().apply {
+            editableResults[self.id] = editableProfile(self, "Self")
+            timelineResults[ProfileTimelineTab.Media] = mutableListOf(Page(listOf(post("media", self)), null))
+        }
+        val model = model(source)
+        model.open(self)
+        advanceUntilIdle()
+        model.openEditor()
+        advanceUntilIdle()
+        val draft = editableProfile(self, "Edited")
+        model.updateEditor(draft)
+
+        model.selectCategory(ProfileCategory.Media)
+        advanceUntilIdle()
+
+        assertEquals(ProfileCategory.Media, model.state.value.selectedTab)
+        assertEquals(draft, model.state.value.editorDraft)
+        assertTrue(model.state.value.editorOpen)
+        assertEquals(listOf("media"), model.state.value.pages[ProfileTimelineTab.Media]?.posts?.map { it.post.id.value })
+    }
+
     @Test fun unchangedEditorClosesWithoutSourceUpdate() = runProfileTest {
         val source = FakeSource().apply {
             editableResults[self.id] = editableProfile(self, "Self")
