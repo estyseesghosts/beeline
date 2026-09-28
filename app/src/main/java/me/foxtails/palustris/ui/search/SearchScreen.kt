@@ -77,7 +77,6 @@ import me.foxtails.palustris.ui.posts.PostRowEvents
 import me.foxtails.palustris.ui.posts.PostRowPresentation
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.components.CategoryChips
-import me.foxtails.palustris.ui.feed.AccountSearchState
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeSearchDockClearance

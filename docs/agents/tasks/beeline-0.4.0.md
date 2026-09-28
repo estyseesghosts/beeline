@@ -1,160 +1,100 @@
-# Beeline 0.4.0 task state — slice 2B3
+# Beeline 0.4.0 task state — slice 2C1
 
 ## Objective
 
-Separate prepared notification text from UI formatting.
-Preserve notification content, launch behavior, and delivery state.
+Move `AccountSearchState` from `ui.feed` to `ui.search`.
+Preserve fields, defaults, types, state ownership, and all connected lifetimes.
 
 ## Status sets
 
-- Source status: `NotificationTextResolver` owns Android notification title and body resolution in `data.notifications`.
-- Test status: presentation tests cover reaction, fallback, content-warning, and preview contracts.
-- Instrumented intent status: unavailable in this environment. No device intent test ran.
-- Audit status: 608 findings and zero regression lines. The 2B2 count was 609.
-- Lint status: `:app:lintDebug` passed.
-- Full gate status: not green. `test assembleRelease` reached `assembleRelease` but timed out after
-  reporting known DraftActions, CapabilityCache, MisskeyThreadContinuation, and
-  NotificationSyncOrchestrator failures. No failure is attributed to this slice.
+- Source status: `AccountSearchState` now lives in `ui/search/AccountSearchState.kt`. `FeedState` imports it for the unchanged `accountSearch` field. Search imports no longer point to `ui.feed`.
+- Characterization status: named suites cover stale replies, Photo Grid selection and cancellation, external projection, connected-lifetime retirement, account switching, session replacement, sign-out removal, and saved-state recreation.
+- Characterization gap: no Search-specific account-removal test exists. Existing lifecycle tests cover sign-out and connected-entry retirement. The exit gate allows this move with the gap recorded for 2C2. This slice adds no production behavior.
+- Test status: focused feed, restoration, Photo Grid, projection, and session suites passed. The
+  wider run covered 106 tests and failed the same two Navigation draft tests named in
+  `logs/BUGS.txt:13`: `closingComposerAutosavesUnsavedText` at line 820 and
+  `draftsSurviveActivityRecreationAndCanBeDeleted` at line 803. This name match is recorded from
+  the reports; independent verification of the wider run is not available here.
+- Audit status: the audit reported 607 findings and zero regression lines. The prior 2B3 record
+  reports 608 findings in `logs/architecture-audit-2b3.txt:1`. This is a count-only difference with
+  no explanation. It does not establish that an audit rule was resolved.
+- Lint status: not triggered by this import-only move.
+- Full gate status: `test assembleRelease` timed out after 120 seconds. It reported the two
+  Navigation draft failures plus DraftActions and CapabilityCache categories before timeout.
+  Their relationship to the 16 failures in `logs/BUGS.txt:7` remains unattributed and unresolved.
 - Device and live-server status: unverified.
 
-Focused presentation tests passed. Repository and delivery planner tests passed.
-The architecture audit passed with 608 findings and zero regression lines.
-`test assembleRelease` reached `assembleRelease` but timed out at 120 seconds while the full test
-task reported known DraftActions, CapabilityCache, MisskeyThreadContinuation, and
-NotificationSyncOrchestrator failures. The full gate is not green.
+## Preserved boundaries
 
-## Prepared text boundary
-
-`NotificationPresentationFactory` owns the resolver lifetime and passes its application context.
-It resolves resources in the current locale and does not depend on Compose or `ui.notifications`.
-The UI formatter remains the owner of Compose notification-row labels.
-
-Content warnings take precedence over post text. Empty and disabled previews use actor text.
-Empty actor text uses the actorless resource. Reaction fallback labels use the same resource or plain
-value for both protocols. `BigTextStyle` receives the prepared body without truncation.
+`FeedHost` wiring, session revision, projection subscription, pager and cancellation behavior,
+preferences, and saved route behavior remain unchanged. This slice does not extract Search or
+Photo Grid lifetime owners. It does not change Home-only behavior, protocol behavior, layout, or
+user-visible strings.
 
 ## Characterized contracts
 
-- Tap intents use `ACTION_VIEW`, the `palustris://notification/open/<key>` URI, and four extras.
-- Misskey and Mastodon protocol enum values serialize and parse.
-- Blank, missing, invalid, foreign, malformed, and mismatched values reject without persistence.
-- Stored keys remain `origin`, `account_local_id`, `protocol`, and `notification_id`.
-- SharedPreferences recreation, partial data, corrupt data, clear, and dismiss parsing are covered.
-- The host waits during startup, switches to a non-active account, retains rejected launches, routes
-  missing accounts to unavailable, and clears only an accepted launch.
-- Tap and dismiss pending intents remain distinct and use the notification Android ID as request code.
-- Pending-intent flags remain `UPDATE_CURRENT | IMMUTABLE`.
+- `FeedViewModelRequestTest` covers accepted requests, stale refresh success and failure, stop,
+  cursors, and external mutations.
+- `PhotoGridFeedViewModelTest` covers independent selection, paging, and late canceled results.
+- `PostProjectionCoordinatorTest` covers external updates, account and revision rejection, and
+  retirement.
+- `ConnectedEntryStoreTest` covers recomposition, lifetime replacement, owner clearing, and
+  teardown replacement.
+- `ConnectedSessionContextTest` and `SessionViewModelTest` cover account switching, session
+  replacement, and sign-out removal.
+- `SearchPanelRestorationTest`, `NavigationTest`, and `HomeFeedTest` cover saved route and Search
+  presentation restoration.
 
 ## Changed files
 
-- `app/src/main/java/me/foxtails/palustris/data/notifications/NotificationLaunch.kt`
-- `app/src/main/java/me/foxtails/palustris/data/notifications/NotificationLaunchStore.kt`
-- `app/src/main/java/me/foxtails/palustris/data/notifications/NotificationLaunchRouter.kt`
-- `app/src/main/java/me/foxtails/palustris/data/notifications/AndroidNotificationPresenter.kt`
-- `app/src/main/java/me/foxtails/palustris/data/notifications/AndroidNotificationDismissReceiver.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationLaunchHost.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/ConnectedApp.kt`
-- `app/src/main/java/me/foxtails/palustris/MainActivity.kt`
-- `app/src/test/java/me/foxtails/palustris/data/notifications/NotificationLaunchRouterTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchHostTest.kt`
-- `app/src/test/java/me/foxtails/palustris/data/notifications/NotificationPresentationTest.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationLabelText.kt`
-- `docs/wiki/notifications-and-direct-messages.md`
+- `app/src/main/java/me/foxtails/palustris/ui/search/AccountSearchState.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedState.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/search/SearchController.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/search/SearchScreen.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/shell/SearchContract.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt`
 - `docs/agents/tasks/beeline-0.4.0.md`
 - `docs/agents/handoff.md`
 
-Deleted old paths:
-
-- `app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouter.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouterTest.kt`
-
-## Changed files for 2B3
-
-- `app/src/main/java/me/foxtails/palustris/data/notifications/NotificationTextResolver.kt`
-- `app/src/main/java/me/foxtails/palustris/data/notifications/AndroidNotificationPresenter.kt`
-- `app/src/test/java/me/foxtails/palustris/data/notifications/NotificationPresentationTest.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationLabelText.kt`
-- `docs/wiki/notifications-and-direct-messages.md`
-- `docs/agents/tasks/beeline-0.4.0.md`
-- `docs/agents/handoff.md`
+No ownership documentation path was stale. No wiki or agent ownership page changed.
 
 ## Verification
 
-- Focused notification presentation, repository, and delivery planner tests passed after the blank
-  post-text fallback assertion was added.
-- `git diff --check -- <slice pathspec>` is clean. Full `git diff --check` reports unrelated trailing whitespace in
-  `.opencode/agents/orchestrator.md`, `.opencode/agents/targeted_fixer.md`, and staged
-  `docs/classic_navigation.md`. These files are excluded from the slice and remain untouched.
+- Grep for the old feed-qualified state name: zero matches.
+- Focused Gradle run passed the seven feed, restoration, Photo Grid, projection, and session test
+  classes. The wider run compiled the changed code and ran 106 tests, with only the two listed
+  Navigation draft failures.
 - Architecture audit command: `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`.
-  The command exited 0 with 608 findings and zero `regression:` lines. The ignored output is
-  `logs/architecture-audit-2b3.txt`.
-- `:app:lintDebug` passed.
-- `test assembleRelease` timed out at 120 seconds. Its report listed DraftActions, CapabilityCache,
-  MisskeyThreadContinuation, and NotificationSyncOrchestrator failures. Test-result XML files are
-  unavailable, so the full-suite failure set remains unresolved and unattributed against the
-  16-name BUGS baseline.
-- The implementer reports that notification presentation tests remain on Robolectric SDK 32 because
-  SDK 35 requires runtime notification permission that this test does not grant. This reason is not
-  independently verified here.
-
-Ignored records:
-
-- `logs/260928-2b2-notification-launch.txt`
-- `logs/architecture-audit-2b2.txt`
-- `logs/260928-2a4.txt` (comparison record for the 16 names)
-
-The audit records contain summaries only. `grep -nE 'rule|app/src/' logs/architecture-audit-2b1.txt`
-and the matching 2B2 command each exited 1 with zero matching lines. The records have 5 and 6 total
-summary lines. The 612-to-609 and 609-to-608 reductions are count-only and unexplained at rule level.
-No regression line appeared in any record.
+  It exited 0 with 607 findings and zero regression lines.
+- Audit output record: `logs/architecture-audit-2c1.txt`.
+  The 607-versus-608 comparison is unexplained and count-only; zero regression lines do not prove
+  that any audit rule was resolved.
+- `git diff --check` for the slice pathspec passed.
 
 ## Staging pathspec
 
-For 2B3, stage only the following paths if the parent requests staging:
+This slice remains an unstaged worktree move and import update. The index currently contains only
+the unrelated `docs/classic_navigation.md` entry. If the parent commits this slice, use an explicit
+pathspec for only these files:
 
 ```text
-app/src/main/java/me/foxtails/palustris/data/notifications/NotificationTextResolver.kt
-app/src/main/java/me/foxtails/palustris/data/notifications/AndroidNotificationPresenter.kt
-app/src/test/java/me/foxtails/palustris/data/notifications/NotificationPresentationTest.kt
-docs/wiki/notifications-and-direct-messages.md
+app/src/main/java/me/foxtails/palustris/ui/search/AccountSearchState.kt
+app/src/main/java/me/foxtails/palustris/ui/feed/FeedState.kt
+app/src/main/java/me/foxtails/palustris/ui/search/SearchController.kt
+app/src/main/java/me/foxtails/palustris/ui/search/SearchScreen.kt
+app/src/main/java/me/foxtails/palustris/ui/shell/SearchContract.kt
+app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationTest.kt
+app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt
 docs/agents/tasks/beeline-0.4.0.md
 docs/agents/handoff.md
 ```
 
-Do not stage, commit, or push in this continuation. Keep ignored verification logs outside staging.
-
-The previous 2B2 pathspec follows for historical reference. Do not use it for 2B3.
-
-```text
-app/src/main/java/me/foxtails/palustris/data/notifications/NotificationLaunch.kt
-app/src/main/java/me/foxtails/palustris/data/notifications/NotificationLaunchStore.kt
-app/src/main/java/me/foxtails/palustris/data/notifications/NotificationLaunchRouter.kt
-app/src/main/java/me/foxtails/palustris/data/notifications/AndroidNotificationPresenter.kt
-app/src/main/java/me/foxtails/palustris/data/notifications/AndroidNotificationDismissReceiver.kt
-app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationLaunchHost.kt
-app/src/main/java/me/foxtails/palustris/ui/ConnectedApp.kt
-app/src/main/java/me/foxtails/palustris/MainActivity.kt
-app/src/test/java/me/foxtails/palustris/data/notifications/NotificationLaunchRouterTest.kt
-app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchHostTest.kt
-app/src/test/java/me/foxtails/palustris/data/notifications/NotificationPresentationTest.kt
-docs/wiki/notifications-and-direct-messages.md
-docs/agents/tasks/beeline-0.4.0.md
-docs/agents/handoff.md
-app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouter.kt
-app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouterTest.kt
-```
-
-Deleted paths (`D` in the current worktree; Git may report `R` after staging):
-
-```text
-D app/src/main/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouter.kt
-D app/src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouterTest.kt
-```
-
-Exclude all pre-existing dirty files, including staged `docs/classic_navigation.md`. Keep ignored
-logs outside staging.
+Do not include `docs/classic_navigation.md`, unrelated staged or unstaged files, or untracked files.
+The slice `git diff --check` is clean. The full worktree check includes unrelated whitespace.
+Do not stage, commit, or push in this continuation. Keep ignored logs outside staging.
 
 ## Limits
 
-Live push, physical device, API 29, RTL, TalkBack, font scale, and signed-release checks remain
-unverified.
+The full `test assembleRelease` gate timed out after 120 seconds. Live servers, physical devices,
+API 29, RTL, TalkBack, font scale, and signed release checks remain unverified.

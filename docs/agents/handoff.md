@@ -4,69 +4,54 @@
 
 ## Current position
 
-Slice 2B3 moves prepared Android notification text resolution out of the UI package.
-The documentation count and category records are reconciled. The UI mapping comment and blank
-post-text fallback test are corrected. No staging, commit, or push occurred.
+Slice 2C1 moves `AccountSearchState` to `ui/search` with no lifetime or behavior change.
+`FeedState` keeps the same account-search field and imports the new type.
+
+No staging, commit, or push occurred.
 
 ## Verification
 
-Focused presentation, repository, and delivery planner tests pass. `:app:lintDebug` passes.
-The architecture audit command is
+The focused feed, restoration, Photo Grid, projection, and session suites passed. A wider run
+compiled the move and ran 106 tests. Its two failures match the Navigation tests in
+`logs/BUGS.txt:13`: `closingComposerAutosavesUnsavedText` at line 820 and
+`draftsSurviveActivityRecreationAndCanBeDeleted` at line 803. This match is not independently
+verified in this record.
+
+The audit reports 607 findings and zero regression lines in `logs/architecture-audit-2c1.txt`.
+The prior 2B3 record reports 608 in `logs/architecture-audit-2b3.txt:1`; the count difference is
+unexplained and does not show that an audit rule was resolved.
+
+The audit command is:
 `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`.
-complete with 608 findings and zero regression lines. The ignored audit output record is
-`logs/architecture-audit-2b3.txt`.
 
-The fully qualified Mastodon failure was
-`me.foxtails.palustris.data.mastodon.MastodonIntegrationTest.cancelingTimelinePageCancelsRequestAndAllowsRetry`.
-The focused run failed during teardown with
-`java.io.IOException: Gave up waiting for queue to shut down` from `MockWebServer.shutdown`.
-The test passed when rerun alone.
+The grep for the old feed-qualified state name has zero matches. No ownership page had a stale path.
 
-The fully qualified Misskey failure was
-`me.foxtails.palustris.data.misskey.MisskeyApiTest.cancellationCancelsTheInFlightCallAndDoesNotBecomeApiFailure`.
-The focused run failed at `MisskeyApiTest.kt:140` with `java.lang.AssertionError` from
-`assertTrue(canceledCall.get())`. The test passed when rerun alone.
+## Characterization coverage and gap
 
-The full `test assembleRelease` attempt reached `assembleRelease` but timed out at 120 seconds.
-The test task reported DraftActions, CapabilityCache, MisskeyThreadContinuation, and
-NotificationSyncOrchestrator failures. The full gate is not green. No failure is attributed to this slice.
-
-The implementer reports that the presentation test remains on Robolectric SDK 32 because SDK 35
-requires runtime notification permission that this test does not grant. This reason is not
-independently verified here.
-
-## Audit count delta
-
-The 2B3 audit reports 608 findings and zero regression lines. The 2B2 audit reported 609 findings.
-
-The 2B1 and 2B2 ignored audit records contain summaries only. The commands
-`grep -nE 'rule|app/src/' logs/architecture-audit-2b1.txt` and its 2B2 equivalent each exited 1
-with zero matching lines. The 2B1 record has 5 total summary lines. The 2B2 record has 6. The
-reductions from 612 to 609 and from 609 to 608 are count-only and unexplained at rule level. All
-three records report zero regression lines.
+The prerequisite suites cover switching, stale replies, connected-entry retirement, session
+replacement, external projection, and recreation. Sign-out tests cover account removal at the
+lifecycle boundary. No Search-specific account-removal test exists. The exit gate allows this move
+with that gap recorded for 2C2. The slice did not broaden production behavior.
 
 ## Next slice
 
-Continue with the next planned packet.
+The next planned packet is 2C2: give Search an explicit connected lifetime, release, and projection
+subscription. Start only after the parent reviews this move and the focused failures.
 
 ## Staging boundary
 
-The exact file-by-file staging pathspec is listed in `docs/agents/tasks/beeline-0.4.0.md`. Use
-`git add --all -- <paths>` or the listed paths explicitly. This preserves deleted old UI paths and
-new data paths; Git may display them as renames. The launch data files, wiring files, tests, and
-documentation are intended for this slice. The index still contains unrelated staged
-`docs/classic_navigation.md`. Do not reset the index.
+The exact 2C1 pathspec is in `docs/agents/tasks/beeline-0.4.0.md`. Exclude all pre-existing dirty
+files, including `.opencode/agents`, `docs/classic_navigation.md`, images, helper scripts,
+`importantdocs/writing_style.md`, and Python cache directories. Keep ignored `logs/*` outside staging.
 
-Use the pathspec in the task state.
+## Limits
 
-Exclude staged `docs/classic_navigation.md`.
-Exclude all pre-existing dirty files, including the modified `.opencode/agents` files and helpers.
-Exclude modified `importantdocs/writing_style.md`.
-Exclude deleted `currentbehaviour.png` and `intendedbehaviour.png`.
-Exclude the four untracked helper scripts, both Python cache directories, and `screen.png`.
-Keep ignored `logs/*` outside staging, including both 2B2 records and earlier comparison records.
+The full `test assembleRelease` gate timed out after 120 seconds. It reported the two Navigation
+draft failures plus DraftActions and CapabilityCache categories before timeout. Their relationship
+to the 16 failures in `logs/BUGS.txt:7` remains unattributed and unresolved. Live, device, API 29,
+RTL, TalkBack, font-scale, and signed-release checks remain unverified.
 
-`git diff --check -- <slice pathspec>` is clean. Full `git diff --check` reports unrelated trailing
-whitespace in `.opencode/agents/orchestrator.md`, `.opencode/agents/targeted_fixer.md`, and staged
-`docs/classic_navigation.md`. These files are excluded from the slice and remain untouched. Do not
-claim that the full check is clean.
+This slice is an unstaged worktree move and import update. The index currently contains only the
+unrelated `docs/classic_navigation.md` entry. The parent must commit with an explicit pathspec for
+the files listed in the task state, excluding all unrelated staged, unstaged, and untracked files.
+The slice `git diff --check` is clean; the full worktree check has unrelated whitespace.

@@ -12,7 +12,6 @@ import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.domain.mergeExternalActionFields
 import me.foxtails.palustris.ui.UiStrings
-import me.foxtails.palustris.ui.feed.AccountSearchState
 
 internal class SearchController(
     private val source: SocialSource,

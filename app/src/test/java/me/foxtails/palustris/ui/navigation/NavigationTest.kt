@@ -57,7 +57,7 @@ import me.foxtails.palustris.domain.PollOption
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.ui.feed.FeedState
-import me.foxtails.palustris.ui.feed.AccountSearchState
+import me.foxtails.palustris.ui.search.AccountSearchState
 import me.foxtails.palustris.ui.notifications.NotificationsUiState
 import me.foxtails.palustris.ui.PalustrisApp
 import me.foxtails.palustris.ui.profile.ProfileCategory

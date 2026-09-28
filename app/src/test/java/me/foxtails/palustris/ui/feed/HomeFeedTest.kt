@@ -44,7 +44,7 @@ import me.foxtails.palustris.ui.feed.HomeFeed
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
 import me.foxtails.palustris.ui.PalustrisApp
 import me.foxtails.palustris.ui.search.SearchScreen
-import me.foxtails.palustris.ui.feed.AccountSearchState
+import me.foxtails.palustris.ui.search.AccountSearchState
 import me.foxtails.palustris.ui.shell.HomeFeedUiState
 import me.foxtails.palustris.ui.profile.ProfileUiState
 import me.foxtails.palustris.ui.thread.PostThreadPhase

@@ -1,6 +1,6 @@
 package me.foxtails.palustris.ui.shell
 
-import me.foxtails.palustris.ui.feed.AccountSearchState
+import me.foxtails.palustris.ui.search.AccountSearchState
 
 /**
  * Account-search presentation.
