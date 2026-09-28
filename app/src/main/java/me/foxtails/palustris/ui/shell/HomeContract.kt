@@ -2,6 +2,7 @@ package me.foxtails.palustris.ui.shell
 
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.Timeline
 
 /**
@@ -11,6 +12,7 @@ import me.foxtails.palustris.domain.Timeline
  * inert preview value.
  */
 data class HomeFeedUiState(
+    val favouriteArtworkStyle: FavouriteArtworkStyle = FavouriteArtworkStyle.Heart,
     val ownedPosts: List<OwnedPost> = emptyList(),
     val posts: List<Post> = emptyList(),
     val loading: Boolean = false,

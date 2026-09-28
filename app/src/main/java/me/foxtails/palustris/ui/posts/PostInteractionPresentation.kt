@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.EmojiChoice
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostInteractionCounts
@@ -209,6 +210,7 @@ internal fun InteractionSummaryRow(counts: PostInteractionCounts) {
 internal fun InteractionRow(
     ownedPost: OwnedPost,
     availableActions: Set<PostAction>,
+    favouriteArtworkStyle: FavouriteArtworkStyle = FavouriteArtworkStyle.Heart,
     onReply: (OwnedPost) -> Unit,
     onReact: (OwnedPost) -> Unit,
     onReshare: (OwnedPost) -> Unit,
@@ -241,7 +243,7 @@ internal fun InteractionRow(
             val reactionEnabled = PostAction.React in availableActions
             fun openReactionBubble(bounds: Rect) = onOpenReactionBubble(ownedPost, bounds)
             InteractionButton(
-                Modifier.fillMaxWidth(), favouriteIconFor(ownedPost),
+                Modifier.fillMaxWidth(), favouriteIconFor(ownedPost, favouriteArtworkStyle),
                 stringResource(if (ownedPost.post.favourited) R.string.post_action_unfavorite else R.string.post_action_favorite),
                 favouriteEnabled || reactionEnabled, ownedPost.post.hasVisibleInteractionSelection(),
                 onClick = { if (favouriteEnabled) onReact(ownedPost) },

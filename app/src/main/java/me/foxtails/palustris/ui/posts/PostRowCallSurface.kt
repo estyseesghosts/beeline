@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Rect
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.EmojiChoice
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.media.MediaOpenRequest
@@ -30,6 +31,7 @@ internal data class PostRowEvents(
 /** Presentation choices for a post row. It contains no event or ownership behavior. */
 internal data class PostRowPresentation(
     val availableActions: Set<PostAction>,
+    val favouriteArtworkStyle: FavouriteArtworkStyle = FavouriteArtworkStyle.Heart,
     val quoteEnabled: Boolean = false,
     val truncateBody: Boolean = true,
     val largeLayout: Boolean = false,

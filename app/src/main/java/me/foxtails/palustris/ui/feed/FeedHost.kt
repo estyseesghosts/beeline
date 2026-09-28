@@ -75,6 +75,7 @@ fun FeedHost(
     val home = remember(feed, homeActions) {
         HomeContract(
             state = HomeFeedUiState(
+                favouriteArtworkStyle = feedModel.favouriteArtworkStyle,
                 ownedPosts = feed.ownedPosts,
                 posts = feed.posts,
                 loading = feed.loading,

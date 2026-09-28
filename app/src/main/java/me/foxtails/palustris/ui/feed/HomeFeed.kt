@@ -210,10 +210,11 @@ fun HomeFeed(
                     val enabledActions = if (hasOwnership) availableActions.intersect(ClientReadyPostActions) else emptySet()
                     items(visibleRows, key = { "${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
                         Column(Modifier.animateItem(fadeInSpec = scheme.fastFadeIn, fadeOutSpec = scheme.fastFadeOut, placementSpec = scheme.gentleOffset)) {
-                             PostRow(
-                                 ownedPost = ownedPost,
-                                 presentation = PostRowPresentation(
-                                     availableActions = enabledActions,
+                            PostRow(
+                                ownedPost = ownedPost,
+                                presentation = PostRowPresentation(
+                                    availableActions = enabledActions,
+                                    favouriteArtworkStyle = state.favouriteArtworkStyle,
                                      quoteEnabled = quoteEnabled,
                                      largeLayout = !compactLayout,
                                      contentWarningRules = contentWarningRules,

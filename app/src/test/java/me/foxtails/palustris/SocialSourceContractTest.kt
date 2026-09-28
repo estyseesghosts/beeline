@@ -6,6 +6,7 @@ import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SourceError
@@ -33,6 +34,13 @@ abstract class SocialSourceContractTest {
     protected abstract fun enqueueCapabilities(server: MockWebServer, timelines: Set<Timeline> = setOf(Timeline.Home))
 
     protected abstract fun enqueueTimelinePage(server: MockWebServer, ids: List<String>)
+
+    @Test
+    fun defaultFavouriteArtworkStyleUsesHeart() {
+        MockWebServer().use { server ->
+            assertEquals(FavouriteArtworkStyle.Heart, createSource(server, null, System::currentTimeMillis).favouriteArtworkStyle)
+        }
+    }
 
     @Test
     fun callingTimelineTwiceWithReturnedCursorNeverRepeatsIds() = runBlocking {

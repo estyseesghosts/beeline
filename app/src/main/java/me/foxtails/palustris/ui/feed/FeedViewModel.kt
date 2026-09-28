@@ -45,6 +45,7 @@ class FeedViewModel @AssistedInject constructor(
     @Assisted private val executionAuthority: PostInteractionExecutionAuthority,
     private val uiStrings: UiStrings = UiStrings.Default,
 ) : ViewModel() {
+    val favouriteArtworkStyle = source.favouriteArtworkStyle
     private val _feed = MutableStateFlow(FeedState())
     val feed = _feed.asStateFlow()
     val sync = syncCoordinator.observeAccount(accountId)

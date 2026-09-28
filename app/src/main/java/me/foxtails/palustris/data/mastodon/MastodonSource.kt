@@ -19,6 +19,7 @@ import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.ConversationId
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.CustomEmoji
@@ -88,6 +89,7 @@ class MastodonSource(
     private val sessionRevision: Long = 0L,
     private val onCapabilitiesUpdated: ((ServerCapabilities) -> Unit)? = null,
 ) : SocialSource, DirectMessageSource {
+    override val favouriteArtworkStyle: FavouriteArtworkStyle = FavouriteArtworkStyle.Star
     private val _capabilities = kotlinx.coroutines.flow.MutableStateFlow(
         if (initialCapabilities.timelines.isEmpty() && initialCapabilities.actions.isEmpty() &&
             initialCapabilities.audiences.isEmpty() && initialCapabilities.notifications == NotificationCapabilities()

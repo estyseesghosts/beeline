@@ -1,75 +1,82 @@
-# Beeline 0.4.0 task state — Profile Liked eligibility
+# Beeline 0.4.0 task state — 2D3 artwork contracts
 
-The parent session must stage both task records as whole files. This is intentional.
-This rewrite records the 2D2 adapter-test follow-up and preserves committed slice 2D1 at `752f380`.
+The parent session must stage both record files as whole files. This is intentional.
+This 2D3 follow-up remains uncommitted. It includes production artwork wiring and contract tests.
 
 ## Objective
 
-Move profile Liked eligibility behind a target-aware, protocol-neutral source query.
+Close the 2D3 artwork contract gaps with tests and current records.
 
-## Status sets
+## Status
 
-- 2D1 status: committed at `752f380`. `PostThreadViewModel` requires `PostPreferencesRepository`.
-- 2D2 status: `SocialSource.profileCapability` returns a target-aware result with `CapabilityStatus`.
-  Misskey uses capability evidence for self and other accounts. Mastodon uses evidence for self and
-  returns unsupported for other accounts. The profile ViewModel and pager use this result.
-- Status set: unknown, denied, unsupported, temporarily unavailable, and supported remain distinct.
-- Persistence status: no probe, cache, schema, or serialized format changed. No schema bump was needed.
-- Focused tests: `ProfileViewModelTest`, `ProfileTimelinePagerTest`, and
-  `ProfileSourceContractTest` passed, including adapter target and status coverage.
-- The generic profile UI and ViewModel grep found zero `Protocol` references.
-- Profile source adapter contracts and `lintDebug` passed. `assembleRelease` passed. The full gate
-  reported 16 known baseline test failures. The earlier timeout and those baseline failures remain
-  unresolved.
+- `SocialSourceContractTest` checks the Heart default for every adapter contract.
+- `PostRowFavouriteArtworkTest` checks `myReaction` and `selectedReactions` without `favourited`.
+- The test preserves distinct Favorite and React action availability.
+- Focused artwork and Misskey contract tests passed. The selected task set contains 10 tests.
+- `lintDebug` passed.
+- Production artwork policy now flows from each source into feed and post presentation.
 
-## Slice 2D2 files (10)
+## Complete 2D3 path inventory
 
-- `app/src/main/java/me/foxtails/palustris/domain/ServerCapabilities.kt`
+- `app/src/main/java/me/foxtails/palustris/domain/FavouriteArtworkStyle.kt`
 - `app/src/main/java/me/foxtails/palustris/domain/SocialSource.kt`
 - `app/src/main/java/me/foxtails/palustris/data/misskey/MisskeySource.kt`
 - `app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonSource.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/profile/ProfileTimelinePager.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/profile/ProfileViewModelTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedHost.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedState.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/feed/HomeFeed.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/shell/HomeContract.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/posts/PostRow.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/posts/PostRowCallSurface.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/posts/PostInteractionPresentation.kt`
+- `app/src/test/java/me/foxtails/palustris/ProfileSourceContractTest.kt`
+- `app/src/test/java/me/foxtails/palustris/SocialSourceContractTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/posts/PostRowFavouriteArtworkTest.kt`
 - `docs/agents/tasks/beeline-0.4.0.md`
 - `docs/agents/handoff.md`
 
-The adapter-test follow-up also changes `app/src/test/java/me/foxtails/palustris/ProfileSourceContractTest.kt`.
+The profile contract path is included because it verifies both adapter artwork styles.
+
+## Excluded worktree paths
+
+- `.opencode/**` changes and untracked agent files are pre-existing and unrelated.
+- Deleted `currentbehaviour.png` and `intendedbehaviour.png`, plus untracked PNG captures, are
+  pre-existing and unrelated.
+- Staged `docs/classic_navigation.md` is pre-existing and unrelated.
+- Deleted `app/src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridFeedViewModelTest.kt` is
+  the committed 2C deletion from `92d15a8` and remains excluded.
+- Helpers, caches, and other logs remain outside 2D3.
+
+Git pointers for these classifications are `git status --short`, `git diff -- .opencode`,
+`git diff --cached -- docs/classic_navigation.md`, and commit `92d15a8`.
+
+Do not stage or commit this session. The parent session must preserve the complete path inventory
+above and exclude the unrelated paths.
+
+Keep staged `docs/classic_navigation.md` separate. Do not stage welcome, OAuth, 2C, committed
+2D1, committed 2D2, 2E, `.opencode`, images, helpers, caches, or logs.
+
+No files were staged or committed in this session.
+
+## Verification
+
+The count-only audit command was:
+
+`python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`
+
+The command exited 0 with 612 findings and zero regressions against the baseline.
+The prior count-only result was 611. The requested 614 count does not match this worktree result.
+
+The full `test assembleRelease` gate remains unresolved because known baseline test failures or a
+timeout prevent a clean result. Release compilation and R8 reached completion before the timeout.
+Focused device, live-server, API 29, RTL, TalkBack, font-scale, signed, compact, and wide or
+foldable checks remain unverified.
+The reviewer could not rerun the focused tests or lint in this review environment. The records
+retain the implementer-reported focused-test and `lintDebug` results.
 
 ## Preservation
 
-- The original 2D2 slice has the ten paths listed above. `git diff HEAD --name-only` also shows
-  pre-existing or unrelated work, including seven `.opencode` files, deleted PNGs, helpers, caches,
-  staged `docs/classic_navigation.md`, and the already committed Photo Grid deletion.
-- Commit `92d15a8` records the `PhotoGridFeedViewModelTest` deletion. It is not a 2D2 change.
-- The adapter-test follow-up changes only the listed profile contract test and these two records.
-- No files were staged or committed in this session.
-
-## Exact staging pathspec for the parent session
-
-Stage only the ten original code and test paths listed above, the adapter-test follow-up path,
-plus these records:
-
-`app/src/test/java/me/foxtails/palustris/ProfileSourceContractTest.kt`
-`docs/agents/tasks/beeline-0.4.0.md`
-
-`docs/agents/handoff.md`
-
-Do not stage `logs/260928-profile-liked-eligibility.txt` or unrelated files.
-
-## Verification limits
-
-Live-server behavior remains unverified. Profile Liked chips remain unverified on a device.
-Other-account device checks require `@ctr` approval and remain blocked unless signed in.
-API 29 physical, RTL, TalkBack, font-scale, signed, and wide or foldable checks remain unverified.
-
-## Records
-
-- Ignored implementation log: `logs/260928-profile-liked-eligibility.txt`.
-- Audit was not rerun. The prior count-only architecture audit was 611 with zero baseline
-  regressions.
-- `TemporarilyUnavailable` maps rate limits, network failures, server errors, and resource limits
-  to one status. The typed cause remains at the `SourceError` boundary because no UI or retry
-  behavior currently needs a more specific profile capability cause.
-- No secrets, tokens, callback values, or response bodies belong in these records.
+Welcome, OAuth, 2C, committed 2D1, and committed 2D2 work remain untouched by this follow-up.
+The staged classic navigation file remains untouched. Unrelated `.opencode` files, images, helpers,
+caches, and logs remain excluded. 2E remains untouched.

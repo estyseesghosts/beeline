@@ -8,6 +8,7 @@ import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
@@ -57,6 +58,7 @@ class ProfileSourceContractTest {
                 ),
                 clock = { fixedNow },
             )
+            assertEquals(FavouriteArtworkStyle.Star, source.favouriteArtworkStyle)
 
             assertEquals(
                 expected,
@@ -90,6 +92,7 @@ class ProfileSourceContractTest {
                 capabilityCache = CapabilityCache(),
                 clock = { fixedNow },
             )
+            assertEquals(FavouriteArtworkStyle.Heart, source.favouriteArtworkStyle)
 
             assertEquals(
                 expected,

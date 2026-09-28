@@ -9,6 +9,7 @@ import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.ConversationId
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.CustomEmoji
@@ -97,6 +98,7 @@ class MisskeySource(
     private val appMessages: AppMessages = AppMessages.Default,
     private val monotonicClock: () -> Long = System::nanoTime,
 ) : SocialSource, DirectMessageSource {
+    override val favouriteArtworkStyle: FavouriteArtworkStyle = FavouriteArtworkStyle.Heart
     private val sourceInstance = UUID.randomUUID().toString()
     private val cacheKey = CapabilityCacheKey(
         origin,

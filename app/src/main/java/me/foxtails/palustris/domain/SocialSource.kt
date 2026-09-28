@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.flowOf
 /** Transport-independent boundary implemented by individual server adapters. */
 interface SocialSource {
     val capabilities: ServerCapabilities
+    /** Artwork policy for the primary favourite action. This is not a feature capability. */
+    val favouriteArtworkStyle: FavouriteArtworkStyle
+        get() = FavouriteArtworkStyle.Heart
     /**
      * Observable capability snapshot. A feature host collects this instead of reading
      * [capabilities] once, so a refreshed probe can update capability-driven controls.

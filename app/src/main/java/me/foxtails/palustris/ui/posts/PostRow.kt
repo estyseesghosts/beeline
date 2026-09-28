@@ -33,10 +33,10 @@ import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.media.PostMediaCarousel
@@ -193,6 +193,7 @@ internal fun PostRow(
         InteractionRow(
             ownedPost = ownedPost,
             availableActions = availableActions,
+            favouriteArtworkStyle = presentation.favouriteArtworkStyle,
             onReply = onReply,
             onReact = onReact,
             onReshare = onReshare,
@@ -219,12 +220,11 @@ internal fun actionsForPost(availableActions: Set<PostAction>, post: Post): Set<
 internal fun Post.hasVisibleInteractionSelection(): Boolean =
     favourited || myReaction != null || selectedReactions.isNotEmpty()
 
-/** Stars show Mastodon favourite state. Hearts show like and reaction state on all other services. */
-internal fun favouriteIconFor(ownedPost: OwnedPost): ImageVector {
+/** The supplied style keeps artwork policy outside the generic post row. */
+internal fun favouriteIconFor(ownedPost: OwnedPost, style: FavouriteArtworkStyle): ImageVector {
     val selected = ownedPost.post.hasVisibleInteractionSelection()
-    return if (ownedPost.fetchedBy.connection.protocol == Protocol.MASTODON) {
-        if (selected) AppIcons.FilledStar else AppIcons.HollowStar
-    } else {
-        if (selected) AppIcons.FilledHeart else AppIcons.HollowHeart
+    return when (style) {
+        FavouriteArtworkStyle.Star -> if (selected) AppIcons.FilledStar else AppIcons.HollowStar
+        FavouriteArtworkStyle.Heart -> if (selected) AppIcons.FilledHeart else AppIcons.HollowHeart
     }
 }
