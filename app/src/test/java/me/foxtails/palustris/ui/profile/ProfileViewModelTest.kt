@@ -30,6 +30,8 @@ import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.ProfileRelationship
+import me.foxtails.palustris.domain.ProfileCapabilityQuery
+import me.foxtails.palustris.domain.ProfileCapabilityResult
 import me.foxtails.palustris.domain.ProfileTimelineQuery
 import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.ReactionSelectionMode
@@ -115,12 +117,31 @@ class ProfileViewModelTest {
         val protocol = me.foxtails.palustris.domain.Protocol.MISSKEY
         val misskeySelf = Account(AccountId(Connection(origin, protocol), "self"), "Self", "@self@example.org")
         val misskeyRemote = Account(AccountId(Connection(origin, protocol), "remote"), "Remote", "@remote@example.org")
-        val model = ProfileViewModel(misskeySelf.id, FakeSource(), executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+        val model = ProfileViewModel(
+            misskeySelf.id,
+            FakeSource(likedStatus = CapabilityStatus.Supported, likedForOther = true),
+            executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority(),
+        )
 
         model.open(misskeyRemote)
         advanceUntilIdle()
 
         assertTrue(model.state.value.likedAvailable)
+    }
+
+    @Test fun likedAvailabilityRequiresSupportedCapabilityForSelfAndOtherTargets() = runProfileTest {
+        CapabilityStatus.entries.forEach { status ->
+            val source = FakeSource(likedStatus = status, likedForOther = true)
+            val model = model(source)
+
+            model.open(self)
+            advanceUntilIdle()
+            assertEquals(status == CapabilityStatus.Supported, model.state.value.likedAvailable)
+
+            model.open(remote)
+            advanceUntilIdle()
+            assertEquals(status == CapabilityStatus.Supported, model.state.value.likedAvailable)
+        }
     }
 
     @Test fun selectingLikedTabLoadsTheLikedTimeline() = runProfileTest {
@@ -675,6 +696,8 @@ class ProfileViewModelTest {
 
     private class FakeSource(
         override val capabilities: ServerCapabilities = ServerCapabilities(),
+        private val likedStatus: CapabilityStatus = CapabilityStatus.Supported,
+        private val likedForOther: Boolean = false,
     ) : SocialSource {
         val detailCalls = mutableListOf<AccountId>()
         val relationshipCalls = mutableListOf<AccountId>()
@@ -712,6 +735,9 @@ class ProfileViewModelTest {
                 followersCount = 42L,
             )
         }
+
+        override suspend fun profileCapability(query: ProfileCapabilityQuery): ProfileCapabilityResult =
+            ProfileCapabilityResult(if (query.target.localId == "self" || likedForOther) likedStatus else CapabilityStatus.Unsupported)
 
         override suspend fun profileTimeline(query: ProfileTimelineQuery, cursor: String?): Page<Post> {
             timelineCalls += query to cursor

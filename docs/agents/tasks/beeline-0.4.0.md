@@ -1,71 +1,75 @@
-# Beeline 0.4.0 task state — Post thread preferences injection
-
-## Record rewrite rule
+# Beeline 0.4.0 task state — Profile Liked eligibility
 
 The parent session must stage both task records as whole files. This is intentional.
-AGENTS requires this task-state file to be rewritten at each slice boundary. AGENTS requires the
-handoff to be rewritten after each slice. The 2D1 rewrite therefore supersedes the earlier 2C3
-record in these files. It does not mix 2C3 implementation with 2D1. Git preserves the prior
-history, including `92d15a8`, `48ddc1d`, `5140d64`, `80bfd25`, `47dbc36`, and `2b67bf9`.
+This rewrite records the 2D2 adapter-test follow-up and preserves committed slice 2D1 at `752f380`.
 
 ## Objective
 
-Require `PostPreferencesRepository` in `PostThreadViewModel` so the thread uses the DI-owned
-account preference repository.
+Move profile Liked eligibility behind a target-aware, protocol-neutral source query.
 
 ## Status sets
 
-- OAuth status: committed Mastodon verification, token exchange, registration, and callback
-  diagnostics remain preserved.
-- 2C status: committed connected-session ownership work remains preserved. Staged classic navigation
-  remains outside this slice.
-- 2D1 status: `PostThreadViewModel` requires `PostPreferencesRepository`. `ThreadHost` keeps the
-  assisted factory contract. `AppModule` already provides the persisted repository.
-- Test status: every direct test constructor supplies one per-test `InMemoryPostPreferencesRepository`.
-  Regression coverage proves preference refresh and thread replacement behavior.
-- Audit status: the required architecture audit reported 611 findings and zero baseline regressions.
-- Build status: the focused thread test passed. `assembleRelease` passed. The full `test assembleRelease`
-  gate remains red with 16 known baseline failures recorded in `logs/BUGS.txt`.
-- Device status: no device test ran for this dependency-only slice.
+- 2D1 status: committed at `752f380`. `PostThreadViewModel` requires `PostPreferencesRepository`.
+- 2D2 status: `SocialSource.profileCapability` returns a target-aware result with `CapabilityStatus`.
+  Misskey uses capability evidence for self and other accounts. Mastodon uses evidence for self and
+  returns unsupported for other accounts. The profile ViewModel and pager use this result.
+- Status set: unknown, denied, unsupported, temporarily unavailable, and supported remain distinct.
+- Persistence status: no probe, cache, schema, or serialized format changed. No schema bump was needed.
+- Focused tests: `ProfileViewModelTest`, `ProfileTimelinePagerTest`, and
+  `ProfileSourceContractTest` passed, including adapter target and status coverage.
+- The generic profile UI and ViewModel grep found zero `Protocol` references.
+- Profile source adapter contracts and `lintDebug` passed. `assembleRelease` passed. The full gate
+  reported 16 known baseline test failures. The earlier timeout and those baseline failures remain
+  unresolved.
 
-## Slice 2D1 files
+## Slice 2D2 files (10)
 
-- `app/src/main/java/me/foxtails/palustris/ui/thread/PostThreadViewModel.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/thread/PostThreadViewModelTest.kt`
+- `app/src/main/java/me/foxtails/palustris/domain/ServerCapabilities.kt`
+- `app/src/main/java/me/foxtails/palustris/domain/SocialSource.kt`
+- `app/src/main/java/me/foxtails/palustris/data/misskey/MisskeySource.kt`
+- `app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonSource.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/profile/ProfileTimelinePager.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/profile/ProfileViewModelTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt`
 - `docs/agents/tasks/beeline-0.4.0.md`
 - `docs/agents/handoff.md`
 
+The adapter-test follow-up also changes `app/src/test/java/me/foxtails/palustris/ProfileSourceContractTest.kt`.
+
 ## Preservation
 
-- Staged `docs/classic_navigation.md` remains untouched.
-- Committed welcome, OAuth, and 2C work remains untouched.
-- Unrelated `.opencode` files, images, helpers, caches, and logs remain untouched.
-- 2D2, 2D3, and 2E work remains untouched.
-- Unrelated worktree changes remain untouched.
+- The original 2D2 slice has the ten paths listed above. `git diff HEAD --name-only` also shows
+  pre-existing or unrelated work, including seven `.opencode` files, deleted PNGs, helpers, caches,
+  staged `docs/classic_navigation.md`, and the already committed Photo Grid deletion.
+- Commit `92d15a8` records the `PhotoGridFeedViewModelTest` deletion. It is not a 2D2 change.
+- The adapter-test follow-up changes only the listed profile contract test and these two records.
 - No files were staged or committed in this session.
 
 ## Exact staging pathspec for the parent session
 
-Stage only this slice with:
+Stage only the ten original code and test paths listed above, the adapter-test follow-up path,
+plus these records:
 
-`app/src/main/java/me/foxtails/palustris/ui/thread/PostThreadViewModel.kt`
-
-`app/src/test/java/me/foxtails/palustris/ui/thread/PostThreadViewModelTest.kt`
-
+`app/src/test/java/me/foxtails/palustris/ProfileSourceContractTest.kt`
 `docs/agents/tasks/beeline-0.4.0.md`
 
 `docs/agents/handoff.md`
 
-These four paths are the exact 2D1 code, test, and record paths.
-Do not stage the ignored implementation log or unrelated files.
+Do not stage `logs/260928-profile-liked-eligibility.txt` or unrelated files.
 
 ## Verification limits
 
-Live-server behavior remains unverified. Thread preference rendering remains unverified on a device.
+Live-server behavior remains unverified. Profile Liked chips remain unverified on a device.
+Other-account device checks require `@ctr` approval and remain blocked unless signed in.
 API 29 physical, RTL, TalkBack, font-scale, signed, and wide or foldable checks remain unverified.
 
 ## Records
 
-- Ignored implementation log: `logs/260928-post-thread-preferences.txt`.
-- The architecture audit count was 611 with zero baseline regressions.
+- Ignored implementation log: `logs/260928-profile-liked-eligibility.txt`.
+- Audit was not rerun. The prior count-only architecture audit was 611 with zero baseline
+  regressions.
+- `TemporarilyUnavailable` maps rate limits, network failures, server errors, and resource limits
+  to one status. The typed cause remains at the `SourceError` boundary because no UI or retry
+  behavior currently needs a more specific profile capability cause.
 - No secrets, tokens, callback values, or response bodies belong in these records.

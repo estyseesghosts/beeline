@@ -11,6 +11,8 @@ import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.ProfileTimelineQuery
 import me.foxtails.palustris.domain.ProfileTimelineTab
+import me.foxtails.palustris.domain.ProfileCapability
+import me.foxtails.palustris.domain.ProfileCapabilityQuery
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.ui.UiStrings
@@ -117,18 +119,6 @@ internal class ProfileTimelinePager(
             }
             return
         }
-        // The Liked tab depends on the liked-posts capability, not the profile-timeline
-        // capability, because Mastodon and Misskey resolve it through a dedicated endpoint.
-        val unsupported = if (tab == ProfileTimelineTab.Liked) {
-            source.capabilities.likedPosts == CapabilityStatus.Unsupported
-        } else {
-            source.capabilities.profile.timelines == CapabilityStatus.Unsupported
-        }
-        if (unsupported) {
-            val feature = if (tab == ProfileTimelineTab.Liked) "profile.liked" else "profile.timeline"
-            publishPageFailure(target, tab, requestGeneration, SourceError.Unsupported(feature))
-            return
-        }
         val requestToken = Any()
         if (cursor != null) {
             cursorSet.add(cursor)
@@ -138,6 +128,32 @@ internal class ProfileTimelinePager(
         pageJobs[tab]?.cancel()
         val job = scope.launch {
             try {
+                if (tab == ProfileTimelineTab.Liked) {
+                    when (val status = source.profileCapability(
+                        ProfileCapabilityQuery(target, ProfileCapability.LikedPosts),
+                    ).status) {
+                        CapabilityStatus.Supported -> Unit
+                        CapabilityStatus.Unsupported -> {
+                            publishPageFailure(target, tab, requestGeneration, SourceError.Unsupported("profile.liked"))
+                            return@launch
+                        }
+                        CapabilityStatus.Denied -> {
+                            publishPageFailure(target, tab, requestGeneration, SourceError.AccessDenied("profile.liked"))
+                            return@launch
+                        }
+                        CapabilityStatus.TemporarilyUnavailable -> {
+                            publishPageFailure(target, tab, requestGeneration, SourceError.RateLimited)
+                            return@launch
+                        }
+                        CapabilityStatus.Unknown -> {
+                            publishCapabilityUnknown(target, tab, requestGeneration)
+                            return@launch
+                        }
+                    }
+                } else if (source.capabilities.profile.timelines == CapabilityStatus.Unsupported) {
+                    publishPageFailure(target, tab, requestGeneration, SourceError.Unsupported("profile.timeline"))
+                    return@launch
+                }
                 val page = source.profileTimeline(ProfileTimelineQuery(target, tab), cursor)
                 if (!isCurrent(target, requestGeneration)) return@launch
                 val current = pages[tab] ?: ProfilePageState()
@@ -198,6 +214,21 @@ internal class ProfileTimelinePager(
             error = uiStrings.sourceError(error),
             needsSignIn = requiresSignIn(error),
             nextCursor = current.nextCursor,
+        )))
+    }
+
+    private fun publishCapabilityUnknown(
+        target: AccountId,
+        tab: ProfileTimelineTab,
+        requestGeneration: Long,
+    ) {
+        if (!isCurrent(target, requestGeneration)) return
+        val current = pages[tab] ?: ProfilePageState()
+        publish(pages + (tab to current.copy(
+            initialLoading = false,
+            refreshing = false,
+            loadingMore = false,
+            error = null,
         )))
     }
 

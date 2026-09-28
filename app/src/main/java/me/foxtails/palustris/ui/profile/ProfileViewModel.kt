@@ -11,6 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -23,7 +24,8 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostReactionReducer
-import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.ProfileCapability
+import me.foxtails.palustris.domain.ProfileCapabilityQuery
 import me.foxtails.palustris.domain.ReactionSelectionMode
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
@@ -63,6 +65,7 @@ class ProfileViewModel @AssistedInject constructor(
     private var relationshipJob: Job? = null
     private var pinnedJob: Job? = null
     private var editJob: Job? = null
+    private var capabilityJob: Job? = null
     private val interactionMutations = PostInteractionMutationOwner(
         accountId = accountId,
         source = source,
@@ -82,6 +85,15 @@ class ProfileViewModel @AssistedInject constructor(
         executionAuthority = executionAuthority,
     )
 
+    init {
+        capabilityJob = viewModelScope.launch {
+            source.observeCapabilities().collect {
+                val target = _state.value.targetId ?: return@collect
+                refreshLikedAvailability(target, generation)
+            }
+        }
+    }
+
     fun open(seed: Account) {
         if (stopped) return
         val current = _state.value
@@ -89,13 +101,14 @@ class ProfileViewModel @AssistedInject constructor(
             _state.value = current.copy(
                 seedAccount = seed,
                 account = current.account ?: seed,
-                likedAvailable = likedAvailable(seed.id),
+                likedAvailable = false,
             )
             cancelProfileRequests()
             loadDetails(seed.id, generation)
             loadRelationshipIfNeeded(seed.id, generation)
             loadPinned(seed.id, generation)
             refreshSelected()
+            refreshLikedAvailability(seed.id, generation)
             return
         }
 
@@ -107,13 +120,14 @@ class ProfileViewModel @AssistedInject constructor(
             seedAccount = seed,
             account = seed,
             editableSupported = editableSupported(source.capabilities.profile.editable),
-            likedAvailable = likedAvailable(seed.id),
+            likedAvailable = false,
         )
         timelinePager.setTarget(seed.id, targetGeneration)
         loadDetails(seed.id, targetGeneration)
         loadRelationshipIfNeeded(seed.id, targetGeneration)
         loadPinned(seed.id, targetGeneration)
         refreshSelected()
+        refreshLikedAvailability(seed.id, targetGeneration)
     }
 
     fun refreshDetails() {
@@ -129,6 +143,7 @@ class ProfileViewModel @AssistedInject constructor(
         loadRelationshipIfNeeded(target, targetGeneration)
         loadPinned(target, targetGeneration)
         refreshSelected()
+        refreshLikedAvailability(target, targetGeneration)
     }
 
     fun selectCategory(category: ProfileCategory) {
@@ -480,20 +495,23 @@ class ProfileViewModel @AssistedInject constructor(
         timelinePager.cancel()
     }
 
+    private fun refreshLikedAvailability(target: AccountId, targetGeneration: Long) {
+        viewModelScope.launch {
+            try {
+                val result = source.profileCapability(ProfileCapabilityQuery(target, ProfileCapability.LikedPosts))
+                if (isCurrent(targetGeneration, target)) {
+                    _state.value = _state.value.copy(likedAvailable = result.status == CapabilityStatus.Supported)
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                // A failed capability query cannot prove that the tab is unsupported.
+            }
+        }
+    }
+
     private fun isCurrent(targetGeneration: Long, target: AccountId): Boolean =
         !stopped && generation == targetGeneration && _state.value.targetId == target
-
-    /**
-     * The Liked tab is offered for the signed-in account on either protocol, and for another
-     * account only on Misskey, where `users/reactions` accepts the viewed user id. Mastodon
-     * exposes favourites only for the signed-in account, so another account has no Liked tab.
-     */
-    private fun likedAvailable(target: AccountId): Boolean =
-        if (target == accountId) {
-            source.capabilities.likedPosts != CapabilityStatus.Unsupported
-        } else {
-            accountId.connection.protocol == Protocol.MISSKEY
-        }
 
     private fun isEditorCurrent(targetEditorGeneration: Long, target: AccountId): Boolean =
         !stopped && editorGeneration == targetEditorGeneration && _state.value.targetId == target

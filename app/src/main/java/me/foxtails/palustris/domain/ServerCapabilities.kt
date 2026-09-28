@@ -32,6 +32,23 @@ data class ServerCapabilities(
 
 enum class CapabilityStatus { Supported, Denied, Unsupported, TemporarilyUnavailable, Unknown }
 
+fun capabilityStatus(error: SourceError): CapabilityStatus = when (error) {
+    is SourceError.Unsupported, is SourceError.ServerUnsupported, is SourceError.ForeignOrigin,
+    SourceError.AccountMismatch -> CapabilityStatus.Unsupported
+    is SourceError.AccessDenied, is SourceError.UnsupportedCredential, SourceError.Unauthorized -> CapabilityStatus.Denied
+    SourceError.NetworkUnavailable, SourceError.RateLimited, is SourceError.ServerError,
+    is SourceError.ResourceLimit -> CapabilityStatus.TemporarilyUnavailable
+}
+
+enum class ProfileCapability { LikedPosts }
+
+data class ProfileCapabilityQuery(
+    val target: AccountId,
+    val capability: ProfileCapability,
+)
+
+data class ProfileCapabilityResult(val status: CapabilityStatus)
+
 val timelineDisplayOrder: List<Timeline> = listOf(
     Timeline.Home,
     Timeline.Local,

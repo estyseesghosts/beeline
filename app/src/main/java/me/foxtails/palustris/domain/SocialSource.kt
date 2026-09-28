@@ -18,6 +18,12 @@ interface SocialSource {
     suspend fun profile(id: AccountId): Account = unsupported("profile")
     suspend fun profileTimeline(query: ProfileTimelineQuery, cursor: String? = null): Page<Post> =
         unsupported("profile.timeline")
+    /**
+     * Capability defaults must be conservative because this contract has no target ownership
+     * information. Adapters that can serve a target must provide target-aware evidence.
+     */
+    suspend fun profileCapability(query: ProfileCapabilityQuery): ProfileCapabilityResult =
+        ProfileCapabilityResult(CapabilityStatus.Unsupported)
     suspend fun profileRelationship(id: AccountId): ProfileRelationship = unsupported("profile.relationship")
     suspend fun followProfile(id: AccountId): ProfileRelationship = unsupported("profile.follow")
     suspend fun unfollowProfile(id: AccountId): ProfileRelationship = unsupported("profile.unfollow")

@@ -8,9 +8,11 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.ProfileCapability
 import me.foxtails.palustris.domain.ProfileTimelineQuery
 import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.Protocol
@@ -20,6 +22,7 @@ import me.foxtails.palustris.domain.SourceError
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -216,6 +219,34 @@ class ProfileTimelinePagerTest {
         assertFalse(page.loadingMore)
     }
 
+    @Test
+    fun likedPagerRequestsOnlyWhenCapabilityIsSupported() = runTest {
+        CapabilityStatus.entries.forEach { status ->
+            val source = LikedCapabilitySource(status)
+            val states = mutableListOf<Map<ProfileTimelineTab, ProfilePageState>>()
+            val pager = pager(source, states, this)
+
+            pager.setTarget(target, 1)
+            pager.refresh(target, 1, ProfileTimelineTab.Liked)
+            runCurrent()
+
+            assertEquals(status == CapabilityStatus.Supported, source.calls == 1)
+            val page = states.last().getValue(ProfileTimelineTab.Liked)
+            if (status == CapabilityStatus.Unknown) assertNull(page.error)
+            if (status == CapabilityStatus.Denied) assertNotNull(page.error)
+        }
+    }
+
+    @Test
+    fun defaultProfileCapabilityIsConservative() = runTest {
+        val source = PagingSource(listOf(Page(emptyList(), null)))
+        val result = source.profileCapability(
+            me.foxtails.palustris.domain.ProfileCapabilityQuery(target, ProfileCapability.LikedPosts),
+        )
+
+        assertEquals(CapabilityStatus.Unsupported, result.status)
+    }
+
     private fun pager(
         source: SocialSource,
         states: MutableList<Map<ProfileTimelineTab, ProfilePageState>>,
@@ -273,5 +304,22 @@ class ProfileTimelinePagerTest {
         }
 
         override suspend fun profile(id: AccountId): Account = Account(id, "Target", "@target@example.org")
+    }
+
+    private class LikedCapabilitySource(
+        private val status: CapabilityStatus,
+    ) : SocialSource {
+        override val capabilities = ServerCapabilities()
+        var calls = 0
+
+        override suspend fun timeline(timeline: me.foxtails.palustris.domain.Timeline, cursor: String?) = Page<Post>(emptyList())
+
+        override suspend fun profileCapability(query: me.foxtails.palustris.domain.ProfileCapabilityQuery) =
+            me.foxtails.palustris.domain.ProfileCapabilityResult(status)
+
+        override suspend fun profileTimeline(query: ProfileTimelineQuery, cursor: String?): Page<Post> {
+            calls++
+            return Page(emptyList(), null)
+        }
     }
 }

@@ -8,11 +8,15 @@ import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.ProfileCapability
+import me.foxtails.palustris.domain.ProfileCapabilityQuery
 import me.foxtails.palustris.domain.ProfileTimelineQuery
 import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
 import okhttp3.mockwebserver.MockResponse
@@ -33,6 +37,71 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class ProfileSourceContractTest {
+    @Test
+    fun mastodonProfileCapabilityUsesSelfTargetAndPreservesStatuses() = runBlocking {
+        val origin = "https://mastodon.example"
+        val self = AccountId(Connection(origin, Protocol.MASTODON), "contract-user")
+        val other = AccountId(Connection(origin, Protocol.MASTODON), "other-user")
+        val fixedNow = 10_000L
+
+        CapabilityStatus.entries.forEach { expected ->
+            val source = MastodonSource(
+                origin = origin,
+                token = "contract-token",
+                api = mastodonTestClient(),
+                accountId = self,
+                initialCapabilities = ServerCapabilities(
+                    timelines = setOf(me.foxtails.palustris.domain.Timeline.Home),
+                    likedPosts = expected,
+                    capabilitiesLastUpdated = fixedNow,
+                ),
+                clock = { fixedNow },
+            )
+
+            assertEquals(
+                expected,
+                source.profileCapability(ProfileCapabilityQuery(self, ProfileCapability.LikedPosts)).status,
+            )
+            assertEquals(
+                CapabilityStatus.Unsupported,
+                source.profileCapability(ProfileCapabilityQuery(other, ProfileCapability.LikedPosts)).status,
+            )
+        }
+    }
+
+    @Test
+    fun misskeyProfileCapabilityUsesSelfAndOtherTargetsAndPreservesStatuses() = runBlocking {
+        val origin = "https://misskey.example"
+        val self = AccountId(Connection(origin, Protocol.MISSKEY), "contract-user")
+        val other = AccountId(Connection(origin, Protocol.MISSKEY), "other-user")
+        val fixedNow = 10_000L
+
+        CapabilityStatus.entries.forEach { expected ->
+            val source = MisskeySource(
+                origin = origin,
+                token = "contract-token",
+                api = MisskeyApi(),
+                accountId = self,
+                initialCapabilities = ServerCapabilities(
+                    timelines = setOf(me.foxtails.palustris.domain.Timeline.Home),
+                    likedPosts = expected,
+                    capabilitiesLastUpdated = fixedNow,
+                ),
+                capabilityCache = CapabilityCache(),
+                clock = { fixedNow },
+            )
+
+            assertEquals(
+                expected,
+                source.profileCapability(ProfileCapabilityQuery(self, ProfileCapability.LikedPosts)).status,
+            )
+            assertEquals(
+                expected,
+                source.profileCapability(ProfileCapabilityQuery(other, ProfileCapability.LikedPosts)).status,
+            )
+        }
+    }
+
     @Test
     fun mastodonAdapterSatisfiesProfileContract() = runBlocking {
         MockWebServer().use { server ->

@@ -7,6 +7,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
+import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.ConversationId
 import me.foxtails.palustris.domain.CreatePostRequest
@@ -40,6 +41,9 @@ import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.ProfileCapabilities
+import me.foxtails.palustris.domain.ProfileCapability
+import me.foxtails.palustris.domain.ProfileCapabilityQuery
+import me.foxtails.palustris.domain.ProfileCapabilityResult
 import me.foxtails.palustris.domain.PostActionResult
 import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.ProfileTimelineQuery
@@ -127,6 +131,22 @@ class MisskeySource(
 
     override suspend fun profileTimeline(query: ProfileTimelineQuery, cursor: String?): Page<Post> = request("profile.timeline") {
         profileService.timeline(query, cursor)
+    }
+
+    override suspend fun profileCapability(query: ProfileCapabilityQuery): ProfileCapabilityResult = try {
+        request("profile.capability") {
+            if (query.target.connection != Connection(origin, Protocol.MISSKEY)) {
+                return@request ProfileCapabilityResult(CapabilityStatus.Unsupported)
+            }
+            refreshCapabilities()
+            when (query.capability) {
+                ProfileCapability.LikedPosts -> ProfileCapabilityResult(capabilities.likedPosts)
+            }
+        }
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: SourceError) {
+        ProfileCapabilityResult(capabilityStatus(error))
     }
 
     override suspend fun profileRelationship(id: AccountId): ProfileRelationship = request("profile.relationship") {
