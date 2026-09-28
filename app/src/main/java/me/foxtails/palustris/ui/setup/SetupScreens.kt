@@ -4,9 +4,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,6 +53,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.AppMessages
 import me.foxtails.palustris.data.misskey.ServerAddress
@@ -58,7 +62,7 @@ import me.foxtails.palustris.ui.session.SessionUi
 @Composable
 internal fun SetupInitialScreen(onNewUser: () -> Unit, onSignIn: () -> Unit) {
     SetupColumn {
-        LogoSurface(Modifier.fillMaxWidth().weight(1f, fill = false))
+        LogoSurface(Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
         SetupPrimaryAction(stringResource(R.string.setup_new_user), onNewUser)
         Spacer(Modifier.height(12.dp))
@@ -70,25 +74,27 @@ internal fun SetupInitialScreen(onNewUser: () -> Unit, onSignIn: () -> Unit) {
 internal fun SetupIntroductionScreen(onGetStarted: () -> Unit) {
     SetupColumn {
         Surface(
-            modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+            modifier = Modifier.fillMaxWidth().aspectRatio(1.25f),
             shape = RoundedCornerShape(48.dp),
             color = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ) {
-            Column(
-                Modifier.fillMaxWidth().padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(stringResource(R.string.setup_welcome_to), style = MaterialTheme.typography.headlineLarge)
-                Text(stringResource(R.string.setup_the_fediverse), style = MaterialTheme.typography.headlineLarge)
-                Spacer(Modifier.weight(1f))
-                Image(
-                    painter = painterResource(R.drawable.beeline_mark),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxWidth(.65f),
-                    contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
-                )
+            Box(Modifier.fillMaxSize().padding(32.dp)) {
+                Column(
+                    Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(stringResource(R.string.setup_welcome_to), style = MaterialTheme.typography.headlineLarge)
+                    Text(stringResource(R.string.setup_the_fediverse), style = MaterialTheme.typography.headlineLarge)
+                    Spacer(Modifier.weight(1f))
+                    Image(
+                        painter = painterResource(R.drawable.beeline_mark),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxWidth(.65f).weight(1f),
+                        contentScale = ContentScale.Fit,
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
+                    )
+                }
             }
         }
         Spacer(Modifier.height(12.dp))
@@ -127,6 +133,8 @@ internal fun SetupServerScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -169,7 +177,7 @@ internal fun SetupServerScreen(
             Spacer(Modifier.height(8.dp))
             SetupTextAction(stringResource(if (state.addingAccount) R.string.sign_in_cancel else R.string.sign_in_different_instance), onCancel, enabled = !state.busy)
         } else {
-            Column(Modifier.fillMaxWidth().navigationBarsPadding().imePadding()) {
+            Column(Modifier.fillMaxWidth().imePadding()) {
                 validationError?.let {
                     Text(it, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), color = MaterialTheme.colorScheme.error)
                 }
@@ -200,6 +208,8 @@ private fun SetupColumn(content: @Composable ColumnScope.() -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
@@ -210,25 +220,33 @@ private fun SetupColumn(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun LogoSurface(modifier: Modifier) {
     Surface(
-        modifier = modifier.height(520.dp),
+        modifier = modifier.aspectRatio(1.25f),
         shape = RoundedCornerShape(48.dp),
         color = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
     ) {
-        Column(
-            Modifier.fillMaxSize().padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(stringResource(R.string.setup_wordmark), style = MaterialTheme.typography.displaySmall)
-            Spacer(Modifier.weight(1f))
-            Image(
-                painter = painterResource(R.drawable.beeline_mark),
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth(.65f),
-                contentScale = ContentScale.Fit,
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
-            )
-            Spacer(Modifier.weight(1f))
+        BoxWithConstraints(Modifier.fillMaxSize().padding(24.dp)) {
+            val wordmarkFontSize = maxWidth.value.coerceIn(28f, 56f).sp
+            Column(
+                Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    stringResource(R.string.setup_wordmark),
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontSize = wordmarkFontSize,
+                    ),
+                )
+                Spacer(Modifier.weight(1f))
+                Image(
+                    painter = painterResource(R.drawable.beeline_mark),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth(.65f).weight(1f),
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
+                )
+                Spacer(Modifier.weight(1f))
+            }
         }
     }
 }
