@@ -11,6 +11,7 @@ import kotlinx.coroutines.yield
 import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.data.mastodon.MastodonSource
+import me.foxtails.palustris.data.mastodon.mastodonTestClient
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.Protocol
@@ -87,7 +88,7 @@ class WebSocketTransportTest {
         val client = CapturingWebSocketClient()
         val origin = "https://example.org"
         val account = AccountId(Connection(origin, Protocol.MASTODON), "receiver")
-        val source = MastodonSource(origin, "test-token", MisskeyApi(client), account)
+        val source = MastodonSource(origin, "test-token", mastodonTestClient(client), account)
         val event = async { source.streamEvents().first() }
         withTimeout(1_000) {
             while (client.listener == null) yield()
@@ -103,7 +104,7 @@ class WebSocketTransportTest {
         val client = CapturingWebSocketClient()
         val origin = "https://example.org"
         val account = AccountId(Connection(origin, Protocol.MASTODON), "receiver")
-        val source = MastodonSource(origin, "test-token", MisskeyApi(client), account)
+        val source = MastodonSource(origin, "test-token", mastodonTestClient(client), account)
         val collector = launch { source.streamEvents().collect() }
         withTimeout(1_000) {
             while (client.listener == null) yield()

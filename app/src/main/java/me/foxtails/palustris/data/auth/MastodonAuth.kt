@@ -2,6 +2,7 @@ package me.foxtails.palustris.data.auth
 
 import me.foxtails.palustris.data.AppMessages
 import me.foxtails.palustris.data.transport.HttpClientPool
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.ServerAddress
 import me.foxtails.palustris.data.mastodon.MastodonCapabilityProbe
@@ -23,22 +24,28 @@ import java.util.Base64
 import java.util.UUID
 
 class MastodonAuth(
-    private val apiFor: (String) -> MisskeyApi,
+    private val apiFor: (String) -> AuthenticatedHttpClient,
     private val appRegistrationCache: AppRegistrationCache,
     private val appMessages: AppMessages = AppMessages.Default,
 ) : AuthGateway {
     constructor(
-        api: MisskeyApi,
+        api: AuthenticatedHttpClient,
         appRegistrationCache: AppRegistrationCache,
         appMessages: AppMessages = AppMessages.Default,
     ) : this({ api }, appRegistrationCache, appMessages)
+
+    constructor(
+        api: MisskeyApi,
+        appRegistrationCache: AppRegistrationCache,
+        appMessages: AppMessages = AppMessages.Default,
+    ) : this(api.authenticatedClient(), appRegistrationCache, appMessages)
 
     constructor(
         clientPool: HttpClientPool,
         appRegistrationCache: AppRegistrationCache,
         appMessages: AppMessages = AppMessages.Default,
     ) : this(
-        { origin -> MisskeyApi(clientPool.clientFor(Connection(origin, Protocol.MASTODON)), appMessages = appMessages) },
+        { origin -> AuthenticatedHttpClient(clientPool.clientFor(Connection(origin, Protocol.MASTODON)), origin) },
         appRegistrationCache,
         appMessages,
     )
@@ -131,7 +138,7 @@ class MastodonAuth(
         throw MastodonErrorMapper.map(e)
     }
 
-    private suspend fun registerApp(origin: String, api: MisskeyApi, scopes: Set<String>): AppRegistration {
+    private suspend fun registerApp(origin: String, api: AuthenticatedHttpClient, scopes: Set<String>): AppRegistration {
         val response = api.postForm(origin, "api/v1/apps", mapOf(
             "client_name" to ProductIdentity.name,
             "redirect_uris" to REDIRECT_URI,
@@ -165,7 +172,7 @@ class MastodonAuth(
         )
     }
 
-    private suspend fun detectPkceSupport(origin: String, api: MisskeyApi): Boolean {
+    private suspend fun detectPkceSupport(origin: String, api: AuthenticatedHttpClient): Boolean {
         val version = runCatching {
             MastodonCapabilityProbe.parseLeadingVersion(
                 JSONObject(api.get(origin, "v2/instance").body).optString("version"),

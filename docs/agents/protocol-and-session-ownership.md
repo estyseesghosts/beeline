@@ -24,7 +24,13 @@ Device and live-server behavior remain unverified.
 - `data/transport/HttpClientPool.kt` owns credential-free HTTP client reuse, timeouts, redirects,
   connection keying, and bounded retention for both protocol adapters.
 - `data/transport/HttpResponse.kt` owns the generic HTTP body, headers, and Link cursor parsing.
+- `data/transport/AuthenticatedHttpClient.kt` owns authenticated HTTP execution, origin checks,
+  bounded reads, cancellation, WebSocket requests, and multipart streaming. It stores no token.
 - `data/misskey/MisskeySource` and `data/mastodon/MastodonSource` are the two adapters.
+- `data/transport/AuthenticatedHttpClient` owns protocol-neutral authenticated execution, bounded
+  bodies, cancellation, origin checks, and status failures. Adapters own paths and failure mapping.
+- `data/misskey/MisskeyApi` remains the Misskey JSON adapter. It owns the `/api/` prefix and
+  delegates execution to the neutral client. Slice 2A4 still owns full authentication and DI migration.
 - `data/SourceFactory.kt` creates one source for a session. It branches on `Protocol` only there.
 - `data/AccountSourceRegistry.kt` stores one source for each `AccountId` together with a
   generation from `NotificationSyncToken`.

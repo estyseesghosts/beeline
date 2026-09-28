@@ -1,6 +1,7 @@
 package me.foxtails.palustris.data.misskey
 
 import java.io.ByteArrayInputStream
+import me.foxtails.palustris.data.transport.MultipartFileBody
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -10,6 +11,8 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.async
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.Call
@@ -107,7 +110,7 @@ class MisskeyApiTest {
     @Test
     fun cancellationCancelsTheInFlightCallAndDoesNotBecomeApiFailure() = runBlocking {
         MockWebServer().also { it.start() }.use { server ->
-            server.enqueue(MockResponse().setBody("late").setBodyDelay(5, TimeUnit.SECONDS))
+            server.enqueue(MockResponse().setSocketPolicy(okhttp3.mockwebserver.SocketPolicy.NO_RESPONSE))
             val origin = server.url("/").toString().removeSuffix("/")
             val canceledCall = AtomicBoolean(false)
             val callFailure = AtomicReference<IOException?>(null)
@@ -121,12 +124,13 @@ class MisskeyApiTest {
                     }
                 }
                 .build()
-            val request = launch {
+            val request = async {
                 MisskeyApi(client).get(origin, "slow")
             }
             var completionCause: Throwable? = null
             request.invokeOnCompletion { completionCause = it }
             yield()
+            delay(100)
             assertNotNull(server.takeRequest(10, TimeUnit.SECONDS))
             request.cancelAndJoin()
             assertTrue(request.isCancelled)

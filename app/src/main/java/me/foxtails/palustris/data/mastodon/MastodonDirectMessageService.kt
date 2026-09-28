@@ -1,7 +1,7 @@
 package me.foxtails.palustris.data.mastodon
 
-import me.foxtails.palustris.data.misskey.ApiFailure
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
+import me.foxtails.palustris.data.transport.HttpStatusFailure
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
@@ -25,7 +25,7 @@ import org.json.JSONObject
 internal class MastodonDirectMessageService(
     private val origin: String,
     private val token: String,
-    private val api: MisskeyApi,
+    private val api: AuthenticatedHttpClient,
     private val accountId: AccountId,
     private val profileService: MastodonProfileService,
 ) {
@@ -49,7 +49,7 @@ internal class MastodonDirectMessageService(
         val anchor = loadAnchor(request.anchor)
         val context = JSONObject(api.get(
             origin,
-            "v1/statuses/${anchor.id.value.encodeMastodonPathSegment()}/context",
+            "api/v1/statuses/${anchor.id.value.encodeMastodonPathSegment()}/context",
             token,
             MASTODON_MAX_RESPONSE_BYTES,
         ).body)
@@ -74,8 +74,8 @@ internal class MastodonDirectMessageService(
             throw SourceError.Unsupported("direct.thread")
         }
         val body = try {
-            api.get(origin, "v1/statuses/${anchor.value.encodeMastodonPathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES).body
-        } catch (error: ApiFailure) {
+            api.get(origin, "api/v1/statuses/${anchor.value.encodeMastodonPathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES).body
+        } catch (error: HttpStatusFailure) {
             if (error.status == 403 || error.status == 404 || error.status == 410) {
                 throw SourceError.Unsupported("direct.thread")
             }

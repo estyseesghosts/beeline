@@ -3,7 +3,7 @@ package me.foxtails.palustris.data.mastodon
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Event
 import me.foxtails.palustris.domain.SocialEvent
@@ -14,7 +14,7 @@ import org.json.JSONObject
 internal class MastodonStreamService(
     private val origin: String,
     private val token: String,
-    private val api: MisskeyApi,
+    private val api: AuthenticatedHttpClient,
     private val accountId: AccountId,
 ) {
     fun events(): Flow<Event> = callbackFlow {

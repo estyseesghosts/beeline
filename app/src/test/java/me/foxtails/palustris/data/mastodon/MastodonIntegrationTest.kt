@@ -189,7 +189,7 @@ class MastodonIntegrationTest {
         val source = MastodonSource(
             origin = origin,
             token = "test-token",
-            api = MisskeyApi(),
+            api = mastodonTestClient(),
             accountId = AccountId(Connection(origin, Protocol.MASTODON), "local-user"),
             initialCapabilities = ServerCapabilities(
                 quotes = CapabilityStatus.Supported,
@@ -382,8 +382,8 @@ class MastodonIntegrationTest {
         val sourceA = source()
         val cursor = sourceA.timeline(me.foxtails.palustris.domain.Timeline.Home).nextCursor!!
         val count = server.requestCount
-        val otherAccount = MastodonSource(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "other"))
-        val otherSession = MastodonSource(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "local-user"), sessionRevision = 1L)
+        val otherAccount = MastodonSource(origin, "token", mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "other"))
+        val otherSession = MastodonSource(origin, "token", mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "local-user"), sessionRevision = 1L)
         val otherInstance = source()
         listOf(otherAccount, otherSession, otherInstance).forEach { other ->
             val error = assertThrows(SourceError.Unsupported::class.java) {
@@ -461,7 +461,7 @@ class MastodonIntegrationTest {
 
     @Test
     fun invalidCursorSkipsCapabilityProbeWhileValidCursorRefreshesAndPages() = runBlocking {
-        val invalidSource = staleSchemaSource(MastodonCapabilityProbe(MisskeyApi()))
+        val invalidSource = staleSchemaSource(MastodonCapabilityProbe(mastodonTestClient()))
         val error = assertThrows(SourceError.Unsupported::class.java) {
             runBlocking { invalidSource.timeline(me.foxtails.palustris.domain.Timeline.Home, "not-a-cursor") }
         }
@@ -476,7 +476,7 @@ class MastodonIntegrationTest {
             "Link", "<$origin/api/v1/timelines/home?max_id=newest>; rel=\"next\"",
         ))
         server.enqueue(MockResponse().setBody("[${status("older")}]"))
-        val validSource = staleSchemaSource(MastodonCapabilityProbe(MisskeyApi()))
+        val validSource = staleSchemaSource(MastodonCapabilityProbe(mastodonTestClient()))
         val first = validSource.timeline(me.foxtails.palustris.domain.Timeline.Home)
         val second = validSource.timeline(me.foxtails.palustris.domain.Timeline.Home, first.nextCursor)
 
@@ -498,7 +498,7 @@ class MastodonIntegrationTest {
             MastodonPageCursor.Identity(origin, "local-user", 0L, "instance", route.name, route.query),
             "$origin/api/v1/timelines/home",
         )
-        val pageClient = MastodonPageClient(origin, "token", MisskeyApi(), "local-user", 0L, "instance")
+        val pageClient = MastodonPageClient(origin, "token", mastodonTestClient(), "local-user", 0L, "instance")
         val error = assertThrows(SourceError.Unsupported::class.java) {
             runBlocking { pageClient.getPage(route, cursor) }
         }
@@ -605,8 +605,8 @@ class MastodonIntegrationTest {
             assertEquals(replayCount, server.requestCount)
         }
         val otherSources = listOf(
-            MastodonSource(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "other")),
-            MastodonSource(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "local-user"), sessionRevision = 1L),
+            MastodonSource(origin, "token", mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "other")),
+            MastodonSource(origin, "token", mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "local-user"), sessionRevision = 1L),
             source(),
         )
         otherSources.forEach { other ->
@@ -641,7 +641,7 @@ class MastodonIntegrationTest {
         server.enqueue(MockResponse().setBody("[]").addHeader(
             "Link", "<$origin/api/v1/bookmarks?limit=40&max_id=x>; rel=\"next\"",
         ))
-        val source = staleSchemaSource(MastodonCapabilityProbe(MisskeyApi()))
+        val source = staleSchemaSource(MastodonCapabilityProbe(mastodonTestClient()))
         val cursor = source.savedPosts().nextCursor!!
         val requestCount = server.requestCount
 
@@ -711,7 +711,7 @@ class MastodonIntegrationTest {
             "$origin/api/v1/bookmarks?limit=40",
         )
         val loopError = assertThrows(SourceError.Unsupported::class.java) {
-            runBlocking { MastodonPageClient(origin, "token", MisskeyApi(), "local-user", 0L, "instance").getPage(route, loop) }
+            runBlocking { MastodonPageClient(origin, "token", mastodonTestClient(), "local-user", 0L, "instance").getPage(route, loop) }
         }
         assertEquals("pagination.cursor", loopError.feature)
         assertEquals(count, server.requestCount)
@@ -1339,14 +1339,14 @@ class MastodonIntegrationTest {
     private fun source() = MastodonSource(
         origin = origin,
         token = "token",
-        api = MisskeyApi(),
+        api = mastodonTestClient(),
         accountId = AccountId(Connection(origin, me.foxtails.palustris.domain.Protocol.MASTODON), "local-user"),
     )
 
     private fun sourceWith(capabilities: ServerCapabilities) = MastodonSource(
         origin = origin,
         token = "token",
-        api = MisskeyApi(),
+        api = mastodonTestClient(),
         accountId = AccountId(Connection(origin, me.foxtails.palustris.domain.Protocol.MASTODON), "local-user"),
         initialCapabilities = capabilities,
     )
@@ -1392,7 +1392,7 @@ class MastodonIntegrationTest {
     ) = MastodonSource(
         origin = origin,
         token = "token",
-        api = MisskeyApi(),
+        api = mastodonTestClient(),
         accountId = AccountId(Connection(origin, Protocol.MASTODON), "local-user"),
         initialCapabilities = ServerCapabilities(
             timelines = setOf(me.foxtails.palustris.domain.Timeline.Home),

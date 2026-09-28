@@ -8,6 +8,7 @@ import me.foxtails.palustris.data.directmessages.DirectMessageRepository
 import me.foxtails.palustris.data.directmessages.DirectMessageWriteAuthority
 import me.foxtails.palustris.data.directmessages.InMemoryDirectMessageStore
 import me.foxtails.palustris.data.mastodon.MastodonSource
+import me.foxtails.palustris.data.mastodon.mastodonTestClient
 import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MISSKEY_MAX_RESPONSE_BYTES
 import me.foxtails.palustris.data.misskey.MisskeyApi
@@ -92,7 +93,7 @@ class DirectMessageSourceTest {
             val source = MastodonSource(
                 origin = origin,
                 token = "token",
-                api = MisskeyApi(),
+                api = mastodonTestClient(),
                 accountId = owner,
                 initialCapabilities = ServerCapabilities(),
             )
@@ -224,7 +225,7 @@ class DirectMessageSourceTest {
     private fun mastodonSource(origin: String): MastodonSource = MastodonSource(
         origin,
         "token",
-        MisskeyApi(),
+        mastodonTestClient(),
         AccountId(Connection(origin, Protocol.MASTODON), "owner"),
         initialCapabilities = ServerCapabilities(),
     )
@@ -1210,7 +1211,7 @@ class DirectMessageSourceTest {
             val source = MastodonSource(
                 origin,
                 "token",
-                MisskeyApi(),
+                mastodonTestClient(),
                 AccountId(Connection(origin, Protocol.MASTODON), "owner"),
                 initialCapabilities = ServerCapabilities(),
             )

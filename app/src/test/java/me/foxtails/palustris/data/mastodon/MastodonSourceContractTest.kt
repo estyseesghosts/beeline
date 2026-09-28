@@ -36,7 +36,7 @@ class MastodonSourceContractTest : SocialSourceContractTest() {
         return MastodonSource(
             origin = origin,
             token = "contract-token",
-            api = MisskeyApi(),
+            api = mastodonTestClient(),
             accountId = AccountId(Connection(origin, Protocol.MASTODON), "contract-user"),
             initialCapabilities = ServerCapabilities(timelines = setOf(Timeline.Home)),
             capabilityProbe = capabilityProbe,

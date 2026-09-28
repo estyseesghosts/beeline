@@ -172,7 +172,7 @@ class MastodonCapabilityProbeTest {
             server.enqueue(MockResponse().setBody(instance("4.6.0").toString()))
             server.enqueue(MockResponse().setBody("""{"links":[]}"""))
             val origin = server.url("/").toString().removeSuffix("/")
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+            val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertFalse(PostAction.React in capabilities.actions)
@@ -187,7 +187,7 @@ class MastodonCapabilityProbeTest {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody(extensionInstance().toString()))
             val origin = server.url("/").toString().removeSuffix("/")
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+            val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertEquals(CapabilityStatus.Supported, capabilities.emoji.reactionMutation)
@@ -203,7 +203,7 @@ class MastodonCapabilityProbeTest {
             server.enqueue(MockResponse().setResponseCode(404).setBody("""{"error":"Record not found"}"""))
             server.enqueue(MockResponse().setBody(extensionInstance().toString()))
             val origin = server.url("/").toString().removeSuffix("/")
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+            val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertEquals(CapabilityStatus.Supported, capabilities.emoji.reactionMutation)
@@ -219,9 +219,9 @@ class MastodonCapabilityProbeTest {
                 server.enqueue(MockResponse().setResponseCode(status).setBody("{}"))
                 val origin = server.url("/").toString().removeSuffix("/")
 
-                assertThrows(me.foxtails.palustris.data.misskey.ApiFailure::class.java) {
+                assertThrows(me.foxtails.palustris.data.transport.HttpStatusFailure::class.java) {
                     runBlocking {
-                        MastodonCapabilityProbe(MisskeyApi())
+                        MastodonCapabilityProbe(mastodonTestClient())
                             .probeCapabilities(Connection(origin, Protocol.MASTODON))
                     }
                 }

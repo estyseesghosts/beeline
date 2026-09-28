@@ -1,7 +1,7 @@
 package me.foxtails.palustris.data.mastodon
 
 import me.foxtails.palustris.data.transport.HttpResponse
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Notification
@@ -25,7 +25,7 @@ import org.json.JSONObject
 internal class MastodonNotificationService(
     private val origin: String,
     private val token: String,
-    private val api: MisskeyApi,
+    private val api: AuthenticatedHttpClient,
     private val accountId: AccountId,
     private val clock: () -> Long,
 ) {
@@ -52,12 +52,12 @@ internal class MastodonNotificationService(
     }
 
     suspend fun unreadState(): NotificationUnreadState {
-        val count = JSONObject(api.get(origin, "v1/notifications/unread_count", token, MASTODON_MAX_RESPONSE_BYTES).body).optInt("count", -1)
+        val count = JSONObject(api.get(origin, "api/v1/notifications/unread_count", token, MASTODON_MAX_RESPONSE_BYTES).body).optInt("count", -1)
         return if (count < 0) NotificationUnreadState.Unknown else NotificationUnreadState.AtLeast(count)
     }
 
     suspend fun acknowledge(): NotificationAcknowledgement {
-        val latest = api.get(origin, "v1/notifications?limit=1", token, MASTODON_MAX_RESPONSE_BYTES)
+        val latest = api.get(origin, "api/v1/notifications?limit=1", token, MASTODON_MAX_RESPONSE_BYTES)
             .let { JSONArray(it.body).optJSONObject(0)?.optString("id").orEmpty() }
         if (latest.isBlank()) return NotificationAcknowledgement(accountId, NotificationUnreadState.None, clock())
         api.postForm(origin, "api/v1/markers", listOf("notifications[last_read_id]" to latest), token, MASTODON_MAX_RESPONSE_BYTES)

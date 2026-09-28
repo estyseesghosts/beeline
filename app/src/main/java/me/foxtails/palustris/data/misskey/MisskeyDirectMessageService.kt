@@ -1,5 +1,7 @@
 package me.foxtails.palustris.data.misskey
 
+import me.foxtails.palustris.data.transport.ResponseLimitExceeded
+
 import java.util.Base64
 import kotlinx.coroutines.CancellationException
 import me.foxtails.palustris.domain.Account

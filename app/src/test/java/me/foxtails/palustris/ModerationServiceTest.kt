@@ -2,6 +2,8 @@ package me.foxtails.palustris
 
 import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.data.mastodon.MastodonModerationService
+import me.foxtails.palustris.data.mastodon.mastodonTestClient
+import me.foxtails.palustris.data.transport.HttpStatusFailure
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.ApiFailure
 import me.foxtails.palustris.data.misskey.MisskeyModerationService
@@ -81,7 +83,7 @@ class ModerationServiceTest {
         runBlocking {
             val origin = server.url("/").toString().removeSuffix("/")
             val accountId = AccountId(Connection(origin, Protocol.MASTODON), "viewer")
-            val service = MastodonModerationService(origin, "token", MisskeyApi(), accountId)
+            val service = MastodonModerationService(origin, "token", mastodonTestClient(), accountId)
             server.enqueue(MockResponse().setBody("[${mastodonUser("blocked")}]"))
             server.enqueue(MockResponse())
 
@@ -106,7 +108,7 @@ class ModerationServiceTest {
         runBlocking {
             val origin = server.url("/").toString().removeSuffix("/")
             val token = "page-token"
-            val service = MastodonModerationService(origin, token, MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
+            val service = MastodonModerationService(origin, token, mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
             for (route in listOf("blocked", "muted")) {
                 val firstId = "$route-first"
                 val secondId = "$route-second"
@@ -135,7 +137,7 @@ class ModerationServiceTest {
         runBlocking {
             val origin = server.url("/").toString().removeSuffix("/")
             val account = AccountId(Connection(origin, Protocol.MASTODON), "viewer")
-            val service = MastodonModerationService(origin, "token", MisskeyApi(), account)
+            val service = MastodonModerationService(origin, "token", mastodonTestClient(), account)
             server.enqueue(MockResponse().setBody("[]").addHeader("Link", "<$origin/api/v1/accounts/blocked?limit=40&max_id=x>; rel=\"next\""))
             val valid = service.blocked().nextCursor!!
             val raw = JSONObject(String(java.util.Base64.getUrlDecoder().decode(valid.value), Charsets.UTF_8))
@@ -188,7 +190,7 @@ class ModerationServiceTest {
                 assertEquals("moderation.cursor", error.feature)
                 assertEquals(count, server.requestCount)
             }
-            val other = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "other"))
+            val other = MastodonModerationService(origin, "token", mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "other"))
             assertThrows(SourceError.Unsupported::class.java) { runBlocking { other.blocked(valid) } }
             assertEquals(count, server.requestCount)
         }
@@ -198,13 +200,13 @@ class ModerationServiceTest {
     fun mastodonModerationRejectsInvalidLinksAndCurrentUrlLoop() {
         runBlocking {
             val origin = server.url("/").toString().removeSuffix("/")
-            val service = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
+            val service = MastodonModerationService(origin, "token", mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
             server.enqueue(MockResponse().setBody("[]").addHeader("Link", "<$origin/api/v1/accounts/muted?max_id=x&local=true>; rel=\"next\""))
             val invalid = assertThrows(SourceError.Unsupported::class.java) { runBlocking { service.muted() } }
             assertEquals("pagination.link", invalid.feature)
             val count = server.requestCount
             server.enqueue(MockResponse().setBody("[]").addHeader("Link", "<$origin/api/v1/accounts/blocked?limit=40>; rel=\"next\""))
-            val loopService = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
+            val loopService = MastodonModerationService(origin, "token", mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
             val loop = assertThrows(SourceError.Unsupported::class.java) { runBlocking { loopService.blocked() } }
             assertEquals("pagination.link", loop.feature)
             assertEquals(count + 1, server.requestCount)
@@ -215,7 +217,7 @@ class ModerationServiceTest {
     fun mastodonModerationRejectsValuelessLimitLinksAndAllowsMissingLimit() {
         runBlocking {
             val origin = server.url("/").toString().removeSuffix("/")
-            val service = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
+            val service = MastodonModerationService(origin, "token", mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
             for (query in listOf("max_id=x&limit", "max_id=x&limit=", "max_id=x&limit=40&limit=40")) {
                 val count = server.requestCount
                 server.enqueue(MockResponse().setBody("[]").addHeader(
@@ -237,7 +239,7 @@ class ModerationServiceTest {
     @Test
     fun mastodonRejectsForeignMutationBeforeRequest() {
         val origin = server.url("/").toString().removeSuffix("/")
-        val service = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
+        val service = MastodonModerationService(origin, "token", mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
         val foreign = AccountId(Connection("https://foreign.example", Protocol.MASTODON), "target")
 
         val error = assertThrows(SourceError.ForeignOrigin::class.java) {
@@ -252,7 +254,7 @@ class ModerationServiceTest {
     fun mastodonEncodesReservedTargetOnEveryAccountRoute() {
         runBlocking {
             val origin = server.url("/").toString().removeSuffix("/")
-            val service = MastodonModerationService(origin, "token", MisskeyApi(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
+        val service = MastodonModerationService(origin, "token", mastodonTestClient(), AccountId(Connection(origin, Protocol.MASTODON), "viewer"))
             val targetId = AccountId(Connection(origin, Protocol.MASTODON), "segment/with?query value")
             server.enqueue(MockResponse().setBody("[${mastodonUser(targetId.localId)}]"))
             server.enqueue(MockResponse().setBody("{\"blocking\":true}"))
@@ -295,7 +297,7 @@ class ModerationServiceTest {
             val service = MastodonModerationService(
                 origin,
                 token,
-                MisskeyApi(),
+                mastodonTestClient(),
                 AccountId(Connection(origin, Protocol.MASTODON), "viewer"),
             )
             val target = AccountId(Connection(origin, Protocol.MASTODON), "segment/with?query value")
@@ -323,14 +325,14 @@ class ModerationServiceTest {
             val service = MastodonModerationService(
                 origin,
                 token,
-                MisskeyApi(),
+                mastodonTestClient(),
                 AccountId(Connection(origin, Protocol.MASTODON), "viewer"),
             )
             val target = AccountId(Connection(origin, Protocol.MASTODON), "target")
             server.enqueue(MockResponse().setBody("{}"))
             server.enqueue(MockResponse().setResponseCode(400).setBody("bad request"))
 
-            val error = assertThrows(ApiFailure::class.java) { runBlocking { service.setMuted(target, true) } }
+            val error = assertThrows(HttpStatusFailure::class.java) { runBlocking { service.setMuted(target, true) } }
             val mutation = server.takeRequest()
             val recovery = server.takeRequest()
             assertEquals("/api/v1/accounts/target/mute", mutation.path)
@@ -351,7 +353,7 @@ class ModerationServiceTest {
             val service = MastodonModerationService(
                 origin,
                 "token",
-                MisskeyApi(),
+                mastodonTestClient(),
                 AccountId(Connection(origin, Protocol.MASTODON), "viewer"),
             )
             server.enqueue(MockResponse())

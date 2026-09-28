@@ -1,8 +1,8 @@
 package me.foxtails.palustris.data.mastodon
 
 import kotlinx.coroutines.CancellationException
-import me.foxtails.palustris.data.misskey.ApiFailure
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
+import me.foxtails.palustris.data.transport.HttpStatusFailure
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
@@ -30,7 +30,7 @@ import java.net.URI
  * mutation request. An arbitrary probe request cannot prove mutation support: the
  * advertised extension is the only positive evidence this owner accepts.
  */
-class MastodonCapabilityProbe(private val api: MisskeyApi) : CapabilityProbe {
+class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : CapabilityProbe {
     data class VersionTriple(val major: Int, val minor: Int, val patch: Int) {
         fun atLeast(major: Int, minor: Int, patch: Int): Boolean = when {
             this.major != major -> this.major > major
@@ -60,15 +60,15 @@ class MastodonCapabilityProbe(private val api: MisskeyApi) : CapabilityProbe {
      */
     suspend fun fetchInstanceMetadata(origin: String): JSONObject {
         val v2 = try {
-            JSONObject(api.get(origin, "v2/instance", maxResponseBytes = MAX_INSTANCE_BYTES).body)
+            JSONObject(api.get(origin, "api/v2/instance", maxResponseBytes = MAX_INSTANCE_BYTES).body)
         } catch (e: CancellationException) {
             throw e
-        } catch (e: ApiFailure) {
+        } catch (e: HttpStatusFailure) {
             if (e.status != 404) throw e
             null
         }
         if (v2 != null) return v2
-        return JSONObject(api.get(origin, "v1/instance", maxResponseBytes = MAX_INSTANCE_BYTES).body)
+        return JSONObject(api.get(origin, "api/v1/instance", maxResponseBytes = MAX_INSTANCE_BYTES).body)
     }
 
     /**

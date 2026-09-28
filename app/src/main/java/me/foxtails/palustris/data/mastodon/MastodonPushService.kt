@@ -1,7 +1,7 @@
 package me.foxtails.palustris.data.mastodon
 
-import me.foxtails.palustris.data.misskey.ApiFailure
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
+import me.foxtails.palustris.data.transport.HttpStatusFailure
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.NotificationCategory
@@ -15,7 +15,7 @@ import org.json.JSONObject
 internal class MastodonPushService(
     private val origin: String,
     private val token: String,
-    private val api: MisskeyApi,
+    private val api: AuthenticatedHttpClient,
     private val accountId: AccountId,
 ) {
     suspend fun providerInfo() = PushProviderInfo(status = CapabilityStatus.Supported)
@@ -49,8 +49,8 @@ internal class MastodonPushService(
         if (spec.accountId != accountId || spec.publicKey.isBlank() || spec.authSecret.isBlank()) throw SourceError.Unsupported("notifications.push.spec")
     }
     private suspend fun readOwned(): PushSubscription? = try {
-        confirmed(api.get(origin, "v1/push/subscription", token, MASTODON_MAX_RESPONSE_BYTES).body)
-    } catch (error: ApiFailure) { if (error.status == 404) null else throw error }
+        confirmed(api.get(origin, "api/v1/push/subscription", token, MASTODON_MAX_RESPONSE_BYTES).body)
+    } catch (error: HttpStatusFailure) { if (error.status == 404) null else throw error }
     private fun confirmed(body: String, expectedEndpoint: ValidatedUrl? = null): PushSubscription {
         val json = JSONObject(body); val endpoint = ValidatedUrl.https(json.optString("endpoint")) ?: throw SourceError.ServerError("notifications.push.confirmation")
         if (expectedEndpoint != null && endpoint != expectedEndpoint) throw SourceError.ServerError("notifications.push.confirmation")

@@ -73,7 +73,7 @@ class MastodonNotificationSyncTest {
         val token = NotificationSyncToken(account, 1)
         val repository = NotificationRepository(InMemoryNotificationStore())
         repository.activate(token)
-        val source = MastodonSource(origin, "token", MisskeyApi(), account)
+        val source = MastodonSource(origin, "token", mastodonTestClient(), account)
         val synchronizer = NotificationSynchronizer(repository)
 
         synchronizer.establishBaseline(source, token)
@@ -124,7 +124,7 @@ class MastodonNotificationSyncTest {
         val token = NotificationSyncToken(account, 1)
         val repository = NotificationRepository(InMemoryNotificationStore())
         repository.activate(token)
-        val source = MastodonSource(origin, "token", MisskeyApi(), account)
+        val source = MastodonSource(origin, "token", mastodonTestClient(), account)
         val synchronizer = NotificationSynchronizer(repository)
 
         synchronizer.establishBaseline(source, token)

@@ -3,20 +3,20 @@ package me.foxtails.palustris.data.mastodon
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.domain.SourceError
 
 internal class MastodonPageClient(
     private val origin: String,
     private val token: String,
-    private val api: MisskeyApi,
+    private val api: AuthenticatedHttpClient,
     private val account: String,
     private val sessionRevision: Long,
     private val sourceInstance: String,
 ) {
     suspend fun getPage(route: MastodonPageRoute, cursor: String?) = if (cursor == null) {
-        api.get(origin, route.endpoint, token, MASTODON_MAX_RESPONSE_BYTES)
+        api.get(origin, "api/${route.endpoint}", token, MASTODON_MAX_RESPONSE_BYTES)
     } else {
         val url = decodeAndValidate(route, cursor)
         api.getUrl(url.toString(), token, MASTODON_MAX_RESPONSE_BYTES)

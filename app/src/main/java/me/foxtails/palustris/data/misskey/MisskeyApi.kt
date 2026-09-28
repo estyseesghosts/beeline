@@ -1,35 +1,31 @@
 package me.foxtails.palustris.data.misskey
 
-import kotlinx.coroutines.Dispatchers
-import me.foxtails.palustris.ProductIdentity
 import me.foxtails.palustris.data.AppMessages
 import me.foxtails.palustris.data.transport.HttpResponse
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
+import me.foxtails.palustris.data.transport.HttpStatusFailure
+import me.foxtails.palustris.data.transport.MultipartFileBody
+import me.foxtails.palustris.data.transport.ResponseLimitExceeded
+import me.foxtails.palustris.ProductIdentity
 import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
-import okhttp3.ResponseBody
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import okio.source
 import org.json.JSONObject
 import java.io.InputStream
 import java.io.IOException
-import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import okio.source
 
 object ServerAddress {
     fun normalize(input: String, messages: AppMessages = AppMessages.Default): String {
@@ -45,7 +41,6 @@ object ServerAddress {
 
 class ApiFailure(val status: Int, val code: String? = null, message: String = "") : IOException(message)
 
-class ResponseLimitExceeded(message: String = "") : IOException(message)
 
 /** No redirects: an authenticated request must never forward its token to another host. */
 class MisskeyApi(
@@ -55,6 +50,11 @@ class MisskeyApi(
         .callTimeout(40, TimeUnit.SECONDS).build(),
     private val appMessages: AppMessages = AppMessages.Default,
 ) {
+    private val transport = AuthenticatedHttpClient(client)
+
+    /** Temporary bridge for MastodonAuth; slice 2A4 removes this auth constructor and bridge. */
+    fun authenticatedClient(): AuthenticatedHttpClient =
+        AuthenticatedHttpClient(client)
     suspend fun post(
         origin: String,
         endpoint: String,
@@ -166,16 +166,7 @@ class MisskeyApi(
         files: List<MultipartFileBody> = emptyList(),
         bearerToken: String? = null,
     ): HttpResponse {
-        val body = MultipartBody.Builder().setType(MultipartBody.FORM).apply {
-            fields.forEach { (name, value) -> addFormDataPart(name, value) }
-            files.forEach { part -> addFormDataPart(part.fieldName, part.fileName, part.body()) }
-        }.build()
-        return execute(Request.Builder().url("$origin/$endpoint")
-            .header("Accept", "application/json")
-            .header("User-Agent", ProductIdentity.userAgent)
-            .apply { bearerToken?.let { header("Authorization", "Bearer $it") } }
-            .patch(body)
-            .build())
+        return transport.patchMultipart(origin, endpoint, fields, files, bearerToken)
     }
 
     suspend fun get(
@@ -217,58 +208,12 @@ class MisskeyApi(
         return client.newWebSocket(request, listener)
     }
 
-    private suspend fun execute(request: Request, maxResponseBytes: Long? = null): HttpResponse = withContext(Dispatchers.IO) {
-        suspendCancellableCoroutine { continuation ->
-            val call = client.newCall(request)
-            continuation.invokeOnCancellation { call.cancel() }
-            call.enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) { if (!continuation.isCancelled) continuation.resumeWithException(e) }
-                override fun onResponse(call: Call, response: Response) {
-                    response.use {
-                        try {
-                            val text = it.body?.let { body -> readBody(body, maxResponseBytes) }.orEmpty()
-                            if (!it.isSuccessful) {
-                                val code = runCatching { JSONObject(text).optJSONObject("error")?.optString("code") }.getOrNull()
-                                throw ApiFailure(it.code, code, appMessages.serverRequestFailed(it.code, code))
-                            }
-                            continuation.resume(HttpResponse(text, it.headers))
-                        } catch (e: Exception) { if (!continuation.isCancelled) continuation.resumeWithException(e) }
-                    }
-                }
-            })
-        }
-    }
-
-    private fun readBody(body: ResponseBody, maxResponseBytes: Long?): String {
-        if (maxResponseBytes == null) return body.string()
-        val output = ByteArrayOutputStream()
-        val buffer = ByteArray(8 * 1024)
-        var total = 0L
-        body.byteStream().use { input ->
-            while (true) {
-                val read = input.read(buffer)
-                if (read < 0) break
-                total += read
-                if (total > maxResponseBytes) throw ResponseLimitExceeded(appMessages.responseLimitExceeded())
-                output.write(buffer, 0, read)
-            }
-        }
-        return output.toString(Charsets.UTF_8.name())
-    }
-}
-
-/** One file part for a multipart patch; the stream is application-owned and closes after the request. */
-class MultipartFileBody(
-    val fieldName: String,
-    val fileName: String?,
-    private val mimeType: String,
-    private val stream: InputStream,
-) {
-    internal fun body(): RequestBody = object : RequestBody() {
-        override fun contentType(): MediaType? = mimeType.toMediaType()
-        override fun writeTo(sink: okio.BufferedSink) {
-            stream.use { sink.writeAll(it.source()) }
-        }
+    private suspend fun execute(request: Request, maxResponseBytes: Long? = null): HttpResponse = try {
+        transport.execute(request, maxResponseBytes)
+    } catch (failure: HttpStatusFailure) {
+        val error = runCatching { JSONObject(failure.body).optJSONObject("error") }.getOrNull()
+        val code = error?.optString("code")?.takeIf(String::isNotBlank)
+        throw ApiFailure(failure.status, code, appMessages.serverRequestFailed(failure.status, code))
     }
 }
 

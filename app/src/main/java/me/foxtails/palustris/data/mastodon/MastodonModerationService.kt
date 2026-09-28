@@ -5,7 +5,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.util.Base64
 import org.json.JSONArray
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.ModerationAccount
 import me.foxtails.palustris.domain.ModerationCursor
@@ -21,7 +21,7 @@ import org.json.JSONObject
 class MastodonModerationService(
     private val origin: String,
     private val token: String,
-    private val api: MisskeyApi,
+    private val api: AuthenticatedHttpClient,
     private val accountId: AccountId,
 ) {
     suspend fun blocked(cursor: ModerationCursor? = null): ModerationPage<ModerationAccount> = list(ModerationListKind.Blocked, cursor)
@@ -57,7 +57,7 @@ class MastodonModerationService(
         val variant = "mastodon-${kind.name.lowercase()}-v1"
         val route = if (kind == ModerationListKind.Blocked) "blocked" else "muted"
         val path = "/api/v1/accounts/$route"
-        val endpoint = "v1/accounts/$route?limit=40"
+        val endpoint = "api/v1/accounts/$route?limit=40"
         val url = cursor?.let { decodeCursor(it, kind, variant, route, path) }
         val current = url ?: origin.toHttpUrl().resolve("/api/$endpoint")!!
         val response = if (url == null) api.get(origin, endpoint, token, MASTODON_MAX_RESPONSE_BYTES) else api.getUrl(url.toString(), token, MASTODON_MAX_RESPONSE_BYTES)
@@ -94,7 +94,7 @@ class MastodonModerationService(
     }
 
     private suspend fun profileRelationship(target: AccountId): ProfileRelationship {
-        // Build a complete HttpUrl with an encoded path and query, then use getUrl to bypass the /api/ prefix that MisskeyApi.get adds.
+        // Build a complete URL with an encoded path and query for the neutral client.
         val url = origin.toHttpUrl().newBuilder()
             .addPathSegments("api/v1/accounts/relationships")
             .addQueryParameter("id[]", target.localId)

@@ -256,7 +256,7 @@ class CrossCuttingTest {
             val stale = me.foxtails.palustris.data.mastodon.MastodonSource(
                 origin = origin,
                 token = "token",
-                api = MisskeyApi(),
+                api = me.foxtails.palustris.data.mastodon.mastodonTestClient(),
                 accountId = AccountId(Connection(origin, Protocol.MASTODON), "account"),
                 initialCapabilities = ServerCapabilities(
                     timelines = setOf(Timeline.Home),
@@ -269,7 +269,7 @@ class CrossCuttingTest {
             val current = me.foxtails.palustris.data.mastodon.MastodonSource(
                 origin = origin,
                 token = "token",
-                api = MisskeyApi(),
+                api = me.foxtails.palustris.data.mastodon.mastodonTestClient(),
                 accountId = AccountId(Connection(origin, Protocol.MASTODON), "account"),
                 initialCapabilities = ServerCapabilities(
                     timelines = setOf(Timeline.Home),

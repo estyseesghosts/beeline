@@ -1,6 +1,7 @@
 package me.foxtails.palustris.data.misskey
 
 import me.foxtails.palustris.data.AppMessages
+import me.foxtails.palustris.data.transport.ResponseLimitExceeded
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience

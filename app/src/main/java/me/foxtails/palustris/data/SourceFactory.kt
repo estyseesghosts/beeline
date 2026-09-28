@@ -2,6 +2,7 @@ package me.foxtails.palustris.data
 
 import javax.inject.Inject
 import me.foxtails.palustris.data.transport.HttpClientPool
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeySource
 import me.foxtails.palustris.data.misskey.CapabilityCache
@@ -41,7 +42,9 @@ class SocialSourceFactory @Inject constructor(
             appMessages = appMessages,
         )
         Protocol.MASTODON -> {
-            val api = MisskeyApi(clientPool.clientFor(session.accountId.connection), appMessages = appMessages)
+            val api = AuthenticatedHttpClient(
+                clientPool.clientFor(session.accountId.connection), session.accountId.connection.origin,
+            )
             MastodonSource(
                 origin = session.accountId.connection.origin,
                 token = session.token,

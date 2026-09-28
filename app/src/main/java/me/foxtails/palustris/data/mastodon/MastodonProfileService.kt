@@ -1,7 +1,7 @@
 package me.foxtails.palustris.data.mastodon
 
-import me.foxtails.palustris.data.misskey.ApiFailure
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
+import me.foxtails.palustris.data.transport.HttpStatusFailure
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Page
@@ -21,7 +21,7 @@ import org.json.JSONObject
 class MastodonProfileService(
     private val origin: String,
     private val token: String,
-    private val api: MisskeyApi,
+    private val api: AuthenticatedHttpClient,
     private val authenticatedAccountId: AccountId,
 ) {
     suspend fun profile(id: AccountId): Account {
@@ -51,7 +51,7 @@ class MastodonProfileService(
     private suspend fun likedTimeline(profileId: AccountId, cursor: String?): Page<Post> {
         if (profileId != authenticatedAccountId) throw SourceError.Unsupported("profile.liked")
         val response = if (cursor == null) {
-            api.get(origin, "v1/favourites?limit=$PROFILE_PAGE_SIZE", token, MASTODON_MAX_RESPONSE_BYTES)
+            api.get(origin, "api/v1/favourites?limit=$PROFILE_PAGE_SIZE", token, MASTODON_MAX_RESPONSE_BYTES)
         } else {
             api.getUrl(validateFavouritesPaginationUrl(cursor).toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         }
@@ -74,7 +74,7 @@ class MastodonProfileService(
         validateTarget(id, "profile.pinned")
         val response = try {
             api.getUrl(pinnedUrl(id).toString(), token, MASTODON_MAX_RESPONSE_BYTES)
-        } catch (error: ApiFailure) {
+        } catch (error: HttpStatusFailure) {
             if (error.status in setOf(400, 404, 422)) return emptyList()
             throw error
         }

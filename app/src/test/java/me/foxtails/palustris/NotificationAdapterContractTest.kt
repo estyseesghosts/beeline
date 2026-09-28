@@ -3,6 +3,7 @@ package me.foxtails.palustris
 import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.data.mastodon.MastodonNotificationMapper
 import me.foxtails.palustris.data.mastodon.MastodonSource
+import me.foxtails.palustris.data.mastodon.mastodonTestClient
 import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeyNotificationMapper
@@ -63,7 +64,7 @@ class NotificationAdapterContractTest {
             ))
         server.enqueue(MockResponse().setBody(JSONArray().put(mastodonNotification("n-old", "mention")).toString()))
 
-        val source = MastodonSource(origin, "token", MisskeyApi(), account)
+        val source = MastodonSource(origin, "token", mastodonTestClient(), account)
         val first = source.notifications(query)
         val second = source.notifications(query, first.olderCursor)
 
@@ -78,7 +79,7 @@ class NotificationAdapterContractTest {
         val otherAccount = MastodonSource(
             origin,
             "token",
-            MisskeyApi(),
+            mastodonTestClient(),
             AccountId(Connection(origin, Protocol.MASTODON), "receiver-b"),
         )
         assertThrows(SourceError.Unsupported::class.java) {
@@ -105,7 +106,7 @@ class NotificationAdapterContractTest {
                 .put("most_recent_notification_id", "notification-3")))
         server.enqueue(MockResponse().setBody(payload.toString()))
 
-        val result = MastodonSource(origin, "token", MisskeyApi(), receiver)
+        val result = MastodonSource(origin, "token", mastodonTestClient(), receiver)
             .notifications(NotificationQuery(grouped = true))
             .items
             .single()
@@ -146,7 +147,7 @@ class NotificationAdapterContractTest {
 
             assertThrows(SourceError.Unsupported::class.java) {
                 runBlocking {
-                    MastodonSource(origin, "token", MisskeyApi(), receiver).notifications()
+                    MastodonSource(origin, "token", mastodonTestClient(), receiver).notifications()
                 }
             }
             assertEquals(0, foreign.requestCount)
@@ -165,7 +166,7 @@ class NotificationAdapterContractTest {
             .put("status", JSONObject().put("id", "missing-account"))
         server.enqueue(MockResponse().setBody(JSONArray().put(malformedOptionalStatus).toString()))
 
-        val notification = MastodonSource(origin, "token", MisskeyApi(), receiver)
+        val notification = MastodonSource(origin, "token", mastodonTestClient(), receiver)
             .notifications()
             .items
             .single()
@@ -283,7 +284,7 @@ class NotificationAdapterContractTest {
         server.enqueue(MockResponse().setBody(JSONArray().put(mastodonNotification("latest", "mention")).toString()))
         server.enqueue(MockResponse().setBody("{}"))
 
-        val acknowledgement = MastodonSource(origin, "token", MisskeyApi(), account).acknowledgeNotifications()
+        val acknowledgement = MastodonSource(origin, "token", mastodonTestClient(), account).acknowledgeNotifications()
 
         assertEquals(me.foxtails.palustris.domain.NotificationUnreadState.None, acknowledgement.readState)
         assertEquals("/api/v1/notifications?limit=1", server.takeRequest().path)
@@ -310,7 +311,7 @@ class NotificationAdapterContractTest {
         server.enqueue(MockResponse().setBody(JSONObject().put("id", "push-id").put("endpoint", spec.endpoint.value).toString()))
         server.enqueue(MockResponse().setBody(JSONObject().put("id", "push-id").put("endpoint", spec.endpoint.value).toString()))
         server.enqueue(MockResponse())
-        val source = MastodonSource(origin, "token", MisskeyApi(), account)
+        val source = MastodonSource(origin, "token", mastodonTestClient(), account)
 
         val existing = source.queryOwnedPushSubscription(oldEndpoint)!!
         val replacement = source.createOrReplacePushSubscription(spec, existing)
@@ -409,7 +410,7 @@ class NotificationAdapterContractTest {
         )
         server.enqueue(MockResponse().setBody(JSONObject().put("id", "missing-endpoint").toString()))
         assertThrows(SourceError.ServerError::class.java) {
-            runBlocking { MastodonSource(origin, "token", MisskeyApi(), mastodonAccount).createOrReplacePushSubscription(mastodonSpec) }
+            runBlocking { MastodonSource(origin, "token", mastodonTestClient(), mastodonAccount).createOrReplacePushSubscription(mastodonSpec) }
         }
 
         val misskeyAccount = AccountId(Connection(origin, Protocol.MISSKEY), "misskey")

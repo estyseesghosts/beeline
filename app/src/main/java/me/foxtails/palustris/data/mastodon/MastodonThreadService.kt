@@ -8,14 +8,14 @@ import me.foxtails.palustris.domain.ThreadContext
 import me.foxtails.palustris.domain.ThreadContinuation
 import me.foxtails.palustris.domain.ThreadRefreshHint
 import me.foxtails.palustris.domain.ThreadSessionKey
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import org.json.JSONArray
 import org.json.JSONObject
 
 internal class MastodonThreadService(
     private val origin: String,
     private val token: String,
-    private val api: MisskeyApi,
+    private val api: AuthenticatedHttpClient,
     private val accountId: AccountId,
     private val sessionRevision: Long,
 ) {
@@ -24,7 +24,7 @@ internal class MastodonThreadService(
         if (continuation != null && continuation.sessionKey != key) {
             throw me.foxtails.palustris.domain.SourceError.Unsupported("thread.continuation")
         }
-        val path = "v1/statuses/${focalId.value.encodeMastodonPathSegment()}"
+        val path = "api/v1/statuses/${focalId.value.encodeMastodonPathSegment()}"
         val focal = MastodonMapper.post(
             api.get(origin, path, token, MAX_RESPONSE_BYTES).body.toJson(),
             origin,

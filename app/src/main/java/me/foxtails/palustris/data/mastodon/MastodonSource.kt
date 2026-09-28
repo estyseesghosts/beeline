@@ -8,10 +8,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
-import me.foxtails.palustris.data.misskey.ApiFailure
 import me.foxtails.palustris.data.transport.HttpResponse
-import me.foxtails.palustris.data.misskey.MisskeyApi
-import me.foxtails.palustris.data.misskey.ResponseLimitExceeded
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
+import me.foxtails.palustris.data.transport.ResponseLimitExceeded
+import me.foxtails.palustris.data.transport.HttpStatusFailure
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -76,7 +76,7 @@ internal const val MASTODON_MAX_RESPONSE_BYTES = 4L * 1024 * 1024
 class MastodonSource(
     private val origin: String,
     private val token: String,
-    private val api: MisskeyApi,
+    private val api: AuthenticatedHttpClient,
     private val accountId: AccountId,
     initialCapabilities: ServerCapabilities = DEFAULT_CAPABILITIES,
     private val capabilityProbe: CapabilityProbe? = null,
@@ -124,7 +124,7 @@ class MastodonSource(
 
     override suspend fun post(id: EntityId): Post = request("post") {
         validatePostId(id, "post")
-        MastodonMapper.post(api.get(origin, "v1/statuses/${id.value.encodeMastodonPathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(), origin)
+        MastodonMapper.post(api.get(origin, "api/v1/statuses/${id.value.encodeMastodonPathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(), origin)
     }
 
     override suspend fun threadContext(
@@ -212,7 +212,7 @@ class MastodonSource(
     }
 
     override suspend fun customEmojis(): List<CustomEmoji> = request("emoji.catalog") {
-        MastodonEmojiMapper.parseCatalog(api.get(origin, "v1/custom_emojis", token, MASTODON_MAX_RESPONSE_BYTES).body, origin)
+        MastodonEmojiMapper.parseCatalog(api.get(origin, "api/v1/custom_emojis", token, MASTODON_MAX_RESPONSE_BYTES).body, origin)
     }
 
     override suspend fun react(id: EntityId, choice: EmojiChoice) = request("react") {
@@ -428,7 +428,7 @@ class MastodonSource(
 
     override suspend fun search(query: String): List<Post> = request("search") {
         val encodedQuery = URLEncoder.encode(query, Charsets.UTF_8.name())
-        val statuses = JSONObject(api.get(origin, "v2/search?q=$encodedQuery", token, MASTODON_MAX_RESPONSE_BYTES).body)
+        val statuses = JSONObject(api.get(origin, "api/v2/search?q=$encodedQuery", token, MASTODON_MAX_RESPONSE_BYTES).body)
             .optJSONArray("statuses") ?: JSONArray()
         (0 until statuses.length()).map { MastodonMapper.post(statuses.getJSONObject(it), origin) }
     }
@@ -452,7 +452,7 @@ class MastodonSource(
         val handle = query.trim().removePrefix("@").takeIf { it.isNotBlank() }
             ?: throw SourceError.Unsupported("account search")
         listOf(MastodonMapper.account(
-            api.get(origin, "v1/accounts/lookup?acct=${URLEncoder.encode(handle, Charsets.UTF_8.name())}", token, MASTODON_MAX_RESPONSE_BYTES)
+            api.get(origin, "api/v1/accounts/lookup?acct=${URLEncoder.encode(handle, Charsets.UTF_8.name())}", token, MASTODON_MAX_RESPONSE_BYTES)
                 .body.toJson(), origin,
         ))
     }
@@ -493,8 +493,8 @@ class MastodonSource(
             throw SourceError.ResourceLimit(operation)
         } catch (e: SourceError) {
             throw e
-        } catch (e: ApiFailure) {
-            throw MastodonErrorMapper.map(e)
+        } catch (e: HttpStatusFailure) {
+            throw MastodonErrorMapper.map(e.status, e.body)
         } catch (e: Exception) {
             throw MastodonErrorMapper.map(e)
         }

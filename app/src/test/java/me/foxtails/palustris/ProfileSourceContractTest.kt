@@ -2,6 +2,7 @@ package me.foxtails.palustris
 
 import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.data.mastodon.MastodonSource
+import me.foxtails.palustris.data.mastodon.mastodonTestClient
 import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.misskey.MisskeySource
@@ -37,7 +38,7 @@ class ProfileSourceContractTest {
         MockWebServer().use { server ->
             val origin = server.url("/").toString().removeSuffix("/")
             val target = AccountId(Connection(origin, Protocol.MASTODON), "contract-user")
-            val source = MastodonSource(origin, "contract-token", MisskeyApi(), target)
+            val source = MastodonSource(origin, "contract-token", mastodonTestClient(), target)
 
             server.enqueue(mastodonPage("posts-first").addHeader(
                 "Link",

@@ -1,6 +1,6 @@
 package me.foxtails.palustris.data.mastodon
 
-import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.EditableProfile
@@ -13,7 +13,7 @@ import org.json.JSONObject
 class MastodonSelfProfileService(
     private val origin: String,
     private val token: String,
-    private val api: MisskeyApi,
+    private val api: AuthenticatedHttpClient,
     private val authenticatedAccountId: AccountId,
 ) {
     suspend fun load(capabilities: EditableProfileCapabilities): EditableProfile {
@@ -21,9 +21,9 @@ class MastodonSelfProfileService(
             throw SourceError.Unsupported("profile.editable.load")
         }
         val body = if (capabilities.read == CapabilityStatus.Supported) {
-            api.get(origin, "v1/profile", token, MASTODON_MAX_RESPONSE_BYTES).body
+            api.get(origin, "api/v1/profile", token, MASTODON_MAX_RESPONSE_BYTES).body
         } else {
-            api.get(origin, "v1/accounts/verify_credentials", token, MASTODON_MAX_RESPONSE_BYTES).body
+            api.get(origin, "api/v1/accounts/verify_credentials", token, MASTODON_MAX_RESPONSE_BYTES).body
         }
         val json = JSONObject(body)
         requireMatchingAccount(json)

@@ -2,54 +2,53 @@
 
 **Status:** `docs/agents/tasks/beeline-0.4.0.md` is the active durable task state.
 
-## Current boundary
+## Current position
 
-Slice 2A1 is committed as `5db0d1a`. Slice 2A2 moves only the generic HTTP pool and response into
-`data/transport`. Slice 2A3 and slice 2A4 remain planned.
-
-## Completed slice
-
-`HttpClientPool` keeps its timeouts, redirect policy, maximum size, connection key, and singleton
-lifetime. `HttpResponse` keeps its body, headers, and Link cursor parser. All callers use the new
-package. Grep found no old fully qualified references.
+Slice 2A3 now uses `AuthenticatedHttpClient` for neutral authenticated HTTP execution. Mastodon
+production services no longer construct that client through `MisskeyApi`. The test suite uses a
+test-only neutral fixture. No staging, commit, or push occurred.
 
 ## Verification
 
-The post-edit focused command passed 142 tests: 5 MisskeyApiTest, 9 HttpClientPoolTest, 6
-WebSocketTransportTest, 59 MastodonIntegrationTest, 48 MisskeyIntegrationTest, and 15
-SessionLifecycleTest. It exited 0 with zero regressions. The complete focused evidence remains 23
-transport tests, 113 adapter tests, and 17 authentication tests. The cancellation test passed alone.
-`:app:lintDebug` passed. `python tools/scripts/architecture_audit.py . --baseline
-tools/architecture-baseline.json --check` exited 0 with 613 findings and zero `regression:` lines.
-Its output is in ignored `logs/architecture-audit-2a2.txt`.
+The new transport test passes 6 tests. The requested focused adapter and transport set ran 260
+tests, with 258 passing and two cancellation failures.
 
-The first adapter run had one queue-shutdown timeout. The rerun passed. The full `test
-assembleRelease` command exceeded 180 seconds after reporting 1,385 tests and 17 failures. The
-known baseline has 16 failures in `logs/BUGS.txt`. Retained output does not identify the seventeenth
-test or message. The cancellation test passed alone. The seventeenth failure remains unexplained
-and unattributed, not a proven baseline failure or flake. A separate `:app:assembleRelease` run
-passed.
+The fully qualified Mastodon failure was
+`me.foxtails.palustris.data.mastodon.MastodonIntegrationTest.cancelingTimelinePageCancelsRequestAndAllowsRetry`.
+The focused run failed during teardown with
+`java.io.IOException: Gave up waiting for queue to shut down` from `MockWebServer.shutdown`.
+The test passed when rerun alone.
+
+The fully qualified Misskey failure was
+`me.foxtails.palustris.data.misskey.MisskeyApiTest.cancellationCancelsTheInFlightCallAndDoesNotBecomeApiFailure`.
+The focused run failed at `MisskeyApiTest.kt:140` with `java.lang.AssertionError` from
+`assertTrue(canceledCall.get())`. The test passed when rerun alone.
+
+These failures are isolation or timing flakes. They are not a transport baseline failure.
+They need a test-isolation and timing stabilization owner. Do not weaken the tests.
+
+`AuthenticatedHttpClientTest.cancellationCancelsInFlightCallAndRemainsCancellationException`
+passed all 6 tests. The architecture audit exits 0 with 613 findings and zero regression lines.
+Its ignored record is `logs/architecture-audit-2a3.txt`.
+
+`:app:lintDebug` and `assembleRelease` pass. The combined `test assembleRelease` command timed out
+after unrelated full-suite failures. Full device and live-server checks remain unavailable. Earlier
+suites do not prove the new transport client without its new test.
 
 ## Next slice
 
-Review this diff. Stage and commit only the exact pathspec entries listed in the task state. Use explicit
-`git add` and `git commit` pathspecs. This excludes staged `docs/classic_navigation.md`. Do not stage
-the other unrelated modified, deleted, untracked, or ignored files. Slice 2A3 can then move
-`MisskeyApi` as planned.
+Run the remaining gates. Inspect the diff. Use the explicit file-by-file pathspec in the task state
+if a parent agent later stages this slice. Keep `MastodonAuth` compatibility for 2A4 only.
 
-## Hygiene
+## Staging boundary
 
-No staging, commit, or push occurred. `docs/classic_navigation.md` remains staged from prior work.
-Seven modified `.opencode/agents` files, `importantdocs/writing_style.md`, deleted PNGs, untracked
-helper scripts, Python caches, and `screen.png` remain unrelated. Ignored `logs/*` files remain
-excluded. The staged `docs/classic_navigation.md` remains excluded by the commit pathspec.
+The exact staging pathspec is listed in `docs/agents/tasks/beeline-0.4.0.md`.
+It contains two new transport production files, 17 migrated production files, 15 test files,
+and three documentation files.
 
-## Limits
-
-Live-server, physical-device, API 29 physical, RTL, TalkBack, font-scale, and signed-release
-checks remain unverified.
-
-## Last safe boundary
-
-The last committed slice is `5db0d1a`. The 2A2 worktree is complete and awaits review and commit by
-`git_handler`.
+Exclude staged `docs/classic_navigation.md`.
+Exclude the seven modified `.opencode/agents` files and the two untracked `.opencode/agents` helpers.
+Exclude modified `importantdocs/writing_style.md`.
+Exclude deleted `currentbehaviour.png` and `intendedbehaviour.png`.
+Exclude the four untracked helper scripts, both Python cache directories, and `screen.png`.
+Keep ignored `logs/*` outside staging, including the audit record.

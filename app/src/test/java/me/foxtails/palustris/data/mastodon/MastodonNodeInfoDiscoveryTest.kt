@@ -36,7 +36,7 @@ class MastodonNodeInfoDiscoveryTest {
             server.enqueue(MockResponse().setBody(wellKnown(origin).toString()))
             server.enqueue(MockResponse().setBody(nodeInfo("pleroma_emoji_reactions").toString()))
 
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+            val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertEquals(CapabilityStatus.Supported, capabilities.emoji.reactionMutation)
@@ -59,7 +59,7 @@ class MastodonNodeInfoDiscoveryTest {
             server.enqueue(MockResponse().setBody(extensionInstance().toString()))
             val origin = server.url("/").toString().removeSuffix("/")
 
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+            val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertEquals(CapabilityStatus.Supported, capabilities.emoji.reactionMutation)
@@ -81,7 +81,7 @@ class MastodonNodeInfoDiscoveryTest {
             ))
             server.enqueue(MockResponse().setBody(nodeInfo("pleroma_emoji_reactions").toString()))
 
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+            val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertEquals(CapabilityStatus.Supported, capabilities.emoji.reactionMutation)
@@ -100,7 +100,7 @@ class MastodonNodeInfoDiscoveryTest {
             server.enqueue(MockResponse().setBody(wellKnown(origin).toString()))
             server.enqueue(MockResponse().setBody(nodeInfo("pleroma_other").toString()))
 
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+            val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertEquals(CapabilityStatus.Unknown, capabilities.emoji.reactionMutation)
@@ -116,7 +116,7 @@ class MastodonNodeInfoDiscoveryTest {
             server.enqueue(MockResponse().setBody(instance("4.6.0").toString()))
             server.enqueue(MockResponse().setBody("""{"links":[]}"""))
 
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+            val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertEquals(CapabilityStatus.Unknown, capabilities.emoji.reactionMutation)
@@ -132,7 +132,7 @@ class MastodonNodeInfoDiscoveryTest {
                 server.enqueue(MockResponse().setBody(instance("4.6.0").toString()))
                 server.enqueue(MockResponse().setBody(wellKnown("http://nodeinfo.diaspora.software/ns/schema/2.1" to href).toString()))
 
-                val capabilities = MastodonCapabilityProbe(MisskeyApi())
+                val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                     .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
                 assertEquals(href, CapabilityStatus.Unknown, capabilities.emoji.reactionMutation)
@@ -149,7 +149,7 @@ class MastodonNodeInfoDiscoveryTest {
                 server.enqueue(MockResponse().setBody(instance("4.6.0").toString()))
                 server.enqueue(MockResponse().setBody(wellKnown("http://nodeinfo.diaspora.software/ns/schema/2.1" to href).toString()))
 
-                val capabilities = MastodonCapabilityProbe(MisskeyApi())
+                val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                     .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
                 assertEquals(href, CapabilityStatus.Unknown, capabilities.emoji.reactionMutation)
@@ -165,7 +165,7 @@ class MastodonNodeInfoDiscoveryTest {
             server.enqueue(MockResponse().setBody(instance("4.6.0").toString()))
             server.enqueue(MockResponse().setResponseCode(500).setBody("{}"))
 
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+                val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertEquals(CapabilityStatus.Unknown, capabilities.emoji.reactionMutation)
@@ -181,7 +181,7 @@ class MastodonNodeInfoDiscoveryTest {
             server.enqueue(MockResponse().setBody(wellKnown(origin).toString()))
             server.enqueue(MockResponse().setResponseCode(500).setBody("{}"))
 
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+                val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertEquals(CapabilityStatus.Unknown, capabilities.emoji.reactionMutation)
@@ -196,7 +196,7 @@ class MastodonNodeInfoDiscoveryTest {
             server.enqueue(MockResponse().setBody(instance("4.6.0").toString()))
             server.enqueue(MockResponse().setBody("x".repeat(300 * 1024)))
 
-            val capabilities = MastodonCapabilityProbe(MisskeyApi())
+                val capabilities = MastodonCapabilityProbe(mastodonTestClient())
                 .probeCapabilities(Connection(origin, Protocol.MASTODON))
 
             assertEquals(CapabilityStatus.Unknown, capabilities.emoji.reactionMutation)
