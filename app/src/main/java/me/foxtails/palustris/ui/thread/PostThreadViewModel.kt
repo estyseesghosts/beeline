@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.CapabilityStatus
@@ -47,7 +46,7 @@ class PostThreadViewModel @AssistedInject constructor(
     @Assisted val accountId: AccountId,
     @Assisted private val source: SocialSource,
     @Assisted private val sessionRevision: Long,
-    private val preferences: PostPreferencesRepository = InMemoryPostPreferencesRepository(),
+    private val preferences: PostPreferencesRepository,
     @Assisted private val executionAuthority: PostInteractionExecutionAuthority,
 ) : ViewModel() {
 

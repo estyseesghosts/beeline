@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
+import me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
@@ -52,15 +53,19 @@ class PostThreadViewModelTest {
     private val origin = "https://example.org"
     private val account = AccountId(Connection(origin, Protocol.MASTODON), "viewer")
     private val focal = owned("focal")
+    private lateinit var preferences: InMemoryPostPreferencesRepository
 
-    @Before fun setUp() { Dispatchers.setMain(StandardTestDispatcher()) }
+    @Before fun setUp() {
+        preferences = InMemoryPostPreferencesRepository()
+        Dispatchers.setMain(StandardTestDispatcher())
+    }
 
     @After fun tearDown() { Dispatchers.resetMain() }
 
     @Test
     fun excludedOriginKeepsFocalVisibleWithoutRequestingThread() = runTest {
         val source = FakeSource()
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = false)
         advanceUntilIdle()
@@ -79,7 +84,7 @@ class PostThreadViewModelTest {
                 descendants = listOf(owned("reply", replyTo = "focal").post),
             ),
         )
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()
@@ -96,7 +101,7 @@ class PostThreadViewModelTest {
     fun continuationIsBoundToTheActiveSession() = runTest {
         val key = ThreadSessionKey(account, 8L, focal.post.id)
         val source = FakeSource(context = ThreadContext(focal = focal.post, continuation = ThreadContinuation(key, "more")))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()
@@ -110,7 +115,7 @@ class PostThreadViewModelTest {
     @Test
     fun confirmedFavoriteSurvivesAReplacementRefresh() = runTest {
         val source = FakeSource(context = ThreadContext(focal = focal.post))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()
@@ -123,9 +128,48 @@ class PostThreadViewModelTest {
     }
 
     @Test
+    fun injectedPreferencesApplyAcrossRefreshAndThreadReplacement() = runTest {
+        preferences.update(account) { it.copy(favouriteEmoji = "🎉") }
+        val reacted = focal.post.copy(
+            myReaction = "🎉",
+            selectedReactions = listOf(EmojiChoice("🎉", "🎉", null)),
+        )
+        val source = GatedThreadSource(
+            context = ThreadContext(focal = reacted),
+            primaryFavouriteMode = PrimaryFavouriteMode.Reaction,
+        )
+        val model = PostThreadViewModel(
+            account,
+            source,
+            sessionRevision = 8L,
+            preferences = preferences,
+            executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority(),
+        )
+
+        model.activate(OwnedPost(account, reacted, 8L), supportsComments = true)
+        advanceUntilIdle()
+        assertTrue(model.state.value.focal!!.post.favourited)
+
+        preferences.update(account) { it.copy(favouriteEmoji = "😂") }
+        advanceUntilIdle()
+        model.refresh()
+        advanceUntilIdle()
+        assertFalse(model.state.value.focal!!.post.favourited)
+
+        val replacement = owned("replacement").post.copy(
+            myReaction = "😂",
+            selectedReactions = listOf(EmojiChoice("😂", "😂", null)),
+        )
+        source.context = ThreadContext(focal = replacement)
+        model.activate(OwnedPost(account, replacement, 8L), supportsComments = true)
+        advanceUntilIdle()
+        assertTrue(model.state.value.focal!!.post.favourited)
+    }
+
+    @Test
     fun wideMastodonDetailMutationsUpdateTheFocalPostAndRollbackOnFailure() = runTest {
         val source = FakeSource()
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()
@@ -164,7 +208,7 @@ class PostThreadViewModelTest {
             interactionCounts = PostInteractionCounts(replyCount = 2),
         ))
         val source = FakeSource(context = ThreadContext(focal = parent.post))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(parent, supportsComments = true)
         advanceUntilIdle()
@@ -176,7 +220,7 @@ class PostThreadViewModelTest {
     @Test
     fun publishedReplyKeepsUnavailableReplyCountUnavailable() = runTest {
         val source = FakeSource(context = ThreadContext(focal = focal.post))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()
@@ -188,7 +232,7 @@ class PostThreadViewModelTest {
     @Test
     fun staleOrForeignActivationIsIgnored() = runTest {
         val source = FakeSource(context = ThreadContext(focal = focal.post))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(OwnedPost(account, focal.post, 7L), supportsComments = true)
         model.activate(
@@ -212,7 +256,7 @@ class PostThreadViewModelTest {
                 ThreadContext(focal = focal.post)
             }
         }
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()
@@ -234,7 +278,7 @@ class PostThreadViewModelTest {
     @Test
     fun failedSecondReactionRestoresPreviousConfirmedOverlay() = runTest {
         val source = GatedThreadSource()
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()
@@ -267,7 +311,7 @@ class PostThreadViewModelTest {
         )
         // The server still returns the removed reaction. The confirmed overlay must win.
         val source = GatedThreadSource(context = ThreadContext(focal = reacted))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(OwnedPost(account, reacted, 8L), supportsComments = true)
         advanceUntilIdle()
@@ -285,7 +329,7 @@ class PostThreadViewModelTest {
     @Test
     fun failedReactionFavoriteLeavesNoOptimisticOverlay() = runTest {
         val source = GatedThreadSource(primaryFavouriteMode = PrimaryFavouriteMode.Reaction)
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()
@@ -304,7 +348,7 @@ class PostThreadViewModelTest {
     @Test
     fun acknowledgedFavoriteOverlayRetiresAfterRefresh() = runTest {
         val source = GatedThreadSource()
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()
@@ -337,7 +381,7 @@ class PostThreadViewModelTest {
             interactionCounts = PostInteractionCounts(reactionCount = 2),
         )
         val source = GatedThreadSource(context = ThreadContext(focal = reacted))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(OwnedPost(account, reacted, 8L), supportsComments = true)
         advanceUntilIdle()
@@ -361,7 +405,7 @@ class PostThreadViewModelTest {
             interactionCounts = PostInteractionCounts(reactionCount = 2),
         )
         val source = GatedThreadSource(context = ThreadContext(focal = reacted))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(OwnedPost(account, reacted, 8L), supportsComments = true)
         advanceUntilIdle()
@@ -379,7 +423,7 @@ class PostThreadViewModelTest {
     @Test
     fun externalProjectionDoesNotEmitToTheUpdateListener() = runTest {
         val source = GatedThreadSource(context = ThreadContext(focal = focal.post))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
         var emissions = 0
 
         model.setPostUpdateListener { emissions += 1 }
@@ -395,7 +439,7 @@ class PostThreadViewModelTest {
     @Test
     fun failedFavoriteKeepsNewerSameFamilyCountProjection() = runTest {
         val source = GatedThreadSource(context = ThreadContext(focal = focal.post))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()
@@ -416,7 +460,7 @@ class PostThreadViewModelTest {
     @Test
     fun staleServerSnapshotPreservesNewerLocalFields() = runTest {
         val source = GatedThreadSource(context = ThreadContext(focal = focal.post))
-         val model = PostThreadViewModel(account, source, sessionRevision = 8L, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+          val model = PostThreadViewModel(account, source, sessionRevision = 8L, preferences = preferences, executionAuthority = me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
 
         model.activate(focal, supportsComments = true)
         advanceUntilIdle()

@@ -1,13 +1,18 @@
 # Handoff
 
-**Status:** Slice 2C3 is implemented in the worktree and remains uncommitted.
+**Status:** Slice 2D1 is implemented in the worktree and remains uncommitted.
+
+The parent session must stage both record files as whole files. This is intentional.
+The task-state file is rewritten at each slice boundary. The handoff is rewritten after each
+slice. This 2D1 rewrite therefore supersedes the earlier 2C3 record in these files. It does not
+mix 2C3 implementation with 2D1. The prior history remains in Git, including `92d15a8`,
+`48ddc1d`, `5140d64`, `80bfd25`, `47dbc36`, and `2b67bf9`.
 
 ## Current position
 
-Photo Grid now has an explicit connected-session owner. `PhotoGridHost` observes account-scoped
-preferences, registers an independent projection sink, and releases through `ConnectedEntryStore`.
-`ConnectedSessionHost` wires Photo Grid beside Search. Home retains its own feed mutations and
-publication path.
+`PostThreadViewModel` now requires `PostPreferencesRepository` through `@AssistedInject`.
+The existing `AppModule` binding supplies the persisted repository. `ThreadHost` needs no change.
+All thread unit-test constructors now pass a per-test in-memory repository.
 
 ## Durable task state
 
@@ -15,54 +20,31 @@ Use `docs/agents/tasks/beeline-0.4.0.md`.
 
 ## Verification
 
-- Focused Photo Grid, store, Home, session, projection, restoration, and shell tests passed.
-- The Photo Grid, store, and projection focused run passed 26 tests.
-- `:app:lintDebug` passed.
-- The architecture audit command `python tools/scripts/architecture_audit.py . --baseline
-  tools/architecture-baseline.json --check` exited 0 and reported 611 findings with zero baseline
-  regressions. This is a count-only result. Counts can vary across worktree states, so 611 versus
-  610 is not itself a regression. The audit record is `logs/architecture-audit-2c3.txt`.
+- `PostThreadViewModelTest` passed.
+- The all-callers search found 19 thread test constructors, all with explicit preferences.
+- The architecture audit reported 611 findings with zero baseline regressions.
 - `assembleRelease` passed.
-- The full `test assembleRelease` gate is not green. It reported 16 known unrelated baseline unit-test
-  failures. The 2A4, 2B, and 2C records repeat this result, which remains unresolved per
-  `logs/BUGS.txt`. Phase 10 owns the green full gate; this slice does not claim it passed.
-- Authenticated Photo Grid device verification remains blocked pending fresh user approval.
+- The full `test assembleRelease` gate remains red with 16 known baseline failures.
+  The failures match the existing records in `logs/BUGS.txt`.
 
 ## Modified slice files
 
-- `app/src/main/java/me/foxtails/palustris/ui/ConnectedApp.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedHost.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridController.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridHost.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridOwner.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/feed/FeedViewModelReactionTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/feed/FeedViewModelRequestTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridOwnerTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/session/ConnectedEntryStoreTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/shell/PostProjectionCoordinatorTest.kt`
-- `docs/agents/app-shell-ownership.md`
+- `app/src/main/java/me/foxtails/palustris/ui/thread/PostThreadViewModel.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/thread/PostThreadViewModelTest.kt`
+- `docs/agents/tasks/beeline-0.4.0.md`
+- `docs/agents/handoff.md`
 
-OAuth, welcome, and staged navigation work remains preserved. No source files were staged or committed.
-
-## Focused regression evidence
-
-- `:app:testDebugUnitTest --tests me.foxtails.palustris.ui.photogrid.PhotoGridOwnerTest --tests
-  me.foxtails.palustris.ui.session.ConnectedEntryStoreTest` passed after the Photo Grid coverage
-  extension.
-- Coverage now includes refresh invalidation and late results, account preference separation,
-  external and optimistic row preservation, unsupported or denied capability handling, temporary
-  errors, sign-in-required errors, store retirement, and a fresh owner after session replacement.
+The ignored record is `logs/260928-post-thread-preferences.txt`.
+Staged `docs/classic_navigation.md` remains untouched.
+Unrelated `.opencode` files, images, helpers, caches, and logs remain untouched.
+Slices 2D2, 2D3, and 2E remain untouched.
 
 ## Next slice
 
-Review the 2C3 diff. Then use the exact path list in the task-state file to stage this slice in the
-parent session. That list includes
-`app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridController.kt`.
+Review the 2D1 diff. Then stage only the exact four paths listed above.
+Do not stage the ignored implementation log or unrelated files.
 
 ## Known limits
 
-Live-server, API 29 physical, RTL, TalkBack, font-scale, signed, and wide or foldable authenticated
-checks remain unverified.
+Live-server, device, API 29 physical, RTL, TalkBack, font-scale, signed, and wide or foldable
+checks remain unverified. No commit or staging was performed in this session.
