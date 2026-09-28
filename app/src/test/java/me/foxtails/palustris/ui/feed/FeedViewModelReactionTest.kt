@@ -369,7 +369,7 @@ class FeedViewModelReactionTest {
     }
 
     @Test
-    fun hashtagSearchReactionMutationUpdatesTheSearchResultRow() = runTest {
+    fun homeReactionMutationUpdatesTheHomeRow() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val coordinator = NotificationSyncOrchestrator()
         try {
@@ -377,12 +377,9 @@ class FeedViewModelReactionTest {
              val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
             advanceUntilIdle()
 
-            model.search("#cats")
-            advanceUntilIdle()
-            val searchPost = model.feed.value.accountSearch.posts.single()
-            model.react(OwnedPost(accountId, searchPost), EmojiChoice("👍", "👍", null))
+            model.react(model.feed.value.ownedPosts.single(), EmojiChoice("👍", "👍", null))
 
-            assertEquals("👍", model.feed.value.accountSearch.posts.single().myReaction)
+            assertEquals("👍", model.feed.value.posts.single().myReaction)
             advanceUntilIdle()
         } finally {
             coordinator.close()

@@ -35,6 +35,7 @@ import me.foxtails.palustris.ui.posts.PostPopupOwner
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.profile.ProfileHost
 import me.foxtails.palustris.ui.saved.SavedCollectionsHost
+import me.foxtails.palustris.ui.search.SearchHost
 import me.foxtails.palustris.ui.shell.AccountSwitcher
 import me.foxtails.palustris.ui.shell.ComposerContract
 import me.foxtails.palustris.ui.shell.PostProjectionCoordinator
@@ -113,6 +114,15 @@ fun ConnectedSessionHost(
             projectionCoordinator.retire()
         }
     }
+    val search = SearchHost(
+        accountId = accountId,
+        sessionGeneration = sessionGeneration,
+        sessionRevision = sessionRevision,
+        source = sharedSource,
+        postPreferences = postPreferences,
+        coordinator = projectionCoordinator,
+        entryStore = entryStore,
+    )
     val feed = FeedHost(
         accountId = accountId,
         sessionGeneration = sessionGeneration,
@@ -121,6 +131,7 @@ fun ConnectedSessionHost(
         executionAuthority = postInteractionAuthority,
         coordinator = projectionCoordinator,
         entryStore = entryStore,
+        search = search,
     )
     val savedCollections = SavedCollectionsHost(
         accountId = accountId,
@@ -241,7 +252,7 @@ fun ConnectedSessionHost(
             accountSwitcher = accountSwitcher,
             composer = composer,
             thread = thread,
-            search = feed.search,
+            search = search,
             draftsContract = draftsContract,
             postInteractions = feed.postInteractions,
             bookmarks = savedCollections.bookmarks,

@@ -38,7 +38,6 @@ import me.foxtails.palustris.ui.photogrid.PhotoGridFeed
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.posts.PostInteractionMutationOwner
 import me.foxtails.palustris.ui.requiresSignIn
-import me.foxtails.palustris.ui.search.SearchController
 
 @HiltViewModel(assistedFactory = FeedViewModel.Factory::class)
 class FeedViewModel @AssistedInject constructor(
@@ -88,13 +87,6 @@ class FeedViewModel @AssistedInject constructor(
         uiStrings = uiStrings,
     )
     val photoGridFeed = photoGridController.state
-    private val searchController = SearchController(
-        source = source,
-        scope = viewModelScope,
-        applyFavouritePreference = ::applyFavouritePreference,
-        onStateChanged = { search -> _feed.value = _feed.value.copy(accountSearch = search) },
-        uiStrings = uiStrings,
-    )
 
     init {
         setupJob = viewModelScope.launch {
@@ -148,7 +140,6 @@ class FeedViewModel @AssistedInject constructor(
                 _feed.value = FeedState(
                     posts = posts,
                     ownedPosts = posts.map { OwnedPost(accountId, it, sessionRevision) },
-                    accountSearch = _feed.value.accountSearch,
                     timeline = timeline,
                     timelines = source.capabilities.timelines,
                     canPublish = source.capabilities.canPublish,
@@ -286,18 +277,6 @@ class FeedViewModel @AssistedInject constructor(
         }
     }
 
-    fun searchAccounts(query: String) {
-        search(query)
-    }
-
-    fun search(query: String) {
-        searchController.search(query)
-    }
-
-    fun loadMoreSearch() {
-        searchController.loadMore()
-    }
-
     fun favorite(ownedPost: OwnedPost) {
         interactionMutations.favorite(ownedPost)
     }
@@ -353,7 +332,6 @@ class FeedViewModel @AssistedInject constructor(
         feedEpoch += 1
         setupJob?.cancel()
         feedJob?.cancel()
-        searchController.stop()
         publishJob?.cancel()
         preferencesJob?.cancel()
         interactionMutations.stop()
@@ -401,7 +379,6 @@ class FeedViewModel @AssistedInject constructor(
         updatedOwnedPosts.filterIndexed { index, owned -> owned !== currentOwnedPosts[index] }
             .forEach { updated -> postProjectionListeners.toList().forEach { it(updated) } }
         photoGridController.updatePost(id, transform)
-        searchController.updatePost(id, transform)
         if (!hasMatchingHomePost) postProjectionListeners.toList().forEach { it(selectedProjection) }
     }
 
@@ -417,7 +394,6 @@ class FeedViewModel @AssistedInject constructor(
             ownedPosts = updated,
         )
         photoGridController.updatePost(id, transform)
-        searchController.updatePost(id, transform)
     }
 
     private fun updateExternalPost(target: EntityId, incoming: Post) {
@@ -432,7 +408,6 @@ class FeedViewModel @AssistedInject constructor(
             },
         )
         photoGridController.updateExternalPost(target, incoming)
-        searchController.updateExternalPost(target, incoming)
     }
 
     private fun mergeExternalActionFields(existing: Post, incoming: Post): Post =
@@ -447,7 +422,6 @@ class FeedViewModel @AssistedInject constructor(
             },
         )
         photoGridController.updatePosts(transform)
-        searchController.updatePosts(transform)
     }
 
     private fun feedFailure(e: Exception) {

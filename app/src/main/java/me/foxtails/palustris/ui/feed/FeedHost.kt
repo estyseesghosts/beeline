@@ -59,6 +59,7 @@ fun FeedHost(
     executionAuthority: PostInteractionExecutionAuthority,
     coordinator: PostProjectionCoordinator,
     entryStore: ConnectedEntryStore,
+    search: SearchContract,
 ): Feed {
     val feedModel = hiltViewModel<FeedViewModel, FeedViewModel.Factory>(
         key = "feed-$accountId-$sessionGeneration",
@@ -93,15 +94,6 @@ fun FeedHost(
             ),
             actions = homeActions,
         )
-    }
-    val searchActions = remember(feedModel) {
-        object : SearchContract.Actions {
-            override fun search(query: String) { feedModel.search(query) }
-            override fun loadMore() { feedModel.loadMoreSearch() }
-        }
-    }
-    val search = remember(feed.accountSearch, searchActions) {
-        SearchContract(state = feed.accountSearch, actions = searchActions)
     }
     val postInteractionsActions = remember(feedModel) {
         object : PostInteractions.Actions {

@@ -7,6 +7,19 @@ Stale when: A destination, layout policy, restoration rule, or accessibility req
 
 Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
 
+## Search lifetime
+
+Search uses one `SearchOwner` for each connected account session. `SearchHost` registers the owner
+with `ConnectedEntryStore` and releases it when the session retires. Route changes and recomposition
+do not create another owner. Search state does not depend on Home or Photo Grid state.
+
+The owner validates account and session revision before applying post projections. Its sink joins
+`PostProjectionCoordinator` while the owner is active. The coordinator forwards external and accepted
+publication updates without changing route or saved-state restoration.
+
+Sources: `ui/search/SearchOwner.kt`, `ui/search/SearchHost.kt`, `ui/shell/PostProjectionCoordinator.kt`,
+`SearchOwnerTest`, `ConnectedEntryStoreTest`.
+
 ## Purpose
 
 <!-- Explain the visible application structure for contributors. -->

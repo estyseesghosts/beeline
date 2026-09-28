@@ -7,7 +7,7 @@ C-05, C-06a, C-06b, C-06c, C-07, C-08, C-09, C-10, C-11, C-12a through C-12d4, C
 C-14, and C-15 are implemented and test verified. Steps 13, 14, and 15 of the progress
 report are complete. No dead scaffolding remains.
 
-**Last reviewed:** 2026-09-15.
+**Last reviewed:** 2026-09-28.
 
 **Source baseline:** `b629a2c` (planning). Status refreshed against `c9e06c8`.
 
@@ -37,7 +37,8 @@ Focused feature hosts own their model, state, actions, and projection registrati
 
 | Host | Owner | Contract |
 | --- | --- | --- |
-| `ui/feed/FeedHost.kt` | Home and Photo Grid `FeedViewModel` | `HomeContract`, `SearchContract`, `PhotoGridContract`, `PostInteractions` |
+| `ui/feed/FeedHost.kt` | Home and Photo Grid `FeedViewModel` | `HomeContract`, `PhotoGridContract`, `PostInteractions` |
+| `ui/search/SearchHost.kt` | connected-session `SearchOwner` | `SearchContract` |
 | `ui/saved/SavedCollectionsHost.kt` | bookmark `SavedPostsViewModel` | `SavedCollections` |
 | `ui/profile/ProfileHost.kt` | `ProfileViewModel` | `ProfileContract` |
 | `ui/thread/ThreadHost.kt` | `PostThreadViewModel` | `ThreadContract` |
@@ -100,6 +101,7 @@ Test code binds test-only recorders in `app/src/test/java/me/foxtails/palustris/
 | `ProfileContract` | `ProfileViewModel` | Target, categories, relationship, editor | Open, category, paging, follow, react, editor |
 | `ThreadContract` | `PostThreadViewModel` | Selected thread | Activate, deactivate, paging, mutations |
 | `PhotoGridContract` | Photo Grid `FeedViewModel` | Independent Photo Grid feed | Load, select, refresh, paging, hashtag, error |
+| `SearchContract` | `ui/search/SearchOwner.kt` | Account and hashtag search state | Search, paging |
 | `ComposerContract` | `ui/composer/ComposerOwner.kt` | Editor fields, dirty snapshot, drafts, reply, quote | Update editor, save, delete draft, publish |
 | `DraftsContract` | account draft store | Saved drafts for the active account | Load, save, delete |
 
@@ -172,6 +174,8 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
 - The popup owner and the projection coordinator retire with the connected entry. A retired
   popup has no authority. A retired coordinator delivers nothing.
 - Photo Grid keeps independent feed state and selection from Home.
+- Search keeps account and session-revision state outside `FeedViewModel`. Its connected owner and
+  projection sink release through `ConnectedEntryStore`, and repeated registration uses one key.
 - Home paging demand resets on filter identity and request epoch changes. Only accepted pages
   consume the no-progress budget. The demand blocks while sign-in is required.
 - Post commands bind to the validated account set. A removed target reports unavailable at call

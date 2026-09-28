@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.CreatePostRequest
+import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.domain.mergeExternalActionFields
@@ -89,6 +91,24 @@ internal class SearchController(
 
     fun updatePosts(transform: (Post) -> Post) {
         publish(_state.value.copy(posts = _state.value.posts.map(transform)))
+    }
+
+    fun applyPublishedPost(request: CreatePostRequest) {
+        if (stopped) return
+        request.replyTo?.let { target ->
+            updatePost(target) { post ->
+                post.copy(interactionCounts = post.interactionCounts.copy(
+                    replyCount = post.interactionCounts.replyCount.adjustedBy(1),
+                ))
+            }
+        }
+        request.quoteOf?.let { target ->
+            updatePost(target) { post ->
+                post.copy(interactionCounts = post.interactionCounts.copy(
+                    quoteRepostCount = post.interactionCounts.quoteRepostCount.adjustedBy(1),
+                ))
+            }
+        }
     }
 
     fun stop() {
