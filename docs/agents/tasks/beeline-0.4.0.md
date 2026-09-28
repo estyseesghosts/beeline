@@ -1,60 +1,75 @@
-# Beeline 0.4.0 task state — slice 2C2
+# Beeline 0.4.0 task state — OAuth diagnostics continuation
 
 ## Objective
 
-Give Search one explicit connected owner. Keep Search state, cancellation, account identity, session
-revision, and post projection subscription outside `FeedViewModel`. Keep Photo Grid in that ViewModel.
+Close the OAuth diagnostics test gaps without weakening callback validation or changing protocol
+behavior. Keep the interrupted Photo Grid work intact.
 
 ## Status sets
 
-- Source status: `SearchOwner` and `SearchHost` own Search state and actions. `FeedViewModel` retains
-  Home and Photo Grid behavior and no longer forwards Search requests or post updates.
-- Lifetime status: `ConnectedEntryStore` registers one stable Search key per connected generation.
-  Replacement, removal, store clearing, and owner release cancel Search work. Coordinator registration
-  is idempotent and unregisters on disposal or owner retirement.
-- Projection status: Search accepts only matching account and session revision. Its coordinator sink
-  receives external and accepted publication updates independently of Home.
-- Test status: the Search owner suite passes all 8 tests. It covers cooperative cancellation, session
-  replacement, account isolation, revision rejection, recreation registration, release-once teardown,
-  coordinator updates, optimistic projection, and operation without Home. The focused Feed request,
-  session, projection, and Search restoration suites pass 41 tests in total.
-- Audit status: the audit exited 0 with 610 findings and no reported regression lines. Slice 2C1
-  recorded 607 findings and zero regression lines. The count difference does not prove a fix.
-- Full gate status: `test assembleRelease` reached release packaging and timed out at 120 seconds.
-  It reported known baseline failures in DraftActions, CapabilityCache, Misskey thread continuation,
-  and NotificationSyncOrchestrator before timeout. No test was weakened.
-- Lint status: `:app:lintDebug` passed.
-- Device and live-server status: unverified.
+- Source status: OAuth dispatch categories, callback rejection categories, and the Mastodon missing
+  callback message are implemented.
+- Test status: the invalid callback matrix now covers scheme, host, path, missing, duplicate, and
+  wrong state, blank and duplicate code, and expired pending state. Session tests cover deferred
+  callbacks and ignored callbacks without pending state.
+- MainActivity test status: unverified. The available unit-test harness cannot inject Hilt fields or
+  observe the private dispatch method. This blocks direct coverage for saved-null and saved-non-null
+  `onCreate`, `onNewIntent`, and notification-versus-auth fallback routing.
+- Protocol status: Misskey matching remains unchanged. Mastodon keeps the existing redirect URI,
+  strict state matching, single code requirement, and fifteen-minute lifetime.
+- Audit status: count-only mismatch remains unexplained. The OAuth log reports 613 findings against
+  a 610 baseline. It reports zero OAuth-attributable regressions; the listed regression lines are
+  unchanged baseline files.
+- Full gate status: unresolved. The full gate timed out at 120 seconds after known baseline test
+  failures.
+- Device status: dummy callback delivery through `onNewIntent` passed. The real redirect did not
+  arrive. The stuck guidance UI was not in the accessibility tree because it uses a canvas. Screenshots
+  remain blocked by tool policy.
+- Live-server status: unverified.
 
-## Preserved boundaries
+## Exact OAuth commit pathspec
 
-No protocol, layout, route, saved-state, preference, or Photo Grid behavior changed. Search does not
-select behavior from host names. Search receives the connected source and post preferences from the
-session composition root.
+Stage only these files for the OAuth slice:
 
-## Changed files
-
-- `app/src/main/java/me/foxtails/palustris/ui/search/SearchOwner.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/search/SearchHost.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/search/SearchController.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedState.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedHost.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/shell/SearchContract.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/feed/FeedViewModelReactionTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt`
-- `docs/wiki/ui-and-navigation.md`
-- `docs/agents/app-shell-ownership.md`
+- `app/src/main/java/me/foxtails/palustris/MainActivity.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt`
+- `app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/setup/SetupScreens.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/UiStrings.kt`
+- `app/src/main/res/values/strings.xml`
+- `app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt`
 - `docs/agents/tasks/beeline-0.4.0.md`
 - `docs/agents/handoff.md`
 
-## Staging pathspec
+Add `app/src/test/java/me/foxtails/palustris/ui/SignInScreenTest.kt` only if this slice changes it.
+Use the same explicit pathspec for staging and committing:
 
-Do not stage or commit in this continuation. If the parent commits this slice, stage only the files
-listed above. Keep the pre-existing dirty files and ignored logs outside the pathspec.
+```text
+git add -- app/src/main/java/me/foxtails/palustris/MainActivity.kt app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt app/src/main/java/me/foxtails/palustris/ui/setup/SetupScreens.kt app/src/main/java/me/foxtails/palustris/ui/UiStrings.kt app/src/main/res/values/strings.xml app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt docs/agents/tasks/beeline-0.4.0.md docs/agents/handoff.md
+git commit -- app/src/main/java/me/foxtails/palustris/MainActivity.kt app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt app/src/main/java/me/foxtails/palustris/ui/setup/SetupScreens.kt app/src/main/java/me/foxtails/palustris/ui/UiStrings.kt app/src/main/res/values/strings.xml app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt docs/agents/tasks/beeline-0.4.0.md docs/agents/handoff.md
+```
 
-## Limits
+If `SignInScreenTest.kt` changes, append it to both commands.
 
-Live servers, physical devices, API 29, RTL, TalkBack, font scale, and signed release checks remain
-unverified. The current worktree also contains unrelated dirty files from before this slice.
+Exclude the staged `docs/classic_navigation.md`. Exclude unrelated files: `.opencode/agents/code_reviewer_high.md`, `.opencode/agents/code_reviewer_low.md`, `.opencode/agents/git_handler.md`, `.opencode/agents/orchestrator.md`, `.opencode/agents/problem_solver_high.md`, `.opencode/agents/problem_solver_low.md`, `.opencode/agents/targeted_fixer.md`, `docs/agents/app-shell-ownership.md`, `importantdocs/writing_style.md`, `currentbehaviour.png`, `intendedbehaviour.png`, `.opencode/agents/adb_handler.md`, `.opencode/agents/codebase_explorer_android.md`, `auth_stuck.png`, `screen.png`, `screen_after_dummy.png`, `screen_pending.png`, `tools/scripts/adb_control.py`, `tools/scripts/adb_flow.py`, `tools/scripts/adb_inspect.py`, `tools/scripts/adb_screenshot.py`, `tools/scripts/__pycache__/`, `tools/tests/__pycache__/`, and `logs/*`.
+
+Exclude the interrupted 2C3 PhotoGrid/Search files: `app/src/main/java/me/foxtails/palustris/ui/ConnectedApp.kt`, `app/src/main/java/me/foxtails/palustris/ui/feed/FeedHost.kt`, `app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt`, `app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt`, `app/src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridFeedViewModelTest.kt`, `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridHost.kt`, `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridOwner.kt`, `app/src/main/java/me/foxtails/palustris/ui/search/SearchScreen.kt`, `app/src/main/java/me/foxtails/palustris/ui/search/SearchOwner.kt`, `app/src/main/java/me/foxtails/palustris/ui/search/SearchHost.kt`, `app/src/main/java/me/foxtails/palustris/ui/search/SearchController.kt`, `app/src/main/java/me/foxtails/palustris/ui/search/AccountSearchState.kt`, `app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt`, and `app/src/test/java/me/foxtails/palustris/ui/search/SearchPanelRestorationTest.kt`.
+
+## Verification record
+
+- Focused auth and session tests passed: 3 `AuthGatewayTest` tests and 15 `SessionViewModelTest`
+  tests. The existing SignInScreen test also passed before this continuation.
+- The OAuth audit log is `logs/260928-oauth-callback.txt`. It records 613 findings, baseline 610,
+  and a count delta of three. It does not explain the count delta.
+- The audit command was `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`.
+  The command exit code was 0. The log records no OAuth-attributable regression.
+- The full Gradle gate command was `test assembleRelease`. It timed out at 120 seconds after
+  `assembleRelease` completed. Known baseline failures remained in unrelated tests.
+- The MainActivity dispatch harness was not available in the unit-test harness. Instrumentation can
+  cover this dispatch later. This gap does not block the OAuth commit.
+
+## Boundaries
+
+There is no redirect URI change, validation weakening, auto-polling, or pasted-code flow. No Misskey
+adapter change is allowed in this slice.

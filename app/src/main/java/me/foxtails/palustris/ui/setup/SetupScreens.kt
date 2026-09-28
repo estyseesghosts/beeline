@@ -156,6 +156,13 @@ internal fun SetupServerScreen(
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Spacer(Modifier.height(16.dp))
+            state.error?.let {
+                Text(
+                    it,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
             SetupPrimaryAction(stringResource(R.string.sign_in_button_authorized), onComplete, enabled = !state.busy)
             Spacer(Modifier.height(12.dp))
             SetupSecondaryAction(stringResource(R.string.sign_in_open_browser_again), onReopen, enabled = !state.busy)

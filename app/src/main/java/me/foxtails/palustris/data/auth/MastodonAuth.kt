@@ -203,16 +203,45 @@ class MastodonAuth(
 }
 
 object AuthCallback {
-    fun matches(value: String, pending: PendingLogin, now: Long): Boolean = runCatching {
+    enum class InvalidReason { SCHEME, HOST, PATH, STATE, CODE_COUNT, FRESHNESS }
+
+    sealed interface Result {
+        data object Accepted : Result
+        data class Invalid(val reason: InvalidReason) : Result
+    }
+
+    fun diagnose(value: String, pending: PendingLogin, now: Long): Result = runCatching {
         val uri = URI(value)
-        val validUri = uri.scheme == "palustris" && uri.host == "auth" && uri.userInfo == null &&
-            uri.port == -1 && uri.fragment == null && pending.isFresh(now)
-        if (!validUri) return@runCatching false
-        when (pending.protocol) {
-            Protocol.MISSKEY -> uri.path == "/misskey" && queryValues(uri, "session") == listOf(pending.id)
-            Protocol.MASTODON -> uri.path == "/mastodon" && queryValues(uri, "state") == listOf(pending.id) &&
-                queryValues(uri, "code").singleOrNull()?.isNotBlank() == true
+        if (uri.scheme != "palustris") return@runCatching Result.Invalid(InvalidReason.SCHEME)
+        if (uri.host != "auth" || uri.userInfo != null || uri.port != -1 || uri.fragment != null) {
+            return@runCatching Result.Invalid(InvalidReason.HOST)
         }
+        if (!pending.isFresh(now)) return@runCatching Result.Invalid(InvalidReason.FRESHNESS)
+        when (pending.protocol) {
+            Protocol.MISSKEY -> {
+                if (uri.path != "/misskey") return@runCatching Result.Invalid(InvalidReason.PATH)
+                if (queryValues(uri, "session") != listOf(pending.id)) {
+                    Result.Invalid(InvalidReason.STATE)
+                } else {
+                    Result.Accepted
+                }
+            }
+            Protocol.MASTODON -> {
+                if (uri.path != "/mastodon") return@runCatching Result.Invalid(InvalidReason.PATH)
+                if (queryValues(uri, "state") != listOf(pending.id)) {
+                    return@runCatching Result.Invalid(InvalidReason.STATE)
+                }
+                if (queryValues(uri, "code").singleOrNull()?.isNullOrBlank() != false) {
+                    Result.Invalid(InvalidReason.CODE_COUNT)
+                } else {
+                    Result.Accepted
+                }
+            }
+        }
+    }.getOrElse { Result.Invalid(InvalidReason.SCHEME) }
+
+    fun matches(value: String, pending: PendingLogin, now: Long): Boolean = runCatching {
+        diagnose(value, pending, now) is Result.Accepted
     }.getOrDefault(false)
 
     fun authorizationCode(value: String): String? = runCatching {

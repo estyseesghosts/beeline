@@ -2,6 +2,7 @@ package me.foxtails.palustris.ui.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Log
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -70,6 +71,7 @@ class AccountManager @Inject constructor(
                     _session.value = SessionUi(starting = false, pending = pending != null, origin = pending?.origin)
                     deferredCallback?.let(::callback)
                 }
+                Log.i(TAG, "oauth_callback starting-complete")
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 _session.value = SessionUi(starting = false, error = uiStrings.sessionRestoreFailed())
@@ -147,21 +149,39 @@ class AccountManager @Inject constructor(
 
     fun callback(value: String) {
         if (_session.value.starting) {
+            Log.i(TAG, "oauth_callback deferred-for-restore")
             deferredCallback = value
             return
         }
-        val request = pending ?: return
-        if (AuthCallback.matches(value, request, System.currentTimeMillis())) {
-            pending = request.copy(authorizationCode = AuthCallback.authorizationCode(value))
-            finishSignIn()
-        } else {
-            _session.value = _session.value.copy(error = uiStrings.sessionCallbackInvalid())
+        val request = pending
+        if (request == null) {
+            Log.i(TAG, "oauth_callback no-pending-ignore")
+            return
+        }
+        when (val result = AuthCallback.diagnose(value, request, System.currentTimeMillis())) {
+            AuthCallback.Result.Accepted -> {
+                pending = request.copy(authorizationCode = AuthCallback.authorizationCode(value))
+                Log.i(TAG, "oauth_callback accepted-storing-code")
+                finishSignIn()
+            }
+            is AuthCallback.Result.Invalid -> {
+                Log.i(TAG, "oauth_callback invalid-callback reason=${result.reason.name.lowercase()}")
+                _session.value = _session.value.copy(
+                    error = if (result.reason == AuthCallback.InvalidReason.CODE_COUNT &&
+                        request.protocol == me.foxtails.palustris.domain.Protocol.MASTODON
+                    ) uiStrings.sessionCallbackMissing() else uiStrings.sessionCallbackInvalid(),
+                )
+            }
         }
     }
 
     fun finishSignIn() {
         val request = pending ?: return
         if (_session.value.busy) return
+        if (request.protocol == me.foxtails.palustris.domain.Protocol.MASTODON && request.authorizationCode == null) {
+            _session.value = _session.value.copy(error = uiStrings.sessionCallbackMissing())
+            return
+        }
         authJob = viewModelScope.launch {
             _session.value = _session.value.copy(busy = true, error = null, browserUrl = null)
             try {
@@ -174,6 +194,7 @@ class AccountManager @Inject constructor(
                 _accountIndex.value = saved.index
                 pending = null
                 connect(saved.activation)
+                Log.i(TAG, "oauth_callback exchange-complete")
             } catch (e: Exception) {
                 failAuth(e)
             }
@@ -291,4 +312,6 @@ class AccountManager @Inject constructor(
     }
 
     private fun message(e: Exception): String = uiStrings.sourceError(e)
+
+    private companion object { const val TAG = "BeelineAuth" }
 }

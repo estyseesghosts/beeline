@@ -179,6 +179,17 @@ class SessionViewModelTest {
         override suspend fun complete(pending: PendingLogin) = result
     }
 
+    private fun mastodonAuth(result: LoginSession) = object : AuthGateway {
+        override suspend fun prepare(input: String) = PendingLogin(
+            input,
+            "session-id",
+            System.currentTimeMillis(),
+            protocol = Protocol.MASTODON,
+        )
+        override fun browserUrl(pending: PendingLogin) = "https://example.org/oauth/authorize"
+        override suspend fun complete(pending: PendingLogin) = result
+    }
+
     @Test fun restorePageDeduplicateRetryAndSignOut() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val owner = ViewModelStore()
@@ -234,6 +245,69 @@ class SessionViewModelTest {
             advanceUntilIdle()
             assertNotNull(restored.session.value.account)
             assertFalse(restored.session.value.pending)
+        } finally { owner.clear(); Dispatchers.resetMain() }
+    }
+
+    @Test fun callbackDuringRestoreIsDeferredUntilPendingStateLoads() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val owner = ViewModelStore()
+        try {
+            val store = MemoryStore().apply {
+                pending = PendingLogin("https://example.org", "session-id", System.currentTimeMillis())
+            }
+            val manager = accountManagerFixture(store, auth(login), StandardTestDispatcher(testScheduler))
+            owner.put("account", manager)
+
+            manager.callback("palustris://auth/misskey?session=session-id")
+            assertNull(manager.session.value.account)
+
+            advanceUntilIdle()
+            assertNotNull(manager.session.value.account)
+            assertFalse(manager.session.value.pending)
+        } finally { owner.clear(); Dispatchers.resetMain() }
+    }
+
+    @Test fun callbackWithoutPendingStateIsIgnored() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val owner = ViewModelStore()
+        try {
+            val manager = accountManagerFixture(MemoryStore(), auth(login), StandardTestDispatcher(testScheduler))
+            owner.put("account", manager)
+            advanceUntilIdle()
+
+            manager.callback("palustris://auth/misskey?session=unexpected")
+            advanceUntilIdle()
+
+            assertNull(manager.session.value.account)
+            assertNull(manager.session.value.error)
+        } finally { owner.clear(); Dispatchers.resetMain() }
+    }
+
+    @Test fun mastodonMissingCallbackShowsReturnViaBrowserError() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val owner = ViewModelStore()
+        try {
+            val store = MemoryStore()
+            val manager = accountManagerFixture(
+                store,
+                mastodonAuth(LoginSession("https://example.org", "test-token", JSONObject("{}"), Protocol.MASTODON)),
+                StandardTestDispatcher(testScheduler),
+                uiStrings = UiStrings.from(ApplicationProvider.getApplicationContext()),
+            )
+            owner.put("account", manager)
+            advanceUntilIdle()
+            manager.signIn("https://example.org")
+            advanceUntilIdle()
+
+            manager.callback("palustris://auth/mastodon?state=session-id")
+            advanceUntilIdle()
+
+            assertEquals(
+                ApplicationProvider.getApplicationContext<android.content.Context>()
+                    .getString(me.foxtails.palustris.R.string.session_callback_missing),
+                manager.session.value.error,
+            )
+            assertTrue(manager.session.value.pending)
         } finally { owner.clear(); Dispatchers.resetMain() }
     }
 

@@ -2,6 +2,7 @@ package me.foxtails.palustris
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -22,6 +23,7 @@ import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferencesRepository
+import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.ui.session.AccountManager
 import me.foxtails.palustris.ui.ConnectedApp
 import me.foxtails.palustris.ui.display.RefreshRateController
@@ -42,6 +44,7 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var notificationStreamController: ForegroundNotificationStreamController
     @Inject lateinit var appPreferencesRepository: AppPreferencesRepository
     @Inject lateinit var postPreferencesRepository: PostPreferencesRepository
+    @Inject lateinit var photoGridPreferencesRepository: PhotoGridPreferencesRepository
     private lateinit var refreshRateController: RefreshRateController
     private var appliedLanguage = AppLanguage.SystemDefault
     private val localeOwner = AppLocaleOwner()
@@ -71,6 +74,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         refreshRateController = RefreshRateController(window)
         enableEdgeToEdge()
+        Log.i(TAG, "oauth_dispatch entry=onCreate saved=${savedInstanceState != null}")
         if (savedInstanceState == null) handleIntent(intent)
         setContent {
             ConnectedApp(
@@ -82,6 +86,7 @@ class MainActivity : ComponentActivity() {
                 notificationStreamController,
                 appPreferencesRepository,
                 postPreferencesRepository,
+                photoGridPreferencesRepository,
             )
         }
         lifecycleScope.launch {
@@ -162,14 +167,34 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        Log.i(TAG, "oauth_dispatch entry=onNewIntent saved=not-applicable")
         handleIntent(intent)
     }
 
     private fun handleIntent(intent: Intent) {
         if (notificationLaunchRouter.parse(intent) != null) {
+            Log.i(TAG, "oauth_dispatch branch=notification delivery=delivered")
             notificationLaunchRouter.accept(intent)
         } else {
-            intent.dataString?.let(accountManager::callback)
+            val data = intent.data
+            if (data == null) {
+                Log.i(TAG, "oauth_dispatch branch=auth-fallback delivery=no-intent")
+            } else {
+                val path = when (data.path) {
+                    "/mastodon" -> "mastodon"
+                    "/misskey" -> "misskey"
+                    null -> "missing"
+                    else -> "other"
+                }
+                Log.i(
+                    TAG,
+                    "oauth_dispatch branch=auth-fallback delivery=delivered " +
+                        "scheme=${data.scheme != null} host=${data.host != null} path=$path",
+                )
+                accountManager.callback(data.toString())
+            }
         }
     }
+
+    private companion object { const val TAG = "BeelineAuth" }
 }

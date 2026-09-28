@@ -26,6 +26,7 @@ interface UiStrings {
     fun sessionAccountUnavailable(): String
     fun sessionNoBrowser(): String
     fun sessionCallbackInvalid(): String
+    fun sessionCallbackMissing(): String
 
     companion object {
         /** Builds the Android-backed implementation. */
@@ -51,6 +52,7 @@ interface UiStrings {
             override fun sessionAccountUnavailable(): String = ""
             override fun sessionNoBrowser(): String = ""
             override fun sessionCallbackInvalid(): String = ""
+            override fun sessionCallbackMissing(): String = ""
         }
     }
 }
@@ -74,4 +76,5 @@ private class AndroidUiStrings(private val context: Context) : UiStrings {
     override fun sessionAccountUnavailable(): String = context.getString(R.string.settings_account_unavailable)
     override fun sessionNoBrowser(): String = context.getString(R.string.session_no_browser)
     override fun sessionCallbackInvalid(): String = context.getString(R.string.session_callback_invalid)
+    override fun sessionCallbackMissing(): String = context.getString(R.string.session_callback_missing)
 }

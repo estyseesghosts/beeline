@@ -690,6 +690,7 @@
     <string name="sign_in_open_browser_again">Open browser again</string>
     <string name="sign_in_pending_description">Approve %1$s in your browser on %2$s. Then return here to open your home feed.</string>
     <string name="sign_in_pending_title">One more step</string>
+    <string name="session_callback_missing">The callback was not received yet. Return to the browser and finish the redirect, then try again.</string>
     <string name="sign_in_required">Sign-in required</string>
     <string name="single_post_close">Close post</string>
     <string name="single_post_title">Post</string>
