@@ -4,6 +4,7 @@ import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.Protocol
 import okhttp3.Request
@@ -12,6 +13,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -115,5 +117,39 @@ class HttpClientPoolTest {
             val response = borrowed.newCall(Request.Builder().url(server.url("/")).build()).execute()
             assertEquals("ok", response.use { requireNotNull(it.body).string() })
         }
+    }
+
+    @Test
+    fun responseLimitKeepsBelowAndAtBoundaryAndRejectsAbove() {
+        runBlocking {
+            MockWebServer().also { it.start() }.use { server ->
+                val limit = 4L * 1024 * 1024
+                server.enqueue(MockResponse().setBody("x".repeat((limit - 1).toInt())))
+                server.enqueue(MockResponse().setBody("x".repeat(limit.toInt())))
+                server.enqueue(MockResponse().setBody("x".repeat((limit + 1).toInt())))
+                val origin = server.url("/").toString().removeSuffix("/")
+                val api = MisskeyApi(HttpClientPool().clientFor(Connection(origin, Protocol.MISSKEY)))
+
+                assertEquals(limit - 1, api.get(origin, "below", maxResponseBytes = limit).body.length.toLong())
+                assertEquals(limit, api.get(origin, "at", maxResponseBytes = limit).body.length.toLong())
+                assertThrows(ResponseLimitExceeded::class.java) {
+                    runBlocking { api.get(origin, "above", maxResponseBytes = limit) }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun serverAddressRejectsUnsafeOriginsBeforeUse() {
+        listOf(
+            "http://example.org",
+            "https://user:pass@example.org",
+            "https://example.org/path",
+            "https://example.org?token=secret",
+            "https://example.org#fragment",
+        ).forEach { input ->
+            assertThrows(IllegalArgumentException::class.java) { ServerAddress.normalize(input) }
+        }
+        assertEquals("https://example.org", ServerAddress.normalize(" example.org/ "))
     }
 }

@@ -23,6 +23,8 @@ import okhttp3.Response
 import okio.ByteString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -46,6 +48,17 @@ class WebSocketTransportTest {
         assertEquals("https", request.url.scheme)
         assertEquals("/streaming", request.url.encodedPath)
         assertEquals("Bearer test-token", request.header("Authorization"))
+    }
+
+    @Test
+    fun websocketRejectsInvalidOriginBeforeCreation() {
+        val client = CapturingWebSocketClient()
+        listOf("http://example.org", "https://user:pass@example.org").forEach { origin ->
+            assertThrows(IllegalArgumentException::class.java) {
+                MisskeyApi(client).webSocket(origin, "/streaming", listener = object : WebSocketListener() {})
+            }
+        }
+        assertTrue(client.request == null)
     }
 
     @Test
@@ -86,6 +99,22 @@ class WebSocketTransportTest {
     }
 
     @Test
+    fun mastodonStreamCancellationCancelsTheSocket() = runBlocking {
+        val client = CapturingWebSocketClient()
+        val origin = "https://example.org"
+        val account = AccountId(Connection(origin, Protocol.MASTODON), "receiver")
+        val source = MastodonSource(origin, "test-token", MisskeyApi(client), account)
+        val collector = launch { source.streamEvents().collect() }
+        withTimeout(1_000) {
+            while (client.listener == null) yield()
+        }
+
+        collector.cancelAndJoin()
+
+        assertTrue(client.socket.cancelled)
+    }
+
+    @Test
     fun misskeyStreamReportsReadyOnlyAfterNotificationsChannelAcknowledgement() = runBlocking {
         val client = CapturingWebSocketClient()
         val origin = "https://example.org"
@@ -107,7 +136,7 @@ class WebSocketTransportTest {
     private class CapturingWebSocketClient : OkHttpClient() {
         var request: Request? = null
         var listener: WebSocketListener? = null
-        lateinit var socket: WebSocket
+        lateinit var socket: NoOpWebSocket
 
         override fun newWebSocket(request: Request, listener: WebSocketListener): WebSocket {
             this.request = request
@@ -126,11 +155,14 @@ class WebSocketTransportTest {
     private class NoOpWebSocket(
         private val requestValue: Request,
     ) : WebSocket {
+        var cancelled = false
         override fun request(): Request = requestValue
         override fun queueSize(): Long = 0
         override fun send(text: String): Boolean = true
         override fun send(bytes: ByteString): Boolean = true
         override fun close(code: Int, reason: String?): Boolean = true
-        override fun cancel() = Unit
+        override fun cancel() {
+            cancelled = true
+        }
     }
 }

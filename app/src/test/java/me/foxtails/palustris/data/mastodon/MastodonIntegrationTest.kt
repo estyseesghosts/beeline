@@ -11,6 +11,7 @@ import kotlinx.coroutines.cancelAndJoin
 import me.foxtails.palustris.data.mastodon.MastodonMapper
 import me.foxtails.palustris.data.mastodon.MastodonSource
 import me.foxtails.palustris.data.misskey.MisskeyApi
+import me.foxtails.palustris.data.misskey.HttpResponse
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityProbe
@@ -33,6 +34,7 @@ import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SourceError
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.Headers
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
@@ -161,6 +163,25 @@ class MastodonIntegrationTest {
 
         assertNull(post.replyTo)
         assertNull(post.replyToAuthorId)
+    }
+
+    @Test
+    fun sharedLinkParserCharacterizesRelationSyntaxAndHeaderSelection() {
+        // These tests pin the shared parsing shape, not Misskey cursor ownership or pagination.
+        fun response(link: String) = HttpResponse("", Headers.headersOf("Link", link))
+
+        assertEquals("https://example.org/next", response("<https://example.org/next>; rel=next").linkHeaderCursor())
+        assertEquals("https://example.org/next", response("<https://example.org/next>; rel=\"prev next\"").linkHeaderCursor())
+        assertEquals("https://example.org/next", response("<https://example.org/next> ; rel = \"  next  \"").linkHeaderCursor())
+        assertNull(response("https://example.org/next; rel=next").linkHeaderCursor())
+        assertNull(response("<https://example.org/next>; REL=next").linkHeaderCursor())
+
+        val multiple = Headers.Builder()
+            // OkHttp exposes repeated Link header fields as multiple values.
+            .add("Link", "<https://example.org/first>; rel=next")
+            .add("Link", "<https://example.org/second>; rel=next")
+            .build()
+        assertEquals("https://example.org/second", HttpResponse("", multiple).linkHeaderCursor())
     }
 
     @Test
