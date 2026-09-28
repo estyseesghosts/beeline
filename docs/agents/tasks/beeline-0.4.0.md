@@ -24,6 +24,24 @@ Repair Mastodon OAuth verification and callback handling without changing Misske
   passed. No exchange occurred because the device had no pending request.
 - Live-server status: a fresh user approval remains required to prove the exchange and verify flow.
 
+## Welcome scaling record
+
+- Commit `47dbc36` removes the fixed `520.dp` welcome logo height. The shared box uses an
+  aspect ratio of `1.25`.
+- The scroll content applies status-bar and navigation-bar padding. The IME padding remains
+  intact for the server form.
+- Welcome buttons use consistent `64.dp` height and `480.dp` maximum width.
+- `SignInScreenTest` covers compact, large, and pending states.
+- The code reviewer reported no `BLOCKING` or `REQUIRED` findings.
+- A portrait device check passed on `1848x2448`. The card stayed below the status bar, the logo
+  stayed centered, and the buttons stayed above the navigation bar.
+- Wide, foldable, large-font, and landscape checks remain unverified.
+- The architecture audit reported 611 findings against a 610 baseline. This is a count-only
+  measurement and does not prove a regression.
+- The full gate timed out. Known unrelated baseline test failures remain unresolved.
+- OAuth commit `80bfd25` and the preserved `MainActivity` lines remain intact.
+- The interrupted 2C3 PhotoGrid work remains interrupted.
+
 ## Exact Mastodon staging pathspec
 
 Stage only the Mastodon repair files and its focused tests:
@@ -56,4 +74,6 @@ remain outside this slice.
 
 - Implementation log: `logs/260928-mastodon-callback-repair.txt`.
 - Audit source: `logs/260928-oauth-callback.txt`.
+- Welcome scaling record: commit `47dbc36`; the ignored implementation log is
+  `logs/260928-welcome-signin-ui.txt`.
 - No secrets, tokens, callback values, or response bodies belong in these records.
