@@ -311,6 +311,64 @@ class SessionViewModelTest {
         } finally { owner.clear(); Dispatchers.resetMain() }
     }
 
+    @Test fun duplicateMastodonCallbackExchangesOnceAndPreservesPendingCode() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val owner = ViewModelStore()
+        try {
+            val exchangeGate = CompletableDeferred<Unit>()
+            var exchangeCalls = 0
+            var pendingCodeAtExchange: String? = null
+            val result = LoginSession(
+                login.origin,
+                login.token,
+                login.user,
+                Protocol.MASTODON,
+            )
+            val gateway = object : AuthGateway {
+                override suspend fun prepare(input: String) = PendingLogin(
+                    input,
+                    "session-id",
+                    System.currentTimeMillis(),
+                    protocol = Protocol.MASTODON,
+                )
+
+                override fun browserUrl(pending: PendingLogin) = "https://example.org/oauth/authorize"
+
+                override suspend fun complete(pending: PendingLogin): LoginSession {
+                    exchangeCalls += 1
+                    pendingCodeAtExchange = pending.authorizationCode
+                    exchangeGate.await()
+                    return result
+                }
+            }
+            val store = MemoryStore()
+            val manager = accountManagerFixture(store, gateway, StandardTestDispatcher(testScheduler))
+            owner.put("account", manager)
+            advanceUntilIdle()
+
+            manager.signIn("https://example.org")
+            advanceUntilIdle()
+            val callback = "palustris://auth/mastodon?state=session-id&code=test-code"
+            manager.callback(callback)
+            runCurrent()
+            manager.callback(callback)
+            runCurrent()
+
+            assertEquals(1, exchangeCalls)
+            assertEquals("test-code", pendingCodeAtExchange)
+            assertTrue(manager.session.value.pending)
+            assertTrue(manager.session.value.busy)
+            assertNull(manager.session.value.error)
+            assertFalse(manager.session.value.error.orEmpty().contains("unsupported", ignoreCase = true))
+
+            exchangeGate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(1, exchangeCalls)
+            assertNull(store.pending)
+            assertNotNull(manager.session.value.account)
+        } finally { owner.clear(); Dispatchers.resetMain() }
+    }
+
     @Test fun failedPublishKeepsStateAndSuccessInvokesCompletion() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val owner = ViewModelStore()

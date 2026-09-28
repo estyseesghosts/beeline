@@ -4,51 +4,47 @@
 
 ## Current position
 
-OAuth callback diagnostics now have a strict invalid-category matrix. Session tests cover callback
-deferral during restore and ignoring callbacks without pending state. No protocol behavior changed.
+The Mastodon callback repair is implemented in:
 
-The staged `docs/classic_navigation.md`, unrelated dirty files, helper scripts, images, and
-interrupted 2C3 PhotoGrid/Search files remain outside the OAuth commit pathspec.
+- `app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt`
+- `app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonErrorMapper.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt`
+
+Focused tests are:
+
+- `app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt`
+- `app/src/test/java/me/foxtails/palustris/data/mastodon/MastodonIntegrationTest.kt`
+- `app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyIntegrationTest.kt`
+- `app/src/test/java/me/foxtails/palustris/data/transport/AuthenticatedHttpClientTest.kt`
+- `app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt`
+
+No resource files changed. The duplicate test checks the code and pending state before completion.
+
+The repair uses `/api/v1/accounts/verify_credentials`, root `/oauth/token`, `/api/v1/apps`, and
+`/api/v2/instance`. Stage-aware authentication 404 errors remain distinct from unsupported
+capabilities. Misskey behavior remains unchanged.
 
 ## Verification
 
-The focused auth and session tests passed: 3 `AuthGatewayTest` tests and 15 `SessionViewModelTest`
-tests. The existing SignInScreen test and `:app:lintDebug` also passed. The architecture
-audit reports 613 findings against a 610 baseline. The three-count difference is unexplained, but no
-OAuth-attributable regression exists; unchanged baseline regression lines remain in the audit log. The
-audit command returned exit code 0.
-The full gate command `test assembleRelease` timed out after 120 seconds. Release assembly completed
-before the timeout. Known baseline failures remained.
+Sixteen session tests, three auth gateway tests, 59 Mastodon integration tests, and 48 Misskey
+integration tests passed. The prior `lintDebug` run passed after the test change. The command
+`python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`
+exited 0 with 611 findings and zero baseline regressions. Historical slice counts of 610, 611, 612,
+and 613 occurred across worktree states. Treat them as unstable count-only measurements, not
+regressions or proof. The related logs are ignored by `/logs/*.txt`: `logs/260928-oauth-callback.txt`
+and `logs/260928-mastodon-callback-repair.txt`. The full gate remains unresolved because the known
+baseline suite reports unrelated failures.
 
-The dummy device callback reached `onNewIntent`. The real redirect did not arrive. The canvas guidance
-was absent from the accessibility tree. Screenshot capture was blocked by tool policy. The MainActivity
-dispatch remains untestable in the unit harness; instrumentation is future work.
+The device installed the debug APK and passed welcome and dummy callback dispatch checks.
+It had no pending request, so it did not perform an exchange. A fresh user approval remains needed.
 
 ## Next slice
 
-Run the focused auth, session, SignInScreen, and MainActivity verification that the available harness
-supports. Keep the MainActivity harness limitation explicit if instrumentation remains unavailable.
+Use a fresh device approval to verify the real Mastodon exchange and verify request.
+Capture a welcome screenshot during that device check.
 
-## Staging boundary
+## Staging pathspec
 
-The exact committable OAuth paths are:
-
-- `app/src/main/java/me/foxtails/palustris/MainActivity.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt`
-- `app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/setup/SetupScreens.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/UiStrings.kt`
-- `app/src/main/res/values/strings.xml`
-- `app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt`
-- `docs/agents/tasks/beeline-0.4.0.md`
-- `docs/agents/handoff.md`
-
-Append `app/src/test/java/me/foxtails/palustris/ui/SignInScreenTest.kt` only when it changes.
-Use the matching `git add -- <paths>` and `git commit -- <paths>` commands in the task document.
-Exclude `docs/classic_navigation.md`, the listed unrelated files, and the interrupted 2C3 PhotoGrid/Search files.
-
-## Limits
-
-Live-server, real-redirect, API 29, RTL, TalkBack, font-scale, signed-release, and physical-device
-checks remain unverified except for the dummy callback result described above.
+Use the exact Mastodon pathspec in `docs/agents/tasks/beeline-0.4.0.md`.
+Exclude welcome UI, 2C3 PhotoGrid and Search, `docs/classic_navigation.md`, and unrelated dirty files.
+Do not stage or commit in this subagent session.

@@ -20,6 +20,16 @@ object MastodonErrorMapper {
         else -> SourceError.ServerError(error.message)
     }
 
+    /** Keeps authentication 404s diagnostic instead of treating a broken auth path as unsupported. */
+    fun map(error: Exception, stage: String): SourceError = when (error) {
+        is HttpStatusFailure -> if (error.status == 404) {
+            SourceError.ServerError(errorDetail(error.body) ?: "$stage returned 404")
+        } else {
+            map(error)
+        }
+        else -> map(error)
+    }
+
     private fun errorDetail(body: String?): String? = body?.let {
         runCatching {
             val json = JSONObject(it)

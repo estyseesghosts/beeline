@@ -819,7 +819,9 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             val tokenBody = tokenRequest.body.readUtf8()
             assertEquals("authorization_code", tokenBody.substringAfter("grant_type=").substringBefore('&'))
             assertTrue(tokenBody.contains("code_verifier=verifier"))
-            assertEquals("Bearer mastodon-token", server.takeRequest().getHeader("Authorization"))
+            val verifyRequest = server.takeRequest()
+            assertEquals("Bearer mastodon-token", verifyRequest.getHeader("Authorization"))
+            assertEquals("/api/v1/accounts/verify_credentials", verifyRequest.path)
         }
     }
 
@@ -838,6 +840,9 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         assertSame(SourceError.Unauthorized, MisskeyErrorMapper.map(ApiFailure(401)))
         assertSame(SourceError.RateLimited, MastodonErrorMapper.map(429))
         assertEquals("server exploded", (MastodonErrorMapper.map(500, """{"error":"server exploded"}""") as SourceError.ServerError).detail)
+        assertEquals("verify returned 404", (MastodonErrorMapper.map(
+            me.foxtails.palustris.data.transport.HttpStatusFailure(404, ""), "verify",
+        ) as SourceError.ServerError).detail)
         assertEquals("timeline", (MisskeyErrorMapper.map(ApiFailure(404, "timeline")) as SourceError.Unsupported).feature)
     }
 

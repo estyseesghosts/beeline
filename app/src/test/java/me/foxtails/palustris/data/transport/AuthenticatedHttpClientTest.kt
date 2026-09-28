@@ -81,6 +81,22 @@ class AuthenticatedHttpClientTest {
     }
 
     @Test
+    fun explicitMastodonApiPathsRemainUnderApiPrefix() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("{}"))
+            server.enqueue(MockResponse().setBody("{}"))
+            val origin = server.url("/").toString().removeSuffix("/")
+            val client = AuthenticatedHttpClient(OkHttpClient())
+
+            client.postForm(origin, "api/v1/apps", emptyMap())
+            client.get(origin, "api/v2/instance")
+
+            assertEquals("/api/v1/apps", server.takeRequest().path)
+            assertEquals("/api/v2/instance", server.takeRequest().path)
+        }
+    }
+
+    @Test
     fun redirectsStayDisabledAndDoNotSendBearerToTarget() = runBlocking {
         MockWebServer().use { source ->
             MockWebServer().use { target ->

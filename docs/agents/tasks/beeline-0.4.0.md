@@ -1,75 +1,59 @@
-# Beeline 0.4.0 task state — OAuth diagnostics continuation
+# Beeline 0.4.0 task state — Mastodon callback repair
 
 ## Objective
 
-Close the OAuth diagnostics test gaps without weakening callback validation or changing protocol
-behavior. Keep the interrupted Photo Grid work intact.
+Repair Mastodon OAuth verification and callback handling without changing Misskey behavior.
 
 ## Status sets
 
-- Source status: OAuth dispatch categories, callback rejection categories, and the Mastodon missing
-  callback message are implemented.
-- Test status: the invalid callback matrix now covers scheme, host, path, missing, duplicate, and
-  wrong state, blank and duplicate code, and expired pending state. Session tests cover deferred
-  callbacks and ignored callbacks without pending state.
-- MainActivity test status: unverified. The available unit-test harness cannot inject Hilt fields or
-  observe the private dispatch method. This blocks direct coverage for saved-null and saved-non-null
-  `onCreate`, `onNewIntent`, and notification-versus-auth fallback routing.
-- Protocol status: Misskey matching remains unchanged. Mastodon keeps the existing redirect URI,
-  strict state matching, single code requirement, and fifteen-minute lifetime.
-- Audit status: count-only mismatch remains unexplained. The OAuth log reports 613 findings against
-  a 610 baseline. It reports zero OAuth-attributable regressions; the listed regression lines are
-  unchanged baseline files.
-- Full gate status: unresolved. The full gate timed out at 120 seconds after known baseline test
-  failures.
-- Device status: dummy callback delivery through `onNewIntent` passed. The real redirect did not
-  arrive. The stuck guidance UI was not in the accessibility tree because it uses a canvas. Screenshots
-  remain blocked by tool policy.
-- Live-server status: unverified.
+- Source status: Mastodon verify uses `/api/v1/accounts/verify_credentials`.
+  Token exchange uses root `/oauth/token`. Registration uses `/api/v1/apps`.
+  The capability probe uses `/api/v2/instance`. Authentication 404 errors keep their stage.
+  Generic capability 404 errors remain unsupported. Unknown errors remain unknown.
+- Callback status: PKCE, form encoding, redirect validation, origin validation, and strict state
+  matching remain intact. Duplicate valid callbacks start one exchange and preserve the pending code.
+- Test status: 16 session tests, 3 auth gateway tests, 59 Mastodon integration tests, and 48
+  Misskey integration tests pass. Live-server exchange proof remains unverified.
+- Audit status: `python tools/scripts/architecture_audit.py . --baseline
+  tools/architecture-baseline.json --check` exited 0 and reported 611 findings with zero baseline
+  regressions. Historical slice counts of 610, 611, 612, and 613 occurred across worktree states.
+  Treat these counts as unstable count-only measurements, not regressions or proof. The related
+  logs are ignored by `/logs/*.txt`: `logs/260928-oauth-callback.txt` and
+  `logs/260928-mastodon-callback-repair.txt`.
+- Device status: the debug APK installed successfully. Welcome layout and dummy callback dispatch
+  passed. No exchange occurred because the device had no pending request.
+- Live-server status: a fresh user approval remains required to prove the exchange and verify flow.
 
-## Exact OAuth commit pathspec
+## Exact Mastodon staging pathspec
 
-Stage only these files for the OAuth slice:
-
-- `app/src/main/java/me/foxtails/palustris/MainActivity.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt`
-- `app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/setup/SetupScreens.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/UiStrings.kt`
-- `app/src/main/res/values/strings.xml`
-- `app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt`
-- `docs/agents/tasks/beeline-0.4.0.md`
-- `docs/agents/handoff.md`
-
-Add `app/src/test/java/me/foxtails/palustris/ui/SignInScreenTest.kt` only if this slice changes it.
-Use the same explicit pathspec for staging and committing:
+Stage only the Mastodon repair files and its focused tests:
 
 ```text
-git add -- app/src/main/java/me/foxtails/palustris/MainActivity.kt app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt app/src/main/java/me/foxtails/palustris/ui/setup/SetupScreens.kt app/src/main/java/me/foxtails/palustris/ui/UiStrings.kt app/src/main/res/values/strings.xml app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt docs/agents/tasks/beeline-0.4.0.md docs/agents/handoff.md
-git commit -- app/src/main/java/me/foxtails/palustris/MainActivity.kt app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt app/src/main/java/me/foxtails/palustris/ui/setup/SetupScreens.kt app/src/main/java/me/foxtails/palustris/ui/UiStrings.kt app/src/main/res/values/strings.xml app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt docs/agents/tasks/beeline-0.4.0.md docs/agents/handoff.md
+git add -- app/src/main/java/me/foxtails/palustris/data/auth/MastodonAuth.kt app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonErrorMapper.kt app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt app/src/test/java/me/foxtails/palustris/data/auth/AuthGatewayTest.kt app/src/test/java/me/foxtails/palustris/data/mastodon/MastodonIntegrationTest.kt app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyIntegrationTest.kt app/src/test/java/me/foxtails/palustris/data/transport/AuthenticatedHttpClientTest.kt app/src/test/java/me/foxtails/palustris/ui/session/SessionViewModelTest.kt docs/agents/tasks/beeline-0.4.0.md docs/agents/handoff.md
 ```
 
-If `SignInScreenTest.kt` changes, append it to both commands.
-
-Exclude the staged `docs/classic_navigation.md`. Exclude unrelated files: `.opencode/agents/code_reviewer_high.md`, `.opencode/agents/code_reviewer_low.md`, `.opencode/agents/git_handler.md`, `.opencode/agents/orchestrator.md`, `.opencode/agents/problem_solver_high.md`, `.opencode/agents/problem_solver_low.md`, `.opencode/agents/targeted_fixer.md`, `docs/agents/app-shell-ownership.md`, `importantdocs/writing_style.md`, `currentbehaviour.png`, `intendedbehaviour.png`, `.opencode/agents/adb_handler.md`, `.opencode/agents/codebase_explorer_android.md`, `auth_stuck.png`, `screen.png`, `screen_after_dummy.png`, `screen_pending.png`, `tools/scripts/adb_control.py`, `tools/scripts/adb_flow.py`, `tools/scripts/adb_inspect.py`, `tools/scripts/adb_screenshot.py`, `tools/scripts/__pycache__/`, `tools/tests/__pycache__/`, and `logs/*`.
-
-Exclude the interrupted 2C3 PhotoGrid/Search files: `app/src/main/java/me/foxtails/palustris/ui/ConnectedApp.kt`, `app/src/main/java/me/foxtails/palustris/ui/feed/FeedHost.kt`, `app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt`, `app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt`, `app/src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridFeedViewModelTest.kt`, `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridHost.kt`, `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridOwner.kt`, `app/src/main/java/me/foxtails/palustris/ui/search/SearchScreen.kt`, `app/src/main/java/me/foxtails/palustris/ui/search/SearchOwner.kt`, `app/src/main/java/me/foxtails/palustris/ui/search/SearchHost.kt`, `app/src/main/java/me/foxtails/palustris/ui/search/SearchController.kt`, `app/src/main/java/me/foxtails/palustris/ui/search/AccountSearchState.kt`, `app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt`, and `app/src/test/java/me/foxtails/palustris/ui/search/SearchPanelRestorationTest.kt`.
+Exclude welcome UI files, the 2C3 PhotoGrid and Search files, and staged `docs/classic_navigation.md`.
+Exclude unrelated `.opencode`, writing, image, helper, cache, and log files.
 
 ## Verification record
 
-- Focused auth and session tests passed: 3 `AuthGatewayTest` tests and 15 `SessionViewModelTest`
-  tests. The existing SignInScreen test also passed before this continuation.
-- The OAuth audit log is `logs/260928-oauth-callback.txt`. It records 613 findings, baseline 610,
-  and a count delta of three. It does not explain the count delta.
-- The audit command was `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`.
-  The command exit code was 0. The log records no OAuth-attributable regression.
-- The full Gradle gate command was `test assembleRelease`. It timed out at 120 seconds after
-  `assembleRelease` completed. Known baseline failures remained in unrelated tests.
-- The MainActivity dispatch harness was not available in the unit-test harness. Instrumentation can
-  cover this dispatch later. This gap does not block the OAuth commit.
+- Focused auth, Mastodon integration, capability, transport, and session tests passed.
+- `:app:lintDebug` passed after the duplicate-callback test change.
+- The full gate remains unresolved because the known baseline suite reports unrelated failures.
+- The audit command exited 0 and reported 611 findings with zero baseline regressions. Historical
+  counts of 610, 611, 612, and 613 are unstable count-only measurements across worktree states.
 
 ## Boundaries
 
-There is no redirect URI change, validation weakening, auto-polling, or pasted-code flow. No Misskey
-adapter change is allowed in this slice.
+The repair changes Mastodon authentication and its session callback guard only.
+The implementation paths are `MastodonAuth.kt`, `MastodonErrorMapper.kt`, and `AccountManager.kt`.
+The focused test paths are `AuthGatewayTest.kt`, `MastodonIntegrationTest.kt`,
+`MisskeyIntegrationTest.kt`, `AuthenticatedHttpClientTest.kt`, and `SessionViewModelTest.kt`.
+No resource files changed. Misskey transport, the welcome UI, PhotoGrid, Search, and navigation
+remain outside this slice.
+
+## Records
+
+- Implementation log: `logs/260928-mastodon-callback-repair.txt`.
+- Audit source: `logs/260928-oauth-callback.txt`.
+- No secrets, tokens, callback values, or response bodies belong in these records.

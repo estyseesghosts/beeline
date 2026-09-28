@@ -160,6 +160,10 @@ class AccountManager @Inject constructor(
         }
         when (val result = AuthCallback.diagnose(value, request, System.currentTimeMillis())) {
             AuthCallback.Result.Accepted -> {
+                if (request.authorizationCode != null || _session.value.busy || authJob?.isActive == true) {
+                    Log.i(TAG, "oauth_callback duplicate-ignore")
+                    return
+                }
                 pending = request.copy(authorizationCode = AuthCallback.authorizationCode(value))
                 Log.i(TAG, "oauth_callback accepted-storing-code")
                 finishSignIn()

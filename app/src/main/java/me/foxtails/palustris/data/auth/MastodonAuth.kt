@@ -1,8 +1,10 @@
 package me.foxtails.palustris.data.auth
 
+import android.util.Log
 import me.foxtails.palustris.data.AppMessages
 import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
+import me.foxtails.palustris.data.transport.HttpStatusFailure
 import me.foxtails.palustris.data.misskey.ServerAddress
 import me.foxtails.palustris.data.mastodon.MastodonCapabilityProbe
 import me.foxtails.palustris.ProductIdentity
@@ -67,7 +69,7 @@ class MastodonAuth(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        throw MastodonErrorMapper.map(e)
+        throw MastodonErrorMapper.map(e, "prepare")
     }
 
     override fun browserUrl(pending: PendingLogin): String {
@@ -97,21 +99,37 @@ class MastodonAuth(
         val code = requireNotNull(pending.authorizationCode) {
             appMessages.signInAuthorizationMissing()
         }
-        val tokenResponse = apiFor(pending.origin).postForm(pending.origin, "oauth/token", mapOf(
-            "client_id" to clientId,
-            "client_secret" to clientSecret,
-            "grant_type" to "authorization_code",
-            "redirect_uri" to REDIRECT_URI,
-            "code" to code,
-        ) + (pending.codeVerifier?.let { mapOf("code_verifier" to it) } ?: emptyMap()))
+        Log.i(TAG, "oauth_stage exchange-start")
+        val tokenResponse = try {
+            apiFor(pending.origin).postForm(pending.origin, "oauth/token", mapOf(
+                "client_id" to clientId,
+                "client_secret" to clientSecret,
+                "grant_type" to "authorization_code",
+                "redirect_uri" to REDIRECT_URI,
+                "code" to code,
+            ) + (pending.codeVerifier?.let { mapOf("code_verifier" to it) } ?: emptyMap()))
+        } catch (e: Exception) {
+            logStageFailure("exchange", e)
+            throw MastodonErrorMapper.map(e, "exchange")
+        }
         val tokenJson = JSONObject(tokenResponse.body)
         val token = tokenJson.getString("access_token")
         require(token.isNotBlank())
         val api = apiFor(pending.origin)
-        val user = JSONObject(api.get(pending.origin, "v1/accounts/verify_credentials", token).body)
+        Log.i(TAG, "oauth_stage verify-start")
+        val user = try {
+            JSONObject(api.get(pending.origin, "api/v1/accounts/verify_credentials", token).body)
+        } catch (e: Exception) {
+            logStageFailure("verify", e)
+            throw MastodonErrorMapper.map(e, "verify")
+        }
+        Log.i(TAG, "oauth_stage capability-start")
         val capabilities = runCatching {
             MastodonCapabilityProbe(api).probeCapabilities(Connection(pending.origin, Protocol.MASTODON))
-        }.getOrElse { ServerCapabilities() }
+        }.getOrElse {
+            logStageFailure("capability", it)
+            ServerCapabilities()
+        }
         LoginSession(
             origin = pending.origin,
             token = token,
@@ -128,7 +146,8 @@ class MastodonAuth(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        throw MastodonErrorMapper.map(e)
+        logStageFailure("complete", e)
+        throw MastodonErrorMapper.map(e, "complete")
     }
 
     private suspend fun registerApp(origin: String, api: AuthenticatedHttpClient, scopes: Set<String>): AppRegistration {
@@ -166,11 +185,15 @@ class MastodonAuth(
     }
 
     private suspend fun detectPkceSupport(origin: String, api: AuthenticatedHttpClient): Boolean {
+        Log.i(TAG, "oauth_stage capability-start")
         val version = runCatching {
             MastodonCapabilityProbe.parseLeadingVersion(
                 JSONObject(api.get(origin, "v2/instance").body).optString("version"),
             )
-        }.getOrNull()
+        }.getOrElse {
+            logStageFailure("capability", it)
+            null
+        }
         return version != null && version.atLeast(4, 3, 0)
     }
 
@@ -183,7 +206,17 @@ class MastodonAuth(
     private fun codeChallenge(verifier: String): String = Base64.getUrlEncoder().withoutPadding()
         .encodeToString(MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray(Charsets.US_ASCII)))
 
+    private fun logStageFailure(stage: String, error: Throwable) {
+        val category = when (error) {
+            is HttpStatusFailure -> "http-${error.status}"
+            is java.io.IOException -> "network"
+            else -> "client"
+        }
+        Log.i(TAG, "oauth_stage $stage-failure category=$category")
+    }
+
     private companion object {
+        const val TAG = "BeelineAuth"
         const val MASTODON_SCOPE = "read write push"
         val REQUIRED_APP_SCOPES = setOf("read", "write", "push")
         val REQUESTED_ACCESS = setOf(
