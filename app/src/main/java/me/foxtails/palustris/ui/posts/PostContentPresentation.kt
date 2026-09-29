@@ -50,6 +50,9 @@ import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.springPress
+import me.foxtails.palustris.ui.theme.postAuthor
+import me.foxtails.palustris.ui.theme.postBody
+import me.foxtails.palustris.ui.theme.postMetadata
 
 private val PostMetadataVerticalPadding = 2.dp * 1.06f
 private val PostChromeHeight = 44.dp + (PostMetadataVerticalPadding * 2f)
@@ -92,7 +95,7 @@ internal fun PostBodyContent(
                                 onOpenUrl = onOpenUrl,
                                 onOpenUsername = onOpenUsername,
                                 onSearchHashtag = onSearchHashtag,
-                                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                                style = MaterialTheme.typography.postBody.copy(color = MaterialTheme.colorScheme.onSurface),
                             )
                             onOpenPost?.let { ViewFullPostBubble(it) }
                         }
@@ -104,7 +107,7 @@ internal fun PostBodyContent(
                             onOpenUrl = onOpenUrl,
                             onOpenUsername = onOpenUsername,
                             onSearchHashtag = onSearchHashtag,
-                            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                            style = MaterialTheme.typography.postBody.copy(color = MaterialTheme.colorScheme.onSurface),
                         )
                     }
                 }
@@ -114,7 +117,7 @@ internal fun PostBodyContent(
                     Text(
                         it,
                         modifier = Modifier.semantics { contentDescription = timeDescription },
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.postMetadata,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -128,7 +131,7 @@ internal fun PostBodyText(
     text: String,
     emoji: Map<String, CustomEmoji>,
     modifier: Modifier = Modifier,
-    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyLarge,
+    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.postBody,
     onTextTap: (() -> Unit)? = null,
     onOpenUrl: ((String) -> Unit)? = null,
     onOpenUsername: ((String) -> Unit)? = null,
@@ -175,7 +178,7 @@ internal fun PostMetadataRow(
         ) {
             AccountAvatar(post.author, Modifier.size(40.dp))
             Spacer(Modifier.width(8.dp))
-            AccountDisplayName(post.author, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            AccountDisplayName(post.author, style = MaterialTheme.typography.postAuthor, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (filteredHashtags.isNotEmpty() && (onSearchHashtag != null || onOpenHashtagBubble != null)) {
             Spacer(Modifier.width(4.dp))

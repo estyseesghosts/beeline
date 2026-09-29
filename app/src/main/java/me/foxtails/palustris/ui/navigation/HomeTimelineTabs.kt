@@ -41,6 +41,7 @@ import me.foxtails.palustris.ui.components.BeelineBubbleMinHeight
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
 import me.foxtails.palustris.ui.shell.timelineDescriptionRes
 import me.foxtails.palustris.ui.shell.timelineLabelRes
+import me.foxtails.palustris.ui.theme.tab
 
 @Composable
 internal fun HomeTimelineTabs(
@@ -108,6 +109,7 @@ internal fun HomeTimelineTabs(
                     ) {
                         Text(
                             label,
+                            style = MaterialTheme.typography.tab,
                             color = if (isSelected) {
                                 MaterialTheme.colorScheme.onSecondaryContainer
                             } else {

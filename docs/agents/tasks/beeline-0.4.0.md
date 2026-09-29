@@ -1,62 +1,72 @@
-# Beeline 0.4.0 task state — Phase 3A-first
+# Beeline 0.4.0 task state — Phase 3A-2
 
 ## Status
 
-Phase 2E is committed at `8e1c046`. This worktree contains the first Phase 3A behavior.
-`PillAction` now keeps an effective 48 dp by 48 dp target under tight parent constraints.
-
-The previous task state was stale. It incorrectly claimed that Phase 2E remained uncommitted.
+Phase 3A-2 centralizes semantic typography roles that have consumers. The roles delegate to
+existing Material 3 styles. This slice does not change typography metrics, colors, spacing,
+navigation, or storage.
 
 ## Ownership and scope
 
-`PillAction.kt` owns the shared action target, semantics, loading suppression, and click behavior.
-`BubbleGeometry.kt` owns the shared 24 dp pill radius and 48 dp minimum height values.
-Callers include hashtag actions, post interaction presentation, post sharing, emoji pinning, and
-profile actions. No caller changes are required.
+`AppTypography.kt` owns the semantic role names and the existing Material style mappings. Post
+body text, author names, post metadata, and Home timeline tabs use these roles. Unused count and
+heading roles were removed. The compact and large navigation files remain unchanged.
 
-The slice changes only target measurement and regression coverage. It does not change labels,
-colors, shape, padding, icons, navigation, post policy, media, editor, or emoji behavior.
+The role boundary remains protocol-neutral. It does not own font preferences, color schemes, post
+policy, media, editors, emoji, or navigation state.
 
-## Tests
+## Tests and verification
 
-`PillActionTest` covers enabled button semantics and click behavior, constrained 48 dp bounds,
-disabled semantics, and loading click suppression.
+`AppTypographyTest` passed 1 test across all font families and text-size preferences.
+`HomeFeedTest`, `NavigationTest`, `SinglePostScreenTest`, and `PostShareSheetTest` ran 111 tests;
+109 passed and two baseline `NavigationTest` draft failures remained. The failures were
+`closingComposerAutosavesUnsavedText` at line 820 and
+`draftsSurviveActivityRecreationAndCanBeDeleted` at line 803. `logs/BUGS.txt` entry
+`20260923-0B` records both failures against identical app sources with no `app/src` diff. This
+slice does not touch draft, composer, or navigation state code.
 
-The focused suite passed 4 tests. Caller suites passed 77 tests: HomeFeed 37, ProfileScreen 22,
-EmojiPicker 17, and PostShareSheet 1. `lintDebug` passed. The architecture audit passed with 612
-findings and zero regressions.
+The focused `AppTypographyTest` command passed. The affected-suite command exited 1 because of
+the two baseline failures. `lintDebug` passed. The architecture audit passed with 616 findings
+and zero regressions. `diff --check` passed for the allowed documentation paths.
+
+The full gate remains known red because Phase 10 owns the existing failures. It was not reclassified
+as a Phase 3A-2 regression.
+
+## Device evidence — 3A-2
+
+The adb handler tested `emulator-5554`, Android 16 SDK 36, at 1848x2448 with density 480 and
+override 616. `MainActivity` was focused, the keyguard was false, the IME was hidden, and light
+status and navigation bars were active. The installed debug package was version 0.2.8 (2008),
+debuggable, with first install and last update on 2026-09-28; no reinstall was used. Font scale
+was 1.0.
+
+The `screen.png`, `screen_top.png`, and `screen_restored.png` captures showed fully rendered
+authors, bodies, and timestamps without overlap. Home, Local, and Federated tabs were legible,
+with the selected tab visible. Floating chrome covered images as designed, while text remained
+readable. Compact portrait light geometry passed. A 500,600 to 500,1800 swipe scrolled only.
+
+Back switched to Firefox at the `mstdn.ca/oauth/authorize` page. This is a behavior note, not a
+typography failure. Starting `MainActivity` again recovered Home with state preserved. No sign-out
+was performed. The `@ctr@mstdn.ca` account identity was preserved in the evidence and is not a
+secret.
+
+Unverified: Search and Profile because of mis-tap risk; dark or pure-black theme; wide or foldable
+layouts because no fold display was available; 200% font scale; keyboard; and TalkBack. The
+captures provide geometry evidence only. Temporary screenshots remain untracked and are excluded
+from the documentation change.
 
 ## Documentation review
 
-`docs/wiki/ui-and-navigation.md` does not define the `PillAction` or `BubbleGeometry` boundary.
-It remains unchanged. `docs/agents/app-shell-ownership.md` also does not define this boundary.
+`docs/wiki/ui-and-navigation.md` documents navigation and feature boundaries, not theme
+typography. `docs/agents/app-shell-ownership.md` documents shell ownership, not theme typography.
+Both remain unchanged.
 
-## Device evidence
+## Preservation and continuation
 
-The adb check used one device: `emulator-5554`. The signed-in account was `@ctr@mstdn.ca`, and
-the session remained preserved. The foreground activity was `me.foxtails.palustris/MainActivity`, visible and on-screen. The IME was not
-visible (`isVisible=false`, `mInputShown=false`). The package was Beeline version `0.2.8` (`2008`),
-with first install at 2026-09-28 15:54:45 and last update at 2026-09-28 17:23:44. No reinstall or
-build ran during the check.
+Only this task-state file and `docs/agents/handoff.md` are updated. Production and test source,
+the staged classic navigation document, `.opencode` changes, images, helpers, caches, logs, and
+the committed Photo Grid test deletion remain unrelated and untouched. This subagent does not
+stage, commit, or push.
 
-The device used Android 16 (SDK 36), font scale 1.0, light theme, and an unlocked display. The
-display was 1848 by 2448 at density 480 with a 616 override. Home showed fully rendered Home,
-Local, and Federated pills. The `#travel` chip was visible. Five post-action icons were evenly
-spaced. No clipped hit areas appeared in the screenshot geometry. Back navigation returned to Home.
-
-The search screenshot was taken after a mis-tap opened the image viewer. It is not evidence for
-Search or Photo Grid. The Compose hierarchy exposed only `android.view.View` nodes with empty text
-and content descriptions, so numeric 48 dp proof remains code and test evidence.
-
-Search, Photo Grid, Notifications, direct messages, and Profile were not captured. Dark and
-pure-black themes, compact and wide or foldable layouts, 200 percent font scale, keyboard, and
-TalkBack were not run. UI dump numeric bounds were not measurable. The screenshots
-`.tmp-pill-search.png` and `.tmp-pill-home2.png` remain untracked. These checks remain unverified.
-
-## Preservation
-
-The staged classic navigation document, `.opencode` changes, images, helpers, caches, logs, and the
-committed Photo Grid test deletion remain unrelated and untouched. The temporary inspection files
-and screenshots remain untracked and untouched.
-
-This subagent does not stage or commit. The parent session must preserve those paths.
+Prior history `8e1c046` and `5b8d98d` remains accurate. Last safe commit: `5b8d98d`. Next slice:
+Phase 3A-3 or Phase 3B.

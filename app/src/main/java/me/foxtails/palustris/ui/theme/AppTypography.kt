@@ -39,6 +39,18 @@ fun appTypography(font: AppFont, textSize: AppTextSize): Typography {
     )
 }
 
+val Typography.postBody: TextStyle
+    get() = bodyLarge
+
+val Typography.postAuthor: TextStyle
+    get() = titleSmall
+
+val Typography.postMetadata: TextStyle
+    get() = labelSmall
+
+val Typography.tab: TextStyle
+    get() = bodyLarge
+
 private fun TextStyle.with(family: FontFamily, scale: Float): TextStyle = copy(
     fontFamily = family,
     fontSize = fontSize * scale,
