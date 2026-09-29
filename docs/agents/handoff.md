@@ -1,6 +1,6 @@
 # Handoff
 
-**Status:** The OpenCode orchestrator setup task is in progress. Slices 1 to 3 are
+**Status:** The OpenCode orchestrator setup task is in progress. Slices 1 to 4 are
 complete. The Beeline application work in `docs/agents/tasks/beeline-0.4.0.md` is
 untouched and continues from last safe source commit `464b2d1`.
 
@@ -36,7 +36,7 @@ reading the OpenCode V2 permission guide and reproducing its rule order.
 The orchestrator never works directly. It always delegates to a subagent. This
 replaces the AGENTS.md rule that says an agent must not use subagents by default,
 for the orchestrator only. It is why the orchestrator keeps `edit` -> `deny` and
-gains no write allow rule.
+gains no write allow rule. AGENTS.md records the decision.
 
 ## Verification approach
 
@@ -55,9 +55,9 @@ can confirm it.
 
 ## Next slice
 
-Slice 4 reconciles `AGENTS.md` with the delegation decision. It replaces the four
-lines under Working Process that forbid subagents, and scopes the replacement to
-the orchestrator.
+Slice 5 corrects the orchestrator prompt. It makes the `codebase_explorer_android`
+routing line conditional, states in the opening role line that the orchestrator
+never edits and always delegates, and brings the agent README up to nine agents.
 
 ## Known blockers
 

@@ -182,11 +182,12 @@ Large files are warnings, not automatic split requirements.
 
 ### Start
 
-- Work directly on the requested task.
-- Do not use subagents by default. Do not delegate work to another agent by default.
-- Use a subagent only when the user explicitly requests one.
-- Do not create a subagent because the task is large. Divide large tasks into implementation
-  slices instead.
+- Work directly on the requested task, unless you are the orchestrator.
+- The orchestrator never works directly. It always delegates to a subagent. It does not
+  edit, write, stage, or commit by itself. Its permission rules block those actions.
+- Any other agent must not use subagents unless the user explicitly requests one.
+- Any other agent must not create a subagent because the task is large. Divide large tasks
+  into implementation slices instead.
 - Read the relevant source before you make changes.
 - Trace the current behavior before you replace it.
 - Identify the current owner of each behavior.
@@ -270,6 +271,8 @@ Read these items at the start of a session, after compaction, and when you are u
 ### Handoff
 
 - Rewrite `docs/agents/handoff.md` after each completed slice.
+- The orchestrator asks `targeted_fixer` to rewrite the handoff and the task-state file,
+  because the orchestrator cannot write files.
 - Include the handoff rewrite in the same commit as the slice.
 - Keep it as the continuation pointer for the next session or agent.
 - Name the durable task-state file. Do not duplicate it.

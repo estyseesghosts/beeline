@@ -36,15 +36,18 @@ run under it.
 - Slice 0 — task log, plan file moved into the repository, task-state file.
 - Slice 1 — orchestrator permission hardening, commit `d3d88d8`.
 - Slice 2 — track the two untracked subagent definitions, commit `7526732`.
-- Slice 3 — bind `/checkpoint` and `/resume` to the orchestrator.
+- Slice 3 — bind `/checkpoint` and `/resume` to the orchestrator, commit
+  `5174d2f`.
+- Slice 4 — reconcile AGENTS.md with the delegation decision.
 
 # Current slice
 
-Slice 4 — reconcile AGENTS.md with the delegation decision.
+Slice 5 — correct the orchestrator prompt and the agent README.
 
 # Files involved
 
-- `AGENTS.md`
+- `.opencode/agents/orchestrator.md`
+- `.opencode/agents/README.md`
 
 # Verification
 
@@ -61,14 +64,17 @@ Slice 4 — reconcile AGENTS.md with the delegation decision.
   `git commit` and asks for `git add` and `git push`.
 - Both command files parse as valid YAML frontmatter and declare
   `agent: orchestrator`.
+- AGENTS.md no longer contains any rule that forbids the delegation model. A
+  search for `subagent`, `orchestrator`, and `delegate` returns only the
+  replacement rules and the new handoff rule.
 - The user's staged `docs/classic_navigation.md` survived every commit and is
   still staged, not committed.
 
 # Next
 
-Edit the four `AGENTS.md` lines under Working Process that forbid subagents.
-Scope the replacement to the orchestrator and record that the user made the
-decision.
+Make the `codebase_explorer_android` routing line conditional, state in the
+opening role line that the orchestrator never edits and always delegates, and
+list all nine agents in the agent README.
 
 # Blockers
 
@@ -78,5 +84,6 @@ decision.
 
 # Last safe commit
 
-Slice 2: `7526732` Track the adb and codebase explorer subagent definitions.
-Slice 1: `d3d88d8`. The app workstream stays at `464b2d1`.
+Slice 3: `5174d2f` Run the slice checkpoint and resume commands as the
+orchestrator. Slice 2: `7526732`. Slice 1: `d3d88d8`. The app workstream stays at
+`464b2d1`.
