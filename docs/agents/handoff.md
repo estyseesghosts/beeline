@@ -50,13 +50,16 @@ can confirm it.
 
 ## Next slice
 
-Slice 2 adds the two untracked subagent files to Git with no content change.
+Slice 3 changes the `agent` frontmatter in `/checkpoint` and `/resume` from
+`build` to `orchestrator`, and rewrites the checkpoint body so each step names
+the responsible subagent.
 
 ## Known blockers
 
-- The content of `adb_handler.md` and `codebase_explorer_android.md` is
-  unverified. A later task must review both and confirm each declares a valid
-  `mode` of `subagent`.
+- The permission behavior needs a real interactive session. A non-interactive
+  client cannot prove it.
+- The prompt bodies of `adb_handler.md` and `codebase_explorer_android.md` are
+  unverified. A separate task must review them. Recorded in `logs/BUGS.txt`.
 - The Gradle gate is known red for reasons that predate this task. The task
   changes no Kotlin source.
 

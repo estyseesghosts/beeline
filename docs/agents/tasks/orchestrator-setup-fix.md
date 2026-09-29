@@ -25,47 +25,49 @@ run under it.
   needs a real interactive session for final confirmation.
 - The user chose to commit the whole of `orchestrator.md`. The file already held
   uncommitted user changes in the same feature area.
+- The two previously untracked subagent files are added to Git with no content
+  change. The user asked for a separate task to review their content.
 
 # Completed
 
 - Slice 0 — task log, plan file moved into the repository, task-state file.
-- Slice 1 — orchestrator permission hardening.
+- Slice 1 — orchestrator permission hardening, commit `d3d88d8`.
+- Slice 2 — track the two untracked subagent definitions.
 
 # Current slice
 
-Slice 2 — track the two untracked subagent definitions.
+Slice 3 — bind `/checkpoint` and `/resume` to the orchestrator.
 
 # Files involved
 
-- `.opencode/agents/adb_handler.md`
-- `.opencode/agents/codebase_explorer_android.md`
+- `.opencode/command/checkpoint.md`
+- `.opencode/command/resume.md`
 
 # Verification
 
-- `tools/tests/permission_matrix.py` reproduces the V2 last-match-wins order
-  with the base policy, then the agent rules. It reports 42 of 42 cases matching
-  the intended effect for the current `orchestrator.md`.
+- `tools/tests/permission_matrix.py` reports 42 of 42 cases matching the
+  intended effect for the current `orchestrator.md`.
 - The same tool reports 35 of 42 against the `HEAD` version, and fails on the
-  exact three defects this task fixes: `.env` reads resolved to `allow`, the
-  `question` action resolved to `deny`, and `external_directory` resolved to
-  `deny`. The test has teeth.
-- The YAML frontmatter parses. It holds 39 rules and no malformed rule.
-- `git show HEAD:.opencode/agents/orchestrator.md` also failed the `adb_handler`
-  and `codebase_explorer_android` cases, because the allow rules for them were
-  uncommitted at that point.
+  three defects this task fixes. The test has teeth.
+- A structural frontmatter check confirms both newly tracked subagent files
+  declare `mode: subagent`, set a description, and carry no malformed permission
+  rule. Both model references resolve. The prompt bodies remain unverified.
+- The user's staged `docs/classic_navigation.md` survived the slice 1 commit and
+  is still staged, not committed.
 
 # Next
 
-Run `git add` for the two untracked agent files. Change no content. Confirm that
-`git ls-files .opencode/agents` lists nine files.
+Change the `agent` frontmatter in both command files from `build` to
+`orchestrator`. Rewrite the checkpoint body so each step names the responsible
+subagent, because the orchestrator cannot write files or run Git mutations.
 
 # Blockers
 
-- The content of the two untracked subagent files is unverified. This task only
-  adds them to Git. A later task must review both.
 - The permission behavior needs a real interactive session. A non-interactive
-  client cannot prove it.
+  client cannot prove it. Recorded in `logs/BUGS.txt` with the subagent content
+  gap.
 
 # Last safe commit
 
-Pending for slice 1. The last safe source commit before this task is `464b2d1`.
+Slice 1: `d3d88d8` Restore the orchestrator environment-file and question
+permissions. The app workstream stays at `464b2d1`.
