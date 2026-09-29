@@ -1,8 +1,8 @@
 # Handoff
 
-**Status:** The OpenCode orchestrator setup task is in progress. Slice 1 is
-complete. The Beeline application work in `docs/agents/tasks/beeline-0.4.0.md`
-is untouched and continues from last safe source commit `464b2d1`.
+**Status:** The OpenCode orchestrator setup task is in progress. Slices 1 to 3 are
+complete. The Beeline application work in `docs/agents/tasks/beeline-0.4.0.md` is
+untouched and continues from last safe source commit `464b2d1`.
 
 The active task-state file is `docs/agents/tasks/orchestrator-setup-fix.md`. Read
 that file for the current position. The plan of record is
@@ -45,23 +45,32 @@ the final effect for 42 operations. It is the evidence for the permission
 slices. It also has a counter-test: it fails on the pre-fix file, which proves it
 detects the defects rather than rubber-stamping them.
 
+A probe across all nine agent files produced the routing table used by the
+rewritten checkpoint command. `targeted_fixer` denies Gradle, so the test run goes
+to `code_reviewer_low`. That routing is a consequence of the current subagent
+permission sets, not an endorsement of them.
+
 The interactive permission smoke test is still outstanding. Only a real session
 can confirm it.
 
 ## Next slice
 
-Slice 3 changes the `agent` frontmatter in `/checkpoint` and `/resume` from
-`build` to `orchestrator`, and rewrites the checkpoint body so each step names
-the responsible subagent.
+Slice 4 reconciles `AGENTS.md` with the delegation decision. It replaces the four
+lines under Working Process that forbid subagents, and scopes the replacement to
+the orchestrator.
 
 ## Known blockers
 
 - The permission behavior needs a real interactive session. A non-interactive
   client cannot prove it.
 - The prompt bodies of `adb_handler.md` and `codebase_explorer_android.md` are
-  unverified. A separate task must review them. Recorded in `logs/BUGS.txt`.
+  unverified. A separate task must review them.
+- `targeted_fixer` cannot run Gradle and cannot create a new file. That looks
+  like a defect in the subagent permission sets.
 - The Gradle gate is known red for reasons that predate this task. The task
   changes no Kotlin source.
+
+All three are recorded in `logs/BUGS.txt`.
 
 ## Worktree caution
 
