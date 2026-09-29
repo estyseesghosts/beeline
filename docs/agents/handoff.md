@@ -1,50 +1,52 @@
 # Handoff
 
-**Status:** Phase 3A-2 is implemented in the worktree and remains uncommitted.
+**Status:** Phase 3A-3 is implemented in the worktree and remains uncommitted.
 
 The task-state file is `docs/agents/tasks/beeline-0.4.0.md`.
 
 ## Current position
 
-`AppTypography.kt` exposes semantic roles for post body, post author, post metadata, and tabs.
-Existing Material 3 styles remain the source of all role metrics. Post content and Home timeline
-tabs use role access without changing colors, spacing, or layout ownership.
+`CategoryChips.kt` uses `BeelineBubbleMinHeight` and `BeelineBubbleShape` from `BubbleGeometry.kt`.
+The values remain 48dp and a 24dp radius. Row behavior, semantics, colors, and layout ownership
+remain unchanged.
 
 ## Verification
 
-`AppTypographyTest` passed 1 test. The affected suite ran 111 tests; 109 passed and two baseline
-`NavigationTest` draft failures remained at lines 820 and 803. `logs/BUGS.txt` entry
-`20260923-0B` records the same failures. `lintDebug` passed. The architecture audit passed with
-616 findings and zero regressions. `diff --check` passed for the allowed documentation paths.
+`CategoryChipsGeometryTest` passed one test. `HomeFeedTest` passed 37 tests. `lintDebug` passed. The
+architecture audit exited 0 with 615 findings and zero regressions. Slice-only `diff --check`
+passed.
 
-The full gate remains known red because Phase 10 owns the existing failures. Last safe commit is
-`5b8d98d`; prior history `8e1c046` and `5b8d98d` is accurate.
+`test assembleRelease` exited 1. Release assembly passed. The test task ran 1,451 tests and
+reported 17 known baseline failures. Phase 10 owns the green full gate.
 
-## Device evidence — 3A-2
+## Device evidence — 3A-3
 
-On `emulator-5554` (Android 16 SDK 36, 1848x2448, density 480, override 616), `MainActivity`
-was focused with keyguard false, IME hidden, and light system bars. Font scale was 1.0. Package
-version 0.2.8 (2008) was debuggable; first install and last update were 2026-09-28, with no
-reinstall.
+Emulator `emulator-5554` was online with Android 16, SDK 36, and a 1848x2448 display. Density was
+480 with a 616 override. The keyguard was unlocked, and no keyboard was visible.
 
-`screen.png`, `screen_top.png`, and `screen_restored.png` showed fully rendered authors, bodies,
-and timestamps without overlap. Home, Local, and Federated tabs were legible and the selected tab
-was visible. Floating chrome overlapped images by design, but text stayed readable. Compact
-portrait light geometry passed. The swipe scrolled only. Back opened Firefox at
-`mstdn.ca/oauth/authorize`; restarting `MainActivity` recovered Home with state preserved. This
-is a behavior note, not a typography failure. No sign-out was performed. `@ctr@mstdn.ca` was
-preserved as the tested account identity.
+`screen.png`, `chips_top.png`, `chips_top2.png`, and `back_check.png` show the Home feed. Home,
+Local, and Federated remain fully legible in consistent 48dp by 24dp pills. No clipping or
+truncation appears. Home remains selected. The chips remain reachable above bottom navigation.
 
-Unverified: Search/Profile, dark or pure-black theme, wide/foldable layouts, 200% font scale,
-keyboard, and TalkBack. The screenshots are geometry evidence only. Temporary screenshots are
-untracked and excluded.
+Bottom navigation and the compose control remain visible. The IME does not cover the content. Back
+stayed in the Home feed. The run did not use `install -r`, perform OAuth, or sign out. The session
+remained preserved. No state or persisted data changed, and no secrets were exposed.
+
+Geometry verification passed once. The exact font scale and activity name remain unverified because
+raw shell access was denied and inspection output was unreadable.
+
+Search, Profile, dark and pure-black themes, wide and foldable layouts, 200% font scale, keyboard
+behavior, and TalkBack remain unverified. The screenshots are untracked worktree files.
 
 ## Next slice
 
-Phase 3A-3 or Phase 3B.
+Phase 3B.
+
+Last safe commit is `e23972e`.
 
 ## Preservation
 
-Only the task-state file and this handoff were updated. Production and test source, the staged
-classic navigation document, `.opencode` changes, images, helpers, caches, logs, and the committed
-Photo Grid test deletion remain unrelated. This subagent does not stage, commit, or push.
+The pre-existing `.opencode` changes, images, helpers, caches, logs, staged classic navigation
+document, and current worktree deletion of `PhotoGridFeedViewModelTest.kt` remain unrelated. `HEAD`
+still tracks the PhotoGrid test. Commit `92d15a8` contains that test and does not contain its
+current worktree deletion. This subagent does not stage, commit, or push.

@@ -9,7 +9,6 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +24,6 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import me.foxtails.palustris.ui.layout.CompactSearchChipRowHeight
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.rememberSelectedColor
 import me.foxtails.palustris.ui.motion.rememberSelectedScale
@@ -56,7 +54,7 @@ internal fun FilterChipRow(
         ),
         modifier = modifier
             .fillMaxWidth()
-            .height(CompactSearchChipRowHeight)
+            .height(BeelineBubbleMinHeight)
             .semantics { contentDescription = rowContentDescription },
         contentPadding = PaddingValues(horizontal = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -88,7 +86,7 @@ internal fun FilterChipRow(
                     disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 ),
                 modifier = Modifier
-                    .height(CompactSearchChipRowHeight)
+                    .height(BeelineBubbleMinHeight)
                     .springPress(interactionSource, pressedScale = LocalPalustrisMotionScheme.current.pressedScale)
                     .graphicsLayer {
                         scaleX = selectedScale
@@ -100,7 +98,7 @@ internal fun FilterChipRow(
                         role = entry.role
                         this.selected = entry.selected
                     },
-                shape = RoundedCornerShape(50),
+                shape = BeelineBubbleShape,
             )
         }
     }
