@@ -1,8 +1,12 @@
 package me.foxtails.palustris.ui.notifications
 
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
@@ -165,6 +169,139 @@ class NotificationsScreenTest {
             .fetchSemanticsNode().boundsInRoot
         assertTrue("the final notification should clear the floating filters", finalRow.bottom <= filters.top)
         compose.onNodeWithTag("notification_row_compact-8", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test fun notificationRowKeepsScaledTextAndActionsInsideItsCard() {
+        val connection = Connection("https://example.org", Protocol.MISSKEY)
+        val account = Account(AccountId(connection, "receiver"), "Receiver", "@receiver@example.org")
+        val actor = Account(AccountId(connection, "actor"), "A very long actor display name", "@actor@example.org")
+        val notification = Notification(
+            id = EntityId(connection.origin, "scaled-row"),
+            accountId = account.id,
+            createdAtEpochMillis = 0,
+            activity = NotificationActivity.FollowRequest,
+            actors = listOf(actor),
+            rawType = "followRequest",
+        )
+        var accepted = 0
+        var rejected = 0
+        var dismissed = 0
+
+        listOf(false, true).forEach { compactLayout ->
+            compose.activity.runOnUiThread {
+                compose.activity.setContent {
+                    val density = LocalDensity.current
+                    CompositionLocalProvider(LocalDensity provides androidx.compose.ui.unit.Density(density.density, 2f)) {
+                        NotificationsScreen(
+                            connected = true,
+                            compactLayout = compactLayout,
+                            notificationState = NotificationsUiState(items = listOf(notification)),
+                            onDismissNotification = { dismissed++ },
+                            onFollowRequest = { _, accept -> if (accept) accepted++ else rejected++ },
+                        )
+                    }
+                }
+            }
+            compose.waitForIdle()
+
+            val content = compose.onNodeWithTag("notifications_content", useUnmergedTree = true)
+                .fetchSemanticsNode().boundsInRoot
+            val row = compose.onNodeWithTag("notification_row_scaled-row", useUnmergedTree = true)
+                .assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+            assertTrue("scaled notification row should stay inside the content bounds", row.left >= content.left)
+            assertTrue("scaled notification row should stay inside the content bounds", row.right <= content.right)
+            assertTrue("scaled notification row should stay inside the content bounds", row.top >= content.top)
+            assertTrue("scaled notification row should stay inside the content bounds", row.bottom <= content.bottom)
+
+            listOf("Accept", "Reject", "Dismiss").forEach { label ->
+                compose.onNodeWithText(label)
+                    .assertIsDisplayed()
+                    .assertIsEnabled()
+                    .assertHasClickAction()
+                    .fetchSemanticsNode().boundsInRoot.let { action ->
+                        assertTrue("$label should remain inside the scaled notification row", action.left >= row.left)
+                        assertTrue("$label should remain inside the scaled notification row", action.right <= row.right)
+                        assertTrue("$label should remain inside the scaled notification row", action.top >= row.top)
+                        assertTrue("$label should remain inside the scaled notification row", action.bottom <= row.bottom)
+                    }
+            }
+            compose.onNodeWithText("Accept").performClick()
+            compose.onNodeWithText("Reject").performClick()
+            compose.onNodeWithText("Dismiss").performClick()
+            compose.runOnIdle {
+                assertEquals(accepted, if (compactLayout) 2 else 1)
+                assertEquals(rejected, if (compactLayout) 2 else 1)
+                assertEquals(dismissed, if (compactLayout) 2 else 1)
+            }
+        }
+    }
+
+    @Test fun notificationRowKeepsWarningHiddenAndErrorTextBoundedAtScaledDensity() {
+        val connection = Connection("https://example.org", Protocol.MISSKEY)
+        val account = Account(AccountId(connection, "receiver"), "Receiver", "@receiver@example.org")
+        val actor = Account(AccountId(connection, "actor"), "Actor", "@actor@example.org")
+        fun notification(id: String, post: Post) = Notification(
+            id = EntityId(connection.origin, id),
+            accountId = account.id,
+            createdAtEpochMillis = 0,
+            activity = NotificationActivity.FollowRequest,
+            actors = listOf(actor),
+            post = post,
+            rawType = "followRequest",
+        )
+        fun post(id: String, warning: String?, visibility: PostContentVisibility) = Post(
+            EntityId(connection.origin, "$id-post"),
+            actor,
+            "A long post body that remains bounded at large font scale.",
+            0,
+            Audience.Public,
+            contentWarning = warning,
+            contentVisibility = visibility,
+        )
+        val cases = listOf(
+            Triple("warning-row", post("warning", "A long content warning label", PostContentVisibility.Visible), "A long content warning label"),
+            Triple("hidden-row", post("hidden", null, PostContentVisibility.Hidden), "Content hidden by your settings."),
+            Triple("error-row", post("error", null, PostContentVisibility.Visible), "A long follow request error message."),
+        )
+
+        cases.forEach { (id, itemPost, visibleText) ->
+            var accepted = 0
+            var rejected = 0
+            var dismissed = 0
+            val item = notification(id, itemPost)
+            compose.activity.runOnUiThread {
+                compose.activity.setContent {
+                    val density = LocalDensity.current
+                    CompositionLocalProvider(LocalDensity provides androidx.compose.ui.unit.Density(density.density, 2f)) {
+                        NotificationsScreen(
+                            connected = true,
+                            compactLayout = true,
+                            notificationState = NotificationsUiState(
+                                items = listOf(item),
+                                actionErrors = if (id == "error-row") mapOf(item.id to "A long follow request error message.") else emptyMap(),
+                            ),
+                            onDismissNotification = { dismissed++ },
+                            onFollowRequest = { _, accept -> if (accept) accepted++ else rejected++ },
+                        )
+                    }
+                }
+            }
+            compose.waitForIdle()
+            val row = compose.onNodeWithTag("notification_row_$id", useUnmergedTree = true)
+                .assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+            val text = compose.onNodeWithText(visibleText).assertIsDisplayed()
+                .fetchSemanticsNode().boundsInRoot
+            assertTrue("$id text should stay inside its notification row", text.left >= row.left)
+            assertTrue("$id text should stay inside its notification row", text.right <= row.right)
+            assertTrue("$id text should stay inside its notification row", text.top >= row.top)
+            assertTrue("$id text should stay inside its notification row", text.bottom <= row.bottom)
+            listOf("Accept", "Reject", "Dismiss").forEach { label ->
+                compose.onNodeWithText(label).assertIsEnabled().assertHasClickAction().performClick()
+            }
+            assertEquals(1, accepted)
+            assertEquals(1, rejected)
+            assertEquals(1, dismissed)
+        }
     }
 
     @Test fun selectingEachFilterShowsItsPlaceholderAndSecondTapRestoresAll() {

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -117,9 +118,15 @@ fun NotificationRow(
             if (actor != null) AccountAvatar(actor, Modifier.size(44.dp))
             else Avatar(Modifier.size(44.dp), description = null)
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(
+                Modifier.weight(1f).widthIn(min = 0.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 if (notification.activity is NotificationActivity.EmojiReaction) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         me.foxtails.palustris.ui.emoji.CustomEmojiImage(
                             emoji = notification.activity.reaction.emoji,
                             fallbackText = notification.activity.reaction.fallbackText.text(),
@@ -127,10 +134,21 @@ fun NotificationRow(
                             textStyle = MaterialTheme.typography.labelLarge,
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text(activityLabel, style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            activityLabel,
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.weight(1f).widthIn(min = 0.dp),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                 } else {
-                    Text(activityLabel, style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        activityLabel,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
                 AnimatedContent(
                     targetState = summary,
@@ -156,6 +174,8 @@ fun NotificationRow(
                     ).toString(),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 notification.post?.let { post ->
                     val locallyMuted = ContentWarningPolicy.matchesHashtagMute(
@@ -170,16 +190,28 @@ fun NotificationRow(
                         post.text,
                     )
                     if (locallyMuted) {
-                        Text(stringResource(me.foxtails.palustris.R.string.content_hidden_local_hashtag), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            stringResource(me.foxtails.palustris.R.string.content_hidden_local_hashtag),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     } else if (warningDecision == ContentWarningDecision.Hidden) {
                         if (LocalHiddenContentPresentation.current == HiddenContentPresentation.Placeholder) {
-                            Text(stringResource(me.foxtails.palustris.R.string.content_hidden_settings), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                stringResource(me.foxtails.palustris.R.string.content_hidden_settings),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                         }
                     } else if (!post.contentWarning.isNullOrBlank()) {
                         me.foxtails.palustris.ui.emoji.InlineEmojiText(
                             post.contentWarning,
                             post.emoji,
                             style = MaterialTheme.typography.labelMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                     if (post.text.isNotBlank() && post.contentWarning.isNullOrBlank() &&
@@ -195,12 +227,15 @@ fun NotificationRow(
                 }
                 if (notification.activity is NotificationActivity.FollowRequest) {
                     onFollowRequest?.let { respond ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
                             Button(
                                 onClick = { respond(true) },
                                 enabled = actionState != NotificationActionState.Running,
                                 contentPadding = ButtonDefaults.TextButtonContentPadding,
-                                modifier = Modifier.width(112.dp),
+                                modifier = Modifier.weight(1f).widthIn(min = 0.dp),
                             ) {
                                 AnimatedContent(
                                     targetState = actionState,
@@ -212,14 +247,24 @@ fun NotificationRow(
                                 ) { followState ->
                                     if (followState == NotificationActionState.Running) {
                                         CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                                    } else Text(stringResource(R.string.notifications_follow_accept))
+                                    } else Text(
+                                        stringResource(R.string.notifications_follow_accept),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
                                 }
                             }
                             TextButton(
                                 onClick = { respond(false) },
                                 enabled = actionState != NotificationActionState.Running,
-                                modifier = Modifier.width(112.dp),
-                            ) { Text(stringResource(R.string.notifications_follow_reject)) }
+                                modifier = Modifier.weight(1f).widthIn(min = 0.dp),
+                            ) {
+                                Text(
+                                    stringResource(R.string.notifications_follow_reject),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
                         }
                     }
                 }
@@ -227,12 +272,27 @@ fun NotificationRow(
                     stateKey = actionError != null,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    actionError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    actionError?.let {
+                        Text(
+                            it,
+                            color = MaterialTheme.colorScheme.error,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
             onDismiss?.let { dismiss ->
-                TextButton(onClick = dismiss, enabled = actionState != NotificationActionState.Running) {
-                    Text(stringResource(R.string.notifications_dismiss))
+                TextButton(
+                    onClick = dismiss,
+                    enabled = actionState != NotificationActionState.Running,
+                    modifier = Modifier.widthIn(max = 96.dp),
+                ) {
+                    Text(
+                        stringResource(R.string.notifications_dismiss),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             }
         }
