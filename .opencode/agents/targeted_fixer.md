@@ -33,8 +33,14 @@ permissions:
     effect: allow
 
   # Approved Beeline repository-analysis scripts.
+  # Only the documented repository entry points. The prompt already forbids
+  # inline Python, and a broad rule would also allow arbitrary code
+  # execution, which defeats the Git mutation denies below.
   - action: shell
-    resource: "python *"
+    resource: "python tools/scripts/*"
+    effect: allow
+  - action: shell
+    resource: "python3 tools/scripts/*"
     effect: allow
 
   # Gradle verification/builds.

@@ -195,14 +195,6 @@ permissions:
     effect: allow
 
   - action: shell
-    resource: "echo *"
-    effect: allow
-
-  - action: shell
-    resource: "printf *"
-    effect: allow
-
-  - action: shell
     resource: "grep *"
     effect: allow
 
@@ -528,6 +520,10 @@ Do not run builds, tests, lint, formatting, installs, publishing, signing, or cl
 ## Compound shell commands
 
 You may combine permitted read-only commands with `&&`, `;`, and pipes.
+
+Output redirection is not available. `echo` and `printf` are denied, so you
+cannot create a file through a redirect. This is deliberate: the agent must
+stay read-only.
 
 Every scanner-produced command must independently be permitted.
 

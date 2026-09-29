@@ -27,46 +27,47 @@ use the shell, use adb, or use Git must be able to do exactly that.
   `targeted_fixer` allows `.\gradlew.bat *` and `./gradlew *`.
 - Edit scripts must locate the rule indent from the `- action:` header line, not
   from the nested `resource:` or `effect:` line.
+- A read-only agent must not allow `echo` or `printf`, because a redirect is one
+  command string that matches a broad allow.
 
 # Completed
 
 - Slice 1 — build `tools/tests/agent_audit.py`, commit `a018db9`.
 - Slice 2 — restore the environment-file protection in all eight subagents,
   commit `e7c465c`.
-- Slice 3 — give the two reviewers working Gradle rules.
+- Slice 3 — give the two reviewers working Gradle rules, commit `ab9f81c`.
+- Slice 4 — close the read-only write hole and the implementation script gap.
 
 # Current slice
 
-Slice 4 — close the read-only write hole and the implementation script gap.
+Slice 5 — repair the adb agent prompt and correct the earlier false claim.
 
 # Files involved
 
-- `.opencode/agents/codebase_explorer_android.md`
-- `.opencode/agents/targeted_fixer.md`
+- `.opencode/agents/adb_handler.md`
+- `.opencode/agents/orchestrator.md`
+- `.opencode/command/checkpoint.md`
+- `docs/agents/handoff.md`
+- `logs/BUGS.txt`
 
 # Verification
 
-- The audit improved from 232 of 241 to 244 of 247, and the total rose by 6
-  because negative probes were added.
-- The audit now also asserts that a reviewer cannot run `clean`, `publish`, or a
-  signing task. All three resolve to `deny`, so the new rules did not
-  over-permit.
-- Both reviewer files parse as valid YAML. Each grew from 73 to 94 rules.
-- All eight agent files parse. Rule counts rose by exactly three in slice 2, and
-  the diff against `HEAD` was inspected line by line to confirm the only added
-  lines are the environment block.
-
-The 3 remaining failures are:
-
-- 2 in `codebase_explorer_android`. `echo` and `printf` resolve to `allow`, so a
-  read-only agent can write a file through redirection.
-- 1 in `targeted_fixer`. It allows `python *` but not `python3`.
+- The audit reports 247 of 247 expectations met across eight agents.
+- `codebase_explorer_android` dropped from 60 to 58 rules, and a check confirms
+  no rule resource still mentions `echo` or `printf`.
+- `targeted_fixer` allows `python tools/scripts/*` and `python3 tools/scripts/*`
+  and no longer allows `python *`. This matches its own prompt, which says only
+  the existing `tools/scripts/*.py` entry points may run.
+- The explorer prompt now states that output redirection is unavailable and that
+  this is deliberate.
+- The edited regions were inspected. The explorer block is tidy and the fixer
+  comment reads correctly.
 
 # Next
 
-Remove the `echo` and `printf` allows from the read-only explorer, and replace
-the broad `python *` in the implementation agent with the documented
-`tools/scripts` entry points in both interpreter spellings.
+Fix the adb prompt, which names a `script.py` that does not exist, and remove
+the false claim that `targeted_fixer` denies Gradle from the orchestrator prompt,
+the checkpoint command, the handoff, the task state, and `logs/BUGS.txt`.
 
 # Blockers
 
@@ -74,6 +75,6 @@ the broad `python *` in the implementation agent with the documented
 
 # Last safe commit
 
-Slice 2: `e7c465c` Restore the environment-file protection in all eight
-subagents. Slice 1: `a018db9`. Slice 6 of the previous task: `7f4ea63`. The app
-workstream stays at `464b2d1`.
+Slice 3: `ab9f81c` Give the two code reviewers Gradle rules that match a real
+invocation. Slice 2: `e7c465c`. Slice 1: `a018db9`. The app workstream stays at
+`464b2d1`.
