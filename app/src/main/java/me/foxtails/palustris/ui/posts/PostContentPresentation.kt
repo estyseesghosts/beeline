@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -163,7 +165,7 @@ internal fun PostMetadataRow(
     val metadataDescription = stringResource(R.string.post_metadata)
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = PostMetadataVerticalPadding)
-            .height(PostChromeHeight).semantics { contentDescription = metadataDescription },
+            .heightIn(min = PostChromeHeight).semantics { contentDescription = metadataDescription },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -219,12 +221,13 @@ private fun FilteredHashtagSummary(hashtags: List<String>, onOpen: (Rect) -> Uni
     val label = if (hashtags.size == 1) hashtags.first() else "${hashtags.first()} +${hashtags.size - 1}"
     val collapsedDescription = stringResource(R.string.post_action_bubble_collapsed)
     val hashtagDescription = hashtagSummaryDescription(hashtags)
+    val summaryMinHeight = 32.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)
     // This local state anchors the popup only; it owns no session, network, or post authority.
     var bounds by remember { mutableStateOf(Rect.Zero) }
     val interactionSource = remember { MutableInteractionSource() }
     Box {
         Surface(
-            modifier = Modifier.widthIn(max = 124.dp).height(32.dp).onGloballyPositioned { bounds = it.boundsInWindow() }
+            modifier = Modifier.widthIn(max = 124.dp).heightIn(min = summaryMinHeight).onGloballyPositioned { bounds = it.boundsInWindow() }
                 .springPress(interactionSource, pressedScale = LocalPalustrisMotionScheme.current.compactPressedScale)
                 .clickable(interactionSource, LocalIndication.current) { onOpen(bounds) }
                 .semantics { contentDescription = hashtagDescription; role = Role.Button; stateDescription = collapsedDescription },

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -128,7 +129,7 @@ internal fun ReactionRow(
             )
             Surface(
                 modifier = Modifier
-                    .height(ReactionChipHeight)
+                    .heightIn(min = ReactionChipHeight)
                     .widthIn(min = ReactionChipMinWidth)
                     .springPress(interactionSource, pressedScale = scheme.compactPressedScale)
                     .combinedClickable(
@@ -227,7 +228,7 @@ internal fun InteractionRow(
     onShare: (OwnedPost, Rect) -> Unit,
 ) {
     val actionDescription = stringResource(R.string.post_actions)
-    Row(Modifier.fillMaxWidth().height(PostInteractionRowHeight).padding(horizontal = 8.dp).semantics { contentDescription = actionDescription }, verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().heightIn(min = PostInteractionRowHeight).padding(horizontal = 8.dp).semantics { contentDescription = actionDescription }, verticalAlignment = Alignment.CenterVertically) {
         InteractionButton(Modifier.weight(1f), AppIcons.Comment, stringResource(R.string.post_action_reply), PostAction.Reply in availableActions, onClick = { onReply(ownedPost) })
         InteractionButton(
             Modifier.weight(1f), AppIcons.RepostBeeline,
@@ -299,7 +300,7 @@ private fun InteractionButton(
     val selectedDescription = stringResource(if (isSelected) R.string.post_action_selected else R.string.post_action_not_selected)
     val interactionSelectedDescription = stringResource(R.string.post_action_interaction_selected)
     Box(
-        modifier = modifier.height(PostInteractionRowHeight).onGloballyPositioned { bounds = it.boundsInWindow() }.then(
+        modifier = modifier.heightIn(min = PostInteractionRowHeight).onGloballyPositioned { bounds = it.boundsInWindow() }.then(
             if (reactionLongPressEnabled && onReactionCompact != null && onReactionExpanded != null) {
                 Modifier.reactionPickerGesture(enabled, reactionGestureKey ?: Unit, with(density) { 36.dp.toPx() }, { onReactionCompact(bounds) }, { onReactionExpanded(bounds) })
             } else Modifier,

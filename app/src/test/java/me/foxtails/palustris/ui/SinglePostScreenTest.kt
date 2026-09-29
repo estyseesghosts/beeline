@@ -19,6 +19,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performTouchInput
@@ -1110,6 +1111,53 @@ class SinglePostScreenTest {
         assertTrue(body.bottom <= summary.top)
         compose.onNodeWithText("0 replies").assertIsDisplayed()
         compose.onNodeWithText("0 reposts").assertIsDisplayed()
+    }
+
+    @Test
+    fun largeFontKeepsHashtagSummaryReadableAndActionsReachable() {
+        val post = Post(
+            EntityId("https://example.org", "large-post-presentation"),
+            account,
+            "Readable post body. ".repeat(180) + "\n\n#misskey #second #third",
+            0,
+            Audience.Public,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                val density = LocalDensity.current
+                CompositionLocalProvider(LocalDensity provides androidx.compose.ui.unit.Density(density.density, 2f)) {
+                    SinglePostScreen(
+                        ownedPost = OwnedPost(account.id, post),
+                        presentation = SinglePostPresentation.Standard,
+                        onClose = {},
+                        availableActions = PostAction.entries.toSet(),
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+
+        val summary = compose.onNodeWithContentDescription(
+            "3 hashtags: #misskey, #second and #third",
+            useUnmergedTree = true,
+        ).fetchSemanticsNode().boundsInRoot
+        val summaryText = compose.onNodeWithText("#misskey +2", useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot
+        val metadata = compose.onNodeWithContentDescription("Post metadata", useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot
+        assertTrue(summary.height > 32f * compose.activity.resources.displayMetrics.density)
+        assertTrue(summaryText.bottom <= summary.bottom)
+        assertTrue(summary.bottom <= metadata.bottom)
+
+        val actionsNode = compose.onNodeWithContentDescription("Post actions", useUnmergedTree = true)
+        actionsNode.performScrollTo()
+        actionsNode.assertIsDisplayed()
+        val actions = actionsNode.fetchSemanticsNode().boundsInRoot
+        val content = compose.onNodeWithTag("single_post_content", useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot
+        assertTrue(actions.top >= content.top)
+        assertTrue(actions.bottom <= content.bottom)
+        compose.onNodeWithContentDescription("Share").assertIsDisplayed()
     }
 
     private fun assertAspectPager(
