@@ -1,75 +1,73 @@
-# Beeline 0.4.0 task state — Phase 3C2 repair
+# Beeline 0.4.0 task state — Phase 3C3 profile statistics
 
 ## Status
 
-Phase 3C2 repairs notification row bounds at a 200% font scale. The repair adds reachability
-coverage without changing shared, protocol-neutral notification presentation.
+Phase 3C3 stacks profile statistics in narrow content. The change preserves full labels at a 200%
+font scale and omits statistics whose account counts are null.
+
+Phase 3C is complete pending commit. Phase 4 integration is next.
 
 ## Requirement and owner
 
-Notification activity, summaries, timestamps, post text, follow-request actions, errors, and the
-trailing dismiss action must remain inside the notification card at font scale 2.0.
+Profile posts, followers, and following values must remain readable at font scale 2.0. Narrow
+content must stack complete values and labels instead of wrapping labels character by character.
+Null counts remain omitted.
 
-`NotificationRow.kt` owns these row bounds. `NotificationsScreen.kt` remains the owner of list
-filtering, acknowledgement, local-seen state, dismiss callbacks, and compact scroll clearance.
+`ProfileScreen.kt` owns the statistics presentation. `ProfileHeader.kt` remains the owner of header
+placement. Account ownership, count formatting, domain models, and protocol adapters remain
+unchanged.
 
-The row now gives weighted content a zero minimum width. Scaled activity, timestamp, hidden text,
-warnings, follow-request labels, errors, and dismiss text use bounded lines. Follow-request
-buttons share the available content width. Callbacks, semantic state, domain models, and protocol
-behavior remain unchanged.
+## Implementation
 
-The notification screen test now clicks enabled Accept, Reject, and Dismiss actions. It checks
-click semantics and callback delivery at 200% density in compact and wide layouts. It also checks
-warning, hidden-content, and error text bounds at 200% density.
+`ProfileStats` uses a narrow-width column and retains the existing row for wider content. The
+statistics keep their existing resource strings and test tag. The presentation remains
+protocol-neutral and does not persist layout state.
+
+`ProfileScreenTest` checks all three values and labels, container bounds, stacking at font scale 2.0,
+and omission of null counts.
 
 ## Verification
 
-* The focused `NotificationsScreenTest` suite passed 14 tests.
-* The notification test package passed.
-* `:app:lintDebug` passed with zero findings.
-* The architecture audit reported 615 existing findings and zero regressions.
-* The full unit test task ran 1,456 tests and reported 18 known failures owned by Phase 10.
-* The reviewer did not rerun the architecture audit.
+The focused `ProfileScreenTest` suite passed 24 tests. The profile test package passed 62 tests.
+`:app:lintDebug` passed with zero findings. The architecture audit reported 615 findings with no
+changed-scope regression identified.
+
+The reviewer reported these results. A reviewer rerun was denied by the same shell permission gate.
+The profile-file slice `diff --check` passed. The whole-worktree check fails on unrelated
+`.opencode` whitespace, which remains preserved.
+
+The full gate did not run. Phase 10 owns the known red gate.
 
 ## Device evidence
 
-The online emulator pass used `emulator-5554` with Android 16, SDK 36, and a 1,848 by 2,448 display.
-The display density was 480 dpi with a 616 density value. The initial font scale was 1.0.
-The main activity opened in the foreground without restoration. Firefox did not appear.
+The `adb_handler` attempt for 3C3 `ProfileStats` on `emulator-5554` failed with
+`permission.rejected` and `shell denied`.
 
-At font scale 1.0, the Home baseline used `screen_home10.png`. The Notifications destination used
-`screen_notif10d.png`. Three cards appeared with Dismiss visible on every card. No card overflowed.
-The return Home state used `screen_home10b.png`.
+No adb command executed. No device state was read. No screenshots were captured. No font change was
+made. No restore was needed.
 
-At font scale 2.0, the Home state used `screen_home20.png`. The Notifications state used
-`screen_notif20.png`. TEST wrapped to two lines. Rows stayed inside their cards. The first two
-Dismiss actions remained fully visible and reachable. No horizontal overflow appeared. The third
-card remained partly behind the filter pills during scroll. This was scroll overlap, not row overflow.
+These screens remain unverified because the shell was denied:
 
-The font scale returned to 1.0. The restored Home state used `screen_home_restored.png`.
-One accidental star highlight occurred during coordinate probing. The highlight was reverted.
-No OAuth flow or other data mutation occurred. The pass used no back action.
+- `Profile@1.0`
+- `Home@2.0`
+- `Profile@2.0`
+- `Home-restored`
 
-The screenshots provide geometry evidence only. Search, Photo Grid, DMs, and Profile at font scale
-2.0 remain unverified because extra taps were blocked. Dark, pure-black, wide, foldable, keyboard,
-and TalkBack behavior remain unverified. Callback, filtering, and acknowledgement behavior were
-not tapped during the device pass.
+Other screens, dark mode, wide layout, keyboard behavior, and TalkBack remain unverified. The
+attempt avoided taps because it had no device access. The session is presumed preserved but was not
+re-verified. No OAuth or sign-out action occurred.
 
 ## Documentation review
 
-The notification boundary documentation remains accurate. No wiki update is required because
-ownership, protocol behavior, persistence, navigation, and list-container ownership did not
-change.
-
-## Unverified
-
-The emulator verified Notifications at font scales 1.0 and 2.0. Search, Photo Grid, DMs, and
-Profile at font scale 2.0 remain unverified because extra taps were blocked. Dark, pure-black,
-wide, foldable, keyboard, and TalkBack behavior remain unverified. Callback, filtering, and
-acknowledgement behavior were not tapped. The screenshots provide geometry evidence only.
+The profile boundary documentation remains accurate. No wiki update is required because ownership,
+protocol behavior, persistence, navigation, and header placement did not change.
 
 ## Preservation and continuation
 
-The unrelated dirty worktree remains untouched. This subagent does not stage, commit, or push.
+No secrets entered the work. No temporary files were created by this attempt. The unrelated dirty
+worktree remains untouched. This subagent does not stage, commit, or push.
 
-Last safe commit: `ca058e9`. Next slice: Phase 3C3.
+History relevant to this slice: `5b8d98d`, `e23972e`, `2c3a1a8`, `7e7f774`, `ca058e9`, `eaeff11`.
+
+Last safe commit: `eaeff11`. Next slice: Phase 3 integration, then Phase 4. Device verification
+remains blocked by shell permission denial.

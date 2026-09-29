@@ -1,41 +1,48 @@
 # Handoff
 
-**Status:** Phase 3C2 notification row 200% bounds repair is implemented and verified by focused
-Compose tests and a bounded emulator pass.
+**Status:** Phase 3C3 profile statistics stacking is implemented. Phase 3 is complete pending
+commit.
 
 The task-state file is `docs/agents/tasks/beeline-0.4.0.md`.
 
 ## Current position
 
-`NotificationRow.kt` constrains weighted content, scaled text, follow-request buttons, errors, and
-the trailing dismiss action. `NotificationsScreenTest` clicks all three actions and checks warning,
-hidden-content, and error text in compact and wide layouts. Existing callbacks, semantic state,
-filtering, acknowledgement, and local-seen behavior remain unchanged.
+`ProfileScreen.kt` stacks profile statistics in narrow content and keeps the existing row for wider
+content. `ProfileScreenTest` checks complete labels at font scale 2.0 and null-count omission.
+Account ownership, count formatting, header placement, and protocol behavior remain unchanged.
 
 ## Verification
 
-The focused `NotificationsScreenTest` suite passed 14 tests. The notification test package passed.
-`:app:lintDebug` passed with zero findings. The architecture audit reported 615 existing findings
-and zero regressions. The reviewer did not rerun the audit. The full unit test task ran 1,456 tests
-and reported 18 known Phase 10 failures.
+The focused `ProfileScreenTest` suite passed 24 tests. The profile test package passed 62 tests.
+`:app:lintDebug` passed with zero findings. The architecture audit reported 615 findings with no
+changed-scope regression identified.
 
-The emulator pass used `emulator-5554` on Android 16, SDK 36, at 1.0 and 2.0 font scale. The
-Notifications cards kept their rows and Dismiss actions within bounds. TEST wrapped at 2.0 without
-horizontal overflow. The third card had scroll overlap behind filter pills, not row overflow.
-The font scale returned to 1.0. One accidental star highlight was reverted.
+The reviewer reported these results. The reviewer rerun was denied by the same shell permission
+gate. The profile-file slice `diff --check` passed. The whole-worktree check fails on unrelated
+`.opencode` whitespace, which remains preserved.
 
-## Unverified
+The full gate did not run. Phase 10 owns the known red gate.
 
-Search, Photo Grid, DMs, and Profile at font scale 2.0 remain unverified because extra taps were
-blocked. Dark, pure-black, wide, foldable, keyboard, and TalkBack behavior remain unverified.
-Callback, filtering, and acknowledgement behavior were not tapped. The screenshots provide
-geometry evidence only.
+## Device evidence
+
+The `adb_handler` attempt for 3C3 `ProfileStats` on `emulator-5554` failed with
+`permission.rejected` and `shell denied`.
+
+No adb command executed. No device state was read. No screenshots were captured. No font change was
+made. No restore was needed.
+
+`Profile@1.0`, `Home@2.0`, `Profile@2.0`, and `Home-restored` remain unverified. Other screens, dark
+mode, wide layout, keyboard behavior, and TalkBack also remain unverified. The attempt avoided taps
+because it had no device access. The session is presumed preserved but was not re-verified.
+
+No OAuth or sign-out action occurred. No secrets were used. No temporary files were created.
 
 ## Next slice
 
-Phase 3C3.
+Phase 3 integration, then Phase 4.
 
-Last safe commit is `ca058e9`. Do not stage, commit, or push this subagent work.
+Last safe commit is `eaeff11`. Relevant history is `5b8d98d`, `e23972e`, `2c3a1a8`, `7e7f774`,
+`ca058e9`, and `eaeff11`. Do not stage, commit, or push this subagent work.
 
 ## Preservation
 

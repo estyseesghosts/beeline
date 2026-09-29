@@ -169,6 +169,50 @@ class ProfileScreenTest {
     }
 
     @Test
+    fun profileStatsStackAtLargeFontScaleWithoutWrappingLabels() {
+        compose.activity.resources.configuration.fontScale = 2.0f
+        val profile = account("stats", "Stats").copy(
+            postsCount = 42,
+            followersCount = 12_345,
+            followingCount = 6_789,
+        )
+
+        show { ProfileStats(profile) }
+
+        val statsBounds = compose.onNodeWithTag("profile_stats").fetchSemanticsNode().boundsInRoot
+        val labels = listOf("42 posts", "12.3K followers", "6.8K following").map {
+            compose.onNodeWithText(it).fetchSemanticsNode().boundsInRoot
+        }
+        labels.forEach { bounds ->
+            assertTrue(
+                "profile statistic should remain inside its container",
+                bounds.left >= statsBounds.left && bounds.right <= statsBounds.right &&
+                    bounds.top >= statsBounds.top && bounds.bottom <= statsBounds.bottom,
+            )
+            assertTrue("profile statistic should keep its full label", bounds.width > 40f)
+        }
+        assertTrue("profile statistics should stack at narrow width", labels[1].top > labels[0].bottom)
+        assertTrue("profile statistics should stack at narrow width", labels[2].top > labels[1].bottom)
+    }
+
+    @Test
+    fun profileStatsOmitUnavailableCounts() {
+        show {
+            ProfileStats(
+                account("partial-stats", "Partial stats").copy(
+                    postsCount = 42,
+                    followersCount = null,
+                    followingCount = 6_789,
+                ),
+            )
+        }
+
+        compose.onNodeWithText("42 posts").assertIsDisplayed()
+        compose.onNodeWithText("6.8K following").assertIsDisplayed()
+        compose.onNodeWithText("followers").assertDoesNotExist()
+    }
+
+    @Test
     fun selfProfileAddsDraftsAndBookmarksBeforeShowMoreWithoutChangingCategory() {
         var selected = ProfileCategory.Posts
         var drafts = 0

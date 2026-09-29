@@ -5,6 +5,7 @@ package me.foxtails.palustris.ui.profile
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -347,12 +348,21 @@ internal fun ProfileStats(account: Account) {
         account.followingCount?.let { stringResource(R.string.profile_count_following, formatProfileCount(it)) },
     )
     if (stats.isNotEmpty()) {
-        Row(
-            modifier = Modifier.padding(top = 18.dp).testTag("profile_stats"),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxWidth().padding(top = 18.dp).testTag("profile_stats"),
         ) {
-            stats.forEach { stat ->
-                Text(stat, style = MaterialTheme.typography.labelLarge)
+            if (maxWidth < 480.dp) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    stats.forEach { stat ->
+                        Text(stat, style = MaterialTheme.typography.labelLarge)
+                    }
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    stats.forEach { stat ->
+                        Text(stat, style = MaterialTheme.typography.labelLarge)
+                    }
+                }
             }
         }
     }
