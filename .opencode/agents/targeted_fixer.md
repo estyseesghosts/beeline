@@ -1,7 +1,7 @@
 ---
 description: Implements targeted Beeline Android/Kotlin fixes, features, tests, UI changes, and bounded refactors from an established plan.
 mode: subagent
-model: openai/gpt-5.6-luna
+model: openai/gpt-5.6-luna#medium
 permissions:
 
   - action: "*"
@@ -9,6 +9,18 @@ permissions:
     effect: deny
   - action: read
     resource: "*"
+    effect: allow
+  # The broad read allow above silently overrides the base policy protection
+  # for environment files, because agent rules load after the base policy and
+  # the last matching rule wins. These three rules restore it.
+  - action: read
+    resource: "*.env"
+    effect: ask
+  - action: read
+    resource: "*.env.*"
+    effect: ask
+  - action: read
+    resource: "*.env.example"
     effect: allow
   - action: glob
     resource: "*"
@@ -22,78 +34,16 @@ permissions:
 
   # Approved Beeline repository-analysis scripts.
   - action: shell
-    resource: "python3 tools/scripts/repo_map.py *"
-    effect: allow
-  - action: shell
-    resource: "python3 tools/scripts/function_audit.py *"
-    effect: allow
-  - action: shell
-    resource: "python3 tools/scripts/file_audit.py *"
-    effect: allow
-  - action: shell
-    resource: "python3 tools/scripts/trace_symbol.py *"
-    effect: allow
-  - action: shell
-    resource: "python3 tools/scripts/change_surface.py *"
-    effect: allow
-  - action: shell
-    resource: "python tools/scripts/repo_map.py *"
-    effect: allow
-  - action: shell
-    resource: "python tools/scripts/function_audit.py *"
-    effect: allow
-  - action: shell
-    resource: "python tools/scripts/file_audit.py *"
-    effect: allow
-  - action: shell
-    resource: "python tools/scripts/trace_symbol.py *"
-    effect: allow
-  - action: shell
-    resource: "python tools/scripts/change_surface.py *"
+    resource: "python *"
     effect: allow
 
-  # Android/Kotlin verification. These may write build outputs, never source.
+  # Gradle verification/builds.
+  # Permit any task through the repository Gradle wrapper.
   - action: shell
-    resource: "./gradlew test *"
+    resource: "./gradlew *"
     effect: allow
   - action: shell
-    resource: "./gradlew check *"
-    effect: allow
-  - action: shell
-    resource: "./gradlew lint *"
-    effect: allow
-  - action: shell
-    resource: "./gradlew assembleDebug *"
-    effect: allow
-  - action: shell
-    resource: "./gradlew :app:test*"
-    effect: allow
-  - action: shell
-    resource: "./gradlew :app:lint*"
-    effect: allow
-  - action: shell
-    resource: "./gradlew :app:assembleDebug *"
-    effect: allow
-  - action: shell
-    resource: '.\gradlew.bat test *'
-    effect: allow
-  - action: shell
-    resource: '.\gradlew.bat check *'
-    effect: allow
-  - action: shell
-    resource: '.\gradlew.bat lint *'
-    effect: allow
-  - action: shell
-    resource: '.\gradlew.bat assembleDebug *'
-    effect: allow
-  - action: shell
-    resource: '.\gradlew.bat :app:test*'
-    effect: allow
-  - action: shell
-    resource: '.\gradlew.bat :app:lint*'
-    effect: allow
-  - action: shell
-    resource: '.\gradlew.bat :app:assembleDebug *'
+    resource: '.\gradlew.bat *'
     effect: allow
 
   # Git: unknown operations require approval; common read-only operations are automatic.
@@ -254,6 +204,26 @@ You implement narrow, explicitly scoped changes in Beeline.
 - Never stage, commit, restore, reset, clean, stash, checkout, switch, rebase, merge, cherry-pick, or push.
 - Run narrow relevant tests first, then required project gates.
 - Report every modified file, gates run, and remaining uncertainty.
+
+## Shell Rules
+
+1. Do NOT chain shell commands (no `&&`, `;`, `|`). One command per shell invocation.
+2. Do NOT use inline python scripts. Only existing tools/scripts/*.py entry points.
+3. Edit files directly with editing tools — no shell heredocs/echo redirection for file content.
+4. If a shell command is rejected or errors, work around it and KEEP GOING. Stop only for a genuine semantic/architectural blocker (e.g. a plan expectation that contradicts actual code semantics — then report the contradiction instead of forcing a wrong assertion).
+
+## Gradle
+
+Run Gradle directly through the repository wrapper. Your work must always result in a green build. 
+
+Windows:
+`.\gradlew.bat --no-daemon --console=plain <tasks>`
+
+Unix:
+`./gradlew --no-daemon --console=plain <tasks>`
+
+Do not wrap Gradle in `cmd /c`, PowerShell environment assignments,
+or another shell command unless the task specifically requires it.
 
 
 ## Beeline invariants

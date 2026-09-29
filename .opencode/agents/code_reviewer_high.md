@@ -1,7 +1,7 @@
 ---
 description: Independently audits Beeline Android/Kotlin changes across protocol behavior, Compose UI, tests, resources, and Git diff.
 mode: subagent
-model: openai/gpt-5.6-sol
+model: openai/gpt-6-luna#xhigh
 permissions:
 
   - action: "*"
@@ -9,6 +9,18 @@ permissions:
     effect: deny
   - action: read
     resource: "*"
+    effect: allow
+  # The broad read allow above silently overrides the base policy protection
+  # for environment files, because agent rules load after the base policy and
+  # the last matching rule wins. These three rules restore it.
+  - action: read
+    resource: "*.env"
+    effect: ask
+  - action: read
+    resource: "*.env.*"
+    effect: ask
+  - action: read
+    resource: "*.env.example"
     effect: allow
   - action: glob
     resource: "*"
@@ -273,4 +285,3 @@ Beeline is an Android Kotlin/Compose fediverse client with Mastodon-family and M
 - Do not silently weaken authentication, pagination, visibility, CW/sensitive-media, media, reaction/favourite, repost/quote, or notification semantics.
 - Do not add platform-specific behavior to a shared abstraction without documenting the capability boundary.
 - Do not refactor only to satisfy line-count metrics. Split only when responsibilities are genuinely mixed.
-

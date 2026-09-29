@@ -11,11 +11,21 @@ permissions:
   - action: read
     resource: "*"
     effect: allow
-
+  # The broad read allow above silently overrides the base policy protection
+  # for environment files, because agent rules load after the base policy and
+  # the last matching rule wins. These three rules restore it.
+  - action: read
+    resource: "*.env"
+    effect: ask
+  - action: read
+    resource: "*.env.*"
+    effect: ask
+  - action: read
+    resource: "*.env.example"
+    effect: allow
   - action: glob
     resource: "*"
     effect: allow
-
   - action: grep
     resource: "*"
     effect: allow

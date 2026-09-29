@@ -9,7 +9,8 @@ use the shell, use adb, or use Git must be able to do exactly that.
 - No agent may read an environment file without approval.
 - No agent may change repository state except through the Git agent.
 - Read-only agents must resolve every filesystem write to `deny`.
-- Unrelated worktree changes stay untouched.
+- Unrelated worktree changes stay untouched. The eight subagent files already
+  held uncommitted user edits and must keep them.
 - No Kotlin source changes in this task.
 - The user tests on a live device. This task has no device-visible behavior.
 
@@ -23,45 +24,52 @@ use the shell, use adb, or use Git must be able to do exactly that.
   mandated flag order.
 - `adb_handler` must keep Git denied. Its prompt states that it never runs Git.
 - The previous task's claim that `targeted_fixer` denies Gradle was wrong and is
-  corrected here.
+  corrected here. `targeted_fixer` allows `.\gradlew.bat *` and `./gradlew *`.
+- Edit scripts must locate the rule indent from the `- action:` header line, not
+  from the nested `resource:` or `effect:` line. Two earlier passes got this
+  wrong and damaged the frontmatter; the final pass normalizes the region.
 
 # Completed
 
-- Slice 1 — build `tools/tests/agent_audit.py`.
+- Slice 1 — build `tools/tests/agent_audit.py`, commit `a018db9`.
+- Slice 2 — restore the environment-file protection in all eight subagents.
 
 # Current slice
 
-Slice 2 — restore the environment-file protection in all eight subagents.
+Slice 3 — let the two reviewers run Gradle on this platform.
 
 # Files involved
 
-- `.opencode/agents/problem_solver_low.md`
-- `.opencode/agents/problem_solver_high.md`
-- `.opencode/agents/targeted_fixer.md`
 - `.opencode/agents/code_reviewer_low.md`
 - `.opencode/agents/code_reviewer_high.md`
-- `.opencode/agents/git_handler.md`
-- `.opencode/agents/codebase_explorer_android.md`
-- `.opencode/agents/adb_handler.md`
 
 # Verification
 
-`tools/tests/agent_audit.py` reports 216 of 241 expectations met across eight
-agents before any fix. The 25 failures are:
+- The audit improved from 216 of 241 to 232 of 241.
+- All eight agent files parse as valid YAML.
+- Rule counts are exactly three higher than before slice 2 for the two files
+  whose pre-slice counts were recorded: `adb_handler` 20 to 23, and
+  `codebase_explorer_android` 57 to 60. The audit arithmetic confirms the rest,
+  because 232 met plus the 9 known remaining failures equals the 241 total.
+- The diff against `HEAD` was inspected. The only added lines are the 12-line
+  environment block. The removed lines in `targeted_fixer.md` are the user's own
+  earlier edits, which replace the narrow script and Gradle lists with broader
+  ones. Nothing was lost by the scripts.
 
-- 16 environment-file reads resolve to `allow` in all eight agents. The broad
-  `read` allow erases the base policy protection.
-- 6 Gradle failures in the two reviewers. None of the three probed wrapper forms
-  matches a rule, so neither reviewer can run a Gradle task.
-- 2 write failures in `codebase_explorer_android`. `echo` and `printf` resolve
-  to `allow`, so a read-only agent can write a file through redirection.
-- 1 analysis-script failure in `targeted_fixer`. It allows `python *` but not
-  `python3`.
+The 9 remaining failures are:
+
+- 6 in the two reviewers. No probed wrapper form matches, so neither reviewer can
+  run a Gradle task. The bare `gradlew.bat` form does not resolve in PowerShell
+  and the rule ordering assumes the task follows the wrapper, while AGENTS.md
+  puts two flags first.
+- 2 in `codebase_explorer_android`. `echo` and `printf` resolve to `allow`, so a
+  read-only agent can write a file through redirection.
+- 1 in `targeted_fixer`. It allows `python *` but not `python3`.
 
 # Next
 
-Add the three environment-file rules to each of the eight subagents, directly
-after its broad `read` allow, then rerun the audit.
+Add Windows wrapper rules to both reviewers in the AGENTS.md flag order, for the
+same task set they already allow.
 
 # Blockers
 
@@ -69,5 +77,5 @@ after its broad `read` allow, then rerun the audit.
 
 # Last safe commit
 
-Slice 6 of the previous task: `7f4ea63` Make the orchestrator the default agent
-and remove a phantom agent. The app workstream stays at `464b2d1`.
+Slice 1: `a018db9` Add a purpose audit for every subagent permission set.
+Slice 6 of the previous task: `7f4ea63`. The app workstream stays at `464b2d1`.

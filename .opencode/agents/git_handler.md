@@ -1,13 +1,25 @@
 ---
 description: Reviews Git state, stages only reviewed Beeline changes, commits them, and pushes only when explicitly requested.
 mode: subagent
-model: opencode-zen/muse-spark-1.3-free
+model: opencode-go/muse-spark-1.3-contributor#low
 permissions:
   - action: "*"
     resource: "*"
     effect: deny
   - action: read
     resource: "*"
+    effect: allow
+  # The broad read allow above silently overrides the base policy protection
+  # for environment files, because agent rules load after the base policy and
+  # the last matching rule wins. These three rules restore it.
+  - action: read
+    resource: "*.env"
+    effect: ask
+  - action: read
+    resource: "*.env.*"
+    effect: ask
+  - action: read
+    resource: "*.env.example"
     effect: allow
   - action: glob
     resource: "*"
