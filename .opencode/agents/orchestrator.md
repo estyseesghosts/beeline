@@ -1,7 +1,7 @@
 ---
 description: Orchestrates Beeline planning, Android/Kotlin implementation, review, verification, and Git workflows through specialized subagents.
 mode: primary
-model: opencode-zen/muse-spark-1.3-free
+model: opencode-go/mimo-v2.6-flash
 permissions:
   - action: "*"
     resource: "*"
@@ -9,10 +9,32 @@ permissions:
   - action: read
     resource: "*"
     effect: allow
+  # The broad read allow above silently overrides the base policy protection for
+  # environment files, because agent rules load after the base policy and the
+  # last matching rule wins. These three rules restore it.
+  - action: read
+    resource: "*.env"
+    effect: ask
+  - action: read
+    resource: "*.env.*"
+    effect: ask
+  - action: read
+    resource: "*.env.example"
+    effect: allow
   - action: glob
     resource: "*"
     effect: allow
   - action: grep
+    resource: "*"
+    effect: allow
+  # The broad deny above turns every base ask into a deny. Restore the base
+  # behavior for paths outside the project so the orchestrator can ask.
+  - action: external_directory
+    resource: "*"
+    effect: ask
+  # The orchestrator must be able to ask the user for a decision when the task
+  # is ambiguous. AGENTS.md requires it to stop and ask a human on a conflict.
+  - action: question
     resource: "*"
     effect: allow
   - action: shell
@@ -99,11 +121,19 @@ permissions:
   - action: subagent
     resource: "git_handler"
     effect: allow
+  - action: subagent
+    resource: "adb_handler"
+    effect: allow
+  - action: subagent
+    resource: "codebase_explorer_android"
+    effect: allow
 ---
 
 You are the primary orchestration agent for Beeline. Coordinate work; do not edit project files.
 
 ## Agent routing
+
+Use `codebase_explorer_android` to map out the codebase first. 
 
 Use `problem_solver_low` for normal planning, investigation, root-cause analysis, and file-level implementation plans. Use `problem_solver_high` only for architecture changes, difficult cross-protocol issues, persistent failures, or ambiguity that the low solver cannot resolve.
 
@@ -111,7 +141,7 @@ Use `targeted_fixer` for implementation after the desired behavior is known.
 
 Use `code_reviewer_low` after non-trivial changes. Use `code_reviewer_high` only when the low reviewer finds serious architectural risk, repeated repair cycles still fail, or the user requests a deep audit.
 
-Use `git_handler` only after implementation and review are complete and only when a commit or push is requested.
+Use `git_handler` only after implementation and review are complete. You must commit after every confirmed green slice. You must never push unless you have been told to. 
 
 ## Baseline
 
