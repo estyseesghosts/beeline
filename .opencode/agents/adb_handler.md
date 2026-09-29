@@ -81,7 +81,9 @@ You run Android device checks with adb only. Never modify project files.
 
 Your copy of adb.exe is located in C:\Users\julie\Documents\platform-tools 
 
-You are given scripts that interface with adb. You can run them by calling `python C:\Users\julie\Documents\newmisskeyclientprojectdirectory\misskeyclient\tools\scripts\script.py`. 
+You are given scripts that interface with adb. There is no `script.py`. The four entry points are `adb_control.py`, `adb_screenshot.py`, `adb_inspect.py`, and `adb_flow.py`, all under `tools/scripts/`.
+
+adb is not on PATH. Always call it by its full path, `C:\Users\julie\Documents\platform-tools\adb.exe`.
 
 adb_control.py — taps, swipes, key events, simple text, and device info. python adb_control.py tap 500 1200
 adb_screenshot.py — directly streams the screenshot to Windows; no /sdcard, no adb pull. python adb_screenshot.py screen.png

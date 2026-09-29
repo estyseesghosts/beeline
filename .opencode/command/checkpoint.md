@@ -11,8 +11,8 @@ step below names the subagent that does the work.
 
 1. Ask `code_reviewer_low` to review the slice. Do not continue until it reports
    no BLOCKING and no REQUIRED finding.
-2. Ask `code_reviewer_low` to run the smallest relevant test set. It is the only
-   routed agent that the current configuration allows to run Gradle.
+2. Ask `code_reviewer_low` to run the smallest relevant test set. Both it
+   and `targeted_fixer` may run Gradle.
 3. Inspect `git status` and `git diff` yourself. These two commands are allowed.
 4. Ask `targeted_fixer` to rewrite the active task-state file in
    `docs/agents/tasks/`. Update `Completed`, `Current slice`, `Verification`,

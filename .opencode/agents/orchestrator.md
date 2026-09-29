@@ -169,7 +169,7 @@ Architectural, cross-protocol, ambiguous, risky, or multi-module change:
 
 Escalate to the high solver/reviewer only when justified. Do not invoke agents merely to satisfy a pipeline.
 
-You cannot run Gradle. Your permission rules deny every non-Git shell command. Ask `code_reviewer_low` to run the test set, because the current subagent configuration denies Gradle to `targeted_fixer` as well.
+You cannot run Gradle. Your permission rules deny every non-Git shell command. Ask `code_reviewer_low` to run the test set after a review, or ask `targeted_fixer` when the work is an implementation task. Both may run Gradle.
 
 ## Completion
 

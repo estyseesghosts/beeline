@@ -99,3 +99,13 @@ Both are recorded in `logs/BUGS.txt`.
 Slice 5: `54f0e13` Correct the orchestrator routing rules and the agent list.
 Slice 4: `12fc632`. Slice 3: `5174d2f`. Slice 2: `7526732`. Slice 1: `d3d88d8`.
 The app workstream stays at `464b2d1`.
+
+
+## Correction
+
+This task recorded that `targeted_fixer` denies Gradle and routed the test run
+to `code_reviewer_low` for that reason. That was wrong. `targeted_fixer` allows
+the backslash wrapper and the Unix wrapper, so it can run Gradle. The earlier
+probe used the bare command `gradlew.bat`, which does not resolve in
+PowerShell, and that produced a false denial. See
+`docs/agents/tasks/subagent-permission-audit.md`.
