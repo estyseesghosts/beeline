@@ -36,6 +36,9 @@ class MotionTokensTest {
         assertTrue(scheme.color is SnapSpec<*>)
         assertTrue(scheme.spatialOffset is SnapSpec<*>)
         assertTrue(scheme.gentleOffset is SnapSpec<*>)
+        assertTrue(scheme.gentleSize is SnapSpec<*>)
+        assertTrue(scheme.fastFadeIn is SnapSpec<*>)
+        assertTrue(scheme.fastFadeOut is SnapSpec<*>)
         assertEquals(0, scheme.floatingEnterOffsetPx)
     }
 
@@ -49,6 +52,14 @@ class MotionTokensTest {
         assertTrue(scheme.selectionStartScale >= 0.86f)
         assertTrue(scheme.selectionMaxScale <= 1.08f)
         assertTrue(scheme.floatingEnterScale >= 0.92f)
+    }
+
+    @Test
+    fun selectedScaleUsesTheDocumentedStartAndMaximum() {
+        val scheme = PalustrisMotionScheme.standard(reducedMotion = false)
+
+        assertEquals(0.86f, scheme.selectionStartScale, 0.0001f)
+        assertEquals(1.08f, scheme.selectionMaxScale, 0.0001f)
     }
 
     @Test

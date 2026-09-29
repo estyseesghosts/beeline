@@ -1,5 +1,6 @@
 package me.foxtails.palustris.ui.motion
 
+import android.animation.ValueAnimator
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
@@ -41,7 +42,7 @@ class SpringyInteractionsTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun pressCompressesAndReturnsWithoutChangingClickSemantics() {
+    fun pressCompressesAndReturnsAfterReleaseWithoutChangingClickSemantics() {
         var clicks = 0
         compose.activity.runOnUiThread {
             compose.activity.setContent {
@@ -77,11 +78,17 @@ class SpringyInteractionsTest {
             button.performTouchInput { cancel() }
             compose.mainClock.advanceTimeBy(500)
             assertEquals(1f, button.fetchSemanticsNode().config[MotionScaleKey], 0.001f)
+            button.performTouchInput { down(center) }
+            compose.mainClock.advanceTimeBy(60)
+            button.performTouchInput { up() }
+            compose.mainClock.advanceTimeBy(500)
+            assertEquals(1f, button.fetchSemanticsNode().config[MotionScaleKey], 0.001f)
         } finally {
             compose.mainClock.autoAdvance = true
         }
-        button.performClick()
         assertEquals(1, clicks)
+        button.performClick()
+        assertEquals(2, clicks)
     }
 
     @Test
@@ -143,5 +150,46 @@ class SpringyInteractionsTest {
             button.performTouchInput { cancel() }
             compose.mainClock.autoAdvance = true
         }
+    }
+
+    @Test
+    fun animatorScaleZeroPreservesDirectClickInteraction() {
+        val previousScale = ValueAnimator.getDurationScale()
+        setAnimatorDurationScale(0f)
+        var clicks = 0
+        try {
+            compose.activity.runOnUiThread {
+                compose.activity.setContent {
+                    val scheme = palustrisMotionScheme()
+                    CompositionLocalProvider(LocalPalustrisMotionScheme provides scheme) {
+                        val source = remember { MutableInteractionSource() }
+                        Box(
+                            Modifier
+                                .size(48.dp)
+                                .springPress(source)
+                                .clickable(
+                                    interactionSource = source,
+                                    indication = LocalIndication.current,
+                                ) { clicks++ }
+                                .semantics { contentDescription = "Zero scale button" },
+                        )
+                    }
+                }
+            }
+            compose.waitForIdle()
+            val button = compose.onNodeWithContentDescription("Zero scale button")
+            assertEquals(1f, button.fetchSemanticsNode().config[MotionScaleKey], 0.001f)
+            button.performClick()
+            assertEquals(1, clicks)
+        } finally {
+            setAnimatorDurationScale(previousScale)
+        }
+    }
+
+    @Suppress("SpreadOperator")
+    private fun setAnimatorDurationScale(scale: Float) {
+        ValueAnimator::class.java
+            .getDeclaredMethod("setDurationScale", Float::class.javaPrimitiveType)
+            .invoke(null, scale)
     }
 }

@@ -1,52 +1,57 @@
 # Handoff
 
-**Status:** Phase 3A-3 is implemented in the worktree and remains uncommitted.
+**Status:** Phase 3B motion characterization and device evidence are recorded. Source and tests remain
+unchanged.
 
 The task-state file is `docs/agents/tasks/beeline-0.4.0.md`.
 
 ## Current position
 
-`CategoryChips.kt` uses `BeelineBubbleMinHeight` and `BeelineBubbleShape` from `BubbleGeometry.kt`.
-The values remain 48dp and a 24dp radius. Row behavior, semantics, colors, and layout ownership
-remain unchanged.
+Motion tests characterize pressed, released, canceled, selected scale tokens, disabled controls,
+reduced-motion snap behavior, and direct clicks with a zero animator scale. `MotionTokens.kt` and
+`SpringyInteractions.kt` remain unchanged. PillAction and NotificationRow remain unchanged.
+
+## Device evidence
+
+The evidence uses `emulator-5554` with the `@ctr` session preserved. It uses Android 16, SDK 36, at
+1848x2448, density 480, and density override 616. It does not touch OAuth, install the application,
+change settings, or expose secrets.
+
+The first attempt was blocked by foreground Firefox at `mstdn.ca/oauth/authorize`. Beeline did not
+resume. No tap, scroll, or back action ran. Font scale and transition scale were 1.0. Animator duration
+scale and reduce-light were null. Keyguard and IME state are unverified because piped `dumpsys` access
+was denied.
+
+The run restored Beeline with `am start -n me.foxtails.palustris/.MainActivity`, without Firefox
+interaction. MainActivity resumed as `t27`. Firefox was visible=false and STOPPED as `t24`. Home showed
+the Home, Local, and Federated chips without clipping. Post rows showed the avatar, name, timestamp,
+body, and photo. Bottom navigation and compose remained visible. The session stayed intact.
+
+A `900,1800` to `900,800` swipe confirmed scrolling without a state change. Back is not valid evidence
+while the OAuth task remains pending. Back popped MainActivity to Firefox `t24` and ended task `t27`.
+Immediate `am start` restored Home, with MainActivity visible and Firefox obscured. This is an OAuth-task
+limitation, not a motion failure.
+
+Compact Home light geometry and scrolling pass. Full scroll and card coverage, hierarchy bounds, wide
+layout, and font-scale coverage remain unverified. Screenshots are `phase3b-home.png`, `screen.png`,
+`screen2.png`, and `screen3.png`. The inspection directory remains untracked.
 
 ## Verification
 
-`CategoryChipsGeometryTest` passed one test. `HomeFeedTest` passed 37 tests. `lintDebug` passed. The
-architecture audit exited 0 with 615 findings and zero regressions. Slice-only `diff --check`
-passed.
-
-`test assembleRelease` exited 1. Release assembly passed. The test task ran 1,451 tests and
-reported 17 known baseline failures. Phase 10 owns the green full gate.
-
-## Device evidence — 3A-3
-
-Emulator `emulator-5554` was online with Android 16, SDK 36, and a 1848x2448 display. Density was
-480 with a 616 override. The keyguard was unlocked, and no keyboard was visible.
-
-`screen.png`, `chips_top.png`, `chips_top2.png`, and `back_check.png` show the Home feed. Home,
-Local, and Federated remain fully legible in consistent 48dp by 24dp pills. No clipping or
-truncation appears. Home remains selected. The chips remain reachable above bottom navigation.
-
-Bottom navigation and the compose control remain visible. The IME does not cover the content. Back
-stayed in the Home feed. The run did not use `install -r`, perform OAuth, or sign out. The session
-remained preserved. No state or persisted data changed, and no secrets were exposed.
-
-Geometry verification passed once. The exact font scale and activity name remain unverified because
-raw shell access was denied and inspection output was unreadable.
-
-Search, Profile, dark and pure-black themes, wide and foldable layouts, 200% font scale, keyboard
-behavior, and TalkBack remain unverified. The screenshots are untracked worktree files.
+Motion tests passed 9 tests. PillAction tests passed 4 tests. `lintDebug` passed. The architecture audit
+passed with 615 findings and zero regressions. Slice-only `diff --check` passed. The focused rerun was
+denied for the reviewer. The full gate remains red because Phase 10 owns the failure.
 
 ## Next slice
 
-Phase 3B.
+Phase 3C-1.
 
-Last safe commit is `e23972e`.
+History: `5b8d98d`, `e23972e`, `2c3a1a8`.
+
+Last safe commit is `2c3a1a8`.
 
 ## Preservation
 
-The pre-existing `.opencode` changes, images, helpers, caches, logs, staged classic navigation
-document, and current worktree deletion of `PhotoGridFeedViewModelTest.kt` remain unrelated. `HEAD`
-still tracks the PhotoGrid test. Commit `92d15a8` contains that test and does not contain its
-current worktree deletion. This subagent does not stage, commit, or push.
+Unrelated `.opencode` changes, images, helpers, caches, logs, the staged classic navigation document,
+and the worktree deletion of `PhotoGridFeedViewModelTest.kt` remain untouched. This subagent does not
+stage, commit, or push.

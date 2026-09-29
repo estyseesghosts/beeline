@@ -1,61 +1,71 @@
-# Beeline 0.4.0 task state — Phase 3A-3
+# Beeline 0.4.0 task state — Phase 3B
 
 ## Status
 
-Phase 3A-3 reuses shared bubble geometry in `CategoryChips`. The existing 48dp height and 24dp
-corner radius remain unchanged. The slice does not change colors, semantics, navigation, protocol
-behavior, or storage.
+Phase 3B characterizes the shared motion contract. The implementation does not change.
+
+The tests cover pressed, released, canceled, selected scale tokens, disabled controls, reduced-motion
+snap behavior, and direct clicks when the animator scale is zero. PillAction and NotificationRow remain
+unchanged.
 
 ## Ownership and scope
 
-`BubbleGeometry.kt` owns the shared bubble minimum height, radius, and shape. `CategoryChips.kt`
-uses these values for the row, chip height, and chip shape. Compact and large layouts retain their
-existing structure. The geometry boundary remains protocol-neutral.
+`MotionTokens.kt` remains the owner of motion specifications and scale tokens. `SpringyInteractions.kt`
+remains the owner of press and selection interaction behavior. This slice adds no haptic API, event map,
+visual change, layout change, protocol behavior, or persistence behavior.
 
-## Tests and verification
+## Verification
 
-Focused verification passed.
-
-* The CategoryChips geometry test passed one test.
-* The HomeFeed test passed 37 tests.
-* `lintDebug` exited 0.
-* The architecture audit exited 0 with 615 findings and zero regressions.
+* Motion unit tests passed 9 tests.
+* PillAction tests passed 4 tests.
+* `lintDebug` passed.
+* The architecture audit passed with 615 findings and zero regressions.
 * Slice-only `diff --check` passed.
-* `test assembleRelease` exited 1. Release assembly passed. The test task ran 1,451 tests and reported 17 known baseline failures. Phase 10 owns the green full gate.
+* The full gate remains red because Phase 10 owns the failure.
+* The focused rerun was denied for the reviewer.
 
-## Device evidence
+## Phase 3B device evidence
 
-The emulator `emulator-5554` was online with Android 16, SDK 36, and a 1848x2448 display. The
-density was 480 with a 616 override. The keyguard was unlocked, and no keyboard was visible.
+The evidence uses `emulator-5554` with the `@ctr` session preserved. The run did not touch OAuth,
+install the application, change settings, or expose secrets.
 
-The screenshots `screen.png`, `chips_top.png`, `chips_top2.png`, and `back_check.png` show the Home
-feed. The Home, Local, and Federated chips remain fully legible. Their pill height is 48dp and
-their visible shape is consistent with a 24dp radius. The row has no clipping or truncation.
+* The device runs Android 16, SDK 36, at 1848x2448 and density 480, with density override 616.
+* The first attempt found Firefox in the foreground at `mstdn.ca/oauth/authorize`.
+* Beeline did not resume because a background OAuth task remained pending.
+* No tap, scroll, or back action ran during the blocked attempt.
+* `font_scale` was 1.0, `transition` was 1.0, and `animator_duration_scale` was null.
+* `reduce_light` was null.
+* Keyguard and IME state remain unverified because piped `dumpsys` access was denied.
 
-Home remains selected. The chips remain reachable above the bottom navigation. The bottom
-navigation and compose control remain visible. The IME does not cover the content. Back navigation
-stays in the Home feed.
+The run restored Beeline with `am start -n me.foxtails.palustris/.MainActivity`. It did not interact with
+Firefox. MainActivity resumed as task `t27`. Firefox remained visible=false and STOPPED as task `t24`.
 
-The run did not use `install -r`. The session remained preserved. The run did not perform OAuth or
-sign-out, and it did not expose secrets. No state or persisted data changed.
+The Home screenshot shows the Home, Local, and Federated chips without clipping. Post rows show the
+avatar, name, timestamp, body, and photo. The bottom navigation and compose control remain visible.
+The session remains intact without a login screen.
 
-Geometry verification passed once. HomeFeed verification passed 37 tests. The exact font scale and
-activity name remain unverified because raw shell access was denied and the inspection output was
-unreadable.
+A safe swipe from `900,1800` to `900,800` confirmed scrolling. It caused no state change.
 
-Search, Profile, dark and pure-black themes, wide and foldable layouts, 200% font scale, keyboard
-behavior, and TalkBack remain unverified. The screenshots are untracked worktree files.
+Back did not provide valid evidence. It popped MainActivity to Firefox task `t24`, and task `t27` ended.
+This behavior relates to the pending background OAuth task, not to motion failure. Beeline restored
+immediately with `am start`; screen 3 shows MainActivity on screen and Firefox obscured. Do not use back
+for evidence while the OAuth task remains pending.
+
+Coverage passes for compact Home light geometry and scrolling. Full scroll and card coverage, hierarchy
+bounds, wide layout, and font-scale coverage remain unverified because of the blockers.
+
+Screenshots are `phase3b-home.png`, `screen.png`, `screen2.png`, and `screen3.png`. The inspection
+directory remains untracked.
 
 ## Documentation review
 
-`docs/wiki/ui-and-navigation.md` documents navigation and feature boundaries, not shared bubble
-geometry. It remains unchanged because this slice does not change a documented boundary.
+This task-state file and the handoff now record the device evidence and its verification limits. No
+source or test file changed. No additional documentation page requires an update.
 
 ## Preservation and continuation
 
-The pre-existing `.opencode` changes, images, helpers, caches, logs, staged classic navigation
-document, and current worktree deletion of `PhotoGridFeedViewModelTest.kt` remain unrelated and
-untouched. `HEAD` still tracks the PhotoGrid test. Commit `92d15a8` contains that test and does not
-contain its current worktree deletion.
+The unrelated dirty worktree remains untouched. This subagent does not stage, commit, or push.
 
-Last safe commit: `e23972e`. Next slice: Phase 3B. This subagent does not stage, commit, or push.
+History: `5b8d98d`, `e23972e`, `2c3a1a8`.
+
+Last safe commit: `2c3a1a8`. Next slice: Phase 3C-1.
