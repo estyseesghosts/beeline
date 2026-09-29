@@ -234,6 +234,74 @@ permissions:
   - action: shell
     resource: "gradlew.bat :app:assembleDebug *"
     effect: allow
+  # AGENTS.md requires every agent Gradle command to start with the two
+  # flags below, and Windows resolves only the backslash wrapper because
+  # "." is not on PATH. The rules above require the task to follow the
+  # wrapper directly, so they never match a compliant command. These rules
+  # match the real invocation for the same task set.
+  - action: shell
+    resource: '.\gradlew.bat --no-daemon --console=plain test *'
+    effect: allow
+  - action: shell
+    resource: '.\gradlew.bat --no-daemon --console=plain check *'
+    effect: allow
+  - action: shell
+    resource: '.\gradlew.bat --no-daemon --console=plain lint *'
+    effect: allow
+  - action: shell
+    resource: '.\gradlew.bat --no-daemon --console=plain assembleDebug *'
+    effect: allow
+  - action: shell
+    resource: '.\gradlew.bat --no-daemon --console=plain :app:test *'
+    effect: allow
+  - action: shell
+    resource: '.\gradlew.bat --no-daemon --console=plain :app:lint *'
+    effect: allow
+  - action: shell
+    resource: '.\gradlew.bat --no-daemon --console=plain :app:assembleDebug *'
+    effect: allow
+  - action: shell
+    resource: './gradlew --no-daemon --console=plain test *'
+    effect: allow
+  - action: shell
+    resource: './gradlew --no-daemon --console=plain check *'
+    effect: allow
+  - action: shell
+    resource: './gradlew --no-daemon --console=plain lint *'
+    effect: allow
+  - action: shell
+    resource: './gradlew --no-daemon --console=plain assembleDebug *'
+    effect: allow
+  - action: shell
+    resource: './gradlew --no-daemon --console=plain :app:test *'
+    effect: allow
+  - action: shell
+    resource: './gradlew --no-daemon --console=plain :app:lint *'
+    effect: allow
+  - action: shell
+    resource: './gradlew --no-daemon --console=plain :app:assembleDebug *'
+    effect: allow
+  - action: shell
+    resource: 'gradlew.bat --no-daemon --console=plain test *'
+    effect: allow
+  - action: shell
+    resource: 'gradlew.bat --no-daemon --console=plain check *'
+    effect: allow
+  - action: shell
+    resource: 'gradlew.bat --no-daemon --console=plain lint *'
+    effect: allow
+  - action: shell
+    resource: 'gradlew.bat --no-daemon --console=plain assembleDebug *'
+    effect: allow
+  - action: shell
+    resource: 'gradlew.bat --no-daemon --console=plain :app:test *'
+    effect: allow
+  - action: shell
+    resource: 'gradlew.bat --no-daemon --console=plain :app:lint *'
+    effect: allow
+  - action: shell
+    resource: 'gradlew.bat --no-daemon --console=plain :app:assembleDebug *'
+    effect: allow
 ---
 
 You independently audit completed Beeline work. Do not implement fixes or modify Git state.

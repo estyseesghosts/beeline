@@ -9,6 +9,7 @@ use the shell, use adb, or use Git must be able to do exactly that.
 - No agent may read an environment file without approval.
 - No agent may change repository state except through the Git agent.
 - Read-only agents must resolve every filesystem write to `deny`.
+- Reviewers may run verification tasks and no other Gradle task.
 - Unrelated worktree changes stay untouched. The eight subagent files already
   held uncommitted user edits and must keep them.
 - No Kotlin source changes in this task.
@@ -18,58 +19,54 @@ use the shell, use adb, or use Git must be able to do exactly that.
 
 - The permission matrix models the V2 order, so it is a model of the rule order
   and not a live permission decision.
-- Gradle rules must match the invocation AGENTS.md mandates, which is the
-  wrapper followed by `--no-daemon --console=plain` and then the task. Rules
-  written as `gradlew.bat test *` match neither the Windows path nor the
-  mandated flag order.
+- Gradle rules must match the invocation AGENTS.md mandates: the wrapper, then
+  `--no-daemon --console=plain`, then the task. On Windows only the backslash
+  wrapper resolves.
 - `adb_handler` must keep Git denied. Its prompt states that it never runs Git.
-- The previous task's claim that `targeted_fixer` denies Gradle was wrong and is
-  corrected here. `targeted_fixer` allows `.\gradlew.bat *` and `./gradlew *`.
+- The previous task's claim that `targeted_fixer` denies Gradle was wrong.
+  `targeted_fixer` allows `.\gradlew.bat *` and `./gradlew *`.
 - Edit scripts must locate the rule indent from the `- action:` header line, not
-  from the nested `resource:` or `effect:` line. Two earlier passes got this
-  wrong and damaged the frontmatter; the final pass normalizes the region.
+  from the nested `resource:` or `effect:` line.
 
 # Completed
 
 - Slice 1 — build `tools/tests/agent_audit.py`, commit `a018db9`.
-- Slice 2 — restore the environment-file protection in all eight subagents.
+- Slice 2 — restore the environment-file protection in all eight subagents,
+  commit `e7c465c`.
+- Slice 3 — give the two reviewers working Gradle rules.
 
 # Current slice
 
-Slice 3 — let the two reviewers run Gradle on this platform.
+Slice 4 — close the read-only write hole and the implementation script gap.
 
 # Files involved
 
-- `.opencode/agents/code_reviewer_low.md`
-- `.opencode/agents/code_reviewer_high.md`
+- `.opencode/agents/codebase_explorer_android.md`
+- `.opencode/agents/targeted_fixer.md`
 
 # Verification
 
-- The audit improved from 216 of 241 to 232 of 241.
-- All eight agent files parse as valid YAML.
-- Rule counts are exactly three higher than before slice 2 for the two files
-  whose pre-slice counts were recorded: `adb_handler` 20 to 23, and
-  `codebase_explorer_android` 57 to 60. The audit arithmetic confirms the rest,
-  because 232 met plus the 9 known remaining failures equals the 241 total.
-- The diff against `HEAD` was inspected. The only added lines are the 12-line
-  environment block. The removed lines in `targeted_fixer.md` are the user's own
-  earlier edits, which replace the narrow script and Gradle lists with broader
-  ones. Nothing was lost by the scripts.
+- The audit improved from 232 of 241 to 244 of 247, and the total rose by 6
+  because negative probes were added.
+- The audit now also asserts that a reviewer cannot run `clean`, `publish`, or a
+  signing task. All three resolve to `deny`, so the new rules did not
+  over-permit.
+- Both reviewer files parse as valid YAML. Each grew from 73 to 94 rules.
+- All eight agent files parse. Rule counts rose by exactly three in slice 2, and
+  the diff against `HEAD` was inspected line by line to confirm the only added
+  lines are the environment block.
 
-The 9 remaining failures are:
+The 3 remaining failures are:
 
-- 6 in the two reviewers. No probed wrapper form matches, so neither reviewer can
-  run a Gradle task. The bare `gradlew.bat` form does not resolve in PowerShell
-  and the rule ordering assumes the task follows the wrapper, while AGENTS.md
-  puts two flags first.
 - 2 in `codebase_explorer_android`. `echo` and `printf` resolve to `allow`, so a
   read-only agent can write a file through redirection.
 - 1 in `targeted_fixer`. It allows `python *` but not `python3`.
 
 # Next
 
-Add Windows wrapper rules to both reviewers in the AGENTS.md flag order, for the
-same task set they already allow.
+Remove the `echo` and `printf` allows from the read-only explorer, and replace
+the broad `python *` in the implementation agent with the documented
+`tools/scripts` entry points in both interpreter spellings.
 
 # Blockers
 
@@ -77,5 +74,6 @@ same task set they already allow.
 
 # Last safe commit
 
-Slice 1: `a018db9` Add a purpose audit for every subagent permission set.
-Slice 6 of the previous task: `7f4ea63`. The app workstream stays at `464b2d1`.
+Slice 2: `e7c465c` Restore the environment-file protection in all eight
+subagents. Slice 1: `a018db9`. Slice 6 of the previous task: `7f4ea63`. The app
+workstream stays at `464b2d1`.

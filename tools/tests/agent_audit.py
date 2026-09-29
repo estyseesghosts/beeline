@@ -77,6 +77,14 @@ BASE_OPS = [
     ("grep", "TODO", "allow"),
 ]
 
+# A reviewer may run the listed verification tasks. It must still be blocked
+# from Gradle tasks outside that set, so the new rules must not over-permit.
+REVIEWER_GRADLE_DENY = [
+    ("shell", ".\\gradlew.bat --no-daemon --console=plain clean", "deny"),
+    ("shell", ".\\gradlew.bat --no-daemon --console=plain publish *", "deny"),
+    ("shell", ".\\gradlew.bat --no-daemon --console=plain sign*", "deny"),
+]
+
 ANALYSIS_SCRIPTS = [
     ("shell", "python tools/scripts/repo_map.py --root .", "allow"),
     ("shell", "python3 tools/scripts/file_audit.py --root .", "allow"),
@@ -125,12 +133,12 @@ PROFILES = {
     "code_reviewer_low": {
         "role": "audit changes and run verification, never edit",
         "git_read": True,
-        "checks": read_only_checks(gradle="allow"),
+        "checks": read_only_checks(gradle="allow") + REVIEWER_GRADLE_DENY,
     },
     "code_reviewer_high": {
         "role": "deep audit and run verification, never edit",
         "git_read": True,
-        "checks": read_only_checks(gradle="allow"),
+        "checks": read_only_checks(gradle="allow") + REVIEWER_GRADLE_DENY,
     },
     "git_handler": {
         "role": "Git state only, never touch project files",
