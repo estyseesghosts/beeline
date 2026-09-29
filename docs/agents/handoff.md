@@ -1,79 +1,68 @@
 # Handoff
 
-**Status:** 2E shell characterization tests and records are implemented in the worktree and remain uncommitted.
+**Status:** Phase 2E is committed at `8e1c046`. Phase 3A-first is implemented in the worktree and
+remains uncommitted.
 
-The parent session must stage only the 2E tests and documentation pathspec. This is intentional.
 The task-state file is `docs/agents/tasks/beeline-0.4.0.md`.
 
 ## Current position
 
-The projection test rejects a foreign publication.
-The shell test covers compact and large Search routes.
-The profile ViewModel test keeps the editor draft while the pager changes tabs.
-No production source changed. No callback bundle was extracted.
+`PillAction` enforces an effective 48 dp target under tight parent constraints. Its label, color,
+shape, padding, icon size, loading state, and click condition remain unchanged.
+
+Regression tests cover enabled semantics and bounds, disabled semantics, and loading suppression.
 
 ## Verification
 
-- Focused ShellCharacterizationTest passed with 4 tests.
-- Focused HomeFeed, ProfileScreen, ProfileViewModel, ProfileTimelinePager, projection, and session
-  tests passed.
-- Four new characterization tests were added.
-- The audit exited 0 with 612 findings and zero regressions.
-- `test assembleRelease` timed out after 120 seconds. Release assembly reached `assembleRelease`.
-  Existing baseline failures appeared in DraftActions, Mastodon artwork, CapabilityCache, Misskey
-  continuation, and NotificationSyncOrchestrator tests.
-- The audit command was `python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`.
-- The audit exited 0 with 612 findings and zero regressions.
-- The earlier count was 611. The requested 614 count does not match this worktree result.
-- The full gate remains unresolved because of the known timeout or baseline failure state.
+The focused `PillActionTest` suite passed 4 tests.
 
-## Complete 2D3 path inventory
+The caller suites passed 77 tests: `HomeFeedTest` 37, `ProfileScreenTest` 22,
+`EmojiPickerTest` 17, and `PostShareSheetTest` 1.
 
-- `app/src/main/java/me/foxtails/palustris/domain/FavouriteArtworkStyle.kt`
-- `app/src/main/java/me/foxtails/palustris/domain/SocialSource.kt`
-- `app/src/main/java/me/foxtails/palustris/data/misskey/MisskeySource.kt`
-- `app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonSource.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedHost.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedState.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/feed/HomeFeed.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/shell/HomeContract.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/posts/PostRow.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/posts/PostRowCallSurface.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/posts/PostInteractionPresentation.kt`
-- `app/src/test/java/me/foxtails/palustris/ProfileSourceContractTest.kt`
-- `app/src/test/java/me/foxtails/palustris/SocialSourceContractTest.kt`
-- `app/src/test/java/me/foxtails/palustris/ui/posts/PostRowFavouriteArtworkTest.kt`
-- `docs/agents/tasks/beeline-0.4.0.md`
-- `docs/agents/handoff.md`
+`lintDebug` passed. The architecture audit passed with 612 findings and zero regressions.
 
-## Exclusions and Git pointers
+## Device evidence
 
-- `.opencode/**` changes and untracked agent files are pre-existing and unrelated.
-- Deleted `currentbehaviour.png` and `intendedbehaviour.png`, plus untracked PNG captures, are
-  pre-existing and unrelated.
-- Staged `docs/classic_navigation.md` is pre-existing and unrelated.
-- Deleted `app/src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridFeedViewModelTest.kt` is
-  the committed 2C deletion from `92d15a8` and remains excluded.
-- Helpers, caches, and other logs remain outside 2D3.
+The adb check used `emulator-5554` with signed-in `@ctr@mstdn.ca`. The session remained preserved.
+The Beeline package was version `0.2.8` (`2008`), with no reinstall or build during the check.
+The foreground activity was `me.foxtails.palustris/MainActivity`, visible and on-screen. The IME was
+not visible (`isVisible=false`, `mInputShown=false`). The device ran Android 16 (SDK 36), with font
+scale 1.0, light theme, light status bar, and an unlocked display. The display was 1848 by 2448 at
+density 480 with a 616 override. The package first installed at 2026-09-28 15:54:45 and last
+updated at 2026-09-28 17:23:44.
 
-Use `git status --short` and `git diff -- .opencode` for worktree pointers. Use
-`git diff --cached -- docs/classic_navigation.md` for the staged classic file.
-Do not stage or commit this session.
+Home, Local, and Federated pills rendered fully. The `#travel` chip was visible. Five post-action
+icons were evenly spaced. No clipped hit areas appeared in screenshot geometry. Back navigation
+returned to Home. A mis-tap opened the image viewer, so the search screenshot does not verify Search
+or Photo Grid. The Compose hierarchy exposed only `android.view.View` nodes with empty text and
+content descriptions. Numeric 48 dp proof therefore remains code and test evidence.
 
-No files were staged or committed in this session.
+Commands used:
+
+`gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "*PillActionTest"`
+
+`gradlew.bat --no-daemon --console=plain :app:testDebugUnitTest --tests "*HomeFeedTest" --tests "*ProfileScreenTest" --tests "*PostShareSheetTest" --tests "*EmojiPickerTest"`
+
+`gradlew.bat --no-daemon --console=plain :app:lintDebug`
+
+`python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`
+
+The full gate is known red in `logs/BUGS.txt`; Phase 10 owns a green full gate.
 
 ## Next slice
 
-The parent session stages the 2E pathspec from the task state. Do not stage or commit this session.
+Phase 3A-2: theme roles.
 
-## Known limits
+Last safe commit: `8e1c046` (Phase 2E). Next commit: pending for Phase 3A-first.
 
-The full `test assembleRelease` gate remains unresolved because known baseline test failures or a
-timeout prevent a clean result. Release compilation and R8 reached completion before timeout.
-Live-server, device, API 29, RTL, TalkBack, font-scale, signed, compact, and wide or foldable
-checks remain unverified.
-The reviewer could not rerun focused tests or lint. The records retain the implementer-reported
-focused-test and `lintDebug` results.
-The requested 614 audit count does not match this worktree, which reports 612 with exit 0 and zero
-regressions. The earlier count was 611.
+## Limits
+
+Search, Photo Grid, Notifications, direct messages, and Profile were not captured. Dark and
+pure-black themes, compact and wide or foldable layouts, font scale 200 percent, keyboard,
+TalkBack, RTL, API 29, and UI dump numeric bounds remain unverified. Live-server behavior also
+remains unverified. The screenshots `.tmp-pill-search.png` and `.tmp-pill-home2.png` remain
+untracked. The adb handler and reviewer own these checks.
+
+The staged classic navigation document, `.opencode` changes, images, helpers, caches, logs, and the
+committed Photo Grid test deletion remain unrelated. The temporary inspection files and screenshots
+remain untracked. This subagent did not stage or commit.

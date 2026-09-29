@@ -1,10 +1,10 @@
 package me.foxtails.palustris.ui.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.requiredSizeIn
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,7 +38,10 @@ internal fun PillAction(
 ) {
     Surface(
         modifier = modifier
-            .defaultMinSize(minHeight = BeelineBubbleMinHeight)
+            .requiredSizeIn(
+                minWidth = BeelineBubbleMinHeight,
+                minHeight = BeelineBubbleMinHeight,
+            )
             .clickable(enabled = enabled && !loading, role = Role.Button, onClick = onClick)
             .semantics {
                 this.contentDescription = contentDescription

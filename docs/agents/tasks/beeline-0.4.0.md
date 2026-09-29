@@ -1,99 +1,62 @@
-# Beeline 0.4.0 task state — 2E shell characterization
-
-The parent session must stage only the 2E tests and documentation pathspec. This is intentional.
-This 2E slice remains uncommitted. It adds characterization assertions without extraction.
-
-## Objective
-
-Characterize shell ownership before any future callback-surface extraction.
+# Beeline 0.4.0 task state — Phase 3A-first
 
 ## Status
 
-- `PostProjectionCoordinatorTest` rejects a publication from a foreign account.
-- `ShellCharacterizationTest` covers compact and large Search routes.
-- `ProfileViewModelTest` covers editor draft continuity across a pager tab change.
-- Existing assertions cover stale revisions, retired coordinators, account switching, and pager
-  target isolation. The new tests preserve those owners without re-hoisting state.
-- No production source changed. No callback bundle was extracted.
+Phase 2E is committed at `8e1c046`. This worktree contains the first Phase 3A behavior.
+`PillAction` now keeps an effective 48 dp by 48 dp target under tight parent constraints.
 
-## Inspected path inventory
+The previous task state was stale. It incorrectly claimed that Phase 2E remained uncommitted.
 
-The shell path was inspected for ownership and callback flow. The session tests were inspected for
-authority lifetime and account replacement. The profile pager and editor tests were inspected for
-continuity and stale-target behavior.
+## Ownership and scope
 
-Inspected implementation paths:
+`PillAction.kt` owns the shared action target, semantics, loading suppression, and click behavior.
+`BubbleGeometry.kt` owns the shared 24 dp pill radius and 48 dp minimum height values.
+Callers include hashtag actions, post interaction presentation, post sharing, emoji pinning, and
+profile actions. No caller changes are required.
 
-- `app/src/main/java/me/foxtails/palustris/ui/shell/ShellContent.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/shell/ShellDestinationContent.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/shell/DestinationCallbacks.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/session/ConnectedSessionHost.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/feed/HomeFeed.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/profile/ProfileTimelineList.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt`
-- Search, Photo Grid, and direct-message contract and host paths
+The slice changes only target measurement and regression coverage. It does not change labels,
+colors, shape, padding, icons, navigation, post policy, media, editor, or emoji behavior.
 
-Inspected test paths:
+## Tests
 
-- `ShellCharacterizationTest.kt`
-- `HomeFeedTest.kt`
-- `ProfileScreenTest.kt`
-- `ProfileViewModelTest.kt`
-- `ProfileTimelinePagerTest.kt`
-- `PostProjectionCoordinatorTest.kt`
-- `ConnectedSessionContextTest.kt`
-- `ConnectedEntryStoreTest.kt`
+`PillActionTest` covers enabled button semantics and click behavior, constrained 48 dp bounds,
+disabled semantics, and loading click suppression.
 
-## Excluded worktree paths
+The focused suite passed 4 tests. Caller suites passed 77 tests: HomeFeed 37, ProfileScreen 22,
+EmojiPicker 17, and PostShareSheet 1. `lintDebug` passed. The architecture audit passed with 612
+findings and zero regressions.
 
-- `.opencode/**` changes and untracked agent files are pre-existing and unrelated.
-- Deleted `currentbehaviour.png` and `intendedbehaviour.png`, plus untracked PNG captures, are
-  pre-existing and unrelated.
-- Staged `docs/classic_navigation.md` is pre-existing and unrelated.
-- Deleted `app/src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridFeedViewModelTest.kt` is
-  the committed 2C deletion from `92d15a8` and remains excluded.
-- Helpers, caches, and other logs remain outside 2E.
+## Documentation review
 
-Git pointers for these classifications are `git status --short`, `git diff -- .opencode`,
-`git diff --cached -- docs/classic_navigation.md`, and commit `92d15a8`.
+`docs/wiki/ui-and-navigation.md` does not define the `PillAction` or `BubbleGeometry` boundary.
+It remains unchanged. `docs/agents/app-shell-ownership.md` also does not define this boundary.
 
-Do not stage or commit this session. The parent session must preserve the complete path inventory
-above and exclude the unrelated paths.
+## Device evidence
 
-Keep staged `docs/classic_navigation.md` separate. Do not stage welcome, OAuth, 2C, committed
-2D1, committed 2D2, `.opencode`, images, helpers, caches, or logs.
+The adb check used one device: `emulator-5554`. The signed-in account was `@ctr@mstdn.ca`, and
+the session remained preserved. The foreground activity was `me.foxtails.palustris/MainActivity`, visible and on-screen. The IME was not
+visible (`isVisible=false`, `mInputShown=false`). The package was Beeline version `0.2.8` (`2008`),
+with first install at 2026-09-28 15:54:45 and last update at 2026-09-28 17:23:44. No reinstall or
+build ran during the check.
 
-No files were staged or committed in this session. The parent should use this pathspec:
-`app/src/test/java/me/foxtails/palustris/ui/shell/ShellCharacterizationTest.kt`
-`app/src/test/java/me/foxtails/palustris/ui/shell/PostProjectionCoordinatorTest.kt`
-`app/src/test/java/me/foxtails/palustris/ui/profile/ProfileViewModelTest.kt`
-`docs/agents/app-shell-ownership.md` `docs/wiki/ui-and-navigation.md`
-`docs/agents/tasks/beeline-0.4.0.md` `docs/agents/handoff.md`.
+The device used Android 16 (SDK 36), font scale 1.0, light theme, and an unlocked display. The
+display was 1848 by 2448 at density 480 with a 616 override. Home showed fully rendered Home,
+Local, and Federated pills. The `#travel` chip was visible. Five post-action icons were evenly
+spaced. No clipped hit areas appeared in the screenshot geometry. Back navigation returned to Home.
 
-## Verification
+The search screenshot was taken after a mis-tap opened the image viewer. It is not evidence for
+Search or Photo Grid. The Compose hierarchy exposed only `android.view.View` nodes with empty text
+and content descriptions, so numeric 48 dp proof remains code and test evidence.
 
-- Focused ShellCharacterizationTest passed, including 4 tests.
-- Focused HomeFeedTest, ProfileScreenTest, ProfileViewModelTest, ProfileTimelinePagerTest,
-  PostProjectionCoordinatorTest, ConnectedSessionContextTest, and ConnectedEntryStoreTest passed.
-- Four new characterization tests were added.
-- The count-only audit command remains:
-
-`python tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check`
-
-The command exited 0 with 612 findings and zero regressions against the baseline.
-The prior count-only result was 611. The requested 614 count does not match this worktree result.
-
-- The audit exited 0 with 612 findings and zero regressions.
-- The full `test assembleRelease` gate timed out after 120 seconds. Release assembly reached
-  `assembleRelease`, but the test task reported existing unrelated baseline failures first.
-  Reported failures include DraftActions, Mastodon artwork, CapabilityCache, Misskey continuation,
-  and NotificationSyncOrchestrator tests.
-Focused device, live-server, API 29, RTL, TalkBack, font-scale, signed, compact, and wide or
-foldable checks remain unverified.
-- Lint was not required because production source did not change.
+Search, Photo Grid, Notifications, direct messages, and Profile were not captured. Dark and
+pure-black themes, compact and wide or foldable layouts, 200 percent font scale, keyboard, and
+TalkBack were not run. UI dump numeric bounds were not measurable. The screenshots
+`.tmp-pill-search.png` and `.tmp-pill-home2.png` remain untracked. These checks remain unverified.
 
 ## Preservation
 
-Welcome, OAuth, 2C, committed 2D1, and committed 2D2 work remain untouched by this follow-up.
-The staged classic navigation file remains untouched. Unrelated `.opencode` files, images, helpers,
-caches, and logs remain excluded. The 2E production boundary remains untouched.
+The staged classic navigation document, `.opencode` changes, images, helpers, caches, logs, and the
+committed Photo Grid test deletion remain unrelated and untouched. The temporary inspection files
+and screenshots remain untracked and untouched.
+
+This subagent does not stage or commit. The parent session must preserve those paths.
