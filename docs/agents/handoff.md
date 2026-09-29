@@ -1,50 +1,47 @@
 # Handoff
 
-**Status:** Phase 3C3 profile statistics stacking is implemented. Phase 3 is complete pending
-commit.
+**Status:** Phase 3 is complete through commit `287b02c`. This handoff records the integration
+only. It changes no production or test source.
 
 The task-state file is `docs/agents/tasks/beeline-0.4.0.md`.
 
-## Current position
+## Completed Phase 3
 
-`ProfileScreen.kt` stacks profile statistics in narrow content and keeps the existing row for wider
-content. `ProfileScreenTest` checks complete labels at font scale 2.0 and null-count omission.
-Account ownership, count formatting, header placement, and protocol behavior remain unchanged.
+Phase 3 contains these seven commits:
 
-## Verification
+- `5b8d98d` — PillAction 48 dp effective bounds.
+- `e23972e` — post and tab typography roles.
+- `2c3a1a8` — CategoryChips geometry.
+- `7e7f774` — motion characterization.
+- `ca058e9` — post readability at 200 percent text.
+- `eaeff11` — notification row bounds at 200 percent text.
+- `287b02c` — narrow profile-stat stacking at 200 percent text.
 
-The focused `ProfileScreenTest` suite passed 24 tests. The profile test package passed 62 tests.
-`:app:lintDebug` passed with zero findings. The architecture audit reported 615 findings with no
-changed-scope regression identified.
+Focused tests, lint, and architecture audits passed or reported no changed-scope regression for
+each slice, as detailed in the task-state file. The reviewer reported no `BLOCKING` or `REQUIRED`
+issue. Reviewer reruns were denied by the same shell permission gate. The full gate remains known
+red, and Phase 10 owns that failure.
 
-The reviewer reported these results. The reviewer rerun was denied by the same shell permission
-gate. The profile-file slice `diff --check` passed. The whole-worktree check fails on unrelated
-`.opencode` whitespace, which remains preserved.
+## Evidence limits
 
-The full gate did not run. Phase 10 owns the known red gate.
+Home light and Notifications at 1.0 and 2.0 have recorded emulator results. Profile verification
+was blocked by shell permission denial. Post-fix physical rendering for the post and profile slices
+remains unverified. The six-screen 200 percent recapture is incomplete.
 
-## Device evidence
+Wide, foldable, dark, keyboard, TalkBack, live-server, and API 29 behavior remain unverified.
 
-The `adb_handler` attempt for 3C3 `ProfileStats` on `emulator-5554` failed with
-`permission.rejected` and `shell denied`.
+## Documentation decision
 
-No adb command executed. No device state was read. No screenshots were captured. No font change was
-made. No restore was needed.
-
-`Profile@1.0`, `Home@2.0`, `Profile@2.0`, and `Home-restored` remain unverified. Other screens, dark
-mode, wide layout, keyboard behavior, and TalkBack also remain unverified. The attempt avoided taps
-because it had no device access. The session is presumed preserved but was not re-verified.
-
-No OAuth or sign-out action occurred. No secrets were used. No temporary files were created.
+`docs/wiki/ui-and-navigation.md` and the agent ownership pages remain unchanged. Phase 3 changed
+characterization, minimum-height, and stacking behavior only. It did not change ownership,
+navigation, persistence, protocol, or shell boundaries.
 
 ## Next slice
 
-Phase 3 integration, then Phase 4.
+Phase 4A stabilizes back, modal, and memory behavior after Phase 3A and 3B.
 
-Last safe commit is `eaeff11`. Relevant history is `5b8d98d`, `e23972e`, `2c3a1a8`, `7e7f774`,
-`ca058e9`, and `eaeff11`. Do not stage, commit, or push this subagent work.
+Last safe commit: `287b02c`.
 
-## Preservation
-
-Unrelated `.opencode` changes, images, helpers, caches, the staged classic navigation document,
-and the worktree deletion of `PhotoGridFeedViewModelTest.kt` remain untouched.
+Preserve the unrelated dirty worktree, including the staged `classic_navigation` document,
+modified agent and writing-style files, deleted PNGs and Photo Grid test, and untracked captures,
+helpers, caches, and temporary files. Do not stage, commit, or push this documentation work.
