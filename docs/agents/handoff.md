@@ -1,6 +1,6 @@
 # Handoff
 
-**Status:** The OpenCode orchestrator setup task is in progress. Slices 1 to 4 are
+**Status:** The OpenCode orchestrator setup task is in progress. Slices 1 to 5 are
 complete. The Beeline application work in `docs/agents/tasks/beeline-0.4.0.md` is
 untouched and continues from last safe source commit `464b2d1`.
 
@@ -55,9 +55,9 @@ can confirm it.
 
 ## Next slice
 
-Slice 5 corrects the orchestrator prompt. It makes the `codebase_explorer_android`
-routing line conditional, states in the opening role line that the orchestrator
-never edits and always delegates, and brings the agent README up to nine agents.
+Slice 6 adds `.opencode/opencode.json` with `default_agent` set to
+`orchestrator`, and notes the default in the agent README. It is the last slice
+because a leaky agent must not become the default first.
 
 ## Known blockers
 

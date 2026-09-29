@@ -38,21 +38,22 @@ run under it.
 - Slice 2 — track the two untracked subagent definitions, commit `7526732`.
 - Slice 3 — bind `/checkpoint` and `/resume` to the orchestrator, commit
   `5174d2f`.
-- Slice 4 — reconcile AGENTS.md with the delegation decision.
+- Slice 4 — reconcile AGENTS.md with the delegation decision, commit `12fc632`.
+- Slice 5 — correct the orchestrator prompt and the agent README.
 
 # Current slice
 
-Slice 5 — correct the orchestrator prompt and the agent README.
+Slice 6 — make the orchestrator the default agent.
 
 # Files involved
 
-- `.opencode/agents/orchestrator.md`
-- `.opencode/agents/README.md`
+- `.opencode/opencode.json` (new)
 
 # Verification
 
 - `tools/tests/permission_matrix.py` reports 42 of 42 cases matching the
-  intended effect for the current `orchestrator.md`.
+  intended effect for the current `orchestrator.md`, after the prompt body
+  changed.
 - The same tool reports 35 of 42 against the `HEAD` version, and fails on the
   three defects this task fixes. The test has teeth.
 - A structural frontmatter check confirms both newly tracked subagent files
@@ -64,17 +65,14 @@ Slice 5 — correct the orchestrator prompt and the agent README.
   `git commit` and asks for `git add` and `git push`.
 - Both command files parse as valid YAML frontmatter and declare
   `agent: orchestrator`.
-- AGENTS.md no longer contains any rule that forbids the delegation model. A
-  search for `subagent`, `orchestrator`, and `delegate` returns only the
-  replacement rules and the new handoff rule.
-- The user's staged `docs/classic_navigation.md` survived every commit and is
-  still staged, not committed.
+- AGENTS.md no longer contains any rule that forbids the delegation model.
+- The agent README now lists nine agents. A set comparison against the nine
+  files in `.opencode/agents` reports no difference.
 
 # Next
 
-Make the `codebase_explorer_android` routing line conditional, state in the
-opening role line that the orchestrator never edits and always delegates, and
-list all nine agents in the agent README.
+Add `.opencode/opencode.json` with `default_agent` set to `orchestrator`, then
+note the default in the agent README.
 
 # Blockers
 
@@ -84,6 +82,6 @@ list all nine agents in the agent README.
 
 # Last safe commit
 
-Slice 3: `5174d2f` Run the slice checkpoint and resume commands as the
-orchestrator. Slice 2: `7526732`. Slice 1: `d3d88d8`. The app workstream stays at
-`464b2d1`.
+Slice 4: `12fc632` Scope the AGENTS.md no-delegation rule to non-orchestrator
+agents. Slice 3: `5174d2f`. Slice 2: `7526732`. Slice 1: `d3d88d8`. The app
+workstream stays at `464b2d1`.
