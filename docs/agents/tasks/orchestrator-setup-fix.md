@@ -4,6 +4,8 @@ Make the Beeline OpenCode orchestrator agent work as designed. It must be the
 default agent, it must keep its permission model, and its workflow commands must
 run under it.
 
+Status: complete. All six slices are committed.
+
 # Invariants
 
 - The orchestrator never edits, writes, patches, stages, or commits by itself.
@@ -21,8 +23,8 @@ run under it.
   orchestrator only. Other agents keep the no-delegation rule.
 - Permission hardening runs before the default-agent change. A leaky agent must
   not become the default first.
-- The permission behavior is proved statically with a rule simulator. It still
-  needs a real interactive session for final confirmation.
+- The permission behavior is proved statically with a rule simulator, because a
+  non-interactive client cannot run the planned interactive smoke test.
 - The user chose to commit the whole of `orchestrator.md`. The file already held
   uncommitted user changes in the same feature area.
 - The two previously untracked subagent files are added to Git with no content
@@ -39,49 +41,61 @@ run under it.
 - Slice 3 — bind `/checkpoint` and `/resume` to the orchestrator, commit
   `5174d2f`.
 - Slice 4 — reconcile AGENTS.md with the delegation decision, commit `12fc632`.
-- Slice 5 — correct the orchestrator prompt and the agent README.
+- Slice 5 — correct the orchestrator prompt and the agent README, commit
+  `54f0e13`.
+- Slice 6 — set the default agent, remove the phantom README agent.
 
 # Current slice
 
-Slice 6 — make the orchestrator the default agent.
+None. The task is complete.
 
 # Files involved
 
-- `.opencode/opencode.json` (new)
+None.
 
 # Verification
 
-- `tools/tests/permission_matrix.py` reports 42 of 42 cases matching the
-  intended effect for the current `orchestrator.md`, after the prompt body
-  changed.
-- The same tool reports 35 of 42 against the `HEAD` version, and fails on the
-  three defects this task fixes. The test has teeth.
-- A structural frontmatter check confirms both newly tracked subagent files
-  declare `mode: subagent`, set a description, and carry no malformed permission
-  rule. Both model references resolve. The prompt bodies remain unverified.
-- A permission probe across all nine agent files confirms the routing used by
-  the rewritten checkpoint command. `code_reviewer_low` allows Gradle.
-  `targeted_fixer` denies Gradle and allows `edit`. `git_handler` allows
-  `git commit` and asks for `git add` and `git push`.
-- Both command files parse as valid YAML frontmatter and declare
-  `agent: orchestrator`.
-- AGENTS.md no longer contains any rule that forbids the delegation model.
-- The agent README now lists nine agents. A set comparison against the nine
-  files in `.opencode/agents` reports no difference.
+Static, from `tools/tests/permission_matrix.py`:
+
+- 42 of 42 cases match the intended effect for the final `orchestrator.md`.
+- The same tool reports 35 of 42 against the pre-fix file, and fails on the
+  three permission defects. The test detects the defects.
+- The YAML frontmatter parses. It holds 44 merged rules and no malformed rule.
+
+Live service, through the OpenCode API:
+
+- `/api/config` lists the project document
+  `.opencode\opencode.json`, so the new config file is discovered and loaded.
+- `/api/agent` returns the orchestrator with `mode=primary` and the model
+  `opencode-go/mimo-v2.6-flash`, and its system prompt is the corrected text.
+- `/api/agent` returns all nine custom subagents with `mode=subagent`.
+- `/api/agent` reported a phantom agent named `README` with `mode=primary`
+  before the move, and does not report it after. The count went from 17 to 16.
+
+Not verified:
+
+- The interactive permission smoke test. Only a real interactive session can
+  prove it. The merged `default_agent` value is not exposed by the API, so a new
+  session is still needed to confirm which agent it starts with.
+- The Gradle gate. The task changes no Kotlin source, and the gate is already
+  known red for reasons that predate this task.
 
 # Next
 
-Add `.opencode/opencode.json` with `default_agent` set to `orchestrator`, then
-note the default in the agent README.
+Start a new session in the project. Confirm that it opens with the orchestrator.
+Then run the interactive permission smoke test in the plan.
 
 # Blockers
 
-- The permission behavior needs a real interactive session. A non-interactive
-  client cannot prove it. Recorded in `logs/BUGS.txt` with the subagent content
-  gap and the `targeted_fixer` Gradle finding.
+- The prompt bodies of `adb_handler.md` and `codebase_explorer_android.md` are
+  unverified. A separate task must review them.
+- `targeted_fixer` cannot run Gradle and cannot create a new file. That looks
+  like a defect in the subagent permission sets.
+
+Both are recorded in `logs/BUGS.txt`.
 
 # Last safe commit
 
-Slice 4: `12fc632` Scope the AGENTS.md no-delegation rule to non-orchestrator
-agents. Slice 3: `5174d2f`. Slice 2: `7526732`. Slice 1: `d3d88d8`. The app
-workstream stays at `464b2d1`.
+Slice 5: `54f0e13` Correct the orchestrator routing rules and the agent list.
+Slice 4: `12fc632`. Slice 3: `5174d2f`. Slice 2: `7526732`. Slice 1: `d3d88d8`.
+The app workstream stays at `464b2d1`.

@@ -2,7 +2,13 @@
 
 Copy these files to `.opencode/agents/` in the Beeline repository.
 
-Recommended primary agent: `orchestrator`.
+Default agent: `orchestrator`. Project configuration sets it in
+`.opencode/opencode.json`. Without that file a new session falls back to
+`build`, which has full write and shell rights.
+
+This file sits in `.opencode/` on purpose. Every `.md` file in `.opencode/agents/`
+is loaded as an agent definition, so agent documentation must stay outside that
+directory.
 
 Agents:
 - `orchestrator`: delegates and controls scope; never works directly.

@@ -1,10 +1,35 @@
 # Orchestrator setup fix plan
 
-Status: planned
+Status: implemented
 Owner: unassigned
 Last reviewed: 2026-09-29
-Intended location in the repository: `.opencode/plan/orchestrator-setup-fix.md`
+Verification: source verified, live service verified, interactive session unverified
 Applies to: `.opencode/agents/orchestrator.md` and the OpenCode project configuration
+
+## Slice commits
+
+| Slice | Commit |
+| --- | --- |
+| 1 — permission hardening | `d3d88d8` |
+| 2 — track the two subagent files | `7526732` |
+| 3 — bind the commands to the orchestrator | `5174d2f` |
+| 4 — reconcile AGENTS.md | `12fc632` |
+| 5 — prompt and README corrections | `54f0e13` |
+| 6 — default agent | recorded in the handoff |
+
+## Deviations from this plan
+
+- Slice 1 gained `tools/tests/permission_matrix.py`. The plan relied on an
+  interactive smoke test, which a non-interactive client cannot run. The
+  simulator reproduces the V2 rule order instead, and it fails on the pre-fix
+  file, so it detects the defects rather than rubber-stamping them.
+- Slice 3 routes the Gradle run to `code_reviewer_low`. The plan said "the agent
+  that owns the test command". A probe showed `targeted_fixer` resolves Gradle to
+  `deny`, so the plan wording hid a real routing constraint.
+- Slice 6 also moved `.opencode/agents/README.md` to `.opencode/README.md`. Live
+  service verification showed that every `.md` file in `.opencode/agents/` loads
+  as an agent, so the README was registered as a phantom primary agent named
+  `README`. The plan did not anticipate this.
 
 ## Decision that this plan implements
 
