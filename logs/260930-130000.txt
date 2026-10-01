@@ -1,0 +1,18 @@
+Goal: Reduce agent roles to orchestrator, problem_solver, and targeted_fixer.
+Owner: The current agent owns one documentation and configuration slice.
+Scope: Agent Markdown definitions, command prompts, maintained rule pages, and task records.
+Non-goals: No application, script, test, plugin, dependency, build, or device changes. No push.
+Baseline: f081ced. Preserve the orchestrator local model removal. Retiring ADB and Git local model preferences are recorded in task state.
+Deliverables: Merge investigation/review. Move ADB, Gradle, Git, and heavier implementation to orchestrator. Give the fixer bounded Git access.
+Exit gates: Three valid profiles, correct routing, positive and negative permission probes, local links, scope review, and scoped whitespace.
+Fail gates: Unexplained permission expansion, conflicting ownership rules, or changes that require discarding unrelated work.
+Risks: Static probes do not prove live enforcement. Legacy test profiles need a separate code-permitted task. Broad ADB permission needs explicit task scope.
+Initial validation: 225/225 current-role permission probes, three YAML definitions, command routing, and fixer contract fields passed.
+Independent review: problem_solver review mode found root-pathspec staging aliases bypassing approval. Added approval rules for Unix, Windows, and top-level Git root pathspecs, including mixed path lists. Expanded regression probes remain required.
+2026-10-01 verification: Expanded probes passed 255/255 cases. Three frontmatter blocks, model inheritance, command routing, and 72/72 local links and anchors passed.
+No application, script, test, plugin, Android build, device operation, or push is part of this slice.
+Final independent review: The same problem_solver session approved the implementation and found no remaining required implementation changes. The root-alias finding is resolved.
+Whitespace: Scoped working-diff checks passed. Run the final staged slice check before commit.
+Final staged-slice whitespace check passed. The task log is staged explicitly, and the unrelated navigation document remains staged outside the commit scope.
+Task records: Include this task log explicitly despite .gitignore. Preserve unrelated staged navigation content with a path-only commit.
+Slice commit subject: Consolidate Beeline delivery into three agent roles.

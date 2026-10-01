@@ -2,7 +2,7 @@
 
 Status: current  
 Owner: Maintainers  
-Last reviewed: 2026-09-30
+Last reviewed: 2026-10-01
 Stale when: Required rules, agent routing, task state, or state recovery changes.
 
 This directory holds agent-facing engineering documentation.
@@ -46,8 +46,9 @@ Rebuild the TODO list from these items.
 
 ## Current tasks
 
-The current agent-control cleanup record is [agent-control-cleanup](tasks/agent-control-cleanup.md).
+The current role consolidation record is [agent-role-consolidation](tasks/agent-role-consolidation.md).
 Its status and verification limits are separate from application work.
+The [first cleanup](tasks/agent-control-cleanup.md) is historical and describes the earlier six-profile setup.
 
 The active task is [Beeline 0.4.0](tasks/beeline-0.4.0.md). See its [UI baseline](beeline-0.4.0-ui-baseline.md).
 Keep the
@@ -79,6 +80,7 @@ Keep the
 
 - [Agent control](agent-control.md): roles, dispatch contracts, stop conditions, and review.
 - [Task workflow](workflow.md): recovery, slices, records, checkpoints, and completion.
+- [Operation rules](operation-rules.md): direct Git, Gradle, and ADB work with explicit operator ownership.
 - [Engineering rules](engineering-rules.md): architecture, security, domain, UI, quality, and Android verification.
 - [Documentation rules](documentation-rules.md): authority, coverage, maintenance, comments, and style.
 - [OpenCode profiles](../../.opencode/README.md): configured roles and permission limits.

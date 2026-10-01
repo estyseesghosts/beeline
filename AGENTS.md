@@ -9,6 +9,7 @@
 - Read [writing style](importantdocs/writing_style.md) before writing.
 - Read the active task state and [handoff](docs/agents/handoff.md) before continuing work.
 - Read the relevant ownership pages in [the agent wiki](docs/agents/README.md).
+- Read [operation rules](docs/agents/operation-rules.md) before Git, Gradle, or ADB work.
 
 Linked rules remain required. This file is the entry point, not a second copy of those rules.
 Follow higher-priority instructions. Verify project conflicts against source, or ask the user for a decision.
@@ -43,8 +44,11 @@ Follow higher-priority instructions. Verify project conflicts against source, or
 
 ## Agent ownership
 
-- Each task has one implementation owner. The same owner resolves review findings until validation passes.
-- The `orchestrator` only coordinates. It delegates edits and Git mutations.
+- Each slice has one implementation owner. The same owner resolves review findings until validation passes.
+- The `orchestrator` owns delivery and may implement larger slices, run ADB and Gradle, and operate Git directly.
+- Use `targeted_fixer` only for small explicit work packages with deliverables, exit gates, non-goals, and fail gates.
+- Use `problem_solver` for read-only investigation and review. Do not create separate reviewer, ADB, or Git agents.
+- Assign one implementation owner and one Git operator per slice. Do not mutate a delegated scope concurrently.
 - Other agents do not spawn subagents unless the user explicitly requests delegation.
 - Investigation and review are read-only. Use optional investigation only when it reduces uncertainty.
 - Stop after two failed fixes for one root problem. Follow all stop conditions in [agent control](docs/agents/agent-control.md).

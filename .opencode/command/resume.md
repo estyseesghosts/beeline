@@ -5,8 +5,8 @@ agent: orchestrator
 
 Recover the task state from the repository. Do not trust conversation memory.
 
-You are the orchestrator. You may read files and you may run read-only Git
-commands. You must not change any file.
+You are the orchestrator. This command only recovers state; do not edit or mutate Git during recovery.
+After recovery, you may own implementation, validation, records, ADB, and Git under the current task contract.
 
 Read these items in order.
 

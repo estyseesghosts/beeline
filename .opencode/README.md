@@ -2,54 +2,59 @@
 
 Status: current
 Owner: Maintainers
-Last reviewed: 2026-09-30
+Last reviewed: 2026-10-01
 Stale when: Agent definitions, routing, or permissions change.
 
-Default agent: `orchestrator`. Project configuration sets it in
-`.opencode/opencode.json`. Without that file a new session falls back to
-`build`, which has full write and shell rights.
+## Three profiles
 
-This file sits in `.opencode/` on purpose. Every `.md` file in `.opencode/agents/`
-is loaded as an agent definition, so agent documentation must stay outside that
-directory.
+| Profile | Mode | Responsibility |
+| --- | --- | --- |
+| `orchestrator` | primary | Delivery, larger implementation slices, records, Gradle, ADB, and Git. |
+| `problem_solver` | subagent | Read-only investigation, planning, and actual-diff review. |
+| `targeted_fixer` | subagent | Small explicit work packages, bounded validation, and assigned Git checkpoints. |
 
-Agents:
-- `orchestrator`: delegates and controls scope; never works directly.
-- `problem_solver`: read-only exploration, root-cause analysis, and bounded planning.
-- `targeted_fixer`: one implementation owner for edits, validation, documentation, and review repairs.
-- `code_reviewer`: independent review at the depth the task requires; never implements repairs.
-- `git_handler`: Git-only staging, commit, and push workflow.
-- `adb_handler`: device checks through ADB and the named companion scripts.
+Project configuration sets `default_agent` to orchestrator in [.opencode/opencode.json](opencode.json).
+The primary profile has no model override. Preserve the selected session model.
+Changing the default or profile definitions does not replace the agent already stored on an existing session.
+Only agent definitions belong in agents/. Every Markdown file there loads as a profile.
 
-There are six custom profiles: one primary agent and five subagents.
-The previous low/high planner and reviewer pairs are consolidated.
-The investigator also owns the former Android explorer responsibility.
-Change review depth instead of handing the task to another model-tier role.
+The separate code reviewer, ADB handler, and Git handler are removed.
+Use problem_solver in investigation mode or review mode, not a chain of planning and reviewer profiles.
+The orchestrator may implement directly. Use the fixer only when its small work package has a complete contract.
 
-The definitions use OpenCode V2 `permissions`/`shell`/`subagent` syntax.
-Rules use last-match resolution. Environment-file reads ask for approval, except example files.
-The investigator, reviewer, and implementation owner can inspect Git. ADB cannot run Git.
-Git mutations stay with `git_handler`. Explicit-path staging and normal commits are allowed; push and broad staging ask for approval.
-Prompt rules still require explicit user authorization for push.
+## Ownership and gates
 
-The orchestrator delegates every change. It keeps `edit` set to `deny` and has no write allow rule. Route file changes to `targeted_fixer` and Git mutations to `git_handler`.
+Read [AGENTS.md](../AGENTS.md), [agent control](../docs/agents/agent-control.md),
+[workflow](../docs/agents/workflow.md), and [operation rules](../docs/agents/operation-rules.md).
+Those pages own shared policy. Do not copy full project rules into each agent prompt.
 
-Keep the same implementation session through review repairs and record updates.
-Read [agent control](../docs/agents/agent-control.md), [workflow](../docs/agents/workflow.md), and [AGENTS.md](../AGENTS.md).
-These pages own shared policy. Agent prompts do not copy the full project rules.
+Keep one slice implementation owner and one Git operator at a time.
+Do not edit a delegated scope or mutate the index while its assigned child session owns that operation.
+Keep the same fixer through bounded review repairs. Stop and clarify its contract when a fail gate fires.
+Use the [fixer dispatch template](../docs/agents/agent-control.md#fixer-dispatch-template).
+Require explicit instructions, deliverables, exit gates, non-goals, fail gates, file scope, and commit instructions.
+Tool permission does not authorize unassigned commits or pushes.
+
+## Permission boundaries
+
+The orchestrator and fixer can edit, use the flagged Gradle wrapper, stage explicit paths, and commit.
+Only the orchestrator has direct ADB access. Both operators require approval for unknown Git actions, broad staging, amend, or push.
+Force-push and destructive Git operations remain denied. Never push without an explicit user request.
+Problem_solver cannot edit, mutate Git, run Gradle, or use ADB. It reviews verification evidence from the operators.
+Environment-file reads ask for approval; example files remain readable.
+Rules use V2 last-match resolution. Current V2 documentation says edit covers edits, writes, and patches.
+
+The named script permissions assume the scripts exist and fit the task scope.
+ADB companion scripts include untracked local work. A fresh clone does not contain them.
+Broad wrapper and ADB access does not enforce a task-specific sandbox. Follow the work contract and operation rules.
 
 ## Verification limits
 
-`tools/tests/agent_audit.py` and `permission_matrix.py` still contain the retired role names.
-Their unchanged default runs do not fully check consolidated routing or roles.
-Reuse their permission resolver and old role profiles against the new files without changing test code in this task.
-Check all six frontmatter blocks, current dispatch targets, edit boundaries, environment reads, and denied operations.
-See [the task record](../docs/agents/tasks/agent-control-cleanup.md) for results.
+Legacy permission scripts still describe retired profiles and earlier permission expectations.
+Their default runs are not full evidence for the three-profile configuration.
+Reuse their resolver with explicit current-role probes without changing test code under a documentation-only task.
+See [agent-role-consolidation](../docs/agents/tasks/agent-role-consolidation.md) for the current evidence and limits.
+Earlier [cleanup evidence](../docs/agents/tasks/agent-control-cleanup.md) is historical.
 
-Static checks model permission resolution. They do not prove live interactive enforcement.
-Current V2 documentation says `edit` covers edits, writes, and patches. There is no documented separate write permission.
-The prior handoff claim that `targeted_fixer` cannot create files is therefore not current guidance.
-Confirm live tool behavior in a new session before relying on it.
-
-The script permissions assume the named scripts exist under `tools/scripts/`.
-Some ADB scripts are local untracked work. A fresh clone does not contain those scripts.
+Static permission checks do not prove live interactive enforcement.
+Confirm the three roles, direct operator permissions, and review routing in a new OpenCode session.

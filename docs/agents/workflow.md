@@ -2,7 +2,7 @@
 
 Status: current
 Owner: Maintainers
-Last reviewed: 2026-09-30
+Last reviewed: 2026-10-01
 Stale when: Task ownership, checkpoint order, or recovery changes.
 
 Authority: [AGENTS.md](../../AGENTS.md), [agent control](agent-control.md), and current Git state.
@@ -23,8 +23,9 @@ Use `/resume` after context loss. Stop implementation when task state is incompl
 
 ## Size and ownership
 
-Each task has one implementation owner. That owner keeps responsibility through validation and review repairs.
-The orchestrator delegates implementation. Other agents work directly within their assigned role.
+Each slice has one implementation owner. That owner keeps responsibility through validation and review repairs.
+The orchestrator may implement a slice directly. It delegates only small explicit work packages to targeted_fixer.
+Problem_solver performs read-only investigation and review. Other agents do not edit the same owned scope.
 Do not create subagents merely because a task is large.
 
 Define a slice by one behavior, not by file count. Include its tests, migrations, contracts, and documentation.
@@ -52,20 +53,23 @@ Complete and commit one slice before starting another.
 3. Inspect the actual diff and complete review. Resolve required findings with the same owner.
 4. The owner updates affected documentation, task state, task log, and handoff.
 5. Inspect the final diff, including the record updates.
-6. Commit only the reviewed slice files and their records together.
+6. The assigned Git operator commits only the reviewed slice files and their records together.
 7. Report the commit hash, remaining limits, and next slice.
 
 Use `/checkpoint` to coordinate this order. Do not commit a knowingly broken slice.
 Do not use a separate documentation commit for the same implementation slice.
 Do not squash slice commits unless the user requests it.
 Never push unless the user requests it.
+The orchestrator and fixer may operate Git. Assign one operator; never run concurrent index or history mutations.
+Use [operation rules](operation-rules.md) when unrelated staged changes exist.
 
 ## Handoff
 
 Rewrite `docs/agents/handoff.md` after each completed slice.
 Name the durable task-state file instead of duplicating it.
 Record the current position, next slice, last safe commit, and known blockers.
-The orchestrator asks the same implementation owner to update these files.
+The orchestrator may update these records directly or explicitly assign them to the same implementation owner.
+Do not edit the same record concurrently. Include record scope in fixer instructions when it owns the update.
 Inside a commit, name the preceding safe commit and the slice commit subject.
 The next session can resolve the new hash from Git without a second record-only commit.
 

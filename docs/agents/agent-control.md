@@ -2,7 +2,7 @@
 
 Status: current
 Owner: Maintainers
-Last reviewed: 2026-09-30
+Last reviewed: 2026-10-01
 Stale when: Agent roles, permissions, dispatch, or review contracts change.
 
 Authority: [AGENTS.md](../../AGENTS.md) and [agent definitions](../../.opencode/README.md).
@@ -12,7 +12,8 @@ Project-local architecture constraints take precedence over that reference withi
 
 ## One implementation owner
 
-Each task has exactly one implementation owner. Keep that owner through validation and review repairs.
+The orchestrator owns task delivery. Each slice has exactly one implementation owner: the orchestrator or one targeted_fixer session.
+Keep that slice owner through validation and bounded review repairs.
 Other agents may investigate, compare options, identify tests, or review. They do not independently edit the task.
 Allow another editor only through an explicit separate worktree and non-overlapping ownership assignment.
 Do not pass one task through a chain of implementers and fixers.
@@ -20,13 +21,19 @@ Do not pass one task through a chain of implementers and fixers.
 Default flow:
 
 ```text
-optional investigator -> implementation owner -> verify -> reviewer
--> same implementation owner resolves findings -> verify -> Git checkpoint
+optional problem_solver investigation -> orchestrator implementation or explicit fixer package
+-> verify -> problem_solver review -> same owner repairs -> verify -> assigned Git operator commits
 ```
 
 Use investigation only when ownership, behavior, or the change surface is unclear.
 Use parallel read-only investigation only for independent questions that reduce uncertainty.
 Do not dispatch agents merely to satisfy a pipeline.
+
+The orchestrator may handle heavy implementation, records, Gradle, ADB, and Git directly.
+Use the fixer only for small, clear work packages. Do not push uncertainty into a loosely bounded fixer assignment.
+Do not edit the fixer-owned scope until it finishes or an explicit stopped-state handoff reassigns ownership.
+Keep one Git operator at a time. Normally the orchestrator commits; an explicitly assigned fixer may commit its reviewed slice.
+No reviewer, ADB, or Git specialist agent remains. Problem_solver serves both investigation and review modes.
 
 ## Dispatch contract
 
@@ -37,12 +44,42 @@ Before implementation, record:
 - current behavior owner and existing abstraction;
 - smallest valid change surface;
 - relevant constraints, tests, and validation commands.
+- explicit implementation instructions, deliverables, exit gates, and fail gates;
+- allowed and forbidden files, plus the assigned Git operator and commit instructions.
 
 Investigate before editing when any item is unclear.
 Do not let unfamiliar code justify a replacement architecture.
 Classify a copied pattern as intentional, legacy, compatibility code, technical debt, or an exception.
 Investigate uncertain patterns before copying them.
 Keep cleanup limited to what makes the requested change correct. Record unrelated work as a follow-up.
+
+## Fixer dispatch template
+
+Use every field for each fixer assignment. Fill the values; do not send empty headings.
+
+```text
+Objective:
+Current behavior and required invariant:
+Current owner and existing abstraction:
+Implementation owner and child session:
+Allowed files and behavior scope:
+Forbidden files:
+Explicit ordered instructions:
+Deliverables:
+Non-goals:
+Validation commands and expected results:
+Exit gates:
+Fail gates and stop/report conditions:
+Git operator:
+Commit instructions or explicit no-commit instruction:
+Required final report:
+```
+
+Deliverables identify observable results, not vague activities. Exit gates identify the evidence required for completion.
+Fail gates identify when edits must stop. Include project stop conditions and assignment-specific risks.
+Do not ask the fixer to choose architecture, expand scope, or infer missing requirements.
+An incomplete contract is a fail gate before editing starts.
+Commit permission does not authorize a checkpoint before validation and required review pass.
 
 ## Stop conditions
 
@@ -90,7 +127,11 @@ Do not create a second unrelated screen tree for wide or foldable layouts.
 
 ## Review contract
 
-The reviewer is not another implementer. Inspect the actual final diff, not completion claims.
+Problem_solver in review mode is not another implementer. Inspect the actual final diff, not completion claims.
+Supply the work contract, changed files, and validation evidence. Explicitly request review mode rather than another plan.
+Review orchestrator-owned implementation in a separate read-only child session.
+The same agent definition may investigate and review. A prior plan is not independent proof of its own correctness.
+If the reviewer also planned the task, disclose that context and challenge its assumptions against the actual diff.
 Answer whether the result satisfies the task and changes only the necessary scope.
 Check ownership, duplicate logic, justified abstractions, hidden state, and compounded workarounds.
 Check test placement and coverage. Confirm that existing tests were not weakened.
@@ -99,6 +140,7 @@ For Beeline, check protocol leakage, Compose state and lifecycle, repository dup
 Give concrete file and symbol references. Do not return vague cleanup advice.
 Separate BLOCKING, REQUIRED, OPTIONAL, and OUT OF SCOPE findings.
 The same owner resolves required findings or records rejection with evidence.
+The reviewer does not run Gradle or ADB. The orchestrator or assigned fixer supplies verification results.
 
 ## Completion and permission limits
 

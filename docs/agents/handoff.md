@@ -2,40 +2,42 @@
 
 Status: current
 Owner: Maintainers
-Last reviewed: 2026-09-30
+Last reviewed: 2026-10-01
 
 ## Continuation pointer
 
-The agent-control cleanup is recorded in [tasks/agent-control-cleanup.md](tasks/agent-control-cleanup.md).
-It changes documentation and agent configuration only. Application work remains separate in [tasks/beeline-0.4.0.md](tasks/beeline-0.4.0.md).
-Start with AGENTS.md and its required pages. Do not use historical setup records as current role guidance.
+Read [tasks/agent-role-consolidation.md](tasks/agent-role-consolidation.md) for the current configuration task.
+Only orchestrator, problem_solver, and targeted_fixer remain.
+Application work stays separate in [tasks/beeline-0.4.0.md](tasks/beeline-0.4.0.md).
+Start with AGENTS.md, agent control, workflow, and operation rules.
 
-## Current position and next slice
+## Current position and next action
 
-The cleanup consolidates investigation and review roles and moves detailed rules out of AGENTS.md.
-Static permission, frontmatter, routing, and document checks are the applicable gates.
-No Android build, device, or live-server evidence comes from this slice.
-The next operational check is a new-session OpenCode smoke test of routing and permission prompts.
-There is no authorized next implementation slice. Resume application work only under its own task contract.
+The orchestrator may implement heavier slices, update records, and run Gradle, ADB, and Git directly.
+Problem_solver investigates and reviews without edits or execution of Gradle and ADB.
+Targeted_fixer accepts only small explicit work packages. It may use Git under assigned checkpoint instructions.
+Keep one implementation owner and one Git operator at a time.
+The next operational check is a new-session smoke test of these role and permission changes.
+There is no authorized next application implementation slice in this task.
 
 ## Last safe commit
 
-78b9b14 is the safe commit before this cleanup.
-Resolve the cleanup commit with the subject `Consolidate Beeline agent control and extract project rules` in Git.
-This pointer is included in that slice commit; it does not require a second record-only commit.
-The prior application handoff named source commit 464b2d1. Recheck the application task and Git before resuming it.
+f081ced is the safe commit before this consolidation.
+Resolve the new slice commit by subject: `Consolidate Beeline delivery into three agent roles`.
+The prior application handoff named source commit 464b2d1. Recheck that task and Git before resuming application work.
 
-## Limits and blockers
+## Limits
 
-- Legacy permission tests contain old role names. The cleanup reused their probes with a runtime role map without changing code.
-- Static permission resolution does not prove live interactive enforcement.
-- ADB has broad command permission. Its prompt limits task scope; that is not a hard device-state boundary.
-- Named ADB companion scripts include untracked local work. They are not available in a fresh clone.
-- Current V2 documentation says edit permission covers edits, writes, and patches. The older separate-write limitation is not current guidance.
-- Existing Android gate failures remain recorded in logs/BUGS.txt. This slice does not repair or reverify them.
+- Legacy permission scripts need a separate task that permits test-code changes.
+- Static permission probes do not prove live OpenCode enforcement.
+- Broad ADB and wrapper permissions still require explicit task scope.
+- Some ADB scripts are untracked local work, not fresh-clone resources.
+- No Android, device, or live-server check comes from this documentation-only slice.
+- Existing Android gate failures remain in logs/BUGS.txt and were not repaired here.
 
 ## Worktree caution
 
 Preserve the staged docs/classic_navigation.md, modified importantdocs/writing_style.md, deleted Photo Grid test, and deleted PNGs.
-Preserve all unrelated untracked captures, inspection folders, ADB scripts, and Python caches.
-Do not stage, discard, or commit those files as part of this cleanup. Do not push without a user request.
+Preserve unrelated captures, inspection folders, ADB scripts, and Python caches.
+The orchestrator model-field removal is preserved. Local model changes in the explicitly retired ADB and Git profiles are recorded in task state.
+Do not stage or commit unrelated files. Do not push without a user request.

@@ -1,10 +1,13 @@
 # Agent control cleanup
 
-Status: complete
+Status: historical (completed at f081ced; superseded by the three-profile consolidation)
 Owner: Maintainers
 Last reviewed: 2026-09-30
 
 ## Objective
+
+Current operation guidance: [agent-role-consolidation](agent-role-consolidation.md) and [agent control](../agent-control.md).
+The permissions, counts, and separate specialist roles below describe the earlier configuration only.
 
 Apply the continuing-project control rules to Beeline agent configuration and documentation.
 Do not change code.
