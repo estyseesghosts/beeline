@@ -380,5 +380,8 @@ class CapabilityCacheTest {
 
     private fun account(id: String) = AccountId(Connection("https://example", Protocol.MISSKEY), id)
 
-    private fun capabilities(timestamp: Long) = ServerCapabilities(capabilitiesLastUpdated = timestamp)
+    private fun capabilities(timestamp: Long) = ServerCapabilities(
+        timelines = setOf(Timeline.Home),
+        capabilitiesLastUpdated = timestamp,
+    )
 }

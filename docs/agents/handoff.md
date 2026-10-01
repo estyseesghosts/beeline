@@ -13,29 +13,30 @@ Start with AGENTS.md, agent control, workflow, and operation rules.
 
 ## Current position and next action
 
-R03 is complete. The continuation class runs under the repository Robolectric runner with API 35 config; the lock-release test builds its source directly under a custom dispatcher. No production change came from R03.
+R04 is complete. The capability-cache probe fake carries Home timeline support matching the real probe; both replacement-fencing tests reach their intended assertions. No production change came from R04.
 Problem_solver provides read-only investigation and review. Targeted_fixer accepts only small explicit work packages.
 Keep one implementation owner and one Git operator at a time.
-The next slice is R04. Attribute and repair the capability-cache failures.
+The next slice is R05. Attribute and repair the notification lifecycle failures.
 
 ## Last safe commit
 
-97e2499 is the safe commit before R02.
-R03 slice commit subject: `Repair the Misskey continuation test runtime`.
+1c90e9e is the safe commit after R03.
+R04 slice commit subject: `Repair the capability-cache probe fixture`.
 The next session resolves the new R03 hash from Git without a second record-only commit.
 The last safe application source remains 464b2d1. Simulator evidence reference 219504c resolves.
 
 ## Limits
 
-- R03 changed the continuation test fixture and records only. Production Misskey source and continuation store remain unchanged.
-- MisskeyThreadContinuationTest reports 12 passing tests. The Misskey package sweep reports 3 failures outside R03 by ownership.
+- R04 changed the capability-cache probe fake and records only. Production capability cache and Misskey source remain unchanged.
+- CapabilityCacheTest reports 16 passing tests. MisskeyIntegrationTest, MisskeyThreadContinuationTest, and SessionLifecycleTest report no regression.
+- Post-repair test assembleRelease reports 1466 tests and 6 failures with release assembly complete; the remaining failures belong to R05 and R15a.
 - Full NavigationTest reports 30 passing tests. ComposerOwnerTest, ShellCharacterizationTest, and SignInScreenTest report no regression.
 - ktlintTestSourceSetCheck reports only pre-existing NavigationTest findings. AppShellFixtures has none.
 - Post-repair test assembleRelease from R02 reports 1466 tests and 13 failures with release assembly complete.
 - The deleted Photo Grid test excludes that test from the available suite. Do not change it without owner approval.
 - The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored.
 - A clean-snapshot comparison remains pending because git worktree access is denied.
-- No Android device, API 29, live-server, or signing check comes from R03.
+- No Android device, API 29, live-server, or signing check comes from R04.
 - Existing worktree changes remain intact. Do not push without a user request.
 
 ## Worktree caution
