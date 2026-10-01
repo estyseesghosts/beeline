@@ -42,7 +42,7 @@ class DraftActionsTest {
     @Test
     fun loadMigratesThenLists() = runTest {
         val store = GateDraftStore(listResult = listOf(draft))
-        val actions = actions(store)
+        val (_, actions) = activeActions(store)
         val results = mutableListOf<List<PostDraft>>()
         actions.load(onResult = { results += it })
         advanceUntilIdle()
@@ -55,7 +55,7 @@ class DraftActionsTest {
     @Test
     fun loadFailureReportsError() = runTest {
         val store = GateDraftStore(listError = IOException("disk gone"))
-        val actions = actions(store)
+        val (_, actions) = activeActions(store)
         val results = mutableListOf<List<PostDraft>>()
         val errors = mutableListOf<String>()
         actions.load(onResult = { results += it }, onError = { errors += it })
@@ -68,29 +68,49 @@ class DraftActionsTest {
     @Test
     fun loadCancellationReportsNothing() = runTest {
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob())
-        val store = GateDraftStore(listGate = CompletableDeferred())
-        val actions = DraftActions(scope, store, account, ::preferences, writeAuthority = DraftWriteAuthority())
-        val results = mutableListOf<List<PostDraft>>()
-        val errors = mutableListOf<String>()
-        actions.load(onResult = { results += it }, onError = { errors += it })
-        runCurrent()
-        scope.cancel()
-        store.listGate?.complete(Unit)
-        advanceUntilIdle()
+        try {
+            val store = GateDraftStore(listGate = CompletableDeferred())
+            val actions = DraftActions(scope, store, account, ::preferences, writeAuthority = DraftWriteAuthority())
+            val results = mutableListOf<List<PostDraft>>()
+            val errors = mutableListOf<String>()
+            actions.load(onResult = { results += it }, onError = { errors += it })
+            runCurrent()
+            scope.cancel()
+            store.listGate?.complete(Unit)
+            advanceUntilIdle()
 
-        assertTrue(results.isEmpty())
-        assertTrue(errors.isEmpty())
+            assertTrue(results.isEmpty())
+            assertTrue(errors.isEmpty())
+        } finally {
+            scope.cancel()
+        }
     }
 
     @Test
-    fun saveFailureReportsError() = runTest {
-        val store = GateDraftStore(saveError = IOException("disk gone"))
-        val actions = actions(store)
+    fun saveSuccessWritesOnce() = runTest {
+        val store = GateDraftStore()
+        val (_, actions) = activeActions(store)
         var results = 0
         var errors = 0
         actions.save(draft, onResult = { results++ }, onError = { errors++ })
         advanceUntilIdle()
 
+        assertEquals(listOf(draft), store.saved)
+        assertEquals(1, results)
+        assertEquals(0, errors)
+        assertEquals(1, store.saveAttempts)
+    }
+
+    @Test
+    fun saveFailureReportsError() = runTest {
+        val store = GateDraftStore(saveError = IOException("disk gone"))
+        val (_, actions) = activeActions(store)
+        var results = 0
+        var errors = 0
+        actions.save(draft, onResult = { results++ }, onError = { errors++ })
+        advanceUntilIdle()
+
+        assertEquals(1, store.saveAttempts)
         assertEquals(0, results)
         assertEquals(1, errors)
         assertTrue(store.saved.isEmpty())
@@ -99,29 +119,62 @@ class DraftActionsTest {
     @Test
     fun saveCancellationReportsNothing() = runTest {
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob())
-        val store = GateDraftStore(saveGate = CompletableDeferred())
-        val actions = DraftActions(scope, store, account, ::preferences, writeAuthority = DraftWriteAuthority())
-        var results = 0
-        var errors = 0
-        actions.save(draft, onResult = { results++ }, onError = { errors++ })
-        runCurrent()
-        scope.cancel()
-        store.saveGate?.complete(Unit)
+        try {
+            val authority = DraftWriteAuthority()
+            val generation = authority.activate(account)
+            val saveEntered = CompletableDeferred<Unit>()
+            val saveGate = CompletableDeferred<Unit>()
+            val store = GateDraftStore(saveEntered = saveEntered, saveGate = saveGate)
+            val actions = DraftActions(
+                scope = scope,
+                store = store,
+                accountId = account,
+                legacyPreferences = ::preferences,
+                writeGeneration = generation,
+                writeAuthority = authority,
+                appMessages = appMessages,
+            )
+            var results = 0
+            var errors = 0
+            actions.save(draft, onResult = { results++ }, onError = { errors++ })
+            saveEntered.await()
+            scope.cancel()
+            saveGate.complete(Unit)
+            advanceUntilIdle()
+
+            assertEquals(0, results)
+            assertEquals(0, errors)
+            assertTrue(store.saved.isEmpty())
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    @Test
+    fun deleteSuccessCompletesOnce() = runTest {
+        val store = GateDraftStore()
+        val (_, actions) = activeActions(store)
+        var done = 0
+        val errors = mutableListOf<String>()
+        actions.delete(draftId = "draft", onDone = { done++ }, onError = { errors += it })
         advanceUntilIdle()
 
-        assertEquals(0, results)
-        assertEquals(0, errors)
+        assertEquals(listOf("draft"), store.deleted)
+        assertEquals(1, done)
+        assertTrue(errors.isEmpty())
+        assertEquals(1, store.deleteAttempts)
     }
 
     @Test
     fun deleteFailureStillCompletesAndReports() = runTest {
         val store = GateDraftStore(deleteError = IOException("disk gone"))
-        val actions = actions(store)
+        val (_, actions) = activeActions(store)
         var done = 0
         val errors = mutableListOf<String>()
         actions.delete(draftId = "missing", onDone = { done++ }, onError = { errors += it })
         advanceUntilIdle()
 
+        assertEquals(1, store.deleteAttempts)
         assertEquals(1, done)
         assertEquals(listOf(context.getString(R.string.error_draft_delete)), errors)
     }
@@ -129,18 +182,77 @@ class DraftActionsTest {
     @Test
     fun deleteCancellationReportsNothing() = runTest {
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob())
-        val store = GateDraftStore(deleteGate = CompletableDeferred())
-        val actions = DraftActions(scope, store, account, ::preferences, writeAuthority = DraftWriteAuthority())
-        var done = 0
-        val errors = mutableListOf<String>()
-        actions.delete(draftId = "draft", onDone = { done++ }, onError = { errors += it })
-        runCurrent()
-        scope.cancel()
-        store.deleteGate?.complete(Unit)
+        try {
+            val authority = DraftWriteAuthority()
+            val generation = authority.activate(account)
+            val deleteEntered = CompletableDeferred<Unit>()
+            val deleteGate = CompletableDeferred<Unit>()
+            val store = GateDraftStore(deleteEntered = deleteEntered, deleteGate = deleteGate)
+            val actions = DraftActions(
+                scope = scope,
+                store = store,
+                accountId = account,
+                legacyPreferences = ::preferences,
+                writeGeneration = generation,
+                writeAuthority = authority,
+                appMessages = appMessages,
+            )
+            var done = 0
+            val errors = mutableListOf<String>()
+            actions.delete(draftId = "draft", onDone = { done++ }, onError = { errors += it })
+            deleteEntered.await()
+            scope.cancel()
+            deleteGate.complete(Unit)
+            advanceUntilIdle()
+
+            assertEquals(0, done)
+            assertTrue(errors.isEmpty())
+            assertTrue(store.deleted.isEmpty())
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    @Test
+    fun capturedWriterCannotWriteForAnotherAccount() = runTest {
+        val authority = DraftWriteAuthority()
+        val generation = authority.activate(account)
+        val other = AccountId(Connection("https://drafts.example", Protocol.MISSKEY), "other")
+        val store = GateDraftStore()
+        val actions = DraftActions(
+            scope = this,
+            store = store,
+            accountId = other,
+            legacyPreferences = ::preferences,
+            writeGeneration = generation,
+            writeAuthority = authority,
+            appMessages = appMessages,
+        )
+
+        var saveResults = 0
+        var saveErrors = 0
+        actions.save(draft, onResult = { saveResults++ }, onError = { saveErrors++ })
+        var deleteDone = 0
+        val deleteErrors = mutableListOf<String>()
+        actions.delete(draftId = "draft", onDone = { deleteDone++ }, onError = { deleteErrors += it })
         advanceUntilIdle()
 
-        assertEquals(0, done)
-        assertTrue(errors.isEmpty())
+        assertTrue(store.saved.isEmpty())
+        assertTrue(store.deleted.isEmpty())
+        assertEquals(0, saveResults)
+        assertEquals(0, saveErrors)
+        assertEquals(0, deleteDone)
+        assertTrue(deleteErrors.isEmpty())
+
+        // A live writer for the other account still rejects the captured generation.
+        authority.activate(other)
+        actions.save(draft, onResult = { saveResults++ }, onError = { saveErrors++ })
+        advanceUntilIdle()
+
+        assertEquals(0, store.saveAttempts)
+        assertTrue(store.saved.isEmpty())
+        assertEquals(0, saveResults)
+        assertEquals(0, saveErrors)
     }
 
     private fun preferences() = context.getSharedPreferences("local_draft", Context.MODE_PRIVATE)
@@ -151,7 +263,7 @@ class DraftActionsTest {
         val generation = authority.activate(account)
         val store = GateDraftStore()
         val actions = DraftActions(
-            scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
+            scope = this,
             store = store,
             accountId = account,
             legacyPreferences = ::preferences,
@@ -176,7 +288,7 @@ class DraftActionsTest {
         val generation = authority.activate(account)
         val store = GateDraftStore()
         val actions = DraftActions(
-            scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
+            scope = this,
             store = store,
             accountId = account,
             legacyPreferences = ::preferences,
@@ -202,7 +314,7 @@ class DraftActionsTest {
         val saveGate = CompletableDeferred<Unit>()
         val store = GateDraftStore(saveGate = saveGate)
         val actions = DraftActions(
-            scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
+            scope = this,
             store = store,
             accountId = account,
             legacyPreferences = ::preferences,
@@ -229,14 +341,23 @@ class DraftActionsTest {
         assertEquals(0, errors)
     }
 
-    private fun TestScope.actions(store: DraftStore): DraftActions = DraftActions(
-        scope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
-        store = store,
-        accountId = account,
-        legacyPreferences = ::preferences,
-        writeAuthority = DraftWriteAuthority(),
-        appMessages = appMessages,
-    )
+    private suspend fun TestScope.activeActions(
+        store: DraftStore,
+        boundAccount: AccountId = account,
+    ): Pair<DraftWriteAuthority, DraftActions> {
+        val authority = DraftWriteAuthority()
+        val generation = authority.activate(boundAccount)
+        val actions = DraftActions(
+            scope = this,
+            store = store,
+            accountId = boundAccount,
+            legacyPreferences = ::preferences,
+            writeGeneration = generation,
+            writeAuthority = authority,
+            appMessages = appMessages,
+        )
+        return authority to actions
+    }
 
     private val appMessages: AppMessages
         get() = AppMessages.from(context)
@@ -245,14 +366,18 @@ class DraftActionsTest {
         var listResult: List<PostDraft> = emptyList(),
         var listGate: CompletableDeferred<Unit>? = null,
         var listError: Throwable? = null,
+        var saveEntered: CompletableDeferred<Unit>? = null,
         var saveGate: CompletableDeferred<Unit>? = null,
         var saveError: Throwable? = null,
+        var deleteEntered: CompletableDeferred<Unit>? = null,
         var deleteGate: CompletableDeferred<Unit>? = null,
         var deleteError: Throwable? = null,
     ) : DraftStore {
         val migrated = mutableListOf<Pair<AccountId?, android.content.SharedPreferences>>()
         val saved = mutableListOf<PostDraft>()
         val deleted = mutableListOf<String>()
+        var saveAttempts = 0
+        var deleteAttempts = 0
 
         override suspend fun list(accountId: AccountId?): List<PostDraft> {
             listGate?.await()
@@ -261,12 +386,16 @@ class DraftActionsTest {
         }
 
         override suspend fun save(draft: PostDraft) {
+            saveAttempts++
+            saveEntered?.complete(Unit)
             saveGate?.await()
             saveError?.let { throw it }
             saved += draft
         }
 
         override suspend fun delete(accountId: AccountId?, draftId: String) {
+            deleteAttempts++
+            deleteEntered?.complete(Unit)
             deleteGate?.await()
             deleteError?.let { throw it }
             deleted += draftId

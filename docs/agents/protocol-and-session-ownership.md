@@ -5,7 +5,7 @@
 **Status:** current. Source verified. Slice 2A4 completes the authentication and dependency
 injection migration started in slice 2A3.
 
-**Last reviewed:** 2026-09-28.
+**Last reviewed:** 2026-10-01.
 
 **Source baseline:** Slice 16: `SessionLifecycle.kt` owns durable session transitions, and
 `AccountManager.kt` owns session presentation and authentication UI state.
@@ -273,7 +273,10 @@ share one per-account boundary under `DirectMessageWriteAuthority`.
 C-06c closed the draft gap. `DraftWriteAuthority` mirrors the direct-message authority.
 `DraftActions` captures the writer generation and routes save and delete through `commitIfCurrent`.
 A revoked writer writes nothing. Removal revokes the draft writer before it deletes rows
-(commit `4454bae`).
+(commit `4454bae`). Only account lifecycle or explicit test setup may issue authority.
+`DraftActions` never auto-activates a writer. Test fixtures create one authority,
+call `activate` for the test account, and pass that generation to the action owner.
+The fixture scope ends with the test. Another account cannot use a captured writer.
 
 ## Direct-Message Thread Anchor
 

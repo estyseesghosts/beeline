@@ -13,31 +13,33 @@ The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery
 # Completed
 
 - R00 — record the current recovery baseline and failure attribution. Fresh grouped, isolated, and full-gate evidence replaces the historical count.
+- R01 — activate draft writers in account-bound unit fixtures. All 13 DraftActionsTest tests pass. DraftWriteAuthorityTest passes with no regression.
 
 # Current slice
 
-R00 is complete. No application source changed in this slice.
+R01 is complete. Production draft revocation rules remain unchanged.
 
 # Files involved
 
+- app/src/test/java/me/foxtails/palustris/data/auth/DraftActionsTest.kt holds the fixture repair and new coverage.
+- docs/agents/protocol-and-session-ownership.md holds the draft activation contract.
+- docs/wiki/data-and-privacy.md holds the draft writer section.
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
 - docs/agents/handoff.md points to this recovery task.
-- logs/261001-010000.txt holds fresh attribution and exact checks.
-- logs/BUGS.txt holds the current failure list.
-- docs/wiki/build-test-and-release.md holds the verified local test procedure.
+- logs/261001-020000.txt holds R01 evidence and exact checks.
 
 # Verification
 
-Grouped historical classes with --rerun-tasks report 88 tests and 16 failures. Each class alone reports the same failures. The pre-repair test assembleRelease gate reports 1458 tests and 17 failures. Release assembly completes. The extra failure is MastodonSourceContractTest.defaultFavouriteArtworkStyleUsesHeart. Isolated rerun reports 7 tests and 1 failure. R15a owns that contract repair. Source revision is ecd0d6b on a dirty worktree with no uncommitted main source changes. References 464b2d1 and 219504c resolve. Intermediate XML reports were overwritten by later focused runs; console summaries and logs/261001-010000.txt preserve the sanitized attribution. Full evidence lives in logs/261001-010000.txt.
+DraftActionsTest with --rerun-tasks reports BUILD SUCCESSFUL with all 13 tests passing. DraftWriteAuthorityTest with --rerun-tasks reports BUILD SUCCESSFUL. ktlintCheck reports only pre-existing violations in other test files; DraftActionsTest has none. Post-repair test assembleRelease reports 1461 tests and 15 failures with release assembly complete; both historical draft failures are resolved and no new failure appears. Source revision is e3f74b0 plus the R01 worktree changes. Full evidence lives in logs/261001-020000.txt.
 
 # Next
 
-Execute R01. Activate draft writers in account-bound unit fixtures.
+Execute R02. Give shell draft fixtures a valid account writer. Rerun both historical Navigation failures before and after the fixture change.
 
 # Blockers
 
-The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. Intermediate XML reports were overwritten; sanitized attribution survives in logs/261001-010000.txt. The timestamped log and BUGS.txt edit need explicit force-add approval because /logs/*.txt is Git-ignored. Device, API 29, live-server, signing, and environmental checks remain unverified.
+The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. Device, API 29, live-server, signing, and environmental checks remain unverified.
 
 # Last safe commit
 
-ecd0d6b Allow general orchestrator shell commands.
+e3f74b0 Record the current recovery baseline and failure attribution.

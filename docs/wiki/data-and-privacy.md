@@ -2,7 +2,7 @@
 
 Status: planned  
 Owner: Data maintainers  
-Last reviewed: 2026-09-16  
+Last reviewed: 2026-10-01  
 Stale when: A storage format, migration, retention rule, or privacy boundary changes.
 
 Sources: `AGENTS.md`, `data/`, storage tests, and migration definitions.
@@ -14,6 +14,19 @@ Sources: `AGENTS.md`, `data/`, storage tests, and migration definitions.
 ## Entries
 
 <!-- Add sessions, preferences, drafts, notifications, media, emoji caches, Room, and removal behavior. -->
+
+### Draft writers
+
+Source: `data/auth/DraftWriteAuthority.kt`, `data/auth/DraftActions.kt`,
+and `DraftActionsTest`.
+
+- One writer generation exists for each account. Activation issues a new
+  generation and revokes the previous writer.
+- `DraftActions` captures the generation and routes save and delete through
+  `commitIfCurrent`. A revoked writer writes nothing and reports no success.
+- Account removal revokes the draft writer before it deletes rows.
+- Test fixtures activate a real authority for the test account and pass that
+  generation to the action owner. The fixture scope ends with the test.
 
 ### Emoji assets
 

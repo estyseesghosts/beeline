@@ -13,26 +13,26 @@ Start with AGENTS.md, agent control, workflow, and operation rules.
 
 ## Current position and next action
 
-R00 is complete. The orchestrator owns recovery delivery and ran all R00 checks directly.
+R01 is complete. The orchestrator owns recovery delivery and ran all R01 checks directly.
 Problem_solver provides read-only investigation and review. Targeted_fixer accepts only small explicit work packages.
 Keep one implementation owner and one Git operator at a time.
-The next slice is R01. Activate draft writers in account-bound unit fixtures.
+The next slice is R02. Give shell draft fixtures a valid account writer.
 
 ## Last safe commit
 
-ecd0d6b is the safe commit before R00.
-Resolve the new slice commit by subject: `Record the current recovery baseline and failure attribution`.
+e3f74b0 is the safe commit before R01.
+Resolve the new slice commit by subject: `Activate draft writers in account-bound unit fixtures`.
 The last safe application source remains 464b2d1. Simulator evidence reference 219504c resolves.
 
 ## Limits
 
-- R00 changed records only and left application source unchanged.
-- All 16 historical failures reproduce on the dirty worktree. Narrow slice R15a owns the new Mastodon contract failure and the orchestrator owns R15a.
+- R01 changed test fixtures and records only. Production draft revocation rules remain unchanged.
+- DraftActionsTest reports 13 passing tests. DraftWriteAuthorityTest reports no regression.
+- ktlintCheck reports only pre-existing violations in other test files.
 - The deleted Photo Grid test excludes that test from the available suite. Do not change it without owner approval.
-- Intermediate XML reports were overwritten; sanitized attribution survives in logs/261001-010000.txt.
-- The timestamped log and BUGS.txt edit need explicit force-add approval because /logs/*.txt is Git-ignored.
+- The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored.
 - A clean-snapshot comparison remains pending because git worktree access is denied.
-- No Android device, API 29, live-server, or signing check comes from R00.
+- No Android device, API 29, live-server, or signing check comes from R01.
 - Existing worktree changes remain intact. Do not push without a user request.
 
 ## Worktree caution
