@@ -47,6 +47,11 @@ Source: `data/notifications/NotificationSyncOrchestrator.kt`,
 - Late stream events after removal or unregister write nothing.
 - Removal after publication cancels the poll job and leaves no orphan job.
 - A cancelled removal still revokes the old token.
+- Push source selection stays bound to its notification token. A stale token miss ends as a
+  no-op. It never uses the account registry entry or a transient factory source, which could
+  belong to a replacement session. Token-null removal cleanup uses the stored session snapshot
+  only while that snapshot still matches the store. Ownership is rechecked before remote
+  subscription mutation. Remote cleanup failure still completes local opt-out.
 - Live-server push delivery remains unverified.
 
 ### Direct-message threads

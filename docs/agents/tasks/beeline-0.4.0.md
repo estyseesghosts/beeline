@@ -19,35 +19,35 @@ The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery
 - R04 — repair the capability-cache probe fixture. All 16 CapabilityCacheTest tests pass. No production change.
 - R05 — repair the notification generation lifecycle. All 27 NotificationSyncOrchestratorTest tests pass (25 historical plus 2 gated removal-revocation regressions). No repository, registry, or store change.
 - R06 — require the session authority in source construction. All 6 SourceFactoryTest tests pass. SessionLifecycle, session ViewModel, connected context, auth gateway, push cancellation, and Misskey integration suites pass. The Mastodon contract run retains the pre-existing R15a artwork failure. No adapter, store, or wiring change.
+- R07 — bind push source selection to its notification token. All 15 UnifiedPushRegistrationManagerTest tests pass. PushCancellationTest, PushRegistrationRepositoryTest, NotificationSyncOrchestratorTest, NotificationRepositoryTest, and SessionLifecycleTest pass with no regression. No registry, adapter, store, or wiring change.
 
 # Current slice
 
-R06 is complete. `SocialSourceFactory` requires an explicit `SessionStore`. The fail-open null path is gone. Misskey sources receive the store-backed current-session check, and both adapters persist refreshed capabilities through revision-guarded `updateCapabilities`. New `SourceFactoryTest` covers routing and authority for both protocols.
+R07 is complete. `UnifiedPushRegistrationManager` binds push source selection to its notification token. A failed token lookup ends as a no-op. It never escalates to account lookup or a transient factory source. Token-null removal cleanup uses a validated stored snapshot. Token, session, registry, and endpoint ownership is rechecked before each remote subscription mutation. Stale failures publish nothing against the replacement session.
 
 # Files involved
 
-- app/src/main/java/me/foxtails/palustris/data/SourceFactory.kt holds the R06 production repair.
-- app/src/test/java/me/foxtails/palustris/data/SourceFactoryTest.kt holds the new R06 authority tests.
-- app/src/test/java/me/foxtails/palustris/data/auth/SessionLifecycleTest.kt, ui/session/AccountManagerFixtures.kt, and data/notifications/push/PushCancellationTest.kt pass their owned stores to the factory.
-- docs/agents/protocol-and-session-ownership.md holds the R06 factory authority contract.
-- docs/wiki/accounts-and-sessions.md holds the R06 session identity section.
+- app/src/main/java/me/foxtails/palustris/data/notifications/push/UnifiedPushRegistrationManager.kt holds the R07 production repair.
+- app/src/test/java/me/foxtails/palustris/data/notifications/push/UnifiedPushRegistrationManagerTest.kt holds the new R07 token-binding tests.
+- docs/agents/protocol-and-session-ownership.md holds the R07 push source binding contract.
+- docs/wiki/notifications-and-direct-messages.md and docs/wiki/accounts-and-sessions.md hold the R07 push binding sections.
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
 - docs/agents/handoff.md points to this recovery task.
-- logs/261001-061418.txt holds R06 evidence and exact checks.
+- logs/261001-062500.txt holds R07 evidence and exact checks.
 
 # Verification
 
-R06 verification: new SourceFactoryTest reports 6 tests and 0 failures. SessionLifecycle, session ViewModel, connected context, auth gateway, push cancellation, and Misskey integration suites pass; the Mastodon source contract run retains the pre-existing R15a artwork failure. ktlint reports only pre-existing findings; the new test file is clean. `:app:lintDebug` reports BUILD SUCCESSFUL. Post-repair test assembleRelease reports 1476 tests and 1 failure (R15a Mastodon artwork only) with release assembly complete. Review repair: the two store-level callback tests are removed. They called updateCapabilities directly and could not fail on factory wiring. That guard stays covered by CrossCuttingTest at the store level. Callback firing needs a live probe and stays unverified in unit tests. Full evidence lives in logs/261001-061418.txt.
+R07 verification: new UnifiedPushRegistrationManagerTest reports 15 tests and 0 failures. PushCancellationTest, PushRegistrationRepositoryTest, NotificationSyncOrchestratorTest, NotificationRepositoryTest, and SessionLifecycleTest pass; `:app:lintDebug` reports BUILD SUCCESSFUL. Post-repair test assembleRelease reports 1489 tests and 1 failure (R15a Mastodon artwork only) with release assembly complete. The stale-token tests assert zero source calls and no failure state, which the old account-plus-factory fallback chain cannot satisfy. The endpoint, creation-gate, registry-identity, late-failure, and cleanup-race tests assert zero post-supersede mutations, which the pre-repair rechecks cannot satisfy. No test was weakened. Review repair added endpoint and registry rechecks before each remote mutation, stale guards in both failure paths, and revision-guarded capability writes. Full evidence lives in logs/261001-062500.txt.
 
 # Next
 
-Execute R07. Keep push source selection bound to its notification token.
+Execute R08. Validate Mastodon report identities before sending.
 
 # Blockers
 
-The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. API 29, live-server push delivery, live-server capability refresh, signing, and environmental checks remain unverified. No Android-only behavior changed in R06, so no new instrumented test ran. ktlint shows repo-wide pre-existing findings.
+The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. API 29, live-server push delivery, live-server capability refresh, signing, and environmental checks remain unverified. No Android-only behavior changed in R07, so no new instrumented test ran. ktlint shows repo-wide pre-existing findings.
 
 # Last safe commit
 
-4145f4c is the safe commit after R05.
-R06 slice commit subject: `Require the session authority in SocialSourceFactory`.
+09db376 is the safe commit after R06.
+R07 slice commit subject: `Keep push source selection bound to its notification token`.

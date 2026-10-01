@@ -33,6 +33,7 @@ import me.foxtails.palustris.domain.PushRegistrationFailureReason
 import me.foxtails.palustris.domain.PushRegistrationFailureStage
 import me.foxtails.palustris.domain.PushSubscriptionSpec
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
 import org.unifiedpush.android.connector.FailedReason
 import org.unifiedpush.android.connector.data.PushEndpoint
@@ -138,9 +139,12 @@ class UnifiedPushRegistrationManager @Inject constructor(
             failureReason = null,
             nextRetryAtEpochMillis = 0,
         )
+        // Resolve the source before recording any outcome. A stale token ends
+        // here as a no-op, never as another session's access denial.
+        val source = sourceForToken(token) ?: return
+        if (!isOwnerCurrent(session, token)) return
         update(token, registering)
         try {
-            val source = sourceFor(session, token) ?: throw SourceError.Unauthorized
             val providerInfo = source.pushProviderInfo()
             if (providerInfo.status == CapabilityStatus.Unsupported ||
                 providerInfo.status == CapabilityStatus.Denied
@@ -203,10 +207,18 @@ class UnifiedPushRegistrationManager @Inject constructor(
             ))
             var cancelled: CancellationException? = null
             try {
-                if (session != null) {
-                    sourceFor(session, token)?.let { source ->
-                        val confirmed = source.queryOwnedPushSubscription(registration?.serverEndpoint)
-                        if (confirmed != null) source.removePushSubscription(confirmed)
+                val cleanup = if (token != null) {
+                    // Exact token hit only. A miss skips remote cleanup.
+                    sourceForToken(token)
+                } else {
+                    // Token-null cleanup builds a transient source from the
+                    // validated stored snapshot. Never the account entry.
+                    session?.let(::cleanupSource)
+                }
+                cleanup?.let { source ->
+                    val confirmed = source.queryOwnedPushSubscription(registration?.serverEndpoint)
+                    if (confirmed != null && isCleanupCurrent(session, token)) {
+                        source.removePushSubscription(confirmed)
                     }
                 }
             } catch (error: CancellationException) {
@@ -364,8 +376,18 @@ class UnifiedPushRegistrationManager @Inject constructor(
         )
         try {
             update(owner.token, received.copy(state = NotificationPushRegistrationState.RegisteringWithServer))
-            val source = sourceFor(owner.session, owner.token) ?: throw SourceError.Unauthorized
+            // Stale owner work ends as a no-op, never as another session's denial.
+            val source = sourceForToken(owner.token) ?: return@withLock PushRegistrationWorkResult.NoWork
+            if (!isOwnerCurrent(owner.session, owner.token)) return@withLock PushRegistrationWorkResult.NoWork
             val confirmed = source.queryOwnedPushSubscription(previousServerEndpoint)
+            // Recheck token, session, registry, and endpoint before the remote
+            // mutation. A replacement or a newer endpoint that landed during
+            // metadata must not proceed as old work.
+            if (!isOwnerCurrent(owner.session, owner.token)) return@withLock PushRegistrationWorkResult.NoWork
+            if (sourceRegistry.sourceFor(owner.token) !== source) return@withLock PushRegistrationWorkResult.NoWork
+            if (isEndpointSuperseded(owner.accountId, validatedEndpoint, expectedEndpointGeneration)) {
+                return@withLock PushRegistrationWorkResult.Retry
+            }
             val needsReplacement = confirmed == null ||
                 confirmed.endpoint != validatedEndpoint ||
                 owner.registration.confirmedEndpointGeneration != desiredEndpointGeneration
@@ -373,6 +395,13 @@ class UnifiedPushRegistrationManager @Inject constructor(
                 source.createOrReplacePushSubscription(spec, confirmed)
             } else {
                 confirmed
+            }
+            // Recheck before the second remote mutation. Creation may have
+            // waited while a replacement or a newer endpoint landed.
+            if (!isOwnerCurrent(owner.session, owner.token)) return@withLock PushRegistrationWorkResult.NoWork
+            if (sourceRegistry.sourceFor(owner.token) !== source) return@withLock PushRegistrationWorkResult.NoWork
+            if (isEndpointSuperseded(owner.accountId, validatedEndpoint, expectedEndpointGeneration)) {
+                return@withLock PushRegistrationWorkResult.Retry
             }
             val policy = source.updatePushAlertPolicy(subscription, settings.categories)
             val latestSession = sessionStore.read(owner.accountId)
@@ -401,7 +430,10 @@ class UnifiedPushRegistrationManager @Inject constructor(
                 failureReason = null,
                 nextRetryAtEpochMillis = 0,
             ))
-            sessionStore.updateCapabilities(owner.accountId) {
+            sessionStore.updateCapabilities(
+                owner.accountId,
+                owner.session.sessionRevision,
+            ) {
                 it.copy(notifications = it.notifications.copy(webPush = CapabilityStatus.Supported))
             }
             scheduler.enqueueCatchUp(owner.accountId)
@@ -409,6 +441,9 @@ class UnifiedPushRegistrationManager @Inject constructor(
         } catch (error: CancellationException) {
             throw error
         } catch (error: SourceError) {
+            // Stale work publishes nothing against the replacement session.
+            // A late unauthorized failure must not mark replacement capabilities.
+            if (!isOwnerCurrent(owner.session, owner.token)) return@withLock PushRegistrationWorkResult.NoWork
             update(owner.token, received.copy(
                 state = if (error == SourceError.Unauthorized) NotificationPushRegistrationState.AccessDenied
                 else NotificationPushRegistrationState.TemporarilyUnavailable,
@@ -420,13 +455,19 @@ class UnifiedPushRegistrationManager @Inject constructor(
                 nextRetryAtEpochMillis = nextRetryAt(received.retryCount + 1),
             ))
             when (error) {
-                SourceError.Unauthorized -> sessionStore.updateCapabilities(owner.accountId) {
+                SourceError.Unauthorized -> sessionStore.updateCapabilities(
+                    owner.accountId,
+                    owner.session.sessionRevision,
+                ) {
                     it.copy(notifications = it.notifications.copy(webPush = CapabilityStatus.Denied))
                 }
                 is SourceError.Unsupported,
                 is SourceError.UnsupportedCredential,
                 is SourceError.ServerUnsupported,
-                -> sessionStore.updateCapabilities(owner.accountId) {
+                -> sessionStore.updateCapabilities(
+                    owner.accountId,
+                    owner.session.sessionRevision,
+                ) {
                     it.copy(notifications = it.notifications.copy(webPush = CapabilityStatus.Unsupported))
                 }
                 else -> Unit
@@ -441,6 +482,8 @@ class UnifiedPushRegistrationManager @Inject constructor(
                 PushRegistrationWorkResult.Retry
             }
         } catch (error: Exception) {
+            // Stale work publishes nothing against the replacement session.
+            if (!isOwnerCurrent(owner.session, owner.token)) return@withLock PushRegistrationWorkResult.NoWork
             update(owner.token, received.copy(
                 state = NotificationPushRegistrationState.TemporarilyUnavailable,
                 retryCount = received.retryCount + 1,
@@ -518,8 +561,66 @@ class UnifiedPushRegistrationManager @Inject constructor(
         repository.updatePushRegistration(token, registration)
     }
 
-    private fun sourceFor(session: me.foxtails.palustris.domain.Session, token: me.foxtails.palustris.domain.NotificationSyncToken?) =
-        token?.let(sourceRegistry::sourceFor) ?: sourceRegistry.sourceFor(session.accountId) ?: sourceFactory.create(session)
+    /**
+     * Source for a supplied token. Exact registry hit only. A miss returns null
+     * so stale work ends as a no-op. Never falls back to the account entry or
+     * a transient factory source, which could belong to a replacement session.
+     */
+    private fun sourceForToken(token: me.foxtails.palustris.domain.NotificationSyncToken): SocialSource? =
+        sourceRegistry.sourceFor(token)
+
+    /**
+     * Best-effort source for token-null removal cleanup. Builds a transient
+     * source from the stored session only while the snapshot still matches the
+     * store. Never uses the account registry entry. Null skips remote cleanup
+     * while local opt-out still proceeds.
+     */
+    private fun cleanupSource(session: me.foxtails.palustris.domain.Session): SocialSource? {
+        val current = sessionStore.read(session.accountId) ?: return null
+        if (current.sessionRevision != session.sessionRevision) return null
+        return sourceFactory.create(current)
+    }
+
+    /**
+     * Rechecks token and session ownership before a remote subscription
+     * mutation. The registry hit alone cannot prove freshness: the stored
+     * revision may have moved while the entry lingered.
+     */
+    private fun isOwnerCurrent(
+        session: me.foxtails.palustris.domain.Session,
+        token: me.foxtails.palustris.domain.NotificationSyncToken,
+    ): Boolean {
+        if (repository.currentToken(session.accountId) != token) return false
+        return sessionStore.read(session.accountId)?.sessionRevision == session.sessionRevision
+    }
+
+    /**
+     * Reports whether the stored endpoint moved past the captured work. The
+     * caller already proved token and session ownership. A newer endpoint
+     * generation reruns as fresh work, never as the obsolete endpoint.
+     */
+    private fun isEndpointSuperseded(
+        accountId: me.foxtails.palustris.domain.AccountId,
+        endpoint: me.foxtails.palustris.domain.ValidatedUrl,
+        expectedEndpointGeneration: Long,
+    ): Boolean {
+        val current = sessionStore.read(accountId) ?: return false
+        return current.pushState.endpointGeneration != expectedEndpointGeneration ||
+            current.pushState.endpoint != endpoint
+    }
+
+    /**
+     * Rechecks cleanup ownership after remote metadata. The token path reuses
+     * the owner check. The token-null path revalidates the stored snapshot.
+     */
+    private fun isCleanupCurrent(
+        session: me.foxtails.palustris.domain.Session?,
+        token: me.foxtails.palustris.domain.NotificationSyncToken?,
+    ): Boolean {
+        if (session == null) return false
+        if (token != null) return isOwnerCurrent(session, token)
+        return sessionStore.read(session.accountId)?.sessionRevision == session.sessionRevision
+    }
 
     private fun chooseDistributor(selected: String?): String? {
         val available = connector.availableDistributors()

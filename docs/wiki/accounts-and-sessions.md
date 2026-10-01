@@ -31,6 +31,11 @@ replacement session. `SourceFactoryTest` covers routing and authority for both p
 revision guard behind the callbacks is covered at the store level. Callback firing needs a live
 probe and stays unverified in unit tests.
 
+Push source selection stays bound to its notification token. A stale token miss ends as a
+no-op and never escalates to the account registry entry or a transient factory source.
+Token-null removal cleanup uses the stored session snapshot only while that snapshot still
+matches the store.
+
 ## Account removal
 
 Removal stops foreground delivery first. It disables push and removes notification state next. The

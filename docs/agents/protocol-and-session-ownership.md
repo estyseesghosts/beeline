@@ -48,6 +48,17 @@ Device and live-server behavior remain unverified.
   generation from `NotificationSyncToken`.
 - `sourceFor(token)` returns null when the generation is stale. `sourceFor(accountId)` ignores
   the generation. `isCurrent` compares identity.
+- `UnifiedPushRegistrationManager` binds push source selection to its token. `sourceForToken`
+  uses the exact registry hit only. A miss ends as a no-op. The manager never falls back to
+  `sourceFor(accountId)` or a transient factory source, which could belong to a replaced session.
+  Token-null removal cleanup builds a transient source from the stored session snapshot only
+  while that snapshot still matches the store. Token, session, registry, and endpoint ownership
+  is rechecked before each remote subscription mutation. Stale failures publish nothing against
+  the replacement session, and capability writes carry the owner revision.
+  `UnifiedPushRegistrationManagerTest` covers current-token selection,
+  stale-token no-op behavior, cross-account rejection, replacement races, registry replacement,
+  endpoint supersede, creation-gate replacement, late-failure capability preservation,
+  token-null cleanup, cleanup failure, and the valid connection path.
 - `NotificationSyncController.register` registers a source and returns the `NotificationSyncToken`
   that owns it.
 - `NotificationSyncOrchestrator.unregister` revokes synchronously with the exact generation.
@@ -397,7 +408,7 @@ The stale claim in older ownership and bug records is removed.
   second account, the retry reload, and the healthy-retry no-op.
 - `NotificationWriteFailureTest` covers failing writes, deletes, delivery claims, dismissals,
   acknowledgement, concurrent mutations, and revocation during persistence.
-- `PushRegistrationRepositoryTest`, `PushCancellationTest`
+- `PushRegistrationRepositoryTest`, `PushCancellationTest`, `UnifiedPushRegistrationManagerTest`
 - `AccountSourceRegistry` behavior is exercised through the notification and session tests.
 
 ## Verification Limits
