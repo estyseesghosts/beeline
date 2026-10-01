@@ -153,6 +153,57 @@ class MisskeyApiTest {
         assertTrue(closed.closed)
     }
 
+    @Test
+    fun postMultipartStreamsExactBytesAndClosesInput() = runBlocking {
+        MockWebServer().also { it.start() }.use { server ->
+            server.enqueue(MockResponse().setBody("ok"))
+            val api = MisskeyApi()
+            val origin = server.url("/").toString().removeSuffix("/")
+            val payload = ByteArray(1024) { index -> (index % 251).toByte() }
+            val stream = ClosingInputStream(payload)
+
+            api.postMultipart(origin, "drive/files/create", stream, "image/png", "photo.png", "token")
+
+            val request = server.takeRequest(10, TimeUnit.SECONDS)
+            assertNotNull(request)
+            assertEquals("POST", request!!.method)
+            assertEquals("/drive/files/create", request.path)
+            assertEquals("Bearer token", request.getHeader("Authorization"))
+            assertTrue(request.getHeader("Content-Type")!!.startsWith("multipart/form-data"))
+            val sent = request.body.readByteArray()
+            assertTrue(String(sent, Charsets.UTF_8).contains("filename=\"photo.png\""))
+            assertTrue(String(sent, Charsets.UTF_8).contains("Content-Type: image/png"))
+            assertTrue(containsSequence(sent, payload))
+            assertTrue(stream.closed)
+        }
+    }
+
+    @Test
+    fun postMultipartFailureClosesInputAndMapsApiFailure() = runBlocking {
+        MockWebServer().also { it.start() }.use { server ->
+            server.enqueue(MockResponse().setResponseCode(400).setBody("{\"error\":{\"code\":\"Bad\"}}"))
+            val api = MisskeyApi()
+            val origin = server.url("/").toString().removeSuffix("/")
+            val stream = ClosingInputStream("bytes".toByteArray())
+
+            val failure = assertThrows(ApiFailure::class.java) {
+                runBlocking { api.postMultipart(origin, "drive/files/create", stream, "image/png") }
+            }
+            assertEquals(400, failure.status)
+            assertTrue(stream.closed)
+        }
+    }
+
+    private fun containsSequence(haystack: ByteArray, needle: ByteArray): Boolean {
+        outer@ for (start in 0..haystack.size - needle.size) {
+            for (offset in needle.indices) {
+                if (haystack[start + offset] != needle[offset]) continue@outer
+            }
+            return true
+        }
+        return false
+    }
+
     private class ClosingInputStream(bytes: ByteArray) : ByteArrayInputStream(bytes) {
         var closed = false
 

@@ -8,7 +8,6 @@ import okhttp3.Call
 import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -19,7 +18,6 @@ import okhttp3.Response
 import okhttp3.ResponseBody
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import okio.source
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.IOException
@@ -87,17 +85,48 @@ class AuthenticatedHttpClient(
         return client.newWebSocket(Request.Builder().url(url).apply { headers.forEach { (name, value) -> header(name, value) } }.build(), listener)
     }
 
-    suspend fun postMultipart(origin: String, path: String, file: InputStream, mimeType: String, fileName: String = "upload", bearerToken: String? = null, maxResponseBytes: Long? = null): HttpResponse =
-        execute(request(origin, path, bearerToken).post(MultipartBody.Builder().setType(MultipartBody.FORM)
-            .addFormDataPart("file", fileName, file.use { it.readBytes() }.toRequestBody(mimeType.toMediaType())).build()).build(), maxResponseBytes)
+    /**
+     * Streams one caller-owned upload input as multipart/form-data without buffering it.
+     *
+     * Ownership transfers at entry: this call closes the input on every terminal path
+     * (successful write, read failure, pre-write failure, HTTP failure, oversized
+     * response, and cancellation). A retry needs a newly opened input because the
+     * consumed stream cannot be replayed. Cancellation closes the input while OkHttp
+     * cancels the call, so a read that unblocks on close ends as CancellationException.
+     * Field name, filename, MIME type, bearer, path, User-Agent, and response cap
+     * match the previous buffered behavior.
+     */
+    suspend fun postMultipart(origin: String, path: String, file: InputStream, mimeType: String, fileName: String = "upload", bearerToken: String? = null, maxResponseBytes: Long? = null): HttpResponse {
+        val owner = UploadStreamOwner(file)
+        try {
+            val multipart = MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("file", fileName, owner.body(mimeType)).build()
+            return execute(request(origin, path, bearerToken).post(OneShotRequestBody(multipart)).build(), maxResponseBytes)
+        } finally {
+            owner.release()
+        }
+    }
 
-    /** Streams each application-owned file and closes it when OkHttp finishes writing the request. */
+    /**
+     * Streams each application-owned file and closes it when OkHttp finishes writing the request.
+     *
+     * Ownership of every supplied file transfers at entry: files already written close
+     * through their own body write, and the entry releases every file on any terminal
+     * path, so unwritten files also close exactly once. Cancellation closes all owned
+     * inputs while OkHttp cancels the call.
+     */
     suspend fun patchMultipart(origin: String, path: String, fields: List<Pair<String, String>> = emptyList(), files: List<MultipartFileBody> = emptyList(), bearerToken: String? = null): HttpResponse {
-        val body = MultipartBody.Builder().setType(MultipartBody.FORM).apply {
-            fields.forEach { (name, value) -> addFormDataPart(name, value) }
-            files.forEach { part -> addFormDataPart(part.fieldName, part.fileName, part.body()) }
-        }.build()
-        return execute(request(origin, path, bearerToken).patch(body).build())
+        try {
+            val multipart = MultipartBody.Builder().setType(MultipartBody.FORM).apply {
+                fields.forEach { (name, value) -> addFormDataPart(name, value) }
+                files.forEach { part -> addFormDataPart(part.fieldName, part.fileName, part.body()) }
+            }.build()
+            // Only file-carrying bodies are one-shot. A field-only body stays replayable.
+            val body: RequestBody = if (files.isEmpty()) multipart else OneShotRequestBody(multipart)
+            return execute(request(origin, path, bearerToken).patch(body).build())
+        } finally {
+            files.forEach { it.release() }
+        }
     }
 
     private fun request(origin: String, path: String, token: String?): Request.Builder {
@@ -148,9 +177,21 @@ class AuthenticatedHttpClient(
     }
 }
 
-class MultipartFileBody(val fieldName: String, val fileName: String?, private val mimeType: String, private val stream: InputStream) {
-    internal fun body(): RequestBody = object : RequestBody() {
-        override fun contentType(): MediaType? = mimeType.toMediaType()
-        override fun writeTo(sink: okio.BufferedSink) { stream.use { sink.writeAll(it.source()) } }
-    }
+/**
+ * Describes one application-owned upload file. Passing this to an upload call transfers
+ * ownership of its stream to that call, which closes it exactly once on every terminal path.
+ */
+class MultipartFileBody(val fieldName: String, val fileName: String?, private val mimeType: String, stream: InputStream) {
+    private val owner = UploadStreamOwner(stream)
+
+    /**
+     * Builds the one-shot streaming body for this file. The body reports unknown length
+     * and refuses a second write because the consumed input cannot be replayed. OkHttp
+     * 4.12 does not propagate one-shot through the enclosing MultipartBody, so the
+     * upload entry wraps the completed body in OneShotRequestBody and this
+     * consume-once guard stops silent truncated replays.
+     */
+    internal fun body(): RequestBody = owner.body(mimeType)
+
+    internal fun release() = owner.release()
 }

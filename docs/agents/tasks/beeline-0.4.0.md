@@ -23,39 +23,37 @@ The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery
 - R08 — validate Mastodon report identities before sending. All 15 ModerationServiceTest tests pass (13 existing plus 2 new report validation regressions). MastodonIntegrationTest, MastodonSourceContractTest, and MisskeyIntegrationTest pass except the pre-existing R15a artwork failure. No cursor, encoding, or comment-behavior change.
 - R09 — bind Mastodon moderation cursors to the source session. All 17 ModerationServiceTest tests pass. MastodonIntegrationTest reports 63 passing tests. ModerationViewModelTest reports 13 passing tests. ModerationListScreenTest reports 3 passing tests. Adapter contracts pass except the pre-existing R15a artwork failure. A rejected continuation keeps existing rows visible. No generic cursor, endpoint, or route change.
 - R10 — preserve restored Search state for its matching session. ShellNavigatorTest reports 28 tests and 0 failures. ShellNavigatorRestorationTest reports 5 tests and 0 failures. SearchPanelRestorationTest reports 3 tests and 0 failures. NavigationTest reports 31 tests and 0 failures. ShellCharacterizationTest, WideNavigationTest, and AppShellStateTest pass. The composer overlay is never restored. Full gate reports 1521 tests with only the pre-existing R15a artwork failure; release assembly complete.
+- R11 — stream multipart uploads with explicit one-shot ownership. AuthenticatedHttpClientTest reports 25 tests and 0 failures. MisskeyApiTest reports 7 tests and 0 failures. HttpClientPoolTest reports 9 tests and 0 failures. MastodonIntegrationTest reports 63 tests and 0 failures alone. Grouped adapter run reports 70 tests with only the pre-existing R15a artwork failure and the known isolation-dependent cancellation flake, which passes alone. lintDebug passes. ktlint reports only pre-existing findings; all R11 files are clean. No whole-input buffering remains. Field name, filename, MIME type, bearer, path, User-Agent, and response cap are unchanged.
 
 # Current slice
 
-R10 is complete. `ShellNavigator` binds restored navigation state to the saved session owner (origin, protocol, local account ID, durable revision) synchronously before display. Matching restoration preserves the Search query, category, safe local page, and remembered panels. A mismatched owner clears the account-bound query, category, prefill, page, viewed profile, and selected post. The composer overlay is never restored because reply/quote targets do not survive process recreation.
+R11 is complete. `UploadStreamOwner` owns one upload input stream for a single multipart call and releases it on every terminal path. Stream bodies report unknown length with no pre-read, are one-shot, and refuse a second write because consumed input cannot be replayed. OkHttp 4.12 does not propagate one-shot through the enclosing `MultipartBody`, so the upload entry wraps file-carrying bodies in `OneShotRequestBody` while the consume-once guard stops silent truncated replays. A field-only PATCH body stays replayable. Retry behavior is unchanged for replayable requests. An upload retry needs a newly opened input. Documentation updates were implemented by one targeted_fixer session under an explicit no-commit contract; the orchestrator owns the slice, ran the focused gates and lint, and operates Git. The full gate runs before commit.
 
 # Files involved
 
-- app/src/main/java/me/foxtails/palustris/ui/navigation/ShellNavigator.kt holds the R10 production repair.
-- app/src/main/java/me/foxtails/palustris/ui/PalustrisApp.kt holds the R10 session-revision wiring.
-- app/src/test/java/me/foxtails/palustris/ui/navigation/ShellNavigatorTest.kt holds the extended R10 owner/binding tests.
-- app/src/test/java/me/foxtails/palustris/ui/navigation/ShellNavigatorRestorationTest.kt holds the new R10 composition restoration tests.
-- app/src/test/java/me/foxtails/palustris/ui/search/SearchPanelRestorationTest.kt holds the R10 full-app restoration tests.
-- app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationTest.kt holds the R10 end-to-end account-switch test.
-- docs/agents/app-shell-ownership.md holds the R10 session-binding invariant.
-- docs/wiki/ui-and-navigation.md holds the R10 navigation restoration section.
+- app/src/main/java/me/foxtails/palustris/data/transport/UploadStreamOwner.kt holds the new per-upload owner and one-shot streaming body.
+- app/src/main/java/me/foxtails/palustris/data/transport/AuthenticatedHttpClient.kt holds the R11 streaming postMultipart, ownership-taking patchMultipart, and owner-backed MultipartFileBody.
+- app/src/test/java/me/foxtails/palustris/data/transport/AuthenticatedHttpClientTest.kt holds the R11 lifecycle matrix.
+- app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyApiTest.kt holds the R11 shared-path regressions.
+- docs/agents/protocol-and-session-ownership.md holds the R11 transport ownership entry (fixer implementation).
+- docs/wiki/data-and-privacy.md holds the R11 upload lifetime section (fixer implementation).
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
 - docs/agents/handoff.md points to this recovery task.
-- logs/261001-123500.txt holds R08 evidence and exact checks.
-- logs/261001-062500.txt holds R07 evidence and exact checks.
+- logs/261001-160155.txt holds R11 evidence and exact checks.
 
 # Verification
 
-R10 verification: ShellNavigatorTest reports 28 tests and 0 failures. ShellNavigatorRestorationTest reports 5 tests and 0 failures. SearchPanelRestorationTest reports 3 tests and 0 failures. NavigationTest reports 31 tests and 0 failures. ShellCharacterizationTest, WideNavigationTest, and AppShellStateTest pass. Post-slice full gate reports 1521 tests and 1 failure (pre-existing R15a artwork only) with release assembly complete. problem_solver re-review approved after two REQUIRED repairs. No test was weakened. Full evidence lives in logs/261001-180000.txt.
+R11 verification: AuthenticatedHttpClientTest reports 25 tests and 0 failures with --rerun-tasks. MisskeyApiTest reports 7 tests and 0 failures. HttpClientPoolTest reports 9 tests and 0 failures. MastodonIntegrationTest reports 63 tests and 0 failures alone with --rerun-tasks. Grouped MastodonIntegrationTest plus MastodonSourceContractTest reports 70 tests and 2 failures: the pre-existing R15a artwork failure and the known isolation-dependent cancellation-timing flake, which passes alone and in class isolation. lintDebug reports BUILD SUCCESSFUL. ktlintTestSourceSetCheck reports only pre-existing findings; the MisskeyApiTest findings sit outside the R11 hunk, and all other R11 files are clean. problem_solver review returned approve-after-required-repairs: the effective request body now reports one-shot through OneShotRequestBody (field-only PATCH stays replayable), PATCH pre-write cleanup and part MIME pins are covered, and framing claims are protocol-accurate. problem_solver re-review approved the repairs with no blocking findings. Post-repair full gate reports 1541 tests and 1 failure (pre-existing R15a artwork only) with release assembly complete. No test was weakened. Full evidence lives in logs/261001-160155.txt.
 
 # Next
 
-Execute R11. Stream multipart uploads with explicit one-shot ownership.
+Execute R12. Cover streaming Mastodon uploads through the adapter.
 
 # Blockers
 
-The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. API 29, live-server push delivery, live-server capability refresh, signing, and environmental checks remain unverified. No Android-only behavior changed in R07, so no new instrumented test ran. ktlint shows repo-wide pre-existing findings.
+The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. API 29, live-server push delivery, live-server capability refresh, live-server media upload, signing, and environmental checks remain unverified. No Android-only behavior changed in R11, so no new instrumented test ran. ktlint shows repo-wide pre-existing findings.
 
 # Last safe commit
 
-6d9b69d is the safe commit after R09.
-R10 slice commit subject: `Preserve restored Search state for its matching session`.
+d6ef2a7 is the safe commit after R10.
+R11 slice commit subject: `Stream multipart uploads with explicit one-shot ownership`.

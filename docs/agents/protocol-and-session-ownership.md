@@ -24,6 +24,22 @@ Device and live-server behavior remain unverified.
 - `data/transport/HttpResponse.kt` owns the generic HTTP body, headers, and Link cursor parsing.
 - `data/transport/AuthenticatedHttpClient.kt` owns authenticated HTTP execution, origin checks,
   bounded reads, cancellation, WebSocket requests, and multipart streaming. It stores no token.
+- `data/transport/UploadStreamOwner.kt` owns one upload input stream for a single
+  multipart call. For POST the upload entry creates the owner. For PATCH each
+  `MultipartFileBody` carries its owner and the patch entry releases every file.
+  The owner releases on every terminal path: successful write, read failure,
+  pre-write failure, HTTP failure, oversized response, and cancellation. The stream
+  body reports unknown length, so OkHttp never consumes input to measure it.
+  Framing follows the negotiated protocol. The body is one-shot and refuses a
+  second write because consumed input cannot be replayed. OkHttp 4.12 does not
+  propagate one-shot state through the enclosing `MultipartBody`, so the upload
+  entry wraps the completed body in `OneShotRequestBody`. The consume-once guard
+  stops silent truncated replays. A field-only PATCH body stays replayable.
+  HTTP client retry behavior is unchanged for replayable requests. An upload retry
+  needs a newly opened input. `AuthenticatedHttpClientTest` covers exact bytes,
+  write ordering, unknown length, one-shot state, close-once behavior on all
+  terminal paths, cancellation, and multi-file PATCH cleanup. `MisskeyApiTest`
+  covers the shared postMultipart path.
 - `data/misskey/MisskeySource` and `data/mastodon/MastodonSource` are the two adapters.
 - `data/transport/AuthenticatedHttpClient` owns protocol-neutral authenticated execution, bounded
   bodies, cancellation, origin checks, and status failures. Adapters own paths and failure mapping.

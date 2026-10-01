@@ -45,3 +45,18 @@ Source: `data/emoji/EmojiAssetStore.kt`, `data/emoji/EmojiAssetLease.kt`,
   last reader releases the file.
 - Emoji bytes are shared and credential-free. Account removal does not delete
   them.
+
+### Upload inputs
+
+Source: `data/transport/AuthenticatedHttpClient.kt`,
+`data/transport/UploadStreamOwner.kt`, and `AuthenticatedHttpClientTest`.
+
+- A multipart upload streams its input without buffering the whole file.
+  The request body reports unknown length, so the client never consumes input
+  to measure it. Framing follows the negotiated protocol.
+- The upload call owns its input from entry to termination. It closes the input
+  exactly once on success, failure, and cancellation.
+- A consumed input cannot be replayed. An explicit retry needs a newly opened input.
+- Cancellation closes the input while the client cancels the call.
+- Closing an arbitrary input may not interrupt every provider. Tests use an input
+  that unblocks when closed. Device and provider limits stay recorded per slice.
