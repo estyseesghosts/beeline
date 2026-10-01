@@ -42,3 +42,17 @@ Source: `data/mastodon/MastodonModerationService.kt` and `ModerationServiceTest`
   remains unverified.
 
 <!-- Add the dated support matrix, capability states, protocol differences, and known unverified cases. -->
+
+### Mastodon media upload
+
+Source: `data/mastodon/MastodonSource.kt`, `data/mastodon/MastodonMapper.kt`,
+and `MastodonIntegrationTest`.
+
+- `uploadMedia` posts the caller stream to `/api/v1/media` as multipart
+  name `file` with default filename `upload` and the caller MIME type. The
+  transport streams the input without buffering the whole file and closes it
+  exactly once on success, failure, and cancellation.
+- A consumed input cannot be replayed. A manual retry opens a new stream.
+- Network failure and cancellation yield no attachment. Server-side media
+  processing behavior is unchanged. Live-server media upload remains
+  unverified.

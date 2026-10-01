@@ -1,13 +1,18 @@
 package me.foxtails.palustris.data.mastodon
 
 import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.io.InputStream
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import me.foxtails.palustris.data.mastodon.MastodonMapper
 import me.foxtails.palustris.data.mastodon.MastodonSource
 import me.foxtails.palustris.data.misskey.MisskeyApi
@@ -35,9 +40,10 @@ import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SourceError
+import okhttp3.Headers
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import okhttp3.Headers
+import okhttp3.mockwebserver.SocketPolicy
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
@@ -778,6 +784,187 @@ class MastodonIntegrationTest {
         assertEquals("Bearer token", uploadRequest.getHeader("Authorization"))
         assertTrue(uploadRequest.body.readUtf8().contains("bytes"))
         assertEquals("/api/v2/search?q=hello+world", server.takeRequest().path)
+    }
+
+    @Test
+    fun uploadMediaStreamsExactBytesThroughAdapter() = runBlocking {
+        server.enqueue(MockResponse().setBody(JSONObject()
+            .put("id", "media-1")
+            .put("type", "image")
+            .put("url", "https://example.org/uploaded.jpg")
+            .put("preview_url", "https://example.org/uploaded-small.jpg")
+            .toString()))
+        val stream = AdapterUploadStream(8192)
+
+        val attachment = source().uploadMedia(stream, "image/jpeg")
+        val request = server.takeRequest(5, TimeUnit.SECONDS)
+
+        assertNotNull(request)
+        assertEquals("POST", request!!.method)
+        assertEquals("/api/v1/media", request.path)
+        assertEquals("Bearer token", request.getHeader("Authorization"))
+        val body = request.body.readByteArray()
+        val multipart = body.toString(Charsets.ISO_8859_1)
+        assertTrue(multipart.contains("name=\"file\""))
+        assertTrue(multipart.contains("filename=\"upload\""))
+        assertTrue(multipart.contains("Content-Type: image/jpeg"))
+        assertTrue(multipart.contains(stream.payload().toString(Charsets.ISO_8859_1)))
+        assertEquals("media-1", attachment.id)
+        assertEquals("https://example.org/uploaded.jpg", attachment.url)
+        assertEquals("https://example.org/uploaded-small.jpg", attachment.previewUrl)
+        assertEquals(8192L, stream.payloadBytes)
+        assertEquals(1, stream.closes)
+        assertEquals(0, stream.rewinds)
+    }
+
+    @Test
+    fun uploadMediaHttpFailureClosesInputWithoutAttachment() = runBlocking {
+        server.enqueue(MockResponse().setResponseCode(422).setBody("""{"error":"invalid media"}"""))
+        val stream = AdapterUploadStream(1024)
+        var attachment: Any? = null
+
+        val error = assertThrows(SourceError.ServerError::class.java) {
+            runBlocking { attachment = source().uploadMedia(stream, "image/jpeg") }
+        }
+
+        assertEquals("invalid media", error.detail)
+        assertNull(attachment)
+        assertEquals(1, stream.closes)
+        assertEquals(1, server.requestCount)
+    }
+
+    @Test
+    fun uploadMediaDisconnectClosesInputAndFreshStreamRetries() = runBlocking {
+        MockWebServer().use { faultServer ->
+            val faultOrigin = faultServer.url("/").toString().removeSuffix("/")
+            faultServer.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_DURING_REQUEST_BODY))
+            val disconnectedStream = AdapterUploadStream(262144)
+            var attachment: Any? = null
+            val faultSource = MastodonSource(
+                origin = faultOrigin,
+                token = "token",
+                api = mastodonTestClient(),
+                accountId = AccountId(Connection(faultOrigin, me.foxtails.palustris.domain.Protocol.MASTODON), "local-user"),
+            )
+            assertThrows(SourceError.NetworkUnavailable::class.java) {
+                runBlocking { attachment = faultSource.uploadMedia(disconnectedStream, "image/jpeg") }
+            }
+            assertNull(attachment)
+            assertEquals(1, disconnectedStream.closes)
+        }
+
+        server.enqueue(MockResponse().setBody(JSONObject()
+            .put("id", "media-1")
+            .put("type", "image")
+            .put("url", "https://example.org/uploaded.jpg")
+            .put("preview_url", "https://example.org/uploaded-small.jpg")
+            .toString()))
+        val retryStream = AdapterUploadStream(2048)
+        val retryAttachment = source().uploadMedia(retryStream, "image/jpeg")
+
+        assertEquals("media-1", retryAttachment.id)
+        assertEquals("https://example.org/uploaded.jpg", retryAttachment.url)
+        assertEquals("https://example.org/uploaded-small.jpg", retryAttachment.previewUrl)
+        assertEquals(1, retryStream.closes)
+    }
+
+    @Test
+    fun uploadMediaCancellationClosesInputWithoutAttachment() = runBlocking {
+        val stream = AdapterUploadStream(8, blockReadsUntilClosed = true)
+        var attachment: Any? = null
+        val upload = async(Dispatchers.IO) { attachment = source().uploadMedia(stream, "image/jpeg") }
+
+        try {
+            withTimeout(5_000) { while (stream.readEntered.count != 0L) delay(10) }
+            upload.cancel()
+            try {
+                withTimeout(5_000) { upload.await() }
+                throw AssertionError("Expected cancellation")
+            } catch (_: CancellationException) {
+                // Cancellation is the expected terminal result.
+            }
+            assertEquals(1, stream.closes)
+            assertNull(attachment)
+        } finally {
+            stream.releaseReadGate()
+            upload.cancel()
+            withTimeout(5_000) { upload.join() }
+        }
+    }
+
+    private class AdapterUploadStream(
+        private val size: Int,
+        private val blockReadsUntilClosed: Boolean = false,
+    ) : InputStream() {
+        private val lock = Object()
+        val readEntered = CountDownLatch(1)
+        var payloadBytes = 0L
+            private set
+        var reads = 0
+            private set
+        var closes = 0
+            private set
+        var rewinds = 0
+            private set
+        private var position = 0
+        private var maxPosition = 0
+        private var closed = false
+
+        fun payload(): ByteArray = ByteArray(size) { (it % 251).toByte() }
+
+        fun releaseReadGate() {
+            synchronized(lock) {
+                closed = true
+                lock.notifyAll()
+            }
+        }
+
+        override fun read(): Int {
+            val single = ByteArray(1)
+            return if (read(single, 0, 1) < 0) -1 else single[0].toInt() and 0xFF
+        }
+
+        override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
+            synchronized(lock) {
+                if (closed) throw IOException("Read after close")
+                readEntered.countDown()
+                if (blockReadsUntilClosed) {
+                    val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+                    while (!closed) {
+                        val remaining = deadline - System.nanoTime()
+                        if (remaining <= 0) throw IOException("Timed out waiting for stream close")
+                        TimeUnit.NANOSECONDS.timedWait(lock, remaining)
+                    }
+                    throw IOException("Stream closed while read was blocked")
+                }
+            }
+            if (position >= size) return -1
+            reads++
+            if (position < maxPosition) rewinds++
+            val count = minOf(length, size - position)
+            for (index in 0 until count) {
+                buffer[offset + index] = (position % 251).toByte()
+                position++
+            }
+            payloadBytes += count
+            maxPosition = maxOf(maxPosition, position)
+            return count
+        }
+
+        override fun available(): Int = Int.MAX_VALUE
+
+        override fun reset() {
+            position = 0
+            rewinds++
+        }
+
+        override fun close() {
+            synchronized(lock) {
+                closes++
+                closed = true
+                lock.notifyAll()
+            }
+        }
     }
 
     @Test
