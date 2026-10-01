@@ -1,76 +1,43 @@
-# Beeline 0.4.0 task state — Phase 3 complete
+# Objective
 
-## Status
+Restore a trustworthy test gate. Repair the confirmed restoration, validation, session-selection, and upload defects. Then resume Phase 4A.
 
-Phase 3 is complete. The seven Phase 3 slices improve high-font readability, shared typography,
-chip geometry, and motion characterization without changing the product boundary.
+# Invariants
 
-Phase 4A is next. It will stabilize back behavior, modal behavior, and memory after the Phase 3A
-and 3B work. The last safe source commit is `464b2d1`. This documentation update is pending its
-own commit; its next hash is not known yet.
+Preserve unrelated worktree and index content. Do not weaken tests. Do not implement Phase 4B through 4E. Do not change the approved navigation design. Do not add speculative DM pagination or notification eviction.
 
-## Phase 3 history
+# Decisions
 
-The Phase 3 commits are:
+The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery.md controls slice order. R00 through R15 run serially with one reviewed commit per slice. Phase 4A stays blocked until R15 return criteria pass. The deleted Photo Grid test needs owner approval before committed-suite comparison. New slice R15a splits the Mastodon favourite artwork contract per protocol before R15.
 
-1. `5b8d98d` — enforce the `PillAction` 48 dp effective bounds.
-2. `e23972e` — centralize post and tab typography roles.
-3. `2c3a1a8` — reuse shared bubble geometry in `CategoryChips`.
-4. `7e7f774` — characterize shared motion transitions without visual change.
-5. `ca058e9` — keep post metadata and actions readable at 200 percent text.
-6. `eaeff11` — repair notification row bounds at 200 percent text.
-7. `287b02c` — stack profile statistics at narrow widths for large text.
-8. `464b2d1` — record the Phase 3 visual system as complete.
+# Completed
 
-Per-slice tests, lint, and architecture audits passed or reported no changed-scope regression.
-The full gate remains known red, and Phase 10 owns that failure. The whole-worktree
-`diff --check` failure is unrelated `.opencode` whitespace; changed-file checks passed.
+- R00 — record the current recovery baseline and failure attribution. Fresh grouped, isolated, and full-gate evidence replaces the historical count.
 
-## Fresh-build emulator evidence
+# Current slice
 
-Earlier device runs were stale. They used Beeline 0.2.8 installed on 2026-09-28, before all
-Phase 3 commits. Those runs are not evidence for the Phase 3 implementation.
+R00 is complete. No application source changed in this slice.
 
-Fresh evidence used plain `adb -s emulator-5554` commands without helpers or command chaining:
+# Files involved
 
-- The APK at `app/build/outputs/apk/debug/app-debug.apk` was built from HEAD `464b2d1`; the build
-  exited 0.
-- `adb -s emulator-5554 install -r` returned `Success` and preserved data.
-- Package data showed `lastUpdateTime` 2026-09-29 01:36:54. `firstInstall` remained 2026-09-28.
-  The package was version 0.2.8/2008.
-- `MainActivity` was foreground at task 29 in `RESUMED` state. Firefox OAuth remained in the
-  background and `STOPPED`.
-- `font_scale` was 1.0 and the display was 1848x2448.
-- Home showed Home, Local, and Federated chips inside the screen. Chip-row heights were about
-  185 pixels. Post metadata, timestamps, hashtag chips (`#travel +1` and `#photomonday +22`),
-  and media were inside the screen.
-- The Home action row was `[31,1696][1817,1881]`. It had five actions, each about 357 pixels
-  wide, with no clipping. Bottom navigation and Compose content were inside the screen.
-- Notifications showed three cards inside the screen. Each Dismiss control was inside its card
-  with no clipping. The filter row showed five filters; Likes at the right edge was scrollable.
-- A view-only tap at `1228,2109` opened Notifications. A view-only tap at `839,2109` returned
-  Home. The session stayed preserved. This run did not dismiss, acknowledge, filter, or mutate
-  data. An accidental star from an earlier run is not part of this fresh run.
-- `fresh-home.png` was written with plain `exec-out`. Image reading was blocked, so the geometry
-  evidence comes from UI dumps.
+- docs/agents/tasks/beeline-0.4.0.md holds this state.
+- docs/agents/handoff.md points to this recovery task.
+- logs/261001-010000.txt holds fresh attribution and exact checks.
+- logs/BUGS.txt holds the current failure list.
+- docs/wiki/build-test-and-release.md holds the verified local test procedure.
 
-## Remaining verification limits
+# Verification
 
-Profile, Search, Photo Grid, and direct messages remain unverified on this fresh build. Dark mode,
-wide and foldable layouts, 200 percent font scale, keyboard behavior, TalkBack, and live-server
-behavior also remain unverified. A 200 percent run needs a separate font-scale change and restore.
+Grouped historical classes with --rerun-tasks report 88 tests and 16 failures. Each class alone reports the same failures. The pre-repair test assembleRelease gate reports 1458 tests and 17 failures. Release assembly completes. The extra failure is MastodonSourceContractTest.defaultFavouriteArtworkStyleUsesHeart. Isolated rerun reports 7 tests and 1 failure. R15a owns that contract repair. Source revision is ecd0d6b on a dirty worktree with no uncommitted main source changes. References 464b2d1 and 219504c resolve. Intermediate XML reports were overwritten by later focused runs; console summaries and logs/261001-010000.txt preserve the sanitized attribution. Full evidence lives in logs/261001-010000.txt.
 
-## Documentation review
+# Next
 
-The Phase 3 changes affect characterization coverage, minimum-height behavior, and narrow
-profile-stat stacking. They do not change screen ownership, navigation ownership, persistence,
-protocol behavior, or the shell boundary. No wiki update is required.
+Execute R01. Activate draft writers in account-bound unit fixtures.
 
-## Preservation and continuation
+# Blockers
 
-This integration record changes documentation only. It does not change production or test source.
-The unrelated staged `classic_navigation` document, modified agent files and writing-style file,
-deleted PNGs and Photo Grid test, untracked images and helpers, caches, and temporary files remain
-untouched. No secrets entered the work. No staging, commit, or push occurs here.
+The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. Intermediate XML reports were overwritten; sanitized attribution survives in logs/261001-010000.txt. The timestamped log and BUGS.txt edit need explicit force-add approval because /logs/*.txt is Git-ignored. Device, API 29, live-server, signing, and environmental checks remain unverified.
 
-Next slice: Phase 4A, stabilize back, modal, and memory behavior after Phase 3A and 3B.
+# Last safe commit
+
+ecd0d6b Allow general orchestrator shell commands.
