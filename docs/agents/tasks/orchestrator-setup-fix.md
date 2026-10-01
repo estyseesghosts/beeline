@@ -4,7 +4,9 @@ Make the Beeline OpenCode orchestrator agent work as designed. It must be the
 default agent, it must keep its permission model, and its workflow commands must
 run under it.
 
-Status: complete. All six slices are committed.
+Status: historical. All six slices were committed against the earlier agent configuration.
+Current policy: [agent control](../agent-control.md) and [agent profiles](../../../.opencode/README.md).
+Do not use the role names or permission assumptions below as current operational guidance.
 
 # Invariants
 
@@ -29,9 +31,8 @@ Status: complete. All six slices are committed.
   uncommitted user changes in the same feature area.
 - The two previously untracked subagent files are added to Git with no content
   change. The user asked for a separate task to review their content.
-- The checkpoint command routes the Gradle run to `code_reviewer_low`, because
-  `targeted_fixer` resolves a Gradle shell command to `deny`. This is a routing
-  consequence, not an endorsement of the subagent permission sets.
+- The checkpoint originally routed Gradle to `code_reviewer_low` under an incorrect assumption that `targeted_fixer` denied Gradle.
+  The later permission audit retracted that assumption. The implementation owner could run the permitted wrapper.
 
 # Completed
 

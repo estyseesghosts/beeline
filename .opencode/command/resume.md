@@ -11,6 +11,7 @@ commands. You must not change any file.
 Read these items in order.
 
 1. `AGENTS.md`.
+   Read its required workflow, agent-control, and task-relevant rule pages.
 2. The active task-state file in `docs/agents/tasks/`.
 3. `git status`.
 4. Recent relevant commits with `git log`.

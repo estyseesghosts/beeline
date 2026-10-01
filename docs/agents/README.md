@@ -2,14 +2,15 @@
 
 Status: current  
 Owner: Maintainers  
-Last reviewed: 2026-09-15  
-Stale when: The state-recovery process changes.
+Last reviewed: 2026-09-30
+Stale when: Required rules, agent routing, task state, or state recovery changes.
 
 This directory holds agent-facing engineering documentation.
 
 ## Layers
 
-- `AGENTS.md` holds permanent project law.
+- `AGENTS.md` holds core constraints and required reading.
+- The rule pages below hold detailed permanent engineering and operation rules.
 - `docs/agents/tasks/<task>.md` holds the current truth of one long task.
 - Git commits hold verified history.
 
@@ -45,6 +46,9 @@ Rebuild the TODO list from these items.
 
 ## Current tasks
 
+The current agent-control cleanup record is [agent-control-cleanup](tasks/agent-control-cleanup.md).
+Its status and verification limits are separate from application work.
+
 The active task is [Beeline 0.4.0](tasks/beeline-0.4.0.md). See its [UI baseline](beeline-0.4.0-ui-baseline.md).
 Keep the
 [task template](tasks/_template.md) for new task states.
@@ -72,6 +76,12 @@ Keep the
   states.
 
 ## Pages
+
+- [Agent control](agent-control.md): roles, dispatch contracts, stop conditions, and review.
+- [Task workflow](workflow.md): recovery, slices, records, checkpoints, and completion.
+- [Engineering rules](engineering-rules.md): architecture, security, domain, UI, quality, and Android verification.
+- [Documentation rules](documentation-rules.md): authority, coverage, maintenance, comments, and style.
+- [OpenCode profiles](../../.opencode/README.md): configured roles and permission limits.
 
 - [Acceptance matrix](decomposition-01-02-acceptance-matrix.md)
 - [App shell ownership](app-shell-ownership.md)

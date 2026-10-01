@@ -1,10 +1,13 @@
 # Orchestrator setup fix plan
 
-Status: implemented
-Owner: unassigned
-Last reviewed: 2026-09-29
-Verification: source verified, live service verified, interactive session unverified
+Status: historical (implemented against the earlier agent configuration)
+Owner: Maintainers
+Last reviewed: 2026-09-30
+Verification: Historical source and service evidence below. Current routing and interactive permissions need their own verification.
 Applies to: `.opencode/agents/orchestrator.md` and the OpenCode project configuration
+
+Current guidance: [agent control](../../docs/agents/agent-control.md) and [agent profiles](../README.md).
+The role names and permission assumptions below are not current operation rules.
 
 ## Slice commits
 
@@ -23,9 +26,8 @@ Applies to: `.opencode/agents/orchestrator.md` and the OpenCode project configur
   interactive smoke test, which a non-interactive client cannot run. The
   simulator reproduces the V2 rule order instead, and it fails on the pre-fix
   file, so it detects the defects rather than rubber-stamping them.
-- Slice 3 routes the Gradle run to `code_reviewer_low`. The plan said "the agent
-  that owns the test command". A probe showed `targeted_fixer` resolves Gradle to
-  `deny`, so the plan wording hid a real routing constraint.
+- Slice 3 routed the Gradle run to `code_reviewer_low` under an incorrect assumption that `targeted_fixer` denied Gradle.
+  The later permission audit retracted that claim. The implementation owner could run the permitted wrapper.
 - Slice 6 also moved `.opencode/agents/README.md` to `.opencode/README.md`. Live
   service verification showed that every `.md` file in `.opencode/agents/` loads
   as an agent, so the README was registered as a phantom primary agent named

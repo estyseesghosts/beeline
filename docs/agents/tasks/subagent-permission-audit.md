@@ -4,7 +4,9 @@ Make sure every Beeline subagent has the permissions its declared purpose
 requires. A read-only agent must be read-only. An agent that must edit files,
 use the shell, use adb, or use Git must be able to do exactly that.
 
-Status: complete. All five slices are committed and the audit is green.
+Status: historical. All five slices were committed against the earlier eight-subagent configuration.
+Current policy: [agent control](../agent-control.md) and [agent profiles](../../../.opencode/README.md).
+The counts below are historical evidence, not verification of the consolidated agents.
 
 # Invariants
 

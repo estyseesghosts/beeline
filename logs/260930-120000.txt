@@ -1,0 +1,20 @@
+Goal: Consolidate Beeline agent roles and reduce AGENTS.md.
+Scope: Agent Markdown definitions, command prompts, documentation, and task records.
+Non-goals: Application code, scripts, tests, plugins, dependencies, and unrelated worktree changes.
+Slice: One coherent agent-control update. Role routing and rule links must change together.
+Owner: The current agent owns this documentation implementation.
+Validation: Parse agent frontmatter. Check routing and links. Reuse permission probes without editing test code.
+Risks: Historical permission tests name retired agents. Live OpenCode permission behavior is not proven by static checks.
+Baseline: 78b9b14. Preserve all pre-existing changes, including staged docs/classic_navigation.md.
+Result: Six custom profiles remain: orchestrator, problem_solver, targeted_fixer, code_reviewer, git_handler, and adb_handler.
+Result: The investigator replaces both planners and the explorer. One reviewer replaces both review tiers.
+Result: AGENTS.md links workflow, control, documentation, and engineering rule pages. Shared agent invariant copies were removed.
+Result: Checkpoint keeps the same implementation owner for validation, repairs, and records. Stop conditions replace permission workarounds.
+Static verification: 153/153 subagent permission probes, 44/44 orchestrator probes, six frontmatter blocks, and command routing passed.
+Limit: Test code remains unchanged. Legacy role profiles were mapped in memory for validation.
+Limit: No Android, device, live-server, or live interactive permission checks were run.
+Document verification: 81/81 staged local links and anchors passed. Active prompts contain no retired dispatch targets.
+AGENTS.md: Reduced from 734 lines to 58 lines. Detailed project policies remain in linked rule pages.
+Review: The final scope includes only agent Markdown definitions, command prompts, documentation, and task records.
+Worktree: Unrelated staged and unstaged changes remain intact. Commit uses an explicit path list to exclude the staged navigation document.
+Whitespace: The full index check finds existing trailing spaces only in the unrelated staged navigation document. Check the slice paths separately. Do not edit that user document.

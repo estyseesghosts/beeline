@@ -4,7 +4,7 @@
 
 **Owner:** Maintainers.
 
-**Last reviewed:** 2026-09-23.
+**Last reviewed:** 2026-09-30 (agent-control entries only; other classifications retain their earlier review).
 
 **Stale when:** A document is added, removed, moved, or reclassified.
 
@@ -23,6 +23,13 @@ This page classifies every reviewed document. Use one of these classes: `current
 | Path | Class | Notes |
 | --- | --- | --- |
 | `docs/agents/README.md` | current | Agent wiki index. |
+| `docs/agents/agent-control.md` | current | Beeline dispatch, ownership, stop conditions, and review rules. |
+| `docs/agents/workflow.md` | current | Task records, recovery, slices, and checkpoints. |
+| `docs/agents/engineering-rules.md` | current | Detailed policy moved from AGENTS.md; not a new runtime certification. |
+| `docs/agents/documentation-rules.md` | current | Documentation authority, coverage, maintenance, comments, and style. |
+| `docs/agents/tasks/agent-control-cleanup.md` | current | Agent-control cleanup state and verification limits. |
+| `docs/agents/tasks/orchestrator-setup-fix.md` | historical | Earlier setup record. Not current role or permission guidance. |
+| `docs/agents/tasks/subagent-permission-audit.md` | historical | Earlier eight-subagent audit. Counts describe the old configuration only. |
 | `docs/agents/documentation-inventory.md` | current | This page. |
 | `docs/agents/app-shell-ownership.md` | current | Current shell ownership and gaps. |
 | `docs/agents/protocol-and-session-ownership.md` | current | Current source and session ownership. |
@@ -88,6 +95,10 @@ historical and archived under `docs/archive/`. Do not cite it as current archite
 | --- | --- | --- |
 | `README.md` | current | User-facing readme. Its TODO section is partially stale. |
 | `importantdocs/writing_style.md` | current | Required writing style. |
+| `AGENTS.md` | current | Core constraints and required rule links. |
+| `.opencode/README.md` | current | Six configured profiles and current verification limits. |
+| `.opencode/plan/orchestrator-setup-fix.md` | historical | Earlier setup plan. Superseded for current roles and checkpoint routing. |
+| `docs/CONTINUING_PROJECTS_AGENT_CONTROL.md` | reference | Two-project input; Beeline applies it through project-local agent control. |
 | `docs/archive/` | historical | Superseded plans, reports, roadmaps, and finished task states. See `docs/archive/README.md`. |
 | `docs/README` assets | reference | Images, fonts, and i18n spreadsheets. |
 

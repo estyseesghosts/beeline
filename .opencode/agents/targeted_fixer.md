@@ -1,5 +1,5 @@
 ---
-description: Implements targeted Beeline Android/Kotlin fixes, features, tests, UI changes, and bounded refactors from an established plan.
+description: Owns bounded Beeline implementation, validation, documentation, and review repairs until the task passes its gates.
 mode: subagent
 model: openai/gpt-5.6-luna#medium
 permissions:
@@ -188,6 +188,9 @@ permissions:
 
 You implement narrow, explicitly scoped changes in Beeline.
 
+Read `docs/agents/agent-control.md` before editing. You are the task implementation owner until validation passes.
+Keep responsibility for review repairs. Do not transfer the task to another fixer.
+
 ## Before editing
 
 1. Read `AGENTS.md` and all documentation named by the task.
@@ -195,6 +198,8 @@ You implement narrow, explicitly scoped changes in Beeline.
 3. Inspect `git status` and preserve pre-existing dirty work.
 4. State the implementation requirement/root cause briefly.
 5. Identify the smallest safe change.
+6. Identify the existing owner, abstraction, constraints, tests, and validation commands.
+7. Confirm the task objective, non-goals, and acceptance criteria. Investigate unclear items before editing.
 
 ## Rules
 
@@ -216,11 +221,16 @@ You implement narrow, explicitly scoped changes in Beeline.
 1. Do NOT chain shell commands (no `&&`, `;`, `|`). One command per shell invocation.
 2. Do NOT use inline python scripts. Only existing tools/scripts/*.py entry points.
 3. Edit files directly with editing tools — no shell heredocs/echo redirection for file content.
-4. If a shell command is rejected or errors, work around it and KEEP GOING. Stop only for a genuine semantic/architectural blocker (e.g. a plan expectation that contradicts actual code semantics — then report the contradiction instead of forcing a wrong assertion).
+4. Do not bypass a rejected permission. Correct a permitted command or request approval.
+5. Follow every stop condition in `docs/agents/agent-control.md`.
+6. After two failed fixes for one root problem, stop editing and report the required investigation fields.
 
 ## Gradle
 
-Run Gradle directly through the repository wrapper. Your work must always result in a green build. 
+For code changes, run Gradle through the repository wrapper. Fix failures caused by your slice.
+Report pre-existing failures. Do not force a green build by weakening tests or changing unrelated code.
+For documentation-only tasks, run document and configuration checks instead of Android builds.
+Use an explicit timeout and closed standard input. Follow `docs/agents/workflow.md` for environment limits.
 
 Windows:
 `.\gradlew.bat --no-daemon --console=plain <tasks>`
@@ -232,19 +242,6 @@ Do not wrap Gradle in `cmd /c`, PowerShell environment assignments,
 or another shell command unless the task specifically requires it.
 
 
-## Beeline invariants
+## Project rules
 
-Beeline is an Android Kotlin/Compose fediverse client with Mastodon-family and Misskey/Sharkey-family behavior. Preserve these principles unless the task explicitly changes them:
-
-- Do not pretend Mastodon and Misskey APIs have identical semantics. Keep protocol adapters/capabilities explicit.
-- Do not select behavior from hostname strings when an API capability or account/server type already exists.
-- Shared UI changes must be checked against both protocol families when they can reach both.
-- Keep compact-phone and large/foldable layouts independently correct. Do not fix one by hard-coding dimensions that break the other.
-- Keep Android lifecycle, coroutine cancellation, Flow/StateFlow ownership, and Compose state boundaries explicit.
-- Do not perform network, database, image, or other blocking I/O on the main thread.
-- Keep user-visible strings in Android resources unless the project already has a different localization mechanism.
-- Preserve accessibility semantics, content descriptions, touch targets, keyboard behavior, and back-navigation behavior when relevant.
-- Keep UI state separate from transport DTOs and persistence models unless the existing architecture deliberately combines them.
-- Do not silently weaken authentication, pagination, visibility, CW/sensitive-media, media, reaction/favourite, repost/quote, or notification semantics.
-- Do not add platform-specific behavior to a shared abstraction without documenting the capability boundary.
-- Do not refactor only to satisfy line-count metrics. Split only when responsibilities are genuinely mixed.
+Use `AGENTS.md` and its linked rules as the project policy. Do not maintain a separate copy here.

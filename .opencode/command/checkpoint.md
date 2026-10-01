@@ -9,15 +9,19 @@ You are the orchestrator. You never change a file and you never run a Git
 command that changes repository state. Your permission rules block both. Every
 step below names the subagent that does the work.
 
-1. Ask `code_reviewer_low` to review the slice. Do not continue until it reports
-   no BLOCKING and no REQUIRED finding.
-2. Ask `code_reviewer_low` to run the smallest relevant test set. Both it
-   and `targeted_fixer` may run Gradle.
+1. Ask the same `targeted_fixer` session to run applicable verification.
+   For code, run the smallest relevant test set and required project gates.
+   For documentation-only work, check documents and configuration instead of Android builds.
+2. Ask `code_reviewer` to review the slice and verification evidence.
+   Return required findings to the same implementation owner. Repeat verification after repairs.
+   Do not continue until required findings are resolved or rejected with evidence.
 3. Inspect `git status` and `git diff` yourself. These two commands are allowed.
 4. Ask `targeted_fixer` to rewrite the active task-state file in
    `docs/agents/tasks/`. Update `Completed`, `Current slice`, `Verification`,
    `Next`, `Blockers`, and `Last safe commit`. Do not append. It edits the
-   existing file, because the orchestrator cannot write.
+   task records, because the orchestrator cannot write. Update the task log,
+   handoff, and affected documentation in that same owner session.
+   Inspect the final diff after these updates. Do not omit record updates from review.
 5. Ask `git_handler` to stage only the files that belong to the slice and to
    commit them with a clear imperative message. It runs the staging and the
    commit, because the orchestrator cannot.
