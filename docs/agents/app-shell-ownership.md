@@ -7,12 +7,12 @@ C-05, C-06a, C-06b, C-06c, C-07, C-08, C-09, C-10, C-11, C-12a through C-12d4, C
 C-14, and C-15 are implemented and test verified. Steps 13, 14, and 15 of the progress
 report are complete. No dead scaffolding remains.
 
-**Last reviewed:** 2026-09-28.
+**Last reviewed:** 2026-10-01.
 
 **Source baseline:** `b629a2c` (planning). Status refreshed against `c9e06c8`.
 
-**Evidence:** source verified. Device and live-server behavior remain unverified. No test ran during
-this documentation pass.
+**Evidence:** source verified. R02 verifies the shell draft fixture with NavigationTest,
+ComposerOwnerTest, and ShellCharacterizationTest. Device and live-server behavior remain unverified.
 
 **Completion owner:** `docs/archive/agents/decomposition-01-02-completion.md`.
 
@@ -198,6 +198,15 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `MainActivity` serializes each locale decision with its side effect.
 - Active-account and selected-account notification settings stay distinct.
 - Every source-backed feature receives values from one accepted connected lifetime.
+- Shell draft tests use one active writer for each account. `ShellDrafts.forAccount`
+  activates the authority and builds the contract before composition. The test holds
+  the contract stable across recomposition. A recreation test renews the owner with
+  the same store, authority, and generation. The test retires each session scope at
+  teardown. Account-null previews use `drafts()` and carry no writer.
+- Closing a dirty composer reaches storage, closes the overlay, and permits Profile
+  navigation. A clean close creates no draft. A failed save keeps the editor text
+  and reports no success. A revoked writer keeps the editor text and stores nothing.
+  Recomposition keeps the same writer and stores one draft.
 
 ## Limits
 

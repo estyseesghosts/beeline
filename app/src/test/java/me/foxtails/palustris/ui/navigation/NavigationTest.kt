@@ -36,6 +36,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.activity.compose.setContent
 import org.junit.Before
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import me.foxtails.palustris.ui.shell.AppShellFixtures
@@ -71,6 +72,15 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import java.io.IOException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.runBlocking
+import me.foxtails.palustris.data.auth.DraftStore
+import me.foxtails.palustris.data.auth.DraftWriteAuthority
+import me.foxtails.palustris.data.auth.InMemoryDraftStore
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -83,8 +93,25 @@ class NavigationTest {
     @Before fun previewShell() { compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app() } } }
 
     private val captureScreenshots = System.getProperty("beeline.captureScreenshots") == "true"
+    private val shellDraftSessions = mutableListOf<AppShellFixtures.ShellDrafts>()
+
+    private fun activeDrafts(
+        account: Account,
+        store: DraftStore = InMemoryDraftStore(),
+        authority: DraftWriteAuthority = DraftWriteAuthority(),
+        scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+    ): AppShellFixtures.ShellDrafts = runBlocking {
+        AppShellFixtures.ShellDrafts.forAccount(
+            accountId = account.id,
+            store = store,
+            scope = scope,
+            authority = authority,
+        )
+    }.also { shellDraftSessions += it }
 
     @After fun clearDraft() {
+        shellDraftSessions.forEach { it.retire() }
+        shellDraftSessions.clear()
         compose.activity.getSharedPreferences("local_draft", Context.MODE_PRIVATE).edit().clear().commit()
     }
 
@@ -789,15 +816,22 @@ class NavigationTest {
 
     @Test fun draftsSurviveActivityRecreationAndCanBeDeleted() {
         val account = fixtureAccount("draft-owner")
-        val drafts = AppShellFixtures.drafts(accountId = account.id)
-        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = drafts) } }
+        val drafts = activeDrafts(account)
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = drafts.contract) } }
         compose.waitForIdle()
         compose.onNodeWithContentDescription("Compose post").performClick()
         compose.onNodeWithContentDescription("Post text").performTextInput("A draft stored only on this device.")
         screenshot("compose")
         compose.onNodeWithText("Save draft").performClick()
+        compose.waitUntil(timeoutMillis = 5_000) {
+            runBlocking { drafts.store.list(account.id) }.isNotEmpty()
+        }
         compose.activityRule.scenario.recreate()
-        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = drafts) } }
+        drafts.retire()
+        assertFalse(drafts.scope.isActive)
+        shellDraftSessions.remove(drafts)
+        val renewed = drafts.renewed().also { shellDraftSessions += it }
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = renewed.contract) } }
         compose.onNodeWithContentDescription("Profile").performClick()
         compose.onNodeWithTag("profile_drafts_chip").performClick()
         compose.onNodeWithText("A draft stored only on this device.").assertIsDisplayed()
@@ -811,7 +845,8 @@ class NavigationTest {
 
     @Test fun closingComposerAutosavesUnsavedText() {
         val account = fixtureAccount("autosave-owner")
-        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = AppShellFixtures.drafts(accountId = account.id)) } }
+        val drafts = activeDrafts(account)
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = drafts.contract) } }
         compose.waitForIdle()
         compose.onNodeWithContentDescription("Compose post").performClick()
         compose.onNodeWithContentDescription("Post text").performTextInput("Unsaved")
@@ -820,6 +855,123 @@ class NavigationTest {
         compose.onNodeWithContentDescription("Profile").performClick()
         compose.onNodeWithTag("profile_drafts_chip").performClick()
         compose.onNodeWithText("Unsaved").assertIsDisplayed()
+    }
+
+    @Test fun cleanComposerCloseCreatesNoDraft() {
+        val account = fixtureAccount("clean-close-owner")
+        val drafts = activeDrafts(account)
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = drafts.contract) } }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Compose post").performClick()
+        compose.onNodeWithContentDescription("Close composer").performClick()
+        compose.waitForIdle()
+        assertTrue(runBlocking { drafts.store.list(account.id) }.isEmpty())
+        compose.onNodeWithContentDescription("Profile").performClick()
+        compose.onNodeWithTag("profile_drafts_chip").performClick()
+        compose.onNodeWithText("No drafts yet").assertIsDisplayed()
+    }
+
+    @Test fun failedAutosaveKeepsTextWithoutFalseSuccess() {
+        val account = fixtureAccount("failed-save-owner")
+        val failingStore = object : DraftStore {
+            private val backing = InMemoryDraftStore()
+            override suspend fun list(accountId: AccountId?): List<me.foxtails.palustris.domain.PostDraft> =
+                backing.list(accountId)
+            override suspend fun save(draft: me.foxtails.palustris.domain.PostDraft): Nothing =
+                throw IOException("disk gone")
+            override suspend fun delete(accountId: AccountId?, draftId: String) = backing.delete(accountId, draftId)
+            override suspend fun deleteAll(accountId: AccountId?) = backing.deleteAll(accountId)
+            override suspend fun migrateLegacy(accountId: AccountId?, preferences: android.content.SharedPreferences) =
+                backing.migrateLegacy(accountId, preferences)
+        }
+        val drafts = activeDrafts(account, store = failingStore)
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = drafts.contract) } }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Compose post").performClick()
+        compose.onNodeWithContentDescription("Post text").performTextInput("Keep editing")
+        compose.onNodeWithContentDescription("Close composer").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Post text").assertIsDisplayed()
+        compose.onNodeWithText("Keep editing").assertIsDisplayed()
+        compose.onNodeWithText("Draft could not be saved. Keep editing and try again.").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Post text").performTextInput(" again")
+        compose.onNodeWithText("Keep editing again").assertIsDisplayed()
+        assertTrue(runBlocking { failingStore.list(account.id) }.isEmpty())
+    }
+
+    @Test fun revokedWriterRejectsLateAutosave() {
+        val account = fixtureAccount("revoked-owner")
+        val drafts = activeDrafts(account)
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = drafts.contract) } }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Compose post").performClick()
+        compose.onNodeWithContentDescription("Post text").performTextInput("Late text")
+        runBlocking { drafts.authority.invalidate(account.id) }
+        compose.onNodeWithContentDescription("Close composer").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Post text").assertIsDisplayed()
+        compose.onNodeWithText("Late text").assertIsDisplayed()
+        assertTrue(runBlocking { drafts.store.list(account.id) }.isEmpty())
+    }
+
+    @Test fun accountChangeKeepsDraftsIsolated() {
+        val first = fixtureAccount("draft-first")
+        val second = fixtureAccount("draft-second")
+        val sharedStore = InMemoryDraftStore()
+        val sharedAuthority = DraftWriteAuthority()
+        val firstDrafts = activeDrafts(first, store = sharedStore, authority = sharedAuthority)
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = first, draftsContract = firstDrafts.contract) } }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Compose post").performClick()
+        compose.onNodeWithContentDescription("Post text").performTextInput("First account draft")
+        compose.onNodeWithText("Save draft").performClick()
+        compose.waitUntil(timeoutMillis = 5_000) {
+            runBlocking { sharedStore.list(first.id) }.isNotEmpty()
+        }
+        firstDrafts.retire()
+        assertFalse(firstDrafts.scope.isActive)
+        shellDraftSessions.remove(firstDrafts)
+        val secondDrafts = activeDrafts(second, store = sharedStore, authority = sharedAuthority)
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = second, draftsContract = secondDrafts.contract) } }
+        compose.waitForIdle()
+        assertEquals(1, runBlocking { sharedStore.list(first.id) }.size)
+        assertTrue(runBlocking { sharedStore.list(second.id) }.isEmpty())
+        compose.onNodeWithContentDescription("Profile").performClick()
+        compose.onNodeWithTag("profile_drafts_chip").performClick()
+        compose.onNodeWithText("No drafts yet").assertIsDisplayed()
+    }
+
+    @Test fun recomposingTheSameFixtureKeepsItsWriter() {
+        val account = fixtureAccount("recompose-owner")
+        var saveCalls = 0
+        val backing = InMemoryDraftStore()
+        val countingStore = object : DraftStore {
+            override suspend fun list(accountId: AccountId?): List<me.foxtails.palustris.domain.PostDraft> =
+                backing.list(accountId)
+            override suspend fun save(draft: me.foxtails.palustris.domain.PostDraft) {
+                saveCalls++
+                backing.save(draft)
+            }
+            override suspend fun delete(accountId: AccountId?, draftId: String) = backing.delete(accountId, draftId)
+            override suspend fun deleteAll(accountId: AccountId?) = backing.deleteAll(accountId)
+            override suspend fun migrateLegacy(accountId: AccountId?, preferences: android.content.SharedPreferences) =
+                backing.migrateLegacy(accountId, preferences)
+        }
+        val drafts = activeDrafts(account, store = countingStore)
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = drafts.contract) } }
+        compose.waitForIdle()
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = drafts.contract) } }
+        compose.waitForIdle()
+        assertTrue(drafts.authority.isCurrent(account.id, drafts.generation))
+        compose.onNodeWithContentDescription("Compose post").performClick()
+        compose.onNodeWithContentDescription("Post text").performTextInput("Stable writer")
+        compose.onNodeWithContentDescription("Close composer").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Profile").performClick()
+        compose.onNodeWithTag("profile_drafts_chip").performClick()
+        compose.onNodeWithText("Stable writer").assertIsDisplayed()
+        assertEquals(1, saveCalls)
+        assertEquals(1, runBlocking { countingStore.list(account.id) }.size)
     }
 
     @Test fun contextualActionsFollowSelectedDestination() {

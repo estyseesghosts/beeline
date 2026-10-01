@@ -29,6 +29,8 @@ import me.foxtails.palustris.data.auth.DraftWriteAuthority
 import me.foxtails.palustris.data.auth.InMemoryDraftStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.notifications.NotificationsUiState
 import me.foxtails.palustris.ui.PalustrisApp
@@ -237,13 +239,79 @@ internal object AppShellFixtures {
         },
     )
 
-    /** Test-only draft persistence backed by an explicit store. */
-    fun drafts(store: DraftStore = InMemoryDraftStore(), accountId: me.foxtails.palustris.domain.AccountId? = null): DraftsContract {
-        val scope = CoroutineScope(Dispatchers.Unconfined)
+    /**
+     * Test-owned draft session for one account.
+     *
+     * The session owns one store, one authority, one generation, and one cancellable scope.
+     * The contract stays stable across ordinary recomposition. A recreation test keeps the
+     * store, authority, and generation and builds a new owner through [renewed]. The test
+     * retires each session through [retire]. Account-null previews use [drafts] instead.
+     */
+    class ShellDrafts private constructor(
+        val accountId: me.foxtails.palustris.domain.AccountId,
+        val store: DraftStore,
+        val authority: DraftWriteAuthority,
+        val generation: Long,
+        val scope: CoroutineScope,
+        val contract: DraftsContract,
+    ) {
+        /** Builds a new owner after recreation with the same store, authority, and generation. */
+        fun renewed(): ShellDrafts {
+            val renewedScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+            val renewedContract = DraftActions(
+                scope = renewedScope,
+                store = store,
+                accountId = accountId,
+                legacyPreferences = {
+                    ApplicationProvider.getApplicationContext<Context>()
+                        .getSharedPreferences("local_draft", Context.MODE_PRIVATE)
+                },
+                writeGeneration = generation,
+                writeAuthority = authority,
+            ).asDraftsContract()
+            return ShellDrafts(accountId, store, authority, generation, renewedScope, renewedContract)
+        }
+
+        /** Cancels the session scope. The test calls this at teardown for each session. */
+        fun retire() {
+            scope.cancel()
+        }
+
+        companion object {
+            /**
+             * Activates one writer for [accountId] and builds its contract before composition.
+             * The caller holds the result stable across recomposition and retires it at teardown.
+             */
+            suspend fun forAccount(
+                accountId: me.foxtails.palustris.domain.AccountId,
+                store: DraftStore = InMemoryDraftStore(),
+                scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+                authority: DraftWriteAuthority = DraftWriteAuthority(),
+            ): ShellDrafts {
+                val generation = authority.activate(accountId)
+                val contract = DraftActions(
+                    scope = scope,
+                    store = store,
+                    accountId = accountId,
+                    legacyPreferences = {
+                        ApplicationProvider.getApplicationContext<Context>()
+                            .getSharedPreferences("local_draft", Context.MODE_PRIVATE)
+                    },
+                    writeGeneration = generation,
+                    writeAuthority = authority,
+                ).asDraftsContract()
+                return ShellDrafts(accountId, store, authority, generation, scope, contract)
+            }
+        }
+    }
+
+    /** Test-only account-null draft preview. Account-bound tests use [ShellDrafts.forAccount]. */
+    fun drafts(store: DraftStore = InMemoryDraftStore()): DraftsContract {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
         return DraftActions(
             scope = scope,
             store = store,
-            accountId = accountId,
+            accountId = null,
             legacyPreferences = {
                 ApplicationProvider.getApplicationContext<Context>()
                     .getSharedPreferences("local_draft", Context.MODE_PRIVATE)

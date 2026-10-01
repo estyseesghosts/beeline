@@ -18,6 +18,8 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.PalustrisApp
+import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -37,6 +39,12 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ShellCharacterizationTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    private val shellDraftSessions = mutableListOf<AppShellFixtures.ShellDrafts>()
+
+    @After fun retireDrafts() {
+        shellDraftSessions.forEach { it.retire() }
+        shellDraftSessions.clear()
+    }
 
     @Test
     fun expandedReactionGestureOpensTheExpandedReactionBubble() {
@@ -84,13 +92,15 @@ class ShellCharacterizationTest {
             actions = setOf(PostAction.Reply),
             canPublish = true,
         )
+        val drafts = runBlocking { AppShellFixtures.ShellDrafts.forAccount(account.id) }
+            .also { shellDraftSessions += it }
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 AppShellFixtures.app(
                     account = account,
                     home = AppShellFixtures.home(feed),
                     postInteractions = AppShellFixtures.interactions(feed),
-                    draftsContract = AppShellFixtures.drafts(),
+                    draftsContract = drafts.contract,
                     composer = AppShellFixtures.composer(feed, onPublish = { value, _ -> request = value }),
                 )
             }

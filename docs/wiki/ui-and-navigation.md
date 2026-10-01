@@ -2,7 +2,7 @@
 
 Status: current, partial coverage
 Owner: UI maintainers
-Last reviewed: 2026-09-28
+Last reviewed: 2026-10-01
 Stale when: A destination, layout policy, restoration rule, or accessibility requirement changes.
 
 Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
@@ -31,6 +31,18 @@ publication updates without changing route or saved-state restoration.
 
 Sources: `ui/search/SearchOwner.kt`, `ui/search/SearchHost.kt`, `ui/shell/PostProjectionCoordinator.kt`,
 `SearchOwnerTest`, `ConnectedEntryStoreTest`.
+
+## Draft restoration
+
+Closing a dirty composer saves the draft and closes the overlay. The saved text
+appears under Profile drafts. A clean close saves nothing. A failed save keeps
+the editor text and shows the save error. A revoked writer saves nothing. A saved
+draft survives activity recreation and supports deletion. Recomposition keeps the
+same writer and creates one draft.
+
+Sources: `ui/composer/ComposerOwner.kt`, `ui/PalustrisApp.kt`,
+`app/src/test/java/me/foxtails/palustris/ui/shell/AppShellFixtures.kt`,
+`app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationTest.kt`.
 
 ## Purpose
 

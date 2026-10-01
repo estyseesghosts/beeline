@@ -45,6 +45,8 @@ import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.ReactionSelectionMode
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.data.auth.AccountRef
+import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -59,6 +61,13 @@ import java.io.File
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class SignInScreenTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    private val shellDraftSessions = mutableListOf<AppShellFixtures.ShellDrafts>()
+
+    @After fun retireDrafts() {
+        shellDraftSessions.forEach { it.retire() }
+        shellDraftSessions.clear()
+    }
+
     private fun capture(name: String) {
         compose.waitForIdle()
         compose.runOnIdle {
@@ -117,11 +126,13 @@ class SignInScreenTest {
     @Test fun publishingKeepsDraftUntilSuccessCallback() {
         val account = Account(AccountId(Connection("https://example.org", Protocol.MISSKEY), "owner"), "Owner", "@owner@example.org")
         var complete: ((OwnedPost) -> Unit)? = null
+        val drafts = runBlocking { AppShellFixtures.ShellDrafts.forAccount(account.id) }
+            .also { shellDraftSessions += it }
         compose.activity.runOnUiThread { compose.activity.setContent {
             AppShellFixtures.app(
                 account = account,
                 home = AppShellFixtures.home(FeedState(canPublish = true)),
-                draftsContract = AppShellFixtures.drafts(),
+                draftsContract = drafts.contract,
                 composer = AppShellFixtures.composer(
                     FeedState(canPublish = true),
                     onPublish = { _, onSuccess -> complete = onSuccess },

@@ -14,27 +14,31 @@ The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery
 
 - R00 — record the current recovery baseline and failure attribution. Fresh grouped, isolated, and full-gate evidence replaces the historical count.
 - R01 — activate draft writers in account-bound unit fixtures. All 13 DraftActionsTest tests pass. DraftWriteAuthorityTest passes with no regression.
+- R02 — bind shell draft fixtures to an active writer. Full NavigationTest passes with 30 tests. ComposerOwnerTest, ShellCharacterizationTest, and SignInScreenTest pass with no regression.
 
 # Current slice
 
-R01 is complete. Production draft revocation rules remain unchanged.
+R02 is complete. Production draft, composer, and shell rules remain unchanged. No R02b product slice was needed.
 
 # Files involved
 
-- app/src/test/java/me/foxtails/palustris/data/auth/DraftActionsTest.kt holds the fixture repair and new coverage.
-- docs/agents/protocol-and-session-ownership.md holds the draft activation contract.
-- docs/wiki/data-and-privacy.md holds the draft writer section.
+- app/src/test/java/me/foxtails/palustris/ui/shell/AppShellFixtures.kt holds ShellDrafts and the account-null preview.
+- app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationTest.kt holds the active fixture sessions and new draft coverage.
+- app/src/test/java/me/foxtails/palustris/ui/shell/ShellCharacterizationTest.kt holds the active reply-publish fixture.
+- app/src/test/java/me/foxtails/palustris/ui/SignInScreenTest.kt holds the active publish fixture.
+- docs/agents/app-shell-ownership.md holds the fixture lifetime contract.
+- docs/wiki/ui-and-navigation.md holds the draft restoration section.
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
 - docs/agents/handoff.md points to this recovery task.
-- logs/261001-020000.txt holds R01 evidence and exact checks.
+- logs/261001-030000.txt holds R02 evidence and exact checks.
 
 # Verification
 
-DraftActionsTest with --rerun-tasks reports BUILD SUCCESSFUL with all 13 tests passing. DraftWriteAuthorityTest with --rerun-tasks reports BUILD SUCCESSFUL. ktlintCheck reports only pre-existing violations in other test files; DraftActionsTest has none. Post-repair test assembleRelease reports 1461 tests and 15 failures with release assembly complete; both historical draft failures are resolved and no new failure appears. Source revision is e3f74b0 plus the R01 worktree changes. Full evidence lives in logs/261001-020000.txt.
+Pre-repair rerun of both historical Navigation draft methods reports 2 tests and 2 failures. Each historical method also passes alone after the repair. Post-repair rerun of all draft methods reports BUILD SUCCESSFUL. Full NavigationTest reports BUILD SUCCESSFUL with 30 tests. ComposerOwnerTest, ShellCharacterizationTest, and SignInScreenTest report BUILD SUCCESSFUL. ktlintTestSourceSetCheck reports only pre-existing NavigationTest findings; AppShellFixtures has no new finding. Post-repair test assembleRelease reports 1466 tests and 13 failures with release assembly complete; both historical Navigation failures are resolved and no new failure appears. Source revision is 97e2499 plus the R02 worktree changes. Full evidence lives in logs/261001-030000.txt.
 
 # Next
 
-Execute R02. Give shell draft fixtures a valid account writer. Rerun both historical Navigation failures before and after the fixture change.
+Execute R03. Repair the Misskey continuation test runtime or proven defect. Retain all five failing invariants.
 
 # Blockers
 
@@ -42,4 +46,4 @@ The deleted Photo Grid test excludes that test from the available suite. A clean
 
 # Last safe commit
 
-e3f74b0 Record the current recovery baseline and failure attribution.
+97e2499 Activate draft writers in account-bound unit fixtures.
