@@ -15,30 +15,26 @@ The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery
 - R00 — record the current recovery baseline and failure attribution. Fresh grouped, isolated, and full-gate evidence replaces the historical count.
 - R01 — activate draft writers in account-bound unit fixtures. All 13 DraftActionsTest tests pass. DraftWriteAuthorityTest passes with no regression.
 - R02 — bind shell draft fixtures to an active writer. Full NavigationTest passes with 30 tests. ComposerOwnerTest, ShellCharacterizationTest, and SignInScreenTest pass with no regression.
+- R03 — repair the Misskey continuation test runtime and one exposed fixture ordering defect. All 12 MisskeyThreadContinuationTest tests pass. No production change.
 
 # Current slice
 
-R02 is complete. Production draft, composer, and shell rules remain unchanged. No R02b product slice was needed.
+R03 is complete. The continuation class runs under the repository RobolectricTestRunner and @Config(sdk = [35]) pattern; the lock-release test constructs its source directly under a custom dispatcher instead of enqueueing after it. Production Misskey source and continuation store remain unchanged. No split and no production slice was needed.
 
 # Files involved
 
-- app/src/test/java/me/foxtails/palustris/ui/shell/AppShellFixtures.kt holds ShellDrafts and the account-null preview.
-- app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationTest.kt holds the active fixture sessions and new draft coverage.
-- app/src/test/java/me/foxtails/palustris/ui/shell/ShellCharacterizationTest.kt holds the active reply-publish fixture.
-- app/src/test/java/me/foxtails/palustris/ui/SignInScreenTest.kt holds the active publish fixture.
-- docs/agents/app-shell-ownership.md holds the fixture lifetime contract.
-- docs/wiki/ui-and-navigation.md holds the draft restoration section.
+- app/src/test/java/me/foxtails/palustris/data/misskey/MisskeyThreadContinuationTest.kt holds the runner annotations and the lock-release fixture construction.
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
 - docs/agents/handoff.md points to this recovery task.
-- logs/261001-030000.txt holds R02 evidence and exact checks.
+- logs/261001-150000.txt holds R03 evidence and exact checks.
 
 # Verification
 
-Pre-repair rerun of both historical Navigation draft methods reports 2 tests and 2 failures. Each historical method also passes alone after the repair. Post-repair rerun of all draft methods reports BUILD SUCCESSFUL. Full NavigationTest reports BUILD SUCCESSFUL with 30 tests. ComposerOwnerTest, ShellCharacterizationTest, and SignInScreenTest report BUILD SUCCESSFUL. ktlintTestSourceSetCheck reports only pre-existing NavigationTest findings; AppShellFixtures has no new finding. Post-repair test assembleRelease reports 1466 tests and 13 failures with release assembly complete; both historical Navigation failures are resolved and no new failure appears. Source revision is 97e2499 plus the R02 worktree changes. Full evidence lives in logs/261001-030000.txt.
+Pre-repair rerun of the continuation class reports 12 tests and 5 failures: 4 RuntimeException Method put in org.json.JSONObject not mocked at MisskeyThreadContinuationTest.kt:337 during fixture setup, plus 1 ServerError at MisskeyErrorMapper.kt:21 wrapping the same not-mocked detail from the Dispatcher transport path. Post-repair rerun reports BUILD SUCCESSFUL with 12 tests and 0 failures. The Misskey package sweep reports 107 tests and 3 failures outside R03 by ownership (2 CapabilityCacheTest with R00 baseline support; 1 MisskeyApiTest cancellation with pre-existing status unverified). ktlintCheck reports only pre-existing main-source violations; the changed test file has no new finding. Source revision is 97e2499 plus the R02 and R03 worktree changes. Full evidence lives in logs/261001-150000.txt.
 
 # Next
 
-Execute R03. Repair the Misskey continuation test runtime or proven defect. Retain all five failing invariants.
+Execute R04. Attribute and repair the capability-cache failures. Identity fencing remains at read and publication boundaries.
 
 # Blockers
 
@@ -47,3 +43,4 @@ The deleted Photo Grid test excludes that test from the available suite. A clean
 # Last safe commit
 
 97e2499 Activate draft writers in account-bound unit fixtures.
+R03 slice commit subject: `Repair the Misskey continuation test runtime`.

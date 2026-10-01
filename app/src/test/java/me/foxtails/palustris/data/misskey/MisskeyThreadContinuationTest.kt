@@ -31,7 +31,12 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class MisskeyThreadContinuationTest {
     private var now = 0L
     private val origin = "https://example.org"
@@ -273,8 +278,18 @@ class MisskeyThreadContinuationTest {
                     }
                 }
             }
-            val source = sourceWithContinuation(server)
+            val serverOrigin = serverOrigin(server)
             val sessionKey = serverKey(server)
+            val viewer = AccountId(Connection(serverOrigin, Protocol.MISSKEY), "viewer")
+            val source = MisskeySource(
+                serverOrigin,
+                "token",
+                MisskeyApi(),
+                accountId = viewer,
+                capabilityCache = CapabilityCache(),
+                sessionRevision = sessionKey.sessionRevision,
+                monotonicClock = { now },
+            )
             val continuation = source.threadContext(sessionKey.focalId).continuation!!
             val executor = Executors.newSingleThreadExecutor()
             val request: Future<*> = executor.submit {
