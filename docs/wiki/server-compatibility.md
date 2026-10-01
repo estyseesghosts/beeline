@@ -13,6 +13,21 @@ Sources: `AGENTS.md`, `domain/`, `data/misskey/`, `data/mastodon/`, adapter test
 
 ## Entries
 
+### Mastodon moderation paging
+
+Source: `data/mastodon/MastodonModerationService.kt`,
+`data/mastodon/MastodonSource.kt`, `ModerationServiceTest`,
+`MastodonIntegrationTest`, and `ModerationViewModelTest`.
+
+- Blocked and muted cursors bind account, kind, variant, route, session
+  revision, source instance, and URL in a version-2 payload. Same-account
+  replay on another source or revision fails before any request. Legacy
+  version-1 and raw-URL cursors fail safely.
+- The first-page self-Link check uses the exact initial request URL. A
+  self-Link to the first page cannot become a continuation.
+- A failed next-page load keeps current rows. Live-server moderation paging
+  remains unverified.
+
 ### Mastodon report validation
 
 Source: `data/mastodon/MastodonModerationService.kt` and `ModerationServiceTest`.

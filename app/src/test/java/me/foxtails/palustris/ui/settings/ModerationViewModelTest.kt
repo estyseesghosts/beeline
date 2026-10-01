@@ -255,6 +255,54 @@ class ModerationViewModelTest {
     }
 
     @Test
+    fun failedNextPagePreservesRows() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedModerationSource()
+            val model = model(source, registered(source))
+            advanceUntilIdle()
+            source.completeList(0, ModerationPage(listOf(member("a")), nextCursor = cursor("c1")))
+            advanceUntilIdle()
+
+            model.loadMore()
+            advanceUntilIdle()
+            assertTrue(model.state.value.loadingMore)
+            source.failList(1, java.io.IOException("page failed"))
+            advanceUntilIdle()
+
+            assertEquals(listOf("a"), model.state.value.accounts.map { it.account.id.localId })
+            assertFalse(model.state.value.loadingMore)
+            assertTrue(model.state.value.error != null)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun rejectedCursorNextPagePreservesRows() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedModerationSource()
+            val model = model(source, registered(source))
+            advanceUntilIdle()
+            source.completeList(0, ModerationPage(listOf(member("a")), nextCursor = cursor("c1")))
+            advanceUntilIdle()
+
+            model.loadMore()
+            advanceUntilIdle()
+            // A rejected continuation marks the list unsupported. Rows stay.
+            source.failList(1, SourceError.Unsupported("moderation.cursor"))
+            advanceUntilIdle()
+
+            assertEquals(listOf("a"), model.state.value.accounts.map { it.account.id.localId })
+            assertFalse(model.state.value.loadingMore)
+            assertTrue(model.state.value.unsupported)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
     fun retryWhileOlderFinishesRunsOnce() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {

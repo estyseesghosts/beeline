@@ -38,7 +38,7 @@ fun ModerationListScreen(
         state.loading -> Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
             CircularProgressIndicator()
         }
-        state.unsupported -> Column(Modifier.fillMaxWidth().padding(24.dp)) {
+        state.unsupported && entries.isEmpty() -> Column(Modifier.fillMaxWidth().padding(24.dp)) {
             Text(stringResource(R.string.settings_moderation_unsupported))
         }
         state.error != null && entries.isEmpty() -> Column(Modifier.fillMaxWidth().padding(24.dp)) {
@@ -59,6 +59,9 @@ fun ModerationListScreen(
                     },
                 )
             }
+            // A rejected continuation marks the list unsupported but keeps
+            // existing rows visible. The notice trails the rows.
+            if (state.unsupported) item { Text(stringResource(R.string.settings_moderation_unsupported), Modifier.padding(16.dp)) }
             if (state.error != null) item { Text(state.error, Modifier.padding(16.dp)) }
             if (state.nextCursor != null) item {
                 TextButton(onClick = onLoadMore, enabled = !state.loadingMore, modifier = Modifier.fillMaxWidth()) {

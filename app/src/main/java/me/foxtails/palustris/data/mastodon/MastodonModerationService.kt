@@ -23,6 +23,8 @@ class MastodonModerationService(
     private val token: String,
     private val api: AuthenticatedHttpClient,
     private val accountId: AccountId,
+    private val sessionRevision: Long,
+    private val sourceInstance: String,
 ) {
     suspend fun blocked(cursor: ModerationCursor? = null): ModerationPage<ModerationAccount> = list(ModerationListKind.Blocked, cursor)
     suspend fun muted(cursor: ModerationCursor? = null): ModerationPage<ModerationAccount> = list(ModerationListKind.Muted, cursor)
@@ -62,7 +64,7 @@ class MastodonModerationService(
         val path = "/api/v1/accounts/$route"
         val endpoint = "api/v1/accounts/$route?limit=40"
         val url = cursor?.let { decodeCursor(it, kind, variant, route, path) }
-        val current = url ?: origin.toHttpUrl().resolve("/api/$endpoint")!!
+        val current = url ?: origin.toHttpUrl().resolve("/$endpoint")!!
         val response = if (url == null) api.get(origin, endpoint, token, MASTODON_MAX_RESPONSE_BYTES) else api.getUrl(url.toString(), token, MASTODON_MAX_RESPONSE_BYTES)
         val values = JSONArray(response.body)
         val items = (0 until values.length()).mapNotNull { index ->
@@ -145,13 +147,17 @@ class MastodonModerationService(
         } catch (_: Exception) {
             throw SourceError.Unsupported("moderation.cursor")
         }
-        val keys = setOf("version", "variant", "route", "kind", "account", "url")
+        val keys = setOf("version", "variant", "route", "kind", "account", "sessionRevision", "sourceInstance", "url")
         if (payload.keys().asSequence().toSet() != keys || payload.opt("version") !is Int ||
             payload.opt("variant") !is String || payload.opt("route") !is String ||
-            payload.opt("kind") !is String || payload.opt("account") !is String || payload.opt("url") !is String ||
-            payload.getInt("version") != 1 || payload.getString("variant") != variant ||
+            payload.opt("kind") !is String || payload.opt("account") !is String ||
+            payload.opt("sessionRevision") !is Int && payload.opt("sessionRevision") !is Long ||
+            payload.opt("sourceInstance") !is String || payload.opt("url") !is String ||
+            payload.getInt("version") != 2 || payload.getString("variant") != variant ||
             payload.getString("route") != route || payload.getString("kind") != kind.name ||
-            payload.getString("account") != accountId.localId
+            payload.getString("account") != accountId.localId ||
+            payload.getLong("sessionRevision") != sessionRevision ||
+            payload.getString("sourceInstance") != sourceInstance
         ) throw SourceError.Unsupported("moderation.cursor")
         val page = payload.getString("url").toHttpUrlOrNull() ?: throw SourceError.Unsupported("moderation.cursor")
         return try {
@@ -181,7 +187,8 @@ class MastodonModerationService(
 
     private fun encodeCursor(kind: ModerationListKind, variant: String, route: String, value: String) =
         ModerationCursor(accountId, me.foxtails.palustris.domain.ModerationListQuery(kind), variant,
-            Base64.getUrlEncoder().withoutPadding().encodeToString(JSONObject().put("version", 1)
+            Base64.getUrlEncoder().withoutPadding().encodeToString(JSONObject().put("version", 2)
                 .put("variant", variant).put("route", route).put("kind", kind.name)
-                .put("account", accountId.localId).put("url", value).toString().toByteArray(Charsets.UTF_8)))
+                .put("account", accountId.localId).put("sessionRevision", sessionRevision)
+                .put("sourceInstance", sourceInstance).put("url", value).toString().toByteArray(Charsets.UTF_8)))
 }

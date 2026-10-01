@@ -103,11 +103,11 @@ class MastodonSource(
     private val selfProfileService = MastodonSelfProfileService(origin, token, api, accountId)
     private val directMessageService = MastodonDirectMessageService(origin, token, api, accountId, profileService)
     private val notificationService = MastodonNotificationService(origin, token, api, accountId, clock)
-    private val moderationService = MastodonModerationService(origin, token, api, accountId)
+    private val sourceInstance = UUID.randomUUID().toString()
+    private val moderationService = MastodonModerationService(origin, token, api, accountId, sessionRevision, sourceInstance)
     private val pushService = MastodonPushService(origin, token, api, accountId)
     private val streamService = MastodonStreamService(origin, token, api, accountId)
     private val threadService = MastodonThreadService(origin, token, api, accountId, sessionRevision)
-    private val sourceInstance = UUID.randomUUID().toString()
     private val pageClient = MastodonPageClient(origin, token, api, accountId.localId, sessionRevision, sourceInstance)
     private val timelineService = MastodonTimelineService(pageClient, origin)
     override val capabilities: ServerCapabilities get() = _capabilities.value

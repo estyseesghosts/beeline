@@ -21,17 +21,23 @@ The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery
 - R06 — require the session authority in source construction. All 6 SourceFactoryTest tests pass. SessionLifecycle, session ViewModel, connected context, auth gateway, push cancellation, and Misskey integration suites pass. The Mastodon contract run retains the pre-existing R15a artwork failure. No adapter, store, or wiring change.
 - R07 — bind push source selection to its notification token. All 15 UnifiedPushRegistrationManagerTest tests pass. PushCancellationTest, PushRegistrationRepositoryTest, NotificationSyncOrchestratorTest, NotificationRepositoryTest, and SessionLifecycleTest pass with no regression. No registry, adapter, store, or wiring change.
 - R08 — validate Mastodon report identities before sending. All 15 ModerationServiceTest tests pass (13 existing plus 2 new report validation regressions). MastodonIntegrationTest, MastodonSourceContractTest, and MisskeyIntegrationTest pass except the pre-existing R15a artwork failure. No cursor, encoding, or comment-behavior change.
+- R09 — bind Mastodon moderation cursors to the source session. All 17 ModerationServiceTest tests pass. MastodonIntegrationTest reports 63 passing tests. ModerationViewModelTest reports 13 passing tests. ModerationListScreenTest reports 3 passing tests. Adapter contracts pass except the pre-existing R15a artwork failure. A rejected continuation keeps existing rows visible. No generic cursor, endpoint, or route change.
 
 # Current slice
 
-R08 is complete. `MastodonModerationService.report` validates its target with `validateTarget` before constructing fields. A same-origin Misskey target or a blank target ID fails as unsupported without a request. A foreign target keeps the foreign-origin error. The optional status ID keeps same-origin validation and rejects a blank value.
+R09 is complete. `MastodonModerationService` takes required session revision and source instance dependencies from the source UUID. The moderation cursor payload binds both values at version 2. Legacy version-1 and raw-URL cursors fail safely. The first-page self-Link uses the exact initial request URL.
 
 # Files involved
 
-- app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonModerationService.kt holds the R08 production repair.
-- app/src/test/java/me/foxtails/palustris/ModerationServiceTest.kt holds the extended R08 report validation tests.
-- docs/agents/protocol-and-session-ownership.md holds the R08 report validation contract.
-- docs/wiki/server-compatibility.md holds the R08 report validation section.
+- app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonModerationService.kt holds the R09 production repair.
+- app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonSource.kt holds the R09 source wiring.
+- app/src/test/java/me/foxtails/palustris/ModerationServiceTest.kt holds the extended R09 cursor tests.
+- app/src/test/java/me/foxtails/palustris/data/mastodon/MastodonIntegrationTest.kt holds the R09 source-level cursor tests.
+- app/src/test/java/me/foxtails/palustris/ui/settings/ModerationViewModelTest.kt holds the R09 row-preservation test.
+- app/src/main/java/me/foxtails/palustris/ui/settings/ModerationListScreen.kt holds the R09 unsupported-with-rows presentation repair.
+- app/src/test/java/me/foxtails/palustris/ui/settings/ModerationListScreenTest.kt holds the new R09 presentation tests.
+- docs/agents/protocol-and-session-ownership.md holds the R09 cursor binding contract.
+- docs/wiki/server-compatibility.md holds the R09 moderation paging section.
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
 - docs/agents/handoff.md points to this recovery task.
 - logs/261001-123500.txt holds R08 evidence and exact checks.
@@ -39,11 +45,11 @@ R08 is complete. `MastodonModerationService.report` validates its target with `v
 
 # Verification
 
-R08 verification: ModerationServiceTest reports 15 tests and 0 failures. MastodonIntegrationTest, MastodonSourceContractTest, and MisskeyIntegrationTest report 115 tests with only the pre-existing R15a artwork failure; `:app:lintDebug` reports BUILD SUCCESSFUL. Post-slice test assembleRelease reports 1491 tests and 2 failures with release assembly complete. The invalid-target test asserts error types and an unchanged request count, which the old origin-only check cannot satisfy. No test was weakened. Full evidence lives in logs/261001-123500.txt.
+R09 verification: ModerationServiceTest reports 17 tests and 0 failures. MastodonIntegrationTest reports 63 tests and 0 failures. ModerationViewModelTest reports 13 tests and 0 failures. ModerationListScreenTest reports 3 tests and 0 failures. Adapter contracts report 68 tests with only the pre-existing R15a artwork failure; `:app:lintDebug` reports BUILD SUCCESSFUL. Post-slice test assembleRelease reports 1502 tests and 1 failure (R15a artwork only) with release assembly complete. The version-2 payload makes old code reject new cursors and new code reject legacy cursors. No test was weakened. Full evidence lives in logs/261001-130000.txt.
 
 # Next
 
-Execute R09. Bind Mastodon moderation cursors to the source session.
+Execute R10. Preserve restored Search state for its matching session.
 
 # Blockers
 
@@ -51,5 +57,5 @@ The deleted Photo Grid test excludes that test from the available suite. A clean
 
 # Last safe commit
 
-459c67b is the safe commit after R07.
-R08 slice commit subject: `Validate Mastodon report identities before sending`.
+34e2a19 is the safe commit after R08.
+R09 slice commit subject: `Bind Mastodon moderation cursors to the source session`.

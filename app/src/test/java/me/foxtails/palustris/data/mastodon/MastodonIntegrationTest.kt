@@ -24,6 +24,9 @@ import me.foxtails.palustris.domain.EditableProfilePatch
 import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.ModerationCursor
+import me.foxtails.palustris.domain.ModerationListKind
+import me.foxtails.palustris.domain.ModerationListQuery
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.ProfileCapabilities
@@ -1334,6 +1337,79 @@ class MastodonIntegrationTest {
         } catch (error: SourceError.Unsupported) {
             assertEquals("requested feature", error.feature)
         }
+    }
+
+    @Test
+    fun moderationSecondPageSucceedsInWireOrder() = runBlocking {
+        val secondAccount = JSONObject(localAccount.toString())
+            .put("id", "second-user")
+            .put("username", "bob")
+            .put("acct", "bob")
+        server.enqueue(MockResponse().setBody("[$localAccount]").addHeader(
+            "Link", "<$origin/api/v1/accounts/blocked?limit=40&max_id=page2>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody("[$secondAccount]"))
+        val first = source()
+        val page = first.blockedAccounts()
+        assertEquals(listOf("local-user"), page.items.map { it.account.id.localId })
+        val cursor = page.nextCursor!!
+        val second = first.blockedAccounts(cursor)
+        assertEquals(listOf("second-user"), second.items.map { it.account.id.localId })
+        assertEquals("/api/v1/accounts/blocked?limit=40", server.takeRequest().path)
+        assertEquals("/api/v1/accounts/blocked?limit=40&max_id=page2", server.takeRequest().path)
+    }
+
+    @Test
+    fun moderationCursorFailsOnAnotherSourceInstance() = runBlocking {
+        server.enqueue(MockResponse().setBody("[$localAccount]").addHeader(
+            "Link", "<$origin/api/v1/accounts/blocked?limit=40&max_id=page2>; rel=\"next\"",
+        ))
+        val first = source()
+        val cursor = first.blockedAccounts().nextCursor!!
+        val count = server.requestCount
+        // Another source shares the account and revision but owns another instance.
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source().blockedAccounts(cursor) }
+        }
+        assertEquals("moderation.cursor", error.feature)
+        assertEquals(count, server.requestCount)
+    }
+
+    @Test
+    fun moderationCursorFailsOnNewerSessionRevision() = runBlocking {
+        server.enqueue(MockResponse().setBody("[$localAccount]").addHeader(
+            "Link", "<$origin/api/v1/accounts/blocked?limit=40&max_id=page2>; rel=\"next\"",
+        ))
+        val first = source()
+        val cursor = first.blockedAccounts().nextCursor!!
+        val count = server.requestCount
+        val newer = MastodonSource(
+            origin = origin,
+            token = "token",
+            api = mastodonTestClient(),
+            accountId = AccountId(Connection(origin, me.foxtails.palustris.domain.Protocol.MASTODON), "local-user"),
+            sessionRevision = 1L,
+        )
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { newer.blockedAccounts(cursor) }
+        }
+        assertEquals("moderation.cursor", error.feature)
+        assertEquals(count, server.requestCount)
+    }
+
+    @Test
+    fun moderationCursorValidationRunsBeforeSourceIo() {
+        val raw = ModerationCursor(
+            AccountId(Connection(origin, me.foxtails.palustris.domain.Protocol.MASTODON), "local-user"),
+            ModerationListQuery(ModerationListKind.Blocked),
+            "mastodon-blocked-v1",
+            "$origin/api/v1/accounts/blocked?max_id=x",
+        )
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source().blockedAccounts(raw) }
+        }
+        assertEquals("moderation.cursor", error.feature)
+        assertEquals(0, server.requestCount)
     }
 
     private fun source() = MastodonSource(
