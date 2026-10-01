@@ -1,0 +1,13 @@
+Goal: Allow task-required general shell commands for orchestrator, including .\gradlew.bat without exact argument matching.
+Owner: Current orchestrator, including Git checkpoint. Baseline: 9f0bb10.
+Scope: Orchestrator profile, operator guidance, task state, handoff, and audit log only.
+Non-goals: No application, script, test, plugin, provider, subagent, Gradle build, device, or push changes.
+Safeguards: Existing direct Git approval/deny rules follow general shell allow. Secret and external-directory approval remain. Preserve unrelated work.
+Limits: General shell access is not a sandbox. It permits indirect access; prompts forbid using wrappers or interpreters to evade protections.
+Validation: Pending current-role probes, links, independent review, and scoped whitespace checks.
+Static checks: 69/69 permission probes and 53/53 local links and anchors passed. All previous Git and non-shell rules remain identical.
+Subagents: Both retain baseline permissions and their unrelated local model edits. No subagent file is in this slice.
+Review: Independent problem_solver review approved the actual diff with no blocking or required repairs.
+Whitespace: Scoped working-diff check passed. Final staged check is required before commit.
+Final staged whitespace check passed. Only the seven reviewed slice files enter the path-only commit.
+Checkpoint subject: Allow general orchestrator shell commands. No Android builds, device checks, or push.

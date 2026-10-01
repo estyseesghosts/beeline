@@ -11,6 +11,8 @@ Build authority: [Gradle configuration](../../app/build.gradle.kts), [wrapper](.
 ## Operators and scope
 
 The orchestrator may implement, edit records, run Gradle, inspect devices through ADB, and operate Git.
+It has general shell access for task-required PowerShell commands, interpreters, diagnostics, and other development tools.
+Its Gradle permission does not require exact flag order. Validation runs still require the project flags below.
 Targeted_fixer may implement and validate its small work package. It may operate Git only under explicit assignment instructions.
 Problem_solver only investigates and reviews source and evidence. It does not edit, run Gradle, inspect devices, or mutate Git.
 
@@ -86,8 +88,11 @@ Install, remove, reset, or change device state only when the user task explicitl
 
 Use one shell command per invocation. Do not chain commands to bypass permissions.
 Use editing tools for file changes. Do not use redirection or interpreter payloads to evade edit or Git restrictions.
-Named script permissions assume the script exists and that its behavior fits the task scope.
-Broad Gradle and ADB access is not a hard task boundary. Prompts and the work contract still constrain use.
+The fixer's named script permissions assume the script exists and that its behavior fits the task scope.
+The orchestrator may use inline interpreter programs for task-required analysis and validation.
+General shell access is not a sandbox. It can reach files, network resources, and Git indirectly.
+Do not use that access to bypass Git safeguards, secret-read approval, external-directory approval, or denied operations.
+Prompts and the work contract still constrain use. Direct-command permission probes cannot prove indirect-command safety.
 Static permission probes model rule resolution; they do not prove live enforcement or command safety.
 Do not treat mocked tests as live-server evidence, or Compose tests as physical rendering evidence.
 Report device, live-server, signing, and interactive permission checks that remain unavailable.

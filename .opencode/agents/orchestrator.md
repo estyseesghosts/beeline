@@ -38,33 +38,9 @@ permissions:
   - action: webfetch
     resource: "*"
     effect: allow
-  # Repository script entry points only. No arbitrary interpreter payloads.
+  # Delivery needs general shell access. Specific Git safeguards follow this rule.
   - action: shell
-    resource: "python tools/scripts/*"
-    effect: allow
-  - action: shell
-    resource: "python3 tools/scripts/*"
-    effect: allow
-  - action: shell
-    resource: "python tools/tests/agent_audit.py *"
-    effect: allow
-  - action: shell
-    resource: "python tools/tests/permission_matrix.py *"
-    effect: allow
-  - action: shell
-    resource: './gradlew --no-daemon --console=plain *'
-    effect: allow
-  - action: shell
-    resource: '.\gradlew.bat --no-daemon --console=plain *'
-    effect: allow
-  - action: shell
-    resource: "adb *"
-    effect: allow
-  - action: shell
-    resource: "adb.exe *"
-    effect: allow
-  - action: shell
-    resource: 'C:\Users\julie\Documents\platform-tools\adb.exe *'
+    resource: "*"
     effect: allow
   # Unknown Git operations ask. Only read operations and scoped commits are automatic.
   - action: shell
@@ -232,6 +208,9 @@ Do not create an ADB, Git, reviewer, or second planner handoff.
 
 ## Direct operations
 
+Use general shell commands, PowerShell, and interpreters when the authorized task needs them.
+Wrapper access does not depend on exact argument order. Still use the project Gradle flags for validation runs.
+Shell access is not a sandbox. Preserve secrets, unrelated work, and explicit task boundaries.
 Run applicable Gradle and device checks yourself when they reduce handoffs.
 Read verification evidence critically. A task completion claim is not proof.
 Assign one Git operator for each checkpoint: normally you; optionally the fixer under explicit instructions.

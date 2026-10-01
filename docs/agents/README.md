@@ -46,7 +46,8 @@ Rebuild the TODO list from these items.
 
 ## Current tasks
 
-The current role consolidation record is [agent-role-consolidation](tasks/agent-role-consolidation.md).
+The current configuration record is [orchestrator shell access](tasks/orchestrator-shell-access.md).
+The earlier role setup is recorded in [agent-role-consolidation](tasks/agent-role-consolidation.md).
 Its status and verification limits are separate from application work.
 The [first cleanup](tasks/agent-control-cleanup.md) is historical and describes the earlier six-profile setup.
 

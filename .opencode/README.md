@@ -37,16 +37,17 @@ Tool permission does not authorize unassigned commits or pushes.
 
 ## Permission boundaries
 
-The orchestrator and fixer can edit, use the flagged Gradle wrapper, stage explicit paths, and commit.
+The orchestrator can edit and run general shell commands, including PowerShell, interpreters, and the Gradle wrapper with any argument order.
+The fixer retains its named-script and flagged-wrapper allowlist. Both operators can stage explicit paths and commit.
 Only the orchestrator has direct ADB access. Both operators require approval for unknown Git actions, broad staging, amend, or push.
 Force-push and destructive Git operations remain denied. Never push without an explicit user request.
 Problem_solver cannot edit, mutate Git, run Gradle, or use ADB. It reviews verification evidence from the operators.
 Environment-file reads ask for approval; example files remain readable.
 Rules use V2 last-match resolution. Current V2 documentation says edit covers edits, writes, and patches.
 
-The named script permissions assume the scripts exist and fit the task scope.
+The fixer's named script permissions assume the scripts exist and fit the task scope.
 ADB companion scripts include untracked local work. A fresh clone does not contain them.
-Broad wrapper and ADB access does not enforce a task-specific sandbox. Follow the work contract and operation rules.
+General shell access does not enforce a sandbox or prevent indirect Git or secret access. Follow task boundaries and operation rules.
 
 ## Verification limits
 
@@ -54,6 +55,7 @@ Legacy permission scripts still describe retired profiles and earlier permission
 Their default runs are not full evidence for the three-profile configuration.
 Reuse their resolver with explicit current-role probes without changing test code under a documentation-only task.
 See [agent-role-consolidation](../docs/agents/tasks/agent-role-consolidation.md) for the current evidence and limits.
+See [orchestrator shell access](../docs/agents/tasks/orchestrator-shell-access.md) for the subsequent permission change and checks.
 Earlier [cleanup evidence](../docs/agents/tasks/agent-control-cleanup.md) is historical.
 
 Static permission checks do not prove live interactive enforcement.
