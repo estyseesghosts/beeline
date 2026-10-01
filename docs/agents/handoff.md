@@ -13,23 +13,23 @@ Start with AGENTS.md, agent control, workflow, and operation rules.
 
 ## Current position and next action
 
-R07 is complete. `UnifiedPushRegistrationManager` binds push source selection to its notification token. A failed token lookup ends as a no-op. It never escalates to account lookup or a transient factory source. Token-null removal cleanup uses a validated stored snapshot. Token, session, registry, and endpoint ownership is rechecked before each remote subscription mutation, and stale failures publish nothing against the replacement session. New `UnifiedPushRegistrationManagerTest` covers current selection, stale no-op behavior, cross-account rejection, replacement races, registry replacement, endpoint supersede, creation-gate replacement, late-failure capability preservation, token-null cleanup, cleanup failure, and the valid connection path.
+R08 is complete. `MastodonModerationService.report` validates its target with `validateTarget` before constructing fields. A same-origin Misskey target or a blank target ID fails as unsupported without a request. A foreign target keeps the foreign-origin error. New `ModerationServiceTest` report tests cover invalid targets, account-only bodies, and reserved-character encoding.
 Problem_solver provides read-only investigation and review. Targeted_fixer accepts only small explicit work packages.
 Keep one implementation owner and one Git operator at a time.
-The next slice is R08. Validate Mastodon report identities before sending.
+The next slice is R09. Bind Mastodon moderation cursors to the source session.
 
 ## Last safe commit
 
-09db376 is the safe commit after R06.
-R07 slice commit subject: `Keep push source selection bound to its notification token`.
-The next session resolves the new R07 hash from Git without a second record-only commit.
+459c67b is the safe commit after R07.
+R08 slice commit subject: `Validate Mastodon report identities before sending`.
+The next session resolves the new R08 hash from Git without a second record-only commit.
 The last safe application source remains 464b2d1. Simulator evidence reference 219504c resolves.
 
 ## Limits
 
-- R07 changed the push manager source selection, its ownership rechecks, and records only. The registry, adapters, store implementation, and DI wiring remain unchanged.
-- UnifiedPushRegistrationManagerTest reports 15 passing tests. PushCancellationTest, PushRegistrationRepositoryTest, NotificationSyncOrchestratorTest, NotificationRepositoryTest, and SessionLifecycleTest report no regression.
-- Post-repair test assembleRelease reports 1489 tests and 1 failure (R15a Mastodon artwork only) with release assembly complete; all R01–R07 failures are absent.
+- R08 changed the Mastodon report target validation and records only. The cursor codec, other moderation mutations, form encoding, and comment behavior remain unchanged.
+- ModerationServiceTest reports 15 passing tests. MastodonIntegrationTest, MastodonSourceContractTest, and MisskeyIntegrationTest report 115 tests with only the pre-existing R15a artwork failure.
+- Post-slice test assembleRelease reports 1491 tests and 2 failures with release assembly complete: the pre-existing R15a Mastodon artwork failure plus an isolation-dependent MastodonIntegrationTest cancellation-timing flake that passes alone and never touches the changed report path; all R01–R08 failures are absent.
 - `:app:lintDebug` reports BUILD SUCCESSFUL. ktlint reports repo-wide pre-existing findings; the new test file is clean.
 - Live-server capability refresh, API 29, live-server push delivery, and signing checks remain unverified.
 - Full NavigationTest reports 30 passing tests. ComposerOwnerTest, ShellCharacterizationTest, and SignInScreenTest report no regression.

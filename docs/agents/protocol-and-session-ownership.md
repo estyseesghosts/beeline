@@ -59,6 +59,12 @@ Device and live-server behavior remain unverified.
   stale-token no-op behavior, cross-account rejection, replacement races, registry replacement,
   endpoint supersede, creation-gate replacement, late-failure capability preservation,
   token-null cleanup, cleanup failure, and the valid connection path.
+- `MastodonModerationService.report` validates its target with `validateTarget`
+  before constructing fields. A same-origin Misskey target or a blank target
+  ID fails as unsupported without a request. A foreign target keeps
+  `SourceError.ForeignOrigin`. The optional postId keeps same-origin
+  validation and rejects a blank value as unsupported. `ModerationServiceTest`
+  covers invalid targets, account-only and encoded valid reports.
 - `NotificationSyncController.register` registers a source and returns the `NotificationSyncToken`
   that owns it.
 - `NotificationSyncOrchestrator.unregister` revokes synchronously with the exact generation.

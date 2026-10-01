@@ -376,6 +376,137 @@ class ModerationServiceTest {
     }
 
     @Test
+    fun mastodonRejectsInvalidReportTargetsBeforeRequest() {
+        val origin = server.url("/").toString().removeSuffix("/")
+        val service = MastodonModerationService(
+            origin,
+            "token",
+            mastodonTestClient(),
+            AccountId(Connection(origin, Protocol.MASTODON), "viewer"),
+        )
+        val count = server.requestCount
+
+        // Same origin but Misskey protocol is not a Mastodon report target.
+        val wrongProtocol = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking {
+                service.report(
+                    ReportRequest(
+                        AccountId(Connection(origin, Protocol.MISSKEY), "target"),
+                        comment = "spam",
+                    ),
+                )
+            }
+        }
+        assertEquals("moderation.report", wrongProtocol.feature)
+
+        // Blank and whitespace-only target IDs produce no request.
+        listOf("", "   ").forEach { localId ->
+            val blank = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking {
+                    service.report(
+                        ReportRequest(
+                            AccountId(Connection(origin, Protocol.MASTODON), localId),
+                            comment = "spam",
+                        ),
+                    )
+                }
+            }
+            assertEquals("moderation.report", blank.feature)
+        }
+
+        // A foreign account origin keeps the foreign-origin error type.
+        val foreign = assertThrows(SourceError.ForeignOrigin::class.java) {
+            runBlocking {
+                service.report(
+                    ReportRequest(
+                        AccountId(Connection("https://foreign.example", Protocol.MASTODON), "target"),
+                        comment = "spam",
+                    ),
+                )
+            }
+        }
+        assertEquals("moderation.report", foreign.feature)
+
+        // A foreign status ID keeps the foreign-origin error type.
+        val foreignStatus = assertThrows(SourceError.ForeignOrigin::class.java) {
+            runBlocking {
+                service.report(
+                    ReportRequest(
+                        AccountId(Connection(origin, Protocol.MASTODON), "target"),
+                        EntityId("https://foreign.example", "status"),
+                        "spam",
+                    ),
+                )
+            }
+        }
+        assertEquals("moderation.report", foreignStatus.feature)
+
+        // Blank and whitespace-only status IDs produce no request.
+        listOf("", "   ").forEach { value ->
+            val blankStatus = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking {
+                    service.report(
+                        ReportRequest(
+                            AccountId(Connection(origin, Protocol.MASTODON), "target"),
+                            EntityId(origin, value),
+                            "spam",
+                        ),
+                    )
+                }
+            }
+            assertEquals("moderation.report", blankStatus.feature)
+        }
+
+        assertEquals(count, server.requestCount)
+    }
+
+    @Test
+    fun mastodonSendsAccountOnlyReportsAndEncodesReservedFields() {
+        runBlocking {
+            val origin = server.url("/").toString().removeSuffix("/")
+            val service = MastodonModerationService(
+                origin,
+                "token",
+                mastodonTestClient(),
+                AccountId(Connection(origin, Protocol.MASTODON), "viewer"),
+            )
+            server.enqueue(MockResponse())
+            server.enqueue(MockResponse())
+
+            // An account-only report sends no status IDs and no blank comment.
+            service.report(
+                ReportRequest(
+                    AccountId(Connection(origin, Protocol.MASTODON), "target"),
+                    comment = "   ",
+                ),
+            )
+            // Reserved characters stay form-encoded, never raw path text.
+            service.report(
+                ReportRequest(
+                    AccountId(Connection(origin, Protocol.MASTODON), "seg/ment"),
+                    EntityId(origin, "status"),
+                    "a&b=c",
+                ),
+            )
+
+            val accountOnly = server.takeRequest()
+            assertEquals("/api/v1/reports", accountOnly.path)
+            val accountOnlyBody = accountOnly.body.readUtf8()
+            assertTrue(accountOnlyBody.contains("account_id=target"))
+            assertTrue(!accountOnlyBody.contains("status_ids"))
+            assertTrue(!accountOnlyBody.contains("comment"))
+
+            val encoded = server.takeRequest()
+            assertEquals("/api/v1/reports", encoded.path)
+            val encodedBody = encoded.body.readUtf8()
+            assertTrue(encodedBody.contains("account_id=seg%2Fment"))
+            assertTrue(encodedBody.contains("status_ids%5B%5D=status"))
+            assertTrue(encodedBody.contains("comment=a%26b%3Dc"))
+            assertEquals(2, server.requestCount)
+        }
+    }
+
+    @Test
     fun misskeyReportsAccountsAndRejectsPostReports() {
         runBlocking {
             val origin = server.url("/").toString().removeSuffix("/")

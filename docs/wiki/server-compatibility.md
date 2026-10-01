@@ -13,4 +13,17 @@ Sources: `AGENTS.md`, `domain/`, `data/misskey/`, `data/mastodon/`, adapter test
 
 ## Entries
 
+### Mastodon report validation
+
+Source: `data/mastodon/MastodonModerationService.kt` and `ModerationServiceTest`.
+
+- `report` validates its target with `validateTarget` before it constructs
+  fields. A same-origin Misskey target or a blank target ID fails as
+  unsupported without a request. A foreign target keeps the foreign-origin
+  error. The optional status ID keeps same-origin validation and rejects a
+  blank value without a request.
+- Valid account-only and account-plus-status reports keep the exact form
+  fields. Reserved characters stay form-encoded. Live-server report delivery
+  remains unverified.
+
 <!-- Add the dated support matrix, capability states, protocol differences, and known unverified cases. -->

@@ -43,8 +43,11 @@ class MastodonModerationService(
     }
 
     suspend fun report(request: ReportRequest) {
-        validateOrigin(request.targetAccountId.connection.origin, "moderation.report")
-        request.postId?.let { validateOrigin(it.connection, "moderation.report") }
+        validateTarget(request.targetAccountId, "moderation.report")
+        request.postId?.let {
+            validateOrigin(it.connection, "moderation.report")
+            if (it.value.isBlank()) throw SourceError.Unsupported("moderation.report")
+        }
         val fields = buildList {
             add("account_id" to request.targetAccountId.localId)
             request.postId?.let { add("status_ids[]" to it.value) }
