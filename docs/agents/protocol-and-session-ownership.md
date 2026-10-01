@@ -40,6 +40,15 @@ Device and live-server behavior remain unverified.
   the generation. `isCurrent` compares identity.
 - `NotificationSyncController.register` registers a source and returns the `NotificationSyncToken`
   that owns it.
+- `NotificationSyncOrchestrator.unregister` revokes synchronously with the exact generation.
+  It calls `NotificationRepository.deactivate` for that token. It never advances the tombstone
+  past the removed generation.
+- `NotificationSyncOrchestrator.removeAccount` runs `unregister`, then `repository.remove`,
+  then a trailing agreement check. Durable deletion runs outside the controller lock.
+- `NotificationSyncOrchestrator.accept` requires an active controller entry that matches
+  the token. The repository token alone never authorizes delivery.
+- A replacement activates only with a strictly newer generation than the tombstone.
+  Stale activation never materializes state.
 - `SessionLifecycle` owns restoration, durable session transitions, source registration, push
   activation, account cleanup, and direct-message and draft writer generations.
 - `AccountManager` owns authentication-screen state and publishes one `ConnectedSessionContext`
@@ -366,6 +375,9 @@ The stale claim in older ownership and bug records is removed.
 - `SessionViewModelTest`, `ConnectedSessionContextTest`, `AuthGatewayTest`
 - `DirectMessageRepositoryTest`, `DirectMessageViewModelTest`
 - `NotificationRepositoryTest`, `NotificationAdapterContractTest`, `NotificationSynchronizerTest`
+- `NotificationSyncOrchestratorTest` covers generation fencing, removal revocation, late-event
+  rejection, poll cancellation, and gated in-flight-write removal. A cancelled removal still
+  revokes the old token.
 - `NotificationStorageRecoveryTest` covers the recoverable health, the write block, the healthy
   second account, the retry reload, and the healthy-retry no-op.
 - `NotificationWriteFailureTest` covers failing writes, deletes, delivery claims, dismissals,

@@ -13,23 +13,26 @@ Start with AGENTS.md, agent control, workflow, and operation rules.
 
 ## Current position and next action
 
-R04 is complete. The capability-cache probe fake carries Home timeline support matching the real probe; both replacement-fencing tests reach their intended assertions. No production change came from R04.
+R05 is complete. `NotificationSyncOrchestrator.unregister` revokes synchronously with the exact generation through `NotificationRepository.deactivate`; `removeAccount` keeps its unregister plus repository removal plus trailing-check composition; `accept` requires an active controller entry matching the token. Two gated tests prove removal and cancelled removal revoke an in-flight write.
 Problem_solver provides read-only investigation and review. Targeted_fixer accepts only small explicit work packages.
 Keep one implementation owner and one Git operator at a time.
-The next slice is R05. Attribute and repair the notification lifecycle failures.
+The next slice is R06. Require SessionStore in source construction.
 
 ## Last safe commit
 
-1c90e9e is the safe commit after R03.
-R04 slice commit subject: `Repair the capability-cache probe fixture`.
-The next session resolves the new R03 hash from Git without a second record-only commit.
+9445dec is the safe commit after R04.
+R05 slice commit subject: `Repair notification generation lifecycle regressions`.
+The next session resolves the new R05 hash from Git without a second record-only commit.
 The last safe application source remains 464b2d1. Simulator evidence reference 219504c resolves.
 
 ## Limits
 
-- R04 changed the capability-cache probe fake and records only. Production capability cache and Misskey source remain unchanged.
-- CapabilityCacheTest reports 16 passing tests. MisskeyIntegrationTest, MisskeyThreadContinuationTest, and SessionLifecycleTest report no regression.
-- Post-repair test assembleRelease reports 1466 tests and 6 failures with release assembly complete; the remaining failures belong to R05 and R15a.
+- R05 changed the notification orchestrator revocation path, its accept guard, and records only. Repository, registry, and store implementations remain unchanged.
+- NotificationSyncOrchestratorTest reports 27 passing tests. Repository, synchronizer, state-ownership, write-failure, and SessionLifecycle suites report no regression.
+- Post-repair test assembleRelease reports 1468 tests and 1 failure (R15a Mastodon artwork only) with release assembly complete; all R03, R04, and R05 failures are absent.
+- RoomNotificationStoreInstrumentedTest reports 1 passing test on emulator-5554 (API 36).
+- ktlint reports repo-wide pre-existing findings; the changed test file is clean.
+- API 29, live-server push delivery, and signing checks remain unverified.
 - Full NavigationTest reports 30 passing tests. ComposerOwnerTest, ShellCharacterizationTest, and SignInScreenTest report no regression.
 - ktlintTestSourceSetCheck reports only pre-existing NavigationTest findings. AppShellFixtures has none.
 - Post-repair test assembleRelease from R02 reports 1466 tests and 13 failures with release assembly complete.

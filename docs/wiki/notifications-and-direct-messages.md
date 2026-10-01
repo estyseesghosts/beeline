@@ -36,7 +36,18 @@ Source: `data/notifications/NotificationTextResolver.kt`,
 
 ## Entries
 
-<!-- Add inbox filters, unread state, delivery, push limits, account routing, and direct-message privacy limits. -->
+### Notification lifecycle
+
+Source: `data/notifications/NotificationSyncOrchestrator.kt`,
+`data/notifications/NotificationRepository.kt`, and
+`NotificationSyncOrchestratorTest`.
+
+- Removal revokes the account token before durable deletion completes.
+- A replacement succeeds only with a generation newer than the removal tombstone.
+- Late stream events after removal or unregister write nothing.
+- Removal after publication cancels the poll job and leaves no orphan job.
+- A cancelled removal still revokes the old token.
+- Live-server push delivery remains unverified.
 
 ### Direct-message threads
 

@@ -8,6 +8,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -798,6 +799,133 @@ class NotificationSyncOrchestratorTest {
         }
     }
 
+    @Test
+    fun removalRevokesGatedInFlightWrite() = runBlocking {
+        val enteredWrite = CountDownLatch(1)
+        val releaseWrite = CountDownLatch(1)
+        val enteredRemove = CountDownLatch(1)
+        val releaseRemove = CountDownLatch(1)
+        val pollEntered = CountDownLatch(1)
+        val pollRelease = CompletableDeferred<Unit>()
+        // Park the poll inside network work before it can write, so the
+        // gated write below is the only write that can reach the store.
+        val gatedPoll = GatedPollSource(pollEntered, pollRelease)
+        val repository = NotificationRepository(GatedWriteStore(enteredWrite, releaseWrite))
+        val controller = NotificationSyncOrchestrator(
+            repository,
+            NotificationSynchronizer(repository),
+            AccountSourceRegistry(),
+            RecordingDeliveryScheduler(AtomicLong(0)),
+        )
+        try {
+            val first = controller.register(account, gatedPoll)
+            assertTrue(controller.observeAccount(account).value.isActive)
+            assertTrue(pollEntered.await(10, TimeUnit.SECONDS))
+            // Hold removal after revocation and before durable deletion.
+            // The gate runs outside locks, so removal waits for the write mutex.
+            controller.preRemoveGate = {
+                enteredRemove.countDown()
+                check(releaseRemove.await(10, TimeUnit.SECONDS)) { "Remove gate never released." }
+            }
+            // A repository write that passed its checks pauses inside durable work.
+            val staleWrite = async(Dispatchers.Default) {
+                repository.updateUnreadState(first, NotificationUnreadState.Exact(1))
+            }
+            assertTrue(enteredWrite.await(10, TimeUnit.SECONDS))
+            val removal = async(Dispatchers.Default) { controller.removeAccount(account) }
+            try {
+                assertTrue(enteredRemove.await(10, TimeUnit.SECONDS))
+                releaseWrite.countDown()
+                // Revocation preceded durable completion, so the gated write fails.
+                assertFalse(withTimeout(10_000) { staleWrite.await() })
+            } finally {
+                releaseRemove.countDown()
+            }
+            withTimeout(10_000) { removal.await() }
+            controller.preRemoveGate = null
+            // Removal fully wins: no token, no state, and the tombstone stands.
+            assertNull(repository.currentToken(account))
+            assertFalse(controller.observeAccount(account).value.isActive)
+            assertFalse(controller.accept(Event(account, SocialEvent.Other("late"))))
+            assertFalse(repository.updateUnreadState(first, NotificationUnreadState.Exact(1)))
+            assertTrue((retiredGenerationsOf(repository)[account] ?: 0L) >= first.generation)
+            // A replacement still succeeds with a strictly newer generation.
+            val replacement = controller.register(account, gatedPoll)
+            assertTrue(replacement.generation > first.generation)
+            assertEquals(replacement, repository.currentToken(account))
+            assertTrue(controller.observeAccount(account).value.isActive)
+        } finally {
+            releaseWrite.countDown()
+            releaseRemove.countDown()
+            pollRelease.complete(Unit)
+            controller.preRemoveGate = null
+            controller.close()
+        }
+    }
+
+    @Test
+    fun cancelledRemovalStillRevokesGatedWrite() = runBlocking {
+        val enteredWrite = CountDownLatch(1)
+        val releaseWrite = CountDownLatch(1)
+        val enteredRemove = CountDownLatch(1)
+        val releaseRemove = CountDownLatch(1)
+        val pollEntered = CountDownLatch(1)
+        val pollRelease = CompletableDeferred<Unit>()
+        // Park the poll inside network work before it can write, so the
+        // gated write below is the only write that can reach the store.
+        val gatedPoll = GatedPollSource(pollEntered, pollRelease)
+        val repository = NotificationRepository(GatedWriteStore(enteredWrite, releaseWrite))
+        val controller = NotificationSyncOrchestrator(
+            repository,
+            NotificationSynchronizer(repository),
+            AccountSourceRegistry(),
+            RecordingDeliveryScheduler(AtomicLong(0)),
+        )
+        try {
+            val first = controller.register(account, gatedPoll)
+            assertTrue(controller.observeAccount(account).value.isActive)
+            assertTrue(pollEntered.await(10, TimeUnit.SECONDS))
+            controller.preRemoveGate = {
+                enteredRemove.countDown()
+                check(releaseRemove.await(10, TimeUnit.SECONDS)) { "Remove gate never released." }
+            }
+            val staleWrite = async(Dispatchers.Default) {
+                repository.updateUnreadState(first, NotificationUnreadState.Exact(1))
+            }
+            assertTrue(enteredWrite.await(10, TimeUnit.SECONDS))
+            val removal = async(Dispatchers.Default) { controller.removeAccount(account) }
+            assertTrue(enteredRemove.await(10, TimeUnit.SECONDS))
+            // Cancel removal while it is parked: revocation already ran
+            // synchronously, so release the gate and let cancellation land on
+            // the repository mutex wait. The tombstone survives cancellation.
+            // Only the expected cancellation is swallowed; a gate timeout still fails.
+            removal.cancel()
+            releaseRemove.countDown()
+            try {
+                withTimeout(10_000) { removal.join() }
+            } catch (expected: CancellationException) {
+                if (expected is TimeoutCancellationException) throw expected
+            }
+            releaseWrite.countDown()
+            assertFalse(withTimeout(10_000) { staleWrite.await() })
+            controller.preRemoveGate = null
+            assertNull(repository.currentToken(account))
+            assertFalse(controller.accept(Event(account, SocialEvent.Other("late"))))
+            assertFalse(repository.updateUnreadState(first, NotificationUnreadState.Exact(1)))
+            assertTrue((retiredGenerationsOf(repository)[account] ?: 0L) >= first.generation)
+            val replacement = controller.register(account, gatedPoll)
+            assertTrue(replacement.generation > first.generation)
+            assertEquals(replacement, repository.currentToken(account))
+            assertTrue(controller.observeAccount(account).value.isActive)
+        } finally {
+            releaseWrite.countDown()
+            releaseRemove.countDown()
+            pollRelease.complete(Unit)
+            controller.preRemoveGate = null
+            controller.close()
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun generationsOf(controller: NotificationSyncOrchestrator): Map<AccountId, Long> {
         val field = NotificationSyncOrchestrator::class.java.getDeclaredField("generations").apply {
@@ -882,6 +1010,20 @@ class NotificationSyncOrchestratorTest {
         override fun enqueueDelivery(accountId: AccountId) {
             deliveries.incrementAndGet()
         }
+    }
+
+    private class GatedWriteStore(
+        private val entered: CountDownLatch,
+        private val release: CountDownLatch,
+    ) : NotificationStore {
+        private val delegate = InMemoryNotificationStore()
+        override fun read(accountId: AccountId): NotificationStoreRead = delegate.read(accountId)
+        override fun write(accountId: AccountId, state: NotificationRepositoryState) {
+            entered.countDown()
+            check(release.await(10, TimeUnit.SECONDS)) { "Write gate never released." }
+            delegate.write(accountId, state)
+        }
+        override fun delete(accountId: AccountId) = delegate.delete(accountId)
     }
 
     private class GatedPollSource(

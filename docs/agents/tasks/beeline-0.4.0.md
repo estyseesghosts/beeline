@@ -17,31 +17,35 @@ The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery
 - R02 — bind shell draft fixtures to an active writer. Full NavigationTest passes with 30 tests. ComposerOwnerTest, ShellCharacterizationTest, and SignInScreenTest pass with no regression.
 - R03 — repair the Misskey continuation test runtime and one exposed fixture ordering defect. All 12 MisskeyThreadContinuationTest tests pass. No production change.
 - R04 — repair the capability-cache probe fixture. All 16 CapabilityCacheTest tests pass. No production change.
+- R05 — repair the notification generation lifecycle. All 27 NotificationSyncOrchestratorTest tests pass (25 historical plus 2 gated removal-revocation regressions). No repository, registry, or store change.
 
 # Current slice
 
-R04 is complete. The capability-cache probe fake now carries Home timeline support matching the real probe, so both replacement-fencing tests reach their intended assertions. Production capability cache and Misskey source remain unchanged. No SourceFactory change and no production slice was needed.
+R05 is complete. `NotificationSyncOrchestrator.unregister` now revokes synchronously with the exact generation through `NotificationRepository.deactivate`, so the legitimate replacement stays strictly newer and an in-flight write still fails after revocation. `removeAccount` keeps its unregister plus repository removal plus trailing-check composition. `accept` requires an active controller entry matching the token. Two gated tests prove removal revokes an in-flight write and a cancelled removal still revokes.
 
 # Files involved
 
-- app/src/test/java/me/foxtails/palustris/data/misskey/CapabilityCacheTest.kt holds the probe fake fix.
+- app/src/main/java/me/foxtails/palustris/data/notifications/NotificationSyncOrchestrator.kt holds the R05 production repair.
+- app/src/test/java/me/foxtails/palustris/data/notifications/NotificationSyncOrchestratorTest.kt holds the two R05 gated regression tests.
+- docs/agents/protocol-and-session-ownership.md holds the R05 notification generation contract.
+- docs/wiki/notifications-and-direct-messages.md holds the R05 lifecycle section.
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
 - docs/agents/handoff.md points to this recovery task.
-- logs/261001-160000.txt holds R04 evidence and exact checks.
+- logs/261001-170000.txt holds R05 evidence and exact checks.
 
 # Verification
 
-Pre-repair rerun of the capability-cache class reports 16 tests and 2 failures: both SourceError Unsupported(timeline:Home) at MisskeyTimelineService.kt:25 via MisskeySource.kt:123, thrown from each replacement source's first timeline call because the fake probe carried empty timelines. Post-repair rerun reports BUILD SUCCESSFUL with 16 tests and 0 failures. MisskeyIntegrationTest, MisskeyThreadContinuationTest, and SessionLifecycleTest report BUILD SUCCESSFUL. ktlintTestSourceSetCheck reports only pre-existing violations in unrelated test files; CapabilityCacheTest.kt is clean. Post-repair test assembleRelease reports 1466 tests and 6 failures with release assembly complete; both R03 and R04 failures are absent and the remaining failures belong to R05 and R15a. Source revision is 1c90e9e plus the R04 worktree changes. Full evidence lives in logs/261001-160000.txt.
+R05 verification: focused NotificationSyncOrchestratorTest reports 27 tests and 0 failures across consecutive --rerun-tasks runs. Repository, synchronizer, state-ownership, write-failure, and SessionLifecycle suites report BUILD SUCCESSFUL. ktlint reports only pre-existing findings; the changed test file is clean. `:app:lintDebug` reports BUILD SUCCESSFUL. RoomNotificationStoreInstrumentedTest reports 1 passing test on emulator-5554 (API 36). Post-repair test assembleRelease reports 1468 tests and 1 failure (R15a Mastodon artwork only) with release assembly complete. Full evidence lives in logs/261001-170000.txt.
 
 # Next
 
-Execute R05. Attribute and repair the notification lifecycle failures.
+Execute R06. Require SessionStore in source construction.
 
 # Blockers
 
-The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. Device, API 29, live-server, signing, and environmental checks remain unverified.
+The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. API 29, live-server push delivery, signing, and environmental checks remain unverified. Emulator-5554 (API 36) covers only the Room store round-trip and delete path. R05 leaves API 29, live-server push delivery, and signing unverified; ktlint shows repo-wide pre-existing findings.
 
 # Last safe commit
 
-1c90e9e Repair the Misskey continuation test runtime.
-R04 slice commit subject: `Repair the capability-cache probe fixture`.
+9445dec is the safe commit after R04.
+R05 slice commit subject: `Repair notification generation lifecycle regressions`.

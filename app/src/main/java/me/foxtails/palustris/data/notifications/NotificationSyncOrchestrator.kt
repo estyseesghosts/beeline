@@ -171,6 +171,15 @@ class NotificationSyncOrchestrator @Inject constructor(
     @Volatile
     var preEnqueueGate: (() -> Unit)? = null
 
+    /**
+     * Test-only gate. It runs outside locks after revocation and before durable
+     * deletion. Production keeps it null. Tests use it to force an in-flight
+     * write or a cancellation into that window.
+     */
+    @VisibleForTesting
+    @Volatile
+    var preRemoveGate: (() -> Unit)? = null
+
     @Synchronized
     override fun observeAccount(accountId: AccountId): StateFlow<NotificationSyncState> {
         // A removed account never materializes display or repository state. Check the
@@ -192,14 +201,21 @@ class NotificationSyncOrchestrator @Inject constructor(
         jobs.remove(accountId)?.cancel()
         // The per-account lock stays. Waiters keep their order through removal.
         sourceRegistry.remove(accountId)
-        if (generation != null) repository.invalidate(accountId, generation)
+        // Revoke synchronously with the exact generation: deactivate tombstones it,
+        // so the legitimate replacement stays strictly newer and an in-flight write
+        // still fails its post-work check while durable deletion waits on its lock.
+        // An invalidate-then-remove sequence would tombstone one generation too high
+        // and reject that replacement.
+        if (generation != null) {
+            repository.deactivate(NotificationSyncToken(accountId, generation))
+        }
         // Bump even with no active entry. A null-baseline register needs the change.
         removalEpochs[accountId] = removalEpochAllocator.incrementAndGet()
         states[accountId]?.value = states[accountId]?.value?.copy(isActive = false) ?: NotificationSyncState()
     }
 
     /**
-     * Removes one account. Invalidation runs before repository removal, so late
+     * Removes one account. Revocation runs before repository removal, so late
      * stream events fail and the generation entry disappears. A new registration
      * after this call receives a fresh generation from the process-lifetime allocator.
      * Durable removal runs outside the controller lock. A trailing check under a short
@@ -210,6 +226,9 @@ class NotificationSyncOrchestrator @Inject constructor(
         synchronized(this) {
             unregister(accountId)
         }
+        // Test-only ordering gate. It runs outside locks after revocation and
+        // before durable deletion. Production keeps it null.
+        preRemoveGate?.invoke()
         repository.remove(accountId)
         synchronized(this) {
             val published = generations[accountId]
@@ -239,7 +258,7 @@ class NotificationSyncOrchestrator @Inject constructor(
      * network I/O. The repository monitor necessarily covers short in-memory checks plus the
      * activation store read. Callers invoke registration from an I/O context. The interface
      * does not enforce that context.
-     * A concurrent removal wins through invalidate-before-delete, the repository tombstone,
+     * A concurrent removal wins through synchronous revocation, the repository tombstone,
      * the epoch check, stale undo, and the post-removal drop in [removeAccount]. A null
      * baseline needs the epoch and retirement checks: the active map alone cannot show
      * removal when no entry exists, and a newer token can clear the tombstone on activation.
@@ -388,6 +407,9 @@ class NotificationSyncOrchestrator @Inject constructor(
 
     suspend fun accept(event: Event): Boolean {
         val token = repository.currentToken(event.accountId) ?: return false
+        // Only an entry this controller published may deliver. The repository can
+        // still hold a generation with no active entry, so the map check comes first.
+        if (!synchronized(this) { generations[event.accountId] == token.generation }) return false
         return lockFor(event.accountId).withLock { repository.applyStreamEvent(token, event) }
     }
 
@@ -540,8 +562,9 @@ class NotificationSyncOrchestrator @Inject constructor(
 
     private companion object {
         const val POLL_INTERVAL_MILLIS = 60_000L
-        // Removal advances the repository past one allocation (invalidate plus tombstone),
-        // so one retry is the common case. The extra attempts cover a concurrent cycle.
+        // Removal tombstones the exact generation at unregister time, so the
+        // replacement is the common first-try success. The extra attempts cover
+        // a concurrent cycle.
         const val MAX_ACTIVATION_ATTEMPTS = 4
     }
 }
