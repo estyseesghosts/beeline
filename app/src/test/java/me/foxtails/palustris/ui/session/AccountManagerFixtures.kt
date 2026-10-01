@@ -31,7 +31,7 @@ internal fun accountManagerFixture(
     notificationSync: NotificationSyncController = NoOpNotificationSyncController(),
     uiStrings: UiStrings = UiStrings.Default,
     capabilityCache: CapabilityCache = CapabilityCache(),
-    sourceFactory: SocialSourceFactory = SocialSourceFactory(HttpClientPool(), capabilityCache = capabilityCache),
+    sourceFactory: SocialSourceFactory = SocialSourceFactory(HttpClientPool(), store, capabilityCache),
 ): AccountManager = AccountManager(
     auth = auth,
     lifecycle = SessionLifecycle(

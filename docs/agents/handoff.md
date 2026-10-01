@@ -13,26 +13,25 @@ Start with AGENTS.md, agent control, workflow, and operation rules.
 
 ## Current position and next action
 
-R05 is complete. `NotificationSyncOrchestrator.unregister` revokes synchronously with the exact generation through `NotificationRepository.deactivate`; `removeAccount` keeps its unregister plus repository removal plus trailing-check composition; `accept` requires an active controller entry matching the token. Two gated tests prove removal and cancelled removal revoke an in-flight write.
+R06 is complete. `SocialSourceFactory` requires an explicit `SessionStore`. The fail-open null path is gone. Misskey sources receive the store-backed current-session check, and both adapters persist refreshed capabilities through revision-guarded `updateCapabilities`. New `SourceFactoryTest` covers routing and authority for both protocols.
 Problem_solver provides read-only investigation and review. Targeted_fixer accepts only small explicit work packages.
 Keep one implementation owner and one Git operator at a time.
-The next slice is R06. Require SessionStore in source construction.
+The next slice is R07. Keep push source selection bound to its notification token.
 
 ## Last safe commit
 
-9445dec is the safe commit after R04.
-R05 slice commit subject: `Repair notification generation lifecycle regressions`.
-The next session resolves the new R05 hash from Git without a second record-only commit.
+4145f4c is the safe commit after R05.
+R06 slice commit subject: `Require the session authority in SocialSourceFactory`.
+The next session resolves the new R06 hash from Git without a second record-only commit.
 The last safe application source remains 464b2d1. Simulator evidence reference 219504c resolves.
 
 ## Limits
 
-- R05 changed the notification orchestrator revocation path, its accept guard, and records only. Repository, registry, and store implementations remain unchanged.
-- NotificationSyncOrchestratorTest reports 27 passing tests. Repository, synchronizer, state-ownership, write-failure, and SessionLifecycle suites report no regression.
-- Post-repair test assembleRelease reports 1468 tests and 1 failure (R15a Mastodon artwork only) with release assembly complete; all R03, R04, and R05 failures are absent.
-- RoomNotificationStoreInstrumentedTest reports 1 passing test on emulator-5554 (API 36).
-- ktlint reports repo-wide pre-existing findings; the changed test file is clean.
-- API 29, live-server push delivery, and signing checks remain unverified.
+- R06 changed the source factory session dependency, its authority check, and records only. Adapters, store implementation, and DI wiring remain unchanged.
+- SourceFactoryTest reports 6 passing tests. SessionLifecycle, session ViewModel, connected context, auth gateway, push cancellation, and Misskey integration suites report no regression. The Mastodon contract run retains the pre-existing R15a artwork failure.
+- Post-repair test assembleRelease reports 1476 tests and 1 failure (R15a Mastodon artwork only) with release assembly complete; all R01–R06 failures are absent.
+- `:app:lintDebug` reports BUILD SUCCESSFUL. ktlint reports repo-wide pre-existing findings; the new test file is clean.
+- Live-server capability refresh, API 29, live-server push delivery, and signing checks remain unverified.
 - Full NavigationTest reports 30 passing tests. ComposerOwnerTest, ShellCharacterizationTest, and SignInScreenTest report no regression.
 - ktlintTestSourceSetCheck reports only pre-existing NavigationTest findings. AppShellFixtures has none.
 - Post-repair test assembleRelease from R02 reports 1466 tests and 13 failures with release assembly complete.

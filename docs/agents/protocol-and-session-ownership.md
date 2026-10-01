@@ -34,6 +34,16 @@ Device and live-server behavior remain unverified.
 - `di/AppModule` probes Misskey through the neutral client. `SocialSourceFactory` creates the
   Misskey adapter or Mastodon neutral client from the session connection protocol.
 - `data/SourceFactory.kt` creates one source for a session. It branches on `Protocol` only there.
+- `SocialSourceFactory` requires a `SessionStore`. It has no null-store path.
+  `isCurrentSession(session)` compares the stored session revision with the
+  source session revision. A missing, removed, or replaced session fails.
+- Misskey sources receive that check as `isCurrentSession`. A late probe result
+  cannot pass the factory-owned gate after session replacement or removal. The
+  revision read is not atomic with adapter publication, so this is a gate
+  rather than a transactional guarantee.
+- Both adapters persist refreshed capabilities through
+  `SessionStore.updateCapabilities` with the source session revision. A late
+  callback cannot overwrite a replacement session.
 - `data/AccountSourceRegistry.kt` stores one source for each `AccountId` together with a
   generation from `NotificationSyncToken`.
 - `sourceFor(token)` returns null when the generation is stale. `sourceFor(accountId)` ignores
@@ -375,6 +385,11 @@ The stale claim in older ownership and bug records is removed.
 - `SessionViewModelTest`, `ConnectedSessionContextTest`, `AuthGatewayTest`
 - `DirectMessageRepositoryTest`, `DirectMessageViewModelTest`
 - `NotificationRepositoryTest`, `NotificationAdapterContractTest`, `NotificationSynchronizerTest`
+- `SourceFactoryTest` covers source routing and session authority. It verifies
+  Misskey and Mastodon creation, current-session acceptance, and missing,
+  removed, and replaced session rejection. The revision guard behind the
+  capability callbacks is covered at the store level by `CrossCuttingTest`.
+  Callback firing needs a live probe and stays unverified in unit tests.
 - `NotificationSyncOrchestratorTest` covers generation fencing, removal revocation, late-event
   rejection, poll cancellation, and gated in-flight-write removal. A cancelled removal still
   revokes the old token.

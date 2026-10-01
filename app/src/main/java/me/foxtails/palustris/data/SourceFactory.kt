@@ -15,10 +15,18 @@ import me.foxtails.palustris.data.auth.SessionStore
 
 class SocialSourceFactory @Inject constructor(
     private val clientPool: HttpClientPool,
-    private val sessionStore: SessionStore? = null,
+    private val sessionStore: SessionStore,
     private val capabilityCache: CapabilityCache,
     private val appMessages: AppMessages = AppMessages.Default,
 ) {
+    /**
+     * Session authority for created sources. A source is current only while the
+     * store holds its session revision. Missing, removed, and replaced sessions
+     * fail. Misskey sources use this for late probe publication.
+     */
+    internal fun isCurrentSession(session: Session): Boolean =
+        sessionStore.read(session.accountId)?.sessionRevision == session.sessionRevision
+
     fun create(session: Session): SocialSource = when (session.accountId.connection.protocol) {
         Protocol.MISSKEY -> MisskeySource(
             origin = session.accountId.connection.origin,
@@ -33,11 +41,11 @@ class SocialSourceFactory @Inject constructor(
             sessionIdentity = capabilityCache.currentIdentity(session.accountId)
                 ?: capabilityCache.activate(session.accountId),
             isCurrentSession = {
-                sessionStore?.let { it.read(session.accountId)?.sessionRevision == session.sessionRevision } ?: true
+                this.isCurrentSession(session)
             },
             onCapabilitiesUpdated = { capabilities ->
                 // Persist only when the stored session still matches the source revision.
-                sessionStore?.updateCapabilities(session.accountId, session.sessionRevision) { capabilities }
+                sessionStore.updateCapabilities(session.accountId, session.sessionRevision) { capabilities }
             },
             appMessages = appMessages,
         )
@@ -55,7 +63,7 @@ class SocialSourceFactory @Inject constructor(
                 sessionRevision = session.sessionRevision,
                 onCapabilitiesUpdated = { capabilities ->
                     // Persist only when the stored session still matches the source revision.
-                    sessionStore?.updateCapabilities(session.accountId, session.sessionRevision) { capabilities }
+                    sessionStore.updateCapabilities(session.accountId, session.sessionRevision) { capabilities }
                 },
             )
         }
