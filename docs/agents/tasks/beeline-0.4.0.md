@@ -22,22 +22,22 @@ The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery
 - R07 — bind push source selection to its notification token. All 15 UnifiedPushRegistrationManagerTest tests pass. PushCancellationTest, PushRegistrationRepositoryTest, NotificationSyncOrchestratorTest, NotificationRepositoryTest, and SessionLifecycleTest pass with no regression. No registry, adapter, store, or wiring change.
 - R08 — validate Mastodon report identities before sending. All 15 ModerationServiceTest tests pass (13 existing plus 2 new report validation regressions). MastodonIntegrationTest, MastodonSourceContractTest, and MisskeyIntegrationTest pass except the pre-existing R15a artwork failure. No cursor, encoding, or comment-behavior change.
 - R09 — bind Mastodon moderation cursors to the source session. All 17 ModerationServiceTest tests pass. MastodonIntegrationTest reports 63 passing tests. ModerationViewModelTest reports 13 passing tests. ModerationListScreenTest reports 3 passing tests. Adapter contracts pass except the pre-existing R15a artwork failure. A rejected continuation keeps existing rows visible. No generic cursor, endpoint, or route change.
+- R10 — preserve restored Search state for its matching session. ShellNavigatorTest reports 28 tests and 0 failures. ShellNavigatorRestorationTest reports 5 tests and 0 failures. SearchPanelRestorationTest reports 3 tests and 0 failures. NavigationTest reports 31 tests and 0 failures. ShellCharacterizationTest, WideNavigationTest, and AppShellStateTest pass. The composer overlay is never restored. Full gate reports 1521 tests with only the pre-existing R15a artwork failure; release assembly complete.
 
 # Current slice
 
-R09 is complete. `MastodonModerationService` takes required session revision and source instance dependencies from the source UUID. The moderation cursor payload binds both values at version 2. Legacy version-1 and raw-URL cursors fail safely. The first-page self-Link uses the exact initial request URL.
+R10 is complete. `ShellNavigator` binds restored navigation state to the saved session owner (origin, protocol, local account ID, durable revision) synchronously before display. Matching restoration preserves the Search query, category, safe local page, and remembered panels. A mismatched owner clears the account-bound query, category, prefill, page, viewed profile, and selected post. The composer overlay is never restored because reply/quote targets do not survive process recreation.
 
 # Files involved
 
-- app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonModerationService.kt holds the R09 production repair.
-- app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonSource.kt holds the R09 source wiring.
-- app/src/test/java/me/foxtails/palustris/ModerationServiceTest.kt holds the extended R09 cursor tests.
-- app/src/test/java/me/foxtails/palustris/data/mastodon/MastodonIntegrationTest.kt holds the R09 source-level cursor tests.
-- app/src/test/java/me/foxtails/palustris/ui/settings/ModerationViewModelTest.kt holds the R09 row-preservation test.
-- app/src/main/java/me/foxtails/palustris/ui/settings/ModerationListScreen.kt holds the R09 unsupported-with-rows presentation repair.
-- app/src/test/java/me/foxtails/palustris/ui/settings/ModerationListScreenTest.kt holds the new R09 presentation tests.
-- docs/agents/protocol-and-session-ownership.md holds the R09 cursor binding contract.
-- docs/wiki/server-compatibility.md holds the R09 moderation paging section.
+- app/src/main/java/me/foxtails/palustris/ui/navigation/ShellNavigator.kt holds the R10 production repair.
+- app/src/main/java/me/foxtails/palustris/ui/PalustrisApp.kt holds the R10 session-revision wiring.
+- app/src/test/java/me/foxtails/palustris/ui/navigation/ShellNavigatorTest.kt holds the extended R10 owner/binding tests.
+- app/src/test/java/me/foxtails/palustris/ui/navigation/ShellNavigatorRestorationTest.kt holds the new R10 composition restoration tests.
+- app/src/test/java/me/foxtails/palustris/ui/search/SearchPanelRestorationTest.kt holds the R10 full-app restoration tests.
+- app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationTest.kt holds the R10 end-to-end account-switch test.
+- docs/agents/app-shell-ownership.md holds the R10 session-binding invariant.
+- docs/wiki/ui-and-navigation.md holds the R10 navigation restoration section.
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
 - docs/agents/handoff.md points to this recovery task.
 - logs/261001-123500.txt holds R08 evidence and exact checks.
@@ -45,11 +45,11 @@ R09 is complete. `MastodonModerationService` takes required session revision and
 
 # Verification
 
-R09 verification: ModerationServiceTest reports 17 tests and 0 failures. MastodonIntegrationTest reports 63 tests and 0 failures. ModerationViewModelTest reports 13 tests and 0 failures. ModerationListScreenTest reports 3 tests and 0 failures. Adapter contracts report 68 tests with only the pre-existing R15a artwork failure; `:app:lintDebug` reports BUILD SUCCESSFUL. Post-slice test assembleRelease reports 1502 tests and 1 failure (R15a artwork only) with release assembly complete. The version-2 payload makes old code reject new cursors and new code reject legacy cursors. No test was weakened. Full evidence lives in logs/261001-130000.txt.
+R10 verification: ShellNavigatorTest reports 28 tests and 0 failures. ShellNavigatorRestorationTest reports 5 tests and 0 failures. SearchPanelRestorationTest reports 3 tests and 0 failures. NavigationTest reports 31 tests and 0 failures. ShellCharacterizationTest, WideNavigationTest, and AppShellStateTest pass. Post-slice full gate reports 1521 tests and 1 failure (pre-existing R15a artwork only) with release assembly complete. problem_solver re-review approved after two REQUIRED repairs. No test was weakened. Full evidence lives in logs/261001-180000.txt.
 
 # Next
 
-Execute R10. Preserve restored Search state for its matching session.
+Execute R11. Stream multipart uploads with explicit one-shot ownership.
 
 # Blockers
 
@@ -57,5 +57,5 @@ The deleted Photo Grid test excludes that test from the available suite. A clean
 
 # Last safe commit
 
-34e2a19 is the safe commit after R08.
-R09 slice commit subject: `Bind Mastodon moderation cursors to the source session`.
+6d9b69d is the safe commit after R09.
+R10 slice commit subject: `Preserve restored Search state for its matching session`.

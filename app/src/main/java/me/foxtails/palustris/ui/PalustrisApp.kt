@@ -109,6 +109,7 @@ fun PalustrisApp(
         val availableTimelines = if (account == null) Timeline.entries.toSet() else home?.state?.availableTimelines ?: setOf(Timeline.Home)
         val navigator = rememberShellNavigator(
             accountId = account?.id,
+            sessionRevision = sessionRevision,
             initialRoute = initialNotificationRoute,
             availableTimelines = availableTimelines,
             selectedHomeTimeline = home?.state?.selectedTimeline,

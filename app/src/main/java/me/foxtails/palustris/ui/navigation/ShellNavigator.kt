@@ -28,9 +28,16 @@ import me.foxtails.palustris.ui.shell.SearchPanel
  * here and report side effects through the event callbacks: transient-popup clearing,
  * search execution, and conversation start. Session-bound validation (media, reactions,
  * guarded closes) and feature-contract reads stay with the shell. Saved fields survive
- * process recreation through [Saver]. Transient selection clears on account change through
+ * process recreation through [Saver]. Restored state binds to its session owner through
+ * [bindSession] before display. Transient selection also clears on account change through
  * [resetForAccount].
  */
+internal enum class NavigatorSessionBind {
+    FRESH,
+    MATCHING,
+    MISMATCHED,
+}
+
 internal class ShellNavigator internal constructor() {
     var destination by mutableStateOf(Destination.Home)
     var destinationTransitionDirection by mutableStateOf(0)
@@ -49,6 +56,11 @@ internal class ShellNavigator internal constructor() {
     var notificationRoute by mutableStateOf<AppRoute?>(null)
 
     internal var overlayKey by mutableStateOf<String?>(null)
+
+    internal var boundOrigin: String? = null
+    internal var boundProtocolName: String? = null
+    internal var boundLocalId: String? = null
+    internal var boundRevision: Long? = null
 
     var reducedMotion: Boolean = false
     var onClearTransient: () -> Unit = {}
@@ -219,15 +231,99 @@ internal class ShellNavigator internal constructor() {
         clearSelectedPost()
     }
 
+    /**
+     * Binds restored navigation state to the current session owner before first display.
+     *
+     * Fresh state adopts the current owner. Matching restoration preserves the query,
+     * category, safe local page, and remembered panels. A mismatched owner clears the
+     * account-bound query, category, prefill, page, viewed profile, and selected post
+     * before those fields reach visible content or event callbacks, then adopts the
+     * current owner. Destination, timeline, panels, non-composer overlays, sheets, route, and
+     * visibility stay per [resetForAccount]. The composer overlay is never restored because
+     * reply/quote targets do not survive process recreation.
+     */
+    internal fun bindSession(accountId: AccountId?, sessionRevision: Long): NavigatorSessionBind {
+        val currentOrigin = accountId?.connection?.origin
+        val currentProtocolName = accountId?.connection?.protocol?.name
+        val currentLocalId = accountId?.localId
+        val hasBoundOwner = boundOrigin != null || boundProtocolName != null ||
+            boundLocalId != null || boundRevision != null
+        if (!hasBoundOwner) {
+            boundOrigin = currentOrigin
+            boundProtocolName = currentProtocolName
+            boundLocalId = currentLocalId
+            boundRevision = if (accountId == null) null else sessionRevision
+            return NavigatorSessionBind.FRESH
+        }
+        val matches = accountId != null &&
+            boundOrigin == currentOrigin &&
+            boundProtocolName == currentProtocolName &&
+            boundLocalId == currentLocalId &&
+            boundRevision == sessionRevision
+        if (matches) return NavigatorSessionBind.MATCHING
+        viewedProfile = null
+        page = null
+        searchQuery = ""
+        searchCategory = 0
+        searchPrefill = ""
+        clearSelectedPost()
+        boundOrigin = currentOrigin
+        boundProtocolName = currentProtocolName
+        boundLocalId = currentLocalId
+        boundRevision = if (accountId == null) null else sessionRevision
+        return NavigatorSessionBind.MISMATCHED
+    }
+
     companion object {
         private const val COMPOSER_OVERLAY_KEY = "Composer"
         private const val EDIT_PROFILE_OVERLAY_KEY = "EditProfile"
         private const val NOTIFICATION_SETTINGS_OVERLAY_KEY = "NotificationSettings"
         private const val NULL_SENTINEL = ""
+        private const val SAVER_VERSION = 1
+
+        private fun safeDestination(value: Any?): Destination =
+            try {
+                Destination.valueOf(value as String)
+            } catch (_: Exception) {
+                Destination.Home
+            }
+
+        private fun safeTimeline(value: Any?): Timeline =
+            try {
+                Timeline.valueOf(value as String)
+            } catch (_: Exception) {
+                Timeline.Home
+            }
+
+        private fun safeLocalPage(value: Any?): LocalPage? =
+            try {
+                (value as String).takeIf { it.isNotEmpty() }?.let { LocalPage.valueOf(it) }
+            } catch (_: Exception) {
+                null
+            }
+
+        private fun safeSearchPanel(value: Any?): String =
+            try {
+                SearchPanel.valueOf(value as String).name
+            } catch (_: Exception) {
+                SearchPanel.Search.name
+            }
+
+        private fun safeNotificationsPanel(value: Any?): String =
+            try {
+                NotificationsPanel.valueOf(value as String).name
+            } catch (_: Exception) {
+                NotificationsPanel.Notifications.name
+            }
 
         val Saver: Saver<ShellNavigator, *> = listSaver(
             save = {
                 listOf(
+                    SAVER_VERSION,
+                    it.boundOrigin ?: NULL_SENTINEL,
+                    it.boundProtocolName ?: NULL_SENTINEL,
+                    it.boundLocalId ?: NULL_SENTINEL,
+                    it.boundRevision,
                     it.destination.name,
                     it.destinationTransitionDirection,
                     it.timeline.name,
@@ -243,19 +339,65 @@ internal class ShellNavigator internal constructor() {
                 )
             },
             restore = { saved ->
-                ShellNavigator().apply {
-                    destination = Destination.valueOf(saved[0] as String)
-                    destinationTransitionDirection = saved[1] as Int
-                    timeline = Timeline.valueOf(saved[2] as String)
-                    (saved[3] as String).takeIf { it.isNotEmpty() }?.let { page = LocalPage.valueOf(it) }
-                    (saved[4] as String).takeIf { it.isNotEmpty() }?.let { sheet = it }
-                    (saved[5] as String).takeIf { it.isNotEmpty() }?.let { overlayKey = it }
-                    searchPanelName = saved[6] as String
-                    searchQuery = saved[7] as String
-                    searchCategory = saved[8] as Int
-                    searchPrefill = saved[9] as String
-                    notificationsPanelName = saved[10] as String
-                    navigationVisible = saved[11] as Boolean
+                try {
+                    if (saved.size == 12) {
+                        ShellNavigator().apply {
+                            destination = safeDestination(saved[0])
+                            destinationTransitionDirection = (saved[1] as? Number)?.toInt() ?: 0
+                            timeline = safeTimeline(saved[2])
+                            page = null
+                            (saved[4] as? String)?.takeIf { it.isNotEmpty() }?.let { sheet = it }
+                            // The composer overlay is never restored: reply/quote targets do not
+                            // survive process recreation, and reopening the saved text as a new
+                            // post would silently retarget a reply. Broader editor recovery is
+                            // Phase 7A/7B work.
+                            (saved[5] as? String)?.takeIf { it.isNotEmpty() && it != COMPOSER_OVERLAY_KEY }
+                                ?.let { overlayKey = it }
+                            searchPanelName = safeSearchPanel(saved[6])
+                            searchQuery = ""
+                            searchCategory = 0
+                            searchPrefill = ""
+                            notificationsPanelName = safeNotificationsPanel(saved[10])
+                            navigationVisible = (saved[11] as? Boolean) ?: true
+                        }
+                    } else if (saved.size == 17 && (saved[0] as? Number)?.toInt() == SAVER_VERSION) {
+                        ShellNavigator().apply {
+                            (saved[1] as? String)?.takeIf { it.isNotEmpty() }?.let { boundOrigin = it }
+                            (saved[2] as? String)?.takeIf { it.isNotEmpty() }?.let { boundProtocolName = it }
+                            (saved[3] as? String)?.takeIf { it.isNotEmpty() }?.let { boundLocalId = it }
+                            boundRevision = (saved[4] as? Number)?.toLong()
+                            destination = safeDestination(saved[5])
+                            destinationTransitionDirection = (saved[6] as? Number)?.toInt() ?: 0
+                            timeline = safeTimeline(saved[7])
+                            // The composer overlay is never restored: reply/quote targets do not
+                            // survive process recreation, and reopening the saved text as a new
+                            // post would silently retarget a reply. Broader editor recovery is
+                            // Phase 7A/7B work.
+                            val hasBoundOwner = boundOrigin != null || boundProtocolName != null ||
+                                boundLocalId != null || boundRevision != null
+                            if (!hasBoundOwner) {
+                                page = null
+                                searchQuery = ""
+                                searchCategory = 0
+                                searchPrefill = ""
+                            } else {
+                                page = safeLocalPage(saved[8])
+                                searchQuery = saved[12] as? String ?: ""
+                                searchCategory = (saved[13] as? Number)?.toInt() ?: 0
+                                searchPrefill = saved[14] as? String ?: ""
+                            }
+                            (saved[9] as? String)?.takeIf { it.isNotEmpty() }?.let { sheet = it }
+                            (saved[10] as? String)?.takeIf { it.isNotEmpty() && it != COMPOSER_OVERLAY_KEY }
+                                ?.let { overlayKey = it }
+                            searchPanelName = safeSearchPanel(saved[11])
+                            notificationsPanelName = safeNotificationsPanel(saved[15])
+                            navigationVisible = (saved[16] as? Boolean) ?: true
+                        }
+                    } else {
+                        ShellNavigator()
+                    }
+                } catch (_: Exception) {
+                    ShellNavigator()
                 }
             },
         )
@@ -267,12 +409,14 @@ internal class ShellNavigator internal constructor() {
  *
  * The navigator survives recomposition and process recreation. It clamps the timeline to
  * the available set, follows the Home selection, reasserts navigation visibility on
- * navigation change, applies the launch route once, and clears account-scoped selection
- * when the account changes. Event callbacks arrive from the shell every composition.
+ * navigation change, applies the launch route once, and binds restored account-scoped
+ * selection to the durable session owner synchronously before first display.
+ * Event callbacks arrive from the shell every composition.
  */
 @Composable
 internal fun rememberShellNavigator(
     accountId: AccountId?,
+    sessionRevision: Long,
     initialRoute: AppRoute?,
     availableTimelines: Set<Timeline>,
     selectedHomeTimeline: Timeline?,
@@ -286,7 +430,7 @@ internal fun rememberShellNavigator(
     navigator.onClearTransient = onClearTransient
     navigator.onSearch = onSearch
     navigator.onStartConversation = onStartConversation
-    LaunchedEffect(accountId) { navigator.resetForAccount() }
+    navigator.bindSession(accountId, sessionRevision)
     LaunchedEffect(availableTimelines) { navigator.clampTimeline(availableTimelines) }
     LaunchedEffect(selectedHomeTimeline, accountId) { navigator.syncHomeTimeline(selectedHomeTimeline) }
     LaunchedEffect(navigator.destination, navigator.page, navigator.overlayKey) { navigator.navigationVisible = true }

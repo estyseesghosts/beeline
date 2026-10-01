@@ -1107,4 +1107,31 @@ class NavigationTest {
         assertEquals(other.id, switchedTo)
         compose.onNodeWithContentDescription("Profile").assertIsSelected()
     }
+
+    @Test fun searchQueryClearedForDifferentAccountEndToEnd() {
+        val account = fixtureAccount("search-restore")
+        val other = fixtureAccount("search-other")
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                AppShellFixtures.app(account = account, sessionRevision = 7L)
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Search").performClick()
+        compose.onNodeWithText("Hashtags").performClick()
+        compose.onNode(hasSetTextAction()).performTextInput("photography")
+        compose.onNodeWithContentDescription("Notifications").performClick()
+        compose.onNodeWithContentDescription("Search").performClick()
+        compose.onNodeWithText("photography").assertIsDisplayed()
+        compose.onNodeWithText("Hashtags").assertIsSelected()
+
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                AppShellFixtures.app(account = other, sessionRevision = 7L)
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Search").performClick()
+        compose.onNodeWithText("photography").assertDoesNotExist()
+    }
 }

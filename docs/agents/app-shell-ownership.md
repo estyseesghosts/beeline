@@ -207,6 +207,13 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   navigation. A clean close creates no draft. A failed save keeps the editor text
   and reports no success. A revoked writer keeps the editor text and stores nothing.
   Recomposition keeps the same writer and stores one draft.
+- `ShellNavigator` binds restored navigation state to the origin, protocol, local account ID,
+  and durable session revision synchronously before display. Matching restoration preserves
+  the Search query, category, safe local page, and remembered panels. A mismatched owner
+  clears the account-bound query, category, prefill, page, viewed profile, and selected post.
+  The composer overlay is never restored because reply/quote targets do not survive process
+  recreation. Old payloads keep safe navigation memory without account-bound text. Malformed payloads
+  restore a safe navigator.
 
 ## Limits
 

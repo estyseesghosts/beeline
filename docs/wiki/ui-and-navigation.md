@@ -32,6 +32,21 @@ publication updates without changing route or saved-state restoration.
 Sources: `ui/search/SearchOwner.kt`, `ui/search/SearchHost.kt`, `ui/shell/PostProjectionCoordinator.kt`,
 `SearchOwnerTest`, `ConnectedEntryStoreTest`.
 
+## Navigation restoration
+
+`ShellNavigator` owns shell navigation and selection behind one boundary. Its versioned saver
+binds restored state to the origin, protocol, local account ID, and durable session revision.
+Matching restoration preserves the Search query, category, safe local page, and remembered
+Search/Photo Grid and Notification/DM panels. A mismatched owner clears the account-bound
+query, category, prefill, and page synchronously before display; destination, timeline,
+panels, non-composer overlays, sheets, and visibility stay. The composer overlay is never
+restored because reply/quote targets do not survive process recreation. Old or malformed payloads restore safe
+navigation memory without account-bound text.
+
+Sources: `ui/navigation/ShellNavigator.kt`, `ui/PalustrisApp.kt`,
+`ShellNavigatorTest`, `ShellNavigatorRestorationTest`, `SearchPanelRestorationTest`,
+`NavigationTest`.
+
 ## Draft restoration
 
 Closing a dirty composer saves the draft and closes the overlay. The saved text

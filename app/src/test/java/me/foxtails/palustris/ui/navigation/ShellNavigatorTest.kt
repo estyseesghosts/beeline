@@ -156,6 +156,7 @@ class ShellNavigatorTest {
     @Test
     fun saverRoundTripPreservesNavigationState() {
         val navigator = ShellNavigator()
+        navigator.bindSession(accountId, 7L)
         navigator.destination = Destination.Search
         navigator.destinationTransitionDirection = -1
         navigator.timeline = Timeline.Federated
@@ -185,6 +186,177 @@ class ShellNavigatorTest {
         assertNull(restored.viewedProfile)
         assertNull(restored.singlePost)
         assertNull(restored.notificationRoute)
+        assertEquals(NavigatorSessionBind.MATCHING, restored.bindSession(accountId, 7L))
+        assertEquals("tag", restored.searchQuery)
+    }
+
+    @Test
+    fun saverRoundTripPreservesOwnerBinding() {
+        val navigator = ShellNavigator()
+        navigator.bindSession(accountId, 11L)
+        navigator.searchQuery = "tag"
+        val saved = with(scope) { with(saver) { save(navigator) } }!!
+        val restored = saver.restore(saved)!!
+        assertEquals(NavigatorSessionBind.MATCHING, restored.bindSession(accountId, 11L))
+        assertEquals("tag", restored.searchQuery)
+    }
+
+    @Test
+    fun bindMatchingSessionPreservesAccountBoundFields() {
+        val navigator = ShellNavigator()
+        assertEquals(NavigatorSessionBind.FRESH, navigator.bindSession(accountId, 7L))
+        navigator.searchQuery = "tag"
+        navigator.searchCategory = 2
+        navigator.searchPrefill = "pre"
+        navigator.page = LocalPage.Drafts
+        navigator.destination = Destination.Search
+        assertEquals(NavigatorSessionBind.MATCHING, navigator.bindSession(accountId, 7L))
+        assertEquals("tag", navigator.searchQuery)
+        assertEquals(2, navigator.searchCategory)
+        assertEquals("pre", navigator.searchPrefill)
+        assertEquals(LocalPage.Drafts, navigator.page)
+    }
+
+    @Test
+    fun bindDifferentAccountClearsAccountBoundFieldsBeforeDisplay() {
+        val otherId = AccountId(Connection("https://other.example", Protocol.MASTODON), "other")
+        val navigator = ShellNavigator()
+        navigator.bindSession(accountId, 7L)
+        navigator.searchQuery = "tag"
+        navigator.searchCategory = 2
+        navigator.searchPrefill = "pre"
+        navigator.page = LocalPage.Drafts
+        navigator.destination = Destination.Search
+        assertEquals(NavigatorSessionBind.MISMATCHED, navigator.bindSession(otherId, 7L))
+        assertEquals("", navigator.searchQuery)
+        assertEquals(0, navigator.searchCategory)
+        assertEquals("", navigator.searchPrefill)
+        assertNull(navigator.page)
+        assertEquals(Destination.Search, navigator.destination)
+    }
+
+    @Test
+    fun bindSameAccountNewRevisionClearsAccountBoundFields() {
+        val navigator = ShellNavigator()
+        navigator.bindSession(accountId, 7L)
+        navigator.searchQuery = "tag"
+        navigator.searchCategory = 2
+        navigator.searchPrefill = "pre"
+        navigator.page = LocalPage.Drafts
+        assertEquals(NavigatorSessionBind.MISMATCHED, navigator.bindSession(accountId, 8L))
+        assertEquals("", navigator.searchQuery)
+        assertEquals(0, navigator.searchCategory)
+        assertEquals("", navigator.searchPrefill)
+        assertNull(navigator.page)
+    }
+
+    @Test
+    fun bindNullAccountClearsRestoredQuery() {
+        val navigator = ShellNavigator()
+        navigator.bindSession(accountId, 7L)
+        navigator.searchQuery = "tag"
+        navigator.searchCategory = 2
+        navigator.searchPrefill = "pre"
+        assertEquals(NavigatorSessionBind.MISMATCHED, navigator.bindSession(null, 0L))
+        assertEquals("", navigator.searchQuery)
+        assertEquals("", navigator.searchPrefill)
+    }
+
+    @Test
+    fun oldSavedShapeClearsAccountBoundTextButKeepsNavigationMemory() {
+        val saved = listOf(
+            Destination.Search.name,
+            0,
+            Timeline.Federated.name,
+            LocalPage.Drafts.name,
+            "Accounts",
+            "EditProfile",
+            SearchPanel.PhotoGrid.name,
+            "stale-query",
+            3,
+            "stale-prefill",
+            NotificationsPanel.DirectMessages.name,
+            false,
+        )
+        val restored = saver.restore(saved)!!
+        assertEquals(Destination.Search, restored.destination)
+        assertEquals(SearchPanel.PhotoGrid, restored.searchPanel)
+        assertEquals("", restored.searchQuery)
+        assertEquals(0, restored.searchCategory)
+        assertEquals("", restored.searchPrefill)
+        assertNull(restored.page)
+    }
+
+    @Test
+    fun malformedSavedShapeRestoresSafeNavigatorWithoutCrash() {
+        val malformed = listOf("Bogus", 42)
+        val restored = saver.restore(malformed)!!
+        assertEquals(Destination.Home, restored.destination)
+        assertEquals("", restored.searchQuery)
+        val badEnums = listOf(
+            1, "", "", "", 9L,
+            "Nope", 0, "Nope", "Nope", "", "", "Nope",
+            "query", 1, "prefill", "Nope", true,
+        )
+        val fallback = saver.restore(badEnums)!!
+        assertEquals(Destination.Home, fallback.destination)
+        assertEquals(Timeline.Home, fallback.timeline)
+        assertEquals(SearchPanel.Search, fallback.searchPanel)
+    }
+
+    @Test
+    fun rememberedPanelsSurviveOwnershipMismatch() {
+        val otherId = AccountId(Connection("https://other.example", Protocol.MASTODON), "other")
+        val navigator = ShellNavigator()
+        navigator.bindSession(accountId, 7L)
+        navigator.searchPanelName = SearchPanel.PhotoGrid.name
+        navigator.notificationsPanelName = NotificationsPanel.DirectMessages.name
+        navigator.searchQuery = "tag"
+        val saved = with(scope) { with(saver) { save(navigator) } }!!
+        val restored = saver.restore(saved)!!
+        assertEquals(NavigatorSessionBind.MISMATCHED, restored.bindSession(otherId, 7L))
+        assertEquals(SearchPanel.PhotoGrid, restored.searchPanel)
+        assertEquals(NotificationsPanel.DirectMessages, restored.notificationsPanel)
+        assertEquals("", restored.searchQuery)
+    }
+
+    @Test
+    fun ownerlessVersionedPayloadClearsAccountBoundText() {
+        val ownerless = listOf(
+            1, "", "", "", null,
+            Destination.Search.name, 0, Timeline.Federated.name, LocalPage.Drafts.name,
+            "", "", SearchPanel.PhotoGrid.name,
+            "stale-query", 3, "stale-prefill", NotificationsPanel.DirectMessages.name, false,
+        )
+        val restored = saver.restore(ownerless)!!
+        assertEquals(Destination.Search, restored.destination)
+        assertEquals(SearchPanel.PhotoGrid, restored.searchPanel)
+        assertEquals("", restored.searchQuery)
+        assertEquals(0, restored.searchCategory)
+        assertEquals("", restored.searchPrefill)
+        assertNull(restored.page)
+    }
+
+    @Test
+    fun composerOverlayIsNeverRestored() {
+        val navigator = ShellNavigator()
+        navigator.bindSession(accountId, 7L)
+        navigator.openComposerOverlay()
+        val saved = with(scope) { with(saver) { save(navigator) } }!!
+        val restored = saver.restore(saved)!!
+        assertNull(restored.overlay)
+        assertEquals(NavigatorSessionBind.MATCHING, restored.bindSession(accountId, 7L))
+        assertNull(restored.overlay)
+    }
+
+    @Test
+    fun notificationSettingsOverlayStillRestores() {
+        val navigator = ShellNavigator()
+        navigator.bindSession(accountId, 7L)
+        navigator.openNotificationSettingsOverlay()
+        val saved = with(scope) { with(saver) { save(navigator) } }!!
+        val restored = saver.restore(saved)!!
+        assertEquals(Overlay.NotificationSettings, restored.overlay)
     }
 
     private fun recordingNavigator(): Triple<ShellNavigator, MutableList<String>, MutableList<Account>> {
