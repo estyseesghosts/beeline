@@ -4,7 +4,7 @@
 
 **Owner:** Maintainers.
 
-**Last reviewed:** 2026-10-01 (agent-control entries only; other classifications retain their earlier review).
+**Last reviewed:** 2026-10-02 (R15 recovery review re-checked the touched wiki and agent pages; other classifications retain their earlier review).
 
 **Stale when:** A document is added, removed, moved, or reclassified.
 

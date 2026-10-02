@@ -2,7 +2,7 @@
 
 Status: current, partial coverage
 Owner: UI maintainers
-Last reviewed: 2026-10-01
+Last reviewed: 2026-10-02
 Stale when: A destination, layout policy, restoration rule, or accessibility requirement changes.
 
 Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
@@ -115,3 +115,22 @@ Rows and Photo Grid detail use one quote preview presentation. The precedence is
 
 Sources: `ui/posts/QuotePreviewCard.kt`, `ui/posts/PostRow.kt`,
 `ui/posts/SinglePostScreen.kt`, `SinglePostScreenTest`.
+
+## Post favourite artwork
+
+The primary favourite action uses a per-protocol artwork policy. Misskey presents
+a heart; Mastodon presents a star. `SocialSource.favouriteArtworkStyle` carries the
+policy from the adapter through the feed presentation. `FeedViewModel` reads it
+from the source, `FeedHost` puts it on `HomeFeedUiState`, `HomeFeed` passes it in
+`PostRowPresentation`, and `PostRow`/`InteractionRow` select the icon with
+`favouriteIconFor`. It is not a feature capability, and the post row does not
+branch on `Protocol`. `SocialSourceContractTest` declares the expected style in each
+protocol's test, so the shared contract base never asserts one protocol's artwork
+as the default.
+
+Sources: `domain/SocialSource.kt`, `domain/FavouriteArtworkStyle.kt`,
+`ui/feed/FeedViewModel.kt`, `ui/feed/FeedHost.kt`, `ui/feed/HomeFeed.kt`,
+`ui/posts/PostRow.kt`, `ui/posts/PostInteractionPresentation.kt`,
+`data/misskey/MisskeySource.kt`, `data/mastodon/MastodonSource.kt`,
+`SocialSourceContractTest`, `MastodonSourceContractTest`,
+`PostRowFavouriteArtworkTest`.

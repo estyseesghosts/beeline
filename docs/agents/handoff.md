@@ -13,44 +13,45 @@ Start with AGENTS.md, agent control, workflow, and operation rules.
 
 ## Current position and next action
 
-R15a implementation is complete and the focused gates have run. The favourite
-artwork contract is split per protocol: the shared `SocialSourceContractTest`
-declares an abstract `expectedFavouriteArtworkStyle`; `MisskeySourceContractTest`
-supplies `Heart` and `MastodonSourceContractTest` supplies `Star`. The renamed
-`favouriteArtworkStyleMatchesProtocolContract` passes for both adapters and for
-`MisskeyIntegrationTest`, which extends the Misskey contract base. This removes
-the sole full-gate failure. No production, adapter, or presentation change.
+R15 implementation is complete and the integration gate has run. The full
+`test assembleRelease` gate is green: 151 suites, 1561 tests, 0 failures, with
+release assembly complete. The R00 through R15a repair slices resolved every
+reproduced failure, including the R15a artwork-contract split. The architecture
+audit exits 0 with no regression findings and lintDebug passes; ktlintCheck
+reports repo-wide pre-existing style findings against the committed baseline.
+API 29 smoke and the restoration device check remain unavailable locally.
 Problem_solver provides read-only investigation and review. Targeted_fixer accepts only small explicit work packages.
 Keep one implementation owner and one Git operator at a time.
-The next slice is R15. Run the full integration gate and hand back to Phase 4A.
+The next slice is Phase 4A — back priority and session-bound modal behavior.
 
 ## Last safe commit
 
-ba41628 is the safe commit after R14.
-R15a slice commit subject: `Split the favourite-artwork contract per protocol`.
-The next session resolves the new R15a hash from Git without a second record-only commit.
+ce75bcc is the safe commit after R15a.
+R15 slice commit subject: `Record the green recovery gate and resume Phase 4A`.
+The next session resolves the new R15 hash from Git without a second record-only commit.
 The last safe application source remains 464b2d1. Simulator evidence reference 219504c resolves.
 
 ## Limits
 
-- R15a changes only two contract-test files plus the protocol-ownership note and
-  records. No production, adapter, presentation, transport, route, or header change.
-- `MastodonSourceContractTest` reports 7 passing tests, `MisskeySourceContractTest`
-  7, and `MisskeyIntegrationTest` 49 with --rerun-tasks. The artwork test is renamed
-  and parameterized per protocol; no test was weakened or removed.
-- The R15a hunks add no new ktlint finding. `ktlintTestSourceSetCheck` reports
-  repo-wide pre-existing findings against a stale committed baseline; the only
-  finding in a touched file is the pre-existing unused `MisskeyApi` import at
-  `MastodonSourceContractTest.kt:5`, unused at HEAD `ba41628`. `:app:lintDebug`
-  reports BUILD SUCCESSFUL.
-- No fixer session was dispatched. The orchestrator owns the slice, implemented the
-  contract split directly, ran the focused checks, made the doc edits, and operates Git.
-- R15a removes the sole full-gate failure, so R15 can run its integration gate.
-- Heap and database/WAL bytes, live-server push delivery, API 29, live-server
-  capability refresh, and signing checks remain unverified.
-- No Android-only behavior changed in R15a, so no new instrumented test ran.
+- R15 is a gate-and-records slice. No production, adapter, presentation, transport,
+  route, or header change. It updates the task state, handoff, the 0.4.0 plan status,
+  the documentation inventory, the UI wiki artwork section, and BUGS.txt.
+- Full gate: `test assembleRelease --rerun-tasks` is BUILD SUCCESSFUL with 151 suites,
+  1561 tests, 0 failures, 0 errors, 0 skipped; release assembly complete. The count
+  matches R14 and the R15a artwork split removed the prior sole failure.
+- The architecture audit exits 0 with 616 findings and no regression findings.
+- `:app:lintDebug` passes. `ktlintCheck` fails on repo-wide pre-existing style
+  findings against the stale committed baseline; no baseline changed and no recovery
+  hunk added a finding. Resolving that style debt is a separate slice.
+- No fixer session was dispatched. The orchestrator owns the slice, ran the gate, and
+  operates Git.
+- API 29 smoke and the restoration device check are unavailable: the only connected
+  device is emulator-5554 (API 36) and Beeline is not installed. Heap and database/WAL
+  bytes, live-server push delivery, live-server capability refresh, live-server media
+  upload, and signing remain unverified.
+- No Android-only behavior changed in the recovery, so no new instrumented test ran.
 - The deleted Photo Grid test excludes that test from the available suite. Do not change it without owner approval.
-- The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored.
+- The docs/beeline_0.4.0.md status note, the timestamped logs, and BUGS.txt edits are git-ignored and stay local; force-add needs explicit user approval.
 - A clean-snapshot comparison remains pending because git worktree access is denied.
 - Existing worktree changes remain intact. Do not push without a user request.
 
