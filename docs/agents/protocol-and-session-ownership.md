@@ -378,8 +378,16 @@ cyclic or hostile root row is never reaccepted. The conversation footer shows sp
 
 The Mastodon adapter loads the anchor through `GET /api/v1/statuses/:id` and its context through
 `/context`. It never calls `GET /api/v1/conversations/:id`. It normalizes 403, 404, and 410 to the
-same unsupported error and rejects a non-direct anchor. It returns the result
-as finished with no cursor and adds no continuation. The Misskey adapter keeps
+same unsupported error and rejects a non-direct anchor. Blank or foreign anchor and conversation
+identities fail before any request, as does a malformed anchor body. Repeated rows across the
+anchor and context responses merge without duplicates. It returns the result
+as finished with no cursor and adds no continuation. A non-null thread cursor fails as unsupported
+before any request. The repository needs a stored conversation preview with the last-post anchor; a
+missing stored conversation fails as unsupported with no source call, a failed load keeps cached
+rows and the preview, and a late thread write after session replacement is rejected. Live
+direct-message evidence is blocked: no disposable account or approval exists for synthetic direct
+posts, so truncation beyond one context response stays unverified and no continuation is invented.
+The Misskey adapter keeps
 `conversationId.value` as the reply root and does not adopt Mastodon conversation identity.
 
 Slice 04-E2 removed the adapter `directLastPosts` map and the send-path insertion. The adapter
@@ -423,7 +431,7 @@ The stale claim in older ownership and bug records is removed.
 
 - `SocialSourceContractTest`, `MastodonSourceContractTest`, `ProfileSourceContractTest`
 - `SessionViewModelTest`, `ConnectedSessionContextTest`, `AuthGatewayTest`
-- `DirectMessageRepositoryTest`, `DirectMessageViewModelTest`
+- `DirectMessageSourceTest`, `DirectMessageRepositoryTest`, `DirectMessageViewModelTest`
 - `NotificationRepositoryTest`, `NotificationAdapterContractTest`, `NotificationSynchronizerTest`
 - `SourceFactoryTest` covers source routing and session authority. It verifies
   Misskey and Mastodon creation, current-session acceptance, and missing,

@@ -1258,6 +1258,118 @@ class DirectMessageSourceTest {
     }
 
     @Test
+    fun mastodonThreadMapsForbiddenAnchorToUnsupported() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            server.enqueue(MockResponse().setResponseCode(403))
+            val source = mastodonSource(origin)
+
+            var failure: SourceError? = null
+            try {
+                source.conversationThread(
+                    DirectThreadRequest(ConversationId(origin, "conversation"), EntityId(origin, "forbidden")),
+                )
+            } catch (error: SourceError) {
+                failure = error
+            }
+
+            assertEquals(SourceError.Unsupported("direct.thread"), failure)
+            assertEquals(1, server.requestCount)
+        }
+    }
+
+    @Test
+    fun mastodonThreadMapsGoneAnchorToUnsupported() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            server.enqueue(MockResponse().setResponseCode(410))
+            val source = mastodonSource(origin)
+
+            var failure: SourceError? = null
+            try {
+                source.conversationThread(
+                    DirectThreadRequest(ConversationId(origin, "conversation"), EntityId(origin, "gone")),
+                )
+            } catch (error: SourceError) {
+                failure = error
+            }
+
+            assertEquals(SourceError.Unsupported("direct.thread"), failure)
+            assertEquals(1, server.requestCount)
+        }
+    }
+
+    @Test
+    fun mastodonThreadRejectsBlankAndForeignIdentitiesWithoutRequests() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val source = mastodonSource(origin)
+
+            val invalidRequests = listOf(
+                DirectThreadRequest(ConversationId(origin, "conversation"), EntityId(origin, " ")),
+                DirectThreadRequest(ConversationId(origin, " "), EntityId(origin, "anchor")),
+                DirectThreadRequest(ConversationId("https://other.example.org", "conversation"), EntityId(origin, "anchor")),
+            )
+            invalidRequests.forEach { request ->
+                var failure: SourceError? = null
+                try {
+                    source.conversationThread(request)
+                } catch (error: SourceError) {
+                    failure = error
+                }
+                assertEquals(SourceError.Unsupported("direct.thread"), failure)
+            }
+
+            assertEquals(0, server.requestCount)
+        }
+    }
+
+    @Test
+    fun mastodonThreadRejectsMalformedAnchorBody() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            server.enqueue(MockResponse().setResponseCode(200).setBody("not-json"))
+            val source = mastodonSource(origin)
+
+            var failure: SourceError? = null
+            try {
+                source.conversationThread(
+                    DirectThreadRequest(ConversationId(origin, "conversation"), EntityId(origin, "malformed")),
+                )
+            } catch (error: SourceError) {
+                failure = error
+            }
+
+            assertEquals(SourceError.Unsupported("direct.thread"), failure)
+            assertEquals(1, server.requestCount)
+        }
+    }
+
+    @Test
+    fun mastodonThreadDeduplicatesRepeatedAnchorAcrossContext() = runBlocking {
+        MockWebServer().use { server ->
+            val origin = server.url("/").toString().removeSuffix("/")
+            val context = JSONObject()
+                .put("ancestors", org.json.JSONArray().put(mastodonStatus("before", "direct", "Before")))
+                .put("descendants", org.json.JSONArray()
+                    .put(mastodonStatus("anchor", "direct", "Repeated anchor"))
+                    .put(mastodonStatus("after", "direct", "After")))
+            server.enqueue(MockResponse().setBody(mastodonStatus("anchor", "direct", "Anchor").toString()))
+            server.enqueue(MockResponse().setBody(context.toString()))
+            val source = mastodonSource(origin)
+
+            val result = source.conversationThread(
+                DirectThreadRequest(ConversationId(origin, "conversation"), EntityId(origin, "anchor")),
+            )
+
+            assertEquals(listOf("before", "anchor", "after"), result.posts.map { it.id.value })
+            assertEquals(ThreadAcquisitionState.Finished, result.acquisitionState)
+            assertEquals(null, result.nextCursor)
+            assertEquals(2, server.requestCount)
+        }
+    }
+
+    @Test
     fun misskeyInboxStreamsHaveIndependentCursorValuesAndPreserveMappedTransportItems() = runBlocking {
         MockWebServer().use { server ->
             val origin = server.url("/").toString().removeSuffix("/")

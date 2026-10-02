@@ -1,5 +1,6 @@
 package me.foxtails.palustris.data.directmessages
 
+import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
@@ -166,6 +167,42 @@ class DirectMessageRepositoryTest {
         advanceUntilIdle()
         accepted.await()
         assertEquals(1, store.conversations(accountId).size)
+    }
+
+    @Test
+    fun staleThreadWriteAfterReplacementIsRejected() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val authority = DirectMessageWriteAuthority()
+        val store = InMemoryDirectMessageStore()
+        val source = GatedSource()
+        val id = ConversationId(connection.origin, "thread")
+        store.save(accountId, conversation("thread", "anchor"))
+        val oldGeneration = authority.activate(accountId)
+        val oldRepository = repository(authority, store, source, oldGeneration, dispatcher)
+
+        val staleLoad = async { oldRepository.thread(id) }
+        advanceUntilIdle()
+        val newGeneration = authority.activate(accountId)
+        val newRepository = repository(authority, store, source, newGeneration, dispatcher)
+        source.completeThread(0, listOf(post("stale-row")))
+        advanceUntilIdle()
+
+        var cancelled = false
+        try {
+            staleLoad.await()
+        } catch (_: kotlinx.coroutines.CancellationException) {
+            cancelled = true
+        }
+        assertTrue(cancelled)
+        assertTrue(store.thread(accountId, id).isEmpty())
+        assertEquals("anchor", store.conversation(accountId, id)?.lastPost?.id?.value)
+
+        val acceptedLoad = async { newRepository.thread(id) }
+        advanceUntilIdle()
+        source.completeThread(1, listOf(post("fresh-row")))
+        acceptedLoad.await()
+        advanceUntilIdle()
+        assertEquals(listOf("fresh-row"), store.thread(accountId, id).map { it.id.value })
     }
 
     @Test
@@ -447,6 +484,46 @@ class DirectMessageRepositoryTest {
 
         assertTrue(unsupported)
         assertTrue(source.threadRequests.isEmpty())
+    }
+
+    @Test
+    fun threadSourceFailureKeepsCachedRows() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val authority = DirectMessageWriteAuthority()
+        val store = InMemoryDirectMessageStore()
+        // A directly failing source needs no in-flight gate: nothing runs
+        // concurrently with the load, so the failure path is synchronous.
+        val failure = IOException("thread source failed")
+        val failing = object : DirectMessageSource {
+            override suspend fun conversations(cursor: String?): Page<DirectConversation> = Page(emptyList())
+            override suspend fun conversationThread(
+                request: DirectThreadRequest,
+                cursor: String?,
+            ): DirectThreadResult = throw failure
+            override suspend fun sendDirectMessage(request: DirectMessageRequest): Post = post("unused", owner)
+            override suspend fun markConversationRead(id: ConversationId) = Unit
+        }
+        val repository =
+            DirectMessageRepository(accountId, failing, store, authority.activate(accountId), dispatcher, authority)
+        val id = ConversationId(connection.origin, "thread")
+        val cachedRows = listOf(post("cached-one"), post("cached-two"))
+        val storedConversation = conversation("thread", "preview")
+        store.save(accountId, storedConversation, cachedRows)
+
+        var observed: IOException? = null
+        try {
+            repository.thread(id)
+        } catch (error: IOException) {
+            observed = error
+        }
+
+        // Coroutine stacktrace recovery may copy an exception with the same
+        // type and message across the suspend boundary, so the contract pins
+        // the failure shape instead of the instance identity.
+        assertEquals(failure.message, observed?.message)
+        assertTrue(observed is IOException)
+        assertEquals(cachedRows, store.thread(accountId, id))
+        assertEquals(storedConversation, store.conversation(accountId, id))
     }
 
     @Test

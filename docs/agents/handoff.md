@@ -13,29 +13,46 @@ Start with AGENTS.md, agent control, workflow, and operation rules.
 
 ## Current position and next action
 
-R12 implementation is complete and the full gate has run. `MastodonSource.uploadMedia` is proven to use the R11 streaming transport path with no adapter-side buffering. Four adapter tests through the real adapter verify POST /api/v1/media, multipart name `file` with default filename `upload`, caller MIME type, exact bytes, bearer ownership, attachment mapping, and close-once ownership on success, HTTP 422 failure, genuine mid-body disconnect, and cancellation. A fresh stream retries successfully after the disconnect. The disconnect phase runs on an isolated fault server because MockWebServer never dequeues a request cut off mid-body.
+R13 implementation is complete and the full gate has run. The direct-message anchor and
+context contract is characterized with no production change: Mastodon loads one anchor plus one
+context response and reports Finished with no cursor; a non-null thread cursor fails before any
+request; 403, 404, and 410 anchor reads, blank or foreign identities, malformed bodies, and
+non-direct anchors fail truthfully as unsupported; repeated anchor and context rows merge without
+duplicates. The repository needs a stored conversation preview with the last-post anchor, merges
+remote posts with cached rows, keeps cached rows on failure, rejects late thread writes after
+session replacement, and reloads fresh context on retry with no cursor. Live-server truncation
+beyond one context response stays unverified: no disposable account or approval exists, and no
+continuation is invented.
 Problem_solver provides read-only investigation and review. Targeted_fixer accepts only small explicit work packages.
 Keep one implementation owner and one Git operator at a time.
-The next slice is R13. Characterize DM anchors and context limits with no speculative protocol change.
+The next slice is R14. Measure notification retention without unsafe eviction.
 
 ## Last safe commit
 
-e91e193 is the safe commit after R11.
-R12 slice commit subject: `Cover streaming Mastodon uploads through the adapter`.
-The next session resolves the new R12 hash from Git without a second record-only commit.
+3fb6973 is the safe commit after R12.
+R13 slice commit subject: `Characterize direct-message anchor and context limits`.
+The next session resolves the new R13 hash from Git without a second record-only commit.
 The last safe application source remains 464b2d1. Simulator evidence reference 219504c resolves.
 
 ## Limits
 
-- R12 changed the Mastodon integration test, the server-compatibility wiki, and records only. No production, transport, route, header, or editor-state change.
-- MastodonIntegrationTest reports 67 passing tests (63 existing plus 4 new). Grouped with MastodonSourceContractTest: 74 tests with only the pre-existing R15a artwork failure.
-- Post-repair full gate reports 1545 tests and 1 failure (pre-existing R15a artwork only) with release assembly complete.
-- `:app:lintDebug` reports BUILD SUCCESSFUL. ktlint reports repo-wide pre-existing findings; the R12 hunks introduce no new finding.
-- Test and wiki implementation by one targeted_fixer session under an explicit no-commit contract (kept through review repairs in the same session). The orchestrator owns the slice, ran all gates, and operates Git.
-- Live-server media upload, API 29, live-server push delivery, live-server capability refresh, and signing checks remain unverified.
-- No Android-only behavior changed in R12, so no new instrumented test ran.
+- R13 changed two DM test files, the notifications-and-direct-messages wiki, the
+  protocol-and-session-ownership page, and records only. No production, transport, route, header,
+  or editor-state change.
+- Focused DM suites report 102 passing tests. Grouped Mastodon plus Misskey adapter contracts:
+  245 tests with only the pre-existing R15a artwork failure.
+- Post-repair full gate reports 1552 tests and 1 failure (pre-existing R15a artwork only) with
+  release assembly complete.
+- `:app:lintDebug` reports BUILD SUCCESSFUL. ktlint reports repo-wide pre-existing findings; the
+  R13 hunks introduce no new finding.
+- Tests by one targeted_fixer session under an explicit no-commit contract (stopped at its fail
+  gate on the gated failure test). The orchestrator owns the slice, repaired that test after a
+  stop-condition investigation, made the doc edits, ran all gates, and operates Git.
+- Live-server DM truncation, API 29, live-server push delivery, live-server capability refresh,
+  and signing checks remain unverified.
+- No Android-only behavior changed in R13, so no new instrumented test ran.
 - The deleted Photo Grid test excludes that test from the available suite. Do not change it without owner approval.
-- The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. R12 needs no BUGS.txt entry (coverage only, no defect repaired).
+- The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. R13 needs no BUGS.txt entry (coverage only, no defect repaired).
 - A clean-snapshot comparison remains pending because git worktree access is denied.
 - Existing worktree changes remain intact. Do not push without a user request.
 

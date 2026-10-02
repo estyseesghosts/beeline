@@ -2,7 +2,7 @@
 
 Status: current, partial coverage  
 Owner: Notifications and messaging maintainers  
-Last reviewed: 2026-09-24  
+Last reviewed: 2026-10-01  
 Stale when: Notification delivery or direct-message behavior changes.
 
 Sources: `AGENTS.md`, `data/notifications/`, `data/directmessages/`, notification tests, and messaging tests.
@@ -96,7 +96,19 @@ Source: `data/directmessages/DirectMessageRepository.kt`,
   mark-read. A provisional local conversation clears unread state on this device and sends no
   server request until the server confirms the conversation.
 - The Mastodon adapter loads the anchor through supported status endpoints. It never calls an
-  undocumented individual conversation endpoint.
+  undocumented individual conversation endpoint. One thread call reads the anchor through
+  `GET /api/v1/statuses/:id` and its context through `/context`, then reports Finished with no
+  cursor. A non-null thread cursor fails as unsupported before any request. Anchor 403, 404, and
+  410 map to the same unsupported error, as do blank or foreign anchor and conversation identities
+  (no request), malformed anchor bodies, and non-direct anchors. Repeated rows across the anchor
+  and context responses merge without duplicates.
+- The repository thread needs a stored conversation preview with the last-post anchor. A missing
+  stored conversation fails as unsupported with no source call. Remote posts merge with cached
+  rows with cross-call dedup. A failed load keeps cached rows and the preview. A late thread write
+  after session replacement is rejected. Retry with no cursor reloads fresh context.
+- Live direct-message evidence is blocked. No disposable account or approval exists for synthetic
+  direct posts. Server truncation beyond one context response stays unverified. No continuation is
+  invented from identifier order, and no unsupported pagination ships.
 - Direct messages are federated private posts. They are not encrypted messaging.
 
 ### Misskey inbox pagination
