@@ -6,6 +6,7 @@ import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Timeline
@@ -26,6 +27,8 @@ class MastodonSourceContractTest : SocialSourceContractTest() {
         .put("acct", "contract")
         .put("display_name", "Contract")
         .put("note", "")
+
+    override val expectedFavouriteArtworkStyle: FavouriteArtworkStyle = FavouriteArtworkStyle.Star
 
     override fun createSource(
         server: MockWebServer,

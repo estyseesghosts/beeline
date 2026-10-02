@@ -19,6 +19,11 @@ Device and live-server behavior remain unverified.
 ## Source Ownership
 
 - `domain/SocialSource.kt` is the only transport contract. Each adapter implements it.
+- `SocialSource.favouriteArtworkStyle` is the presentation policy for the primary favourite
+  action. It is not a feature capability. Misskey presents `Heart`; Mastodon presents `Star`.
+  `SocialSourceContractTest` declares the expected style as an abstract member, and each protocol
+  test supplies its own value, so the shared base never asserts one protocol's artwork as the
+  default. `ProfileSourceContractTest` keeps its own per-protocol artwork assertions.
 - `data/transport/HttpClientPool.kt` owns credential-free HTTP client reuse, timeouts, redirects,
   connection keying, and bounded retention for both protocol adapters.
 - `data/transport/HttpResponse.kt` owns the generic HTTP body, headers, and Link cursor parsing.

@@ -27,34 +27,36 @@ The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery
 - R12 — cover streaming Mastodon uploads through the adapter. MastodonIntegrationTest reports 67 tests and 0 failures (63 existing plus 4 new adapter upload tests). MastodonSourceContractTest reports 7 tests with only the pre-existing R15a artwork failure. Full gate reports 1545 tests with only the pre-existing R15a artwork failure; release assembly complete. lintDebug passes. ktlint reports only pre-existing findings; the R12 hunks are clean. No production change. No v2 media, polling, limits, or processing change.
 - R13 — characterize direct-message anchor and context limits. Seven new characterization tests pass with no production change: five Mastodon anchor tests in DirectMessageSourceTest (403 mapping, 410 mapping, blank and foreign identities with zero requests, malformed anchor body, repeated-anchor dedup across context) and two repository tests in DirectMessageRepositoryTest (late thread write rejected after session replacement, thread source failure keeps cached rows with failure type plus message). Focused DM suites report 102 tests and 0 failures. Grouped adapter contracts report 245 tests with only the pre-existing R15a artwork failure. Full gate reports 1552 tests with only the pre-existing R15a artwork failure; release assembly complete. lintDebug passes. ktlint reports only pre-existing findings; the R13 hunks are clean. The wiki and protocol-ownership pages record the anchor and context limits and the explicit live-evidence blocker (no disposable account or approval; truncation beyond one context response unverified; no pagination invented). No BUGS.txt entry: characterization only, no defect repaired.
 - R14 — measure notification correctness-state retention without eviction. New NotificationRetentionMeasurementTest reports 9 passing tests: 50,000 ingested events leave exactly 500 visible records; 1,000 and 10,000 dismissals grow tombstones exactly with empty items and deliveries; 200 stream deliveries claim 50, finish 50 as Presented, and release 100 on dismissal; 5 stable query keys hold 5 checkpoints across repeat baselines; removal cleans one account while the sibling keeps 12 items, 3 tombstones, and 5 delivery records; same-ID re-addition under a strictly newer generation starts with empty tombstones; the Room store holds one state row per account with zero sibling rows. No production, deletion-query, cap, migration, or schema change. Growth is acceptable at measured workloads, so no retention-policy slice opens. Heap and database/WAL bytes remain unmeasured: no device run, no WAL checkpointing, no deterministic byte assertions.
+- R15a — split the favourite-artwork contract per protocol. The shared `SocialSourceContractTest` no longer asserts `Heart` for every adapter. It declares an abstract `expectedFavouriteArtworkStyle`, and each protocol test supplies its own value: `MisskeySourceContractTest` declares `Heart`, `MastodonSourceContractTest` declares `Star`. The renamed `favouriteArtworkStyleMatchesProtocolContract` passes for both adapters. `MisskeyIntegrationTest`, which extends `MisskeySourceContractTest`, keeps the Misskey `Heart` expectation. No production, adapter, or presentation change. MastodonSourceContractTest 7/7, MisskeySourceContractTest 7/7, MisskeyIntegrationTest 49/49 with --rerun-tasks. This removes the sole full-gate failure.
 
 # Current slice
 
-R14 is complete. Retention is measured with counted synthetic workloads and no eviction ships: visible records stay bounded at 500, one checkpoint exists per stable query key with five keys measured, deliveries release on dismissal and removal, and tombstones keep documented correctness lifetimes with no age or count bound. The retention inventory review date and measurement section are current; the data-and-privacy wiki holds the measured notification storage section. The orchestrator owns the slice, implemented the harness directly, ran all gates, and operates Git. No fixer session was dispatched: the slice adds a new test file, which the fixer role cannot create.
+R15a is complete. The favourite-artwork contract is split per protocol: the shared `SocialSourceContractTest` declares an abstract `expectedFavouriteArtworkStyle`, `MisskeySourceContractTest` supplies `Heart`, and `MastodonSourceContractTest` supplies `Star`. The renamed `favouriteArtworkStyleMatchesProtocolContract` passes for both adapters, and the sole full-gate failure is removed. No production, adapter, or presentation change. The orchestrator owns the slice, implemented the contract split directly, ran the focused checks, and operates Git.
 
 # Files involved
 
-- app/src/test/java/me/foxtails/palustris/data/notifications/NotificationRetentionMeasurementTest.kt holds the 9 new measurement tests.
-- docs/wiki/data-and-privacy.md holds the R14 measured notification storage section.
-- docs/agents/retention-inventory.md holds the R14 review date and counted measurement paragraph.
-- logs/BUGS.txt holds the R14 measured retention finding.
+- app/src/test/java/me/foxtails/palustris/SocialSourceContractTest.kt holds the abstract artwork expectation and the Misskey `Heart` declaration.
+- app/src/test/java/me/foxtails/palustris/data/mastodon/MastodonSourceContractTest.kt holds the Mastodon `Star` declaration.
+- docs/agents/protocol-and-session-ownership.md records the per-protocol artwork contract.
+- logs/BUGS.txt holds the R15a result.
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
 - docs/agents/handoff.md points to this recovery task.
-- logs/261002-024032.txt holds R14 evidence and exact checks.
+- logs/261002-033800.txt holds R15a evidence and exact checks.
 
 # Verification
 
-R14 verification: NotificationRetentionMeasurementTest reports 9 tests and 0 failures with --rerun-tasks. The full notification package group reports BUILD SUCCESSFUL with --rerun-tasks. lintDebug reports BUILD SUCCESSFUL. ktlintTestSourceSetCheck and ktlintMainSourceSetCheck report only pre-existing findings in other files; the R14 hunks introduce no new finding. No test was weakened. The full gate reports 1561 tests and 1 failure (pre-existing R15a artwork only; 1552 prior plus 9 new R14 tests) with release assembly complete. Full evidence lives in logs/261002-024032.txt.
+R15a verification: `MastodonSourceContractTest` reports 7 tests and 0 failures, `MisskeySourceContractTest` 7 tests and 0 failures, and `MisskeyIntegrationTest` 49 tests and 0 failures with `--rerun-tasks`. `lintDebug` reports BUILD SUCCESSFUL. `ktlintTestSourceSetCheck` reports repo-wide pre-existing findings; the R15a hunks add no new finding, and the only finding in a touched file is the pre-existing unused `MisskeyApi` import at `MastodonSourceContractTest.kt:5` (unused at HEAD `ba41628`, not introduced by R15a). No test was weakened. Full evidence lives in logs/261002-033800.txt.
 
 # Next
 
-Execute R15a. Split the Mastodon favourite artwork contract per protocol. Then execute R15.
+Execute R15. Run the full integration gate and hand back to Phase 4A.
 
 # Blockers
 
-R15a is not done and the artwork failure still stands, so the R15 gate stays blocked until R15a completes. The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. Heap and database/WAL bytes remain unmeasured: no device run occurred. API 29, live-server push delivery, live-server capability refresh, live-server media upload, signing, and environmental checks remain unverified. No Android-only behavior changed in R14, so no new instrumented test ran. ktlint shows repo-wide pre-existing findings.
+R15a is complete, so the artwork failure no longer blocks R15. The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. Heap and database/WAL bytes remain unmeasured: no device run occurred. API 29, live-server push delivery, live-server capability refresh, live-server media upload, signing, and environmental checks remain unverified. No Android-only behavior changed in R15a, so no new instrumented test ran. ktlint shows repo-wide pre-existing findings and a stale committed baseline.
 
 # Last safe commit
 
-bb52b65 is the safe commit after R13.
-R14 slice commit subject: `Measure notification correctness-state retention`.
+ba41628 is the safe commit after R14.
+R15a slice commit subject: `Split the favourite-artwork contract per protocol`.
+The next session resolves the new R15a hash from Git without a second record-only commit.

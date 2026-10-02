@@ -35,10 +35,16 @@ abstract class SocialSourceContractTest {
 
     protected abstract fun enqueueTimelinePage(server: MockWebServer, ids: List<String>)
 
+    /** The favourite affordance the adapter's protocol presents; declared by each protocol's test. */
+    protected abstract val expectedFavouriteArtworkStyle: FavouriteArtworkStyle
+
     @Test
-    fun defaultFavouriteArtworkStyleUsesHeart() {
+    fun favouriteArtworkStyleMatchesProtocolContract() {
         MockWebServer().use { server ->
-            assertEquals(FavouriteArtworkStyle.Heart, createSource(server, null, System::currentTimeMillis).favouriteArtworkStyle)
+            assertEquals(
+                expectedFavouriteArtworkStyle,
+                createSource(server, null, System::currentTimeMillis).favouriteArtworkStyle,
+            )
         }
     }
 
@@ -139,6 +145,8 @@ abstract class SocialSourceContractTest {
 @Config(sdk = [35])
 open class MisskeySourceContractTest : SocialSourceContractTest() {
     private val user = """{"id":"contract-user","username":"contract","name":"Contract","host":null}"""
+
+    override val expectedFavouriteArtworkStyle: FavouriteArtworkStyle = FavouriteArtworkStyle.Heart
 
     override fun createSource(
         server: MockWebServer,
