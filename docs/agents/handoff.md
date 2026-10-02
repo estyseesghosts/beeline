@@ -2,7 +2,7 @@
 
 Status: current
 Owner: Maintainers
-Last reviewed: 2026-10-01
+Last reviewed: 2026-10-02
 
 ## Continuation pointer
 
@@ -13,46 +13,48 @@ Start with AGENTS.md, agent control, workflow, and operation rules.
 
 ## Current position and next action
 
-R13 implementation is complete and the full gate has run. The direct-message anchor and
-context contract is characterized with no production change: Mastodon loads one anchor plus one
-context response and reports Finished with no cursor; a non-null thread cursor fails before any
-request; 403, 404, and 410 anchor reads, blank or foreign identities, malformed bodies, and
-non-direct anchors fail truthfully as unsupported; repeated anchor and context rows merge without
-duplicates. The repository needs a stored conversation preview with the last-post anchor, merges
-remote posts with cached rows, keeps cached rows on failure, rejects late thread writes after
-session replacement, and reloads fresh context on retry with no cursor. Live-server truncation
-beyond one context response stays unverified: no disposable account or approval exists, and no
-continuation is invented.
+R14 implementation is complete and the focused gates have run. Notification
+retention is measured with counted synthetic workloads and no eviction ships:
+50,000 ingested events leave 500 visible records; 1,000 and 10,000 dismissals
+grow tombstones exactly; 200 stream deliveries claim, finish, and release with
+exact counts; 5 stable query keys hold 5 checkpoints; removal cleans one
+account while the sibling account stays intact; the Room store holds one state
+row per account with zero sibling rows. Growth is acceptable at measured
+workloads, so no retention-policy slice opens. Heap and database/WAL bytes
+remain unmeasured: no device run occurred. No production, deletion-query, cap,
+migration, or schema change.
 Problem_solver provides read-only investigation and review. Targeted_fixer accepts only small explicit work packages.
 Keep one implementation owner and one Git operator at a time.
-The next slice is R14. Measure notification retention without unsafe eviction.
+The next slice is R15a. Split the Mastodon favourite artwork contract per protocol. Then execute R15.
 
 ## Last safe commit
 
-3fb6973 is the safe commit after R12.
-R13 slice commit subject: `Characterize direct-message anchor and context limits`.
-The next session resolves the new R13 hash from Git without a second record-only commit.
+bb52b65 is the safe commit after R13.
+R14 slice commit subject: `Measure notification correctness-state retention`.
+The next session resolves the new R14 hash from Git without a second record-only commit.
 The last safe application source remains 464b2d1. Simulator evidence reference 219504c resolves.
 
 ## Limits
 
-- R13 changed two DM test files, the notifications-and-direct-messages wiki, the
-  protocol-and-session-ownership page, and records only. No production, transport, route, header,
-  or editor-state change.
-- Focused DM suites report 102 passing tests. Grouped Mastodon plus Misskey adapter contracts:
-  245 tests with only the pre-existing R15a artwork failure.
-- Post-repair full gate reports 1552 tests and 1 failure (pre-existing R15a artwork only) with
-  release assembly complete.
+- R14 adds one new measurement test file plus the measured wiki section, the
+  retention-inventory review touch, and records only. No production, transport,
+  route, header, or editor-state change.
+- NotificationRetentionMeasurementTest reports 9 passing tests. The full
+  notification package group reports BUILD SUCCESSFUL.
+- Full gate reports 1561 tests and 1 failure: the pre-existing R15a artwork
+  failure only (1552 prior tests plus 9 new R14 tests). Release assembly complete.
 - `:app:lintDebug` reports BUILD SUCCESSFUL. ktlint reports repo-wide pre-existing findings; the
-  R13 hunks introduce no new finding.
-- Tests by one targeted_fixer session under an explicit no-commit contract (stopped at its fail
-  gate on the gated failure test). The orchestrator owns the slice, repaired that test after a
+  R14 hunks introduce no new finding.
+- No fixer session was dispatched (the slice adds a new file). The orchestrator
+  owns the slice, repaired one Room main-thread test failure after
   stop-condition investigation, made the doc edits, ran all gates, and operates Git.
-- Live-server DM truncation, API 29, live-server push delivery, live-server capability refresh,
-  and signing checks remain unverified.
-- No Android-only behavior changed in R13, so no new instrumented test ran.
+- R15a is not done and the artwork failure still stands, so the R15 gate stays
+  blocked until R15a completes.
+- Heap and database/WAL bytes, live-server push delivery, API 29, live-server
+  capability refresh, and signing checks remain unverified.
+- No Android-only behavior changed in R14, so no new instrumented test ran.
 - The deleted Photo Grid test excludes that test from the available suite. Do not change it without owner approval.
-- The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored. R13 needs no BUGS.txt entry (coverage only, no defect repaired).
+- The timestamped logs and BUGS.txt edits need explicit force-add approval because /logs/*.txt is Git-ignored.
 - A clean-snapshot comparison remains pending because git worktree access is denied.
 - Existing worktree changes remain intact. Do not push without a user request.
 

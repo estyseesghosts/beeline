@@ -2,7 +2,7 @@
 
 Status: planned  
 Owner: Data maintainers  
-Last reviewed: 2026-10-01  
+Last reviewed: 2026-10-02  
 Stale when: A storage format, migration, retention rule, or privacy boundary changes.
 
 Sources: `AGENTS.md`, `data/`, storage tests, and migration definitions.
@@ -60,3 +60,39 @@ Source: `data/transport/AuthenticatedHttpClient.kt`,
 - Cancellation closes the input while the client cancels the call.
 - Closing an arbitrary input may not interrupt every provider. Tests use an input
   that unblocks when closed. Device and provider limits stay recorded per slice.
+
+### Notification storage
+
+Source: `data/notifications/NotificationRepository.kt`,
+`data/notifications/NotificationStore.kt`,
+`data/notifications/db/NotificationDao.kt`,
+and `NotificationRetentionMeasurementTest`.
+
+- The repository keeps at most 500 visible records for each account.
+  New pages merge with stored records and drop the oldest records beyond 500.
+  Fifty thousand ingested events leave exactly 500 visible records.
+- Dismissal tombstones grow by one entry for each distinct dismissed notification.
+  The harness measures exactly 1,000 tombstones after 1,000 dismissals
+  and 10,000 tombstones after 10,000 dismissals.
+  No age bound and no count bound evict them.
+- Checkpoints grow by one entry for each stable query key.
+  Five filter queries hold five checkpoints.
+  Repeat baselines add no entries.
+- Delivery records grow by one entry for each delivered event after the baseline.
+  Dismissal and account removal release them.
+  Finished records stay until dismissal or removal.
+- The Room store writes one state row for each account.
+  The sibling event, actor, group, query, dismissal, delivery,
+  acknowledgement, push, and settings tables hold zero rows
+  under the current writer.
+  Account removal deletes all ten tables in one transaction.
+- Page replay never restores a dismissed record.
+  A newer-page replay never creates a delivery record for a dismissed
+  record or for an already-known record.
+  Stream events after the baseline can still create a delivery record
+  for a known record.
+  Removal cleans one account and keeps the sibling account intact.
+  Re-added identifiers under a strictly newer generation start
+  with empty tombstones.
+- Heap bytes and database file bytes remain unmeasured.
+  Unit counts do not prove device memory or disk behavior.

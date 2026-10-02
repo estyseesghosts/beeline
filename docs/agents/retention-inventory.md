@@ -2,7 +2,7 @@
 
 Status: current
 Owner: Maintainers
-Last reviewed: 2026-09-21  
+Last reviewed: 2026-10-02
 Stale when: A listed owner, lifetime, bound, expiry rule, or release trigger changes.
 
 This page records long-lived mutable structures in Beeline. Source links and test links point to
@@ -91,7 +91,16 @@ Session replacement runs in this order: capabilities invalidate for the session 
 
 ## Measurement procedure
 
-No heap or disk measurements were collected for this inventory. Shell access was denied,
+Counted unit measurements exist in
+[`NotificationRetentionMeasurementTest.kt`](../../app/src/test/java/me/foxtails/palustris/data/notifications/NotificationRetentionMeasurementTest.kt)
+(R14, 2026-10-02). Fifty thousand ingested events leave 500 visible records.
+Dismissal tombstones number exactly 1,000 after 1,000 dismissals and 10,000
+after 10,000 dismissals. Two hundred stream deliveries claim, finish, and
+release on dismissal with exact counts. Five stable query keys hold five
+checkpoints across repeat baselines. Removal cleans one account and keeps
+the sibling account intact. The Room store holds one state row per account
+with zero rows in the nine sibling tables. No heap or disk measurements were
+collected for this inventory. Shell access was denied,
 so no `adb` command ran. Each path below remains explicitly `unverified`. No row claims
 closure through measurement.
 
