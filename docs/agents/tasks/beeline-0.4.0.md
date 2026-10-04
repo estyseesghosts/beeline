@@ -64,6 +64,10 @@ The shared navigation-button contract portion depends on 3A/3B.
 `test assembleRelease` gate and `:app:lintDebug` run before Phase 4A completion. The
 orchestrator owns each slice and operates Git.
 
+Gate run (2026-10-04): `assembleRelease test assembleRelease --rerun-tasks` reports
+BUILD SUCCESSFUL with 96 actionable tasks; release assembly complete. `:app:lintDebug` reports
+BUILD SUCCESSFUL. Phase 4A is complete.
+
 # Files involved
 
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
