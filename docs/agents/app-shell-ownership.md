@@ -7,7 +7,7 @@ C-05, C-06a, C-06b, C-06c, C-07, C-08, C-09, C-10, C-11, C-12a through C-12d4, C
 C-14, and C-15 are implemented and test verified. Steps 13, 14, and 15 of the progress
 report are complete. No dead scaffolding remains.
 
-**Last reviewed:** 2026-10-01.
+**Last reviewed:** 2026-10-04.
 
 **Source baseline:** `b629a2c` (planning). Status refreshed against `c9e06c8`.
 
@@ -165,6 +165,13 @@ tab rows), and the `AccountSyncCoordinator` aliases (replaced by the `data.notif
 names in `FeedViewModel`, `AccountManager`, and the feed tests).
 
 ## Invariants
+
+- Required adaptive end state (maintainer clarification, 2026-10-04): compact-narrow, compact-wide,
+  and tablet reuse the underlying navigation components and one navigator. Compact-wide and tablet
+  share the vertical six-button presentation. Compact-narrow keeps the existing four grouped positions
+  and narrow layout. Independent detail-pane geometry must not create a separate navigation owner.
+  This remains planned; current `LargeLayoutMode` uses width-only 600/840 dp cutoffs.
+  The available emulator is intended for compact-wide testing, not narrow-phone acceptance.
 
 - `CompactContextualNavigationBar` owns one traveling selection indicator for its composition lifetime.
   `ShellNavigator` remains the selection authority. The indicator uses the existing motion scheme

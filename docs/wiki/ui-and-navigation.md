@@ -2,7 +2,7 @@
 
 Status: current, partial coverage
 Owner: UI maintainers
-Last reviewed: 2026-10-02
+Last reviewed: 2026-10-04
 Stale when: A destination, layout policy, restoration rule, or accessibility requirement changes.
 
 Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
@@ -72,6 +72,15 @@ Sources: `ui/navigation/CompactAppNavigation.kt`, `ui/navigation/NavigationItem.
 `CompactNavigationSelectionTest`, `NavigationTest`.
 Verification: Compose tests cover stable bounds, interrupted selection, RTL, and 200% text.
 Physical rendering and TalkBack remain unverified. IME positioning and shared vertical presentation remain planned.
+
+### Required adaptive end state
+
+Maintainer clarification, 2026-10-04: compact-narrow, compact-wide, and large/tablet must share underlying navigation components.
+Compact-narrow retains the existing four-button grouped bar and existing narrow layout.
+Compact-wide and tablet use the same vertical six-button presentation: Home, Search, Photo Grid,
+Notifications, Direct Messages, and Profile. Tablet detail panes remain independent of navigation presentation.
+This is required behavior, not an implementation claim. The current width-only policy does not establish compact-wide support.
+The available emulator simulates compact-wide; narrow-phone acceptance needs separate evidence.
 
 ## Draft restoration
 

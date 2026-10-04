@@ -15,6 +15,19 @@ Do not push.
 This task is larger than one safe implementation slice. Complete and commit each slice before the next.
 The orchestrator owns implementation, records, validation, and Git for each slice.
 
+Maintainer clarification (2026-10-04), required end state:
+
+- Compact-narrow, compact-wide, and large/tablet share the underlying navigation components.
+  Complete this reuse by the end of the navigation work; intermediate slices may prepare it.
+- Compact-narrow always retains the existing four-button grouped bar and existing narrow layout.
+- Compact-wide and large/tablet use the same vertical, expanded six-button navigation presentation:
+  Home, Search, Photo Grid, Notifications, Direct Messages, Profile.
+  Tablet detail panes may differ; they do not justify separate navigation components or state.
+- The available virtual device is intended to simulate compact-wide. Use it for that acceptance target.
+  Do not treat its current rendering as evidence of the final layout policy or a narrow-phone baseline.
+- Current source still classifies presentation by width (600/840 dp in LargeLayoutMode.kt).
+  Compact-wide activation and the vertical container remain Phase 4C work, not completed 4B-1 behavior.
+
 - 4B-1 — one traveling compact selection indicator. Keep button geometry, callbacks, and contextual actions unchanged.
 - 4B-2 — reusable navigation button and capsule presentation for horizontal and future vertical containers.
   Do not replace the wide rail until Phase 4C. Preserve existing unread behavior without increasing height.
@@ -65,7 +78,8 @@ Review the actual slice diff independently before each commit. Capture screensho
 # Next
 
 4B-2 — share button and capsule presentation without implementing the Phase 4C wide rail replacement.
-Read-only investigation will bound 4B-3 before implementation.
+Geometry investigation confirms that capsule placement, contextual docks, and scroll clearance must change together.
+The global IME policy must also coordinate the DM editor to prevent overlap. Bound that slice before editing.
 
 # Blockers
 
@@ -76,6 +90,6 @@ and TalkBack remain unverified. Logs and the main plan are ignored; do not force
 
 # Last safe commit
 
-6e50217 — Record the green Phase 4A gate.
-4B-1 slice commit subject: Move one compact selection indicator between fixed navigation slots.
-Resolve the new slice hash from Git. Do not create a separate records commit.
+0117210 — Move one compact selection indicator between fixed navigation slots.
+Clarification slice subject: Record shared adaptive navigation and compact-wide emulator requirements.
+Resolve the clarification hash from Git. This documentation slice changes no application behavior.
