@@ -1,106 +1,81 @@
 # Objective
 
-Restore a trustworthy test gate. Repair the confirmed restoration, validation, session-selection, and upload defects. Then resume Phase 4A.
+Implement Phase 4B: compact floating navigation from shared buttons.
 
 # Invariants
 
-Preserve unrelated worktree and index content. Do not weaken tests. Do not implement Phase 4B through 4E. Do not change the approved navigation design. Do not add speculative DM pagination or notification eviction.
+Preserve unrelated worktree and index changes. Keep one navigator, four fixed compact groups,
+remembered child icons, profile account switching, and separate contextual actions.
+Use the approved 212 × 56 dp capsule and 48 dp targets. Use existing motion and geometry owners.
+Do not pad the full-screen viewport. Do not change baselines, deleted tests, or Phase 4C–4E behavior.
+Do not push.
 
 # Decisions
 
-The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery.md controls slice order. R00 through R15 run serially with one reviewed commit per slice. Phase 4A stays blocked until R15 return criteria pass. The deleted Photo Grid test needs owner approval before committed-suite comparison. New slice R15a splits the Mastodon favourite artwork contract per protocol before R15.
+This task is larger than one safe implementation slice. Complete and commit each slice before the next.
+The orchestrator owns implementation, records, validation, and Git for each slice.
+
+- 4B-1 — one traveling compact selection indicator. Keep button geometry, callbacks, and contextual actions unchanged.
+- 4B-2 — reusable navigation button and capsule presentation for horizontal and future vertical containers.
+  Do not replace the wide rail until Phase 4C. Preserve existing unread behavior without increasing height.
+- 4B-3 — consistent compact IME/system-bar placement and scroll-content clearance through existing geometry owners.
+  Confirm the destination owner map before editing. Split further if destination behaviors require independent gates.
 
 # Completed
 
-- R00 — record the current recovery baseline and failure attribution. Fresh grouped, isolated, and full-gate evidence replaces the historical count.
-- R01 — activate draft writers in account-bound unit fixtures. All 13 DraftActionsTest tests pass. DraftWriteAuthorityTest passes with no regression.
-- R02 — bind shell draft fixtures to an active writer. Full NavigationTest passes with 30 tests. ComposerOwnerTest, ShellCharacterizationTest, and SignInScreenTest pass with no regression.
-- R03 — repair the Misskey continuation test runtime and one exposed fixture ordering defect. All 12 MisskeyThreadContinuationTest tests pass. No production change.
-- R04 — repair the capability-cache probe fixture. All 16 CapabilityCacheTest tests pass. No production change.
-- R05 — repair the notification generation lifecycle. All 27 NotificationSyncOrchestratorTest tests pass (25 historical plus 2 gated removal-revocation regressions). No repository, registry, or store change.
-- R06 — require the session authority in source construction. All 6 SourceFactoryTest tests pass. SessionLifecycle, session ViewModel, connected context, auth gateway, push cancellation, and Misskey integration suites pass. The Mastodon contract run retains the pre-existing R15a artwork failure. No adapter, store, or wiring change.
-- R07 — bind push source selection to its notification token. All 15 UnifiedPushRegistrationManagerTest tests pass. PushCancellationTest, PushRegistrationRepositoryTest, NotificationSyncOrchestratorTest, NotificationRepositoryTest, and SessionLifecycleTest pass with no regression. No registry, adapter, store, or wiring change.
-- R08 — validate Mastodon report identities before sending. All 15 ModerationServiceTest tests pass (13 existing plus 2 new report validation regressions). MastodonIntegrationTest, MastodonSourceContractTest, and MisskeyIntegrationTest pass except the pre-existing R15a artwork failure. No cursor, encoding, or comment-behavior change.
-- R09 — bind Mastodon moderation cursors to the source session. All 17 ModerationServiceTest tests pass. MastodonIntegrationTest reports 63 passing tests. ModerationViewModelTest reports 13 passing tests. ModerationListScreenTest reports 3 passing tests. Adapter contracts pass except the pre-existing R15a artwork failure. A rejected continuation keeps existing rows visible. No generic cursor, endpoint, or route change.
-- R10 — preserve restored Search state for its matching session. ShellNavigatorTest reports 28 tests and 0 failures. ShellNavigatorRestorationTest reports 5 tests and 0 failures. SearchPanelRestorationTest reports 3 tests and 0 failures. NavigationTest reports 31 tests and 0 failures. ShellCharacterizationTest, WideNavigationTest, and AppShellStateTest pass. The composer overlay is never restored. Full gate reports 1521 tests with only the pre-existing R15a artwork failure; release assembly complete.
-- R11 — stream multipart uploads with explicit one-shot ownership. AuthenticatedHttpClientTest reports 25 tests and 0 failures. MisskeyApiTest reports 7 tests and 0 failures. HttpClientPoolTest reports 9 tests and 0 failures. MastodonIntegrationTest reports 63 tests and 0 failures alone. Grouped adapter run reports 70 tests with only the pre-existing R15a artwork failure and the known isolation-dependent cancellation flake, which passes alone. lintDebug passes. ktlint reports only pre-existing findings; all R11 files are clean. No whole-input buffering remains. Field name, filename, MIME type, bearer, path, User-Agent, and response cap are unchanged.
-- R12 — cover streaming Mastodon uploads through the adapter. MastodonIntegrationTest reports 67 tests and 0 failures (63 existing plus 4 new adapter upload tests). MastodonSourceContractTest reports 7 tests with only the pre-existing R15a artwork failure. Full gate reports 1545 tests with only the pre-existing R15a artwork failure; release assembly complete. lintDebug passes. ktlint reports only pre-existing findings; the R12 hunks are clean. No production change. No v2 media, polling, limits, or processing change.
-- R13 — characterize direct-message anchor and context limits. Seven new characterization tests pass with no production change: five Mastodon anchor tests in DirectMessageSourceTest (403 mapping, 410 mapping, blank and foreign identities with zero requests, malformed anchor body, repeated-anchor dedup across context) and two repository tests in DirectMessageRepositoryTest (late thread write rejected after session replacement, thread source failure keeps cached rows with failure type plus message). Focused DM suites report 102 tests and 0 failures. Grouped adapter contracts report 245 tests with only the pre-existing R15a artwork failure. Full gate reports 1552 tests with only the pre-existing R15a artwork failure; release assembly complete. lintDebug passes. ktlint reports only pre-existing findings; the R13 hunks are clean. The wiki and protocol-ownership pages record the anchor and context limits and the explicit live-evidence blocker (no disposable account or approval; truncation beyond one context response unverified; no pagination invented). No BUGS.txt entry: characterization only, no defect repaired.
-- R14 — measure notification correctness-state retention without eviction. New NotificationRetentionMeasurementTest reports 9 passing tests: 50,000 ingested events leave exactly 500 visible records; 1,000 and 10,000 dismissals grow tombstones exactly with empty items and deliveries; 200 stream deliveries claim 50, finish 50 as Presented, and release 100 on dismissal; 5 stable query keys hold 5 checkpoints across repeat baselines; removal cleans one account while the sibling keeps 12 items, 3 tombstones, and 5 delivery records; same-ID re-addition under a strictly newer generation starts with empty tombstones; the Room store holds one state row per account with zero sibling rows. No production, deletion-query, cap, migration, or schema change. Growth is acceptable at measured workloads, so no retention-policy slice opens. Heap and database/WAL bytes remain unmeasured: no device run, no WAL checkpointing, no deterministic byte assertions.
-- R15a — split the favourite-artwork contract per protocol. The shared `SocialSourceContractTest` no longer asserts `Heart` for every adapter. It declares an abstract `expectedFavouriteArtworkStyle`, and each protocol test supplies its own value: `MisskeySourceContractTest` declares `Heart`, `MastodonSourceContractTest` declares `Star`. The renamed `favouriteArtworkStyleMatchesProtocolContract` passes for both adapters. `MisskeyIntegrationTest`, which extends `MisskeySourceContractTest`, keeps the Misskey `Heart` expectation. No production, adapter, or presentation change. MastodonSourceContractTest 7/7, MisskeySourceContractTest 7/7, MisskeyIntegrationTest 49/49 with --rerun-tasks. This removes the sole full-gate failure.
-- R15 — restore the full gate and hand back to Phase 4A. Full `test assembleRelease --rerun-tasks` reports BUILD SUCCESSFUL with 151 suites, 1561 tests, 0 failures, 0 errors, 0 skipped; release assembly complete. The prior sole failure (the artwork contract) is resolved by R15a. The architecture audit exits 0 with 616 findings and no regression findings. lintDebug passes. ktlintCheck reports repo-wide pre-existing style findings against the committed baseline; the recovery hunks add no finding and no baseline changed. API 29 smoke and the restoration device check are unavailable locally (the only connected device is emulator-5554, API 36, with Beeline not installed). No production change.
-
-# Phase 4A
-
-Phase 4A — back priority and session-bound modal behavior. This task is larger than one safe
-implementation slice. Split into three slices.
-
-- 4A-1 — back priority for picker and popup. `ShellBackPolicy.kt` adds the `EmojiPicker` and
-  `PostActionBubble` surfaces and the `emojiPickerOpen` and `postActionBubbleOpen` state.
-  `PalustrisApp.kt` maps `overlay.emojiPickerTarget` and `overlay.postActionBubbleTarget` and
-  dismisses them. `ShellBackPolicyTest` reports 11 tests and 0 failures. `ShellNavigatorTest`,
-  `NavigationTest`, `WideNavigationTest`, `SearchPanelRestorationTest`, and
-  `ShellCharacterizationTest` pass with no regression. `assembleDebug` and `installDebug`
-  succeed on emulator-5554 (API 36); the app launches to the top resumed activity. No
-  session-authority change.
-- 4A-2 — inactive group icons from saved memory. `CompactContextualNavigationBar` derives the
-  Search and Notifications icons and labels from `searchPanel` and `notificationsPanel`
-  regardless of selection, so an inactive group shows its remembered child. `ShellContent`
-  passes `navigator.notificationsPanel`. `NavigationTest` reports 34 tests and 0 failures.
-- 4A-3 — shared navigation-button contract and navigation item model. New
-  `ui/navigation/NavigationItem.kt` exposes one `NavigationItem` model, four
-  `CompactNavigationItem` positions, six `WideNavigationItem` targets, and one
-  `navigationButtonSemantics` contract. `CompactContextualNavigationBar` and
-  `LargeNavigationRail` both apply the shared contract; the profile long-press account switch
-  stays. `WideNavigationTest` reports 8 tests and 0 failures, including direct wide selection
-  followed by folding.
-
-Gates 3A/3B are visual and motion roles; the back-priority portion proceeds independently.
-The shared navigation-button contract portion depends on 3A/3B.
+Phase 4A is complete: e9c0e2c, 6c0bd07, 90a132e; gate records 6e50217.
+The prior full gate passed with 96 actionable tasks. lintDebug passed.
+4B-1 is implemented, verified, and independently reviewed. The capsule owns one traveling indicator.
 
 # Current slice
 
-4A-3 is complete. All three Phase 4A slices are implemented and focused-verified. The full
-`test assembleRelease` gate and `:app:lintDebug` run before Phase 4A completion. The
-orchestrator owns each slice and operates Git.
-
-Gate run (2026-10-04): `assembleRelease test assembleRelease --rerun-tasks` reports
-BUILD SUCCESSFUL with 96 actionable tasks; release assembly complete. `:app:lintDebug` reports
-BUILD SUCCESSFUL. Phase 4A is complete.
+4B-1 is complete. The next slice is 4B-2: shared navigation presentation.
+Current owner: CompactContextualNavigationBar in CompactAppNavigation.kt.
+Smallest change surface: that component and CompactNavigationSelectionTest, plus records and navigation documentation.
+Acceptance: exactly one indicator before, during, and after selection; stable four button bounds;
+indicator settles beneath the selected item in LTR and RTL; reduced motion snaps; no callback on animation completion.
+Non-goals: button extraction, wide redesign, unread data wiring, IME/clearance changes, tab redesign.
+Fail gates: unexplained test failure, two failed fixes for one root problem, changed navigation ownership,
+unapproved geometry, or unrelated scope expansion. Stop and investigate before more edits.
 
 # Files involved
 
-- docs/agents/tasks/beeline-0.4.0.md holds this state.
-- docs/agents/handoff.md points to this task and names the next slice.
-- docs/agents/documentation-inventory.md holds the R15 review date.
-- docs/wiki/ui-and-navigation.md documents the navigation restoration and back order.
-- docs/beeline_0.4.0.md holds the recovery status note (git-ignored, local only).
-- logs/BUGS.txt holds the R15 result (git-ignored, local only).
-- logs/261002-035505.txt holds R15 evidence and exact checks (git-ignored, local only).
-- logs/261004-153615.txt holds the Phase 4A slice plan and evidence (git-ignored, local only).
+- app/src/main/java/me/foxtails/palustris/ui/navigation/CompactAppNavigation.kt
+- app/src/test/java/me/foxtails/palustris/ui/navigation/CompactNavigationSelectionTest.kt
+- docs/wiki/ui-and-navigation.md
+- docs/agents/app-shell-ownership.md
+- docs/agents/tasks/beeline-0.4.0.md
+- docs/agents/handoff.md
+- logs/261004-180000.txt (local, ignored)
 
 # Verification
 
-4A-1 verification: `ShellBackPolicyTest` reports 11 tests and 0 failures with `--rerun-tasks`.
-`ShellNavigatorTest`, `NavigationTest`, `WideNavigationTest`, `SearchPanelRestorationTest`,
-and `ShellCharacterizationTest` report BUILD SUCCESSFUL. `:app:assembleDebug` and
-`:app:installDebug` succeed on emulator-5554 (API 36). The full `test assembleRelease` gate
-and `:app:lintDebug` run before Phase 4A completion. Full evidence lives in
-logs/261004-153615.txt.
+CompactNavigationSelectionTest reports 3 passing tests. NavigationTest reports 34 passing tests.
+The feed package and WideNavigationTest grouped run passes.
+The full test assembleRelease --rerun-tasks gate passes: 96 executed tasks;
+152 suites, 1571 tests, zero failures, errors, or skipped tests. Release assembly succeeds.
+lintDebug passes. Independent review reports no blocking or required findings.
+The screenshot-enabled NavigationTest run passes. Home and Search fixture screenshots were visually inspected
+at app/build/ui-screenshots/. They show a single selected bubble behind the selected icon.
+These Robolectric captures do not verify device rendering.
+Use the wrapper with --no-daemon --console=plain, explicit timeout, and closed stdin.
+Run test assembleRelease --rerun-tasks and :app:lintDebug before Phase 4B completion.
+Review the actual slice diff independently before each commit. Capture screenshots where available.
 
 # Next
 
-4A-2 — derive both inactive compact group icons from the saved `searchPanelName` and
-`notificationsPanelName`. Then 4A-3 — expose one shared navigation-button visual and semantic
-contract and a navigation item model for four grouped compact positions and six direct wide
-targets. Run the full gate and lint before declaring Phase 4A complete.
+4B-2 — share button and capsule presentation without implementing the Phase 4C wide rail replacement.
+Read-only investigation will bound 4B-3 before implementation.
 
 # Blockers
 
-The deleted Photo Grid test excludes that test from the available suite. A clean-snapshot comparison remains pending because git worktree access is denied. The docs/beeline_0.4.0.md status note, the timestamped logs, and BUGS.txt edits are git-ignored and stay local; force-add needs explicit user approval. ktlint reports repo-wide pre-existing style findings against a stale committed baseline; resolving them is not part of this recovery. Heap and database/WAL bytes remain unmeasured: no device run occurred. API 29 smoke, live-server push delivery, live-server capability refresh, live-server media upload, signing, and the restoration device check remain unverified. No Android-only behavior changed in the recovery, so no new instrumented test ran.
+ktlintCheck has pre-existing repository-wide findings. Do not change its baseline.
+The deleted Photo Grid test remains excluded from the available suite.
+API 29 smoke, device restoration, live-server behavior, signing, physical foldable behavior,
+and TalkBack remain unverified. Logs and the main plan are ignored; do not force-add them.
 
 # Last safe commit
 
-4a66382 is the safe commit after R15. Phase 4A commits follow from it.
-R15 slice commit subject: `Record the green recovery gate and resume Phase 4A`.
-The next session resolves the new hash from Git without a second record-only commit.
+6e50217 — Record the green Phase 4A gate.
+4B-1 slice commit subject: Move one compact selection indicator between fixed navigation slots.
+Resolve the new slice hash from Git. Do not create a separate records commit.

@@ -3,7 +3,7 @@
 package me.foxtails.palustris.ui.navigation
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
@@ -18,11 +18,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
@@ -46,6 +48,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -157,11 +161,38 @@ internal fun CompactContextualNavigationBar(
             color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f),
             shadowElevation = 6.dp,
         ) {
-            Row(
+            BoxWithConstraints(
                 Modifier.fillMaxSize().padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
             ) {
+                val selectedPosition by animateFloatAsState(
+                    targetValue = destination.ordinal.toFloat(),
+                    animationSpec = scheme.spatial,
+                    label = "navigationSelectionPosition",
+                )
+                // The capsule owns one indicator. Logical offsets keep it under the same slot in RTL.
+                val capsuleContentWidth = maxWidth
+                Surface(
+                    modifier = Modifier.align(Alignment.CenterStart)
+                        .offset {
+                            val targetSize = 48.dp.roundToPx()
+                            val indicatorSize = 40.dp.roundToPx()
+                            val gap = (capsuleContentWidth.roundToPx() - targetSize * Destination.entries.size) /
+                                (Destination.entries.size + 1f)
+                            IntOffset(
+                                (gap + (targetSize + gap) * selectedPosition).roundToInt() +
+                                    (targetSize - indicatorSize) / 2,
+                                0,
+                            )
+                        }
+                        .size(40.dp).testTag("selected_navigation_indicator"),
+                    shape = BeelineBubbleShape,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                ) {}
+                Row(
+                    Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Destination.entries.forEach { item ->
                         val selected = destination == item
                         val showsPhotoGrid = item == Destination.Search && searchPanel == SearchPanel.PhotoGrid
@@ -208,19 +239,6 @@ internal fun CompactContextualNavigationBar(
                             modifier = itemModifier.navigationButtonSemantics(label, selected),
                             contentAlignment = Alignment.Center,
                         ) {
-                            androidx.compose.animation.AnimatedVisibility(
-                                visible = selected,
-                                enter = if (scheme.reducedMotion) EnterTransition.None else
-                                    scaleIn(initialScale = 0.86f, animationSpec = scheme.expressive) + fadeIn(scheme.fastFadeIn),
-                                exit = if (scheme.reducedMotion) ExitTransition.None else
-                                    scaleOut(targetScale = 0.86f, animationSpec = scheme.expressive) + fadeOut(scheme.fastFadeOut),
-                            ) {
-                                Surface(
-                                    modifier = Modifier.size(40.dp).testTag("selected_navigation_indicator"),
-                                    shape = BeelineBubbleShape,
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
-                                ) {}
-                            }
                             if (item == Destination.Profile) {
                                 val avatarModifier = Modifier.size(30.dp).graphicsLayer {
                                     scaleX = selectedScale
@@ -238,6 +256,7 @@ internal fun CompactContextualNavigationBar(
                                 tint = selectedTint,
                             )
                         }
+                    }
                 }
             }
         }

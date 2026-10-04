@@ -59,6 +59,20 @@ Home. Back does not navigate because an animation completes.
 Sources: `ui/navigation/ShellBackPolicy.kt`, `ui/PalustrisApp.kt`, `ShellBackPolicyTest`,
 `ShellNavigatorTest`, `NavigationTest`.
 
+## Compact floating selection
+
+The compact capsule keeps four fixed grouped positions and a separate contextual action.
+Search and Notifications show their remembered child icons while inactive.
+One capsule-owned selection indicator travels behind the buttons. Selection changes immediately;
+the animation does not navigate. Reduced motion moves the indicator without a spatial transition.
+The approved capsule stays 212 × 56 dp, with four 48 dp targets.
+RTL reverses logical slot placement without changing the selected destination.
+
+Sources: `ui/navigation/CompactAppNavigation.kt`, `ui/navigation/NavigationItem.kt`,
+`CompactNavigationSelectionTest`, `NavigationTest`.
+Verification: Compose tests cover stable bounds, interrupted selection, RTL, and 200% text.
+Physical rendering and TalkBack remain unverified. IME positioning and shared vertical presentation remain planned.
+
 ## Draft restoration
 
 Closing a dirty composer saves the draft and closes the overlay. The saved text

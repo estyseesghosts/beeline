@@ -166,6 +166,12 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
 
 ## Invariants
 
+- `CompactContextualNavigationBar` owns one traveling selection indicator for its composition lifetime.
+  `ShellNavigator` remains the selection authority. The indicator uses the existing motion scheme
+  and logical offsets matching the capsule's evenly spaced slots. It does not dispatch navigation.
+  `CompactNavigationSelectionTest` covers interruption, reduced motion, RTL, and fixed 48 dp bounds
+  at 200% text. `NavigationTest` covers selected-icon alignment and existing shell behavior.
+
 - A contract carries no session secret, access token, source, repository, or ViewModel.
 - `sessionGeneration` and durable `sessionRevision` stay distinct.
 - The connected session uses one registered source per session. Recomposition does not create
