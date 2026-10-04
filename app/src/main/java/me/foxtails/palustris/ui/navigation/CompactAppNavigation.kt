@@ -141,6 +141,7 @@ internal fun contextualActionFor(
 internal fun CompactContextualNavigationBar(
     destination: Destination,
     searchPanel: SearchPanel,
+    notificationsPanel: NotificationsPanel,
     action: ContextualBottomAction?,
     account: Account?,
     onOpenAccounts: () -> Unit,
@@ -166,10 +167,19 @@ internal fun CompactContextualNavigationBar(
             ) {
                     Destination.entries.forEach { item ->
                         val selected = destination == item
-                        val photoGridSelected = destination == Destination.Search &&
-                            item == Destination.Search && searchPanel == SearchPanel.PhotoGrid
-                        val label = stringResource(if (photoGridSelected) R.string.nav_photo_grid else item.labelRes)
-                        val icon = if (photoGridSelected) AppIcons.PhotoGrid else item.icon
+                        val showsPhotoGrid = item == Destination.Search && searchPanel == SearchPanel.PhotoGrid
+                        val showsDirectMessages = item == Destination.Notifications &&
+                            notificationsPanel == NotificationsPanel.DirectMessages
+                        val label = when {
+                            showsPhotoGrid -> stringResource(R.string.nav_photo_grid)
+                            showsDirectMessages -> stringResource(R.string.nav_direct_messages)
+                            else -> stringResource(item.labelRes)
+                        }
+                        val icon = when {
+                            showsPhotoGrid -> AppIcons.PhotoGrid
+                            showsDirectMessages -> AppIcons.DirectMessage
+                            else -> item.icon
+                        }
                         val interactionSource = remember(item) { MutableInteractionSource() }
                         val pressed by interactionSource.collectIsPressedAsState()
                         val selectedTint = rememberSelectedColor(

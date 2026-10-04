@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowCompat
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotSelected
@@ -1002,10 +1003,40 @@ class NavigationTest {
         compose.onNodeWithText("No media posts available").assertIsDisplayed()
 
         compose.onAllNodesWithContentDescription("Home").onLast().performClick()
-        compose.onNodeWithContentDescription("Search").performClick()
+        compose.onNodeWithContentDescription("Photo grid").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Photo grid").performClick()
 
         compose.onNodeWithContentDescription("Photo grid").assertIsSelected()
         compose.onNodeWithText("No media posts available").assertIsDisplayed()
+    }
+
+    @Test fun rememberedInactiveGroupIconsReflectSavedMemory() {
+        compose.onNodeWithContentDescription("Search").performClick()
+        compose.onNodeWithContentDescription("Photo grid").assertIsEnabled().performClick()
+        compose.onNodeWithContentDescription("Notifications").performClick()
+        compose.onNodeWithContentDescription("Direct messages").assertIsEnabled().performClick()
+        compose.onAllNodesWithContentDescription("Home").onLast().performClick()
+
+        compose.onNodeWithContentDescription("Photo grid").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Direct messages").assertIsDisplayed()
+    }
+
+    @Test fun searchToPhotoGridToHomeKeepsInactiveIcon() {
+        compose.onNodeWithContentDescription("Search").performClick()
+        compose.onNodeWithContentDescription("Photo grid").assertIsEnabled().performClick()
+        compose.onAllNodesWithContentDescription("Home").onLast().performClick()
+
+        compose.onNodeWithContentDescription("Photo grid").assertIsDisplayed()
+        compose.onAllNodesWithContentDescription("Search").assertCountEquals(0)
+    }
+
+    @Test fun notificationsToDirectMessagesToHomeKeepsInactiveIcon() {
+        compose.onNodeWithContentDescription("Notifications").performClick()
+        compose.onNodeWithContentDescription("Direct messages").assertIsEnabled().performClick()
+        compose.onAllNodesWithContentDescription("Home").onLast().performClick()
+
+        compose.onNodeWithContentDescription("Direct messages").assertIsDisplayed()
+        compose.onAllNodesWithContentDescription("Notifications").assertCountEquals(0)
     }
 
     @Test fun hashtagNavigationLeavesPhotoGridModeInSearchState() {

@@ -219,6 +219,7 @@ internal fun ShellContent(
                                     CompactContextualNavigationBar(
                                         destination = navigator.destination,
                                         searchPanel = navigator.searchPanel,
+                                        notificationsPanel = navigator.notificationsPanel,
                                         action = contextualActionFor(
                                             destination = navigator.destination,
                                             searchPanel = navigator.searchPanel,

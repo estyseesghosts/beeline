@@ -43,16 +43,19 @@ implementation slice. Split into three slices.
   `ShellCharacterizationTest` pass with no regression. `assembleDebug` and `installDebug`
   succeed on emulator-5554 (API 36); the app launches to the top resumed activity. No
   session-authority change.
-- 4A-2 — inactive group icons from saved memory. Next.
-- 4A-3 — shared navigation-button contract and navigation item model.
+- 4A-2 — inactive group icons from saved memory. `CompactContextualNavigationBar` derives the
+  Search and Notifications icons and labels from `searchPanel` and `notificationsPanel`
+  regardless of selection, so an inactive group shows its remembered child. `ShellContent`
+  passes `navigator.notificationsPanel`. `NavigationTest` reports 34 tests and 0 failures.
+- 4A-3 — shared navigation-button contract and navigation item model. Next.
 
 Gates 3A/3B are visual and motion roles; the back-priority portion proceeds independently.
 The shared navigation-button contract portion depends on 3A/3B.
 
 # Current slice
 
-4A-1 is complete. 4A-2 (inactive group icons from saved memory) is next. The orchestrator owns
-each slice and operates Git.
+4A-2 is complete. 4A-3 (shared navigation-button contract and navigation item model) is next.
+The orchestrator owns each slice and operates Git.
 
 # Files involved
 
