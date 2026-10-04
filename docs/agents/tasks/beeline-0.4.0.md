@@ -47,15 +47,22 @@ implementation slice. Split into three slices.
   Search and Notifications icons and labels from `searchPanel` and `notificationsPanel`
   regardless of selection, so an inactive group shows its remembered child. `ShellContent`
   passes `navigator.notificationsPanel`. `NavigationTest` reports 34 tests and 0 failures.
-- 4A-3 — shared navigation-button contract and navigation item model. Next.
+- 4A-3 — shared navigation-button contract and navigation item model. New
+  `ui/navigation/NavigationItem.kt` exposes one `NavigationItem` model, four
+  `CompactNavigationItem` positions, six `WideNavigationItem` targets, and one
+  `navigationButtonSemantics` contract. `CompactContextualNavigationBar` and
+  `LargeNavigationRail` both apply the shared contract; the profile long-press account switch
+  stays. `WideNavigationTest` reports 8 tests and 0 failures, including direct wide selection
+  followed by folding.
 
 Gates 3A/3B are visual and motion roles; the back-priority portion proceeds independently.
 The shared navigation-button contract portion depends on 3A/3B.
 
 # Current slice
 
-4A-2 is complete. 4A-3 (shared navigation-button contract and navigation item model) is next.
-The orchestrator owns each slice and operates Git.
+4A-3 is complete. All three Phase 4A slices are implemented and focused-verified. The full
+`test assembleRelease` gate and `:app:lintDebug` run before Phase 4A completion. The
+orchestrator owns each slice and operates Git.
 
 # Files involved
 

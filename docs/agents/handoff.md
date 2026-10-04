@@ -16,18 +16,18 @@ Start with AGENTS.md, agent control, workflow, and operation rules.
 Phase 4A — back priority and session-bound modal behavior — is in progress. The task is larger
 than one safe slice and is split into 4A-1 (back priority for picker and popup), 4A-2 (inactive
 group icons from saved memory), and 4A-3 (shared navigation-button contract and navigation item
-model). 4A-1 and 4A-2 are implemented and focused-verified: `ShellBackPolicyTest` reports 11 tests
-and 0 failures, `NavigationTest` reports 34 tests and 0 failures, and the navigation and shell
-suites pass. `assembleDebug` and `installDebug` succeed on emulator-5554 (API 36). The next slice
-is 4A-3. The full `test assembleRelease` gate and `:app:lintDebug` run before Phase 4A
-completion.
+model). 4A-1, 4A-2, and 4A-3 are implemented and focused-verified: `ShellBackPolicyTest` reports
+11 tests and 0 failures, `NavigationTest` reports 34 tests and 0 failures, `WideNavigationTest`
+reports 8 tests and 0 failures, and the navigation and shell suites pass. `assembleDebug` and
+`installDebug` succeed on emulator-5554 (API 36). The full `test assembleRelease` gate and
+`:app:lintDebug` run before Phase 4A completion.
 Problem_solver provides read-only investigation and review. Targeted_fixer accepts only small explicit work packages.
 Keep one implementation owner and one Git operator at a time.
 
 ## Last safe commit
 
-e9c0e2c is the safe commit after 4A-1. 4A-2 commits follow from it.
-4A-1 slice commit subject: `Add the emoji picker and post action bubble to the shell back order`.
+6c0bd07 is the safe commit after 4A-2. 4A-3 commits follow from it.
+4A-2 slice commit subject: `Derive inactive compact group icons from saved panel memory`.
 The next session resolves the new hash from Git without a second record-only commit.
 The last safe application source remains 464b2d1. Simulator evidence reference 219504c resolves.
 

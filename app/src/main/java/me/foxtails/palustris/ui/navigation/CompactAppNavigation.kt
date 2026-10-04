@@ -43,11 +43,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
@@ -208,11 +205,7 @@ internal fun CompactContextualNavigationBar(
                                 indication = LocalIndication.current,
                             ) { onDestinationSelected(item) }
                         Box(
-                            modifier = itemModifier.semantics {
-                                contentDescription = label
-                                this.selected = selected
-                                role = Role.Tab
-                            },
+                            modifier = itemModifier.navigationButtonSemantics(label, selected),
                             contentAlignment = Alignment.Center,
                         ) {
                             androidx.compose.animation.AnimatedVisibility(

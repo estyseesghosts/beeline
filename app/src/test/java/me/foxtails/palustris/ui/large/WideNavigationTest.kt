@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
@@ -93,6 +94,20 @@ class WideNavigationTest {
         compose.onNodeWithTag("large_screen_shell").assertIsDisplayed()
         compose.onNodeWithText("Select a post").assertIsDisplayed()
         compose.onNodeWithContentDescription("Timeline Home").assertIsDisplayed()
+    }
+
+    @Test fun directWideSelectionFollowedByFoldingKeepsGroupedDestination() {
+        compose.onNodeWithContentDescription("Photo grid").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithContentDescription("Photo grid").assertIsSelected()
+        compose.onNodeWithText("No media posts available").assertIsDisplayed()
+
+        compose.onNodeWithContentDescription("Direct messages").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithContentDescription("Direct messages").assertIsSelected()
+        compose.onNodeWithText("Connect an account to view messages").assertIsDisplayed()
     }
 
     @Test fun largeSearchKeepsCategoriesAboveTheField() {

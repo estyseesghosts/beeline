@@ -22,17 +22,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.Avatar
+import me.foxtails.palustris.ui.navigation.navigationButtonSemantics
 
 internal enum class LargeNavTarget(@StringRes val labelRes: Int) {
     Home(R.string.nav_home),
@@ -78,11 +74,7 @@ internal fun LargeNavigationRail(
                     onClick = { onTargetSelected(target) },
                     modifier = Modifier
                         .size(56.dp)
-                        .semantics {
-                            contentDescription = label
-                            this.selected = selected
-                            role = Role.Tab
-                        },
+                        .navigationButtonSemantics(label, selected),
                 ) {
                     Surface(
                         shape = MaterialTheme.shapes.large,
@@ -113,11 +105,7 @@ internal fun LargeNavigationRail(
                     onLongClick = onOpenAccounts,
                     onLongClickLabel = stringResource(R.string.nav_switch_account),
                 )
-                .semantics {
-                    contentDescription = currentAccountDescription
-                    this.selected = selectedTarget == LargeNavTarget.Profile
-                    role = Role.Tab
-                }
+                .navigationButtonSemantics(currentAccountDescription, selectedTarget == LargeNavTarget.Profile)
             Surface(
                 modifier = Modifier.size(56.dp),
                 shape = MaterialTheme.shapes.large,
