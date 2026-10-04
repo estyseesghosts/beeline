@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.union
@@ -28,43 +29,46 @@ internal val CompactContextualControlsPositioningClearance = CompactNavigationHe
     CompactOverlayControlSpacing + CompactOverlayVerticalPadding
 internal val LegacyFeedBottomClearance = 96.dp
 
+/** Places compact chrome above either the system bars or the IME, never their sum. */
 @Composable
-internal fun compactGlobalNavigationPositioningInsets(): WindowInsets =
+internal fun compactGlobalNavigationPositioningInsets(
+    ime: WindowInsets = WindowInsets.ime,
+): WindowInsets =
     WindowInsets.navigationBarsIgnoringVisibility.only(WindowInsetsSides.Bottom)
+        .union(ime.only(WindowInsetsSides.Bottom))
 
 @Composable
 internal fun compactContextualControlsPositioningInsets(
     navigationVisible: Boolean,
-    ime: WindowInsets = WindowInsets(bottom = 0.dp),
-): WindowInsets = compactGlobalNavigationPositioningInsets()
+    ime: WindowInsets = WindowInsets.ime,
+): WindowInsets = compactGlobalNavigationPositioningInsets(ime)
     .add(
         WindowInsets(
             bottom = if (navigationVisible) CompactContextualControlsPositioningClearance else 0.dp,
         ),
     )
-    .union(ime)
     .only(WindowInsetsSides.Bottom)
 
 @Composable
 internal fun compactScrollEndClearance(
     controlStackHeight: Dp,
     navigationVisible: Boolean,
-    ime: WindowInsets = WindowInsets(bottom = 0.dp),
+    ime: WindowInsets = WindowInsets.ime,
 ): Dp {
-    val systemNavigationBottom = WindowInsets.navigationBarsIgnoringVisibility
+    val controlsBottom = compactContextualControlsPositioningInsets(navigationVisible, ime)
         .asPaddingValues()
         .calculateBottomPadding()
-    val imeBottom = ime.asPaddingValues().calculateBottomPadding()
-    val contextualPositioning = if (navigationVisible) CompactContextualControlsPositioningClearance else 0.dp
-    return maxOf(systemNavigationBottom + contextualPositioning, imeBottom) + controlStackHeight
+    // Controls and content use the same stack above the larger inset. The IME
+    // replaces the system-bar base; it must not replace navigation clearance.
+    return controlsBottom + controlStackHeight
 }
 
 @Composable
 internal fun compactHomeScrollEndClearance(): Dp {
-    val systemNavigationBottom = WindowInsets.navigationBarsIgnoringVisibility
+    val safeBottom = compactGlobalNavigationPositioningInsets()
         .asPaddingValues()
         .calculateBottomPadding()
-    return systemNavigationBottom + CompactNavigationHeight +
+    return safeBottom + CompactNavigationHeight +
         CompactHomeTimelineSpacing + CompactTimelineTabsHeight +
         (CompactOverlayVerticalPadding * 2f)
 }

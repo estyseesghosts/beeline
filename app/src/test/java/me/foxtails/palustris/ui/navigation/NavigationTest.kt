@@ -32,6 +32,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
+import androidx.compose.ui.test.swipe
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.activity.compose.setContent
@@ -41,6 +42,10 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import me.foxtails.palustris.ui.shell.AppShellFixtures
+import me.foxtails.palustris.ui.shell.DirectMessagesContract
+import me.foxtails.palustris.ui.shell.PhotoGridContract
+import me.foxtails.palustris.ui.photogrid.PhotoGridFeedState
+import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.domain.Account
@@ -436,6 +441,20 @@ class NavigationTest {
         assertFixtureVisibleBesideAction("post_row_home-underlap", "Compose post")
         scrollToEnd("home_feed_content")
         compose.onNodeWithText("Home final fixture").assertIsDisplayed()
+        for (keyboardDp in listOf(360, 0)) {
+            applyKeyboardInsets(keyboardDp)
+            scrollToEnd("home_feed_content")
+            // Home intentionally hides chrome while scrolling forward. A small
+            // reverse scroll reveals it without leaving the final post.
+            compose.onNodeWithTag("home_feed_content").performTouchInput {
+                val start = center.copy(y = 100f)
+                swipe(start, start.copy(y = start.y + 80f), durationMillis = 300)
+            }
+            compose.waitForIdle()
+            val row = compose.onNodeWithTag("post_row_home-final").fetchSemanticsNode().boundsInRoot
+            val tabs = compose.onNodeWithTag("home_timeline_tabs").fetchSemanticsNode().boundsInRoot
+            assertTrue("final Home actions must clear tabs at IME $keyboardDp", row.bottom <= tabs.top)
+        }
     }
 
     @Test fun compactSearchResultsUnderlapDockAndFinalPostCanScrollClear() {
@@ -474,6 +493,14 @@ class NavigationTest {
         val finalBounds = compose.onNodeWithTag("post_row_search-final").fetchSemanticsNode().boundsInRoot
         val chips = bounds("Search categories; swipe horizontally for more")
         assertTrue("final Search result should clear the floating controls", finalBounds.bottom <= chips.top)
+        for (keyboardDp in listOf(360, 0)) {
+            applyKeyboardInsets(keyboardDp)
+            scrollToEnd("search_content")
+            val row = compose.onNodeWithTag("post_row_search-final").fetchSemanticsNode().boundsInRoot
+            assertTrue("final Search actions must clear controls at IME $keyboardDp",
+                row.bottom <= bounds("Search categories; swipe horizontally for more").top)
+            screenshot("search-ime-$keyboardDp")
+        }
     }
 
     @Test fun compactNotificationsUnderlapFiltersAndFinalNotificationCanScrollClear() {
@@ -506,6 +533,13 @@ class NavigationTest {
         val finalBounds = compose.onNodeWithTag("notification_row_notification-8").fetchSemanticsNode().boundsInRoot
         val filters = bounds("Notification filters; swipe horizontally for more")
         assertTrue("final notification should clear the floating filters", finalBounds.bottom <= filters.top)
+        for (keyboardDp in listOf(360, 0)) {
+            applyKeyboardInsets(keyboardDp)
+            scrollToEnd("notifications_content")
+            val row = compose.onNodeWithTag("notification_row_notification-8").fetchSemanticsNode().boundsInRoot
+            assertTrue("final notification must clear filters at IME $keyboardDp",
+                row.bottom <= bounds("Notification filters; swipe horizontally for more").top)
+        }
     }
 
     @Test fun compactProfileUnderlapsCategoriesAndFinalSectionCanScrollClear() {
@@ -541,6 +575,13 @@ class NavigationTest {
             .fetchSemanticsNode().boundsInRoot
         val categories = bounds("Profile categories; swipe horizontally for more")
         assertTrue("final Profile section should clear the floating categories", finalBounds.bottom <= categories.top)
+        for (keyboardDp in listOf(360, 0)) {
+            applyKeyboardInsets(keyboardDp)
+            scrollToEnd("profile_content")
+            val row = compose.onNodeWithTag("post_row_profile-8", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            assertTrue("final Profile actions must clear categories at IME $keyboardDp",
+                row.bottom <= bounds("Profile categories; swipe horizontally for more").top)
+        }
     }
 
     @Test fun compactProfileDockSitsAboveNavigationAndResetsForAnotherProfile() {
@@ -734,17 +775,7 @@ class NavigationTest {
         var initialViewportTop = Float.NaN
         var initialViewportBottom = Float.NaN
         for (keyboardDp in listOf(360, 300, 200, 120, 100, 80, 40, 0)) {
-            compose.runOnIdle {
-                val content = compose.activity.findViewById<ViewGroup>(android.R.id.content)
-                val insets = WindowInsetsCompat.Builder()
-                    .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.of(0, 0, 0, systemBottom))
-                    .setInsetsIgnoringVisibility(WindowInsetsCompat.Type.navigationBars(), Insets.of(0, 0, 0, systemBottom))
-                    .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, (keyboardDp * density).toInt()))
-                    .setVisible(WindowInsetsCompat.Type.ime(), keyboardDp > 0)
-                    .build()
-                ViewCompat.dispatchApplyWindowInsets(content.getChildAt(0), insets)
-            }
-            compose.waitForIdle()
+            applyKeyboardInsets(keyboardDp)
             val field = bounds("Search field")
             val viewport = compose.onNodeWithTag("search_content", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
             if (initialViewportTop.isNaN()) {
@@ -756,10 +787,12 @@ class NavigationTest {
             }
             val navigation = bounds("Photo grid")
             assertTrue("field crossed navigation at IME height $keyboardDp", field.bottom < navigation.top)
+            assertEquals("Search and navigation must keep their shared gap", 14f * density, navigation.top - field.bottom, density)
+            assertTrue("navigation must clear IME/system bars", navigation.bottom <= viewport.bottom - maxOf(systemBottom.toFloat(), keyboardDp * density))
             assertTrue("field bounced upward at IME height $keyboardDp", field.bottom >= previousBottom)
             if (keyboardDp == 360) {
                 firstImeFieldBottom = field.bottom
-                assertTrue("test must actually move the field above the keyboard", navigation.top - field.bottom > 150 * density)
+                assertTrue("test must actually move navigation above the keyboard", navigation.bottom < viewport.bottom - 350 * density)
             }
             if (keyboardDp == 0) {
                 assertTrue("IME dismissal should move the floating Search controls", field.bottom > firstImeFieldBottom)
@@ -994,6 +1027,82 @@ class NavigationTest {
         compose.onNodeWithContentDescription("Edit profile").assertDoesNotExist()
         compose.onAllNodesWithText("Your profile").onLast().assertIsDisplayed()
         compose.onNodeWithContentDescription("Profile").assertIsSelected()
+    }
+
+    @Test fun compactDmEditorAndFinalMessageClearNavigationWithImeOpenAndClosed() {
+        val account = fixtureAccount("dm-owner")
+        val recipient = fixtureAccount("dm-recipient")
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                AppShellFixtures.app(
+                    account = account,
+                    directMessages = DirectMessagesContract.Empty.copy(state = DirectMessageUiState(
+                        recipient = recipient,
+                        editorText = "Remember this draft",
+                        thread = (0..15).map { fixturePost("dm-$it", recipient, "Message $it") },
+                    )),
+                )
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Notifications").performClick()
+        compose.onNodeWithContentDescription("Direct messages").performClick()
+        for (keyboardDp in listOf(0, 360, 120, 0)) {
+            applyKeyboardInsets(keyboardDp)
+            val editor = compose.onNodeWithTag("direct_message_input").fetchSemanticsNode().boundsInRoot
+            val navigation = bounds("Notifications")
+            assertTrue("DM editor must clear navigation at IME $keyboardDp", editor.bottom < navigation.top)
+            compose.onNodeWithTag("direct_message_thread").performScrollToNode(hasText("Message 15"))
+            val final = compose.onNodeWithText("Message 15").fetchSemanticsNode().boundsInRoot
+            assertTrue("final message must clear editor at IME $keyboardDp", final.bottom <= editor.top)
+            compose.onNodeWithText("Remember this draft").assertIsDisplayed()
+            compose.onNodeWithTag("direct_message_send").assertIsDisplayed().assertIsEnabled()
+            screenshot("dm-ime-$keyboardDp")
+        }
+    }
+
+    @Test fun compactPhotoGridFinalTileClearsFiltersWithImeOpenAndClosed() {
+        val account = fixtureAccount("grid-owner")
+        val posts = (0..15).map { index ->
+            OwnedPost(account.id, fixturePost("grid-$index", account, "Photo $index").copy(
+                attachments = listOf(Attachment(id = "image", url = "https://cdn.example/grid-$index.jpg", mimeType = "image/jpeg", width = 200, height = 200)),
+            ))
+        }
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                AppShellFixtures.app(account = account, photoGrid = PhotoGridContract.Empty.copy(
+                    state = PhotoGridFeedState(posts = posts),
+                ))
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Search").performClick()
+        compose.onNodeWithContentDescription("Photo grid").performClick()
+        for (keyboardDp in listOf(0, 360, 0)) {
+            applyKeyboardInsets(keyboardDp)
+            scrollToEnd("photo_grid_content")
+            val last = posts.last()
+            val tag = "photo_grid_tile_${account.id.connection.origin}/${last.post.id.connection}/${last.post.id.value}/image"
+            val tile = compose.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
+            assertTrue("final tile must clear filters at IME $keyboardDp",
+                tile.bottom <= bounds("Photo Grid feeds; swipe horizontally for more").top)
+        }
+    }
+
+    private fun applyKeyboardInsets(keyboardDp: Int) {
+        val density = compose.activity.resources.displayMetrics.density
+        val systemBottom = (24 * density).toInt()
+        compose.runOnIdle {
+            val content = compose.activity.findViewById<ViewGroup>(android.R.id.content)
+            val insets = WindowInsetsCompat.Builder()
+                .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.of(0, 0, 0, systemBottom))
+                .setInsetsIgnoringVisibility(WindowInsetsCompat.Type.navigationBars(), Insets.of(0, 0, 0, systemBottom))
+                .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, (keyboardDp * density).toInt()))
+                .setVisible(WindowInsetsCompat.Type.ime(), keyboardDp > 0)
+                .build()
+            ViewCompat.dispatchApplyWindowInsets(content.getChildAt(0), insets)
+        }
+        compose.waitForIdle()
     }
 
     @Test fun photoGridModeSurvivesTabSwitchingAndUpdatesNavigationIcon() {

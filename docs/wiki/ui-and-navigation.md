@@ -74,8 +74,24 @@ Sources: `ui/navigation/CompactAppNavigation.kt`, `ui/navigation/NavigationPrese
 `ui/navigation/NavigationItem.kt`, `CompactNavigationSelectionTest`, `NavigationPresentationTest`, `NavigationTest`.
 Verification: Compose tests cover stable bounds, interrupted selection, RTL, reduced motion, and compact 200% text.
 A six-button vertical fixture uses the same presentation components. Its dimensions are test inputs, not approved production geometry.
-The production wide rail remains unchanged. Adaptive activation, rail replacement, and IME placement remain planned.
+The production wide rail remains unchanged. Adaptive activation and rail replacement remain planned.
 Physical rendering and TalkBack remain unverified.
+
+### Compact IME placement and content clearance
+
+Compact navigation uses the greater of the IME and system-bar bottom insets.
+Search, Photo Grid, notification filters, and profile categories stay above navigation through the same geometry owner.
+Home tabs move with navigation. Home still hides its controls during forward scrolling.
+Destination scroll content carries final-item clearance. The shell does not pad the full viewport for floating controls.
+The DM editor reserves navigation and IME space in its existing column.
+The thread keeps normal content spacing because the editor already occupies space below it.
+The query, editor text, navigation state, and callbacks keep their existing owners.
+
+Sources: `ui/layout/CompactOverlayMetrics.kt`, `ui/shell/ShellContent.kt`,
+`ui/directmessages/DirectMessageConversationScreen.kt`, `NavigationTest`, `DirectMessageScreenTest`.
+Verification: Compose tests cover Search placement through IME dismissal and final-content clearance with synthetic IME insets.
+Tests cover Home, Search, Photo Grid, Notifications, Profile, and the DM conversation.
+Measured high-font dock clearance remains Phase 4E work. Device rendering remains unverified.
 
 ### Required adaptive end state
 

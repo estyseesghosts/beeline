@@ -166,6 +166,18 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
 
 ## Invariants
 
+- `CompactOverlayMetrics` owns compact bottom geometry for the composition lifetime.
+  Navigation uses `max(system navigation inset, IME inset)`. Contextual docks add navigation clearance above that base.
+  `compactScrollEndClearance` uses the same contextual inset plus the destination control-stack height.
+  Home clearance includes its tabs and navigation. Scrolling content carries clearance; the shell viewport stays full size.
+  `ShellContent` places navigation and Home tabs. Search, Photo Grid, Notifications, and Profile own their floating docks.
+  `DirectMessageConversationScreen` places the editor in its column above compact navigation and the IME.
+  Its weighted thread needs normal spacing, not a second copy of editor or navigation clearance.
+  The wide editor retains its prior IME/system-bar policy. Feature state and protocol contracts do not change.
+  `NavigationTest` covers IME dismissal coordination, final rows/tiles, and DM editor separation.
+  `DirectMessageScreenTest` and `WideNavigationTest` cover existing feature and wide behavior.
+  Synthetic insets and Robolectric screenshots do not verify device rendering. Measured high-font clearance remains Phase 4E work.
+
 - Required adaptive end state (maintainer clarification, 2026-10-04): compact-narrow, compact-wide,
   and tablet reuse the underlying navigation components and one navigator. Compact-wide and tablet
   share the vertical six-button presentation. Compact-narrow keeps the existing four grouped positions

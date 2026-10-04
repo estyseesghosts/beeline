@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -37,9 +38,8 @@ import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.Avatar
-import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
+import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
 import me.foxtails.palustris.ui.layout.compactGlobalNavigationPositioningInsets
-import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 
 @Composable
@@ -61,14 +61,6 @@ fun DirectMessageConversationScreen(
         ?.ifBlank { null }
         ?: recipient?.displayName?.ifBlank { recipient.handle }
         ?: stringResource(R.string.dm_private_message)
-    val endClearance = if (compactLayout) {
-        compactScrollEndClearance(
-            controlStackHeight = CompactFilterDockHeight,
-            navigationVisible = compactNavigationVisible,
-        )
-    } else {
-        0.dp
-    }
 
     Column(Modifier.fillMaxSize().testTag("direct_message_conversation")) {
         Row(
@@ -89,7 +81,9 @@ fun DirectMessageConversationScreen(
         }
         LazyColumn(
             modifier = Modifier.weight(1f).fillMaxWidth().testTag("direct_message_thread"),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp + endClearance),
+            // The editor occupies space in this column. Its inset clears both
+            // navigation and the IME, so the thread needs only its own spacing.
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             items(state.thread, key = { "${it.id.connection}/${it.id.value}" }) { post ->
@@ -141,8 +135,13 @@ fun DirectMessageConversationScreen(
         Row(
             Modifier
                 .fillMaxWidth()
-                .imePadding()
-                .windowInsetsPadding(compactGlobalNavigationPositioningInsets())
+                .then(
+                    if (compactLayout) Modifier.windowInsetsPadding(
+                        compactContextualControlsPositioningInsets(compactNavigationVisible),
+                    ) else Modifier.imePadding().windowInsetsPadding(
+                        compactGlobalNavigationPositioningInsets(WindowInsets(bottom = 0.dp)),
+                    ),
+                )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
