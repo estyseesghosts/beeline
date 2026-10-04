@@ -163,10 +163,12 @@ fun PalustrisApp(
             val largePresentation = presentationMode != LargeLayoutMode.Compact
             val navigationMode = NavigationModeObserver.current(LocalView.current)
             SystemBars(overlay.mediaRequest != null || overlay.profileImageRequest != null, largePresentation)
-            fun backState() = ShellBackState(overlay.mediaRequest != null, overlay.profileImageRequest != null, largePresentation, navigator.overlay == Overlay.NotificationSettings, navigator.overlay == Overlay.Composer, navigator.overlay == Overlay.EditProfile, navigator.singlePost != null, navigator.notificationRoute != null, navigator.page != null, navigator.destination == Destination.Home)
+            fun backState() = ShellBackState(overlay.mediaRequest != null, overlay.profileImageRequest != null, overlay.emojiPickerTarget != null, overlay.postActionBubbleTarget != null, largePresentation, navigator.overlay == Overlay.NotificationSettings, navigator.overlay == Overlay.Composer, navigator.overlay == Overlay.EditProfile, navigator.singlePost != null, navigator.notificationRoute != null, navigator.page != null, navigator.destination == Destination.Home)
             fun dismissTopSurface() {
                 when (topSurfaceForBack(backState())) {
                     ShellTopSurface.ProfileImage -> overlay.profileImageRequest = null
+                    ShellTopSurface.EmojiPicker -> overlay.emojiPickerTarget = null
+                    ShellTopSurface.PostActionBubble -> overlay.clearPostActionBubble()
                     ShellTopSurface.NotificationSettings -> navigator.closeOverlay()
                     ShellTopSurface.Composer -> closeComposer()
                     ShellTopSurface.EditProfile -> closeProfile()

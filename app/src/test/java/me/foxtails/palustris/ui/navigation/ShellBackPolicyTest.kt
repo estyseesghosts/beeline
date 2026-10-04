@@ -142,4 +142,78 @@ class ShellBackPolicyTest {
     fun anOpenDestinationWithoutSurfacesReturnsHome() {
         assertEquals(ShellTopSurface.Home, topSurfaceForBack(ShellBackState(atHome = false)))
     }
+
+    @Test
+    fun emojiPickerDismissesAfterProfileImageAndBeforeOverlays() {
+        assertEquals(
+            ShellTopSurface.EmojiPicker,
+            topSurfaceForBack(
+                ShellBackState(
+                    emojiPickerOpen = true,
+                    composerOpen = true,
+                    atHome = false,
+                ),
+            ),
+        )
+        assertEquals(
+            ShellTopSurface.ProfileImage,
+            topSurfaceForBack(
+                ShellBackState(
+                    profileImageOpen = true,
+                    emojiPickerOpen = true,
+                    atHome = false,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun postActionBubbleDismissesAfterEmojiPickerAndBeforeOverlays() {
+        assertEquals(
+            ShellTopSurface.PostActionBubble,
+            topSurfaceForBack(
+                ShellBackState(
+                    postActionBubbleOpen = true,
+                    composerOpen = true,
+                    atHome = false,
+                ),
+            ),
+        )
+        assertEquals(
+            ShellTopSurface.EmojiPicker,
+            topSurfaceForBack(
+                ShellBackState(
+                    emojiPickerOpen = true,
+                    postActionBubbleOpen = true,
+                    atHome = false,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun pickerAndPopupDismissBeforeSheetAndDetail() {
+        assertEquals(
+            ShellTopSurface.EmojiPicker,
+            topSurfaceForBack(
+                ShellBackState(
+                    emojiPickerOpen = true,
+                    notificationSettingsOpen = true,
+                    singlePostOpen = true,
+                    atHome = false,
+                ),
+            ),
+        )
+        assertEquals(
+            ShellTopSurface.PostActionBubble,
+            topSurfaceForBack(
+                ShellBackState(
+                    postActionBubbleOpen = true,
+                    notificationSettingsOpen = true,
+                    singlePostOpen = true,
+                    atHome = false,
+                ),
+            ),
+        )
+    }
 }

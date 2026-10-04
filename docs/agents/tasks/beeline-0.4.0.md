@@ -30,27 +30,56 @@ The recovery plan at C:\Users\julie\.opencode\plan\beeline-0.4.0-phase4-recovery
 - R15a — split the favourite-artwork contract per protocol. The shared `SocialSourceContractTest` no longer asserts `Heart` for every adapter. It declares an abstract `expectedFavouriteArtworkStyle`, and each protocol test supplies its own value: `MisskeySourceContractTest` declares `Heart`, `MastodonSourceContractTest` declares `Star`. The renamed `favouriteArtworkStyleMatchesProtocolContract` passes for both adapters. `MisskeyIntegrationTest`, which extends `MisskeySourceContractTest`, keeps the Misskey `Heart` expectation. No production, adapter, or presentation change. MastodonSourceContractTest 7/7, MisskeySourceContractTest 7/7, MisskeyIntegrationTest 49/49 with --rerun-tasks. This removes the sole full-gate failure.
 - R15 — restore the full gate and hand back to Phase 4A. Full `test assembleRelease --rerun-tasks` reports BUILD SUCCESSFUL with 151 suites, 1561 tests, 0 failures, 0 errors, 0 skipped; release assembly complete. The prior sole failure (the artwork contract) is resolved by R15a. The architecture audit exits 0 with 616 findings and no regression findings. lintDebug passes. ktlintCheck reports repo-wide pre-existing style findings against the committed baseline; the recovery hunks add no finding and no baseline changed. API 29 smoke and the restoration device check are unavailable locally (the only connected device is emulator-5554, API 36, with Beeline not installed). No production change.
 
+# Phase 4A
+
+Phase 4A — back priority and session-bound modal behavior. This task is larger than one safe
+implementation slice. Split into three slices.
+
+- 4A-1 — back priority for picker and popup. `ShellBackPolicy.kt` adds the `EmojiPicker` and
+  `PostActionBubble` surfaces and the `emojiPickerOpen` and `postActionBubbleOpen` state.
+  `PalustrisApp.kt` maps `overlay.emojiPickerTarget` and `overlay.postActionBubbleTarget` and
+  dismisses them. `ShellBackPolicyTest` reports 11 tests and 0 failures. `ShellNavigatorTest`,
+  `NavigationTest`, `WideNavigationTest`, `SearchPanelRestorationTest`, and
+  `ShellCharacterizationTest` pass with no regression. `assembleDebug` and `installDebug`
+  succeed on emulator-5554 (API 36); the app launches to the top resumed activity. No
+  session-authority change.
+- 4A-2 — inactive group icons from saved memory. Next.
+- 4A-3 — shared navigation-button contract and navigation item model.
+
+Gates 3A/3B are visual and motion roles; the back-priority portion proceeds independently.
+The shared navigation-button contract portion depends on 3A/3B.
+
 # Current slice
 
-R15 is complete. The full `test assembleRelease` gate is green: 151 suites, 1561 tests, 0 failures, 0 errors, 0 skipped, with release assembly complete. The R00 through R15a repair slices resolved every reproduced failure. The architecture audit exits 0 with no regression findings, and lintDebug passes. ktlintCheck reports repo-wide pre-existing style findings against the committed baseline; the recovery hunks add no finding and no baseline changed. API 29 smoke and the restoration device check remain unavailable locally. The orchestrator owns the slice, ran the gate, and operates Git.
+4A-1 is complete. 4A-2 (inactive group icons from saved memory) is next. The orchestrator owns
+each slice and operates Git.
 
 # Files involved
 
 - docs/agents/tasks/beeline-0.4.0.md holds this state.
-- docs/agents/handoff.md points to this recovery task and names Phase 4A next.
+- docs/agents/handoff.md points to this task and names the next slice.
 - docs/agents/documentation-inventory.md holds the R15 review date.
-- docs/wiki/ui-and-navigation.md documents the per-protocol post favourite artwork.
+- docs/wiki/ui-and-navigation.md documents the navigation restoration and back order.
 - docs/beeline_0.4.0.md holds the recovery status note (git-ignored, local only).
 - logs/BUGS.txt holds the R15 result (git-ignored, local only).
 - logs/261002-035505.txt holds R15 evidence and exact checks (git-ignored, local only).
+- logs/261004-153615.txt holds the Phase 4A slice plan and evidence (git-ignored, local only).
 
 # Verification
 
-R15 verification: `test assembleRelease --rerun-tasks` reports BUILD SUCCESSFUL with 151 suites, 1561 tests, 0 failures, 0 errors, 0 skipped; release assembly complete. The architecture audit exits 0 with 616 findings and no regression findings. lintDebug passes. ktlintCheck reports repo-wide pre-existing style findings; no baseline changed and no recovery hunk added a finding. The API 29 smoke job and the restoration device check remain unverified. Full evidence lives in logs/261002-035505.txt.
+4A-1 verification: `ShellBackPolicyTest` reports 11 tests and 0 failures with `--rerun-tasks`.
+`ShellNavigatorTest`, `NavigationTest`, `WideNavigationTest`, `SearchPanelRestorationTest`,
+and `ShellCharacterizationTest` report BUILD SUCCESSFUL. `:app:assembleDebug` and
+`:app:installDebug` succeed on emulator-5554 (API 36). The full `test assembleRelease` gate
+and `:app:lintDebug` run before Phase 4A completion. Full evidence lives in
+logs/261004-153615.txt.
 
 # Next
 
-Phase 4A — back priority and session-bound modal behavior. Use the recovered navigator as the only navigation authority. Reread `ShellBackPolicy.kt`, `ShellOverlayPresenter.kt`, `ShellOverlayHost.kt`, and their current tests before editing. Do not repeat R10 or claim Phase 4A complete because Search restoration is fixed.
+4A-2 — derive both inactive compact group icons from the saved `searchPanelName` and
+`notificationsPanelName`. Then 4A-3 — expose one shared navigation-button visual and semantic
+contract and a navigation item model for four grouped compact positions and six direct wide
+targets. Run the full gate and lint before declaring Phase 4A complete.
 
 # Blockers
 
@@ -58,6 +87,6 @@ The deleted Photo Grid test excludes that test from the available suite. A clean
 
 # Last safe commit
 
-ce75bcc is the safe commit after R15a.
+4a66382 is the safe commit after R15. Phase 4A commits follow from it.
 R15 slice commit subject: `Record the green recovery gate and resume Phase 4A`.
-The next session resolves the new R15 hash from Git without a second record-only commit.
+The next session resolves the new hash from Git without a second record-only commit.

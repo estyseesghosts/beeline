@@ -13,22 +13,21 @@ Start with AGENTS.md, agent control, workflow, and operation rules.
 
 ## Current position and next action
 
-R15 implementation is complete and the integration gate has run. The full
-`test assembleRelease` gate is green: 151 suites, 1561 tests, 0 failures, with
-release assembly complete. The R00 through R15a repair slices resolved every
-reproduced failure, including the R15a artwork-contract split. The architecture
-audit exits 0 with no regression findings and lintDebug passes; ktlintCheck
-reports repo-wide pre-existing style findings against the committed baseline.
-API 29 smoke and the restoration device check remain unavailable locally.
+Phase 4A — back priority and session-bound modal behavior — is in progress. The task is larger
+than one safe slice and is split into 4A-1 (back priority for picker and popup), 4A-2 (inactive
+group icons from saved memory), and 4A-3 (shared navigation-button contract and navigation item
+model). 4A-1 is implemented and focused-verified: `ShellBackPolicyTest` reports 11 tests and 0
+failures, and the navigation and shell suites pass. `assembleDebug` and `installDebug` succeed on
+emulator-5554 (API 36). The next slice is 4A-2. The full `test assembleRelease` gate and
+`:app:lintDebug` run before Phase 4A completion.
 Problem_solver provides read-only investigation and review. Targeted_fixer accepts only small explicit work packages.
 Keep one implementation owner and one Git operator at a time.
-The next slice is Phase 4A — back priority and session-bound modal behavior.
 
 ## Last safe commit
 
-ce75bcc is the safe commit after R15a.
+4a66382 is the safe commit after R15. Phase 4A commits follow from it.
 R15 slice commit subject: `Record the green recovery gate and resume Phase 4A`.
-The next session resolves the new R15 hash from Git without a second record-only commit.
+The next session resolves the new hash from Git without a second record-only commit.
 The last safe application source remains 464b2d1. Simulator evidence reference 219504c resolves.
 
 ## Limits

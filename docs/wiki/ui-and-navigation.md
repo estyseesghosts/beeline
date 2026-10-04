@@ -47,6 +47,18 @@ Sources: `ui/navigation/ShellNavigator.kt`, `ui/PalustrisApp.kt`,
 `ShellNavigatorTest`, `ShellNavigatorRestorationTest`, `SearchPanelRestorationTest`,
 `NavigationTest`.
 
+## Back navigation
+
+`topSurfaceForBack` in `ui/navigation/ShellBackPolicy.kt` owns the dismissal order. The media
+viewer owns back while it is open. A profile image, the emoji picker, and the post action
+bubble dismiss first. In a wide layout, the notification settings, composer, and edit-profile
+overlays dismiss before the selected post. In a compact layout, the selected post dismisses
+before those overlays. A notification route and a local page dismiss before the shell returns
+Home. Back does not navigate because an animation completes.
+
+Sources: `ui/navigation/ShellBackPolicy.kt`, `ui/PalustrisApp.kt`, `ShellBackPolicyTest`,
+`ShellNavigatorTest`, `NavigationTest`.
+
 ## Draft restoration
 
 Closing a dirty composer saves the draft and closes the overlay. The saved text

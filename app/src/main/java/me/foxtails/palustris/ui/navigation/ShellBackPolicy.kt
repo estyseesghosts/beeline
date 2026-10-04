@@ -6,6 +6,8 @@ package me.foxtails.palustris.ui.navigation
  */
 enum class ShellTopSurface {
     ProfileImage,
+    EmojiPicker,
+    PostActionBubble,
     NotificationSettings,
     Composer,
     EditProfile,
@@ -22,6 +24,8 @@ enum class ShellTopSurface {
 data class ShellBackState(
     val mediaViewerOpen: Boolean = false,
     val profileImageOpen: Boolean = false,
+    val emojiPickerOpen: Boolean = false,
+    val postActionBubbleOpen: Boolean = false,
     val largePresentation: Boolean = false,
     val notificationSettingsOpen: Boolean = false,
     val composerOpen: Boolean = false,
@@ -34,12 +38,15 @@ data class ShellBackState(
 
 /**
  * Returns the surface that one back press dismisses, or null when back has no shell
- * target. Profile images dismiss first. Wide layouts dismiss their overlay before the
- * selected post. Local pages and notification routes dismiss before returning Home.
+ * target. Profile images, the emoji picker, and the post action bubble dismiss first.
+ * Wide layouts dismiss their overlay before the selected post. Local pages and
+ * notification routes dismiss before returning Home.
  */
 fun topSurfaceForBack(state: ShellBackState): ShellTopSurface? {
     if (state.mediaViewerOpen) return null
     if (state.profileImageOpen) return ShellTopSurface.ProfileImage
+    if (state.emojiPickerOpen) return ShellTopSurface.EmojiPicker
+    if (state.postActionBubbleOpen) return ShellTopSurface.PostActionBubble
     if (state.largePresentation) {
         if (state.notificationSettingsOpen) return ShellTopSurface.NotificationSettings
         if (state.composerOpen) return ShellTopSurface.Composer
