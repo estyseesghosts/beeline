@@ -173,11 +173,17 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   This remains planned; current `LargeLayoutMode` uses width-only 600/840 dp cutoffs.
   The available emulator is intended for compact-wide testing, not narrow-phone acceptance.
 
-- `CompactContextualNavigationBar` owns one traveling selection indicator for its composition lifetime.
+- `NavigationButton` owns interaction presentation for its composition lifetime, not destination state.
+  It shares selected tint, icon scale, press treatment, and tab semantics. Callers supply profile content and account switching.
+  `NavigationCapsule` owns material and one traveling selection indicator for its composition lifetime.
+  `CompactContextualNavigationBar` supplies grouped items, horizontal geometry, and callbacks.
   `ShellNavigator` remains the selection authority. The indicator uses the existing motion scheme
-  and logical offsets matching the capsule's evenly spaced slots. It does not dispatch navigation.
+  and logical offsets matching evenly spaced slots. Reduced motion reads the selected index directly.
+  Neither shared component dispatches navigation from animation completion.
   `CompactNavigationSelectionTest` covers interruption, reduced motion, RTL, and fixed 48 dp bounds
   at 200% text. `NavigationTest` covers selected-icon alignment and existing shell behavior.
+  `NavigationPresentationTest` covers a six-button vertical fixture, both-axis alignment, interruption,
+  reduced motion, fixed bounds, and click/long-press callbacks. The production wide rail remains unchanged.
 
 - A contract carries no session secret, access token, source, repository, or ViewModel.
 - `sessionGeneration` and durable `sessionRevision` stay distinct.

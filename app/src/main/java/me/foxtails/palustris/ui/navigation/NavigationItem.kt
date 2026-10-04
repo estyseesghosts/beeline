@@ -12,11 +12,9 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.AppIcons
 
 /**
- * One shared navigation-button visual and semantic contract for every navigation surface.
+ * The label and icon data for a navigation target.
  *
- * Both the compact grouped bar and the wide rail render their destinations through this model so
- * a button carries the same icon, label, selection treatment, and accessibility semantics no
- * matter which presentation hosts it. The component owns presentation, not navigation state.
+ * Each presentation owns layout and callbacks. The model does not own selection or navigation state.
  */
 internal data class NavigationItem(
     @StringRes val labelRes: Int,

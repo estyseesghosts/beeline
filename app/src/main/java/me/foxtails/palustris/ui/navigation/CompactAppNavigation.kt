@@ -3,7 +3,6 @@
 package me.foxtails.palustris.ui.navigation
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
@@ -11,50 +10,33 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.IntOffset
-import kotlin.math.roundToInt
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.ui.components.AccountAvatar
-import me.foxtails.palustris.ui.components.BeelineBubbleShape
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.Avatar
 import me.foxtails.palustris.ui.shell.Destination
@@ -62,9 +44,6 @@ import me.foxtails.palustris.ui.shell.NotificationsPanel
 import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.layout.CompactNavigationHeight
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
-import me.foxtails.palustris.ui.motion.rememberSelectedColor
-import me.foxtails.palustris.ui.motion.rememberSelectedScale
-import me.foxtails.palustris.ui.motion.springPress
 import me.foxtails.palustris.ui.profile.ProfileUiState
 
 internal data class ContextualBottomAction(
@@ -84,11 +63,6 @@ internal fun Modifier.bubblePressLayer(
         drawRect(color)
     }
 }
-
-private fun Modifier.roundPressLayer(
-    pressed: Boolean,
-    color: androidx.compose.ui.graphics.Color,
-): Modifier = bubblePressLayer(pressed, color, androidx.compose.foundation.shape.CircleShape)
 
 @Composable
 internal fun contextualActionFor(
@@ -155,107 +129,52 @@ internal fun CompactContextualNavigationBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Spacer(Modifier.weight(1f))
-        Surface(
+        NavigationCapsule(
+            selectedIndex = destination.ordinal,
+            itemCount = Destination.entries.size,
+            orientation = Orientation.Horizontal,
             modifier = Modifier.width(212.dp).height(56.dp),
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f),
-            shadowElevation = 6.dp,
         ) {
-            BoxWithConstraints(
-                Modifier.fillMaxSize().padding(horizontal = 4.dp),
+            Row(
+                Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                val selectedPosition by animateFloatAsState(
-                    targetValue = destination.ordinal.toFloat(),
-                    animationSpec = scheme.spatial,
-                    label = "navigationSelectionPosition",
-                )
-                // The capsule owns one indicator. Logical offsets keep it under the same slot in RTL.
-                val capsuleContentWidth = maxWidth
-                Surface(
-                    modifier = Modifier.align(Alignment.CenterStart)
-                        .offset {
-                            val targetSize = 48.dp.roundToPx()
-                            val indicatorSize = 40.dp.roundToPx()
-                            val gap = (capsuleContentWidth.roundToPx() - targetSize * Destination.entries.size) /
-                                (Destination.entries.size + 1f)
-                            IntOffset(
-                                (gap + (targetSize + gap) * selectedPosition).roundToInt() +
-                                    (targetSize - indicatorSize) / 2,
-                                0,
-                            )
-                        }
-                        .size(40.dp).testTag("selected_navigation_indicator"),
-                    shape = BeelineBubbleShape,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                ) {}
-                Row(
-                    Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Destination.entries.forEach { item ->
-                        val selected = destination == item
-                        val showsPhotoGrid = item == Destination.Search && searchPanel == SearchPanel.PhotoGrid
-                        val showsDirectMessages = item == Destination.Notifications &&
-                            notificationsPanel == NotificationsPanel.DirectMessages
-                        val label = when {
-                            showsPhotoGrid -> stringResource(R.string.nav_photo_grid)
-                            showsDirectMessages -> stringResource(R.string.nav_direct_messages)
-                            else -> stringResource(item.labelRes)
-                        }
-                        val icon = when {
-                            showsPhotoGrid -> AppIcons.PhotoGrid
-                            showsDirectMessages -> AppIcons.DirectMessage
-                            else -> item.icon
-                        }
-                        val interactionSource = remember(item) { MutableInteractionSource() }
-                        val pressed by interactionSource.collectIsPressedAsState()
-                        val selectedTint = rememberSelectedColor(
-                            selected,
-                            MaterialTheme.colorScheme.onSecondaryContainer,
-                            MaterialTheme.colorScheme.onSurfaceVariant,
+                Destination.entries.forEach { item ->
+                    val selected = destination == item
+                    val showsPhotoGrid = item == Destination.Search && searchPanel == SearchPanel.PhotoGrid
+                    val showsDirectMessages = item == Destination.Notifications &&
+                        notificationsPanel == NotificationsPanel.DirectMessages
+                    val label = when {
+                        showsPhotoGrid -> stringResource(R.string.nav_photo_grid)
+                        showsDirectMessages -> stringResource(R.string.nav_direct_messages)
+                        else -> stringResource(item.labelRes)
+                    }
+                    val icon = when {
+                        showsPhotoGrid -> AppIcons.PhotoGrid
+                        showsDirectMessages -> AppIcons.DirectMessage
+                        else -> item.icon
+                    }
+                    if (item == Destination.Profile) {
+                        NavigationButton(
+                            label = label,
+                            icon = null,
+                            selected = selected,
+                            onClick = { onDestinationSelected(item) },
+                            onLongClick = onOpenAccounts,
+                            content = { avatarModifier ->
+                                val sizedAvatar = avatarModifier.size(30.dp)
+                                if (account != null) AccountAvatar(account, sizedAvatar, exposeSemantics = false)
+                                else Avatar(sizedAvatar, description = null)
+                            },
                         )
-                        val selectedScale = rememberSelectedScale(selected)
-                        val itemModifier = if (item == Destination.Profile) {
-                            Modifier
-                                .size(48.dp)
-                                .springPress(interactionSource, pressedScale = scheme.compactPressedScale)
-                                .roundPressLayer(pressed, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
-                                .combinedClickable(
-                                    interactionSource = interactionSource,
-                                    indication = LocalIndication.current,
-                                    onClick = { onDestinationSelected(item) },
-                                    onLongClick = onOpenAccounts,
-                                )
-                        } else Modifier
-                            .size(48.dp)
-                            .springPress(interactionSource, pressedScale = scheme.compactPressedScale)
-                            .roundPressLayer(pressed, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
-                            .clickable(
-                                interactionSource = interactionSource,
-                                indication = LocalIndication.current,
-                            ) { onDestinationSelected(item) }
-                        Box(
-                            modifier = itemModifier.navigationButtonSemantics(label, selected),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (item == Destination.Profile) {
-                                val avatarModifier = Modifier.size(30.dp).graphicsLayer {
-                                    scaleX = selectedScale
-                                    scaleY = selectedScale
-                                }
-                                if (account != null) AccountAvatar(account, avatarModifier, exposeSemantics = false)
-                                else Avatar(avatarModifier, description = null)
-                            } else Icon(
-                                icon,
-                                null,
-                                Modifier.graphicsLayer {
-                                    scaleX = selectedScale
-                                    scaleY = selectedScale
-                                },
-                                tint = selectedTint,
-                            )
-                        }
+                    } else {
+                        NavigationButton(
+                            label = label,
+                            icon = icon,
+                            selected = selected,
+                            onClick = { onDestinationSelected(item) },
+                        )
                     }
                 }
             }

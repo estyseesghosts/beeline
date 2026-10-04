@@ -13,7 +13,8 @@ Do not push.
 # Decisions
 
 This task is larger than one safe implementation slice. Complete and commit each slice before the next.
-The orchestrator owns implementation, records, validation, and Git for each slice.
+Each slice has one implementation owner. The orchestrator owns records, validation, and Git.
+The maintainer requests no further problem_solver use. The orchestrator plans and reviews fixer-owned changes directly.
 
 Maintainer clarification (2026-10-04), required end state:
 
@@ -37,47 +38,52 @@ Maintainer clarification (2026-10-04), required end state:
 # Completed
 
 Phase 4A is complete: e9c0e2c, 6c0bd07, 90a132e; gate records 6e50217.
-The prior full gate passed with 96 actionable tasks. lintDebug passed.
-4B-1 is implemented, verified, and independently reviewed. The capsule owns one traveling indicator.
+4B-1 is complete at 0117210. The maintainer clarification is committed at 131b9a7.
+4B-2 is implemented, verified, and reviewed by the orchestrator independently of its fixer owner.
+NavigationButton shares tint, scale, press treatment, and semantics. NavigationCapsule shares material and indicator presentation.
+Compact navigation uses these components. A six-target vertical fixture verifies reuse; the production wide rail remains unchanged.
 
 # Current slice
 
-4B-1 is complete. The next slice is 4B-2: shared navigation presentation.
-Current owner: CompactContextualNavigationBar in CompactAppNavigation.kt.
-Smallest change surface: that component and CompactNavigationSelectionTest, plus records and navigation documentation.
-Acceptance: exactly one indicator before, during, and after selection; stable four button bounds;
-indicator settles beneath the selected item in LTR and RTL; reduced motion snaps; no callback on animation completion.
-Non-goals: button extraction, wide redesign, unread data wiring, IME/clearance changes, tab redesign.
+4B-2 is complete. The same fixer handled implementation and review repairs; it has no active edit assignment.
+The next slice is 4B-3: coordinate compact IME/system-bar placement and scroll-content clearance.
+Bound the destination owner map and smallest change surface before editing. The orchestrator owns this investigation.
+Keep clearance inside scroll content. Coordinate Search controls and the DM editor with navigation placement.
+Non-goals: production wide migration, adaptive activation, unread data wiring, tab redesign, and full-viewport padding.
 Fail gates: unexplained test failure, two failed fixes for one root problem, changed navigation ownership,
 unapproved geometry, or unrelated scope expansion. Stop and investigate before more edits.
 
 # Files involved
 
 - app/src/main/java/me/foxtails/palustris/ui/navigation/CompactAppNavigation.kt
-- app/src/test/java/me/foxtails/palustris/ui/navigation/CompactNavigationSelectionTest.kt
+- app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationPresentation.kt
+- app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationItem.kt (contract documentation only)
+- app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationPresentationTest.kt
 - docs/wiki/ui-and-navigation.md
 - docs/agents/app-shell-ownership.md
 - docs/agents/tasks/beeline-0.4.0.md
 - docs/agents/handoff.md
-- logs/261004-180000.txt (local, ignored)
+- logs/261004-190000.txt (local, ignored)
 
 # Verification
 
-CompactNavigationSelectionTest reports 3 passing tests. NavigationTest reports 34 passing tests.
-The feed package and WideNavigationTest grouped run passes.
-The full test assembleRelease --rerun-tasks gate passes: 96 executed tasks;
-152 suites, 1571 tests, zero failures, errors, or skipped tests. Release assembly succeeds.
-lintDebug passes. Independent review reports no blocking or required findings.
-The screenshot-enabled NavigationTest run passes. Home and Search fixture screenshots were visually inspected
-at app/build/ui-screenshots/. They show a single selected bubble behind the selected icon.
-These Robolectric captures do not verify device rendering.
+CompactNavigationSelectionTest and NavigationPresentationTest each report three passing tests.
+The screenshot-enabled navigation/feed/WideNavigationTest run passes: 11 suites, 165 tests, zero failures/errors/skips.
+The grouped run passes again after review repairs. Existing compact selection tests remain unchanged.
+The full test assembleRelease --rerun-tasks :app:lintDebug gate passes: 105 executed tasks;
+153 suites, 1574 tests, zero failures/errors/skips. Release assembly and lintDebug succeed.
+The final post-review test assembleRelease :app:lintDebug gate passes: 20 executed, 85 up-to-date tasks;
+the same 153 suites and 1574 tests pass. The orchestrator reviewed the fixer-owned diff and resolved required findings.
+Home and Search fixture screenshots were visually inspected at app/build/ui-screenshots/.
+They show one selected bubble behind the selected icon. Robolectric captures do not verify device rendering.
+Document links and slice whitespace checks pass. No baseline changed. No device state changed.
 Use the wrapper with --no-daemon --console=plain, explicit timeout, and closed stdin.
 Run test assembleRelease --rerun-tasks and :app:lintDebug before Phase 4B completion.
 Review the actual slice diff independently before each commit. Capture screenshots where available.
 
 # Next
 
-4B-2 — share button and capsule presentation without implementing the Phase 4C wide rail replacement.
+4B-3 — bound coordinated IME placement and scroll-content clearance before editing.
 Geometry investigation confirms that capsule placement, contextual docks, and scroll clearance must change together.
 The global IME policy must also coordinate the DM editor to prevent overlap. Bound that slice before editing.
 
@@ -90,6 +96,6 @@ and TalkBack remain unverified. Logs and the main plan are ignored; do not force
 
 # Last safe commit
 
-0117210 — Move one compact selection indicator between fixed navigation slots.
-Clarification slice subject: Record shared adaptive navigation and compact-wide emulator requirements.
-Resolve the clarification hash from Git. This documentation slice changes no application behavior.
+131b9a7 — Record shared adaptive navigation and compact-wide emulator requirements.
+Completed slice subject: Share navigation button and capsule presentation.
+Resolve the new slice hash from Git. Nothing was pushed.

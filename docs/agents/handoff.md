@@ -13,29 +13,32 @@ Read AGENTS.md and its required linked pages before continuing.
 
 Phase 4A is complete at 6e50217. Phase 4B is split before implementation:
 4B-1 traveling indicator, 4B-2 shared presentation, 4B-3 compact IME placement and scroll clearance.
-4B-1 is complete. Focused selection, navigation, feed, and wide navigation checks pass.
-The full test assembleRelease --rerun-tasks gate passes: 96 tasks, 1571 tests, zero failures.
-lintDebug passes. Independent review reports no blocking or required findings.
-Home and Search Robolectric fixture screenshots were captured and inspected.
-The next slice is 4B-2 shared presentation. Phase 4B is not complete.
+4B-1 and 4B-2 are complete. Compact navigation now uses shared NavigationButton and NavigationCapsule presentation.
+A six-button vertical fixture uses the same components. The production wide rail remains unchanged.
+Focused navigation/feed/wide checks pass: 165 tests. The full rerun gate passes: 105 tasks, 1574 tests, zero failures.
+The final post-review test assembleRelease and lintDebug gate also passes: 20 executed tasks, 85 up-to-date.
+The orchestrator independently reviewed fixer-owned changes and resolved required findings.
+Home and Search Robolectric fixture screenshots were captured and inspected. Device rendering remains unverified.
+Next: bound 4B-3 coordinated IME placement and scroll-content clearance. Phase 4B is not complete.
+Coordinate Search controls and the DM editor. Do not raise navigation alone or pad the full viewport.
+The fixer has no active edit assignment. The orchestrator owns planning, records, validation, and Git.
+The maintainer requests no further problem_solver use. Plan directly; targeted_fixer remains permitted for bounded work.
 All layouts must share underlying navigation components by completion. Compact-wide and tablet use
 the same vertical six-button presentation. Compact-narrow retains its existing four-button bar and layout.
 The available emulator is intended to simulate compact-wide. Do not use it as the narrow-phone baseline.
 The task state records the maintainer clarification and current width-policy gap.
-The orchestrator owns implementation, validation, records, and Git.
-Problem_solver investigations and reviews are read-only.
 
 ## Last safe commit
 
-0117210 — Move one compact selection indicator between fixed navigation slots.
-Documentation clarification follows with subject: Record shared adaptive navigation and compact-wide emulator requirements.
-Resolve its hash from Git. No application behavior changes in this clarification.
+131b9a7 — Record shared adaptive navigation and compact-wide emulator requirements.
+Completed slice follows with subject: Share navigation button and capsule presentation.
+Resolve its hash from Git. Nothing was pushed.
 
 ## Limits
 
 - The approved compact capsule remains 212 × 56 dp with four 48 dp targets.
-- 4B-1 changes only indicator presentation, not navigation state or contextual actions.
-- Shared vertical presentation, IME placement, and scroll-clearance changes remain planned.
+- 4B-2 shares presentation without changing navigation state, contextual actions, or unread wiring.
+- Production vertical activation, rail replacement, IME placement, and scroll-clearance changes remain planned.
 - API 29 smoke, restoration device checks, live-server behavior, signing, physical foldable behavior,
   and TalkBack remain unverified.
 - The connected emulator is the compact-wide simulation target. Narrow-phone device checks remain separate and unverified.

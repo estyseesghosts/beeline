@@ -63,15 +63,19 @@ Sources: `ui/navigation/ShellBackPolicy.kt`, `ui/PalustrisApp.kt`, `ShellBackPol
 
 The compact capsule keeps four fixed grouped positions and a separate contextual action.
 Search and Notifications show their remembered child icons while inactive.
-One capsule-owned selection indicator travels behind the buttons. Selection changes immediately;
+`NavigationButton` shares icon tint, scale, press treatment, and tab semantics.
+`NavigationCapsule` shares material and one traveling selection indicator across horizontal and vertical presentation.
+The compact bar supplies grouped items, profile content, and callbacks. Selection changes immediately;
 the animation does not navigate. Reduced motion moves the indicator without a spatial transition.
 The approved capsule stays 212 × 56 dp, with four 48 dp targets.
 RTL reverses logical slot placement without changing the selected destination.
 
-Sources: `ui/navigation/CompactAppNavigation.kt`, `ui/navigation/NavigationItem.kt`,
-`CompactNavigationSelectionTest`, `NavigationTest`.
-Verification: Compose tests cover stable bounds, interrupted selection, RTL, and 200% text.
-Physical rendering and TalkBack remain unverified. IME positioning and shared vertical presentation remain planned.
+Sources: `ui/navigation/CompactAppNavigation.kt`, `ui/navigation/NavigationPresentation.kt`,
+`ui/navigation/NavigationItem.kt`, `CompactNavigationSelectionTest`, `NavigationPresentationTest`, `NavigationTest`.
+Verification: Compose tests cover stable bounds, interrupted selection, RTL, reduced motion, and compact 200% text.
+A six-button vertical fixture uses the same presentation components. Its dimensions are test inputs, not approved production geometry.
+The production wide rail remains unchanged. Adaptive activation, rail replacement, and IME placement remain planned.
+Physical rendering and TalkBack remain unverified.
 
 ### Required adaptive end state
 
