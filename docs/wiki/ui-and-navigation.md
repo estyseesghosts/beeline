@@ -47,6 +47,23 @@ Sources: `ui/navigation/ShellNavigator.kt`, `ui/PalustrisApp.kt`,
 `ShellNavigatorTest`, `ShellNavigatorRestorationTest`, `SearchPanelRestorationTest`,
 `NavigationTest`.
 
+## Large panes and folding coordinates
+
+`LargeLayoutMode` currently chooses compact, single-pane, or expanded-pane behavior from
+600/840 dp window-width cutoffs. `LargeScreenShell` applies system-bar insets, then places the
+80 dp rail beside one destination host. Pane geometry uses the remaining content bounds.
+
+Material 3 Adaptive supplies folding-feature bounds in window coordinates. The shell translates
+those bounds into the pane-content pixel space. LTR content starts after the physical left inset
+and rail. RTL content starts after the physical left inset because the `Row` places the rail on
+the right. Separating and occluding features split safe regions; non-separating creases do not.
+
+Sources: `ui/large/LargeLayoutMode.kt`, `ui/large/LargeScreenShell.kt`,
+`LargeLayoutModeTest`.
+Verification: JVM tests characterize LTR/RTL coordinate translation and pane behavior. Device
+hinge coordinates remain unverified. Cutout, gesture, taskbar, stable-height, and production
+navigation-fit policy are not implemented yet.
+
 ## Back navigation
 
 `topSurfaceForBack` in `ui/navigation/ShellBackPolicy.kt` owns the dismissal order. The media

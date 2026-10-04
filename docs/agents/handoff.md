@@ -6,52 +6,46 @@ Last reviewed: 2026-10-04
 
 ## Continuation pointer
 
-Read [tasks/beeline-0.4.0.md](tasks/beeline-0.4.0.md) for the active Phase 4B task and serial slice plan.
-Read AGENTS.md and its required linked pages before continuing.
+Read [tasks/beeline-0.4.0.md](tasks/beeline-0.4.0.md) for the active Phase 4C slice plan and
+current implementation state. Read AGENTS.md and its required linked pages before continuing.
 
 ## Current position and next action
 
-Phase 4A is complete at 6e50217. Phase 4B is split before implementation:
-4B-1 traveling indicator, 4B-2 shared presentation, 4B-3 compact IME placement and scroll clearance.
-4B-1, 4B-2, and 4B-3 are complete. Phase 4B implementation is complete; device acceptance remains unverified.
-Compact navigation and destination controls share max(system-bar, IME) placement plus navigation clearance.
-Destination scroll content carries final-item clearance. The shell viewport stays full size.
-The DM editor reserves the same compact stack in its existing column; the thread uses normal spacing.
-Navigation state, callbacks, account switching, grouped icons, and production wide presentation remain unchanged.
-The screenshot-enabled focused gate passes: five suites, 103 tests, zero failures/errors/skips.
-Search and DM synthetic-IME screenshots were captured and inspected. Device rendering remains unverified.
-The orchestrator reviewed geometry, inset consumption, thread double counting, and wide behavior directly.
-The full test assembleRelease --rerun-tasks :app:lintDebug gate passes: 105 executed tasks, 1576 tests, zero failures/errors/skips.
-Release assembly, lintDebug, document links, and slice whitespace checks pass. Review has no unresolved required findings.
-Next: bound Phase 4C adaptive geometry and shared vertical navigation before editing.
-No fixer has an active edit assignment. The orchestrator owns implementation, records, validation, and Git.
-The maintainer requests no further problem_solver use. Plan directly; targeted_fixer remains permitted for bounded work.
-All layouts must share underlying navigation components by completion. Compact-wide and tablet use
-the same vertical six-button presentation. Compact-narrow retains its existing four-button bar and layout.
-The available emulator is intended to simulate compact-wide. Do not use it as the narrow-phone baseline.
-The task state records the maintainer clarification and current width-policy gap.
+Phase 4A and all Phase 4B slices are complete. 4C-1 is committed as
+`Characterize wide pane coordinate behavior`, preceded by `88044c3`. It adds a direction-aware
+window-to-pane coordinate transform and LTR/RTL hinge tests. Navigation presentation, pane-selection
+policy, and destination behavior remain unchanged. The orchestrator owns implementation, records,
+validation, review, and Git. The maintainer prohibits further `problem_solver` use for this task.
+
+The full test/build gate passes with 153 suites, 1,578 tests, zero failures/errors/skips, and
+successful release assembly. A second wrapper run also succeeded with Gradle tasks up to date.
+Next: 4C-2, implement recipient selection under the existing DM owner for a truthful New
+conversation action. Do not activate vertical navigation until geometry and destination-clearance
+gates pass. The task state records the serial slices, allowed files, validation, exit gates, and
+fail gates.
+
+Source inspection confirms that `LargeLayoutMode.kt` uses width-only 600/840 dp boundaries.
+`LargeScreenShell.kt` reserves an 80 dp rail and subtracts its physical offset from hinge coordinates.
+`PalustrisApp.kt` and `ShellContent.kt` reuse `largePresentation` for navigation, content, system
+bars, and back policy. `ShellNavigator` already remembers direct Photo Grid and DM selection.
+`DirectMessagesContract` starts a conversation only for a selected account; the inbox has no
+recipient finder. `LargeLayoutModeTest` now verifies the content origin in LTR and RTL. Production
+safe-region fit, gesture/cutout/taskbar insets, and device hinge behavior remain unverified.
 
 ## Last safe commit
 
-a318cc0 — Share navigation button and capsule presentation.
-Completed slice subject: Coordinate compact IME placement and scroll clearance.
-Resolve its new hash from Git. Nothing was pushed.
+`88044c3e78dd6a2cd6634059d4502f14a86d42b4` — Coordinate compact IME placement and scroll clearance.
+The 4C-1 checkpoint commit is `Characterize wide pane coordinate behavior`. Resolve its hash from Git.
+Nothing was pushed.
 
-## Limits
+## Limits and worktree caution
 
-- The approved compact capsule remains 212 × 56 dp with four 48 dp targets.
-- 4B-3 preserves navigation state, contextual actions, unread wiring, and shared presentation.
-- Production vertical activation and rail replacement remain Phase 4C. Measured high-font dock clearance remains Phase 4E.
-- API 29 smoke, restoration device checks, live-server behavior, signing, physical foldable behavior,
-  and TalkBack remain unverified.
-- The connected emulator is the compact-wide simulation target. Narrow-phone device checks remain separate and unverified.
-  No device state changed.
-- ktlintCheck retains pre-existing repository-wide findings. Do not change baselines.
-- Logs and the main plan are ignored. Do not force-add them without approval.
-
-## Worktree caution
-
-Preserve modified agent definitions and importantdocs/writing_style.md.
-Preserve the deleted Photo Grid test and PNGs.
-Preserve unrelated captures, ADB scripts, inspection folders, and caches.
-Stage only explicitly reviewed slice paths. Do not push.
+- No production vertical-capsule or contextual-action dimensions are approved. Reuse dimensions
+  from tested components and existing contracts. Ask the maintainer if fit policy needs a new value.
+- Device acceptance is not yet run. The available emulator is intended for compact-wide, not
+  narrow-phone acceptance.
+- API 29, physical foldable behavior, live-server behavior, signing, and TalkBack remain unverified.
+- Preserve modified agent definitions and `importantdocs/writing_style.md`.
+- Preserve deleted Photo Grid test/PNGs, untracked captures, ADB scripts, and caches.
+- The supplied `docs/agents/tasks/4c.md` is untracked user input. Do not stage it.
+- Stage only explicitly reviewed slice paths. Do not push.

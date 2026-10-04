@@ -185,6 +185,17 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   This remains planned; current `LargeLayoutMode` uses width-only 600/840 dp cutoffs.
   The available emulator is intended for compact-wide testing, not narrow-phone acceptance.
 
+- `LargeLayoutMode.kt` owns current wide pane and folding-feature geometry. `HingeInfo.bounds` is
+  translated from window pixels into the pane-content coordinate space by `LargeContentOriginPx`.
+  The current LTR content origin includes the left system inset and 80 dp rail; RTL includes the
+  physical left inset but not the rail, because the `Row` places that rail at physical right.
+  `calculateLargePaneLayout` removes separating or occluding features from safe pane regions and
+  ignores non-separating creases. Its 600/840 dp mode selection remains independent of the new
+  navigation-fit policy, which Phase 4C has not activated. System gesture, cutout, taskbar-safe
+  placement, stable IME-independent fit, and production capsule geometry remain unverified.
+  `LargeLayoutModeTest` characterizes the pixel transform and existing pane behavior; it does not
+  verify physical folding-device coordinates.
+
 - `NavigationButton` owns interaction presentation for its composition lifetime, not destination state.
   It shares selected tint, icon scale, press treatment, and tab semantics. Callers supply profile content and account switching.
   `NavigationCapsule` owns material and one traveling selection indicator for its composition lifetime.

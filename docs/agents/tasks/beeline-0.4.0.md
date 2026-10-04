@@ -1,113 +1,150 @@
 # Objective
 
-Complete Phase 4B-3: coordinated compact IME placement and scroll-content clearance.
+Complete Phase 4C: adaptive floating navigation shared by compact-wide and tablet layouts.
+Compact-narrow keeps its existing grouped navigation, destination tree, feature owners, and state.
 
 # Invariants
 
-Preserve unrelated worktree and index changes. Keep one navigator, four fixed compact groups,
-remembered child icons, profile account switching, and separate contextual actions.
-Use the approved 212 × 56 dp capsule and 48 dp targets. Use existing motion and geometry owners.
-Do not pad the full-screen viewport. Do not change baselines, deleted tests, or Phase 4C–4E behavior.
-Do not push.
+- Keep one `ShellNavigator`, one destination host, and the existing feature owners.
+- Compact-narrow keeps four grouped positions, its 212 × 56 dp capsule, four 48 dp targets, and separate 56 dp action.
+- Compact-wide and tablet share one vertical six-target presentation in the required order.
+- Preserve account switching, grouped child memory, back behavior, route restoration, queries, drafts, tabs, scroll positions, and feature lifetimes.
+- Keep navigation presentation separate from pane and back policy. Ignore IME height for permanent presentation.
+- Keep floating content visible underneath chrome. Put interactive and final-item clearance in actual content owners, not the full viewport.
+- Keep chip geometry separate from navigation exclusion. Preserve shared motion and reduced-motion behavior. Do not add backdrop blur.
+- Do not invent production geometry or widen scope. Preserve all unrelated worktree changes. Do not push.
 
 # Decisions
 
-This task is larger than one safe implementation slice. Complete and commit each slice before the next.
-Each slice has one implementation owner. The orchestrator owns records, validation, and Git.
-The maintainer requests no further problem_solver use. The orchestrator plans and reviews fixer-owned changes directly.
+This task is larger than one safe implementation slice. The orchestrator owns implementation,
+records, validation, review, and Git. The maintainer prohibits `problem_solver` use for this task.
+No fixer owns an active scope. Each slice remains serial and has the orchestrator as Git operator.
 
-Maintainer clarification (2026-10-04), required end state:
+Source characterization at `88044c3`:
 
-- Compact-narrow, compact-wide, and large/tablet share the underlying navigation components.
-  Complete this reuse by the end of the navigation work; intermediate slices may prepare it.
-- Compact-narrow always retains the existing four-button grouped bar and existing narrow layout.
-- Compact-wide and large/tablet use the same vertical, expanded six-button navigation presentation:
-  Home, Search, Photo Grid, Notifications, Direct Messages, Profile.
-  Tablet detail panes may differ; they do not justify separate navigation components or state.
-- The available virtual device is intended to simulate compact-wide. Use it for that acceptance target.
-  Do not treat its current rendering as evidence of the final layout policy or a narrow-phone baseline.
-- Current source still classifies presentation by width (600/840 dp in LargeLayoutMode.kt).
-  Compact-wide activation and the vertical container remain Phase 4C work, not completed 4B-1 behavior.
+- `LargeLayoutMode.kt` selects compact/single/expanded from 600/840 dp width cutoffs.
+- `LargeScreenShell.kt` applies system-bar padding, places an 80 dp rail beside content, and subtracts that rail plus insets from hinge coordinates.
+- Pane policy consumes post-rail content dimensions. Existing tests cover vertical/horizontal hinges, non-separating creases, minimum panes, and single-pane return.
+- `PalustrisApp.kt` and `ShellContent.kt` use one `largePresentation` value for navigation, screen presentation, system bars, and back policy.
+- `NavigationPresentation.kt` and `NavigationItem.kt` already render a reusable six-target vertical capsule fixture. Fixture dimensions are not production geometry.
+- `ShellNavigator.selectLargeTarget` already preserves the compact Search/Photo Grid and Notifications/DM child memory.
+- `DirectMessagesContract` only starts a conversation for a selected `Account`. Existing profile messaging supplies that recipient. The DM inbox has no recipient-selection flow.
+- Material 3 Adaptive 1.3.0 documents `HingeInfo.bounds` in window coordinates. The current LTR pane origin includes the physical left system inset and rail. In RTL the rail is physically right, so content begins at the left inset only.
 
-- 4B-1 — one traveling compact selection indicator. Keep button geometry, callbacks, and contextual actions unchanged.
-- 4B-2 — reusable navigation button and capsule presentation for horizontal and future vertical containers.
-  Do not replace the wide rail until Phase 4C. Preserve existing unread behavior without increasing height.
-- 4B-3 — consistent compact IME/system-bar placement and scroll-content clearance through existing geometry owners.
-  Confirm the destination owner map before editing. Split further if destination behaviors require independent gates.
+Navigation-fit policy for later activation:
+
+- Build stable safe regions from window geometry, drawing/gesture insets, and separating or occluding folding features. Ignore non-separating creases.
+- Ignore IME height when selecting permanent presentation. Keep pane/detail selection independent.
+- Use the actual shared capsule and contextual-action bounds. Select vertical navigation only when one safe region contains the full controls and leaves the approved useful content width. Otherwise keep compact navigation.
+- Anchor to the physical right edge of the eligible safe region. Do not add a report-derived aspect ratio, rail exclusion, or fixed production capsule size.
+- The useful-content minimum and any placement gap still need maintainer approval if they cannot be derived from existing tested values.
+- Initial Git state has unrelated modified agent definitions and writing style, deleted Photo Grid tests and PNGs, and untracked captures/scripts/caches. Preserve them. The supplied `docs/agents/tasks/4c.md` is untracked user input; do not stage it.
+
+# Slice plan
+
+## 4C-1 — Characterize window, pane, and hinge geometry
+
+- **Objective:** Record the current coordinate transforms and pane/hinge invariants. Define a geometry contract that separates navigation fit from detail-pane selection without activating new presentation.
+- **Owner and existing abstraction:** Orchestrator; `LargeLayoutMode.kt` owns pane and folding geometry, `LargeScreenShell.kt` assembles it, and `LargeLayoutModeTest.kt` verifies it.
+- **Allowed files:** `LargeLayoutMode.kt`, `LargeScreenShell.kt` only for a focused coordinate helper if tests require it, `LargeLayoutModeTest.kt`, this task state, handoff, app-shell ownership, UI/navigation wiki, and the local task log.
+- **Non-goals:** Production navigation activation, rail replacement, invented thresholds/dimensions, destination changes, DM behavior, and device state changes.
+- **Deliverables:** Characterization tests for window/content/hinge coordinates and existing pane behavior; a direction-aware content-origin transform; the safe-region/fit policy above; a recorded list of maintainer decisions if current evidence cannot determine them.
+- **Acceptance:** LTR/RTL hinge coordinates match the current rail placement. Separating/occluding hinges remain excluded, non-separating creases remain usable, and pane/detail policy remains independent of navigation fit. No navigation behavior changes.
+- **Validation:** Run `LargeLayoutModeTest`; check touched-document links and whitespace; inspect the full diff.
+- **Exit gates:** Characterization and full required test/build gate pass; no pane assumptions change without tests; geometry policy is recorded without claiming unapproved measures; affected docs and handoff are current.
+- **Fail gates:** Stop if folding-feature coordinates or safe-inset ownership cannot be established, a fit rule needs an unapproved measure, tests expose an unexplained regression, or scope expands.
+- **Git operator:** Orchestrator; commit only reviewed slice paths after validation.
+
+## 4C-2 — Add truthful DM recipient selection
+
+- **Objective:** Provide the wide DM `New conversation` action with a valid recipient-selection flow under the existing DM feature owner.
+- **Owner and existing abstraction:** Orchestrator; `DirectMessageViewModel`, `DirectMessagesHost`, and `DirectMessagesContract` own DM state and actions. The active source already supports account search.
+- **Allowed files:** Existing `ui/directmessages/` owner files, `ui/shell/DirectMessagesContract.kt`, relevant direct-message tests, task state, handoff, ownership/wiki pages, and local task log.
+- **Non-goals:** A new account/search owner, changes to send/session validation, arbitrary recipients, notification toggles, or composer substitution.
+- **Deliverables:** A cancelable recipient finder, explicit `Account` selection through the existing `startConversation(Account)` boundary, race/account guards, and tests that preserve existing conversation state when selection is canceled.
+- **Acceptance:** The action opens recipient selection; a selected account starts a valid DM; cancel does not erase an existing conversation/editor; no request escapes the active account source.
+- **Validation:** Focused direct-message ViewModel and Compose tests, then `test assembleRelease`.
+- **Exit gates:** Recipient lookup and selection stay with the current DM owner; all changed-state and cancellation tests pass; no existing send behavior changes.
+- **Fail gates:** Stop if source lookup cannot satisfy account/session ownership, cancellation loses user text, or a second owner/cache is proposed.
+- **Git operator:** Orchestrator; scoped commit after review and gates.
+
+## 4C-3 — Prepare shared vertical presentation and action rendering
+
+- **Objective:** Reuse the shared capsule/buttons vertically and make contextual action rendering reusable without production activation.
+- **Owner and existing abstraction:** Orchestrator; `NavigationButton`, `NavigationCapsule`, `WideNavigationItem`, and compact contextual action rendering own shared presentation.
+- **Allowed files:** `ui/navigation/NavigationPresentation.kt`, `NavigationItem.kt`, `CompactAppNavigation.kt`, `ui/large/LargeNavigationRail.kt`, focused navigation tests, task state, handoff, ownership/wiki pages, and local task log.
+- **Non-goals:** Activating compact-wide navigation, changing narrow dimensions or mappings, duplicating action rendering, and choosing unapproved production pill geometry.
+- **Deliverables:** One stateless vertical presentation over the existing six items, one reusable contextual action button, correct Profile avatar/long-press behavior, and LTR/RTL/reduced-motion/focus tests.
+- **Acceptance:** Shared visuals and one indicator remain authoritative; all targets stay at least 48 dp; narrow bounds and grouped actions remain unchanged.
+- **Validation:** Focused navigation presentation, compact selection, and wide-navigation tests; then `test assembleRelease`.
+- **Exit gates:** Reuse is proven by tests; no production rail behavior changes; action callback ownership remains in the shell/feature contract.
+- **Fail gates:** Stop if the capsule needs invented dimensions, shared component behavior changes compact geometry, or rendering is copied.
+- **Git operator:** Orchestrator; scoped commit after review and gates.
+
+## 4C-4 — Protect destinations from floating chrome
+
+- **Objective:** Pass right-side obstruction geometry through existing destination branches and keep interactive content and final items clear before activation.
+- **Owner and existing abstraction:** Orchestrator; shell owns shared geometry; Home, Search, Photo Grid, Notifications, DMs, and Profile own their scroll content and controls.
+- **Allowed files:** `ui/shell/ShellContent.kt`, `ShellDestinationContent.kt`, `AppShellState.kt`, `ui/layout/CompactOverlayMetrics.kt`, `ui/large/LargeBottomDock.kt`, `ui/feed/HomeFeed.kt`, `ui/search/SearchScreen.kt`, `ui/photogrid/PhotoGridScreen.kt`, `ui/notifications/NotificationsScreen.kt`, `ui/directmessages/DirectMessageInboxScreen.kt`, `DirectMessageConversationScreen.kt`, `ui/profile/ProfileScreen.kt`, `ProfileTimelineList.kt`, and their focused Compose tests. Include only needed callbacks and geometry types. Update task state, handoff, ownership/wiki pages, and local task log. Split independent destination gates into separate commits.
+- **Non-goals:** Full-viewport padding, tab redesign, chip travel/exclusion coupling, unrelated screen cleanup, and activating an overlapping rail/capsule.
+- **Deliverables:** Named right/bottom clearance inputs; per-surface tests for interactive bounds and fully reachable final content; preserved IME/query/editor behavior.
+- **Acceptance:** Surfaces retain full-size viewports and visual underlay; interactive controls and last content clear the measured obstruction; chips remain separate.
+- **Validation:** Focused Compose tests for each changed destination at compact-wide dimensions and applicable IME states; then `test assembleRelease`.
+- **Exit gates:** Every affected owner has a passing obstruction test; no known overlap remains; no viewport-wide exclusion padding is introduced.
+- **Fail gates:** Stop on any untested affected surface, unexplained failure, lost state, or overlap that requires an unapproved exclusion measurement.
+- **Git operator:** Orchestrator; one reviewed commit per bounded destination slice.
+
+## 4C-5 — Integrate safe placement and activate adaptive navigation
+
+- **Objective:** Replace the production rail with one safe-region floating vertical capsule/action and select presentation from stable window geometry.
+- **Owner and existing abstraction:** Orchestrator; `LargeLayoutMode.kt` remains the geometry owner, `PalustrisApp.kt` supplies window inputs, `LargeScreenShell.kt` places chrome/panes, and `ShellContent.kt` composes existing owners.
+- **Allowed files:** `ui/large/LargeLayoutMode.kt`, `LargeScreenShell.kt`, `LargeNavigationRail.kt`, `LargeBottomDock.kt`, `ui/PalustrisApp.kt`, `ui/SystemBars.kt`, `ui/navigation/ShellBackPolicy.kt`, `ShellNavigator.kt`, `NavigationPresentation.kt`, `NavigationItem.kt`, `CompactAppNavigation.kt`, `ui/shell/ShellContent.kt`, `ShellDestinationContent.kt`, `AppShellState.kt`, `DirectMessagesContract.kt`, affected DM owner files, and their focused geometry/navigation/restoration/destination tests. Update task state, handoff, ownership/wiki pages, and local task log.
+- **Non-goals:** Separate destination hosts/navigation state, automatic tablet detail behavior from vertical presentation, Phase 4D tabs, Phase 4E measurement redesign, and backdrop blur.
+- **Deliverables:** Geometry-driven compact/vertical presentation unaffected by IME; physical-right placement inside safe bounds; hinge-safe panes in one coordinate space; direct six-target navigation; truthful Photo Grid/DM actions; route/detail/back continuity tests.
+- **Acceptance:** 4C-1 through 4C-4 gates pass; no target intersects cutout, bars, gesture region, or structural hinge; pane and back policy remain independent; repeated resizing preserves all existing feature state.
+- **Validation:** Focused geometry, navigation, shell, restoration, and destination tests; required `test assembleRelease`; then `:app:lintDebug`; capture and inspect compact-wide emulator screenshots without changing device state beyond task-authorized navigation.
+- **Exit gates:** No known content overlap; geometry decisions are approved or derived from existing tested component/content values; full Phase 4C test gate and final review pass.
+- **Fail gates:** Stop for unapproved geometry, physical safe-region ambiguity, state reset, unexplained test failure, or any incomplete destination clearance.
+- **Git operator:** Orchestrator; commit only explicitly reviewed implementation and records. Do not push.
 
 # Completed
 
-Phase 4A is complete: e9c0e2c, 6c0bd07, 90a132e; gate records 6e50217.
-4B-1 is complete at 0117210. The maintainer clarification is committed at 131b9a7.
-4B-2 is complete at a318cc0, independently reviewed by the orchestrator against its fixer-owned diff.
-NavigationButton shares tint, scale, press treatment, and semantics. NavigationCapsule shares material and indicator presentation.
-Compact navigation uses these components. A six-target vertical fixture verifies reuse; the production wide rail remains unchanged.
-4B-3 is complete: compact placement and destination clearance share the IME/system-bar base.
-The DM editor clears navigation in its existing column. Phase 4B implementation is complete; device acceptance remains unverified.
+- Phase 4A, 4B-1, 4B-2, and 4B-3 are complete. The last safe commit is `88044c3`.
+- 4C-1 — direction-aware hinge/content coordinate characterization; commit subject `Characterize wide pane coordinate behavior`, preceded by `88044c3`.
+- `LargeLayoutModeTest` covers both coordinate directions and the existing pane/hinge policy. The full test/build gate reports 153 suites, 1,578 tests, zero failures/errors/skips; release assembly succeeds.
+- Navigation presentation, pane-selection policy, and destinations remain unchanged. RTL hinge translation now uses the physical content origin. Physical hinge behavior remains unverified.
 
 # Current slice
 
-4B-3 is implemented by the orchestrator. It has one implementation and Git owner; no child assignment exists.
-The bounded change uses max(system-bar, IME) as the compact base, then adds navigation and destination controls.
-The DM editor reserves the same compact navigation clearance in its existing column.
-The thread keeps normal content spacing because the editor already occupies its own space.
-Navigation state, callbacks, account switching, grouped icons, and wide production presentation remain unchanged.
-Focused checks, direct diff review, full rerun gate, and lint pass. This checkpoint includes the reviewed slice and records.
-Non-goals: production wide migration, adaptive activation, unread data wiring, tab redesign, and full-viewport padding.
-Fail gates: unexplained test failure, two failed fixes for one root problem, changed navigation ownership,
-unapproved geometry, or unrelated scope expansion. Stop and investigate before more edits.
+4C-2 adds recipient selection under the existing DM owner. The orchestrator owns implementation and Git. No child assignment exists.
+The preceding slice, 4C-1, is recorded in the checkpoint commit `Characterize wide pane coordinate behavior`, based on `88044c3`.
+Production vertical navigation remains inactive until geometry approval and destination-clearance gates pass.
 
 # Files involved
 
-- app/src/main/java/me/foxtails/palustris/ui/layout/CompactOverlayMetrics.kt
-- app/src/main/java/me/foxtails/palustris/ui/directmessages/DirectMessageConversationScreen.kt
-- app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationTest.kt
-- docs/wiki/ui-and-navigation.md
-- docs/agents/app-shell-ownership.md
-- docs/agents/tasks/beeline-0.4.0.md
-- docs/agents/handoff.md
-- logs/261004-210000.txt (local, ignored)
-
-# Owner map
-
-CompactOverlayMetrics owns compact geometry. ShellContent places navigation and Home tabs.
-Search, Photo Grid, Notifications, Profile, Home, and the DM inbox keep clearance inside scroll content.
-Search and Profile already pass IME insets. Other compact callers now use the same default IME policy.
-The DM conversation owns its in-flow editor and weighted thread. It does not have a floating filter dock.
-No feature state, protocol, persistence, account, or lifecycle boundary changes.
+- Current slice: `ui/large/LargeLayoutMode.kt`, `ui/large/LargeScreenShell.kt` if a tested coordinate helper is needed, `ui/large/LargeLayoutModeTest.kt`, task/handoff/ownership/wiki records, and local log.
+- Later slices use the scoped file lists above. Expand a destination into its own contract before editing if its behavior needs an independent gate.
 
 # Verification
 
-Screenshot-enabled focused gate passes: NavigationTest, DirectMessageScreenTest, PhotoGridScreenTest,
-WideNavigationTest, and HomeFeedTest. Five suites, 103 tests, zero failures/errors/skips.
-Search IME dismissal asserts a stable gap, visible navigation, and unchanged viewport bounds.
-Final-content tests cover Home, Search, Photo Grid, Notifications, Profile, and DM with IME open and closed.
-The new Home assertion initially failed because scrolling hides chrome. Two undersized reverse gestures failed to reveal it.
-The owner stopped and investigated. A gesture above touch slop now reveals chrome; the focused Home test passes.
-Search and DM synthetic-IME screenshots were captured and visually inspected at app/build/ui-screenshots/.
-Direct diff review checks shared geometry, inset consumption, DM double counting, and unchanged wide policy.
-The full test assembleRelease --rerun-tasks :app:lintDebug gate passes: 105 executed tasks.
-All 153 suites and 1576 tests pass with zero failures/errors/skips. Release assembly and lintDebug succeed.
-Document links and slice whitespace checks pass. Direct review has no unresolved required findings.
-No baseline or device state changed. Unrelated work remains intact.
-Use the wrapper with --no-daemon --console=plain, explicit timeout, and closed stdin.
-Run test assembleRelease --rerun-tasks and :app:lintDebug before Phase 4B completion.
-Review the actual slice diff before each commit. Capture screenshots where available.
+4C-1 focused `LargeLayoutModeTest` passes. The required `test assembleRelease` gate passes with 153 suites,
+1,578 tests, zero failures/errors/skips, and successful release assembly. A second wrapper run of `test assembleRelease` also completed successfully with its tasks up to date. Existing Phase 4B results remain historical evidence only.
+Use the repository wrapper with `--no-daemon --console=plain`, an explicit timeout, and closed stdin.
+Run `test assembleRelease` for each code slice. Run the complete Phase 4C rerun/lint gate before final completion.
 
 # Next
 
-Bound Phase 4C before editing: adaptive geometry, shared vertical navigation, and production rail replacement.
-Keep measured tab/filter/Search clearance work in Phase 4E after its dependencies.
+Implement the DM-owned recipient-selection flow for the truthful wide New conversation action.
 
 # Blockers
 
-ktlintCheck has pre-existing repository-wide findings. Do not change its baseline.
-The deleted Photo Grid test remains excluded from the available suite.
-API 29 smoke, device restoration, live-server behavior, signing, physical foldable behavior,
-and TalkBack remain unverified. Logs and the main plan are ignored; do not force-add them.
+- No production vertical capsule/action measurements are approved. Reuse only dimensions derived from the shared presentation and existing source contracts; ask the maintainer where fit policy requires a new value.
+- DM New conversation has no recipient-free start contract. Implement recipient selection only under the existing DM owner.
+- Device, physical foldable, API 29, live-server, signing, and TalkBack behavior remain unverified.
+- Preserve the existing unrelated worktree, deleted Photo Grid test/PNGs, captures, scripts, caches, and writing-style edits.
 
 # Last safe commit
 
-a318cc0 — Share navigation button and capsule presentation.
-Completed slice subject: Coordinate compact IME placement and scroll clearance.
-Resolve its new hash from Git. Nothing was pushed.
+`88044c3e78dd6a2cd6634059d4502f14a86d42b4` — Coordinate compact IME placement and scroll clearance.
+The 4C-1 checkpoint commit is `Characterize wide pane coordinate behavior`. Resolve its hash from Git.
+Nothing was pushed.

@@ -1,9 +1,12 @@
 package me.foxtails.palustris.ui.large
 
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.LayoutDirection
 import me.foxtails.palustris.ui.large.LargeFoldingFeature
 import me.foxtails.palustris.ui.large.LargeLayoutMode
 import me.foxtails.palustris.ui.large.calculateLargePaneLayout
+import me.foxtails.palustris.ui.large.largeContentOriginPx
+import me.foxtails.palustris.ui.large.largeFeatureBoundsInContentPx
 import me.foxtails.palustris.ui.large.largeLayoutMode
 import me.foxtails.palustris.ui.large.primaryPaneBounds
 import org.junit.Assert.assertEquals
@@ -12,6 +15,30 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LargeLayoutModeTest {
+    @Test
+    fun windowHingeCoordinatesTranslateIntoLtrContentAfterInsetsAndRail() {
+        val origin = largeContentOriginPx(
+            layoutDirection = LayoutDirection.Ltr,
+            railWidthPx = 80f,
+            leftInsetPx = 24f,
+            topInsetPx = 30f,
+        )
+
+        assertEquals(Rect(396f, 50f, 416f, 870f), largeFeatureBoundsInContentPx(Rect(500f, 80f, 520f, 900f), origin))
+    }
+
+    @Test
+    fun windowHingeCoordinatesTranslateIntoRtlContentFromPhysicalLeftInset() {
+        val origin = largeContentOriginPx(
+            layoutDirection = LayoutDirection.Rtl,
+            railWidthPx = 80f,
+            leftInsetPx = 24f,
+            topInsetPx = 30f,
+        )
+
+        assertEquals(Rect(476f, 50f, 496f, 870f), largeFeatureBoundsInContentPx(Rect(500f, 80f, 520f, 900f), origin))
+    }
+
     @Test
     fun widthPolicyKeepsCompactBoundaryAndExpandedBaseline() {
         assertEquals(LargeLayoutMode.Compact, largeLayoutMode(599f))

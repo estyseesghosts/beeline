@@ -1,6 +1,7 @@
 package me.foxtails.palustris.ui.large
 
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.LayoutDirection
 import kotlin.math.max
 import kotlin.math.min
 
@@ -16,6 +17,26 @@ internal data class LargeFoldingFeature(
     val isSeparating: Boolean,
     val isOccluding: Boolean,
 )
+
+/** The physical window-space origin of the rail-excluded pane content. */
+internal data class LargeContentOriginPx(val x: Float, val y: Float)
+
+/** Resolves the current content origin after system insets and the direction-aware rail. */
+internal fun largeContentOriginPx(
+    layoutDirection: LayoutDirection,
+    railWidthPx: Float,
+    leftInsetPx: Float,
+    topInsetPx: Float,
+): LargeContentOriginPx = LargeContentOriginPx(
+    x = leftInsetPx + if (layoutDirection == LayoutDirection.Ltr) railWidthPx else 0f,
+    y = topInsetPx,
+)
+
+/** Converts window-coordinate folding bounds to the pane-content coordinate space. */
+internal fun largeFeatureBoundsInContentPx(
+    windowBounds: Rect,
+    contentOrigin: LargeContentOriginPx,
+): Rect = windowBounds.translate(-contentOrigin.x, -contentOrigin.y)
 
 internal data class LargePaneLayout(
     val mode: LargeLayoutMode,

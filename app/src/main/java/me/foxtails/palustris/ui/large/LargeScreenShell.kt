@@ -63,8 +63,14 @@ internal fun LargeScreenShell(
             val railPx = with(density) { 80.dp.toPx() }
             val insetLeftPx = systemBars.getLeft(density, layoutDirection).toFloat()
             val insetTopPx = systemBars.getTop(density).toFloat()
+            val contentOrigin = largeContentOriginPx(
+                layoutDirection = layoutDirection,
+                railWidthPx = railPx,
+                leftInsetPx = insetLeftPx,
+                topInsetPx = insetTopPx,
+            )
             val features = adaptiveInfo.windowPosture.hingeList.map {
-                it.toLargeFeature(railPx, insetLeftPx, insetTopPx)
+                it.toLargeFeature(contentOrigin)
             }
             val layout = calculateLargePaneLayout(
                 windowWidthDp = windowWidth.value,
@@ -119,10 +125,9 @@ private fun PaneSlot(
     }
 }
 
-private fun HingeInfo.toLargeFeature(railPx: Float, insetLeftPx: Float, insetTopPx: Float): LargeFoldingFeature {
-    val pxBounds = bounds.translate(-(railPx + insetLeftPx), -insetTopPx)
+private fun HingeInfo.toLargeFeature(contentOrigin: LargeContentOriginPx): LargeFoldingFeature {
     return LargeFoldingFeature(
-        bounds = pxBounds,
+        bounds = largeFeatureBoundsInContentPx(bounds, contentOrigin),
         isVertical = isVertical,
         isSeparating = isSeparating,
         isOccluding = isOccluding,
