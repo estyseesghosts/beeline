@@ -5,11 +5,13 @@ import androidx.compose.ui.unit.LayoutDirection
 import me.foxtails.palustris.ui.large.LargeFoldingFeature
 import me.foxtails.palustris.ui.large.LargeLayoutMode
 import me.foxtails.palustris.ui.large.calculateLargePaneLayout
+import me.foxtails.palustris.ui.large.calculateNavigationFit
 import me.foxtails.palustris.ui.large.largeContentOriginPx
 import me.foxtails.palustris.ui.large.largeFeatureBoundsInContentPx
 import me.foxtails.palustris.ui.large.largeLayoutMode
 import me.foxtails.palustris.ui.large.primaryPaneBounds
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -155,5 +157,96 @@ class LargeLayoutModeTest {
         assertEquals(2, layout.safeRegions.size)
         assertNull(layout.detail)
         assertTrue(layout.primary.bottom <= 449f || layout.primary.top >= 451f)
+    }
+
+    @Test
+    fun wideWindowWithoutObstructionsFitsVerticalNavigation() {
+        val fit = calculateNavigationFit(
+            windowWidthDp = 800f,
+            windowHeightDp = 600f,
+            systemBarInsets = Rect(24f, 30f, 24f, 30f),
+        )
+
+        assertTrue(fit.useVerticalNavigation)
+        assertTrue(fit.safeRegion != null)
+    }
+
+    @Test
+    fun narrowWindowFallsBackToCompactNavigation() {
+        val fit = calculateNavigationFit(
+            windowWidthDp = 400f,
+            windowHeightDp = 800f,
+            systemBarInsets = Rect(24f, 30f, 24f, 30f),
+        )
+
+        assertFalse(fit.useVerticalNavigation)
+        assertNull(fit.safeRegion)
+    }
+
+    @Test
+    fun verticalHingePreventsVerticalNavigationWhenItSplitsContent() {
+        val fit = calculateNavigationFit(
+            windowWidthDp = 800f,
+            windowHeightDp = 600f,
+            systemBarInsets = Rect(24f, 30f, 24f, 30f),
+            foldingFeatures = listOf(
+                LargeFoldingFeature(Rect(379f, 0f, 381f, 540f), isVertical = true, isSeparating = true, isOccluding = false),
+            ),
+        )
+
+        assertFalse(fit.useVerticalNavigation)
+        assertNull(fit.safeRegion)
+    }
+
+    @Test
+    fun cutoutExclusionPreventsVerticalNavigationWhenItNarrowsContent() {
+        val fit = calculateNavigationFit(
+            windowWidthDp = 800f,
+            windowHeightDp = 600f,
+            systemBarInsets = Rect(24f, 30f, 24f, 30f),
+            cutoutBounds = Rect(400f, 0f, 800f, 600f),
+        )
+
+        assertFalse(fit.useVerticalNavigation)
+        assertNull(fit.safeRegion)
+    }
+
+    @Test
+    fun gestureExclusionPreventsVerticalNavigationWhenItNarrowsContent() {
+        val fit = calculateNavigationFit(
+            windowWidthDp = 800f,
+            windowHeightDp = 600f,
+            systemBarInsets = Rect(24f, 30f, 24f, 30f),
+            gestureInsets = Rect(0f, 0f, 0f, 200f),
+        )
+
+        assertFalse(fit.useVerticalNavigation)
+        assertNull(fit.safeRegion)
+    }
+
+    @Test
+    fun imeHeightDoesNotAffectNavigationFit() {
+        val fit = calculateNavigationFit(
+            windowWidthDp = 800f,
+            windowHeightDp = 600f,
+            systemBarInsets = Rect(24f, 30f, 24f, 30f),
+        )
+
+        assertTrue(fit.useVerticalNavigation)
+    }
+
+    @Test
+    fun nonSeparatingCreaseDoesNotPreventVerticalNavigation() {
+        val fit = calculateNavigationFit(
+            windowWidthDp = 800f,
+            windowHeightDp = 600f,
+            systemBarInsets = Rect(24f, 30f, 24f, 30f),
+            foldingFeatures = listOf(
+                LargeFoldingFeature(Rect(379f, 0f, 381f, 540f), isVertical = true, isSeparating = false, isOccluding = false),
+            ),
+        )
+
+        assertTrue(fit.useVerticalNavigation)
+        assertTrue(fit.safeRegion != null)
     }
 }

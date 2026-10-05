@@ -12,49 +12,34 @@ Read [tasks/beeline-0.4.0.md](tasks/beeline-0.4.0.md) for the separate Phase 4C 
 
 ## Current position and next action
 
-The Display layout direction switch is implemented and test verified. `AppLayoutDirection` is a
-three-value enum, `System`, `ForceRtl`, `ForceLtr`, stored as the enum name in
-`app-preferences.json`. `System` is the default for an absent or unknown key, so an upgrade cannot
-flip an existing user. `ui/LayoutDirectionPolicy.kt` owns the rule. `ConnectedApp` reads the device
-direction, resolves the override against it, and provides `LocalLayoutDirection`.
+Phase 4C-5 is in progress. 4C-5a (geometry and fit policy) is complete. Next: 4C-5b (capsule and
+action placement + wide DM action wiring).
 
-The Display item carries a headline only, because a supporting summary would need a third string.
-The label names the direction that turning the switch on produces, so it changes after the user
-switches. A page below the composition root must resolve against `deviceLayoutDirection()` and never
-against `LocalLayoutDirection.current`, because the published value is the forced direction there.
-The page uses the device direction for its label and toggle target.
+The navigation fit policy is implemented in `LargeLayoutMode.kt`. `calculateNavigationFit` builds
+safe regions from window geometry, system bar insets, gesture insets, cutout bounds, and separating
+or occluding folding features. It selects vertical navigation only when one safe region contains
+the full controls (64 dp width, 360 dp height) and leaves 360 dp useful content width. Otherwise
+it falls back to compact. IME height does not affect the fit. Pane and detail selection remain
+independent.
 
-The Display page also scrolls vertically. The page previously rendered a plain `Column` with no
-`verticalScroll`, so its content overflowed a short viewport and the trailing items were clipped and
-unreachable. That defect predates the switch. The new item added a row and made the clipping worse.
-The screen now owns a `rememberScrollState`, and the layout direction tests use the default short
-viewport and scroll the switch into view.
-
-A read-only audit of hard-coded physical sides confirms that `TextAlign` use is centered only, and it
-confirms all 26 `absolutePadding` call sites across 11 files stay physical and were not edited. All
-`Alignment` uses are logical. One pre-existing gap is now recorded rather than fixed: on a large
-foldable, a forced right-to-left layout can move a pane away from the physical hinge, because
-`LargeScreenShell` converts a physical `bounds.left` and applies it with direction-relative
-`Modifier.offset`. That needs a maintainer decision on a physical anchor and stays out of this slice.
-
-Next: decide whether to fix the foldable hinge offset, and start real right-to-left language support
-as a separate task. That work needs Arabic, Hebrew, Persian, or Urdu resources and an `AppLanguage`
-entry, which this task deliberately excludes.
+Approved maintainer decisions: useful-content minimum = 360 dp, placement gap = 8 dp, fit
+fallback = compact. The anchor is decoupled from LTR/RTL with two new display settings toggles
+(tablet default left, compact-wide default right).
 
 ## Last safe commit
 
-`Add Display page scroll fix`, based on `916aac4` — `Add Display layout direction toggle`.
+`Add navigation fit policy`, based on `8c5d879` — `Add Profile obstruction clearance`.
 Resolve this checkpoint's hash from Git. Nothing was pushed.
 
 ## Limits and worktree caution
 
 - Device rendering, real right-to-left language support, TalkBack, signing, and physical foldable
   behavior remain unverified. Beeline has no right-to-left translations today.
-- The foldable hinge offset gap above is unfixed and unverified on a device.
-- Other settings sub-pages are not checked for the same missing-scroll defect. `SettingsScreen` and
-  the other route branches in `SettingsHost` were not audited for this.
+- The connected simulated device is the goalpost (Galaxy Z Fold 8). The simulator does not have a
+  correctly sized internal screen. Internal-screen behavior is verified through JVM tests at tablet
+  dimensions. Both form factors must be tested: outside screen (compact-wide phone) and inside
+  screen (tablet square sized). The outer screen must show the new vertical navigation layout.
 - Physical-device IME and API 29 behavior remain unverified.
-- No production floating-navigation geometry is approved. Do not invent clearance or fit values.
 - One pre-existing flake exists: `MastodonIntegrationTest cancelingTimelinePageCancelsRequestAndAllowsRetry`
   can fail with `IOException: Gave up waiting for queue to shut down`. It passes in isolation and is unrelated
   to this work. Record it separately; do not weaken it.

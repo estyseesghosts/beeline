@@ -218,6 +218,13 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   placement, stable IME-independent fit, and production capsule geometry remain unverified.
   `LargeLayoutModeTest` characterizes the pixel transform and existing pane behavior; it does not
   verify physical folding-device coordinates.
+- `calculateNavigationFit` in `LargeLayoutMode.kt` owns the navigation fit policy. It builds safe
+  regions from window geometry, system bar insets, gesture insets, cutout bounds, and separating or
+  occluding folding features. It selects vertical navigation only when one safe region contains
+  the full controls (64 dp width, 360 dp height) and leaves 360 dp useful content width. Otherwise
+  it falls back to compact. IME height does not affect the fit. Pane and detail selection remain
+  independent. `LargeLayoutModeTest` covers wide, narrow, hinge, cutout, gesture, IME, and
+  non-separating crease scenarios.
 
 - `NavigationButton` owns interaction presentation for its composition lifetime, not destination state.
   It shares selected tint, icon scale, press treatment, and tab semantics. Callers supply profile

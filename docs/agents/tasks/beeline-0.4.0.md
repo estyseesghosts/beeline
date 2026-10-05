@@ -142,6 +142,14 @@ Navigation-fit policy for later activation:
 # Completed
 
 - Phase 4A, 4B-1, 4B-2, and 4B-3 are complete. The pre-4C safe commit was `88044c3`.
+- 4C-5a — geometry and fit policy. Commit subject `Add navigation fit policy`, preceded by `8c5d879`.
+  - Focused `LargeLayoutModeTest` passes: 17 tests. Full `test assembleRelease` passes with 158 suites,
+    1,635 tests, zero failures/errors/skips, and successful release assembly.
+  - `calculateNavigationFit` builds safe regions from window geometry, system bar insets, gesture insets,
+    cutout bounds, and separating or occluding folding features. It selects vertical navigation only when
+    one safe region contains the full controls (64 dp width, 360 dp height) and leaves 360 dp useful
+    content width. Otherwise it falls back to compact. IME height does not affect the fit. Pane and
+    detail selection remain independent.
 - 4C-1 — direction-aware hinge/content coordinate characterization; commit `1dc1d39`, `Characterize wide pane coordinate behavior`, preceded by `88044c3`.
 - `LargeLayoutModeTest` covers both coordinate directions and the existing pane/hinge policy. The full test/build gate reports 153 suites, 1,578 tests, zero failures/errors/skips; release assembly succeeds.
 - Navigation presentation, pane-selection policy, and destinations remain unchanged. RTL hinge translation now uses the physical content origin. Physical hinge behavior remains unverified.
@@ -221,14 +229,97 @@ Navigation-fit policy for later activation:
 
 # Current slice
 
-## Next slice — 4C-5 activation gate
+## 4C-5 sub-slice plan
 
-- **Objective:** Replace the production rail with one safe-region floating vertical capsule and contextual action, and select presentation from stable window geometry.
-- **Status:** Not started. All seven destination-clearance slices are complete, so 4C-5 has no unfinished clearance contract.
-- **Owner and existing abstraction:** Orchestrator; `LargeLayoutMode.kt` owns geometry, `PalustrisApp.kt` supplies window inputs, `LargeScreenShell.kt` places chrome and panes, and `ShellContent.kt` composes the existing owners.
-- **Open decisions:** The useful-content minimum and any placement gap still need maintainer approval. Reuse only dimensions derived from the shared presentation and existing source contracts. Confirm the physical-right anchor against the RTL rail placement before editing.
-- **Non-goals:** New production obstruction values, destination clearance changes, Phase 4D tabs, Phase 4E measurement redesign, and backdrop blur.
-- **Validation:** Record the 4C-5 contract before editing, then run focused geometry, navigation, shell, restoration, and destination tests, the required `test assembleRelease`, and `:app:lintDebug`.
+This task is larger than one safe implementation slice. Four sub-slices, each with its own contract,
+allowed files, exit gates, fail gates, validation, and commit.
+
+### 4C-5a — Geometry and fit policy
+
+- **Objective:** Build stable safe regions from window geometry, drawing/gesture insets, and separating
+  or occluding folding features. Determine if the vertical capsule + contextual action can fit in a
+  safe region. Select presentation (compact vs vertical) from stable window geometry.
+- **Approved decisions:** Useful-content minimum = 360 dp. Placement gap = 8 dp. Fit fallback = compact.
+- **Owner and existing abstraction:** Orchestrator; `LargeLayoutMode.kt` owns geometry.
+- **Allowed files:** `ui/large/LargeLayoutMode.kt`, `LargeLayoutModeTest.kt`, task state, handoff,
+  app-shell ownership, UI/navigation wiki, and local task log.
+- **Non-goals:** Production navigation activation, rail replacement, destination changes, DM behavior,
+  display settings toggles, and device state changes.
+- **Deliverables:** Safe-region calculation from window geometry, drawing/gesture insets, and folding
+  features. Fit policy that selects vertical vs compact presentation. IME-independent fit. Pane/detail
+  selection remains independent of navigation fit.
+- **Acceptance:** Safe regions exclude cutout, gesture, and structural hinge areas. Fit policy selects
+  vertical only when one safe region contains the full controls and leaves 360 dp useful content.
+  Otherwise falls back to compact. IME height does not affect permanent presentation.
+- **Validation:** Run `LargeLayoutModeTest`; check touched-document links and whitespace; inspect the full diff.
+- **Exit gates:** Safe-region and fit policy tests pass; no pane assumptions change without tests; geometry
+  policy is recorded without claiming unapproved measures; affected docs and handoff are current.
+- **Fail gates:** Stop if folding-feature coordinates or safe-inset ownership cannot be established,
+  a fit rule needs an unapproved measure, tests expose an unexplained regression, or scope expands.
+- **Git operator:** Orchestrator; commit only reviewed slice paths after validation.
+
+### 4C-5b — Capsule and action placement + wide DM action wiring
+
+- **Objective:** Replace the production rail with the floating vertical capsule and contextual action.
+  Place the capsule at the configured edge. Wire the wide New conversation action to `DirectMessagesContract`.
+- **Owner and existing abstraction:** Orchestrator; `LargeScreenShell.kt` places chrome/panes,
+  `ShellContent.kt` composes existing owners, `WideNavigationPresentation` and
+  `ContextualNavigationActionButton` own shared presentation.
+- **Allowed files:** `ui/large/LargeScreenShell.kt`, `LargeNavigationRail.kt`, `ui/PalustrisApp.kt`,
+  `ui/shell/ShellContent.kt`, `ShellDestinationContent.kt`, `DirectMessagesContract.kt`, affected DM
+  owner files, focused geometry/navigation tests, task state, handoff, ownership/wiki pages, and local task log.
+- **Non-goals:** Display settings toggles, destination clearance changes, Phase 4D tabs, Phase 4E
+  measurement redesign, and backdrop blur.
+- **Deliverables:** Floating vertical capsule replaces the rail. Capsule placed at the configured edge
+  with 8 dp gap. Contextual action below the capsule. Wide DM action wired to `DirectMessagesContract`.
+- **Acceptance:** No target intersects cutout, bars, gesture region, or structural hinge. Six-target
+  order preserved. DM action opens recipient finder.
+- **Validation:** Focused geometry, navigation, shell, and DM tests; then `test assembleRelease`.
+- **Exit gates:** Capsule placement is safe in both layout directions; DM action is wired; full test/build
+  gate passes.
+- **Fail gates:** Stop for unapproved geometry, physical safe-region ambiguity, state reset, unexplained
+  test failure, or any incomplete destination clearance.
+- **Git operator:** Orchestrator; commit only explicitly reviewed implementation and records.
+
+### 4C-5c — Display settings toggles for anchor position
+
+- **Objective:** Add two new display settings toggles for the navigation anchor position (left/right).
+  Tablet (expanded) defaults to left. Compact-wide (single) defaults to right.
+- **Owner and existing abstraction:** Orchestrator; `AppLayoutDirection` and `DisplaySettingsScreen`
+  own display settings. `AppPreferences` owns persisted preferences.
+- **Allowed files:** `domain/AppPreferences.kt`, `ui/settings/DisplaySettingsScreen.kt`,
+  `ui/LayoutDirectionPolicy.kt`, `ui/ConnectedApp.kt`, focused display settings tests, task state,
+  handoff, ownership/wiki pages, and local task log.
+- **Non-goals:** Navigation activation, capsule placement, destination changes, and device state changes.
+- **Deliverables:** Two new toggle settings for anchor position. Defaults: tablet=left, compact-wide=right.
+  Settings persist and apply to the shell.
+- **Acceptance:** Settings persist across recomposition. Defaults are correct. Shell reads the setting.
+- **Validation:** Focused display settings tests; then `test assembleRelease`.
+- **Exit gates:** Settings persist and apply; defaults are correct; full test/build gate passes.
+- **Fail gates:** Stop if settings cannot persist, defaults are wrong, or scope expands.
+- **Git operator:** Orchestrator; commit only explicitly reviewed implementation and records.
+
+### 4C-5d — Activation switch with full gates
+
+- **Objective:** Pass real clearance values from `PalustrisApp` through `ShellContent` to all destinations.
+  Verify all seven destinations under real values. Run full test gate and lint.
+- **Owner and existing abstraction:** Orchestrator; `PalustrisApp.kt` supplies window inputs,
+  `ShellContent.kt` composes existing owners.
+- **Allowed files:** `ui/PalustrisApp.kt`, `ui/shell/ShellContent.kt`, `ShellDestinationContent.kt`,
+  `AppShellState.kt`, focused geometry/navigation/restoration/destination tests, task state, handoff,
+  ownership/wiki pages, and local task log.
+- **Non-goals:** New production obstruction values, destination clearance changes, Phase 4D tabs,
+  Phase 4E measurement redesign, and backdrop blur.
+- **Deliverables:** Real clearance values flow from the shell into each destination. All destinations
+  verified under real values. Full test gate and lint pass.
+- **Acceptance:** All seven destinations consume real clearance values. No known content overlap.
+  Full Phase 4C test gate and final review pass.
+- **Validation:** Focused geometry, navigation, shell, restoration, and destination tests; required
+  `test assembleRelease`; then `:app:lintDebug`; capture and inspect compact-wide emulator screenshots.
+- **Exit gates:** No known content overlap; geometry decisions are approved or derived from existing
+  tested component/content values; full Phase 4C test gate and final review pass.
+- **Fail gates:** Stop for unapproved geometry, physical safe-region ambiguity, state reset, unexplained
+  test failure, or any incomplete destination clearance.
 - **Git operator:** Orchestrator; commit only explicitly reviewed implementation and records. Do not push.
 
 # Files involved

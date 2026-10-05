@@ -241,8 +241,15 @@ the right. Separating and occluding features split safe regions; non-separating 
 Sources: `ui/large/LargeLayoutMode.kt`, `ui/large/LargeScreenShell.kt`,
 `LargeLayoutModeTest`.
 Verification: JVM tests characterize LTR/RTL coordinate translation and pane behavior. Device
-hinge coordinates remain unverified. Cutout, gesture, taskbar, stable-height, and production
-navigation-fit policy are not implemented yet.
+hinge coordinates remain unverified.
+
+`calculateNavigationFit` in `LargeLayoutMode.kt` owns the navigation fit policy. It builds safe
+regions from window geometry, system bar insets, gesture insets, cutout bounds, and separating or
+occluding folding features. It selects vertical navigation only when one safe region contains
+the full controls (64 dp width, 360 dp height) and leaves 360 dp useful content width. Otherwise
+it falls back to compact. IME height does not affect the fit. Pane and detail selection remain
+independent. `LargeLayoutModeTest` covers wide, narrow, hinge, cutout, gesture, IME, and
+non-separating crease scenarios. Production activation and rail replacement remain planned.
 
 ## Back navigation
 
