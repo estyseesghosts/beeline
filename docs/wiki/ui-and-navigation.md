@@ -2,7 +2,7 @@
 
 Status: current, partial coverage
 Owner: UI maintainers
-Last reviewed: 2026-10-04
+Last reviewed: 2026-10-05
 Stale when: A destination, layout policy, restoration rule, or accessibility requirement changes.
 
 Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
@@ -134,6 +134,26 @@ The application still supplies zero values because floating navigation is inacti
 Sources: `ui/search/SearchScreen.kt`, `ui/shell/ShellDestinationContent.kt`, `SearchClearanceTest`.
 Focused Compose tests verify viewport and divider bounds, interaction and dock clearance, final-content reach,
 chip selection, retained list position, synthetic IME open and close, branch forwarding, and compact
+compatibility. Device rendering and production obstruction geometry remain unverified.
+
+## Wide Photo Grid clearance
+
+Photo Grid keeps its full-size grid viewport. Tiles, the load-older control, the paging-error surface,
+the up-to-date label, and the empty state clear shell-supplied physical right in LTR and RTL.
+A tile is opaque media and one click target, so the clearance goes into the grid's own content inset
+instead of inside each tile. A per-tile inset would leave an untappable strip in every lane.
+Adaptive lanes recalculate for the narrower content area. Tile media no longer passes under floating chrome.
+The full-screen error state keeps its full-size viewport and clears only its retry content.
+
+Bottom clearance extends the wide grid end spacing. The wide filter-chip dock clears physical right and sits
+above that obstruction, the same way the Home timeline dock does. Chips keep their own scrolling and selection
+behavior, and clearance does not set chip travel. Compact Photo Grid ignores both wide inputs and keeps its
+contextual-control placement and scroll clearance. The application still supplies zero values because floating
+navigation is inactive.
+
+Sources: `ui/photogrid/PhotoGridScreen.kt`, `ui/shell/ShellDestinationContent.kt`, `PhotoGridClearanceTest`.
+Focused Compose tests verify tile and reveal bounds, continuation and retry callbacks, final-tile reach, dock
+position and clearance, chip and hashtag selection, branch forwarding, retained grid position, and compact
 compatibility. Device rendering and production obstruction geometry remain unverified.
 
 ## Large panes and folding coordinates

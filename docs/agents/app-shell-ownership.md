@@ -7,9 +7,10 @@ C-05, C-06a, C-06b, C-06c, C-07, C-08, C-09, C-10, C-11, C-12a through C-12d4, C
 C-14, and C-15 are implemented and test verified. Steps 13, 14, and 15 of the progress
 report are complete. No dead scaffolding remains.
 
-**Last reviewed:** 2026-10-04.
+**Last reviewed:** 2026-10-05.
 
 **Source baseline:** `b629a2c` (planning). Status refreshed against `c9e06c8`.
+Phase 4C-4 clearance invariants below are recorded through the Photo Grid slice.
 
 **Evidence:** source verified. R02 verifies the shell draft fixture with NavigationTest,
 ComposerOwnerTest, and ShellCharacterizationTest. Device and live-server behavior remain unverified.
@@ -253,6 +254,24 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `compactContextualControlsPositioningInsets` and `compactScrollEndClearance`.
   `SearchClearanceTest` verifies synthetic LTR/RTL bounds, row and divider underlay, account row and continuation callbacks,
   final result reach, dock stability, chip selection, branch forwarding, retained list position, and compact IME compatibility.
+  Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
+
+- `ShellDestinationContent` forwards both shell clearances to Photo Grid without changing its feed, preference,
+  or grid-state owners.
+  `PhotoGridScreen` clears physical right through the staggered grid's own absolute content inset. A tile is opaque
+  media and one click target, so a per-tile inset would leave a dead strip inside every lane. Its
+  `photo_grid_content` viewport keeps the full size, and the adaptive lanes stay adaptive.
+  Tiles, the load-older control, the paging-progress item, the paging-error surface, the up-to-date label, and the
+  empty state therefore clear physical right in LTR and RTL. Tile media no longer passes under floating chrome.
+  The full-screen error state keeps its full-size viewport and clears only its retry content.
+  Bottom clearance adds to the wide grid end spacing. The wide filter-chip dock clears physical right and sits above
+  supplied bottom obstruction, matching `HomeFeed`. Photo Grid has no measured dock height.
+  `FilterChipRow` retains chip travel, chip selection, and the add-hashtag entry. Obstruction clearance sets no chip travel.
+  Compact Photo Grid ignores both inputs and keeps `compactContextualControlsPositioningInsets`,
+  `compactScrollEndClearance`, and `CompactFilterDockHeight`.
+  `PhotoGridClearanceTest` verifies synthetic LTR/RTL bounds, tile and reveal control bounds, continuation and retry
+  callbacks, final-tile reach, dock position and clearance, chip and hashtag selection, branch forwarding, retained
+  grid position, and compact compatibility.
   Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
 
 - A contract carries no session secret, access token, source, repository, or ViewModel.

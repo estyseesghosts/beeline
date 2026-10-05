@@ -275,6 +275,8 @@ internal fun ShellDestinationContent(
                                         onOpenPost = { post -> navigationCallbacks.onOpenPost(post, LargePostOrigin.PhotoGrid) },
                                         compactLayout = !largePresentation,
                                         compactNavigationVisible = !largePresentation,
+                                        rightObstructionClearance = rightObstructionClearance,
+                                        bottomObstructionClearance = bottomObstructionClearance,
                                         gridState = photoGridScrollState,
                                     )
                                 }

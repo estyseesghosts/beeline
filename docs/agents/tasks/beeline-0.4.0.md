@@ -168,40 +168,51 @@ Navigation-fit policy for later activation:
 - Full `test assembleRelease` passes with 155 suites, 1,607 tests, zero failures/errors/skips, and successful release assembly.
 - Hashtag rows, account rows, the continuation item, chips, and the field clear physical right in LTR/RTL.
   Viewports, outer rows, and dividers keep their width. The wide dock keeps its placement and measured height.
+- 4C-4 Photo Grid clearance — commit subject `Add Photo Grid obstruction clearance`, preceded by `5579742`.
+- Focused `PhotoGridClearanceTest` passes: 9 tests. Existing suites pass unchanged: `PhotoGridScreenTest` 8,
+  `PhotoGridOwnerTest` 10, `SearchClearanceTest` 8, `HomeClearanceTest` 7, `DirectMessageScreenTest` 22,
+  `NavigationTest` 36.
+- Full `test assembleRelease` passes with 156 suites, 1,616 tests, zero failures/errors/skips, and successful
+  release assembly.
+- Photo Grid keeps its full-size `photo_grid_content` viewport. Tiles, the load-older control, the paging-error
+  surface, the up-to-date label, and the empty state clear physical right in LTR/RTL through the grid content inset.
+- The maintainer chose the grid content inset over a per-tile click-bound inset. A tile is opaque media and one
+  click target, so a per-tile inset would leave an untappable strip in every lane. Tile media therefore no longer
+  passes under floating chrome. This is the only deviation from the row-underlay rule in the clearance slices.
+- The wide filter-chip dock clears physical right and sits above bottom obstruction, matching `HomeFeed`. The grid
+  end spacing grows by the same value. Chip travel and chip selection keep their own owners.
+- Compact Photo Grid ignores both inputs. Saved hashtags, timeline selection, feed state, and supplied grid state
+  keep their owners. Production clearances remain zero. Floating navigation remains inactive.
 
 # Current slice
 
-## Search destination-clearance contract
+## Photo Grid destination-clearance contract
 
-- **Objective:** Clear wide Search interaction content, the wide dock controls, and final content from future floating navigation. Keep the dock, its chips, the query, and the IME policy unchanged.
-- **Current behavior:** `SearchScreen` owns a full-size `Box`. `SearchContent` holds the animated result panes. A bottom control stack holds `CategoryChips` and `SearchField`. Wide layout places that stack in a `LargeBottomDock` at `Alignment.BottomStart`. Its measured height supplies `largeDockClearance`; `LargeSearchDockClearance` (144 dp) covers the first frame. Compact layout places the stack at `Alignment.BottomCenter` with `CompactOverlayHorizontalPadding` and `compactContextualControlsPositioningInsets`, and takes its end clearance from `compactScrollEndClearance(CompactSearchDockHeight, ...)`. Wide results have no physical-right clearance and no supplied bottom clearance today.
-- **Current owners and callers:** `SearchOwner` and `SearchContract` own query, category, results, and paging. `ShellNavigator` owns `searchQuery`, `searchCategory`, `searchPrefill`, and `searchPanel`. `ShellDestinationContent` forwards state, layout flags, and `searchListState`. `SearchContent`, `HashtagSearchResults`, and `AccountSearchResults` own their panes. `LargeBottomDock` owns the wide dock box and its 12 dp spacing. `CategoryChips` owns chip travel and selection. `SearchField` owns the text, the search IME action, and the clear action.
+- **Objective:** Clear wide Photo Grid tiles, feed controls, and final items from future floating navigation. Keep the feed owner, saved hashtag preferences, timeline selection, chip travel, and compact geometry unchanged.
+- **Current behavior:** `PhotoGridScreen` owns a full-size `Box` with an inner full-size content box. That inner box renders `PhotoGridLoading`, `PhotoGridError`, or `LazyVerticalStaggeredGrid`. The grid uses `StaggeredGridCells.Adaptive(150.dp)` and 3 dp item spacing. Its `contentPadding` supplies only `bottom = bottomClearance + 3.dp`. `bottomClearance` is `compactScrollEndClearance(CompactFilterDockHeight, ...)` in compact layout and the `LargeBottomDockClearance` constant in wide layout. Full-line items follow the tiles: the paging progress indicator, the paging-error surface, the load-older control, the up-to-date label, and the empty state. A wide `LargeBottomDock` at `Alignment.BottomStart` holds the `FilterChipRow`. Compact layout places the chip row at `Alignment.BottomCenter` with `CompactOverlayHorizontalPadding` and `compactContextualControlsPositioningInsets`. Wide tiles, controls, and the chip dock have no physical-right clearance and no supplied bottom clearance today.
+- **Current owners and callers:** `PhotoGridOwner` and `PhotoGridContract` own the independent feed state, saved hashtags, timeline selection, and paging. `ShellNavigator` owns `searchPanel`, which selects `SearchPanel.PhotoGrid`, and it owns the shared `photoGridScrollState`. `ShellDestinationContent` forwards state, layout flags, and `gridState`. `PhotoGridTile` owns one tile, its reveal state, its click target, and its test tag. `LargeBottomDock` owns the wide dock box and its 12 dp spacing. `FilterChipRow` owns chip travel, chip selection, and the add-hashtag entry.
 - **Implementation owner:** Orchestrator. No child session owns a scope. The orchestrator also performs direct review and Git operations.
-- **Exact allowed source paths:** `app/src/main/java/me/foxtails/palustris/ui/search/SearchScreen.kt`; `app/src/main/java/me/foxtails/palustris/ui/shell/ShellDestinationContent.kt` (Search panel branch only).
-- **Exact allowed test path:** `app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt` (new focused Compose coverage).
+- **Exact allowed source paths:** `app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridScreen.kt`; `app/src/main/java/me/foxtails/palustris/ui/shell/ShellDestinationContent.kt` (`SearchPanel.PhotoGrid` branch only).
+- **Exact allowed test path:** `app/src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridClearanceTest.kt` (new focused Compose coverage). The deleted `PhotoGridFeedViewModelTest.kt` is unrelated work and stays deleted.
 - **Exact allowed records:** `docs/agents/tasks/beeline-0.4.0.md`; `docs/agents/handoff.md`; `docs/agents/app-shell-ownership.md`; `docs/wiki/ui-and-navigation.md`; one ignored local task log under `logs/`.
-- **Forbidden files:** All other files. This includes the Photo Grid screen and branch, the completed DM and Home files and tests, `CategoryChips.kt`, `LargeBottomDock.kt`, `CompactOverlayMetrics.kt`, `SearchOwner.kt`, `SearchHost.kt`, `ShellNavigator.kt`, compact navigation geometry, safe-region policy, and resources. Preserve all pre-existing modifications, deletions, and untracked files.
-- **Physical-right invariant:** `SearchScreen` accepts shell-supplied physical-right and bottom `Dp` values and calculates neither. Wide layout applies physical-right clearance inside hashtag `PostRow` content, inside account result rows, inside the result continuation item, and to the wide dock. It does not shrink the content viewport, the outer row extent, list dividers, empty states, or loading indicators, and it adds no opaque surface. Physical right does not reverse with the layout direction.
-- **Bottom invariant:** Wide bottom clearance adds to the resolved result end spacing only. The wide dock keeps its `BottomStart` placement, its `LargeBottomDock` 12 dp spacing, its measured height, and the 144 dp fallback. Obstruction clearance never changes the measured dock height.
-- **Dock and IME invariant:** The maintainer requires that bottom clearance must not move the dock or the search field. This slice adds no IME inset and changes no compact inset. `compactContextualControlsPositioningInsets`, `compactScrollEndClearance`, `CompactSearchDockHeight`, chip travel, chip selection, shared and local query, `initialQuery`, `listState`, and the shell query and category owners keep their current behavior. Wide Search keeps its current IME behavior, which applies no field inset.
-- **Ordered instructions:** Record this contract before coding. Forward both inputs through the existing Search branch. Apply physical-right clearance inside result interaction content and to the wide dock. Add bottom clearance to the wide result scroll range. Add focused tests, run gates, review the complete diff, update records, and commit explicit slice paths.
-- **Deliverables:** Search forwards both clearances; hashtag rows, account rows, the continuation item, chips, and the field clear physical right in LTR and RTL; final content clears the dock and the supplied bottom value; viewport, outer rows, and dividers keep their width; the dock keeps its position and measured height; compact geometry, chip behavior, and IME policy remain unchanged.
-- **Acceptance criteria:** Synthetic wide tests verify the full viewport, divider underlay, all composed click targets, account row and continuation callbacks, final result reach above the dock and above bottom clearance, chip reachability and selection callbacks, dock position stability, and retained list position across clearance changes. Compact tests compare zero and nonzero inputs in LTR and RTL through synthetic IME open and close. IME tests show that the field keeps its bounds when bottom clearance changes. Existing Home, DM, and navigation tests remain unchanged and pass. Production clearance remains zero.
-- **Validation commands:** Recheck external Java/Gradle processes before each build. Run `:app:testDebugUnitTest --tests me.foxtails.palustris.ui.search.SearchClearanceTest`, then `HomeClearanceTest`, `DirectMessageScreenTest`, `HomeFeedTest`, and `NavigationTest`, then `test assembleRelease`. Use `cmd /c "set GRADLE_OPTS=-Dorg.gradle.daemon=false&& gradlew.bat --no-daemon --console=plain <tasks> < NUL"` with an explicit timeout. Check touched-document links and slice-only whitespace.
-- **Non-goals:** No obstruction measurement, navigation activation, rail replacement, wide DM action, safe-region change, dock redesign, chip travel change, feature or data change, Photo Grid work, unrelated destination edit, ADB, live server, or push. No device claims from Compose tests.
+- **Forbidden files:** All other files. This includes the completed DM, Home, and Search files and tests, `CategoryChips.kt`, `LargeBottomDock.kt`, `CompactOverlayMetrics.kt`, `PhotoGridOwner.kt`, `PhotoGridHost.kt`, `ShellNavigator.kt`, `PhotoGridScreenTest.kt`, `PhotoGridOwnerTest.kt`, compact navigation geometry, safe-region policy, and resources. Preserve all pre-existing modifications, deletions, and untracked files.
+- **Physical-right invariant:** `PhotoGridScreen` accepts shell-supplied physical-right and bottom `Dp` values and calculates neither. Wide layout applies physical right through the grid's own absolute content inset. The `photo_grid_content` viewport node keeps its full size, and the shell supplies the values. Adaptive lanes recalculate for the narrower content area, so every tile, the load-older control, the paging-error surface, the up-to-date label, and the empty state clear physical right. Physical right does not reverse with the layout direction. The maintainer approved this content-area inset on 2026-10-05 after a per-tile click-bound inset was rejected: a tile is opaque media and one click target, so a per-tile inset would cut a dead strip inside every lane. The tile background therefore no longer passes under floating chrome. This is the only Photo Grid deviation from the row-underlay rule.
+- **Bottom invariant:** Wide bottom clearance adds to the resolved grid end spacing only. The wide chip dock clears physical right and sits above supplied bottom obstruction, matching the `HomeFeed` wide timeline dock. The grid end spacing grows by the same value, so the final tile clears both. The dock keeps its `BottomStart` placement, its `LargeBottomDock` 12 dp spacing, and the `LargeBottomDockClearance` constant. Obstruction clearance never sets chip travel and never changes a measured height, because Photo Grid has no measured dock height.
+- **Compact invariant:** Compact layout ignores both wide-only inputs. It keeps `compactContextualControlsPositioningInsets`, `compactScrollEndClearance`, `CompactFilterDockHeight`, `CompactOverlayHorizontalPadding`, the bottom-center chip row, and its existing grid end spacing. It adds no IME inset.
+- **Ordered instructions:** Record this contract before coding. Forward both inputs through the existing Photo Grid branch. Apply physical right through the grid content inset in wide layout. Apply bottom clearance to the wide grid end spacing. Apply physical right and bottom obstruction to the wide chip dock. Add focused tests, run gates, review the complete diff, update records, and commit explicit slice paths.
+- **Deliverables:** The Photo Grid branch forwards both clearances; tiles, the load-older control, the paging-error surface, the empty state, the chip row, and the add-hashtag entry clear physical right in LTR and RTL; the final tile and the last full-line item clear the dock and the supplied bottom value; the `photo_grid_content` viewport keeps its full size; the wide dock clears physical right and clears bottom obstruction; tile selection, saved hashtag preferences, timeline selection, and supplied grid state keep their owners; compact geometry and chip behavior remain unchanged.
+- **Acceptance criteria:** Synthetic wide tests verify the full-size viewport, tile bounds, the reveal control on a sensitive tile, all composed click targets, the load-older callback, the paging-error retry callback, chip selection and the add-hashtag entry, final-tile reach above the dock and above bottom clearance, and retained grid position across clearance changes. Compact tests compare zero and nonzero inputs in LTR and RTL. Existing Photo Grid, Home, Search, DM, and navigation tests remain unchanged and pass. Production clearance remains zero.
+- **Validation commands:** Recheck external Java/Gradle processes before each build. Run `:app:testDebugUnitTest --tests me.foxtails.palustris.ui.photogrid.PhotoGridClearanceTest`, then `PhotoGridScreenTest`, `PhotoGridOwnerTest`, `SearchClearanceTest`, `HomeClearanceTest`, and `NavigationTest`, then `test assembleRelease`. Use `cmd /c "set GRADLE_OPTS=-Dorg.gradle.daemon=false&& gradlew.bat --no-daemon --console=plain <tasks> < NUL"` with an explicit timeout. Check touched-document links and slice-only whitespace.
+- **Non-goals:** No obstruction measurement, navigation activation, rail replacement, wide DM action, safe-region change, dock redesign, chip travel change, grid column count fix, feed or preference change, Search, Notifications, or Profile edit, ADB, live server, or push. No device claims from Compose tests.
 - **Exit gates:** Focused and relevant tests pass, and the full test and release assembly gate passes. Direct review has no unresolved required findings. Links and whitespace pass. Records describe verified behavior and limits. Commit only reviewed allowed paths; do not force-stage logs.
-- **Fail gates:** Stop for unclear ownership or geometry, an overlap that requires invented values, a moved dock or field, a changed compact inset or chip behavior, lost query, tab, or scroll state, an unexplained failure, a weakened test, scope expansion, mixed file ownership, or two failed fixes for one root problem. Investigate before further edits. Do not stop external processes.
+- **Fail gates:** Stop for unclear ownership or geometry, an overlap that requires invented values, a dock that covers the final tile, a changed compact inset or chip behavior, lost saved hashtag, timeline selection, feed, or scroll state, an unexplained failure, a weakened test, scope expansion, mixed file ownership, or two failed fixes for one root problem. Investigate before further edits. Do not stop external processes.
 - **Git operator and commit instruction:** Orchestrator. Commit explicit reviewed paths after all gates pass. Do not push.
-
-Search implementation, focused checks, full gate, and direct review pass.
-Checkpoint subject: `Add Search obstruction clearance`, based on `9717c49`.
-Home remains complete. DM slices remain unchanged. Production clearances remain zero. Floating navigation remains inactive.
 
 # Files involved
 
-- Current slice: `SearchScreen.kt`, the Search panel branch of `ShellDestinationContent.kt`, and new `SearchClearanceTest.kt`.
+- Current slice: `PhotoGridScreen.kt`, the `SearchPanel.PhotoGrid` branch of `ShellDestinationContent.kt`, and new `PhotoGridClearanceTest.kt`.
 - `ShellContent` already forwards both inputs. It needs no changes in this slice.
-- Photo Grid shares the Search destination branch but stays a separate clearance gate.
+- Notifications and Profile remain separate gates and need their own contracts.
 - Later slices use the scoped file lists above. Expand a destination into its own contract before editing if its behavior needs an independent gate.
 
 # Verification
@@ -263,25 +274,48 @@ shut down`. That suite passes 67 tests in isolation and is untouched by this sli
 No existing test was weakened. Direct review found no unresolved required findings.
 Process checks before each Gradle run found no external Java/Gradle build. No external process was stopped.
 No ADB or live-server check ran. Compact IME policy and chip travel were not changed.
+4C-4 Photo Grid focused `PhotoGridClearanceTest` passes with 9 tests. Existing suites pass unchanged with 8 + 10
++ 8 + 7 + 22 + 36 tests. Full `test assembleRelease` passes with 156 suites, 1,616 tests, zero failures/errors/skips,
+and successful release assembly.
+Fixtures cover 800 x 600 dp and 600 x 800 dp wide layouts, a 600 x 1000 dp shell branch fixture, and 411 x 891 dp
+compact layouts. Synthetic obstruction values are test inputs, not production measurements.
+Tests cover full viewport, tile bounds and the sensitive-tile reveal control, continuation and paging-error retry
+callbacks, final-tile reach above the dock and above bottom obstruction, dock size and clearance stability, timeline
+and saved-hashtag chip selection, the add-hashtag dialog, branch forwarding, retained grid position, and compact
+compatibility in both layout directions.
+A separate external `gradlew.bat clean installDebug` process started in this worktree during the first full gate and
+removed `app/build/test-results` and `app/build/outputs`. That run could not be counted and is not slice evidence.
+The process was not stopped; it finished on its own. The focused rerun and the repeated full gate are the recorded
+results.
+Three test-setup corrections followed real fixture behavior, all without production changes: the production tile key
+repeats the origin, the `PhotoGridFeed.Hashtag` runtime name is unqualified, and the staggered grid distributes tiles
+across lanes so no single tile owns the left edge. Two touch injections needed a real target: a tile is clicked by its
+own tag, and the add-hashtag chip must be scrolled into view first. A temporary tag-dump test was used to read the
+real tile key and was removed. No existing test was weakened.
+Review was direct because the maintainer prohibits `problem_solver`. No unresolved required findings.
+Process checks before each Gradle run found no external Java/Gradle build, except the external clean noted above.
+No ADB or live-server check ran. Device rendering and production obstruction geometry remain unverified.
 Use the repository wrapper with `--no-daemon --console=plain`, an explicit timeout, and closed stdin.
 Run `test assembleRelease` for each code slice. Run the complete Phase 4C rerun/lint gate before final completion.
 
 # Next
 
-Investigate Photo Grid under its own bounded destination-clearance contract. Notifications and Profile
-follow as separate gates. Do not activate vertical navigation or wire the wide DM action in a clearance slice.
+Investigate Notifications under its own bounded destination-clearance contract. Profile follows as a
+separate gate. Do not activate vertical navigation or wire the wide DM action in a clearance slice.
 
 # Blockers
 
 - No production vertical capsule/action measurements are approved. Reuse only dimensions derived from the shared presentation and existing source contracts; ask the maintainer where fit policy requires a new value.
 - The DM recipient finder is implemented and its contract is ready. Wire it to the wide New conversation action only in the activation slice.
 - Search, Photo Grid, Notifications, and Profile need bounded contracts and passing gates before activation.
-  Search is complete. Photo Grid, Notifications, and Profile still need their contracts.
-- The prior external build was absent during this slice's process checks. Recheck shared-output activity before later Gradle gates. Device state was not checked.
+  Search and Photo Grid are complete. Notifications and Profile still need their contracts.
+- A separate external `gradlew.bat clean installDebug` process ran in this worktree during this slice and wiped
+  shared build outputs. It was not stopped. Recheck shared-output activity before later Gradle gates.
+  Device state was not checked.
 - Device, physical foldable, API 29, live-server, signing, and TalkBack behavior remain unverified.
 - Preserve the existing unrelated worktree, deleted Photo Grid test/PNGs, captures, scripts, caches, and writing-style edits.
 
 # Last safe commit
 
-`Add Search obstruction clearance`, based on `9717c49` — Add Home obstruction clearance.
+`Add Photo Grid obstruction clearance`, based on `5579742` — Add Search obstruction clearance.
 Resolve this checkpoint's hash from Git. Nothing was pushed.
