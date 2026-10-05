@@ -23,11 +23,13 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
@@ -39,6 +41,7 @@ import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppLayoutDirection
+import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppPreferencesState
 import me.foxtails.palustris.ui.resolveAgainst
@@ -97,6 +100,9 @@ class SettingsDisplayTest {
         compose.onAllNodesWithText("Force RTL Layout")[0].assertExists()
         compose.onAllNodesWithText("Force RTL Layout")[0].performScrollTo()
         compose.onNodeWithText("Force RTL Layout").assertIsDisplayed()
+
+        compose.onNodeWithTag("tablet_navigation_anchor_left").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("compact_wide_navigation_anchor_right").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -301,6 +307,35 @@ class SettingsDisplayTest {
         assertEquals(AppLayoutDirection.System, stored.value)
         compose.onAllNodesWithText("Force LTR Layout").assertCountEquals(1)
         layoutDirectionSwitch().assertIsOff()
+    }
+
+    @Test
+    fun displaySettingsExposeIndependentTabletAndCompactWideAnchorChoices() {
+        var tabletChoice = AppNavigationAnchor.Left
+        var compactWideChoice = AppNavigationAnchor.Right
+        compose.activity.setContent {
+            DisplaySettingsScreen(
+                preferences = AppPreferences(),
+                onColorScheme = {},
+                onColorPalette = {},
+                onBackground = {},
+                onTextSize = {},
+                onFont = {},
+                onRequest60Hz = {},
+                tabletNavigationAnchor = AppNavigationAnchor.Left,
+                onTabletNavigationAnchor = { tabletChoice = it },
+                compactWideNavigationAnchor = AppNavigationAnchor.Right,
+                onCompactWideNavigationAnchor = { compactWideChoice = it },
+            )
+        }
+
+        compose.onNodeWithTag("tablet_navigation_anchor_left").performScrollTo().assertIsSelected()
+        compose.onNodeWithTag("compact_wide_navigation_anchor_right").performScrollTo().assertIsSelected()
+        compose.onNodeWithTag("tablet_navigation_anchor_right").performScrollTo().performClick()
+        compose.onNodeWithTag("compact_wide_navigation_anchor_left").performScrollTo().performClick()
+
+        assertEquals(AppNavigationAnchor.Right, tabletChoice)
+        assertEquals(AppNavigationAnchor.Left, compactWideChoice)
     }
 
     /** Renders the Display page under a fixed stored value over a device direction. */

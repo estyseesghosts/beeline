@@ -27,6 +27,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.R
 import androidx.compose.ui.unit.LayoutDirection
@@ -36,6 +37,7 @@ import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
 import me.foxtails.palustris.domain.AppLayoutDirection
+import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppTextSize
 import me.foxtails.palustris.ui.deviceLayoutDirection
@@ -53,6 +55,10 @@ fun DisplaySettingsScreen(
     onRequest60Hz: (Boolean) -> Unit,
     layoutDirection: AppLayoutDirection = AppLayoutDirection.System,
     onLayoutDirection: (AppLayoutDirection) -> Unit = {},
+    tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
+    onTabletNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
+    compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
+    onCompactWideNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
 ) {
     // The page sits below the composition root, where LocalLayoutDirection is the forced direction.
     // The device direction names what turning the switch on produces, so it is the base here.
@@ -147,6 +153,51 @@ fun DisplaySettingsScreen(
                             },
                         )
                     },
+                )
+            },
+        )
+        NavigationAnchorChoiceGroup(
+            title = stringResource(R.string.settings_tablet_navigation_anchor),
+            tagPrefix = "tablet_navigation_anchor",
+            selected = tabletNavigationAnchor,
+            onSelected = onTabletNavigationAnchor,
+        )
+        NavigationAnchorChoiceGroup(
+            title = stringResource(R.string.settings_compact_wide_navigation_anchor),
+            tagPrefix = "compact_wide_navigation_anchor",
+            selected = compactWideNavigationAnchor,
+            onSelected = onCompactWideNavigationAnchor,
+        )
+    }
+}
+
+@Composable
+private fun NavigationAnchorChoiceGroup(
+    title: String,
+    tagPrefix: String,
+    selected: AppNavigationAnchor,
+    onSelected: (AppNavigationAnchor) -> Unit,
+) {
+    Text(title, Modifier.padding(horizontal = 20.dp, vertical = 12.dp))
+    AppNavigationAnchor.entries.forEach { anchor ->
+        ListItem(
+            modifier = Modifier.fillMaxWidth(),
+            headlineContent = {
+                Text(
+                    stringResource(
+                        if (anchor == AppNavigationAnchor.Left) {
+                            R.string.settings_navigation_anchor_left
+                        } else {
+                            R.string.settings_navigation_anchor_right
+                        },
+                    ),
+                )
+            },
+            leadingContent = {
+                RadioButton(
+                    selected = anchor == selected,
+                    onClick = { onSelected(anchor) },
+                    modifier = Modifier.testTag("${tagPrefix}_${anchor.name.lowercase()}"),
                 )
             },
         )

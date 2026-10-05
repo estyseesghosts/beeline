@@ -1,10 +1,13 @@
 package me.foxtails.palustris.ui.shell
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
@@ -21,10 +24,20 @@ internal fun AppLargeDetailPane(
     threadState: PostThreadUiState?,
     callbacks: ShellDetailCallbacks,
     modifier: Modifier,
+    leftObstructionClearance: Dp = 0.dp,
+    rightObstructionClearance: Dp = 0.dp,
 ) {
     if (selected == null) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            EmptyState(AppIcons.HoneyHome, androidx.compose.ui.res.stringResource(R.string.post_select_title), androidx.compose.ui.res.stringResource(R.string.post_select_subtitle))
+            EmptyState(
+                AppIcons.HoneyHome,
+                androidx.compose.ui.res.stringResource(R.string.post_select_title),
+                androidx.compose.ui.res.stringResource(R.string.post_select_subtitle),
+                modifier = Modifier.absolutePadding(
+                    left = leftObstructionClearance,
+                    right = rightObstructionClearance,
+                ),
+            )
         }
         return
     }
@@ -52,6 +65,8 @@ internal fun AppLargeDetailPane(
          onThreadRefresh = callbacks.onThreadRefresh,
          onThreadContinue = callbacks.onThreadContinue,
          quoteEnabled = callbacks.quoteEnabled,
+         leftObstructionClearance = leftObstructionClearance,
+         rightObstructionClearance = rightObstructionClearance,
          onQuote = callbacks.onQuote,
         modifier = modifier,
     )

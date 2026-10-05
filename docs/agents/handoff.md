@@ -19,13 +19,16 @@ IME height does not select permanent presentation. Pane and back policy remain i
 All seven destination surfaces receive physical clearance. Wide compact fallback clears Search and the DM editor too.
 The DM New conversation action opens the existing recipient finder.
 
-Next: define 4C-5c anchor preferences before editing. The 4C-5b checkpoint is directly reviewed.
-Defaults currently anchor expanded layouts left and other fitting windows right. No anchor preference ships yet.
+4C-5c starts from `79dd743`. The anchor slice persists independent tablet and compact-wide physical anchors.
+Focused repository, settings, adaptive-placement, and detail-clearance tests pass. `:app:lintDebug` passes.
+The anchor slice is recorded as `Persist physical navigation anchors`. Next: replace both chip renderers with
+one shared renderer, add the inline visibility caret, and move wide Notifications filters to the bottom.
+Existing feature owners retain selection and data state.
 
 ## Last safe commit
 
-`6dcfac4` — `Add navigation fit policy` precedes the checkpoint subject `Activate safe adaptive floating navigation`.
-Resolve the new checkpoint hash from Git. Nothing was pushed.
+Preceding safe commit: `79dd743` — `Activate safe adaptive floating navigation`.
+The 4C-5c anchor-slice commit subject is `Persist physical navigation anchors`. Nothing was pushed.
 
 ## Evidence and limits
 
@@ -35,7 +38,7 @@ Resolve the new checkpoint hash from Git. Nothing was pushed.
 - Folded outer-screen rendering shows vertical navigation at 1169 × 1848 px and 420 dpi.
   The local capture is `logs/4c5b-outer-home-ready.png`. Square-tablet and RTL placement have Compose evidence only.
 - Physical hinge coordinates, hardware tablet rendering, device RTL, TalkBack, device IME, API 29, signing,
-  and live-server recipient selection remain unverified in this slice.
+  and live-server recipient selection remain unverified in 4C-5b and must remain explicit limits for 4C-5c.
 - The unchanged Mastodon cancellation flake did not occur in the final gate. Record future occurrences separately; do not weaken it.
 
 ## Worktree caution

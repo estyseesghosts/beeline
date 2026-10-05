@@ -31,6 +31,7 @@ import me.foxtails.palustris.ui.shell.AppShellFixtures
 import me.foxtails.palustris.ui.shell.DirectMessagesContract
 import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 import me.foxtails.palustris.ui.PalustrisTheme
+import me.foxtails.palustris.domain.AppNavigationAnchor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -54,12 +55,21 @@ class AdaptiveNavigationTest {
     private fun bounds(tag: String): Rect = compose.onNodeWithTag(tag, useUnmergedTree = true)
         .fetchSemanticsNode().boundsInRoot
 
-    private fun show(directMessages: DirectMessagesContract = DirectMessagesContract.Empty) {
+    private fun show(
+        directMessages: DirectMessagesContract = DirectMessagesContract.Empty,
+        tabletAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
+        compactWideAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
+    ) {
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 CompositionLocalProvider(LocalLayoutDirection provides direction.value) {
                     Box(Modifier.width(width.value.dp).height(height.value.dp)) {
-                        AppShellFixtures.app(account = AppShellFixtures.account(), directMessages = directMessages)
+                        AppShellFixtures.app(
+                            account = AppShellFixtures.account(),
+                            directMessages = directMessages,
+                            tabletNavigationAnchor = tabletAnchor,
+                            compactWideNavigationAnchor = compactWideAnchor,
+                        )
                     }
                 }
             }
@@ -84,6 +94,23 @@ class AdaptiveNavigationTest {
                 assertEquals(56f * density, action.height, 1f)
                 assertEquals(capsule.bottom + 8f * density, action.top, 1f)
                 assertTrue(stack.top >= 0f && stack.bottom <= size.second * density)
+            }
+        }
+    }
+
+    @Test fun savedAnchorsSelectSeparatePhysicalEdgesInLtrAndRtl() {
+        show(
+            tabletAnchor = AppNavigationAnchor.Right,
+            compactWideAnchor = AppNavigationAnchor.Left,
+        )
+        for ((size, expectedLeft) in listOf(445f to 8f, 900f to 836f)) {
+            for (layoutDirection in LayoutDirection.entries) {
+                compose.runOnIdle {
+                    width.value = size
+                    height.value = if (size == 445f) 704f else 900f
+                    direction.value = layoutDirection
+                }
+                assertEquals(expectedLeft * density, bounds(LargeFloatingNavigationTag).left, 1f)
             }
         }
     }
@@ -189,7 +216,7 @@ class AdaptiveNavigationTest {
                                 leftClearance = left.value; rightClearance = right.value
                                 Box(modifier.testTag("physical_primary"))
                             },
-                            detailContent = { Box(it.testTag("physical_detail")) },
+                            detailContent = { modifier, _, _ -> Box(modifier.testTag("physical_detail")) },
                         )
                     }
                 }
@@ -208,5 +235,65 @@ class AdaptiveNavigationTest {
         compose.runOnIdle { visible.value = false }
         compose.onNodeWithTag(LargeFloatingNavigationTag).assertDoesNotExist()
         compose.runOnIdle { assertEquals(0f, leftClearance, 0.01f) }
+    }
+
+    @Test fun anchorClearanceFollowsThePaneUnderTheControlsInBothDirections() {
+        val anchorLeft = mutableStateOf(true)
+        var primaryLeft = 0f
+        var primaryRight = 0f
+        var detailLeft = 0f
+        var detailRight = 0f
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                CompositionLocalProvider(LocalLayoutDirection provides direction.value) {
+                    PalustrisTheme {
+                        LargeScreenShell(
+                            windowWidth = 900.dp,
+                            selectedTarget = LargeNavTarget.Profile,
+                            account = null,
+                            hasDetail = false,
+                            twoPane = true,
+                            navigationFit = calculateNavigationFit(
+                                900f,
+                                900f,
+                                Rect.Zero,
+                                anchorLeft = anchorLeft.value,
+                            ),
+                            anchorLeft = anchorLeft.value,
+                            navigationVisible = true,
+                            action = null,
+                            onTargetSelected = {},
+                            onOpenAccounts = {},
+                            primaryContent = { modifier, left, right ->
+                                primaryLeft = left.value
+                                primaryRight = right.value
+                                Box(modifier.testTag("anchor_primary"))
+                            },
+                            detailContent = { modifier, left, right ->
+                                detailLeft = left.value
+                                detailRight = right.value
+                                Box(modifier.testTag("anchor_detail"))
+                            },
+                        )
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        assertEquals(48f, primaryLeft, 0.01f)
+        assertEquals(0f, primaryRight, 0.01f)
+        assertEquals(0f, detailLeft, 0.01f)
+        assertEquals(0f, detailRight, 0.01f)
+
+        compose.runOnIdle { anchorLeft.value = false }
+        compose.waitForIdle()
+        assertEquals(0f, primaryLeft, 0.01f)
+        assertEquals(0f, primaryRight, 0.01f)
+        assertEquals(0f, detailLeft, 0.01f)
+        assertEquals(48f, detailRight, 0.25f)
+        val rightStack = bounds(LargeFloatingNavigationTag)
+        compose.runOnIdle { direction.value = LayoutDirection.Rtl }
+        assertEquals(rightStack, bounds(LargeFloatingNavigationTag))
+        assertEquals(48f, detailRight, 0.25f)
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import me.foxtails.palustris.domain.Account
+import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.Timeline
@@ -86,6 +87,8 @@ fun PalustrisApp(
     directMessages: DirectMessagesContract,
     initialNotificationRoute: AppRoute?,
     notificationSettings: NotificationSettingsContract,
+    tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
+    compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
 ) {
     val mediaTransitionRegistry = remember { MediaTransitionRegistry() }
     val repostConfirmationOwner = remember(account?.id, sessionGeneration, sessionRevision) { PostRepostConfirmationState() }
@@ -161,9 +164,11 @@ fun PalustrisApp(
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val windowWidth = maxWidth
             val presentationMode = largeLayoutMode(maxWidth.value)
-            // Tablet presentation anchors at the physical left. The display settings toggle that
-            // changes this anchor belongs to the later settings slice.
-            val anchorLeft = presentationMode == LargeLayoutMode.Expanded
+            val anchorLeft = when (presentationMode) {
+                LargeLayoutMode.Expanded -> tabletNavigationAnchor == AppNavigationAnchor.Left
+                LargeLayoutMode.Compact, LargeLayoutMode.Single ->
+                    compactWideNavigationAnchor == AppNavigationAnchor.Left
+            }
             val navigationFit = rememberNavigationFit(maxWidth.value, maxHeight.value, anchorLeft)
             val largePresentation = presentationMode != LargeLayoutMode.Compact
             val navigationMode = NavigationModeObserver.current(LocalView.current)

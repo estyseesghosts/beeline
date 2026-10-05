@@ -11,6 +11,7 @@ import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
+import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfile
 import me.foxtails.palustris.domain.EmojiCapabilities
@@ -341,6 +342,8 @@ internal object AppShellFixtures {
         directMessages: DirectMessagesContract = DirectMessagesContract.Empty,
         initialNotificationRoute: AppRoute? = null,
         notificationSettings: NotificationSettingsContract = NotificationSettingsContract.Empty,
+        tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
+        compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
     ) {
         PalustrisApp(
             account = account,
@@ -361,6 +364,8 @@ internal object AppShellFixtures {
             directMessages = directMessages,
             initialNotificationRoute = initialNotificationRoute,
             notificationSettings = notificationSettings,
+            tabletNavigationAnchor = tabletNavigationAnchor,
+            compactWideNavigationAnchor = compactWideNavigationAnchor,
         )
     }
 

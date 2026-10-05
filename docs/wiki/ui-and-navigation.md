@@ -225,6 +225,28 @@ Sources: `ui/LayoutDirectionPolicy.kt`, `ui/settings/DisplaySettingsScreen.kt`,
 Limits: device RTL, TalkBack, and physical hinge coordinates remain unverified.
 Compose tests verify physical top-left alignment and absolute offsets for panes and floating navigation in both directions.
 
+## Adaptive navigation anchors
+
+The Display page stores independent physical-edge choices for tablet and compact-wide navigation.
+Tablet navigation defaults to physical left. Compact-wide navigation defaults to physical right.
+Missing or unknown stored values keep those defaults. The choices do not follow forced layout direction.
+
+`PalustrisApp` uses the tablet choice in expanded mode. It uses the compact-wide choice in compact
+and single-pane modes. The selected edge controls both the floating stack placement and safe-region
+selection. Compact-narrow navigation keeps its existing placement.
+
+On a split tablet, `LargeScreenShell` clears whichever pane the floating stack overlaps. Detail
+content keeps its full viewport. `SinglePostScreen` adds the physical clearance to lazy-list content,
+so the final viewport does not shrink.
+
+Sources: `domain/AppPreferences.kt`, `data/preferences/FileAppPreferencesRepository.kt`,
+`ui/settings/DisplaySettingsScreen.kt`, `ui/PalustrisApp.kt`, `ui/large/LargeScreenShell.kt`,
+`ui/posts/SinglePostScreen.kt`.
+
+Verification: preference, settings, adaptive-navigation, and detail-screen Compose tests cover
+defaults, persistence, independent choices, LTR/RTL placement, pane clearance, and viewport bounds.
+Physical tablet rendering, device RTL, and TalkBack remain unverified.
+
 ## Large panes and folding coordinates
 
 `LargeLayoutMode` chooses compact, single-pane, or expanded-pane behavior from 600/840 dp window-width cutoffs.
@@ -304,7 +326,7 @@ Compact-narrow retains the existing four-button grouped bar and existing narrow 
 Compact-wide and tablet use the same vertical six-button presentation: Home, Search, Photo Grid,
 Notifications, Direct Messages, and Profile. Tablet detail panes remain independent of navigation presentation.
 This behavior is active. Fit selects navigation independently of width-based panes and back precedence.
-Expanded layouts default to physical left; other fitting windows default to physical right. Anchor preferences remain planned for 4C-5c.
+Expanded layouts default to physical left; other fitting windows default to physical right. The independent Display preferences described in [Adaptive navigation anchors](#adaptive-navigation-anchors) override those defaults.
 Home, Search, Photo Grid, and Notifications offer Compose; Direct Messages offers New conversation; Profile shares edit/follow/unfollow policy.
 When fit fails inside a wide layout, the grouped compact bar remains available and content clears it.
 Search and the DM editor also receive separate fallback positioning clearance, including the compact IME base.

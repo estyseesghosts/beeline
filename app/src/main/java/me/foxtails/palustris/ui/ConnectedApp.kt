@@ -186,6 +186,8 @@ fun ConnectedApp(
                     accountIndex = accountIndex,
                     postPreferences = postPreferences,
                     photoGridPreferences = photoGridPreferencesRepository,
+                    tabletNavigationAnchor = appPreferences.preferences.tabletNavigationAnchor,
+                    compactWideNavigationAnchor = appPreferences.preferences.compactWideNavigationAnchor,
                     initialNotificationRoute = initialNotificationRoute,
                     onOpenSettings = { settingsVisible = true },
                 )

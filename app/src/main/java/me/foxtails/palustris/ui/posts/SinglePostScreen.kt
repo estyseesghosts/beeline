@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -98,6 +99,8 @@ internal fun SinglePostScreen(
     quoteEnabled: Boolean = false,
     onQuote: (OwnedPost) -> Unit = {},
     contentWarningRules: me.foxtails.palustris.domain.ContentWarningRules = LocalContentWarningRules.current,
+    leftObstructionClearance: Dp = 0.dp,
+    rightObstructionClearance: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
     val post = ownedPost.post
@@ -117,7 +120,11 @@ internal fun SinglePostScreen(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
                         .testTag("single_post_content"),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
+                    contentPadding = PaddingValues.Absolute(
+                        left = leftObstructionClearance,
+                        right = rightObstructionClearance,
+                        bottom = 96.dp,
+                    ),
                 ) {
                 item("single-post-header", contentType = "header") {
                     Row(

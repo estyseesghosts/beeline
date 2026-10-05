@@ -74,7 +74,7 @@ internal fun LargeScreenShell(
     onTargetSelected: (LargeNavTarget) -> Unit,
     onOpenAccounts: () -> Unit,
     primaryContent: @Composable (Modifier, Dp, Dp) -> Unit,
-    detailContent: @Composable (Modifier) -> Unit,
+    detailContent: @Composable (Modifier, Dp, Dp) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val adaptiveInfo = currentWindowAdaptiveInfoV2()
@@ -114,15 +114,36 @@ internal fun LargeScreenShell(
                 right = (primary.right + origin.x) / density.density,
                 bottom = (primary.bottom + origin.y) / density.density,
             )
-            val clearance = navigationPaneClearance(windowPane, controls, anchorLeft).dp
-            val leftClearance = if (anchorLeft) clearance else 0.dp
-            val rightClearance = if (anchorLeft) 0.dp else clearance
+            val primaryClearance = navigationPaneClearance(windowPane, controls, anchorLeft).dp
+            // On a split layout, either physical anchor can overlap the detail pane instead.
+            val detailWindowPane = layout.detail?.let { detail ->
+                Rect(
+                    left = (detail.left + origin.x) / density.density,
+                    top = (detail.top + origin.y) / density.density,
+                    right = (detail.right + origin.x) / density.density,
+                    bottom = (detail.bottom + origin.y) / density.density,
+                )
+            }
+            val detailClearance = detailWindowPane?.let {
+                navigationPaneClearance(it, controls, anchorLeft).dp
+            } ?: primaryClearance
+            val primaryLeftClearance = if (anchorLeft) primaryClearance else 0.dp
+            val primaryRightClearance = if (anchorLeft) 0.dp else primaryClearance
+            val detailLeftClearance = if (anchorLeft) detailClearance else 0.dp
+            val detailRightClearance = if (anchorLeft) 0.dp else detailClearance
             PaneSlot(primary, density) { paneModifier ->
-                if (hasDetail && !showDetail) detailContent(paneModifier)
-                else primaryContent(paneModifier, leftClearance, rightClearance)
+                if (hasDetail && !showDetail) {
+                    detailContent(paneModifier, primaryLeftClearance, primaryRightClearance)
+                } else {
+                    primaryContent(paneModifier, primaryLeftClearance, primaryRightClearance)
+                }
             }
             if (twoPane && (showDetail || !hasDetail)) {
-                layout.detail?.let { detail -> PaneSlot(detail, density, detailContent) }
+                layout.detail?.let { detail ->
+                    PaneSlot(detail, density) { paneModifier ->
+                        detailContent(paneModifier, detailLeftClearance, detailRightClearance)
+                    }
+                }
             }
         }
         if (controls != null) {

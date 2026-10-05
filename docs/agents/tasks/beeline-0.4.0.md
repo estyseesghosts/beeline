@@ -3,7 +3,7 @@
 Complete Phase 4C: adaptive floating navigation shared by compact-wide and tablet layouts.
 Keep one navigator, one destination host, and the existing feature owners.
 
-Status: 4C-5b implemented, validated, and directly reviewed.
+Status: 4C-5b is complete. The 4C-5c anchor slice is implemented and verified; the chip slice is next.
 Owner: orchestrator
 Last reviewed: 2026-10-05
 Authority: [AGENTS.md](../../../AGENTS.md), current source, tests, and Git.
@@ -35,7 +35,7 @@ Read insets in pixels with `LayoutDirection.Ltr`, then convert them to dp before
 Separating or occluding hinges split safe regions on their orientation. Non-separating creases remain usable.
 
 Expanded presentation defaults to physical left. Other fitting windows default to physical right.
-Anchor preferences remain deferred to 4C-5c. These defaults do not follow layout direction.
+4C-5c adds independent Display preferences that override these defaults. Physical edges do not follow layout direction.
 
 Photo Grid has its own vertical target, so its action is Compose, not a duplicate panel toggle.
 Direct Messages opens its session-owned recipient finder through `DirectMessagesContract.Actions.openRecipientFinder`.
@@ -52,8 +52,9 @@ Home, Search, and Notifications retain Compose. Profile shares compact edit/foll
 - 4C-5b replaces the rail and activates safe floating navigation, including the former 4C-5d activation gates.
   The checkpoint subject is `Activate safe adaptive floating navigation`, based on `6dcfac4`.
   Verified slice history remains in Git instead of this task record.
+- 4C-5c sub-slice 1 persists separate tablet and compact-wide physical anchors. Focused tests and `:app:lintDebug` pass.
 
-# Current slice
+# Completed slice — 4C-5b
 
 ## 4C-5b — Placement, activation, and physical clearance
 
@@ -82,7 +83,7 @@ Implementation:
   Profile assigns clearance to the mirrored summary/timeline columns. Its summary scroll range now clears the category dock.
 - The Photo Grid content inset remains the approved exception to visual underlay because each opaque tile is one click target.
 
-# Verification
+## Verification
 
 - Production `:app:compileDebugKotlin` passes.
 - Focused geometry/navigation/shell/DM/clearance suites pass. The final focused gate also passes `:app:lintDebug`.
@@ -100,32 +101,76 @@ Implementation:
 - Initial compile/test failures and their resolved causes are recorded in `logs/261005-181600.txt`.
   The known unchanged Mastodon cancellation flake did not occur in the final gate.
 
-# Next
+# Current slice — 4C-5c
 
-Next slice: define 4C-5c before implementation:
+This task is larger than one safe implementation slice. The orchestrator owns implementation,
+review, records, validation, and Git. The maintainer prohibits `problem_solver`. Do not delegate.
+The starting commit is `79dd743` — `Activate safe adaptive floating navigation`.
 
-- Objective: persist separate anchor preferences for tablet and compact-wide navigation.
-- Owners: existing `AppPreferences`, `DisplaySettingsScreen`, and shell/root preference wiring.
-- Defaults: tablet left; compact-wide right. Anchors stay physical in LTR and RTL.
-- Allowed scope: preference model/repository, display settings, connected root/shell wiring, focused tests, and records.
-- Non-goals: another navigator, new destination behavior, changing approved fit geometry, or backdrop blur.
-- Acceptance: both choices persist, missing values preserve defaults, and active shell placement/clearance follows each choice.
-- Gates: focused preference/settings/placement tests, `test assembleRelease`, review, records, and scoped commit.
-- Stop if persistence ownership is unclear, migration changes existing settings unexpectedly, or scope expands.
+## Source inventory and current owners
+
+- `HomeTimelineTabs` and `FilterChipRow` are separate chip renderers. Home uses the first in compact shell chrome and the wide Home dock.
+- Search, Photo Grid, Notifications, and Profile use `FilterChipRow` for their category/filter rows.
+- `LargeBottomDock` places wide Home, Search, and Photo Grid rows. Wide Profile has equivalent local placement.
+- Wide Notifications currently places its filter row before the list. This is the reported reachability defect.
+- Home timeline and Search category selection remain with `ShellNavigator`. Photo Grid selection remains with `PhotoGridOwner`.
+  Notifications selection remains with its existing screen/contract owner. Profile selection remains with `ProfileViewModel`.
+- No shared owner will hold feature selection, queries, paging, or scroll state.
+- `AppPreferencesRepository` stores separate tablet and compact-wide anchors. Display settings writes them.
+  `PalustrisApp` selects the anchor by layout mode, and `LargeScreenShell` clears whichever pane the stack overlaps.
+
+## Sub-slice 1 — Persist physical navigation anchors
+
+- **Status:** implemented and verified. Repository, settings, adaptive-placement, and detail-clearance tests pass. `:app:lintDebug` passes.
+- **Owner:** orchestrator. Existing owners: `AppPreferencesRepository`, `SettingsViewModel`, `DisplaySettingsScreen`, `ConnectedApp`, and the shell composition root.
+- **Allowed files:** `domain/AppPreferences.kt`, `data/preferences/FileAppPreferencesRepository.kt`, `ui/settings/SettingsViewModel.kt`, `SettingsOverlayHost.kt`, `SettingsHost.kt`, `DisplaySettingsScreen.kt`, `ui/ConnectedApp.kt`, `ui/session/ConnectedSessionHost.kt`, `ui/PalustrisApp.kt`, `ui/large/LargeScreenShell.kt`, `ui/shell/AppLargeDetailPane.kt`, `ui/posts/SinglePostScreen.kt`, `app/src/main/res/values/strings.xml`, focused preference/settings/adaptive/detail tests, and this task's records/wiki/log.
+- **Objective:** persist separate tablet and compact-wide physical-left/right choices through the existing global preference repository and Display settings owner.
+- **Acceptance:** tablet defaults left; compact-wide defaults right; missing or unknown stored keys keep those defaults; updates persist independently; the active anchor controls stack placement and clears the primary or detail pane that it overlaps in LTR and RTL. Clearance stays inside scroll content; viewports, fit, pane, and back policies stay independent.
+- **Non-goals:** chip-row presentation, feature state, fit geometry changes, a new settings repository, or account-scoped anchors.
+- **Validation gates:** focused repository, settings-command, Display UI, and placement tests; `:app:lintDebug`; inspect the exact slice diff and records before an explicit-path commit.
+- **Fail gates:** stop if existing global preference ownership cannot persist both fields without changing unrelated stored values, if physical placement follows layout direction, or if right anchoring requires replacing detail or feature owners.
+
+The repository stores `tabletNavigationAnchor` and `compactWideNavigationAnchor` as optional fields.
+Missing and unknown keys keep their independent defaults. Display settings exposes physical-left and
+physical-right choices. `ConnectedApp` carries both values to `PalustrisApp` through `ConnectedSessionHost`.
+`LargeScreenShell` assigns clearance to the primary or detail pane beneath the stack. `SinglePostScreen`
+keeps the detail viewport full size and places edge clearance in its list content.
+
+Focused tests: `AppPreferencesRepositoryTest`, `SettingsViewModelTest`, `SettingsDisplayTest`,
+`AdaptiveNavigationTest`, and `SinglePostScreenTest`. Physical tablet rendering and device RTL remain unverified.
+
+## Sub-slice 2 — Unify destination chip rows and add inline visibility control
+
+- **Owner:** orchestrator. Existing feature owners keep their selection and callbacks. `ShellContent` owns Home row visibility so compact and wide Home share one saveable value. Search, Photo Grid, Notifications, and Profile screen owners each own one saveable visibility value.
+- **Allowed files:** the shared chip component and `ui/navigation/HomeTimelineTabs.kt`, `ui/large/LargeBottomDock.kt`, `ui/layout/CompactOverlayMetrics.kt` if geometry requires a verified update, `ui/shell/ShellContent.kt`, `ui/feed/HomeFeed.kt`, `ui/search/SearchScreen.kt`, `ui/photogrid/PhotoGridScreen.kt`, `ui/notifications/NotificationsScreen.kt`, `ui/profile/ProfileScreen.kt`, `ui/profile/ProfileTimelineList.kt`, `ui/profile/ProfileLargePresentation.kt`, required strings, focused chip/destination/adaptive tests, and this task's records/wiki/log.
+- **Visibility lifetime:** each row starts visible. Its existing screen presentation owner stores a `rememberSaveable` visibility value. The value survives recomposition, adaptive resizing, and saved-state restoration while that screen owner remains. It resets when that saved destination owner is discarded. Home stores one value above the compact/wide branch in `ShellContent`. The shared row owns no global mutable state.
+- **Objective:** replace both existing renderers with exactly one shared Compose chip renderer and one placement contract for Home, Search, Photo Grid, Notifications, and Profile. Remove `HomeTimelineTabs` and `FilterChipRow` as renderers; feature-specific adapters may only build shared entry data. Keep each feature's callbacks, selection, query, paging, and scroll owners unchanged. Add an inline circular caret button that stays present when chips are hidden.
+- **Acceptance:** the caret is a 48 dp target derived from the existing Beeline bubble geometry. Its direction and accessible action label switch between hide and show. Toggling retains selection and chip scroll. Shared chip/caret motion respects the existing reduced-motion scheme. Chip travel does not depend on navigation clearance.
+- **Notifications placement:** move the wide row to the bottom dock. Clear physical navigation edges, system bars, and compact-fallback navigation. Extend the notification list's final scroll range past the dock. Compact placement and applicable IME behavior remain unchanged.
+- **Non-goals:** global chip manager, chip-visibility preference, feature-selection changes, navigation contextual-action replacement, new dimensions, or feature-owner migration.
+- **Validation gates:** shared component tests for bounds, callbacks, semantics, collapse, and retained state; destination regressions for Home, Search, Photo Grid, Notifications, and Profile; 445 × 704 dp outer-screen and square-tablet fixtures in LTR/RTL; compact-narrow and reduced-motion coverage; clearance from navigation, system bars, applicable IME, and final scroll content; focused tests and `:app:lintDebug`.
+- **Device and final gates:** install debug on `emulator-5554` before `assembleRelease`; inspect outer-screen chip placement and hide/show behavior; then run `test assembleRelease`. Check external Java/Gradle activity before every run and do not edit sources during builds.
+- **Fail gates:** stop if unification changes feature selection or scroll ownership, the caret disappears while collapsed, selection/state resets during resize, approved geometry must change, or a regression has failed twice for the same root cause.
+
+## Records and limits
+
+- Update task state and handoff at each slice boundary. Update `app-shell-ownership.md` and `docs/wiki/ui-and-navigation.md` with verified ownership and behavior in the corresponding slice.
+- Create an ignored timestamped task log when implementation starts. Never stage local logs or unrelated user files.
+- Preserve modified agent definitions and writing-style changes, deleted tests/PNGs, untracked captures/scripts/caches, and `docs/agents/tasks/4c.md`.
+- Do not push. Report unavailable hardware, TalkBack, physical-device IME, and live-server checks.
 
 4C-5d is absorbed into 4C-5b. Do not repeat activation as an independent slice.
 
 # Blockers and limits
 
-- No implementation blocker remains for 4C-5b. Anchor preferences remain planned, not implemented.
-- Device RTL, square-tablet hardware, physical hinge coordinates, TalkBack, physical-device IME, API 29, and release signing remain unverified here.
-- Live-server recipient search and mutation behavior remain unverified. Outer-screen feed rendering is not a protocol acceptance gate.
-- Preserve modified agent definitions and `importantdocs/writing_style.md`.
-- Preserve the deleted `PhotoGridFeedViewModelTest.kt` and PNGs, all unrelated captures/scripts/caches, and untracked `docs/agents/tasks/4c.md`.
-- Recheck external Gradle activity before future runs. Prior external clean/install interference remains a worktree risk.
+- 4C-5b remains verified at `79dd743`.
+- The 4C-5c anchor slice is implemented and verified. Commit it before starting chip unification.
+- The shared chip renderer, inline caret, and wide Notifications bottom dock remain unimplemented.
+- Device RTL, square-tablet hardware, physical hinge coordinates, TalkBack, physical-device IME, API 29, and release signing remain unverified.
+- Live-server recipient search and mutation behavior remain unverified. Chip placement is a presentation acceptance gate, not a protocol gate.
+- Recheck external Gradle activity before each build. Prior external clean/install interference remains a worktree risk.
 
 # Last safe commit
 
-`6dcfac4` — `Add navigation fit policy`.
-The reviewed 4C-5b checkpoint subject is `Activate safe adaptive floating navigation`.
-Resolve its new hash from Git after the checkpoint. Nothing was pushed.
+Preceding safe commit: `79dd743` — `Activate safe adaptive floating navigation`.
+The 4C-5c anchor-slice commit subject is `Persist physical navigation anchors`. Nothing was pushed.

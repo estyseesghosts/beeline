@@ -18,6 +18,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppLayoutDirection
+import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.AppPreferencesState
@@ -246,6 +247,33 @@ class SettingsViewModelTest {
 
             preferences = repository.observe().first().preferences
             assertEquals(AppLayoutDirection.System, preferences.layoutDirection)
+            assertNull(model.commandError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun navigationAnchorCommandsUpdateOnlyTheirOwnPhysicalPreference() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = InMemoryAppPreferencesRepository(
+                AppPreferences(background = AppBackground.Dark),
+            )
+            val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
+
+            model.setTabletNavigationAnchor(AppNavigationAnchor.Right)
+            advanceUntilIdle()
+            assertEquals(AppNavigationAnchor.Right, repository.observe().first().preferences.tabletNavigationAnchor)
+            assertEquals(AppNavigationAnchor.Right, repository.observe().first().preferences.compactWideNavigationAnchor)
+
+            model.setCompactWideNavigationAnchor(AppNavigationAnchor.Left)
+            advanceUntilIdle()
+
+            val preferences = repository.observe().first().preferences
+            assertEquals(AppNavigationAnchor.Right, preferences.tabletNavigationAnchor)
+            assertEquals(AppNavigationAnchor.Left, preferences.compactWideNavigationAnchor)
+            assertEquals(AppBackground.Dark, preferences.background)
             assertNull(model.commandError.value)
         } finally {
             Dispatchers.resetMain()

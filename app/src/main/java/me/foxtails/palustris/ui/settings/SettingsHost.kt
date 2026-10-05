@@ -23,6 +23,7 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppPreferencesState
+import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.PostPreferences
@@ -45,6 +46,8 @@ fun SettingsHost(
     onFont: (me.foxtails.palustris.domain.AppFont) -> Unit = {},
     onRequest60Hz: (Boolean) -> Unit = {},
     onLayoutDirection: (me.foxtails.palustris.domain.AppLayoutDirection) -> Unit = {},
+    onTabletNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
+    onCompactWideNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
     onLanguage: (me.foxtails.palustris.domain.AppLanguage) -> Unit = {},
     onTrackingCleanup: (Boolean) -> Unit = {},
     onContentWarningRules: (me.foxtails.palustris.domain.ContentWarningRules) -> Unit = {},
@@ -142,7 +145,21 @@ fun SettingsHost(
                     onPrivacy = { onRoute(SettingsRoute.Privacy) },
                     onLanguage = { onRoute(SettingsRoute.Language) },
                 )
-                SettingsRoute.Display -> DisplaySettingsScreen(state.preferences, onColorScheme, onColorPalette, onBackground, onTextSize, onFont, onRequest60Hz, state.preferences.layoutDirection, onLayoutDirection)
+                SettingsRoute.Display -> DisplaySettingsScreen(
+                    preferences = state.preferences,
+                    onColorScheme = onColorScheme,
+                    onColorPalette = onColorPalette,
+                    onBackground = onBackground,
+                    onTextSize = onTextSize,
+                    onFont = onFont,
+                    onRequest60Hz = onRequest60Hz,
+                    layoutDirection = state.preferences.layoutDirection,
+                    onLayoutDirection = onLayoutDirection,
+                    tabletNavigationAnchor = state.preferences.tabletNavigationAnchor,
+                    onTabletNavigationAnchor = onTabletNavigationAnchor,
+                    compactWideNavigationAnchor = state.preferences.compactWideNavigationAnchor,
+                    onCompactWideNavigationAnchor = onCompactWideNavigationAnchor,
+                )
                 SettingsRoute.Language -> LanguageSettingsScreen(state.preferences.language, onLanguage)
                 SettingsRoute.Notifications -> NotificationAccountsScreen(accounts, onNotificationAccount)
                 is SettingsRoute.NotificationAccount -> NotificationSettingsScreen(

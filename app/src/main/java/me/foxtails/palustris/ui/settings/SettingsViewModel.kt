@@ -18,6 +18,7 @@ import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppLayoutDirection
+import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.AppPreferencesState
@@ -111,6 +112,12 @@ class SettingsViewModel @Inject constructor(
      */
     fun setLayoutDirection(value: AppLayoutDirection): Unit =
         updateApp(retry = { setLayoutDirection(value) }) { it.copy(layoutDirection = value) }
+
+    fun setTabletNavigationAnchor(value: AppNavigationAnchor): Unit =
+        updateApp(retry = { setTabletNavigationAnchor(value) }) { it.copy(tabletNavigationAnchor = value) }
+
+    fun setCompactWideNavigationAnchor(value: AppNavigationAnchor): Unit =
+        updateApp(retry = { setCompactWideNavigationAnchor(value) }) { it.copy(compactWideNavigationAnchor = value) }
 
     fun setTrackingCleanup(value: Boolean): Unit =
         updateApp(retry = { setTrackingCleanup(value) }) { it.copy(cleanTrackingParameters = value) }

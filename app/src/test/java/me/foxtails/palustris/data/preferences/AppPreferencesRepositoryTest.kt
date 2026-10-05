@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.data.preferences.FileAppPreferencesRepository
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppLanguage
+import me.foxtails.palustris.domain.AppNavigationAnchor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
@@ -66,6 +67,35 @@ class AppPreferencesRepositoryTest {
             .first { it.loaded }
 
         assertEquals(AppLanguage.SystemDefault, state.preferences.language)
+    }
+
+    @Test
+    fun navigationAnchorsUseIndependentPhysicalDefaultsAndPersistSeparately() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val defaults = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppNavigationAnchor.Left, defaults.tabletNavigationAnchor)
+        assertEquals(AppNavigationAnchor.Right, defaults.compactWideNavigationAnchor)
+
+        file.writeText("""{"colorScheme":"Palette"}""")
+        val legacy = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppNavigationAnchor.Left, legacy.tabletNavigationAnchor)
+        assertEquals(AppNavigationAnchor.Right, legacy.compactWideNavigationAnchor)
+
+        val repository = FileAppPreferencesRepository(context)
+        repository.update {
+            it.copy(
+                tabletNavigationAnchor = AppNavigationAnchor.Right,
+                compactWideNavigationAnchor = AppNavigationAnchor.Left,
+            )
+        }
+        val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppNavigationAnchor.Right, restored.tabletNavigationAnchor)
+        assertEquals(AppNavigationAnchor.Left, restored.compactWideNavigationAnchor)
+
+        file.writeText("""{"tabletNavigationAnchor":"Unknown"}""")
+        val safe = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppNavigationAnchor.Left, safe.tabletNavigationAnchor)
+        assertEquals(AppNavigationAnchor.Right, safe.compactWideNavigationAnchor)
     }
 
     @Test

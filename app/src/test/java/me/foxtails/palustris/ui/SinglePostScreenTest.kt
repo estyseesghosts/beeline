@@ -134,6 +134,39 @@ class SinglePostScreenTest {
         assertTrue(pager.bottom <= body.top)
     }
 
+    @Test fun physicalRightClearanceStaysInsideTheDetailScrollContent() {
+        val post = Post(
+            EntityId("https://example.org", "detail-clearance"),
+            account,
+            "Detail content stays clear",
+            0,
+            Audience.Public,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                Box(Modifier.requiredSize(360.dp, 800.dp)) {
+                    SinglePostScreen(
+                        ownedPost = OwnedPost(account.id, post),
+                        onClose = {},
+                        embedded = true,
+                        rightObstructionClearance = 48.dp,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+
+        val density = compose.activity.resources.displayMetrics.density
+        val viewport = compose.onNodeWithTag("single_post_content", useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot
+        val row = compose.onNodeWithTag("post_row_detail-clearance", useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot
+        assertEquals(360f * density, viewport.width, 1f)
+        assertEquals(0f, viewport.left, 1f)
+        assertTrue("detail content clears the physical right edge", row.right <= viewport.right - 48f * density + 1f)
+    }
+
     @Test fun wideDetailClampsMediaHeightWhenSpaceIsLimited() {
         val post = Post(
             EntityId("https://example.org", "wide-tight"),

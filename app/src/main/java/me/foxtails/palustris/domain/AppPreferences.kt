@@ -10,6 +10,8 @@ data class AppPreferences(
     val request60Hz: Boolean = false,
     val language: AppLanguage = AppLanguage.SystemDefault,
     val layoutDirection: AppLayoutDirection = AppLayoutDirection.System,
+    val tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
+    val compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
     val cleanTrackingParameters: Boolean = false,
     val contentWarningRules: ContentWarningRules = ContentWarningRules(),
     val hiddenContentPresentation: HiddenContentPresentation = HiddenContentPresentation.Placeholder,
@@ -98,6 +100,12 @@ enum class AppLayoutDirection {
     System,
     ForceRtl,
     ForceLtr,
+}
+
+/** A physical display edge. The value never follows layout direction. */
+enum class AppNavigationAnchor {
+    Left,
+    Right,
 }
 
 data class AppPreferencesState(

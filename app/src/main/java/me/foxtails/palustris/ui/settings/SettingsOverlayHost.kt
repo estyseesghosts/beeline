@@ -127,6 +127,8 @@ fun SettingsOverlayHost(
         onFont = settingsModel::setFont,
         onRequest60Hz = settingsModel::setRequest60Hz,
         onLayoutDirection = settingsModel::setLayoutDirection,
+        onTabletNavigationAnchor = settingsModel::setTabletNavigationAnchor,
+        onCompactWideNavigationAnchor = settingsModel::setCompactWideNavigationAnchor,
         onLanguage = settingsModel::setLanguage,
         onTrackingCleanup = settingsModel::setTrackingCleanup,
         onContentWarningRules = settingsModel::setContentWarningRules,

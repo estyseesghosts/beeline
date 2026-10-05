@@ -18,6 +18,7 @@ import me.foxtails.palustris.data.auth.DraftStore
 import me.foxtails.palustris.data.auth.DraftWriteAuthority
 import me.foxtails.palustris.data.notifications.NotificationStreamController
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostPreferences
@@ -64,6 +65,8 @@ fun ConnectedSessionHost(
     photoGridPreferences: PhotoGridPreferencesRepository,
     initialNotificationRoute: AppRoute?,
     onOpenSettings: () -> Unit,
+    tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
+    compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
 ) {
     val account = connectedContext.account
     val accountId = connectedContext.accountId
@@ -274,6 +277,8 @@ fun ConnectedSessionHost(
             notificationSettings = notificationSettings,
             profile = profile,
             emojiPresentation = emojiPresentation,
+            tabletNavigationAnchor = tabletNavigationAnchor,
+            compactWideNavigationAnchor = compactWideNavigationAnchor,
         )
     }
 }

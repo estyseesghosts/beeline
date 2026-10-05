@@ -9,8 +9,7 @@ report are complete. No dead scaffolding remains.
 
 **Last reviewed:** 2026-10-05.
 
-**Source baseline:** `b629a2c` (planning). Status refreshed against `c9e06c8`.
-Phase 4C-5b activates floating navigation and physical clearance across all seven destination surfaces.
+**Source baseline:** `79dd743` (before the 4C-5c anchor slice). The anchor slice is source and focused-test verified.
 
 **Evidence:** source and test verified. R02 verifies the shell draft fixture with NavigationTest,
 ComposerOwnerTest, and ShellCharacterizationTest. Phase 4C-5b verifies folded outer-screen Home on the emulator.
@@ -223,10 +222,16 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   Structural hinges split safe regions vertically or horizontally; non-separating creases remain usable.
   Fit requires 64 dp width, 360 dp stack height, and 360 dp useful content width.
   Failed fit keeps compact navigation. IME height does not affect permanent presentation.
-  Expanded layouts default to physical left; other fitting windows default to physical right.
-  Anchor preferences remain planned for 4C-5c.
+  `AppPreferences` stores independent tablet and compact-wide anchors. Missing or unknown values
+  default to physical left for tablets and physical right for compact-wide layouts. Display settings
+  writes both values through `AppPreferencesRepository`; the settings do not follow layout direction.
+  `ConnectedApp` passes the values through `ConnectedSessionHost` to `PalustrisApp`. Expanded mode
+  uses the tablet anchor. Compact and single-pane modes use the compact-wide anchor. The active edge
+  also selects the nearest safe region for navigation fit.
   `LargeLayoutModeTest` and `AdaptiveNavigationTest` cover safe bounds, density conversion,
   445 × 704 dp outer-screen and square-tablet dimensions, IME independence, and physical placement in LTR/RTL.
+  `AppPreferencesRepositoryTest`, `SettingsViewModelTest`, and `SettingsDisplayTest` cover defaults,
+  persistence, independent updates, and Display choices.
 
 - `NavigationButton` owns interaction presentation for its composition lifetime, not destination state.
   It shares selected tint, icon scale, press treatment, and tab semantics. Callers supply profile
@@ -255,7 +260,12 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `DirectMessageInboxScreen` uses physical-right clearance for header and row interaction content,
   while its viewport and row surfaces remain full width. Bottom clearance extends only the list
   scroll range. Compact layout ignores wide-only inputs and keeps its existing IME-aware policy.
-  `navigationPaneClearance` in `LargeScreenShell.kt` supplies real clearance only to the pane covered by visible navigation.
+  `navigationPaneClearance` in `LargeScreenShell.kt` supplies clearance to the primary or detail pane
+  covered by visible navigation. `SinglePostScreen` applies detail-pane clearance as absolute lazy-list
+  content padding, so the viewport stays full size. Empty detail state applies the same physical-edge
+  clearance to its message.
+  `AdaptiveNavigationTest` covers anchor-to-pane routing in LTR/RTL. `SinglePostScreenTest` checks the
+  physical-right detail clearance and full-width viewport.
   `DirectMessageScreenTest` covers synthetic LTR/RTL clearance, full-width underlay, row and header
   bounds, final-content reach, branch forwarding, and compact compatibility.
   `DirectMessageConversationScreen` applies physical-right clearance to its header, notice/error text,

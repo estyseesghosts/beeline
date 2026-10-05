@@ -280,7 +280,7 @@ internal fun ShellContent(
                                 navigationCallbacks = navigationCallbacks,
                             )
                         },
-                        detailContent = { paneModifier ->
+                        detailContent = { paneModifier, detailLeftClearance, detailRightClearance ->
                             val detail = detailActionsFor(
                                 origin = navigator.singlePostOrigin,
                                 profile = profile,
@@ -299,6 +299,8 @@ internal fun ShellContent(
                                 threadState = selectedThreadState,
                                 callbacks = detailCallbacks.withResolvedActions(detail),
                                 modifier = paneModifier,
+                                leftObstructionClearance = detailLeftClearance,
+                                rightObstructionClearance = detailRightClearance,
                             )
                         },
                     )
