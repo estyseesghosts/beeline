@@ -78,13 +78,28 @@ layout ignores both wide-only values and keeps its current system-bar and IME cl
 The application still supplies zero clearance because floating navigation remains inactive. Tests
 inject synthetic values in LTR and RTL. They verify the viewport, row underlay, interactive bounds,
 the load-more action, final-item reach, shell-branch forwarding, and unchanged compact behavior.
-These tests do not verify production geometry or physical rendering. The DM conversation editor
-keeps its current IME policy. Its separate clearance implementation and IME-state tests remain
-activation blockers.
+These tests do not verify production geometry or physical rendering.
 
 Sources: `ui/shell/ShellContent.kt`, `ui/shell/ShellDestinationContent.kt`,
 `ui/shell/AppNotificationsDestinationContent.kt`, `ui/directmessages/DirectMessageInboxScreen.kt`,
 `DirectMessageScreenTest`.
+
+## Wide direct-message conversation clearance
+
+`AppNotificationsDestinationContent` also forwards the shell clearances to `DirectMessageConversationScreen`.
+The screen keeps its full-size viewport. Header, notice/error text, bubbles, retry/continue controls,
+editor input, and Send clear physical right in both LTR and RTL. Bottom clearance extends only
+the transcript scroll range. It does not move the editor or add an editor positioning inset.
+Wide `imePadding()` and navigation-bar positioning remain unchanged. Compact layout ignores both
+wide-only inputs and keeps its contextual-control positioning policy.
+
+`DirectMessageScreenTest` verifies content bounds, final transcript reach, branch forwarding, retained
+editor text, and synthetic IME open/close transitions. It also compares compact bounds with and
+without wide clearances. Production inputs remain zero because floating navigation is inactive.
+Physical-device IME behavior and production obstruction geometry remain unverified.
+
+Sources: `ui/directmessages/DirectMessageConversationScreen.kt`,
+`ui/shell/AppNotificationsDestinationContent.kt`, `DirectMessageScreenTest`.
 
 ## Large panes and folding coordinates
 

@@ -83,6 +83,8 @@ internal fun AppNotificationsDestinationContent(
                 state = directMessageState,
                 compactLayout = compactLayout,
                 compactNavigationVisible = compactNavigationVisible,
+                rightObstructionClearance = rightObstructionClearance,
+                bottomObstructionClearance = bottomObstructionClearance,
                 onBack = onBackDirectConversation,
                 onEditorTextChange = onEditorTextChange,
                 onSend = onSendDirectMessage,

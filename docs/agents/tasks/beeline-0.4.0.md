@@ -153,21 +153,22 @@ Navigation-fit policy for later activation:
 - `LargeNavigationRail` remains unchanged. Compact presentation delegates to the shared contextual-action button; production vertical navigation remains inactive.
 - 4C-4 DM inbox clearance — commit subject `Add DM inbox obstruction clearance`, preceded by `1d2050b`. Focused DM screen tests pass: 18 tests. The full `test assembleRelease` gate passes with 153 suites, 1,588 tests, zero failures/errors/skips, and successful release assembly.
 - Later gate retries overlapped a separate `gradlew.bat clean installDebug` process in this worktree. They reported missing test classes, missing R8 inputs, and a locked `R.jar`; no source changes followed the passing gate. Do not start another Gradle run while that external build may still be active.
-- The DM conversation/editor clearance contract is recorded below. It has no implementation changes; that implementation remains a separate activation blocker.
+- 4C-4 DM conversation/editor clearance — commit subject `Add DM conversation obstruction clearance`, preceded by `62506ba`.
+- Focused DM screen tests pass: 22 tests. Full `test assembleRelease` passes with 153 suites, 1,592 tests, zero failures/errors/skips.
+- Wide conversation content clears physical right in LTR/RTL. Bottom clearance extends only transcript scrolling. Editor state, IME policy, and compact geometry remain unchanged.
 
 # Current slice
 
-The DM inbox clearance implementation is complete as `Add DM inbox obstruction clearance`, based
-on `1d2050b` — `Prepare shared vertical navigation presentation`. The DM conversation/editor contract
-above is recorded as `Define DM conversation clearance contract`, based on `1fcd03f` — the inbox
-clearance commit. The next slice implements that contract. The orchestrator owns implementation and
-Git. Keep compact-narrow geometry and mappings fixed. Do not activate vertical navigation before all
-geometry and destination-clearance gates pass.
+The DM conversation/editor clearance implementation is complete as `Add DM conversation obstruction
+clearance`, based on `62506ba` — `Define DM conversation clearance contract`. The inbox slice remains
+unchanged. The next slice needs a separate destination-clearance contract before implementation.
+The orchestrator owns implementation and Git. Keep compact-narrow geometry and mappings fixed.
+Do not activate vertical navigation before all geometry and destination-clearance gates pass.
 
 # Files involved
 
-- Completed slice: DM inbox clearance through its existing shell branch and focused Compose tests.
-- Current contract: DM conversation/editor clearance. Implement only the files listed in that contract. Do not alter its existing IME policy.
+- Completed slice: DM conversation/editor clearance through its existing notification branch and focused Compose tests.
+- `ShellContent` and `ShellDestinationContent` already forwarded both values. They needed no changes in this slice.
 - Later slices use the scoped file lists above. Expand a destination into its own contract before editing if its behavior needs an independent gate.
 
 # Verification
@@ -185,26 +186,33 @@ Later retries ran while a separate `gradlew.bat clean installDebug` process was 
 worktree. The combined retry reported class-loading errors and missing R8 intermediates. A serialized
 forced retry could not delete a locked `R.jar`. These retries do not replace the earlier completed
 green gate. Device state was not checked.
-The DM conversation/editor contract changes documentation only. Its source references resolve, and
-the scoped documentation diff passes `git diff --check`. No Android build or device check ran for
-this contract-only checkpoint.
+4C-4 DM conversation/editor focused tests pass: 22 tests. Full `test assembleRelease` passes with
+153 suites, 1,592 tests, zero failures/errors/skips, and successful release assembly.
+Process checks before validation found no external Java/Gradle build. No external process was stopped.
+Tests cover full viewport, LTR/RTL physical right, header/bubble/control/editor bounds, transcript
+reach, branch forwarding, synthetic IME open/close, retained text, and unchanged compact bounds.
+The editor and Send bounds stay fixed when transcript bottom clearance changes in either IME state.
+Two initial focused runs exposed test setup errors: an incorrect Back label and retained list
+scroll position across direction changes. Both were corrected without production changes.
+Review was direct because the maintainer prohibits `problem_solver`. No existing test was weakened.
+No ADB or live-server check ran. Physical-device IME behavior remains unverified.
 Use the repository wrapper with `--no-daemon --console=plain`, an explicit timeout, and closed stdin.
 Run `test assembleRelease` for each code slice. Run the complete Phase 4C rerun/lint gate before final completion.
 
 # Next
 
-Implement the recorded DM conversation/editor clearance contract. Keep later destination contracts separate.
+Define the next bounded destination-clearance contract under 4C-4. Keep later destination gates separate.
 
 # Blockers
 
 - No production vertical capsule/action measurements are approved. Reuse only dimensions derived from the shared presentation and existing source contracts; ask the maintainer where fit policy requires a new value.
 - The DM recipient finder is implemented and its contract is ready. Wire it to the wide New conversation action only in the activation slice.
-- DM conversation/editor clearance is contracted but not implemented. It blocks activation until right-side interaction bounds pass with the IME open and closed.
-- A separate `gradlew.bat clean installDebug` process was observed in the worktree during failed gate retries. Check that it no longer uses shared outputs before the next Gradle run. Its device state was not checked.
+- Remaining Home, Search, Photo Grid, Notifications, and Profile clearance slices need bounded contracts and passing gates before activation.
+- The prior external build was absent during this slice's process checks. Recheck shared-output activity before later Gradle gates. Device state was not checked.
 - Device, physical foldable, API 29, live-server, signing, and TalkBack behavior remain unverified.
 - Preserve the existing unrelated worktree, deleted Photo Grid test/PNGs, captures, scripts, caches, and writing-style edits.
 
 # Last safe commit
 
-`Define DM conversation clearance contract`, based on `1fcd03f` — Add DM inbox obstruction clearance.
+`Add DM conversation obstruction clearance`, based on `62506ba` — Define DM conversation clearance contract.
 Resolve this checkpoint's hash from Git. Nothing was pushed.

@@ -1,6 +1,7 @@
 package me.foxtails.palustris.ui.directmessages
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,6 +31,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.R
@@ -42,18 +44,29 @@ import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInset
 import me.foxtails.palustris.ui.layout.compactGlobalNavigationPositioningInsets
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 
+/**
+ * Keeps wide content clear of shell-supplied floating chrome without insetting the viewport.
+ *
+ * @param rightObstructionClearance Physical-right clearance for wide conversation and editor content.
+ * @param bottomObstructionClearance Wide transcript scroll clearance; never an editor positioning inset.
+ * Compact layout ignores both values and retains its contextual-control inset policy.
+ */
 @Composable
 fun DirectMessageConversationScreen(
     accountId: AccountId,
     state: DirectMessageUiState,
     compactLayout: Boolean = true,
     compactNavigationVisible: Boolean = true,
+    rightObstructionClearance: Dp = 0.dp,
+    bottomObstructionClearance: Dp = 0.dp,
     onBack: () -> Unit = {},
     onEditorTextChange: (String) -> Unit = {},
     onSend: () -> Unit = {},
     onContinueThread: () -> Unit = {},
     onRetryThread: () -> Unit = {},
 ) {
+    val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
     val recipient = state.recipient
     val title = state.selectedConversation?.participants
         ?.filterNot { it.id == accountId }
@@ -64,26 +77,38 @@ fun DirectMessageConversationScreen(
 
     Column(Modifier.fillMaxSize().testTag("direct_message_conversation")) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+            Modifier.fillMaxWidth().absolutePadding(right = wideRightClearance)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ActionIcon(AppIcons.Back, stringResource(R.string.dm_back), onBack)
-            Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(title, Modifier.weight(1f).testTag("direct_message_title"), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Text(
             stringResource(R.string.dm_not_encrypted),
-            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
+            Modifier.fillMaxWidth().absolutePadding(right = wideRightClearance)
+                .padding(horizontal = 20.dp, vertical = 4.dp).testTag("direct_message_notice"),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (state.error != null) {
-            Text(state.error, Modifier.padding(20.dp), color = MaterialTheme.colorScheme.error)
+            Text(
+                state.error,
+                Modifier.absolutePadding(right = wideRightClearance).padding(20.dp)
+                    .testTag("direct_message_error"),
+                color = MaterialTheme.colorScheme.error,
+            )
         }
         LazyColumn(
             modifier = Modifier.weight(1f).fillMaxWidth().testTag("direct_message_thread"),
-            // The editor occupies space in this column. Its inset clears both
-            // navigation and the IME, so the thread needs only its own spacing.
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            // Editor positioning already clears navigation and the IME. Only wide
+            // floating chrome adds scroll range, not another editor positioning inset.
+            contentPadding = PaddingValues.Absolute(
+                left = 16.dp,
+                top = 12.dp,
+                right = 16.dp + wideRightClearance,
+                bottom = 12.dp + wideBottomClearance,
+            ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             items(state.thread, key = { "${it.id.connection}/${it.id.value}" }) { post ->
@@ -135,6 +160,7 @@ fun DirectMessageConversationScreen(
         Row(
             Modifier
                 .fillMaxWidth()
+                .absolutePadding(right = wideRightClearance)
                 .then(
                     if (compactLayout) Modifier.windowInsetsPadding(
                         compactContextualControlsPositioningInsets(compactNavigationVisible),
@@ -179,6 +205,7 @@ private fun DirectMessageRow(accountId: AccountId, post: Post) {
             Spacer(Modifier.size(8.dp))
         }
         Surface(
+            modifier = Modifier.testTag("direct_message_bubble_${post.id.value}"),
             color = if (mine) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
             shape = MaterialTheme.shapes.large,
         ) {

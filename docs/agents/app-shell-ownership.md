@@ -216,15 +216,20 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   LTR/RTL, reduced motion, profile account switching, and contextual-action bounds and callbacks.
 
 - `ShellContent` carries named physical-right and bottom obstruction clearances through the existing
-  destination host. `AppNotificationsDestinationContent` forwards them to the DM inbox only.
+  destination host. `AppNotificationsDestinationContent` forwards them to the DM inbox and conversation.
   `DirectMessageInboxScreen` uses physical-right clearance for header and row interaction content,
   while its viewport and row surfaces remain full width. Bottom clearance extends only the list
   scroll range. Compact layout ignores both wide-only inputs and keeps its existing IME-aware policy.
   The application currently supplies the default zero values because floating navigation is inactive.
   `DirectMessageScreenTest` covers synthetic LTR/RTL clearance, full-width underlay, row and header
-  bounds, final-content reach, branch forwarding, and compact compatibility. The conversation editor
-  remains unchanged; its contracted clearance implementation and IME-state tests remain separate
-  activation gates.
+  bounds, final-content reach, branch forwarding, and compact compatibility.
+  `DirectMessageConversationScreen` applies physical-right clearance to its header, notice/error text,
+  transcript content, and editor content. Its viewport and transcript viewport remain full size.
+  Bottom clearance extends only the transcript scroll range. Wide `imePadding()` and navigation-bar
+  positioning remain unchanged. Compact layout ignores both inputs and retains contextual-control insets.
+  Tests cover LTR/RTL bubble and control bounds, transcript reach, and synthetic IME open/close transitions.
+  Changing bottom clearance does not move the editor or Send action. Editor text remains feature-owned.
+  Physical-device IME behavior and production obstruction geometry remain unverified.
 
 - A contract carries no session secret, access token, source, repository, or ViewModel.
 - `sessionGeneration` and durable `sessionRevision` stay distinct.
