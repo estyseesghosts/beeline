@@ -253,6 +253,8 @@ internal fun ShellDestinationContent(
                                         sharedTab = navigator.searchCategory,
                                         onSharedQueryChange = { navigator.searchQuery = it },
                                         onSharedTabChange = { navigator.searchCategory = it },
+                                        rightObstructionClearance = rightObstructionClearance,
+                                        bottomObstructionClearance = bottomObstructionClearance,
                                         listState = searchListState.takeIf { largePresentation },
                                         largeLayout = largePresentation,
                                         compactLayout = !largePresentation,

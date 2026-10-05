@@ -242,6 +242,19 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   branch forwarding, timeline selection, scroll-state retention, and narrow compact compatibility.
   Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
 
+- `ShellDestinationContent` forwards both shell clearances to Search without changing query, category, or list-state owners.
+  `SearchScreen` clears physical right inside hashtag post rows, account result rows, the continuation item, and the wide dock.
+  Its content viewport, both list viewports, outer row extents, dividers, empty states, and loading indicators keep their width.
+  Account rows clear through the list's absolute content inset, because the account row surface is its own click target.
+  Bottom clearance adds to the wide result end spacing only. The wide dock keeps its bottom-start placement,
+  `LargeBottomDock` spacing, and measured height, so obstruction clearance never moves the dock or the search field.
+  Wide Search applies no IME field inset and keeps its current dock geometry.
+  `CategoryChips` retains chip scrolling and selection. Compact Search ignores both inputs and keeps
+  `compactContextualControlsPositioningInsets` and `compactScrollEndClearance`.
+  `SearchClearanceTest` verifies synthetic LTR/RTL bounds, row and divider underlay, account row and continuation callbacks,
+  final result reach, dock stability, chip selection, branch forwarding, retained list position, and compact IME compatibility.
+  Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
+
 - A contract carries no session secret, access token, source, repository, or ViewModel.
 - `sessionGeneration` and durable `sessionRevision` stay distinct.
 - The connected session uses one registered source per session. Recomposition does not create

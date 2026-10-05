@@ -161,39 +161,47 @@ Navigation-fit policy for later activation:
 - Full `test assembleRelease` passes with 154 suites, 1,599 tests, zero failures/errors/skips, and successful release assembly.
 - Home retains full viewports and transparent row underlay. Interaction content and the wide dock clear physical right in LTR/RTL.
 - Final post/footer content clears the dock and supplied bottom obstruction. Compact layout, chip travel, and scroll ownership remain unchanged.
+- 4C-4 Search clearance — commit subject `Add Search obstruction clearance`, preceded by `9717c49`.
+- Focused `SearchClearanceTest` passes: 8 tests. Existing suites pass unchanged: `HomeClearanceTest` 7,
+  `DirectMessageScreenTest` 22, `HomeFeedTest` 37, `NavigationTest` 36, `SearchOwnerTest` 8,
+  `SearchPanelRestorationTest` 3.
+- Full `test assembleRelease` passes with 155 suites, 1,607 tests, zero failures/errors/skips, and successful release assembly.
+- Hashtag rows, account rows, the continuation item, chips, and the field clear physical right in LTR/RTL.
+  Viewports, outer rows, and dividers keep their width. The wide dock keeps its placement and measured height.
 
 # Current slice
 
-## Home destination-clearance contract
+## Search destination-clearance contract
 
-- **Objective:** Prepare Home interaction and final-content clearance without activating floating navigation.
-- **Current behavior:** `HomeFeed` owns a full-size pull-to-refresh viewport and `LazyColumn`. Its rows are transparent `PostRow` presentations. Full-width dividers separate rows. Error/sign-in, empty, filtered-empty, loading-more, and continuation states are list items. Wide Home uses 16 dp top spacing and 88 dp final clearance. A separate `LargeBottomDock` overlays its timeline tabs. Compact Home uses 96 dp top spacing and `compactHomeScrollEndClearance()`.
-- **Current owners and callers:** `FeedHost` and `FeedViewModel` own `HomeContract` state and actions. `ShellContent` owns shell scroll states and compact navigation/tab placement. `ShellDestinationContent` forwards the existing scroll state, callbacks, and wide dock content to `HomeFeed`. `HomeTimelineTabs` owns chip scrolling and selection travel. `LargeBottomDock` owns existing 12 dp dock spacing. The null-Home branch in `ShellDestinationContent` owns its empty presentation and wide dock.
+- **Objective:** Clear wide Search interaction content, the wide dock controls, and final content from future floating navigation. Keep the dock, its chips, the query, and the IME policy unchanged.
+- **Current behavior:** `SearchScreen` owns a full-size `Box`. `SearchContent` holds the animated result panes. A bottom control stack holds `CategoryChips` and `SearchField`. Wide layout places that stack in a `LargeBottomDock` at `Alignment.BottomStart`. Its measured height supplies `largeDockClearance`; `LargeSearchDockClearance` (144 dp) covers the first frame. Compact layout places the stack at `Alignment.BottomCenter` with `CompactOverlayHorizontalPadding` and `compactContextualControlsPositioningInsets`, and takes its end clearance from `compactScrollEndClearance(CompactSearchDockHeight, ...)`. Wide results have no physical-right clearance and no supplied bottom clearance today.
+- **Current owners and callers:** `SearchOwner` and `SearchContract` own query, category, results, and paging. `ShellNavigator` owns `searchQuery`, `searchCategory`, `searchPrefill`, and `searchPanel`. `ShellDestinationContent` forwards state, layout flags, and `searchListState`. `SearchContent`, `HashtagSearchResults`, and `AccountSearchResults` own their panes. `LargeBottomDock` owns the wide dock box and its 12 dp spacing. `CategoryChips` owns chip travel and selection. `SearchField` owns the text, the search IME action, and the clear action.
 - **Implementation owner:** Orchestrator. No child session owns a scope. The orchestrator also performs direct review and Git operations.
-- **Exact allowed source paths:** `app/src/main/java/me/foxtails/palustris/ui/feed/HomeFeed.kt`; `app/src/main/java/me/foxtails/palustris/ui/shell/ShellDestinationContent.kt` (Home branch only).
-- **Exact allowed test path:** `app/src/test/java/me/foxtails/palustris/ui/feed/HomeClearanceTest.kt` (new focused Compose coverage).
+- **Exact allowed source paths:** `app/src/main/java/me/foxtails/palustris/ui/search/SearchScreen.kt`; `app/src/main/java/me/foxtails/palustris/ui/shell/ShellDestinationContent.kt` (Search panel branch only).
+- **Exact allowed test path:** `app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt` (new focused Compose coverage).
 - **Exact allowed records:** `docs/agents/tasks/beeline-0.4.0.md`; `docs/agents/handoff.md`; `docs/agents/app-shell-ownership.md`; `docs/wiki/ui-and-navigation.md`; one ignored local task log under `logs/`.
-- **Forbidden files:** All other files, including completed DM files/tests, shared `PostRow`, `HomeTimelineTabs`, `LargeBottomDock`, compact geometry, navigation, safe-region policy, and unrelated destinations. Preserve all pre-existing modifications, deletions, and untracked files.
-- **Clearance invariant:** Use the shell's existing physical-right and bottom `Dp` inputs. Wide Home applies physical-right padding inside each list item to its interactive post content, error/sign-in content, and status/footer content. Keep the list viewport, outer post extent, error surface, and dividers full width. Media and quote content are interactive post content and must also clear physical right. No opaque row background or full-viewport exclusion is permitted.
-- **Bottom invariant:** Add supplied bottom clearance to the existing resolved list end spacing. Move only the wide floating dock above supplied bottom clearance. Clear its physical right through a dock modifier. The final content then clears both the existing dock spacing and supplied obstruction. Keep chip travel independent; do not change chip state, offsets, order, or selection effects.
-- **Compact and state invariants:** Compact Home ignores both wide-only values. Preserve existing top/bottom overrides, compact IME-aware clearance, navigation visibility on scroll, timeline callbacks, paging demand, stable item keys, supplied list state, feature state, and all narrow navigation geometry/mappings. Wide Home has no editor or IME policy; do not add one. The null-Home branch keeps a full viewport and clears only its text presentation and wide dock.
-- **Ordered instructions:** Record this contract before coding. Forward the inputs through the existing Home branch. Apply clearance in Home list items and the floating dock. Cover the null-Home branch. Add focused tests, run gates, review the complete diff, update records, and commit explicit slice paths.
-- **Deliverables:** Home forwards both clearances; populated/error/empty/status content and timeline targets clear physical right in LTR/RTL; final post/footer clear bottom; full-width transparent underlay remains; null-Home tabs also clear obstruction; compact geometry and state remain unchanged.
-- **Acceptance criteria:** Synthetic wide tests verify viewport and divider bounds, all composed click targets, error/sign-in bounds and callbacks, final post and footer reach, dock bounds, horizontally reachable timeline targets and selection callbacks, and retained list position across clearance changes. Compact tests compare zero/nonzero inputs in LTR/RTL. Existing Home and navigation tests remain unchanged and pass. Production clearance remains zero.
-- **Validation commands:** Recheck external Java/Gradle processes before each build. Run `:app:testDebugUnitTest --tests me.foxtails.palustris.ui.feed.HomeClearanceTest`, then relevant `HomeFeedTest` and `NavigationTest`, then `test assembleRelease`. Use `cmd /c "set GRADLE_OPTS=-Dorg.gradle.daemon=false&& gradlew.bat --no-daemon --console=plain <tasks> < NUL"` with an explicit timeout. Check touched-document links and slice-only whitespace.
-- **Non-goals:** No obstruction measurement, navigation activation, rail replacement, wide DM action, safe-region changes, tab redesign, feature/data/state changes, unrelated destination edits, ADB, live server, or push. No device claims from Compose tests.
-- **Exit gates:** Focused/relevant tests and full test/release assembly pass. Direct review has no unresolved required findings. Links and whitespace pass. Records describe verified behavior and limits. Commit only reviewed allowed paths; do not force-stage logs.
-- **Fail gates:** Stop for unclear ownership/geometry, an overlap requiring invented values, changed compact geometry or IME policy, lost scroll/tab/feature state, unexplained failure, weakened tests, scope expansion, mixed file ownership, or two failed fixes for one root problem. Investigate before further edits. Do not stop external processes.
+- **Forbidden files:** All other files. This includes the Photo Grid screen and branch, the completed DM and Home files and tests, `CategoryChips.kt`, `LargeBottomDock.kt`, `CompactOverlayMetrics.kt`, `SearchOwner.kt`, `SearchHost.kt`, `ShellNavigator.kt`, compact navigation geometry, safe-region policy, and resources. Preserve all pre-existing modifications, deletions, and untracked files.
+- **Physical-right invariant:** `SearchScreen` accepts shell-supplied physical-right and bottom `Dp` values and calculates neither. Wide layout applies physical-right clearance inside hashtag `PostRow` content, inside account result rows, inside the result continuation item, and to the wide dock. It does not shrink the content viewport, the outer row extent, list dividers, empty states, or loading indicators, and it adds no opaque surface. Physical right does not reverse with the layout direction.
+- **Bottom invariant:** Wide bottom clearance adds to the resolved result end spacing only. The wide dock keeps its `BottomStart` placement, its `LargeBottomDock` 12 dp spacing, its measured height, and the 144 dp fallback. Obstruction clearance never changes the measured dock height.
+- **Dock and IME invariant:** The maintainer requires that bottom clearance must not move the dock or the search field. This slice adds no IME inset and changes no compact inset. `compactContextualControlsPositioningInsets`, `compactScrollEndClearance`, `CompactSearchDockHeight`, chip travel, chip selection, shared and local query, `initialQuery`, `listState`, and the shell query and category owners keep their current behavior. Wide Search keeps its current IME behavior, which applies no field inset.
+- **Ordered instructions:** Record this contract before coding. Forward both inputs through the existing Search branch. Apply physical-right clearance inside result interaction content and to the wide dock. Add bottom clearance to the wide result scroll range. Add focused tests, run gates, review the complete diff, update records, and commit explicit slice paths.
+- **Deliverables:** Search forwards both clearances; hashtag rows, account rows, the continuation item, chips, and the field clear physical right in LTR and RTL; final content clears the dock and the supplied bottom value; viewport, outer rows, and dividers keep their width; the dock keeps its position and measured height; compact geometry, chip behavior, and IME policy remain unchanged.
+- **Acceptance criteria:** Synthetic wide tests verify the full viewport, divider underlay, all composed click targets, account row and continuation callbacks, final result reach above the dock and above bottom clearance, chip reachability and selection callbacks, dock position stability, and retained list position across clearance changes. Compact tests compare zero and nonzero inputs in LTR and RTL through synthetic IME open and close. IME tests show that the field keeps its bounds when bottom clearance changes. Existing Home, DM, and navigation tests remain unchanged and pass. Production clearance remains zero.
+- **Validation commands:** Recheck external Java/Gradle processes before each build. Run `:app:testDebugUnitTest --tests me.foxtails.palustris.ui.search.SearchClearanceTest`, then `HomeClearanceTest`, `DirectMessageScreenTest`, `HomeFeedTest`, and `NavigationTest`, then `test assembleRelease`. Use `cmd /c "set GRADLE_OPTS=-Dorg.gradle.daemon=false&& gradlew.bat --no-daemon --console=plain <tasks> < NUL"` with an explicit timeout. Check touched-document links and slice-only whitespace.
+- **Non-goals:** No obstruction measurement, navigation activation, rail replacement, wide DM action, safe-region change, dock redesign, chip travel change, feature or data change, Photo Grid work, unrelated destination edit, ADB, live server, or push. No device claims from Compose tests.
+- **Exit gates:** Focused and relevant tests pass, and the full test and release assembly gate passes. Direct review has no unresolved required findings. Links and whitespace pass. Records describe verified behavior and limits. Commit only reviewed allowed paths; do not force-stage logs.
+- **Fail gates:** Stop for unclear ownership or geometry, an overlap that requires invented values, a moved dock or field, a changed compact inset or chip behavior, lost query, tab, or scroll state, an unexplained failure, a weakened test, scope expansion, mixed file ownership, or two failed fixes for one root problem. Investigate before further edits. Do not stop external processes.
 - **Git operator and commit instruction:** Orchestrator. Commit explicit reviewed paths after all gates pass. Do not push.
 
-Home implementation, focused checks, full gate, and direct review pass.
-Checkpoint subject: `Add Home obstruction clearance`, based on `f8f1056`.
-DM slices remain unchanged. Production clearances remain zero. Floating navigation remains inactive.
+Search implementation, focused checks, full gate, and direct review pass.
+Checkpoint subject: `Add Search obstruction clearance`, based on `9717c49`.
+Home remains complete. DM slices remain unchanged. Production clearances remain zero. Floating navigation remains inactive.
 
 # Files involved
 
-- Current slice: `HomeFeed.kt`, the Home branch of `ShellDestinationContent.kt`, and new `HomeClearanceTest.kt`.
+- Current slice: `SearchScreen.kt`, the Search panel branch of `ShellDestinationContent.kt`, and new `SearchClearanceTest.kt`.
 - `ShellContent` already forwards both inputs. It needs no changes in this slice.
+- Photo Grid shares the Search destination branch but stays a separate clearance gate.
 - Later slices use the scoped file lists above. Expand a destination into its own contract before editing if its behavior needs an independent gate.
 
 # Verification
@@ -233,23 +241,47 @@ No existing tests were changed or weakened. Direct review found no unresolved re
 Process checks before each Gradle run found no external Java/Gradle build. No external process was stopped.
 Compact IME policy was not changed. Existing navigation tests pass. No ADB or live-server check ran.
 Touched-document links and slice-only whitespace checks pass. Device rendering remains unverified.
+4C-4 Search focused `SearchClearanceTest` passes: 8 tests. Existing Home, DM, navigation, and Search-owner
+suites pass unchanged: 7 + 22 + 37 + 36 + 8 + 3 tests. Full `test assembleRelease` passes with 155 suites,
+1,607 tests, zero failures/errors/skips, and successful release assembly.
+Fixtures cover 800 x 600 dp and 800 x 1000 dp wide layouts, a 600 x 800 dp wide dock fixture, a
+600 x 1000 dp shell branch fixture, and 411 x 891 dp compact layouts. Synthetic obstruction values are test
+inputs, not production measurements.
+Tests cover full viewport and divider underlay, post row and account row click bounds, continuation
+callbacks, final result reach above the dock and above bottom obstruction, dock size and position stability,
+chip selection callbacks, branch forwarding, retained query and category, retained list position, and
+synthetic IME open and close.
+Wide Search applies no IME field inset. Compact Search keeps its measured 336 dp IME control gap.
+Three test setup errors were corrected without production changes: the shell branch fixture left the
+navigator on Home, a single-word query is an exact hashtag in this codebase, and a fixed shared tab value
+cannot record a chip selection. One production correction followed a real finding: account rows now clear
+through the list's absolute content inset, because padding inside the account row chain left its clickable
+bounds at the full item width.
+One unrelated pre-existing flake appeared in one full run: `MastodonIntegrationTest
+cancelingTimelinePageCancelsRequestAndAllowsRetry` failed with `IOException: Gave up waiting for queue to
+shut down`. That suite passes 67 tests in isolation and is untouched by this slice. The rerun gate is green.
+No existing test was weakened. Direct review found no unresolved required findings.
+Process checks before each Gradle run found no external Java/Gradle build. No external process was stopped.
+No ADB or live-server check ran. Compact IME policy and chip travel were not changed.
 Use the repository wrapper with `--no-daemon --console=plain`, an explicit timeout, and closed stdin.
 Run `test assembleRelease` for each code slice. Run the complete Phase 4C rerun/lint gate before final completion.
 
 # Next
 
-Investigate Search under a separate bounded destination-clearance contract. Keep remaining destination gates separate.
+Investigate Photo Grid under its own bounded destination-clearance contract. Notifications and Profile
+follow as separate gates. Do not activate vertical navigation or wire the wide DM action in a clearance slice.
 
 # Blockers
 
 - No production vertical capsule/action measurements are approved. Reuse only dimensions derived from the shared presentation and existing source contracts; ask the maintainer where fit policy requires a new value.
 - The DM recipient finder is implemented and its contract is ready. Wire it to the wide New conversation action only in the activation slice.
 - Search, Photo Grid, Notifications, and Profile need bounded contracts and passing gates before activation.
+  Search is complete. Photo Grid, Notifications, and Profile still need their contracts.
 - The prior external build was absent during this slice's process checks. Recheck shared-output activity before later Gradle gates. Device state was not checked.
 - Device, physical foldable, API 29, live-server, signing, and TalkBack behavior remain unverified.
 - Preserve the existing unrelated worktree, deleted Photo Grid test/PNGs, captures, scripts, caches, and writing-style edits.
 
 # Last safe commit
 
-`Add Home obstruction clearance`, based on `f8f1056` — Add DM conversation obstruction clearance.
+`Add Search obstruction clearance`, based on `9717c49` — Add Home obstruction clearance.
 Resolve this checkpoint's hash from Git. Nothing was pushed.

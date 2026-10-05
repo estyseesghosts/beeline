@@ -117,6 +117,25 @@ Sources: `ui/feed/HomeFeed.kt`, `ui/shell/ShellDestinationContent.kt`, `HomeClea
 Focused Compose tests verify bounds, final-content reach, timeline callbacks, retained scroll position,
 and compact compatibility. Device rendering and production obstruction geometry remain unverified.
 
+## Wide Search clearance
+
+Search keeps its full-size content viewport and both result lists. Hashtag post rows, account result rows,
+the continuation control, category chips, and the search field clear shell-supplied physical right in LTR
+and RTL. Outer row extents, list dividers, empty states, and loading indicators keep their existing width
+beneath floating chrome. Account rows clear through the list inset because the account row is one click target.
+
+Bottom clearance extends the wide result scroll range only. The wide search dock keeps its bottom-start
+placement, its spacing, and its measured height. The search field therefore keeps its current position
+and its current wide IME behavior, which applies no field inset.
+Compact layout ignores both wide inputs and keeps its IME-aware control placement and scroll clearance.
+Category chips keep their own scrolling and selection behavior. Clearance does not set chip travel.
+The application still supplies zero values because floating navigation is inactive.
+
+Sources: `ui/search/SearchScreen.kt`, `ui/shell/ShellDestinationContent.kt`, `SearchClearanceTest`.
+Focused Compose tests verify viewport and divider bounds, interaction and dock clearance, final-content reach,
+chip selection, retained list position, synthetic IME open and close, branch forwarding, and compact
+compatibility. Device rendering and production obstruction geometry remain unverified.
+
 ## Large panes and folding coordinates
 
 `LargeLayoutMode` currently chooses compact, single-pane, or expanded-pane behavior from

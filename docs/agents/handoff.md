@@ -11,30 +11,37 @@ Read AGENTS.md and its required linked pages before continuing.
 
 ## Current position and next action
 
-Phase 4C-4 Home clearance is complete. The existing Home branch forwards shell-supplied physical-right
-and bottom clearances. Home keeps full-size pull-to-refresh and list viewports, transparent outer rows,
-full-width dividers, and existing error surfaces. Interactive post content, error/sign-in controls,
-and footer content clear physical right in LTR/RTL. Bottom clearance extends the existing scroll range.
-The wide timeline dock clears physical right and moves above bottom obstruction. The null-Home branch
-also clears its dock and empty-state text. Chip scrolling and selection travel remain unchanged.
-Compact Home ignores both wide inputs. Its IME-aware spacing and shell-owned tabs/navigation remain unchanged.
-The DM slices remain unchanged. Floating navigation remains inactive with zero production clearances.
+Phase 4C-4 Search clearance is complete. The existing Search branch forwards shell-supplied physical-right
+and bottom clearances. Search keeps its full-size content viewport, both list viewports, outer row extents,
+dividers, empty states, and loading indicators. Hashtag post rows, account rows, the continuation item,
+category chips, and the search field clear physical right in LTR and RTL. Account rows clear through the
+list's absolute content inset because the account row is one click target.
+Bottom clearance adds to the wide result scroll range only. The wide dock keeps its bottom-start placement,
+its spacing, and its measured height, so the dock and the search field do not move.
+The maintainer requires that bottom clearance must not move the dock or the field. Wide Search applies no
+IME field inset. Chip scrolling and selection remain unchanged. Compact Search ignores both wide inputs and
+keeps its IME-aware control placement and scroll clearance. The DM and Home slices remain unchanged.
 
-Focused `HomeClearanceTest` passes: 7 tests. Existing `HomeFeedTest` and `NavigationTest` pass: 73 tests.
-Full `test assembleRelease` passes with 154 suites, 1,599 tests, zero failures/errors/skips,
-and successful release assembly. The unchanged `DirectMessageScreenTest` passes with 22 tests.
-Tests verify viewport/underlay bounds, interaction clearance, final post/footer reach, branch forwarding,
-timeline callbacks, retained scroll position, and compact compatibility. Direct review found no unresolved required findings.
-Document links and slice-only whitespace pass. No `problem_solver`, ADB, or live-server check ran.
+Focused `SearchClearanceTest` passes: 8 tests. Existing suites pass unchanged: `HomeClearanceTest` 7,
+`DirectMessageScreenTest` 22, `HomeFeedTest` 37, `NavigationTest` 36, `SearchOwnerTest` 8,
+`SearchPanelRestorationTest` 3.
+Full `test assembleRelease` passes with 155 suites, 1,607 tests, zero failures/errors/skips,
+and successful release assembly.
+Tests verify viewport and divider bounds, interaction and dock clearance, final-content reach,
+synthetic IME open and close, chip selection, branch forwarding, retained list position, and compact
+compatibility. Direct review found no unresolved required findings. Document links and slice-only
+whitespace pass. No `problem_solver`, ADB, or live-server check ran.
+One full run also reported an unrelated pre-existing flake in `MastodonIntegrationTest`
+(`IOException: Gave up waiting for queue to shut down`). That suite passes 67 tests in isolation, and the
+recorded rerun gate is green.
 
-Next: investigate Search and record its separate bounded contract before implementation.
-Search, Photo Grid, Notifications, and Profile clearance gates remain before activation.
-Do not activate vertical navigation or wire the wide DM action in a clearance slice.
+Next: investigate Photo Grid under its own bounded destination-clearance contract. Notifications and Profile
+follow as separate gates. Do not activate vertical navigation or wire the wide DM action in a clearance slice.
 The orchestrator remains implementation owner and Git operator. The maintainer prohibits `problem_solver` for this task.
 
 ## Last safe commit
 
-`Add Home obstruction clearance`, based on `f8f1056` — `Add DM conversation obstruction clearance`.
+`Add Search obstruction clearance`, based on `9717c49` — `Add Home obstruction clearance`.
 Resolve this checkpoint's hash from Git. Nothing was pushed.
 
 ## Limits and worktree caution
