@@ -11,27 +11,30 @@ Read AGENTS.md and its required linked pages before continuing.
 
 ## Current position and next action
 
-Phase 4C-4 DM conversation/editor clearance is complete. The existing notification destination
-branch forwards shell-supplied physical-right and bottom clearances. The conversation keeps its
-full-size viewport and clears header, text, bubbles, controls, and editor content from physical right.
-Bottom clearance extends only transcript scrolling. Wide IME/navigation-bar positioning and compact
-contextual-control positioning remain unchanged. Compact layout ignores both wide-only inputs.
-The completed DM inbox slice remains unchanged. Floating navigation remains inactive with zero production clearances.
+Phase 4C-4 Home clearance is complete. The existing Home branch forwards shell-supplied physical-right
+and bottom clearances. Home keeps full-size pull-to-refresh and list viewports, transparent outer rows,
+full-width dividers, and existing error surfaces. Interactive post content, error/sign-in controls,
+and footer content clear physical right in LTR/RTL. Bottom clearance extends the existing scroll range.
+The wide timeline dock clears physical right and moves above bottom obstruction. The null-Home branch
+also clears its dock and empty-state text. Chip scrolling and selection travel remain unchanged.
+Compact Home ignores both wide inputs. Its IME-aware spacing and shell-owned tabs/navigation remain unchanged.
+The DM slices remain unchanged. Floating navigation remains inactive with zero production clearances.
 
-Focused `DirectMessageScreenTest` passes: 22 tests. Full `test assembleRelease` passes with 153 suites,
-1,592 tests, zero failures/errors/skips, and successful release assembly. Tests verify LTR/RTL,
-full viewport, transcript reach, branch forwarding, and synthetic IME open/close transitions.
-Changing bottom clearance does not move the editor or Send. Editor text survives both IME states.
-Direct diff review found no required findings. No `problem_solver`, ADB, or live-server check ran.
+Focused `HomeClearanceTest` passes: 7 tests. Existing `HomeFeedTest` and `NavigationTest` pass: 73 tests.
+Full `test assembleRelease` passes with 154 suites, 1,599 tests, zero failures/errors/skips,
+and successful release assembly. The unchanged `DirectMessageScreenTest` passes with 22 tests.
+Tests verify viewport/underlay bounds, interaction clearance, final post/footer reach, branch forwarding,
+timeline callbacks, retained scroll position, and compact compatibility. Direct review found no unresolved required findings.
+Document links and slice-only whitespace pass. No `problem_solver`, ADB, or live-server check ran.
 
-Next: define a separate bounded contract for the next 4C-4 destination-clearance slice.
-Home, Search, Photo Grid, Notifications, and Profile clearance gates remain before activation.
+Next: investigate Search and record its separate bounded contract before implementation.
+Search, Photo Grid, Notifications, and Profile clearance gates remain before activation.
 Do not activate vertical navigation or wire the wide DM action in a clearance slice.
 The orchestrator remains implementation owner and Git operator. The maintainer prohibits `problem_solver` for this task.
 
 ## Last safe commit
 
-`Add DM conversation obstruction clearance`, based on `62506ba` — `Define DM conversation clearance contract`.
+`Add Home obstruction clearance`, based on `f8f1056` — `Add DM conversation obstruction clearance`.
 Resolve this checkpoint's hash from Git. Nothing was pushed.
 
 ## Limits and worktree caution

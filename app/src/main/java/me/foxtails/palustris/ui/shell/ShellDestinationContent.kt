@@ -3,6 +3,7 @@ package me.foxtails.palustris.ui.shell
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
@@ -173,6 +174,8 @@ internal fun ShellDestinationContent(
                             Destination.Home -> if (home != null) HomeFeed(
                                 state = home.state,
                                 compactLayout = !largePresentation,
+                                rightObstructionClearance = rightObstructionClearance,
+                                bottomObstructionClearance = bottomObstructionClearance,
                                 onRefresh = { home.actions.refresh(navigator.timeline) },
                                 onLoadMore = { home.actions.loadMore(navigator.timeline) },
                                 onSignIn = accountSwitcher.actions::signOut,
@@ -206,9 +209,12 @@ internal fun ShellDestinationContent(
                                     }
                                 }) else null,
                             ) else Box(Modifier.fillMaxSize()) {
-                                EmptyState(AppIcons.HoneyHome, stringResource(R.string.feed_timeline_empty_title), stringResource(R.string.feed_timeline_empty_subtitle, stringResource(timelineLabelRes(navigator.timeline))))
+                                Box(Modifier.absolutePadding(right = if (largePresentation) rightObstructionClearance else 0.dp).fillMaxSize()) {
+                                    EmptyState(AppIcons.HoneyHome, stringResource(R.string.feed_timeline_empty_title), stringResource(R.string.feed_timeline_empty_subtitle, stringResource(timelineLabelRes(navigator.timeline))))
+                                }
                                 if (largePresentation) {
-                                    LargeBottomDock(modifier = Modifier.align(Alignment.BottomStart), content = {
+                                    LargeBottomDock(modifier = Modifier.align(Alignment.BottomStart)
+                                        .absolutePadding(right = rightObstructionClearance, bottom = bottomObstructionClearance), content = {
                                         LargeTimelineDockContent(availableTimelines, navigator.timeline) { item ->
                                             val changed = item != navigator.timeline
                                             if (changed) navigator.clearSelectedPost()

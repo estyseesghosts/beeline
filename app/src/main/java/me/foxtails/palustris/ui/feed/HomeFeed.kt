@@ -9,6 +9,7 @@ package me.foxtails.palustris.ui.feed
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -67,6 +68,11 @@ import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 
+/**
+ * Keeps Home's viewport full size. Wide obstruction inputs clear list interaction
+ * content and the floating dock; bottom clearance also extends the list scroll range.
+ * Compact Home ignores these inputs and retains its IME-aware end spacing.
+ */
 @Composable
 fun HomeFeed(
     state: HomeFeedUiState,
@@ -99,7 +105,16 @@ fun HomeFeed(
     bottomDock: (@Composable () -> Unit)? = null,
     cleanTrackingParameters: Boolean = false,
     contentWarningRules: ContentWarningRules = LocalContentWarningRules.current,
+    rightObstructionClearance: Dp = 0.dp,
+    bottomObstructionClearance: Dp = 0.dp,
 ) {
+    // Clear interaction content, not the viewport or full-width row underlay.
+    // Physical right does not reverse with the layout direction.
+    val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
+    val interactionModifier = Modifier.absolutePadding(right = wideRightClearance)
+    val scrollEndClearance = (bottomContentClearance
+        ?: if (compactLayout) compactHomeScrollEndClearance() else LegacyFeedBottomClearance) + wideBottomClearance
     val list = listState ?: rememberLazyListState()
     val pullToRefreshState = rememberPullToRefreshState()
     var fallbackBubbleTarget by remember { mutableStateOf<PostActionBubbleTarget?>(null) }
@@ -195,21 +210,27 @@ fun HomeFeed(
             ) {
                 LazyColumn(
                     state = list,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = topContentPadding ?: 96.dp, bottom = bottomContentClearance ?: if (compactLayout) compactHomeScrollEndClearance() else LegacyFeedBottomClearance),
+                    modifier = Modifier.fillMaxSize().testTag("home_feed_list"),
+                    contentPadding = PaddingValues(top = topContentPadding ?: 96.dp, bottom = scrollEndClearance),
                 ) {
                     if (state.error != null) item {
-                        Surface(color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth().padding(16.dp), shape = MaterialTheme.shapes.large) {
-                            Column(Modifier.padding(16.dp)) {
+                        Surface(color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("home_feed_error"), shape = MaterialTheme.shapes.large) {
+                            Column(interactionModifier.padding(16.dp)) {
                                 Text(state.error, color = MaterialTheme.colorScheme.onErrorContainer)
                                 TextButton(onClick = if (state.needsSignIn) onSignIn else onRefresh) { Text(if (state.needsSignIn) stringResource(R.string.feed_sign_in_again) else stringResource(R.string.notifications_retry)) }
                             }
                         }
                     }
-                    if (state.posts.isEmpty() && !state.loading && state.error == null) item { Box(Modifier.fillParentMaxSize()) { EmptyState(AppIcons.HoneyHome, stringResource(R.string.feed_empty_title), stringResource(R.string.feed_empty_subtitle)) } }
+                    if (state.posts.isEmpty() && !state.loading && state.error == null) item {
+                        Box(Modifier.fillParentMaxSize()) {
+                            Box(interactionModifier.fillMaxSize()) {
+                                EmptyState(AppIcons.HoneyHome, stringResource(R.string.feed_empty_title), stringResource(R.string.feed_empty_subtitle))
+                            }
+                        }
+                    }
                     val enabledActions = if (hasOwnership) availableActions.intersect(ClientReadyPostActions) else emptySet()
                     items(visibleRows, key = { "${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
-                        Column(Modifier.animateItem(fadeInSpec = scheme.fastFadeIn, fadeOutSpec = scheme.fastFadeOut, placementSpec = scheme.gentleOffset)) {
+                        Column(Modifier.animateItem(fadeInSpec = scheme.fastFadeIn, fadeOutSpec = scheme.fastFadeOut, placementSpec = scheme.gentleOffset).testTag("home_post_underlay_${ownedPost.post.id.value}")) {
                             PostRow(
                                 ownedPost = ownedPost,
                                 presentation = PostRowPresentation(
@@ -236,12 +257,13 @@ fun HomeFeed(
                                      onOpenUrl = onOpenUrl,
                                      onOpenUsername = onOpenUsername,
                                  ),
+                                 modifier = interactionModifier,
                              )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
+                            HorizontalDivider(modifier = Modifier.testTag("home_divider_${ownedPost.post.id.value}"), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
                         }
                     }
                     if (state.posts.isNotEmpty() && visibleRows.isEmpty() && !state.loading && state.error == null) item {
-                        Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.fillMaxWidth().then(interactionModifier).padding(24.dp), contentAlignment = Alignment.Center) {
                             Text(
                                 stringResource(R.string.feed_filtered_empty),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -249,16 +271,22 @@ fun HomeFeed(
                             )
                         }
                     }
-                    if (state.loadingMore) item { Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp)) } }
+                    if (state.loadingMore) item { Box(Modifier.fillMaxWidth().then(interactionModifier).padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp)) } }
                     if (state.posts.isNotEmpty() && !state.loadingMore && state.error == null) item {
-                        Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.fillMaxWidth().then(interactionModifier).padding(16.dp), contentAlignment = Alignment.Center) {
                             if (state.nextCursor != null) TextButton(onClick = { pagingDemand.reset(); onLoadMore() }) { Text(stringResource(R.string.feed_load_older)) }
                             else Text(stringResource(R.string.feed_up_to_date), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
             }
-            bottomDock?.let { LargeBottomDock(content = it, modifier = Modifier.align(Alignment.BottomStart)) }
+            bottomDock?.let {
+                LargeBottomDock(
+                    content = it,
+                    modifier = Modifier.align(Alignment.BottomStart)
+                        .absolutePadding(right = wideRightClearance, bottom = wideBottomClearance),
+                )
+            }
         }
     }
     if (onOpenHashtagBubble == null) PostActionBubbleHost(target = fallbackBubbleTarget, emojiCatalog = EmojiCatalogState(), emojiCapabilities = me.foxtails.palustris.domain.EmojiCapabilities(), onDismiss = { fallbackBubbleTarget = null }, onHashtagSelected = onSearchHashtag, onReactionSelected = { _, _ -> }, hashtagBottomClearance = if (compactLayout) compactHomeScrollEndClearance() else 0.dp)

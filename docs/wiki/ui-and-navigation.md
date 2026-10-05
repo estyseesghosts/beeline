@@ -101,6 +101,22 @@ Physical-device IME behavior and production obstruction geometry remain unverifi
 Sources: `ui/directmessages/DirectMessageConversationScreen.kt`,
 `ui/shell/AppNotificationsDestinationContent.kt`, `DirectMessageScreenTest`.
 
+## Wide Home clearance
+
+Home keeps its full-size pull-to-refresh and list viewports. Post controls, interactive media,
+error/sign-in controls, and footer content clear shell-supplied physical right in LTR and RTL.
+Transparent outer rows, error surfaces, and dividers keep their existing width beneath floating chrome.
+Bottom clearance extends the existing scroll range. The wide timeline dock moves above that obstruction
+and clears physical right. Home without a feed contract also clears its dock and empty-state text.
+
+Timeline chips keep their existing scroll and selection behavior. Clearance does not set chip travel.
+Compact Home ignores both wide inputs. Its shell-owned tabs, navigation, and IME-aware final spacing remain unchanged.
+The application still supplies zero values because floating navigation is inactive.
+
+Sources: `ui/feed/HomeFeed.kt`, `ui/shell/ShellDestinationContent.kt`, `HomeClearanceTest`, `HomeFeedTest`, `NavigationTest`.
+Focused Compose tests verify bounds, final-content reach, timeline callbacks, retained scroll position,
+and compact compatibility. Device rendering and production obstruction geometry remain unverified.
+
 ## Large panes and folding coordinates
 
 `LargeLayoutMode` currently chooses compact, single-pane, or expanded-pane behavior from

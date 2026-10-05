@@ -231,6 +231,17 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   Changing bottom clearance does not move the editor or Send action. Editor text remains feature-owned.
   Physical-device IME behavior and production obstruction geometry remain unverified.
 
+- `ShellDestinationContent` forwards both shell clearances to Home without changing its feature or scroll-state owners.
+  `HomeFeed` clears physical right inside post interaction content, error/sign-in content, and list status/footer content.
+  Its pull-to-refresh and list viewports, transparent outer post extents, error surfaces, and dividers retain their width.
+  Interactive media and quotes stay inside the cleared post content. Bottom clearance extends the existing list end spacing.
+  Only the wide timeline dock moves above bottom obstruction and clears physical right. The null-Home branch clears its dock and text.
+  `HomeTimelineTabs` retains chip scrolling, selection travel, and timeline callbacks. Obstruction clearance does not calculate chip travel.
+  Compact Home ignores both inputs and retains its IME-aware end spacing and shell-owned tabs/navigation.
+  `HomeClearanceTest` verifies synthetic LTR/RTL bounds, row/divider underlay, error/sign-in callbacks, final post/footer reach,
+  branch forwarding, timeline selection, scroll-state retention, and narrow compact compatibility.
+  Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
+
 - A contract carries no session secret, access token, source, repository, or ViewModel.
 - `sessionGeneration` and durable `sessionRevision` stay distinct.
 - The connected session uses one registered source per session. Recomposition does not create
