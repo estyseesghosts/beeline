@@ -80,6 +80,26 @@ translation work.
 Complete. The slice adds the enum, the persisted key, the view model command, the Display page item,
 and the composition root override, with their tests and documentation coverage.
 
+## Current slice
+
+Fix the Display page scroll defect, then re-verify.
+
+The previous current-slice entry is retained below as the delivered slice.
+
+### Delivered slice
+
+Add the enum, the persisted key, the view model command, the Display page item, and the
+composition root override, with their tests.
+
+The page rendered a plain `Column` with no `verticalScroll`. Its content is taller than a short
+viewport, so the trailing items were clipped and could not be reached. The defect predates this
+switch. The new item added one more row and made the clipping worse. The earlier layout direction
+tests worked around it with a tall viewport qualifier instead of fixing the cause.
+
+- `DisplaySettingsScreen` owns a `rememberScrollState` and applies `verticalScroll`.
+- The layout direction tests now use the default short viewport and scroll the switch into view.
+- Two tests cover the scroll itself on a deliberately short viewport.
+
 ## Files involved
 
 - `app/src/main/java/me/foxtails/palustris/domain/AppPreferences.kt`
@@ -101,7 +121,8 @@ and the composition root override, with their tests and documentation coverage.
 ## Completed
 
 - Slice 1 — the enum, the persisted key, the view model command, the Display page item, the
-  composition root override, tests, and documentation.
+  composition root override, tests, and documentation. Commit `916aac4`.
+- Slice 2 — the Display page scroll fix, its tests, and documentation.
 
 ## Verification
 
@@ -135,4 +156,4 @@ None for this slice. The wide-layout hinge offset gap is recorded as unfixed.
 
 ## Last safe commit
 
-`8c5d879` `Add Profile obstruction clearance`.
+`916aac4` `Add Display layout direction toggle`.

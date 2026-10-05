@@ -24,6 +24,12 @@ switches. A page below the composition root must resolve against `deviceLayoutDi
 against `LocalLayoutDirection.current`, because the published value is the forced direction there.
 The page uses the device direction for its label and toggle target.
 
+The Display page also scrolls vertically. The page previously rendered a plain `Column` with no
+`verticalScroll`, so its content overflowed a short viewport and the trailing items were clipped and
+unreachable. That defect predates the switch. The new item added a row and made the clipping worse.
+The screen now owns a `rememberScrollState`, and the layout direction tests use the default short
+viewport and scroll the switch into view.
+
 A read-only audit of hard-coded physical sides confirms that `TextAlign` use is centered only, and it
 confirms all 26 `absolutePadding` call sites across 11 files stay physical and were not edited. All
 `Alignment` uses are logical. One pre-existing gap is now recorded rather than fixed: on a large
@@ -37,13 +43,16 @@ entry, which this task deliberately excludes.
 
 ## Last safe commit
 
-`8c5d879` `Add Profile obstruction clearance`. The layout direction slice commit resolves from Git.
+`Add Display page scroll fix`, based on `916aac4` — `Add Display layout direction toggle`.
+Resolve this checkpoint's hash from Git. Nothing was pushed.
 
 ## Limits and worktree caution
 
 - Device rendering, real right-to-left language support, TalkBack, signing, and physical foldable
   behavior remain unverified. Beeline has no right-to-left translations today.
 - The foldable hinge offset gap above is unfixed and unverified on a device.
+- Other settings sub-pages are not checked for the same missing-scroll defect. `SettingsScreen` and
+  the other route branches in `SettingsHost` were not audited for this.
 - Physical-device IME and API 29 behavior remain unverified.
 - No production floating-navigation geometry is approved. Do not invent clearance or fit values.
 - One pre-existing flake exists: `MastodonIntegrationTest cancelingTimelinePageCancelsRequestAndAllowsRetry`

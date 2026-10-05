@@ -211,6 +211,9 @@ direction that turning the switch on produces, so it reads `Force RTL Layout` in
 device and `Force LTR Layout` in a right-to-left device. The label changes after the user switches.
 The switch is on when a direction is stored. Turning it off returns to the device direction.
 
+The Display page scrolls vertically, so every item stays reachable on a short screen. Its scroll
+position resets each time the page opens.
+
 The switch changes layout only. It does not change the application language, and every user-visible
 string stays as the language provides it. Beeline has no right-to-left translations yet, so the
 setting changes the layout without changing the text.

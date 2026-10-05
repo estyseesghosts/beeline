@@ -29,6 +29,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import java.io.File
 import kotlinx.coroutines.flow.first
@@ -82,6 +83,32 @@ class SettingsDisplayTest {
         }
 
         compose.onAllNodesWithText("Display").assertCountEquals(1)
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w411dp-h640dp-420dpi")
+    fun theDisplayPageScrollsSoTheLastItemStaysReachable() {
+        // A 640 dp viewport is shorter than the page content. The last item must still exist, and a
+        // scroll gesture must bring it into view. This fails if the page stops being scrollable.
+        setDisplayContent(AppLayoutDirection.System, LayoutDirection.Ltr)
+
+        compose.onAllNodesWithText("Force RTL Layout").assertCountEquals(1)
+        // The item is composed but starts outside the viewport, which is what scrolling is for.
+        compose.onAllNodesWithText("Force RTL Layout")[0].assertExists()
+        compose.onAllNodesWithText("Force RTL Layout")[0].performScrollTo()
+        compose.onNodeWithText("Force RTL Layout").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w411dp-h640dp-420dpi")
+    fun scrollingTheDisplayPageRevealsBothTrailingItems() {
+        setDisplayContent(AppLayoutDirection.System, LayoutDirection.Ltr)
+
+        compose.onAllNodesWithText("Request 60 Hz refresh rate")[0].performScrollTo()
+        compose.onNodeWithText("Request 60 Hz refresh rate").assertIsDisplayed()
+
+        compose.onAllNodesWithText("Force RTL Layout")[0].performScrollTo()
+        compose.onNodeWithText("Force RTL Layout").assertIsDisplayed()
     }
 
     @Test
@@ -173,10 +200,9 @@ class SettingsDisplayTest {
         assertEquals(AppColorScheme.Palette, palette.observe().first { it.loaded }.preferences.colorScheme)
     }
 
-    // The Display page is a plain column that does not scroll, so its last item can sit outside a
-    // short viewport. These tests use a tall viewport so the layout direction item is reachable.
+    // These tests deliberately use the default short viewport. The Display page scrolls, so the last
+    // item must be reachable on a normal phone without a tall qualifier.
     @Test
-    @Config(sdk = [35], qualifiers = "w411dp-h2600dp-420dpi")
     fun layoutDirectionItemNamesTheDirectionItProducesInALtrDevice() {
         var requested: AppLayoutDirection? = null
         setDisplayContent(AppLayoutDirection.System, LayoutDirection.Ltr) { requested = it }
@@ -191,7 +217,6 @@ class SettingsDisplayTest {
     }
 
     @Test
-    @Config(sdk = [35], qualifiers = "w411dp-h2600dp-420dpi")
     fun layoutDirectionItemNamesTheDirectionItProducesInAnRtlDevice() {
         var requested: AppLayoutDirection? = null
         setDisplayContent(AppLayoutDirection.System, LayoutDirection.Rtl) { requested = it }
@@ -205,7 +230,6 @@ class SettingsDisplayTest {
     }
 
     @Test
-    @Config(sdk = [35], qualifiers = "w411dp-h2600dp-420dpi")
     fun layoutDirectionSwitchIsOffForSystemAndOnForAStoredOverride() {
         setDisplayContent(AppLayoutDirection.System, LayoutDirection.Ltr)
         layoutDirectionSwitch().assertIsOff()
@@ -225,7 +249,6 @@ class SettingsDisplayTest {
     }
 
     @Test
-    @Config(sdk = [35], qualifiers = "w411dp-h2600dp-420dpi")
     fun theLabelFollowsTheDeviceDirectionAndNotTheForcedDirection() {
         // A forced right-to-left layout does not change the device direction, so the item keeps
         // offering right-to-left in a left-to-right device.
@@ -236,7 +259,6 @@ class SettingsDisplayTest {
     }
 
     @Test
-    @Config(sdk = [35], qualifiers = "w411dp-h2600dp-420dpi")
     fun theToggleIsReversibleAndReturnsToTheDeviceDirection() {
         val stored = mutableStateOf(AppLayoutDirection.System)
         setReversibleDisplayContent(stored, LayoutDirection.Ltr)
@@ -259,7 +281,6 @@ class SettingsDisplayTest {
     }
 
     @Test
-    @Config(sdk = [35], qualifiers = "w411dp-h2600dp-420dpi")
     fun theToggleIsReversibleInAnRtlDevice() {
         val stored = mutableStateOf(AppLayoutDirection.System)
         setReversibleDisplayContent(stored, LayoutDirection.Rtl)
@@ -350,6 +371,9 @@ class SettingsDisplayTest {
     private fun layoutDirectionSwitch(): SemanticsNodeInteraction {
         val switches = compose.onAllNodes(isToggleable())
         switches.assertCountEquals(2)
+        // The item scrolls, so it can sit outside the viewport on a short screen. A click needs the
+        // node on screen, so scroll to it first.
+        switches[1].performScrollTo()
         return switches[1]
     }
 

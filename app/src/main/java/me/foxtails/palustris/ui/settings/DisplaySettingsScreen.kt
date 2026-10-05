@@ -1,5 +1,7 @@
 package me.foxtails.palustris.ui.settings
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,7 +57,16 @@ fun DisplaySettingsScreen(
     // The page sits below the composition root, where LocalLayoutDirection is the forced direction.
     // The device direction names what turning the switch on produces, so it is the base here.
     val baseDirection = deviceLayoutDirection()
-    Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+    // The page holds more items than fit a short viewport, so it scrolls. Without this the last
+    // items are clipped and cannot be reached. The scroll state is local to this screen and is
+    // released when the composition leaves.
+    val scrollState = rememberScrollState()
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .verticalScroll(scrollState)
+            .padding(bottom = 24.dp),
+    ) {
         ChoiceGroup(
             stringResource(R.string.settings_colour_style),
             AppColorScheme.entries,
