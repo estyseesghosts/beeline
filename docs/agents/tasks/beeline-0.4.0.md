@@ -110,6 +110,22 @@ Navigation-fit policy for later activation:
 - **Fail gates:** Stop if physical-right padding cannot be verified in RTL, row visuals or click bounds require viewport exclusion, compact geometry changes, existing editor behavior changes, or any failure remains unexplained.
 - **Git operator:** Orchestrator; stage and commit only reviewed slice paths after validation and review.
 
+### Next bounded destination slice — DM conversation/editor clearance
+
+- **Objective:** Clear the wide DM conversation and editor from future floating navigation without changing editor state or IME positioning.
+- **Current behavior and invariant:** `DirectMessageConversationScreen` owns the full-size conversation viewport, header, transcript, and editor. The wide editor uses `imePadding()` plus navigation-bar positioning insets. Compact layout uses `compactContextualControlsPositioningInsets`. Keep both policies and the editor's stored text unchanged.
+- **Owner and abstraction:** `DirectMessageConversationScreen` owns conversation presentation. `ShellContent`, `ShellDestinationContent`, and `AppNotificationsDestinationContent` carry immutable shell clearances through the existing destination branch.
+- **Implementation owner:** Orchestrator; no fixer owns this slice.
+- **Allowed files:** `ui/shell/ShellContent.kt`, `ui/shell/ShellDestinationContent.kt`, `ui/shell/AppNotificationsDestinationContent.kt`, `ui/directmessages/DirectMessageConversationScreen.kt`, `app/src/test/java/me/foxtails/palustris/ui/directmessages/DirectMessageScreenTest.kt`, this task state, handoff, app-shell ownership, UI/navigation wiki, and the local task log.
+- **Forbidden files and behavior:** Do not change the completed DM inbox slice, DM feature state or send actions, navigation activation, safe-region calculation, production geometry, compact-narrow geometry, or unrelated destinations. Do not alter IME policy or add viewport-wide exclusion padding.
+- **Clearance contract:** The shell supplies the existing physical-right and bottom obstruction `Dp` values. The conversation screen ignores both in compact layout. In wide layout, keep the full viewport. Keep header, notice, and error text; thread bubbles; retry/continue controls; editor text field; and Send action left of physical-right clearance. Add bottom clearance only to the transcript scroll range. Do not add it to the editor's insets. Preserve wide `imePadding()` and navigation-bar positioning, and preserve compact contextual-control positioning. The shell currently supplies zero values because floating navigation is inactive.
+- **Deliverables:** Forward both inputs through the existing conversation branch. Add Compose tests for LTR/RTL right clearance, full-width viewport, header/thread/editor interaction bounds, and final transcript reach. Verify editor visibility and retained text with the IME open and closed. Verify compact layout ignores both wide-only inputs and keeps its current editor positioning.
+- **Non-goals:** Do not wire the wide New conversation action, change recipient selection, or claim physical-device IME behavior from Compose tests.
+- **Validation:** Run focused `DirectMessageScreenTest`, then `test assembleRelease` with the required wrapper flags, timeout, and closed stdin. Confirm no external Gradle build is using the worktree first.
+- **Exit gates:** Focused tests and full test/build gate pass; transcript and editor interactions clear physical right in LTR and RTL; final transcript content is reachable; editor state and IME placement remain unchanged; compact behavior remains unchanged.
+- **Fail gates:** Stop if IME positioning cannot be tested in both states, editor text is lost, any interaction overlaps clearance, bottom clearance moves the editor, compact geometry changes, or a failure remains unexplained.
+- **Git operator:** Orchestrator; stage and commit only reviewed implementation and records.
+
 ## 4C-5 — Integrate safe placement and activate adaptive navigation
 
 - **Objective:** Replace the production rail with one safe-region floating vertical capsule/action and select presentation from stable window geometry.
@@ -137,19 +153,21 @@ Navigation-fit policy for later activation:
 - `LargeNavigationRail` remains unchanged. Compact presentation delegates to the shared contextual-action button; production vertical navigation remains inactive.
 - 4C-4 DM inbox clearance — commit subject `Add DM inbox obstruction clearance`, preceded by `1d2050b`. Focused DM screen tests pass: 18 tests. The full `test assembleRelease` gate passes with 153 suites, 1,588 tests, zero failures/errors/skips, and successful release assembly.
 - Later gate retries overlapped a separate `gradlew.bat clean installDebug` process in this worktree. They reported missing test classes, missing R8 inputs, and a locked `R.jar`; no source changes followed the passing gate. Do not start another Gradle run while that external build may still be active.
+- The DM conversation/editor clearance contract is recorded below. It has no implementation changes; that implementation remains a separate activation blocker.
 
 # Current slice
 
-The first 4C-4 destination slice, DM inbox clearance, is complete. The checkpoint subject is
-`Add DM inbox obstruction clearance`, based on `1d2050b` — `Prepare shared vertical navigation
-presentation`. Next, define the separate DM conversation/editor clearance contract before editing
-that surface. Include IME-open and IME-closed interaction bounds. Keep compact-narrow geometry and
-mappings fixed. Do not activate vertical navigation before all geometry and destination-clearance
-gates pass.
+The DM inbox clearance implementation is complete as `Add DM inbox obstruction clearance`, based
+on `1d2050b` — `Prepare shared vertical navigation presentation`. The DM conversation/editor contract
+above is recorded as `Define DM conversation clearance contract`, based on `1fcd03f` — the inbox
+clearance commit. The next slice implements that contract. The orchestrator owns implementation and
+Git. Keep compact-narrow geometry and mappings fixed. Do not activate vertical navigation before all
+geometry and destination-clearance gates pass.
 
 # Files involved
 
-- Completed slice: DM inbox clearance through its existing shell branch and focused Compose tests. The next contract is limited to DM conversation/editor clearance; do not change that screen before recording its IME and interaction requirements.
+- Completed slice: DM inbox clearance through its existing shell branch and focused Compose tests.
+- Current contract: DM conversation/editor clearance. Implement only the files listed in that contract. Do not alter its existing IME policy.
 - Later slices use the scoped file lists above. Expand a destination into its own contract before editing if its behavior needs an independent gate.
 
 # Verification
@@ -167,24 +185,26 @@ Later retries ran while a separate `gradlew.bat clean installDebug` process was 
 worktree. The combined retry reported class-loading errors and missing R8 intermediates. A serialized
 forced retry could not delete a locked `R.jar`. These retries do not replace the earlier completed
 green gate. Device state was not checked.
+The DM conversation/editor contract changes documentation only. Its source references resolve, and
+the scoped documentation diff passes `git diff --check`. No Android build or device check ran for
+this contract-only checkpoint.
 Use the repository wrapper with `--no-daemon --console=plain`, an explicit timeout, and closed stdin.
 Run `test assembleRelease` for each code slice. Run the complete Phase 4C rerun/lint gate before final completion.
 
 # Next
 
-Define the DM conversation/editor clearance contract, including the IME-open and IME-closed states,
-before editing that surface. Keep later destination contracts separate.
+Implement the recorded DM conversation/editor clearance contract. Keep later destination contracts separate.
 
 # Blockers
 
 - No production vertical capsule/action measurements are approved. Reuse only dimensions derived from the shared presentation and existing source contracts; ask the maintainer where fit policy requires a new value.
 - The DM recipient finder is implemented and its contract is ready. Wire it to the wide New conversation action only in the activation slice.
-- DM conversation/editor clearance remains a separate unimplemented destination contract and blocks activation until its right-side interaction bounds pass with the IME open and closed.
-- A separate `gradlew.bat clean installDebug` process was observed in the worktree during failed gate retries. Do not run another Gradle task until the external build no longer uses these outputs. Its device state was not checked.
+- DM conversation/editor clearance is contracted but not implemented. It blocks activation until right-side interaction bounds pass with the IME open and closed.
+- A separate `gradlew.bat clean installDebug` process was observed in the worktree during failed gate retries. Check that it no longer uses shared outputs before the next Gradle run. Its device state was not checked.
 - Device, physical foldable, API 29, live-server, signing, and TalkBack behavior remain unverified.
 - Preserve the existing unrelated worktree, deleted Photo Grid test/PNGs, captures, scripts, caches, and writing-style edits.
 
 # Last safe commit
 
-`Add DM inbox obstruction clearance`, based on `1d2050b` — Prepare shared vertical navigation presentation.
+`Define DM conversation clearance contract`, based on `1fcd03f` — Add DM inbox obstruction clearance.
 Resolve this checkpoint's hash from Git. Nothing was pushed.

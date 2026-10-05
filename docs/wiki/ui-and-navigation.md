@@ -79,7 +79,8 @@ The application still supplies zero clearance because floating navigation remain
 inject synthetic values in LTR and RTL. They verify the viewport, row underlay, interactive bounds,
 the load-more action, final-item reach, shell-branch forwarding, and unchanged compact behavior.
 These tests do not verify production geometry or physical rendering. The DM conversation editor
-keeps its current IME policy and needs a separate clearance contract before navigation activation.
+keeps its current IME policy. Its separate clearance implementation and IME-state tests remain
+activation blockers.
 
 Sources: `ui/shell/ShellContent.kt`, `ui/shell/ShellDestinationContent.kt`,
 `ui/shell/AppNotificationsDestinationContent.kt`, `ui/directmessages/DirectMessageInboxScreen.kt`,

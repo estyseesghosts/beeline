@@ -43,9 +43,14 @@ worktree. The combined run reported missing test classes and R8 inputs. A one-wo
 could not delete a locked `R.jar`. Do not run another Gradle task until that external build releases
 the shared outputs. The earlier full gate passed before these retries. No device check ran.
 
-Next: define the separate DM conversation/editor clearance contract before editing that surface.
-Include right-side interaction bounds with the IME open and closed. The wide DM action remains
-unwired. Do not activate vertical navigation until geometry and all destination-clearance gates pass.
+The DM conversation/editor clearance contract is now recorded in
+`tasks/beeline-0.4.0.md`. It keeps the full viewport, clears transcript and editor content from
+physical right, adds bottom clearance only to transcript scrolling, and preserves wide and compact
+IME policies. No conversation-screen code changed in the inbox slice.
+
+Next: implement that contract and test right-side bounds with the IME open and closed. The wide DM
+action remains unwired. Do not activate vertical navigation until geometry and all destination-
+clearance gates pass.
 
 Source inspection confirms that `LargeLayoutMode.kt` uses width-only 600/840 dp boundaries.
 `LargeScreenShell.kt` reserves an 80 dp rail and subtracts its physical offset from hinge coordinates.
@@ -55,12 +60,14 @@ bars, and back policy. `ShellNavigator` already remembers direct Photo Grid and 
 `LargeNavigationRail` remains the current production presentation. `WideNavigationPresentation`
 tests the shared six-target vertical composition without activating it. `LargeLayoutModeTest`
 verifies the content origin in LTR and RTL. Production safe-region fit, gesture/cutout/taskbar insets,
-and device hinge behavior remain unverified.
+and device hinge behavior remain unverified. `DirectMessageConversationScreen` keeps its wide
+`imePadding()` and navigation-bar positioning and its compact contextual-control insets. Existing
+Compose tests cover editor submission but not obstruction clearance or real IME geometry.
 
 ## Last safe commit
 
-`Add DM inbox obstruction clearance`, based on `1d2050b` — Prepare shared vertical navigation
-presentation. Resolve this checkpoint's hash from Git.
+`Define DM conversation clearance contract`, based on `1fcd03f` — Add DM inbox obstruction clearance.
+Resolve this checkpoint's hash from Git.
 Nothing was pushed.
 
 ## Limits and worktree caution
@@ -72,6 +79,8 @@ Nothing was pushed.
 - API 29, physical foldable behavior, live-server behavior, signing, and TalkBack remain unverified.
 - A separate `gradlew.bat clean installDebug` process was observed using this worktree during failed
   gate retries. It was not started or stopped by this task. Device state was not checked.
+- Confirm that no external Gradle build is using shared outputs before running the next implementation
+  gate.
 - Preserve modified agent definitions and `importantdocs/writing_style.md`.
 - Preserve deleted Photo Grid test/PNGs, untracked captures, ADB scripts, and caches.
 - The supplied `docs/agents/tasks/4c.md` is untracked user input. Do not stage it.

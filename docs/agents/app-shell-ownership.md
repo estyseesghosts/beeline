@@ -223,7 +223,8 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   The application currently supplies the default zero values because floating navigation is inactive.
   `DirectMessageScreenTest` covers synthetic LTR/RTL clearance, full-width underlay, row and header
   bounds, final-content reach, branch forwarding, and compact compatibility. The conversation editor
-  remains unchanged and needs a separate clearance contract before activation.
+  remains unchanged; its contracted clearance implementation and IME-state tests remain separate
+  activation gates.
 
 - A contract carries no session secret, access token, source, repository, or ViewModel.
 - `sessionGeneration` and durable `sessionRevision` stay distinct.
