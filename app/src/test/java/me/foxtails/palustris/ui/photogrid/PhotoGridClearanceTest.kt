@@ -167,6 +167,24 @@ class PhotoGridClearanceTest {
         error = error,
     )
 
+    @Test fun wideTilesAndDockClearPhysicalLeft() {
+        for (direction in LayoutDirection.entries) {
+            show(direction) {
+                PhotoGridScreen(state = state("left", count = 6), compactLayout = false,
+                    leftObstructionClearance = right)
+            }
+            val viewport = bounds("photo_grid_test_viewport")
+            assertEquals(viewport, bounds("photo_grid_content"))
+            val safeLeft = viewport.left + right.value * density
+            assertTrue(chipsBounds().left >= safeLeft - 1f)
+            compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
+                .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
+                    assertTrue("Photo Grid interaction clears physical left", it.boundsInRoot.left >= safeLeft - 1f)
+                }
+            assertTrue(tileBounds("left-0").left >= safeLeft - 1f)
+        }
+    }
+
     @Test fun wideTilesKeepFullViewportAndClearPhysicalRight() {
         for (direction in LayoutDirection.entries) {
             var opened: String? = null

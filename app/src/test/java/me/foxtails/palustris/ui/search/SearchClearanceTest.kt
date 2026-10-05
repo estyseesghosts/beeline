@@ -128,6 +128,31 @@ class SearchClearanceTest {
         AppShellFixtures.post("$label-$it", author, "Search $label fixture $it")
     }
 
+    @Test fun wideSearchRowsAndDockClearPhysicalLeft() {
+        val result = AppShellFixtures.post("left", author, "Search left")
+        for (direction in LayoutDirection.entries) {
+            show(direction) {
+                SearchScreen(
+                    accountSearch = AccountSearchState(query = "#fixture", tagQuery = "fixture", posts = listOf(result)),
+                    compactLayout = false, largeLayout = true, sharedQuery = "#fixture", sharedTab = 0,
+                    leftObstructionClearance = right, mediaOwner = author.id,
+                    availableActions = setOf(PostAction.Reply, PostAction.Favorite),
+                )
+            }
+            val viewport = bounds("search_test_viewport")
+            assertEquals(viewport, bounds("search_content"))
+            assertEquals(viewport.left, bounds("search_divider_left").left, 1f)
+            val safeLeft = viewport.left + right.value * density
+            assertEquals(safeLeft, bounds("post_row_left").left, 1f)
+            assertTrue(fieldBounds().left >= safeLeft - 1f)
+            assertTrue(chipsBounds().left >= safeLeft - 1f)
+            compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
+                .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
+                    assertTrue("Search interaction clears physical left", it.boundsInRoot.left >= safeLeft - 1f)
+                }
+        }
+    }
+
     @Test fun wideResultRowAndDividerKeepFullViewportAndClearPhysicalRight() {
         val result = AppShellFixtures.post("wide-row", author, "Interactive search body #fixture").copy(
             attachments = listOf(Attachment("https://fixture.example/photo.jpg", "image/jpeg", "Fixture photo")),

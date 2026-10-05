@@ -105,6 +105,7 @@ fun ProfileScreen(
     largeShowSummary: Boolean = true,
     listState: LazyListState? = null,
     rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
     bottomObstructionClearance: Dp = 0.dp,
 ) {
     LaunchedEffect(account?.id) {
@@ -115,16 +116,17 @@ fun ProfileScreen(
         ?.takeIf { account == null || it.id == account.id }
         ?: profileState.seedAccount?.takeIf { account == null || it.id == account.id }
         ?: account
-    // Clear interactive content and the final list item, not the viewport. Compact ignores both inputs.
-    // Physical right does not reverse with the layout direction.
+    // Clear interactive content and the final list item, not the viewport. Compact ignores wide inputs.
+    // Physical edges never reverse with the layout direction.
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
     if (displayedAccount == null) {
         EmptyState(
             icon = AppIcons.DefaultUser,
             title = stringResource(R.string.profile_empty_title),
             subtitle = stringResource(R.string.profile_empty_subtitle),
-            modifier = Modifier.absolutePadding(right = wideRightClearance).fillMaxSize(),
+            modifier = Modifier.absolutePadding(left = wideLeftClearance, right = wideRightClearance).fillMaxSize(),
         )
         return
     }
@@ -152,6 +154,7 @@ fun ProfileScreen(
             listState = listState,
             endContentClearance = endContentClearance,
             rightObstructionClearance = wideRightClearance,
+            leftObstructionClearance = wideLeftClearance,
             bottomObstructionClearance = wideBottomClearance,
             onCategorySelected = onCategorySelected,
              onOpenDrafts = onOpenDrafts,
@@ -191,6 +194,7 @@ fun ProfileScreen(
             compactLayout = compactLayout,
             endContentClearance = endContentClearance,
             rightObstructionClearance = wideRightClearance,
+            leftObstructionClearance = wideLeftClearance,
             isSelf = isSelf,
             onCategorySelected = onCategorySelected,
             onOpenDrafts = onOpenDrafts,

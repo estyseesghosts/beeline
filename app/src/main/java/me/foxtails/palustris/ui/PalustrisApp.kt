@@ -21,6 +21,7 @@ import me.foxtails.palustris.ui.composer.ComposerOwnerContext
 import me.foxtails.palustris.ui.composer.rememberComposerOwner
 import me.foxtails.palustris.ui.large.LargeLayoutMode
 import me.foxtails.palustris.ui.large.largeLayoutMode
+import me.foxtails.palustris.ui.large.rememberNavigationFit
 import me.foxtails.palustris.ui.media.LocalMediaTransitionRegistry
 import me.foxtails.palustris.ui.media.MediaTransitionRegistry
 import me.foxtails.palustris.ui.navigation.AppRoute
@@ -160,6 +161,10 @@ fun PalustrisApp(
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val windowWidth = maxWidth
             val presentationMode = largeLayoutMode(maxWidth.value)
+            // Tablet presentation anchors at the physical left. The display settings toggle that
+            // changes this anchor belongs to the later settings slice.
+            val anchorLeft = presentationMode == LargeLayoutMode.Expanded
+            val navigationFit = rememberNavigationFit(maxWidth.value, maxHeight.value, anchorLeft)
             val largePresentation = presentationMode != LargeLayoutMode.Compact
             val navigationMode = NavigationModeObserver.current(LocalView.current)
             SystemBars(overlay.mediaRequest != null || overlay.profileImageRequest != null, largePresentation)
@@ -194,6 +199,7 @@ fun PalustrisApp(
                     detailCallbacks = ShellDetailCallbacks({ navigator.clearSelectedPost() }, onReact, ::handleReply, onReshare, onBookmark, onReaction, navigator::openProfile, navigator::openHashtagSearch, overlay::openHashtagBubble, { post, bounds, handler -> overlay.openReactionBubble(post, bounds, handler) }, overlay::expandReactionPicker, overlay::openMedia, navigator::openAccountSearch, thread.actions::refresh, thread.actions::continueAcquisition, quoteEnabled, ::handleQuote),
                     selectedPost = selectedPost, selectedThreadState = selectedThreadState, thread = thread, availableActions = availableActions,
                     onCompose = ::openComposer, postActionOwner = postActionOwner, presentationMode = presentationMode, windowWidth = windowWidth,
+                    navigationFit = navigationFit, anchorLeft = anchorLeft,
                 )
             }
             ShellOverlayHost(navigator, overlay, emojiPresentation, account, onReact, ::handleReply, onReshare, composerOwner, composer, profile, notificationSettings, accountSwitcher, ::closeComposer, ::closeProfile, { navigator.closeOverlay() }, ::discardProfileEditor)

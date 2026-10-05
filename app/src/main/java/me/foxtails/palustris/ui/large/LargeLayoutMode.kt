@@ -1,7 +1,6 @@
 package me.foxtails.palustris.ui.large
 
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.unit.LayoutDirection
 import kotlin.math.max
 import kotlin.math.min
 
@@ -18,19 +17,14 @@ internal data class LargeFoldingFeature(
     val isOccluding: Boolean,
 )
 
-/** The physical window-space origin of the rail-excluded pane content. */
+/** The physical window-space origin of the pane content. */
 internal data class LargeContentOriginPx(val x: Float, val y: Float)
 
-/** Resolves the current content origin after system insets and the direction-aware rail. */
+/** Resolves the current content origin after the system insets. */
 internal fun largeContentOriginPx(
-    layoutDirection: LayoutDirection,
-    railWidthPx: Float,
     leftInsetPx: Float,
     topInsetPx: Float,
-): LargeContentOriginPx = LargeContentOriginPx(
-    x = leftInsetPx + if (layoutDirection == LayoutDirection.Ltr) railWidthPx else 0f,
-    y = topInsetPx,
-)
+): LargeContentOriginPx = LargeContentOriginPx(x = leftInsetPx, y = topInsetPx)
 
 /** Converts window-coordinate folding bounds to the pane-content coordinate space. */
 internal fun largeFeatureBoundsInContentPx(
@@ -51,7 +45,7 @@ internal fun largeLayoutMode(windowWidthDp: Float): LargeLayoutMode = when {
     else -> LargeLayoutMode.Expanded
 }
 
-/** Calculates pane bounds after the rail, margins, and any separating feature are removed. */
+/** Calculates pane bounds after the outer margins and any separating feature are removed. */
 internal fun calculateLargePaneLayout(
     windowWidthDp: Float,
     contentWidthDp: Float,
@@ -76,9 +70,7 @@ internal fun calculateLargePaneLayout(
     val structuralFeatures = foldingFeatures.filter {
         (it.isSeparating || it.isOccluding) && it.bounds.overlaps(content)
     }
-    val verticalFeatures = structuralFeatures.filter {
-        it.isVertical && (it.isSeparating || it.isOccluding) && it.bounds.overlaps(content)
-    }
+    val verticalFeatures = structuralFeatures.filter { it.isVertical }
     val safeRegions = verticalFeatures.fold(listOf(content)) { regions, feature ->
         regions.flatMap { region ->
             if (!feature.bounds.overlaps(region)) {
@@ -140,14 +132,28 @@ internal fun calculateLargePaneLayout(
 /** The minimum useful content width that must remain after placing the vertical navigation capsule. */
 internal const val MinimumUsefulContentWidthDp = 360f
 
-/** The gap between the floating navigation capsule and the physical screen edge. */
+/** The gap between the floating navigation stack and the physical safe-region edge. */
 internal const val NavigationPlacementGapDp = 8f
 
-/** The width of the vertical navigation capsule including its placement gap. */
-internal val NavigationCapsuleTotalWidthDp = 56f + NavigationPlacementGapDp
+/** The shared vertical capsule width. The shared presentation owns this value. */
+internal const val NavigationCapsuleWidthDp = 56f
 
-/** The height of the vertical navigation capsule, contextual action, and their gap. */
-internal val NavigationCapsuleTotalHeightDp = 296f + NavigationPlacementGapDp + 56f
+/**
+ * The shared vertical capsule height.
+ *
+ * Six 48 dp targets plus the shared capsule vertical padding of 4 dp on each side.
+ */
+internal const val NavigationCapsuleHeightDp = 296f
+
+/** The shared contextual action size. `ContextualNavigationActionButton` owns this value. */
+internal const val NavigationActionSizeDp = 56f
+
+/** The width the vertical navigation stack reserves, including its physical placement gap. */
+internal val NavigationCapsuleTotalWidthDp = NavigationCapsuleWidthDp + NavigationPlacementGapDp
+
+/** The height of the vertical navigation stack: capsule, gap, and contextual action. */
+internal val NavigationCapsuleTotalHeightDp =
+    NavigationCapsuleHeightDp + NavigationPlacementGapDp + NavigationActionSizeDp
 
 /** The result of the navigation fit policy. */
 internal data class NavigationFit(
@@ -156,11 +162,15 @@ internal data class NavigationFit(
 )
 
 /**
- * Calculates whether the vertical navigation capsule and contextual action can fit in a safe region.
+ * Calculates whether the vertical navigation stack can fit in a safe region.
  *
- * The safe region must be large enough to hold the full controls and leave the approved useful
- * content width. The fit ignores IME height because permanent presentation does not change with
- * the IME. Pane and detail selection remain independent of this policy.
+ * A safe region must hold the complete stack and leave the approved useful content width. The fit
+ * reads permanent window geometry only, so IME height never changes permanent presentation. Pane
+ * and detail selection stay independent of this policy.
+ *
+ * `gestureInsets` carries the mandatory system gesture insets. The shell supplies them because a
+ * nonmandatory back-gesture strip may still hold visible content. Insets on the same edge merge by
+ * their larger value, so overlapping insets never remove the same space twice.
  */
 internal fun calculateNavigationFit(
     windowWidthDp: Float,
@@ -169,13 +179,14 @@ internal fun calculateNavigationFit(
     gestureInsets: Rect = Rect(0f, 0f, 0f, 0f),
     cutoutBounds: Rect? = null,
     foldingFeatures: List<LargeFoldingFeature> = emptyList(),
+    anchorLeft: Boolean = false,
 ): NavigationFit {
-    // Use only the permanent window geometry (system bar insets), not IME insets.
+    // Use only the permanent window geometry. IME insets never affect the fit.
     val content = Rect(
-        systemBarInsets.left,
-        systemBarInsets.top,
-        windowWidthDp - systemBarInsets.right,
-        windowHeightDp - systemBarInsets.bottom,
+        max(systemBarInsets.left, gestureInsets.left),
+        max(systemBarInsets.top, gestureInsets.top),
+        windowWidthDp - max(systemBarInsets.right, gestureInsets.right),
+        windowHeightDp - max(systemBarInsets.bottom, gestureInsets.bottom),
     )
 
     val cutoutRegions = if (cutoutBounds != null && cutoutBounds.overlaps(content)) {
@@ -189,40 +200,44 @@ internal fun calculateNavigationFit(
         listOf(content)
     }
 
-    val gestureRegions = cutoutRegions.mapNotNull { region ->
-        val top = region.top + max(0f, gestureInsets.top)
-        val bottom = region.bottom - max(0f, gestureInsets.bottom)
-        if (top < bottom) {
-            Rect(region.left, top, region.right, bottom)
-        } else {
-            null
-        }
-    }
-
     val structuralFeatures = foldingFeatures.filter { it.isSeparating || it.isOccluding }
-    val safeRegions = structuralFeatures.fold(gestureRegions) { regions, feature ->
+    val safeRegions = structuralFeatures.fold(cutoutRegions) { regions, feature ->
         regions.flatMap { region ->
-            if (!feature.bounds.overlaps(region)) {
-                listOf(region)
-            } else {
-                listOfNotNull(
+            when {
+                !feature.bounds.overlaps(region) -> listOf(region)
+                feature.isVertical -> listOfNotNull(
                     Rect(region.left, region.top, min(region.right, feature.bounds.left), region.bottom)
                         .takeIf { it.width > 0f },
                     Rect(max(region.left, feature.bounds.right), region.top, region.right, region.bottom)
                         .takeIf { it.width > 0f },
                 )
+                else -> listOfNotNull(
+                    Rect(region.left, region.top, region.right, min(region.bottom, feature.bounds.top))
+                        .takeIf { it.height > 0f },
+                    Rect(region.left, max(region.top, feature.bounds.bottom), region.right, region.bottom)
+                        .takeIf { it.height > 0f },
+                )
             }
         }
     }
 
-    val fittingRegion = safeRegions.find { region ->
+    val fittingRegions = safeRegions.filter { region ->
         region.width >= NavigationCapsuleTotalWidthDp &&
             region.height >= NavigationCapsuleTotalHeightDp &&
             (region.width - NavigationCapsuleTotalWidthDp) >= MinimumUsefulContentWidthDp
     }
+    // The anchor selects the fitting safe region nearest its own physical edge.
+    val fittingRegion = if (anchorLeft) fittingRegions.minByOrNull { it.left }
+    else fittingRegions.maxByOrNull { it.right }
 
     return NavigationFit(
         useVerticalNavigation = fittingRegion != null,
         safeRegion = fittingRegion,
     )
+}
+
+/** Converts a window-space pixel rect into density-independent dp. */
+internal fun Rect.toDpRect(density: Float): Rect {
+    val scale = density.coerceAtLeast(0.1f)
+    return Rect(left / scale, top / scale, right / scale, bottom / scale)
 }

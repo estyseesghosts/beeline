@@ -58,6 +58,10 @@ import me.foxtails.palustris.ui.shell.timelineLabelRes
  * unchanged, so restoration keys and scroll positions stay stable. Post,
  * draft, and navigation callbacks travel as three bundles so the branch
  * wiring stays reviewable.
+ *
+ * `leftObstructionClearance` and `rightObstructionClearance` are physical. They never reverse with
+ * the layout direction. Compact layout ignores both, and a row or tile that stays transparent
+ * underlays the floating navigation while its interactive content clears it.
  */
 @Composable
 internal fun ShellDestinationContent(
@@ -71,7 +75,9 @@ internal fun ShellDestinationContent(
     profileListState: LazyListState,
     largePresentation: Boolean,
     rightObstructionClearance: Dp,
+    leftObstructionClearance: Dp = 0.dp,
     bottomObstructionClearance: Dp,
+    bottomNavigationClearance: Dp = 0.dp,
     account: Account?,
     displayedProfile: Account?,
     savedTitle: Int,
@@ -175,6 +181,7 @@ internal fun ShellDestinationContent(
                                 state = home.state,
                                 compactLayout = !largePresentation,
                                 rightObstructionClearance = rightObstructionClearance,
+                                leftObstructionClearance = leftObstructionClearance,
                                 bottomObstructionClearance = bottomObstructionClearance,
                                 onRefresh = { home.actions.refresh(navigator.timeline) },
                                 onLoadMore = { home.actions.loadMore(navigator.timeline) },
@@ -209,19 +216,30 @@ internal fun ShellDestinationContent(
                                     }
                                 }) else null,
                             ) else Box(Modifier.fillMaxSize()) {
-                                Box(Modifier.absolutePadding(right = if (largePresentation) rightObstructionClearance else 0.dp).fillMaxSize()) {
+                                val wideLeft = if (largePresentation) leftObstructionClearance else 0.dp
+                                val wideRight = if (largePresentation) rightObstructionClearance else 0.dp
+                                Box(
+                                    Modifier.absolutePadding(left = wideLeft, right = wideRight)
+                                        .fillMaxSize(),
+                                ) {
                                     EmptyState(AppIcons.HoneyHome, stringResource(R.string.feed_timeline_empty_title), stringResource(R.string.feed_timeline_empty_subtitle, stringResource(timelineLabelRes(navigator.timeline))))
                                 }
                                 if (largePresentation) {
-                                    LargeBottomDock(modifier = Modifier.align(Alignment.BottomStart)
-                                        .absolutePadding(right = rightObstructionClearance, bottom = bottomObstructionClearance), content = {
-                                        LargeTimelineDockContent(availableTimelines, navigator.timeline) { item ->
-                                            val changed = item != navigator.timeline
-                                            if (changed) navigator.clearSelectedPost()
-                                            navigator.timeline = item
-                                            if (changed && home != null) home.actions.refresh(item)
-                                        }
-                                    })
+                                    LargeBottomDock(
+                                        modifier = Modifier.align(Alignment.BottomStart)
+                                            .absolutePadding(
+                                                left = wideLeft,
+                                                right = wideRight,
+                                                bottom = bottomObstructionClearance,
+                                            ),
+                                        content = {
+                                            LargeTimelineDockContent(availableTimelines, navigator.timeline) { item ->
+                                                val changed = item != navigator.timeline
+                                                if (changed) navigator.clearSelectedPost()
+                                                navigator.timeline = item
+                                            }
+                                        },
+                                    )
                                 }
                             }
                             Destination.Search -> AnimatedStatePane(
@@ -254,7 +272,9 @@ internal fun ShellDestinationContent(
                                         onSharedQueryChange = { navigator.searchQuery = it },
                                         onSharedTabChange = { navigator.searchCategory = it },
                                         rightObstructionClearance = rightObstructionClearance,
+                                        leftObstructionClearance = leftObstructionClearance,
                                         bottomObstructionClearance = bottomObstructionClearance,
+                                        bottomNavigationClearance = bottomNavigationClearance,
                                         listState = searchListState.takeIf { largePresentation },
                                         largeLayout = largePresentation,
                                         compactLayout = !largePresentation,
@@ -276,6 +296,7 @@ internal fun ShellDestinationContent(
                                         compactLayout = !largePresentation,
                                         compactNavigationVisible = !largePresentation,
                                         rightObstructionClearance = rightObstructionClearance,
+                                        leftObstructionClearance = leftObstructionClearance,
                                         bottomObstructionClearance = bottomObstructionClearance,
                                         gridState = photoGridScrollState,
                                     )
@@ -287,7 +308,9 @@ internal fun ShellDestinationContent(
                                 compactLayout = !largePresentation,
                                 compactNavigationVisible = navigator.navigationVisible,
                                 rightObstructionClearance = rightObstructionClearance,
+                                leftObstructionClearance = leftObstructionClearance,
                                 bottomObstructionClearance = bottomObstructionClearance,
+                                bottomNavigationClearance = bottomNavigationClearance,
                                 notificationAccountIdentity = notificationAccountIdentity,
                                 notificationState = notifications.state,
                                 onRefreshNotifications = notifications.actions::refresh,
@@ -326,6 +349,7 @@ internal fun ShellDestinationContent(
                                 largeShowSummary = navigator.singlePost == null,
                                 listState = profileListState,
                                 rightObstructionClearance = rightObstructionClearance,
+                                leftObstructionClearance = leftObstructionClearance,
                                 bottomObstructionClearance = bottomObstructionClearance,
                                 compactNavigationVisible = navigator.navigationVisible,
                                 authenticatedAccountId = account?.id,

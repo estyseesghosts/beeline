@@ -261,6 +261,40 @@ class ProfileClearanceTest {
     }
 
     @Test
+    fun physicalLeftClearanceFollowsMirroredSummaryAndTimelineColumns() {
+        val target = profile("left")
+        for (direction in LayoutDirection.entries) {
+            for (summary in listOf(false, true)) {
+                show(direction) {
+                    ProfileScreen(
+                        account = target, profileState = state(target, listOf(post("left", target)),
+                            relationship = ProfileRelationship(profileId = target.id), relationshipSupported = true),
+                        compactLayout = false, largeLayout = true, largeShowSummary = summary,
+                        leftObstructionClearance = right, availableActions = rowActions,
+                    )
+                }
+                val viewport = bounds("profile_test_viewport")
+                val safeLeft = viewport.left + right.value * density
+                if (!summary) assertEquals(viewport, bounds("profile_content"))
+                val timeline = bounds("profile_timeline_list")
+                val row = bounds("post_row_left")
+                if (!summary || direction == LayoutDirection.Rtl) {
+                    assertEquals(viewport.left, timeline.left, 1f)
+                    assertEquals(safeLeft, row.left, 1f)
+                } else {
+                    assertEquals("bounded timeline keeps its width", timeline.left, row.left, 1f)
+                    assertTrue(bounds("profile_header").left >= safeLeft - 1f)
+                }
+                assertTrue(categoriesBounds().left >= safeLeft - 1f)
+                compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
+                    .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
+                        assertTrue("Profile interaction clears physical left", it.boundsInRoot.left >= safeLeft - 1f)
+                    }
+            }
+        }
+    }
+
+    @Test
     @Config(qualifiers = "w800dp-h1000dp-420dpi")
     fun wideFinalRowAndUpToDateFooterClearBottomObstruction() {
         val target = profile("final")

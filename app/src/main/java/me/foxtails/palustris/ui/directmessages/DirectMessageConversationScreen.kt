@@ -58,7 +58,10 @@ fun DirectMessageConversationScreen(
     compactLayout: Boolean = true,
     compactNavigationVisible: Boolean = true,
     rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
     bottomObstructionClearance: Dp = 0.dp,
+    // Shell-owned compact fallback placement, distinct from transcript-only obstruction clearance.
+    bottomNavigationClearance: Dp = 0.dp,
     onBack: () -> Unit = {},
     onEditorTextChange: (String) -> Unit = {},
     onSend: () -> Unit = {},
@@ -66,6 +69,7 @@ fun DirectMessageConversationScreen(
     onRetryThread: () -> Unit = {},
 ) {
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
     val recipient = state.recipient
     val title = state.selectedConversation?.participants
@@ -77,7 +81,7 @@ fun DirectMessageConversationScreen(
 
     Column(Modifier.fillMaxSize().testTag("direct_message_conversation")) {
         Row(
-            Modifier.fillMaxWidth().absolutePadding(right = wideRightClearance)
+            Modifier.fillMaxWidth().absolutePadding(left = wideLeftClearance, right = wideRightClearance)
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -86,7 +90,7 @@ fun DirectMessageConversationScreen(
         }
         Text(
             stringResource(R.string.dm_not_encrypted),
-            Modifier.fillMaxWidth().absolutePadding(right = wideRightClearance)
+            Modifier.fillMaxWidth().absolutePadding(left = wideLeftClearance, right = wideRightClearance)
                 .padding(horizontal = 20.dp, vertical = 4.dp).testTag("direct_message_notice"),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -94,7 +98,7 @@ fun DirectMessageConversationScreen(
         if (state.error != null) {
             Text(
                 state.error,
-                Modifier.absolutePadding(right = wideRightClearance).padding(20.dp)
+                Modifier.absolutePadding(left = wideLeftClearance, right = wideRightClearance).padding(20.dp)
                     .testTag("direct_message_error"),
                 color = MaterialTheme.colorScheme.error,
             )
@@ -104,7 +108,7 @@ fun DirectMessageConversationScreen(
             // Editor positioning already clears navigation and the IME. Only wide
             // floating chrome adds scroll range, not another editor positioning inset.
             contentPadding = PaddingValues.Absolute(
-                left = 16.dp,
+                left = 16.dp + wideLeftClearance,
                 top = 12.dp,
                 right = 16.dp + wideRightClearance,
                 bottom = 12.dp + wideBottomClearance,
@@ -160,11 +164,12 @@ fun DirectMessageConversationScreen(
         Row(
             Modifier
                 .fillMaxWidth()
-                .absolutePadding(right = wideRightClearance)
+                .absolutePadding(left = wideLeftClearance, right = wideRightClearance)
                 .then(
                     if (compactLayout) Modifier.windowInsetsPadding(
                         compactContextualControlsPositioningInsets(compactNavigationVisible),
-                    ) else Modifier.imePadding().windowInsetsPadding(
+                    ) else if (bottomNavigationClearance > 0.dp) Modifier.padding(bottom = bottomNavigationClearance)
+                    else Modifier.imePadding().windowInsetsPadding(
                         compactGlobalNavigationPositioningInsets(WindowInsets(bottom = 0.dp)),
                     ),
                 )

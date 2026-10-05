@@ -61,14 +61,14 @@ class WideNavigationTest {
         compose.activity.getSharedPreferences("local_draft", Context.MODE_PRIVATE).edit().clear().commit()
     }
 
-    @Test fun wideLightLayoutShowsNavigationRail() {
-        assertRailAndComposer()
+    @Test fun wideLightLayoutShowsSharedNavigationCapsule() {
+        assertCapsuleAndComposer()
     }
 
     @Test
     @Config(qualifiers = "w800dp-h1000dp-night-420dpi")
-    fun wideDarkLayoutShowsNavigationRail() {
-        assertRailAndComposer()
+    fun wideDarkLayoutShowsSharedNavigationCapsule() {
+        assertCapsuleAndComposer()
     }
 
     @Test fun wideNotificationsUseNormalChipFlow() {
@@ -230,7 +230,7 @@ class WideNavigationTest {
         compose.onNodeWithText("Edit profile").assertIsDisplayed()
     }
 
-    private fun assertRailAndComposer() {
+    private fun assertCapsuleAndComposer() {
         compose.waitForIdle()
         compose.runOnIdle {
             val view = compose.activity.window.decorView
@@ -246,8 +246,16 @@ class WideNavigationTest {
         compose.onNodeWithContentDescription("Timeline Home").assertIsDisplayed()
         compose.onNodeWithContentDescription("Search").assertIsDisplayed()
         compose.onNodeWithContentDescription("Notifications").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Current account; long press to switch account").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Profile").assertDoesNotExist()
+        compose.onNodeWithTag(LargeNavigationCapsuleTag, useUnmergedTree = true).assertIsDisplayed()
+        listOf("Home", "Search", "Photo grid", "Notifications", "Direct messages", "Profile").forEach {
+            compose.onNodeWithContentDescription(it).assertIsDisplayed()
+        }
+        val targets = listOf("Home", "Search", "Photo grid", "Notifications", "Direct messages", "Profile")
+            .map { compose.onNodeWithContentDescription(it).fetchSemanticsNode().boundsInRoot }
+        targets.zipWithNext().forEach { (above, below) ->
+            assertTrue("six direct targets retain their vertical order", above.bottom <= below.top + 1f)
+        }
+        compose.onNodeWithContentDescription("Home").assertIsSelected()
         compose.onNodeWithContentDescription("Compose post").performClick()
         compose.onNodeWithText("New post").assertIsDisplayed()
     }

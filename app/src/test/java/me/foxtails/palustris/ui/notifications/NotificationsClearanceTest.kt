@@ -153,6 +153,26 @@ class NotificationsClearanceTest {
         syncDelayed = syncDelayed,
     )
 
+    @Test fun wideChipsAndRowActionsClearPhysicalLeft() {
+        for (direction in LayoutDirection.entries) {
+            show(direction) {
+                NotificationsScreen(connected = true, compactLayout = false,
+                    leftObstructionClearance = right,
+                    notificationState = state(listOf(notification("left", withPost = true))))
+            }
+            val viewport = bounds("notification_test_viewport")
+            val safeLeft = viewport.left + right.value * density
+            assertEquals(viewport.left, bounds("notifications_content").left, 1f)
+            assertTrue(bounds("notification_row_left").left < safeLeft)
+            assertTrue(bounds("notification_row_action_left").left >= safeLeft - 1f)
+            assertTrue(chipsBounds().left >= safeLeft - 1f)
+            compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
+                .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
+                    assertTrue("Notification interaction clears physical left", it.boundsInRoot.left >= safeLeft - 1f)
+                }
+        }
+    }
+
     @Test fun wideChipsAndRowsClearPhysicalRightWhileRowSurfacesUnderlay() {
         val items = (0..5).map { notification("wide-$it", withPost = true) }
         for (direction in LayoutDirection.entries) {

@@ -106,13 +106,15 @@ fun HomeFeed(
     cleanTrackingParameters: Boolean = false,
     contentWarningRules: ContentWarningRules = LocalContentWarningRules.current,
     rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
     bottomObstructionClearance: Dp = 0.dp,
 ) {
     // Clear interaction content, not the viewport or full-width row underlay.
-    // Physical right does not reverse with the layout direction.
+    // Physical left and physical right do not reverse with the layout direction.
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
-    val interactionModifier = Modifier.absolutePadding(right = wideRightClearance)
+    val interactionModifier = Modifier.absolutePadding(left = wideLeftClearance, right = wideRightClearance)
     val scrollEndClearance = (bottomContentClearance
         ?: if (compactLayout) compactHomeScrollEndClearance() else LegacyFeedBottomClearance) + wideBottomClearance
     val list = listState ?: rememberLazyListState()
@@ -284,7 +286,7 @@ fun HomeFeed(
                 LargeBottomDock(
                     content = it,
                     modifier = Modifier.align(Alignment.BottomStart)
-                        .absolutePadding(right = wideRightClearance, bottom = wideBottomClearance),
+                        .absolutePadding(left = wideLeftClearance, right = wideRightClearance, bottom = wideBottomClearance),
                 )
             }
         }

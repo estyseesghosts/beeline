@@ -288,6 +288,43 @@ class DirectMessageScreenTest {
 
     @Test
     @Config(qualifiers = "w800dp-h1000dp-420dpi")
+    fun wideInboxAndConversationClearPhysicalLeftInBothDirections() {
+        val density = compose.activity.resources.displayMetrics.density
+        for (direction in LayoutDirection.entries) {
+            show {
+                CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                    DirectMessageInboxScreen(accountId = owner.id,
+                        state = DirectMessageUiState(conversations = listOf(conversation)),
+                        compactLayout = false, leftObstructionClearance = 72.dp)
+                }
+            }
+            val list = bounds("direct_message_conversation_list")
+            val surface = bounds("direct_message_conversation_surface_conversation")
+            val action = bounds("direct_message_conversation_action_conversation")
+            assertEquals(list.left, surface.left, 1f)
+            assertTrue(action.left >= list.left + 72f * density - 1f)
+            show {
+                CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                    DirectMessageConversationScreen(accountId = owner.id,
+                        state = DirectMessageUiState(selectedConversation = conversation,
+                            selectedConversationId = conversation.id, thread = listOf(conversation.lastPost),
+                            editorText = "Retained draft"),
+                        compactLayout = false, leftObstructionClearance = 72.dp)
+                }
+            }
+            val viewport = bounds("direct_message_conversation")
+            assertEquals(viewport.left, bounds("direct_message_thread").left, 1f)
+            val safeLeft = viewport.left + 72f * density
+            listOf("direct_message_title", "direct_message_input", "direct_message_send",
+                "direct_message_bubble_last").forEach { tag ->
+                assertTrue("$tag clears physical left", bounds(tag).left >= safeLeft - 1f)
+            }
+            compose.onNodeWithTag("direct_message_input").assertTextContains("Retained draft")
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w800dp-h1000dp-420dpi")
     fun wideConversationClearsPhysicalRightAndKeepsFullViewportAndTranscriptReach() {
         val rightClearance = 72.dp
         val bottomClearance = 96.dp

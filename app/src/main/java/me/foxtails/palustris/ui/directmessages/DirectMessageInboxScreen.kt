@@ -52,6 +52,7 @@ fun DirectMessageInboxScreen(
     compactLayout: Boolean = true,
     compactNavigationVisible: Boolean = true,
     rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
     bottomObstructionClearance: Dp = 0.dp,
     onRefresh: () -> Unit = {},
     onLoadMore: () -> Unit = {},
@@ -66,11 +67,12 @@ fun DirectMessageInboxScreen(
         0.dp
     }
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
     Column(Modifier.fillMaxSize().testTag("direct_message_inbox")) {
         Column(
             Modifier.fillMaxWidth()
-                .absolutePadding(right = wideRightClearance)
+                .absolutePadding(left = wideLeftClearance, right = wideRightClearance)
                 .padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -97,13 +99,13 @@ fun DirectMessageInboxScreen(
                 icon = AppIcons.DirectMessage,
                 title = stringResource(R.string.dm_load_error),
                 subtitle = state.error,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().absolutePadding(left = wideLeftClearance, right = wideRightClearance),
             )
             state.conversations.isEmpty() -> EmptyState(
                 icon = AppIcons.DirectMessage,
                 title = stringResource(R.string.dm_empty_title),
                 subtitle = stringResource(R.string.dm_empty_subtitle),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().absolutePadding(left = wideLeftClearance, right = wideRightClearance),
             )
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize().testTag("direct_message_conversation_list"),
@@ -117,12 +119,14 @@ fun DirectMessageInboxScreen(
                         accountId = accountId,
                         conversation = conversation,
                         rightObstructionClearance = wideRightClearance,
+                        leftObstructionClearance = wideLeftClearance,
                         onClick = { onOpenConversation(conversation) },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
                 }
                 item {
-                    Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.fillMaxWidth().absolutePadding(left = wideLeftClearance, right = wideRightClearance)
+                        .padding(16.dp), contentAlignment = Alignment.Center) {
                         when {
                             state.loadingMore -> CircularProgressIndicator(Modifier.size(24.dp))
                             state.nextCursor != null -> Text(
@@ -148,6 +152,7 @@ private fun DirectConversationRow(
     accountId: AccountId,
     conversation: DirectConversation,
     rightObstructionClearance: Dp,
+    leftObstructionClearance: Dp,
     onClick: () -> Unit,
 ) {
     val people = conversation.participants.filterNot { it.id == accountId }
@@ -161,7 +166,7 @@ private fun DirectConversationRow(
     ) {
         Row(
             Modifier.fillMaxWidth()
-                .absolutePadding(right = rightObstructionClearance)
+                .absolutePadding(left = leftObstructionClearance, right = rightObstructionClearance)
                 .clickable(onClick = onClick)
                 .testTag("direct_message_conversation_action_${conversation.id.value}")
                 .padding(horizontal = 16.dp, vertical = 12.dp),

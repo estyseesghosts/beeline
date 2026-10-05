@@ -41,6 +41,13 @@ internal fun Modifier.bubblePressLayer(
     }
 }
 
+/**
+ * Resolves the compact contextual action for one destination.
+ *
+ * The compact bar keeps four grouped positions, so a remembered child panel stays a separate
+ * contextual action. The panel, destination, and profile relationship own the label and callback.
+ * The callback itself stays with the feature contract or the shell.
+ */
 @Composable
 internal fun contextualActionFor(
     destination: Destination,
@@ -67,26 +74,102 @@ internal fun contextualActionFor(
     } else {
         ContextualNavigationAction(AppIcons.Mail, stringResource(R.string.nav_notifications), true, onNotificationsToggle)
     }
-    Destination.Profile -> when {
-        profileTarget?.movedTo != null -> null
-        profileTarget?.id == authenticatedAccountId && authenticatedAccountId != null ->
-            ContextualNavigationAction(AppIcons.PersonEdit, stringResource(R.string.profile_edit), profileState.editableSupported, onEditProfile)
-        profileState.relationshipSupported == true && profileState.relationship != null -> {
-            val relationship = profileState.relationship
-            val following = relationship.following || relationship.requested
-            ContextualNavigationAction(
-                icon = if (following) AppIcons.Unfollow else AppIcons.Follow,
-                contentDescription = when {
-                    relationship.following -> stringResource(R.string.profile_unfollow_action)
-                    relationship.requested -> stringResource(R.string.profile_cancel_request_action)
-                    else -> stringResource(R.string.profile_follow_action)
-                },
-                enabled = !profileState.relationshipMutation,
-                onClick = if (following) onUnfollowProfile else onFollowProfile,
-            )
-        }
-        else -> null
+    Destination.Profile -> profileContextualAction(
+        profileTarget = profileTarget,
+        authenticatedAccountId = authenticatedAccountId,
+        profileState = profileState,
+        onEditProfile = onEditProfile,
+        onFollowProfile = onFollowProfile,
+        onUnfollowProfile = onUnfollowProfile,
+    )
+}
+
+/**
+ * Resolves the shared contextual action for a profile target.
+ *
+ * Compact and vertical presentation both call this policy, so a moved profile, the signed-in
+ * account, and a known relationship keep the same label and callback in either presentation.
+ */
+@Composable
+internal fun profileContextualAction(
+    profileTarget: Account?,
+    authenticatedAccountId: AccountId?,
+    profileState: ProfileUiState,
+    onEditProfile: () -> Unit,
+    onFollowProfile: () -> Unit,
+    onUnfollowProfile: () -> Unit,
+): ContextualNavigationAction? = when {
+    profileTarget?.movedTo != null -> null
+    profileTarget?.id == authenticatedAccountId && authenticatedAccountId != null ->
+        ContextualNavigationAction(
+            AppIcons.PersonEdit,
+            stringResource(R.string.profile_edit),
+            profileState.editableSupported,
+            onEditProfile,
+        )
+    profileState.relationshipSupported == true && profileState.relationship != null -> {
+        val relationship = profileState.relationship
+        val following = relationship.following || relationship.requested
+        ContextualNavigationAction(
+            icon = if (following) AppIcons.Unfollow else AppIcons.Follow,
+            contentDescription = when {
+                relationship.following -> stringResource(R.string.profile_unfollow_action)
+                relationship.requested -> stringResource(R.string.profile_cancel_request_action)
+                else -> stringResource(R.string.profile_follow_action)
+            },
+            enabled = !profileState.relationshipMutation,
+            onClick = if (following) onUnfollowProfile else onFollowProfile,
+        )
     }
+    else -> null
+}
+
+/**
+ * Resolves the contextual action for one of the six direct vertical targets.
+ *
+ * The vertical presentation already lists Photo Grid and Direct Messages as their own targets, so
+ * those two do not repeat a panel switch the way the compact grouped bar does. Home, Search,
+ * Photo Grid, and Notifications keep their Compose action, which matches the action the replaced
+ * rail offered on every screen. Direct Messages opens the recipient finder that the direct-message
+ * contract owns. Profile reuses the shared profile policy.
+ */
+@Composable
+internal fun wideContextualAction(
+    target: WideNavigationItem,
+    profileTarget: Account?,
+    authenticatedAccountId: AccountId?,
+    profileState: ProfileUiState,
+    directMessagesEnabled: Boolean,
+    onCompose: () -> Unit,
+    onNewConversation: () -> Unit,
+    onEditProfile: () -> Unit,
+    onFollowProfile: () -> Unit,
+    onUnfollowProfile: () -> Unit,
+): ContextualNavigationAction? = when (target) {
+    WideNavigationItem.Home,
+    WideNavigationItem.Search,
+    WideNavigationItem.PhotoGrid,
+    WideNavigationItem.Notifications,
+    -> ContextualNavigationAction(
+        AppIcons.Compose,
+        stringResource(R.string.nav_compose),
+        true,
+        onCompose,
+    )
+    WideNavigationItem.DirectMessages -> ContextualNavigationAction(
+        AppIcons.DirectMessage,
+        stringResource(R.string.dm_new_conversation),
+        directMessagesEnabled,
+        onNewConversation,
+    )
+    WideNavigationItem.Profile -> profileContextualAction(
+        profileTarget = profileTarget,
+        authenticatedAccountId = authenticatedAccountId,
+        profileState = profileState,
+        onEditProfile = onEditProfile,
+        onFollowProfile = onFollowProfile,
+        onUnfollowProfile = onUnfollowProfile,
+    )
 }
 
 @Composable

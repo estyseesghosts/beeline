@@ -66,6 +66,7 @@ internal fun ProfileTimelineList(
     compactLayout: Boolean,
     endContentClearance: Dp,
     rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
     isSelf: Boolean,
     onCategorySelected: (ProfileCategory) -> Unit,
     onOpenDrafts: () -> Unit,
@@ -97,8 +98,8 @@ internal fun ProfileTimelineList(
     largeLayout: Boolean = false,
 ) {
     // A profile row is a transparent column with separate state and footer items, so only the
-    // interactive content clears physical right. Item dividers keep the full width for underlay.
-    val interactionModifier = Modifier.absolutePadding(right = rightObstructionClearance)
+    // interactive content clears physical edges. Item dividers keep the full width for underlay.
+    val interactionModifier = Modifier.absolutePadding(left = leftObstructionClearance, right = rightObstructionClearance)
     val list = listState ?: rememberLazyListState()
     val currentState by rememberUpdatedState(state)
     val loadMore by rememberUpdatedState(onLoadMore)

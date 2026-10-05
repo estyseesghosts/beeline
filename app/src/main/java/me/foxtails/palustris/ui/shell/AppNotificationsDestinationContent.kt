@@ -1,9 +1,12 @@
 package me.foxtails.palustris.ui.shell
 
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.ContentWarningRules
@@ -20,14 +23,23 @@ import me.foxtails.palustris.ui.notifications.NotificationsScreen
 import me.foxtails.palustris.ui.notifications.NotificationsUiState
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 
+/**
+ * Notification inbox and direct-message destination branches.
+ *
+ * The shell supplies physical left, physical right, and bottom obstruction clearance. Compact
+ * layout ignores every value and keeps its own system-bar and IME clearance. The direct-message
+ * empty state clears the floating chrome too, so no reachable wide surface stays uncovered.
+ */
 @Composable
 internal fun AppNotificationsDestinationContent(
     panel: NotificationsPanel,
     account: Account?,
     compactLayout: Boolean,
     compactNavigationVisible: Boolean,
-    rightObstructionClearance: Dp,
-    bottomObstructionClearance: Dp,
+    rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
+    bottomObstructionClearance: Dp = 0.dp,
+    bottomNavigationClearance: Dp = 0.dp,
     notificationAccountIdentity: String,
     notificationState: NotificationsUiState,
     onRefreshNotifications: () -> Unit,
@@ -50,6 +62,8 @@ internal fun AppNotificationsDestinationContent(
     onRetryDirectThread: () -> Unit,
     contentWarningRules: ContentWarningRules = LocalContentWarningRules.current,
 ) {
+    val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
+    val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
     AnimatedStatePane(
         stateKey = panel,
         modifier = Modifier.fillMaxSize(),
@@ -58,7 +72,8 @@ internal fun AppNotificationsDestinationContent(
             NotificationsScreen(
                 connected = account != null,
                 compactLayout = compactLayout,
-                rightObstructionClearance = rightObstructionClearance,
+                leftObstructionClearance = wideLeftClearance,
+                rightObstructionClearance = wideRightClearance,
                 bottomObstructionClearance = bottomObstructionClearance,
                 accountIdentity = notificationAccountIdentity,
                 notificationState = notificationState,
@@ -75,9 +90,13 @@ internal fun AppNotificationsDestinationContent(
             )
         } else if (account == null) {
             EmptyState(
-                AppIcons.DirectMessage,
-                androidx.compose.ui.res.stringResource(R.string.direct_messages_connect_title),
-                androidx.compose.ui.res.stringResource(R.string.direct_messages_connect_subtitle),
+                icon = AppIcons.DirectMessage,
+                title = stringResource(R.string.direct_messages_connect_title),
+                subtitle = stringResource(R.string.direct_messages_connect_subtitle),
+                modifier = Modifier.absolutePadding(
+                    left = wideLeftClearance,
+                    right = wideRightClearance,
+                ),
             )
         } else if (directMessageState.selectedConversationId != null || directMessageState.recipient != null) {
             DirectMessageConversationScreen(
@@ -85,9 +104,11 @@ internal fun AppNotificationsDestinationContent(
                 state = directMessageState,
                 compactLayout = compactLayout,
                 compactNavigationVisible = compactNavigationVisible,
-                rightObstructionClearance = rightObstructionClearance,
+                leftObstructionClearance = wideLeftClearance,
+                rightObstructionClearance = wideRightClearance,
                 bottomObstructionClearance = bottomObstructionClearance,
                 onBack = onBackDirectConversation,
+                bottomNavigationClearance = bottomNavigationClearance,
                 onEditorTextChange = onEditorTextChange,
                 onSend = onSendDirectMessage,
                 onContinueThread = onContinueDirectThread,
@@ -95,11 +116,12 @@ internal fun AppNotificationsDestinationContent(
             )
         } else {
             DirectMessageInboxScreen(
+                leftObstructionClearance = wideLeftClearance,
                 accountId = account.id,
                 state = directMessageState,
                 compactLayout = compactLayout,
                 compactNavigationVisible = compactNavigationVisible,
-                rightObstructionClearance = rightObstructionClearance,
+                rightObstructionClearance = wideRightClearance,
                 bottomObstructionClearance = bottomObstructionClearance,
                 onRefresh = onRefreshDirectMessages,
                 onLoadMore = onLoadMoreDirectMessages,

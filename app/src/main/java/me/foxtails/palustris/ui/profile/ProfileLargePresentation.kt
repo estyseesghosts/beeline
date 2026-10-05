@@ -3,9 +3,11 @@ package me.foxtails.palustris.ui.profile
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -33,6 +35,7 @@ internal fun ProfileLargePresentation(
     listState: LazyListState?,
     endContentClearance: Dp,
     rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
     bottomObstructionClearance: Dp = 0.dp,
     onCategorySelected: (ProfileCategory) -> Unit,
     onOpenDrafts: () -> Unit,
@@ -63,21 +66,25 @@ internal fun ProfileLargePresentation(
     onQuote: (OwnedPost) -> Unit = {},
     onEditProfile: (() -> Unit)?,
 ) {
-    // The floating obstruction sits at the physical right edge. This Row mirrors in RTL, so the
-    // summary column reaches that edge in RTL and the timeline column reaches it in LTR. Only the
-    // column that reaches the edge takes clearance, so the other column keeps its usable width.
-    val obstructionAtTimeline = LocalLayoutDirection.current != LayoutDirection.Rtl
-    val timelineClearance = if (obstructionAtTimeline) rightObstructionClearance else 0.dp
-    val summaryClearance = if (obstructionAtTimeline) 0.dp else rightObstructionClearance
+    // The two-column Row mirrors in RTL, so the column that reaches a physical edge changes with
+    // the layout direction. Each column takes only the clearance for the edges it reaches, so the
+    // other column keeps its usable width. LTR puts the summary at the physical left and the
+    // timeline at the physical right. RTL swaps those two.
+    val timelineAtPhysicalRight = LocalLayoutDirection.current != LayoutDirection.Rtl
+    val timelineRightClearance = if (timelineAtPhysicalRight) rightObstructionClearance else 0.dp
+    val summaryRightClearance = if (timelineAtPhysicalRight) 0.dp else rightObstructionClearance
+    val timelineLeftClearance = if (timelineAtPhysicalRight) 0.dp else leftObstructionClearance
+    val summaryLeftClearance = if (timelineAtPhysicalRight) leftObstructionClearance else 0.dp
 
     @Composable
-    fun timeline(rightClearance: Dp) {
+    fun timeline(rightClearance: Dp, leftClearance: Dp) {
         ProfileTimelineList(
             account = account,
             state = state,
             compactLayout = false,
             endContentClearance = endContentClearance,
             rightObstructionClearance = rightClearance,
+            leftObstructionClearance = leftClearance,
             isSelf = isSelf,
             onCategorySelected = onCategorySelected,
             onOpenDrafts = onOpenDrafts,
@@ -140,7 +147,7 @@ internal fun ProfileLargePresentation(
                     Modifier
                         .weight(0.42f)
                         .fillMaxHeight()
-                        .absolutePadding(right = summaryClearance)
+                        .absolutePadding(left = summaryLeftClearance, right = summaryRightClearance)
                         .verticalScroll(rememberScrollState()),
                 ) {
                     ProfileHeader(
@@ -157,12 +164,19 @@ internal fun ProfileLargePresentation(
                         largeSummary = showSummary,
                     )
                     details()
+                    // The summary column scrolls under the overlaid category dock, so its
+                    // scroll range ends past the dock height. The timeline list owns the same
+                    // clearance through its own end spacing.
+                    Spacer(Modifier.height(endContentClearance))
                 }
-                Box(Modifier.weight(0.58f).fillMaxHeight()) { timeline(timelineClearance) }
+                Box(Modifier.weight(0.58f).fillMaxHeight()) {
+                    timeline(timelineRightClearance, timelineLeftClearance)
+                }
             }
             dock(
                 Modifier.align(Alignment.BottomStart).absolutePadding(
                     right = rightObstructionClearance,
+                    left = leftObstructionClearance,
                     bottom = bottomObstructionClearance,
                 ),
             )
@@ -170,10 +184,11 @@ internal fun ProfileLargePresentation(
     } else {
         Box(Modifier.fillMaxSize()) {
             // Without the summary the timeline fills the pane, so it always reaches the edge.
-            timeline(rightObstructionClearance)
+            timeline(rightObstructionClearance, leftObstructionClearance)
             dock(
                 Modifier.align(Alignment.BottomStart).absolutePadding(
                     right = rightObstructionClearance,
+                    left = leftObstructionClearance,
                     bottom = bottomObstructionClearance,
                 ),
             )

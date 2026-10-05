@@ -57,8 +57,8 @@ existing `startConversation(Account)` action. Canceling the finder preserves the
 conversation and editor. Request generations reject results after a query change, dismissal, or
 session retirement.
 
-The wide navigation action is not connected to this contract yet. Phase 4C activates that callback
-after navigation and destination-clearance gates pass.
+The vertical New conversation action now opens this recipient finder through the existing DM contract.
+It does not open the post composer or toggle back to Notifications.
 
 Sources: `ui/directmessages/DirectMessageViewModel.kt`,
 `ui/directmessages/DirectMessagesHost.kt`, `ui/directmessages/DirectMessageRecipientFinder.kt`,
@@ -68,17 +68,17 @@ failure. Compose tests cover search, selection, and dismissal. Live-server behav
 
 ## Wide direct-message inbox clearance
 
-`ShellContent` forwards physical-right and bottom obstruction clearances through the existing
+`ShellContent` forwards physical-left, physical-right, and bottom obstruction clearances through the existing
 destination branch. `DirectMessageInboxScreen` applies them only when the wide layout is active.
 Header text, refresh, conversation text, and row click targets stay left of physical-right clearance.
 The inbox viewport and row backgrounds keep their full width, so they can continue under floating
 chrome. Bottom clearance extends the inbox scroll range instead of padding its viewport. Compact
-layout ignores both wide-only values and keeps its current system-bar and IME clearance.
+layout ignores wide-only values and keeps its current system-bar and IME clearance.
 
-The application still supplies zero clearance because floating navigation remains inactive. Tests
-inject synthetic values in LTR and RTL. They verify the viewport, row underlay, interactive bounds,
+Production navigation supplies real clearance to the pane that holds visible controls. Tests
+also inject synthetic values in LTR and RTL. They verify the viewport, row underlay, interactive bounds,
 the load-more action, final-item reach, shell-branch forwarding, and unchanged compact behavior.
-These tests do not verify production geometry or physical rendering.
+Compose tests verify geometry and both physical edges. Device DM rendering remains unverified.
 
 Sources: `ui/shell/ShellContent.kt`, `ui/shell/ShellDestinationContent.kt`,
 `ui/shell/AppNotificationsDestinationContent.kt`, `ui/directmessages/DirectMessageInboxScreen.kt`,
@@ -90,13 +90,13 @@ Sources: `ui/shell/ShellContent.kt`, `ui/shell/ShellDestinationContent.kt`,
 The screen keeps its full-size viewport. Header, notice/error text, bubbles, retry/continue controls,
 editor input, and Send clear physical right in both LTR and RTL. Bottom clearance extends only
 the transcript scroll range. It does not move the editor or add an editor positioning inset.
-Wide `imePadding()` and navigation-bar positioning remain unchanged. Compact layout ignores both
+Wide `imePadding()` and navigation-bar positioning remain unchanged without fallback. Compact layout ignores
 wide-only inputs and keeps its contextual-control positioning policy.
 
 `DirectMessageScreenTest` verifies content bounds, final transcript reach, branch forwarding, retained
 editor text, and synthetic IME open/close transitions. It also compares compact bounds with and
-without wide clearances. Production inputs remain zero because floating navigation is inactive.
-Physical-device IME behavior and production obstruction geometry remain unverified.
+without wide clearances. Production inputs are active. The wide compact fallback also supplies separate
+`bottomNavigationClearance` to place the editor above the grouped bar. Physical-device IME behavior remains unverified.
 
 Sources: `ui/directmessages/DirectMessageConversationScreen.kt`,
 `ui/shell/AppNotificationsDestinationContent.kt`, `DirectMessageScreenTest`.
@@ -110,12 +110,12 @@ Bottom clearance extends the existing scroll range. The wide timeline dock moves
 and clears physical right. Home without a feed contract also clears its dock and empty-state text.
 
 Timeline chips keep their existing scroll and selection behavior. Clearance does not set chip travel.
-Compact Home ignores both wide inputs. Its shell-owned tabs, navigation, and IME-aware final spacing remain unchanged.
-The application still supplies zero values because floating navigation is inactive.
+Compact Home ignores wide inputs. Its shell-owned tabs, navigation, and IME-aware final spacing remain unchanged.
+Production clearance is active. The folded outer-screen Home rendering is emulator verified.
 
 Sources: `ui/feed/HomeFeed.kt`, `ui/shell/ShellDestinationContent.kt`, `HomeClearanceTest`, `HomeFeedTest`, `NavigationTest`.
 Focused Compose tests verify bounds, final-content reach, timeline callbacks, retained scroll position,
-and compact compatibility. Device rendering and production obstruction geometry remain unverified.
+and compact compatibility. Outer-screen Home is emulator verified; hardware tablet and device RTL rendering remain unverified.
 
 ## Wide Search clearance
 
@@ -126,15 +126,15 @@ beneath floating chrome. Account rows clear through the list inset because the a
 
 Bottom clearance extends the wide result scroll range only. The wide search dock keeps its bottom-start
 placement, its spacing, and its measured height. The search field therefore keeps its current position
-and its current wide IME behavior, which applies no field inset.
-Compact layout ignores both wide inputs and keeps its IME-aware control placement and scroll clearance.
+and its current wide IME behavior, which applies no field inset without compact fallback.
+Compact layout ignores wide inputs and keeps its IME-aware control placement and scroll clearance.
 Category chips keep their own scrolling and selection behavior. Clearance does not set chip travel.
-The application still supplies zero values because floating navigation is inactive.
+Production clearance is active. Wide compact fallback uses separate positioning clearance to keep the field above navigation.
 
 Sources: `ui/search/SearchScreen.kt`, `ui/shell/ShellDestinationContent.kt`, `SearchClearanceTest`.
 Focused Compose tests verify viewport and divider bounds, interaction and dock clearance, final-content reach,
 chip selection, retained list position, synthetic IME open and close, branch forwarding, and compact
-compatibility. Device rendering and production obstruction geometry remain unverified.
+compatibility. Device Search rendering remains unverified.
 
 ## Wide Photo Grid clearance
 
@@ -147,14 +147,13 @@ The full-screen error state keeps its full-size viewport and clears only its ret
 
 Bottom clearance extends the wide grid end spacing. The wide filter-chip dock clears physical right and sits
 above that obstruction, the same way the Home timeline dock does. Chips keep their own scrolling and selection
-behavior, and clearance does not set chip travel. Compact Photo Grid ignores both wide inputs and keeps its
-contextual-control placement and scroll clearance. The application still supplies zero values because floating
-navigation is inactive.
+behavior, and clearance does not set chip travel. Compact Photo Grid ignores wide inputs and keeps its
+contextual-control placement and scroll clearance. Production clearance is active.
 
 Sources: `ui/photogrid/PhotoGridScreen.kt`, `ui/shell/ShellDestinationContent.kt`, `PhotoGridClearanceTest`.
 Focused Compose tests verify tile and reveal bounds, continuation and retry callbacks, final-tile reach, dock
 position and clearance, chip and hashtag selection, branch forwarding, retained grid position, and compact
-compatibility. Device rendering and production obstruction geometry remain unverified.
+compatibility. Device Photo Grid rendering remains unverified.
 
 ## Wide Notifications clearance
 
@@ -166,15 +165,15 @@ opaque target. The row card keeps its full width for visual underlay; its intera
 through an absolute right inset inside the row.
 
 Wide layout has no bottom dock because its chip row sits at the top. Bottom clearance extends the wide list end
-spacing only. Compact Notifications ignores both wide inputs and keeps its floating bottom chip row, contextual-control
+spacing only. Compact Notifications ignores wide inputs and keeps its floating bottom chip row, contextual-control
 placement, and scroll clearance. Chips keep their own scrolling and selection behavior, and clearance does not set
-chip travel. The application still supplies zero values because floating navigation is inactive.
+chip travel. Production clearance is active.
 
 Sources: `ui/notifications/NotificationsScreen.kt`, `ui/notifications/NotificationRow.kt`,
 `ui/shell/AppNotificationsDestinationContent.kt`, `NotificationsClearanceTest`.
 Focused Compose tests verify viewport and row bounds, row-surface underlay, dismiss and follow-request controls and
 callbacks, load-older and retry callbacks, final-item reach, retained filter selection and scroll position, branch
-forwarding, and compact compatibility. Device rendering and production obstruction geometry remain unverified.
+forwarding, and compact compatibility. Device Notifications rendering remains unverified.
 
 ## Wide Profile clearance
 
@@ -188,21 +187,21 @@ instead of a list-wide inset.
 The wide category dock keeps its bottom-start placement and its own spacing. It clears physical right and sits above
 supplied bottom obstruction. Wide end-of-list clearance adds that obstruction to `LargeBottomDockClearance`.
 
-The wide summary layout has two columns, and only one of them reaches the pane physical right edge. In LTR that is
-the timeline column. In RTL that is the summary column that holds the header and details. Only that column takes
-clearance, so the other column keeps its usable width. Without the summary the timeline fills the pane and always
-takes clearance.
+The wide summary layout has two mirrored columns. LTR places the summary left and timeline right; RTL swaps them.
+Each column takes only the physical-edge clearance that it reaches. Without the summary, the timeline takes both edges.
+The summary scroll range ends past the category dock, so its final details stay reachable.
 
-Compact Profile ignores both wide inputs and keeps its measured end clearance and its floating chip row. Chips keep
-their own scrolling and selection behavior, and clearance sets no chip travel. The application still supplies zero
-values because floating navigation is inactive.
+Compact Profile ignores wide inputs and keeps its measured end clearance and its floating chip row. Chips keep
+their own scrolling and selection behavior, and clearance sets no chip travel. Production clearance is active.
 
 Sources: `ui/profile/ProfileScreen.kt`, `ui/profile/ProfileLargePresentation.kt`,
 `ui/profile/ProfileTimelineList.kt`, `ui/shell/ShellDestinationContent.kt`, `ProfileClearanceTest`.
 Focused Compose tests verify viewport and divider bounds, mirrored wide columns, header and row control bounds,
 dock clearance, final-row and footer reach, load-older and retry callbacks, branch forwarding, retained category
-selection and scroll position, and compact compatibility. Device rendering and production obstruction geometry
-remain unverified.
+selection and scroll position, and compact compatibility. Device Profile rendering remains unverified.
+
+All seven wide surfaces also clear shell-supplied physical left through the same content owners described above.
+Physical edges never reverse with layout direction. The viewport remains full size; clearance stays inside interactive or scroll content.
 
 ## Forced layout direction
 
@@ -223,33 +222,29 @@ A user without the setting, or with a value from a future version, keeps the dev
 Sources: `ui/LayoutDirectionPolicy.kt`, `ui/settings/DisplaySettingsScreen.kt`,
 `ui/ConnectedApp.kt`, `domain/AppPreferences.kt`.
 
-Limits: device rendering, TalkBack, and physical foldable behavior are unverified. On a large
-foldable, a forced right-to-left layout can move a pane away from the physical hinge, because the
-pane offset uses the physical left inset with a direction-relative modifier.
+Limits: device RTL, TalkBack, and physical hinge coordinates remain unverified.
+Compose tests verify physical top-left alignment and absolute offsets for panes and floating navigation in both directions.
 
 ## Large panes and folding coordinates
 
-`LargeLayoutMode` currently chooses compact, single-pane, or expanded-pane behavior from
-600/840 dp window-width cutoffs. `LargeScreenShell` applies system-bar insets, then places the
-80 dp rail beside one destination host. Pane geometry uses the remaining content bounds.
+`LargeLayoutMode` chooses compact, single-pane, or expanded-pane behavior from 600/840 dp window-width cutoffs.
+`LargeScreenShell` applies system-bar insets around one destination host. Floating navigation does not subtract a rail from pane geometry.
 
 Material 3 Adaptive supplies folding-feature bounds in window coordinates. The shell translates
-those bounds into the pane-content pixel space. LTR content starts after the physical left inset
-and rail. RTL content starts after the physical left inset because the `Row` places the rail on
-the right. Separating and occluding features split safe regions; non-separating creases do not.
+those bounds into the pane-content pixel space. Content starts after the physical left/top system inset in both directions.
+Separating and occluding features split safe regions; non-separating creases do not.
 
 Sources: `ui/large/LargeLayoutMode.kt`, `ui/large/LargeScreenShell.kt`,
 `LargeLayoutModeTest`.
 Verification: JVM tests characterize LTR/RTL coordinate translation and pane behavior. Device
 hinge coordinates remain unverified.
 
-`calculateNavigationFit` in `LargeLayoutMode.kt` owns the navigation fit policy. It builds safe
-regions from window geometry, system bar insets, gesture insets, cutout bounds, and separating or
-occluding folding features. It selects vertical navigation only when one safe region contains
-the full controls (64 dp width, 360 dp height) and leaves 360 dp useful content width. Otherwise
-it falls back to compact. IME height does not affect the fit. Pane and detail selection remain
-independent. `LargeLayoutModeTest` covers wide, narrow, hinge, cutout, gesture, IME, and
-non-separating crease scenarios. Production activation and rail replacement remain planned.
+`calculateNavigationFit` owns permanent navigation fit. `NavigationFitWindowInsets` reads physical system-bar,
+display-cutout, mandatory-gesture, and hinge geometry, then converts window pixels to dp.
+Overlapping edge insets merge by their maximum. Nonmandatory back-gesture strips do not exclude visible navigation.
+Vertical navigation requires the full controls (64 dp reserved width, 360 dp height) plus 360 dp useful content width.
+Otherwise it keeps compact navigation. IME height does not affect permanent presentation. Pane and detail selection remain independent.
+`LargeLayoutModeTest` and `AdaptiveNavigationTest` cover fit, safe placement, hinge coordinates, density conversion, and RTL physical bounds.
 
 ## Back navigation
 
@@ -281,9 +276,10 @@ RTL reverses logical slot placement without changing the selected destination.
 Sources: `ui/navigation/CompactAppNavigation.kt`, `ui/navigation/NavigationPresentation.kt`,
 `ui/navigation/NavigationItem.kt`, `CompactNavigationSelectionTest`, `NavigationPresentationTest`, `NavigationTest`.
 Verification: Compose tests cover stable bounds, interrupted selection, RTL, reduced motion, and compact 200% text.
-A six-target vertical test uses the shared presenter. Its dimensions are test inputs, not approved production geometry.
-The production wide rail remains unchanged. Adaptive activation and rail replacement remain planned.
-Physical rendering and TalkBack remain unverified.
+The production vertical capsule is 56 × 296 dp, with six 48 dp slots and 4 dp padding at each end.
+Its separate 56 dp action sits 8 dp below it. The stack remains fixed when Profile has no contextual action.
+`LargeFloatingNavigation` replaces the rail and uses physical placement independent of RTL.
+Outer-screen Home rendering is emulator verified. TalkBack and hardware tablet rendering remain unverified.
 
 ### Compact IME placement and content clearance
 
@@ -307,8 +303,13 @@ Maintainer clarification, 2026-10-04: compact-narrow, compact-wide, and large/ta
 Compact-narrow retains the existing four-button grouped bar and existing narrow layout.
 Compact-wide and tablet use the same vertical six-button presentation: Home, Search, Photo Grid,
 Notifications, Direct Messages, and Profile. Tablet detail panes remain independent of navigation presentation.
-This is required behavior, not an implementation claim. The current width-only policy does not establish compact-wide support.
-The available emulator simulates compact-wide; narrow-phone acceptance needs separate evidence.
+This behavior is active. Fit selects navigation independently of width-based panes and back precedence.
+Expanded layouts default to physical left; other fitting windows default to physical right. Anchor preferences remain planned for 4C-5c.
+Home, Search, Photo Grid, and Notifications offer Compose; Direct Messages offers New conversation; Profile shares edit/follow/unfollow policy.
+When fit fails inside a wide layout, the grouped compact bar remains available and content clears it.
+Search and the DM editor also receive separate fallback positioning clearance, including the compact IME base.
+The folded emulator shows vertical navigation at 445 × 704 dp. A 900 × 900 dp tablet fixture passes Compose tests.
+Narrow-phone, hardware tablet, device RTL, and physical hinge acceptance remain separate verification limits.
 
 ## Draft restoration
 

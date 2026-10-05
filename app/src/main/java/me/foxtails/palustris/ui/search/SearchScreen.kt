@@ -95,6 +95,7 @@ import me.foxtails.palustris.ui.motion.springPress
  *
  * @param rightObstructionClearance Physical-right clearance for wide result content and the wide dock.
  * @param bottomObstructionClearance Wide scroll clearance only. It never moves the dock or the field.
+ * @param bottomNavigationClearance Positions the wide dock above compact fallback navigation, including its IME base.
  * Compact layout ignores both values and retains its IME-aware control placement.
  */
 @Composable
@@ -120,7 +121,9 @@ fun SearchScreen(
     compactLayout: Boolean = true,
     compactNavigationVisible: Boolean = false,
     rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
     bottomObstructionClearance: Dp = 0.dp,
+    bottomNavigationClearance: Dp = 0.dp,
     mediaOwner: AccountId? = null,
     sessionRevision: Long = 0L,
     onOpenMedia: (me.foxtails.palustris.ui.media.MediaOpenRequest) -> Unit = {},
@@ -177,8 +180,9 @@ fun SearchScreen(
         0.dp
     }
     // Clear interaction content, not the viewport, the outer row extent, or dividers.
-    // The search field owns dock placement, so obstruction clearance never moves it.
+    // Obstruction clearance does not move the dock. Compact fallback navigation has separate placement clearance.
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
 
     Box(Modifier.fillMaxSize()) {
@@ -202,6 +206,7 @@ fun SearchScreen(
             onLoadMoreSearch = onLoadMoreSearch,
             endClearance = if (largeLayout) largeDockClearance + wideBottomClearance else searchEndClearance,
             rightClearance = wideRightClearance,
+            leftClearance = wideLeftClearance,
             mediaOwner = mediaOwner,
             sessionRevision = sessionRevision,
             onOpenMedia = onOpenMedia,
@@ -224,10 +229,11 @@ fun SearchScreen(
                         SearchField(query, ::submitSearch, ::updateQuery)
                     }
                 },
-                // Physical right narrows the dock only. Bottom clearance keeps its placement so the
-                // search field and chip row stay on their measured dock geometry.
+                // Physical edges narrow the dock. Only compact fallback navigation moves it upward.
+                // Measurement excludes fallback placement padding so end clearance does not count it twice.
                 modifier = Modifier.align(Alignment.BottomStart)
-                    .absolutePadding(right = wideRightClearance)
+                    .padding(bottom = bottomNavigationClearance)
+                    .absolutePadding(left = wideLeftClearance, right = wideRightClearance)
                     .onSizeChanged { largeDockHeightPx = it.height }
                     .testTag("search_dock"),
             )
@@ -268,6 +274,7 @@ private fun SearchContent(
     onLoadMoreSearch: () -> Unit,
     endClearance: Dp,
     rightClearance: Dp,
+    leftClearance: Dp,
     mediaOwner: AccountId?,
     sessionRevision: Long,
     onOpenMedia: (me.foxtails.palustris.ui.media.MediaOpenRequest) -> Unit,
@@ -310,6 +317,7 @@ private fun SearchContent(
                     onQuote = onQuote,
                     endClearance = endClearance,
                     rightClearance = rightClearance,
+                    leftClearance = leftClearance,
                     mediaOwner = mediaOwner,
                     sessionRevision = sessionRevision,
                     onOpenMedia = onOpenMedia,
@@ -320,7 +328,7 @@ private fun SearchContent(
                     onOpenPost = onOpenPost,
                     onOpenUrl = onOpenUrl,
                     onOpenUsername = onOpenUsername,
-                ) else AccountSearchResults(query, accountSearch, onAccountClick, endClearance, rightClearance, listState)
+                ) else AccountSearchResults(query, accountSearch, onAccountClick, endClearance, rightClearance, leftClearance, listState)
             } else {
                 EmptyState(
                     AppIcons.Hashtag,
@@ -393,6 +401,7 @@ private fun HashtagSearchResults(
     onQuote: (OwnedPost) -> Unit,
     endClearance: Dp,
     rightClearance: Dp,
+    leftClearance: Dp,
     mediaOwner: AccountId?,
     sessionRevision: Long,
     onOpenMedia: (me.foxtails.palustris.ui.media.MediaOpenRequest) -> Unit,
@@ -423,9 +432,9 @@ private fun HashtagSearchResults(
                 ) {
                     PostRow(
                         ownedPost = OwnedPost(mediaOwner ?: post.author.id, post, sessionRevision),
-                        // Physical right clears interaction content only. The row extent and its
+                        // The floating edges clear interaction content only. The row extent and its
                         // divider keep full width so content passes under floating chrome.
-                        modifier = Modifier.absolutePadding(right = rightClearance),
+                        modifier = Modifier.absolutePadding(left = leftClearance, right = rightClearance),
                         presentation = PostRowPresentation(
                             availableActions = availableActions.intersect(ClientReadyPostActions),
                             quoteEnabled = quoteEnabled,
@@ -457,7 +466,7 @@ private fun HashtagSearchResults(
                 }
             }
             item {
-                Box(Modifier.fillMaxWidth().absolutePadding(right = rightClearance).padding(16.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxWidth().absolutePadding(left = leftClearance, right = rightClearance).padding(16.dp), contentAlignment = Alignment.Center) {
                     if (state.loadingMore) CircularProgressIndicator(Modifier.size(24.dp))
                     else if (state.nextCursor != null) androidx.compose.material3.TextButton(onClick = onLoadMore) { Text(stringResource(R.string.search_load_older)) }
                     else Text(stringResource(R.string.search_up_to_date), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -477,6 +486,7 @@ private fun AccountSearchResults(
     onAccountClick: (Account) -> Unit,
     endClearance: Dp,
     rightClearance: Dp,
+    leftClearance: Dp,
     listState: LazyListState?,
 ) {
     val scheme = LocalPalustrisMotionScheme.current
@@ -486,9 +496,9 @@ private fun AccountSearchResults(
         state.accounts.isNotEmpty() -> LazyColumn(
             state = listState ?: rememberLazyListState(),
             modifier = Modifier.fillMaxSize().testTag("search_account_results"),
-            // Physical right belongs to the scroll content, so account rows and their
+            // Both physical edges belong to the scroll content, so account rows and their
             // click bounds keep clear of floating chrome. The list viewport keeps its width.
-            contentPadding = PaddingValues.Absolute(left = 8.dp, right = 8.dp + rightClearance, bottom = endClearance),
+            contentPadding = PaddingValues.Absolute(left = 8.dp + leftClearance, right = 8.dp + rightClearance, bottom = endClearance),
         ) {
             items(state.accounts, key = { "${it.id.connection.origin}/${it.id.localId}" }) { account ->
                 val interactionSource = remember(account.id) { MutableInteractionSource() }

@@ -156,6 +156,7 @@ fun PhotoGridScreen(
     compactLayout: Boolean = true,
     compactNavigationVisible: Boolean = false,
     rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
     bottomObstructionClearance: Dp = 0.dp,
     gridState: LazyStaggeredGridState? = null,
     contentWarningRules: ContentWarningRules = LocalContentWarningRules.current,
@@ -179,10 +180,11 @@ fun PhotoGridScreen(
     } else {
         LargeBottomDockClearance
     }
-    // A tile is opaque media and one click target, so the grid content area clears physical
-    // right. The viewport keeps its full size and the lanes stay adaptive.
-    // Physical right does not reverse with the layout direction.
+    // A tile is opaque media and one click target, so the grid content area clears the floating
+    // navigation on both physical edges. The viewport keeps its full size and the lanes stay
+    // adaptive. Physical left and physical right do not reverse with the layout direction.
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
 
     LaunchedEffect(state.selectedFeed, state.initialLoadComplete) {
@@ -253,6 +255,7 @@ fun PhotoGridScreen(
                     onRetry = if (state.nextCursor != null) onLoadMore else onRefresh,
                     modifier = Modifier.fillMaxSize().testTag("photo_grid_content"),
                     rightClearance = wideRightClearance,
+                    leftClearance = wideLeftClearance,
                 )
                 else -> LazyVerticalStaggeredGrid(
                     columns = StaggeredGridCells.Adaptive(150.dp),
@@ -261,6 +264,7 @@ fun PhotoGridScreen(
                     verticalItemSpacing = 3.dp,
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
                     contentPadding = PaddingValues.Absolute(
+                        left = wideLeftClearance,
                         right = wideRightClearance,
                         bottom = bottomClearance + wideBottomClearance + 3.dp,
                     ),
@@ -326,7 +330,7 @@ fun PhotoGridScreen(
             LargeBottomDock(
                 // The wide dock clears the floating chrome the same way the Home timeline dock does.
                 modifier = Modifier.align(Alignment.BottomStart)
-                    .absolutePadding(right = wideRightClearance, bottom = wideBottomClearance)
+                    .absolutePadding(left = wideLeftClearance, right = wideRightClearance, bottom = wideBottomClearance)
                     .testTag("photo_grid_dock"),
                 content = { FilterChipRow(chipEntries, stringResource(R.string.photo_grid_filter_description)) },
             )
@@ -470,10 +474,10 @@ private fun PhotoGridLoading(modifier: Modifier) {
 }
 
 @Composable
-private fun PhotoGridError(message: String, onRetry: () -> Unit, rightClearance: Dp, modifier: Modifier) {
-    // The error viewport keeps its full size. Only the retry content clears physical right.
+private fun PhotoGridError(message: String, onRetry: () -> Unit, rightClearance: Dp, leftClearance: Dp, modifier: Modifier) {
+    // The error viewport keeps its full size. Only the retry content clears the floating edges.
     Column(
-        modifier.absolutePadding(right = rightClearance).padding(24.dp),
+        modifier.absolutePadding(left = leftClearance, right = rightClearance).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

@@ -1,7 +1,6 @@
 package me.foxtails.palustris.ui.large
 
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.unit.LayoutDirection
 import me.foxtails.palustris.ui.large.LargeFoldingFeature
 import me.foxtails.palustris.ui.large.LargeLayoutMode
 import me.foxtails.palustris.ui.large.calculateLargePaneLayout
@@ -18,22 +17,8 @@ import org.junit.Test
 
 class LargeLayoutModeTest {
     @Test
-    fun windowHingeCoordinatesTranslateIntoLtrContentAfterInsetsAndRail() {
+    fun windowHingeCoordinatesTranslateFromPhysicalInsetsWithoutRail() {
         val origin = largeContentOriginPx(
-            layoutDirection = LayoutDirection.Ltr,
-            railWidthPx = 80f,
-            leftInsetPx = 24f,
-            topInsetPx = 30f,
-        )
-
-        assertEquals(Rect(396f, 50f, 416f, 870f), largeFeatureBoundsInContentPx(Rect(500f, 80f, 520f, 900f), origin))
-    }
-
-    @Test
-    fun windowHingeCoordinatesTranslateIntoRtlContentFromPhysicalLeftInset() {
-        val origin = largeContentOriginPx(
-            layoutDirection = LayoutDirection.Rtl,
-            railWidthPx = 80f,
             leftInsetPx = 24f,
             topInsetPx = 30f,
         )
@@ -212,12 +197,12 @@ class LargeLayoutModeTest {
     }
 
     @Test
-    fun gestureExclusionPreventsVerticalNavigationWhenItNarrowsContent() {
+    fun mandatoryGestureExclusionPreventsNavigationWithInsufficientHeight() {
         val fit = calculateNavigationFit(
             windowWidthDp = 800f,
             windowHeightDp = 600f,
             systemBarInsets = Rect(24f, 30f, 24f, 30f),
-            gestureInsets = Rect(0f, 0f, 0f, 200f),
+            gestureInsets = Rect(0f, 0f, 0f, 220f),
         )
 
         assertFalse(fit.useVerticalNavigation)
@@ -248,5 +233,67 @@ class LargeLayoutModeTest {
 
         assertTrue(fit.useVerticalNavigation)
         assertTrue(fit.safeRegion != null)
+    }
+
+    @Test
+    fun overlappingInsetsMergeOnEveryPhysicalEdgeInsteadOfAdding() {
+        val fit = calculateNavigationFit(
+            800f, 600f,
+            systemBarInsets = Rect(24f, 30f, 24f, 30f),
+            gestureInsets = Rect(12f, 20f, 40f, 200f),
+        )
+        assertTrue(fit.useVerticalNavigation)
+        assertEquals(Rect(24f, 30f, 760f, 400f), fit.safeRegion)
+    }
+
+    @Test
+    fun outerScreenAndSquareTabletFitWithPermanentInsets() {
+        for ((width, height) in listOf(445f to 704f, 900f to 900f)) {
+            for (anchorLeft in listOf(false, true)) {
+                val fit = calculateNavigationFit(
+                    width, height, Rect(0f, 24f, 0f, 24f),
+                    gestureInsets = Rect(0f, 0f, 0f, 24f), anchorLeft = anchorLeft,
+                )
+                assertTrue(fit.useVerticalNavigation)
+                val bounds = requireNotNull(floatingNavigationBounds(fit, anchorLeft))
+                val safe = requireNotNull(fit.safeRegion)
+                assertEquals(56f, bounds.width, 0.001f)
+                assertEquals(360f, bounds.height, 0.001f)
+                assertTrue(bounds.left >= safe.left && bounds.right <= safe.right)
+                assertTrue(bounds.top >= safe.top && bounds.bottom <= safe.bottom)
+                assertEquals(if (anchorLeft) 8f else width - 64f, bounds.left, 0.001f)
+            }
+        }
+    }
+
+    @Test
+    fun structuralHingesChooseSafeRegionAtRequestedPhysicalEdge() {
+        val vertical = LargeFoldingFeature(Rect(490f, 0f, 510f, 900f), true, true, true)
+        val left = calculateNavigationFit(1000f, 900f, Rect.Zero, foldingFeatures = listOf(vertical), anchorLeft = true)
+        val right = calculateNavigationFit(1000f, 900f, Rect.Zero, foldingFeatures = listOf(vertical), anchorLeft = false)
+        assertEquals(Rect(0f, 0f, 490f, 900f), left.safeRegion)
+        assertEquals(Rect(510f, 0f, 1000f, 900f), right.safeRegion)
+        assertTrue(requireNotNull(floatingNavigationBounds(left, true)).right < vertical.bounds.left)
+        assertTrue(requireNotNull(floatingNavigationBounds(right, false)).left > vertical.bounds.right)
+        val horizontal = LargeFoldingFeature(Rect(0f, 300f, 1000f, 320f), false, true, false)
+        val bottom = calculateNavigationFit(1000f, 900f, Rect.Zero, foldingFeatures = listOf(horizontal))
+        assertEquals(Rect(0f, 320f, 1000f, 900f), bottom.safeRegion)
+        assertTrue(requireNotNull(floatingNavigationBounds(bottom, false)).top >= 320f)
+        assertFalse(calculateNavigationFit(1000f, 600f, Rect.Zero, foldingFeatures = listOf(horizontal)).useVerticalNavigation)
+    }
+
+    @Test
+    fun clearanceIsPaneLocalAndAbsentForHiddenOrFailedNavigation() {
+        val fit = calculateNavigationFit(900f, 900f, Rect.Zero, anchorLeft = true)
+        val controls = floatingNavigationBounds(fit, true)
+        assertEquals(48f, navigationPaneClearance(Rect(16f, 0f, 400f, 900f), controls, true), 0.001f)
+        assertEquals(0f, navigationPaneClearance(Rect(401f, 0f, 884f, 900f), controls, true), 0.001f)
+        assertEquals(0f, navigationPaneClearance(Rect(16f, 0f, 884f, 900f), null, true), 0.001f)
+        assertNull(floatingNavigationBounds(calculateNavigationFit(445f, 359f, Rect.Zero), false))
+    }
+
+    @Test
+    fun windowPixelsConvertToDpBeforeFit() {
+        assertEquals(Rect(10f, 20f, 30f, 40f), Rect(26.25f, 52.5f, 78.75f, 105f).toDpRect(2.625f))
     }
 }

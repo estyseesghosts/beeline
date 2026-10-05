@@ -73,6 +73,7 @@ fun NotificationsScreen(
     connected: Boolean = false,
     compactLayout: Boolean = true,
     rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
     bottomObstructionClearance: Dp = 0.dp,
     accountIdentity: String = "preview",
     notificationState: NotificationsUiState = NotificationsUiState(),
@@ -175,8 +176,9 @@ fun NotificationsScreen(
     } else {
         0.dp
     }
-    // Clear interaction content, not the viewport or the row surfaces. Compact ignores both.
+    // Clear interaction content, not the viewport or the row surfaces. Compact ignores wide inputs.
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
     val title = selectedFilter?.let { stringResource(it.labelRes) }
         ?: stringResource(if (connected) R.string.notifications_title else R.string.notifications_empty_title)
@@ -202,6 +204,7 @@ fun NotificationsScreen(
                 modifier = Modifier.fillMaxSize(),
                 endClearance = notificationEndClearance,
                 rightClearance = 0.dp,
+                leftClearance = 0.dp,
                 stateKey = "${selectedFilterName ?: "all"}:${when {
                     notificationState.loading && notificationState.items.isEmpty() -> "loading"
                     notificationState.storageUnavailable -> "storage-error"
@@ -224,8 +227,8 @@ fun NotificationsScreen(
             FilterChipRow(
                 chipEntries,
                 stringResource(R.string.notification_filter_description),
-                // The top chip row clears physical right so its chips stay reachable.
-                modifier = Modifier.absolutePadding(right = wideRightClearance),
+                // The top chip row clears both physical edges so its chips stay reachable.
+                modifier = Modifier.absolutePadding(left = wideLeftClearance, right = wideRightClearance),
             )
             NotificationContent(
                 title = title,
@@ -241,6 +244,7 @@ fun NotificationsScreen(
                 modifier = Modifier.weight(1f),
                 endClearance = wideBottomClearance,
                 rightClearance = wideRightClearance,
+                leftClearance = wideLeftClearance,
                 stateKey = "${selectedFilterName ?: "all"}:${when {
                     notificationState.loading && notificationState.items.isEmpty() -> "loading"
                     notificationState.storageUnavailable -> "storage-error"
@@ -269,6 +273,7 @@ private fun NotificationContent(
     modifier: Modifier,
     endClearance: Dp,
     rightClearance: Dp,
+    leftClearance: Dp,
     stateKey: String,
     contentWarningRules: me.foxtails.palustris.domain.ContentWarningRules,
 ) {
@@ -303,7 +308,7 @@ private fun NotificationContent(
             if (items.isEmpty()) {
                 item {
                     Box(
-                        Modifier.fillParentMaxSize().absolutePadding(right = rightClearance),
+                        Modifier.fillParentMaxSize().absolutePadding(left = leftClearance, right = rightClearance),
                         contentAlignment = Alignment.Center,
                     ) {
                         when {
@@ -336,7 +341,7 @@ private fun NotificationContent(
                     ExpandableContent(visible = state.syncDelayed) {
                         Text(
                             stringResource(R.string.notifications_sync_delayed),
-                            modifier = Modifier.absolutePadding(right = rightClearance),
+                            modifier = Modifier.absolutePadding(left = leftClearance, right = rightClearance),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -351,6 +356,7 @@ private fun NotificationContent(
                         onFollowRequest = { accept -> onFollowRequest(notification, accept) },
                         contentWarningRules = contentWarningRules,
                         rightObstructionClearance = rightClearance,
+                        leftObstructionClearance = leftClearance,
                         modifier = Modifier.animateItem(
                             fadeInSpec = me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme.current.fastFadeIn,
                             fadeOutSpec = me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme.current.fastFadeOut,
@@ -359,7 +365,7 @@ private fun NotificationContent(
                     )
                 }
                 item {
-                    Box(Modifier.fillMaxWidth().absolutePadding(right = rightClearance)) {
+                    Box(Modifier.fillMaxWidth().absolutePadding(left = leftClearance, right = rightClearance)) {
                         when {
                             state.loadingMore -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator(Modifier.padding(12.dp))
@@ -375,7 +381,7 @@ private fun NotificationContent(
                     item {
                         Text(
                             error,
-                            modifier = Modifier.absolutePadding(right = rightClearance),
+                            modifier = Modifier.absolutePadding(left = leftClearance, right = rightClearance),
                             color = MaterialTheme.colorScheme.error,
                         )
                     }

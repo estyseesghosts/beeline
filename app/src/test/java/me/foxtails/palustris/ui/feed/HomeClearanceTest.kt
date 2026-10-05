@@ -94,6 +94,29 @@ class HomeClearanceTest {
         }
     }
 
+    @Test fun wideContentClearsPhysicalLeftWithoutShrinkingViewport() {
+        val post = AppShellFixtures.post("left", author, "Left clearance")
+        for (direction in LayoutDirection.entries) {
+            show(direction) {
+                HomeFeed(
+                    state = HomeFeedUiState(posts = listOf(post)), compactLayout = false,
+                    leftObstructionClearance = right,
+                    availableActions = setOf(PostAction.Reply, PostAction.Favorite),
+                    onRefresh = {}, onLoadMore = {}, onSignIn = {},
+                )
+            }
+            val viewport = bounds("home_test_viewport")
+            assertEquals(viewport, bounds("home_feed_list"))
+            assertEquals(viewport.left, bounds("home_post_underlay_left").left, 1f)
+            val safeLeft = viewport.left + right.value * density
+            assertEquals(safeLeft, bounds("post_row_left").left, 1f)
+            compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
+                .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
+                    assertTrue("Home interaction clears physical left", it.boundsInRoot.left >= safeLeft - 1f)
+                }
+        }
+    }
+
     @Test fun widePostControlsAndDividerKeepFullViewportInBothDirections() {
         val post = AppShellFixtures.post("controls", author, "Interactive body #fixture").copy(
             attachments = listOf(Attachment("https://fixture.example/photo.jpg", "image/jpeg", "Fixture photo")),

@@ -69,6 +69,7 @@ fun NotificationRow(
     onFollowRequest: ((Boolean) -> Unit)? = null,
     contentWarningRules: ContentWarningRules = LocalContentWarningRules.current,
     rightObstructionClearance: Dp = 0.dp,
+    leftObstructionClearance: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
     val scheme = LocalPalustrisMotionScheme.current
@@ -109,9 +110,9 @@ fun NotificationRow(
     ) {
         Row(
             Modifier.fillMaxWidth()
-                // Interaction content clears physical right while the row surface underlays
-                // future floating chrome. Physical right does not reverse with layout direction.
-                .absolutePadding(right = rightObstructionClearance)
+                // Interaction content clears the physical edges while the row surface underlays
+                // floating chrome. Physical clearance never reverses with layout direction.
+                .absolutePadding(left = leftObstructionClearance, right = rightObstructionClearance)
                 .then(onOpen?.let { callback ->
                     Modifier.clickable(
                         interactionSource = interactionSource,

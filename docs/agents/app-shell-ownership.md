@@ -10,10 +10,11 @@ report are complete. No dead scaffolding remains.
 **Last reviewed:** 2026-10-05.
 
 **Source baseline:** `b629a2c` (planning). Status refreshed against `c9e06c8`.
-Phase 4C-4 clearance invariants below are recorded through the Profile clearance slice.
+Phase 4C-5b activates floating navigation and physical clearance across all seven destination surfaces.
 
-**Evidence:** source verified. R02 verifies the shell draft fixture with NavigationTest,
-ComposerOwnerTest, and ShellCharacterizationTest. Device and live-server behavior remain unverified.
+**Evidence:** source and test verified. R02 verifies the shell draft fixture with NavigationTest,
+ComposerOwnerTest, and ShellCharacterizationTest. Phase 4C-5b verifies folded outer-screen Home on the emulator.
+Other device behavior and live-server acceptance remain unverified.
 
 **Completion owner:** `docs/archive/agents/decomposition-01-02-completion.md`.
 
@@ -183,7 +184,7 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   and tablet reuse the underlying navigation components and one navigator. Compact-wide and tablet
   share the vertical six-button presentation. Compact-narrow keeps the existing four grouped positions
   and narrow layout. Independent detail-pane geometry must not create a separate navigation owner.
-  This remains planned; current `LargeLayoutMode` uses width-only 600/840 dp cutoffs.
+  Production navigation now follows the fit policy. Pane/back policy retains the 600/840 dp cutoffs.
   The available emulator is intended for compact-wide testing, not narrow-phone acceptance.
 
 - `ui/LayoutDirectionPolicy.kt` owns the effective layout direction rule.
@@ -200,31 +201,32 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `DisplaySettingsScreen` owns its own scroll state. The page holds more items than fit a short
   viewport, so without `verticalScroll` the trailing items are clipped and unreachable. The scroll
   state lives for the composition and resets when the screen leaves.
-  Physical `absolutePadding` clearance sites keep following the physical right edge and must not be
+  Physical `absolutePadding` clearance sites keep following physical left/right edges and must not be
   converted. System bar and window insets stay physical.
-  Unverified: device rendering, physical foldable behavior, TalkBack, and real right-to-left
-  language support, which is a separate task. Known gap: `LargeScreenShell` converts a physical
-  `bounds.left` from `LargeLayoutMode` and applies it with direction-relative `Modifier.offset`, so
-  forced right-to-left can move a pane away from the physical hinge. That needs a physical-anchor
-  decision from the maintainer and is not fixed here.
+  `LargeScreenShell` uses physical top-left alignment and `absoluteOffset` for pane and chrome placement.
+  Compose tests verify that RTL does not move those bounds. Physical hinge behavior, device RTL,
+  TalkBack, and real right-to-left language support remain unverified.
 
 - `LargeLayoutMode.kt` owns current wide pane and folding-feature geometry. `HingeInfo.bounds` is
   translated from window pixels into the pane-content coordinate space by `LargeContentOriginPx`.
-  The current LTR content origin includes the left system inset and 80 dp rail; RTL includes the
-  physical left inset but not the rail, because the `Row` places that rail at physical right.
+  The content origin includes physical left/top system insets only, in both layout directions.
+  No rail subtraction remains.
   `calculateLargePaneLayout` removes separating or occluding features from safe pane regions and
   ignores non-separating creases. Its 600/840 dp mode selection remains independent of the new
-  navigation-fit policy, which Phase 4C has not activated. System gesture, cutout, taskbar-safe
-  placement, stable IME-independent fit, and production capsule geometry remain unverified.
+  navigation-fit policy. Outer-screen placement is emulator verified; physical hinge coordinates remain unverified.
   `LargeLayoutModeTest` characterizes the pixel transform and existing pane behavior; it does not
   verify physical folding-device coordinates.
-- `calculateNavigationFit` in `LargeLayoutMode.kt` owns the navigation fit policy. It builds safe
-  regions from window geometry, system bar insets, gesture insets, cutout bounds, and separating or
-  occluding folding features. It selects vertical navigation only when one safe region contains
-  the full controls (64 dp width, 360 dp height) and leaves 360 dp useful content width. Otherwise
-  it falls back to compact. IME height does not affect the fit. Pane and detail selection remain
-  independent. `LargeLayoutModeTest` covers wide, narrow, hinge, cutout, gesture, IME, and
-  non-separating crease scenarios.
+- `calculateNavigationFit` in `LargeLayoutMode.kt` owns permanent navigation fit.
+  `NavigationFitWindowInsets.kt` reads system bars, display cutouts, mandatory gestures, and window-space hinges.
+  It reads physical edges with `LayoutDirection.Ltr` and converts pixels to dp before calculating fit.
+  Overlapping edge insets merge by maximum. Nonmandatory back-gesture strips do not exclude visible controls.
+  Structural hinges split safe regions vertically or horizontally; non-separating creases remain usable.
+  Fit requires 64 dp width, 360 dp stack height, and 360 dp useful content width.
+  Failed fit keeps compact navigation. IME height does not affect permanent presentation.
+  Expanded layouts default to physical left; other fitting windows default to physical right.
+  Anchor preferences remain planned for 4C-5c.
+  `LargeLayoutModeTest` and `AdaptiveNavigationTest` cover safe bounds, density conversion,
+  445 × 704 dp outer-screen and square-tablet dimensions, IME independence, and physical placement in LTR/RTL.
 
 - `NavigationButton` owns interaction presentation for its composition lifetime, not destination state.
   It shares selected tint, icon scale, press treatment, and tab semantics. Callers supply profile
@@ -233,59 +235,70 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
 - `WideNavigationPresentation` composes the six `WideNavigationItem` values vertically with shared
   buttons and capsule. The caller supplies selection, callbacks, and bounds. The Profile target uses
   `AccountAvatar`; a long press requests account switching. The presenter does not choose production
-  dimensions or replace `LargeNavigationRail`.
+  dimensions. `LargeFloatingNavigation` replaces the production rail with a 56 × 296 dp capsule,
+  an 8 dp gap, and a 56 dp contextual action. An absent action keeps its reserved slot.
 - `ContextualNavigationAction` carries the icon, accessibility label, enabled state, and callback.
   `ContextualNavigationActionButton` owns its shared Material 3 rendering and motion. The compact
   bar delegates to it; the callback remains with the shell or feature contract.
 - `ShellNavigator` remains the selection authority. The indicator uses the existing motion scheme
   and logical offsets matching evenly spaced slots. Reduced motion reads the selected index directly.
   Neither shared component dispatches navigation from animation completion.
+  `wideContextualAction` supplies Compose for Home/Search/Photo Grid/Notifications, recipient selection
+  for Direct Messages, and shared edit/follow/unfollow policy for Profile. Vertical targets do not repeat grouped panel toggles.
   `CompactNavigationSelectionTest` covers interruption, reduced motion, RTL, and fixed 48 dp bounds
   at 200% text. `NavigationTest` covers selected-icon alignment and grouped compact behavior.
   `NavigationPresentationTest` covers six-target order, vertical alignment, 48 dp bounds, focus,
   LTR/RTL, reduced motion, profile account switching, and contextual-action bounds and callbacks.
 
-- `ShellContent` carries named physical-right and bottom obstruction clearances through the existing
+- `ShellContent` carries named physical-left, physical-right, and bottom obstruction clearances through the existing
   destination host. `AppNotificationsDestinationContent` forwards them to the DM inbox and conversation.
   `DirectMessageInboxScreen` uses physical-right clearance for header and row interaction content,
   while its viewport and row surfaces remain full width. Bottom clearance extends only the list
-  scroll range. Compact layout ignores both wide-only inputs and keeps its existing IME-aware policy.
-  The application currently supplies the default zero values because floating navigation is inactive.
+  scroll range. Compact layout ignores wide-only inputs and keeps its existing IME-aware policy.
+  `navigationPaneClearance` in `LargeScreenShell.kt` supplies real clearance only to the pane covered by visible navigation.
   `DirectMessageScreenTest` covers synthetic LTR/RTL clearance, full-width underlay, row and header
   bounds, final-content reach, branch forwarding, and compact compatibility.
   `DirectMessageConversationScreen` applies physical-right clearance to its header, notice/error text,
   transcript content, and editor content. Its viewport and transcript viewport remain full size.
   Bottom clearance extends only the transcript scroll range. Wide `imePadding()` and navigation-bar
-  positioning remain unchanged. Compact layout ignores both inputs and retains contextual-control insets.
+  positioning remain unchanged without fallback. Compact layout ignores wide inputs and retains contextual-control insets.
   Tests cover LTR/RTL bubble and control bounds, transcript reach, and synthetic IME open/close transitions.
   Changing bottom clearance does not move the editor or Send action. Editor text remains feature-owned.
-  Physical-device IME behavior and production obstruction geometry remain unverified.
+  Physical-device IME behavior remains unverified.
 
-- `ShellDestinationContent` forwards both shell clearances to Home without changing its feature or scroll-state owners.
+- `ShellContent` separates width-based pane/back policy from fit-based navigation and destination presentation.
+  A fitting outer screen uses wide destination content below 600 dp without enabling tablet panes or wide back precedence.
+  Failed fit retains the compact grouped bar even inside wide panes. Wide content receives fallback scroll clearance.
+  Search and the DM editor also receive `bottomNavigationClearance`, a separate positioning input.
+  That input includes the compact IME base after the pane's consumed system inset; it does not replace transcript-only obstruction clearance.
+  `AdaptiveNavigationTest` covers resize memory, pane independence, hidden-navigation clearance,
+  the DM callback, actionless slot placement, and fallback Search/editor bounds.
+
+- `ShellDestinationContent` forwards shell clearances to Home without changing its feature or scroll-state owners.
   `HomeFeed` clears physical right inside post interaction content, error/sign-in content, and list status/footer content.
   Its pull-to-refresh and list viewports, transparent outer post extents, error surfaces, and dividers retain their width.
   Interactive media and quotes stay inside the cleared post content. Bottom clearance extends the existing list end spacing.
   Only the wide timeline dock moves above bottom obstruction and clears physical right. The null-Home branch clears its dock and text.
   `HomeTimelineTabs` retains chip scrolling, selection travel, and timeline callbacks. Obstruction clearance does not calculate chip travel.
-  Compact Home ignores both inputs and retains its IME-aware end spacing and shell-owned tabs/navigation.
+  Compact Home ignores wide inputs and retains its IME-aware end spacing and shell-owned tabs/navigation.
   `HomeClearanceTest` verifies synthetic LTR/RTL bounds, row/divider underlay, error/sign-in callbacks, final post/footer reach,
   branch forwarding, timeline selection, scroll-state retention, and narrow compact compatibility.
-  Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
+  Production clearance is active. The folded outer-screen Home rendering is emulator verified; other hardware rendering remains unverified.
 
-- `ShellDestinationContent` forwards both shell clearances to Search without changing query, category, or list-state owners.
+- `ShellDestinationContent` forwards shell clearances to Search without changing query, category, or list-state owners.
   `SearchScreen` clears physical right inside hashtag post rows, account result rows, the continuation item, and the wide dock.
   Its content viewport, both list viewports, outer row extents, dividers, empty states, and loading indicators keep their width.
   Account rows clear through the list's absolute content inset, because the account row surface is its own click target.
   Bottom clearance adds to the wide result end spacing only. The wide dock keeps its bottom-start placement,
   `LargeBottomDock` spacing, and measured height, so obstruction clearance never moves the dock or the search field.
-  Wide Search applies no IME field inset and keeps its current dock geometry.
-  `CategoryChips` retains chip scrolling and selection. Compact Search ignores both inputs and keeps
+  Wide Search applies no IME field inset without compact fallback and keeps its current dock geometry.
+  `CategoryChips` retains chip scrolling and selection. Compact Search ignores wide inputs and keeps
   `compactContextualControlsPositioningInsets` and `compactScrollEndClearance`.
   `SearchClearanceTest` verifies synthetic LTR/RTL bounds, row and divider underlay, account row and continuation callbacks,
   final result reach, dock stability, chip selection, branch forwarding, retained list position, and compact IME compatibility.
-  Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
+  Production clearance is active. Device Search rendering remains unverified.
 
-- `ShellDestinationContent` forwards both shell clearances to Photo Grid without changing its feed, preference,
+- `ShellDestinationContent` forwards shell clearances to Photo Grid without changing its feed, preference,
   or grid-state owners.
   `PhotoGridScreen` clears physical right through the staggered grid's own absolute content inset. A tile is opaque
   media and one click target, so a per-tile inset would leave a dead strip inside every lane. Its
@@ -296,14 +309,14 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   Bottom clearance adds to the wide grid end spacing. The wide filter-chip dock clears physical right and sits above
   supplied bottom obstruction, matching `HomeFeed`. Photo Grid has no measured dock height.
   `FilterChipRow` retains chip travel, chip selection, and the add-hashtag entry. Obstruction clearance sets no chip travel.
-  Compact Photo Grid ignores both inputs and keeps `compactContextualControlsPositioningInsets`,
+  Compact Photo Grid ignores wide inputs and keeps `compactContextualControlsPositioningInsets`,
   `compactScrollEndClearance`, and `CompactFilterDockHeight`.
   `PhotoGridClearanceTest` verifies synthetic LTR/RTL bounds, tile and reveal control bounds, continuation and retry
   callbacks, final-tile reach, dock position and clearance, chip and hashtag selection, branch forwarding, retained
   grid position, and compact compatibility.
-  Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
+  Production clearance is active. Device Photo Grid rendering remains unverified.
 
-- `AppNotificationsDestinationContent` forwards both shell clearances to the notification inbox.
+- `AppNotificationsDestinationContent` forwards shell clearances to the notification inbox.
   `NotificationsScreen` clears physical right in the wide top chip row and in the notification list content.
   A notification row always carries a dismiss control and can carry follow-request controls, so it is not a single
   opaque target. The row card keeps its full width for visual underlay; its interactive content (row open target,
@@ -311,20 +324,21 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   The empty state, error/storage retry controls, sync-delayed banner, paging/load-older control, and paging error
   text clear physical right. Bottom clearance adds to the wide list end spacing only. The wide `Column`,
   `notification_refresh_surface`, and `notifications_content` keep their full size. Wide layout has no bottom dock;
-  its chip row sits at the top. Compact Notifications ignores both inputs and keeps its floating bottom chip row,
+  its chip row sits at the top. Compact Notifications ignores wide inputs and keeps its floating bottom chip row,
   `compactContextualControlsPositioningInsets`, `compactScrollEndClearance`, and `CompactFilterDockHeight`.
   `NotificationsClearanceTest` verifies synthetic LTR/RTL bounds, row-surface underlay, dismiss and follow-request
   controls and callbacks, the load-older and retry callbacks, final-item reach, retained filter selection and
   scroll position, branch forwarding, and compact compatibility.
-  Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
+  Production clearance is active. Device Notifications rendering remains unverified.
 
-- `ShellDestinationContent` forwards both shell clearances to Profile without changing its feature, paging,
+- `ShellDestinationContent` forwards shell clearances to Profile without changing its feature, paging,
   category, or scroll-state owners.
   `ProfileScreen` passes physical-right clearance to its wide owners and adds bottom obstruction to
-  `LargeBottomDockClearance` for the wide end of list. Compact ignores both inputs.
-  `ProfileLargePresentation` clears the only wide column that reaches the pane physical right edge: the timeline
-  column in LTR and the summary column that holds the header and details in RTL. The wide category dock keeps its
-  bottom-start placement and `LargeBottomDock` spacing, clears physical right, and sits above the bottom obstruction.
+  `LargeBottomDockClearance` for the wide end of list. Compact ignores wide inputs.
+  `ProfileLargePresentation` assigns physical-edge clearance to the column that reaches each edge.
+  LTR places the summary left and timeline right; RTL swaps them. The summary scroll range includes dock clearance.
+  The wide category dock keeps its bottom-start placement and `LargeBottomDock` spacing,
+  clears physical right, and sits above the bottom obstruction.
   `ProfileTimelineList` clears physical right on the content it owns: post rows, pinned rows, the Featured title,
   the inline category chip row, the details item, the loading, empty, error, and inline-error surfaces, the
   loading-more indicator, and the load-older or up-to-date footer.
@@ -334,7 +348,12 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `ProfileClearanceTest` verifies synthetic LTR/RTL bounds, viewport and divider underlay, the mirrored wide
   columns, header and row controls, dock clearance, final-row and footer reach, load-older and retry callbacks,
   branch forwarding, retained category selection and scroll position, and compact compatibility.
-  Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
+  Production clearance is active. Device Profile rendering remains unverified.
+
+- Every destination also clears physical left through the same content owner described for physical right.
+  Home/Search/Profile dividers and row surfaces retain underlay. Photo Grid clears its opaque tile content area.
+  Notification row actions and DM row/editor content clear physically in both directions.
+  The seven destination suites add physical-left coverage, including Profile's mirrored columns.
 
 - A contract carries no session secret, access token, source, repository, or ViewModel.
 - `sessionGeneration` and durable `sessionRevision` stay distinct.
@@ -355,8 +374,8 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   session's injected `SocialSource`; it creates no search owner or cache. The model excludes the
   signed-in account and foreign connection IDs, accepts selection only from current results, and
   routes the selected account through `startConversation(Account)`. Cancel and session retirement
-  invalidate lookup generations without clearing the active conversation or editor. The wide
-  navigation action remains unwired until the later activation slice. ViewModel and Compose tests
+  invalidate lookup generations without clearing the active conversation or editor. The vertical
+  New conversation action now calls `openRecipientFinder`. ViewModel and Compose tests
   cover cancellation, result races, account filtering, selection, lookup errors, and host UI.
 - The composer editor stays with the composer feature owner. The shell requests transitions and
   places the overlay. It does not hold editor fields.
