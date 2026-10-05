@@ -27,6 +27,8 @@ import me.foxtails.palustris.domain.ThreadLimitation
 import me.foxtails.palustris.ui.PalustrisTheme
 import me.foxtails.palustris.ui.directmessages.DirectMessageConversationScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageInboxScreen
+import me.foxtails.palustris.ui.directmessages.DirectMessageRecipientFinder
+import me.foxtails.palustris.ui.directmessages.DirectMessageRecipientFinderState
 import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 import me.foxtails.palustris.ui.profile.ProfileScreen
 import org.junit.Assert.assertEquals
@@ -113,6 +115,52 @@ class DirectMessageScreenTest {
         compose.onNodeWithTag("profile_message_action").performClick()
 
         assertEquals(recipient.id, messaged?.id)
+    }
+
+    @Test
+    fun recipientFinderSearchesAndSelectsAnAccount() {
+        var selected: Account? = null
+        var searchRequests = 0
+        show {
+            var finder by remember {
+                mutableStateOf(DirectMessageRecipientFinderState(isOpen = true))
+            }
+            DirectMessageRecipientFinder(
+                state = finder,
+                onQueryChange = { query -> finder = finder.copy(query = query, searched = false) },
+                onSearch = {
+                    searchRequests += 1
+                    finder = finder.copy(results = listOf(recipient), searched = true)
+                },
+                onAccountSelected = { selected = it },
+                onDismiss = { finder = finder.copy(isOpen = false) },
+            )
+        }
+
+        compose.onNodeWithTag("dm_recipient_query").performTextInput("@recipient@example.org")
+        compose.onNodeWithTag("dm_recipient_search").performClick()
+        compose.onNodeWithTag("dm_recipient_result").assertIsDisplayed().performClick()
+
+        assertEquals(1, searchRequests)
+        assertEquals(recipient.id, selected?.id)
+    }
+
+    @Test
+    fun recipientFinderCanBeCancelled() {
+        var dismissed = false
+        show {
+            DirectMessageRecipientFinder(
+                state = DirectMessageRecipientFinderState(isOpen = true),
+                onQueryChange = {},
+                onSearch = {},
+                onAccountSelected = {},
+                onDismiss = { dismissed = true },
+            )
+        }
+
+        compose.onNodeWithTag("dm_recipient_cancel").performClick()
+
+        assertEquals(true, dismissed)
     }
 
     @Test

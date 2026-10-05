@@ -58,11 +58,11 @@ Navigation-fit policy for later activation:
 ## 4C-2 — Add truthful DM recipient selection
 
 - **Objective:** Provide the wide DM `New conversation` action with a valid recipient-selection flow under the existing DM feature owner.
-- **Owner and existing abstraction:** Orchestrator; `DirectMessageViewModel`, `DirectMessagesHost`, and `DirectMessagesContract` own DM state and actions. The active source already supports account search.
-- **Allowed files:** Existing `ui/directmessages/` owner files, `ui/shell/DirectMessagesContract.kt`, relevant direct-message tests, task state, handoff, ownership/wiki pages, and local task log.
+- **Owner and existing abstraction:** Orchestrator; `DirectMessageViewModel`, `DirectMessagesHost`, and `DirectMessagesContract` own DM state and actions. The active `SocialSource` already supports account search.
+- **Allowed files:** `ui/directmessages/DirectMessageViewModel.kt`, `DirectMessageUiState.kt`, `DirectMessagesHost.kt`, `DirectMessageRecipientFinder.kt`, `ui/shell/DirectMessagesContract.kt`, `app/src/main/res/values/strings.xml`, `DirectMessageViewModelTest.kt`, `DirectMessageScreenTest.kt`, task state, handoff, ownership/wiki pages, and local task log.
 - **Non-goals:** A new account/search owner, changes to send/session validation, arbitrary recipients, notification toggles, or composer substitution.
-- **Deliverables:** A cancelable recipient finder, explicit `Account` selection through the existing `startConversation(Account)` boundary, race/account guards, and tests that preserve existing conversation state when selection is canceled.
-- **Acceptance:** The action opens recipient selection; a selected account starts a valid DM; cancel does not erase an existing conversation/editor; no request escapes the active account source.
+- **Deliverables:** A per-session recipient finder in the DM host, a cancelable modal, explicit selection of a current search result through `startConversation(Account)`, and race/account guards.
+- **Acceptance:** The contract opens recipient selection; search uses only the connected session's source; selection starts a DM with a returned account; cancel preserves an existing conversation/editor; stale results cannot replace current results.
 - **Validation:** Focused direct-message ViewModel and Compose tests, then `test assembleRelease`.
 - **Exit gates:** Recipient lookup and selection stay with the current DM owner; all changed-state and cancellation tests pass; no existing send behavior changes.
 - **Fail gates:** Stop if source lookup cannot satisfy account/session ownership, cancellation loses user text, or a second owner/cache is proposed.
@@ -109,42 +109,47 @@ Navigation-fit policy for later activation:
 
 # Completed
 
-- Phase 4A, 4B-1, 4B-2, and 4B-3 are complete. The last safe commit is `88044c3`.
-- 4C-1 — direction-aware hinge/content coordinate characterization; commit subject `Characterize wide pane coordinate behavior`, preceded by `88044c3`.
+- Phase 4A, 4B-1, 4B-2, and 4B-3 are complete. The pre-4C safe commit was `88044c3`.
+- 4C-1 — direction-aware hinge/content coordinate characterization; commit `1dc1d39`, `Characterize wide pane coordinate behavior`, preceded by `88044c3`.
 - `LargeLayoutModeTest` covers both coordinate directions and the existing pane/hinge policy. The full test/build gate reports 153 suites, 1,578 tests, zero failures/errors/skips; release assembly succeeds.
 - Navigation presentation, pane-selection policy, and destinations remain unchanged. RTL hinge translation now uses the physical content origin. Physical hinge behavior remains unverified.
+- 4C-2 — session-owned recipient finder, active-source account lookup, candidate validation, and cancel-safe state; commit subject `Add direct message recipient finder`, preceded by `1dc1d39`.
+- Focused direct-message tests pass: 30 ViewModel tests and 15 Compose tests. Full `test assembleRelease` passes with 153 suites, 1,584 tests, zero failures/errors/skips, and successful release assembly.
+- `DirectMessagesContract` now exposes the finder action. The wide navigation action remains unwired until 4C-5; presentation and destination behavior do not change in this slice.
 
 # Current slice
 
-4C-2 adds recipient selection under the existing DM owner. The orchestrator owns implementation and Git. No child assignment exists.
-The preceding slice, 4C-1, is recorded in the checkpoint commit `Characterize wide pane coordinate behavior`, based on `88044c3`.
-Production vertical navigation remains inactive until geometry approval and destination-clearance gates pass.
+4C-3 prepares the shared vertical presentation and contextual-action rendering without activating it.
+The orchestrator owns implementation and Git. No child assignment exists. The preceding slice is `Add direct message recipient finder`, based on `1dc1d39`.
+Compact-narrow geometry and mappings remain fixed. Production vertical navigation remains inactive until geometry approval and destination-clearance gates pass.
 
 # Files involved
 
-- Current slice: `ui/large/LargeLayoutMode.kt`, `ui/large/LargeScreenShell.kt` if a tested coordinate helper is needed, `ui/large/LargeLayoutModeTest.kt`, task/handoff/ownership/wiki records, and local log.
+- Current slice: `ui/navigation/NavigationPresentation.kt`, `NavigationItem.kt`, `CompactAppNavigation.kt`, `ui/large/LargeNavigationRail.kt`, focused navigation tests, task/handoff/ownership/wiki records, and local log.
 - Later slices use the scoped file lists above. Expand a destination into its own contract before editing if its behavior needs an independent gate.
 
 # Verification
 
-4C-1 focused `LargeLayoutModeTest` passes. The required `test assembleRelease` gate passes with 153 suites,
-1,578 tests, zero failures/errors/skips, and successful release assembly. A second wrapper run of `test assembleRelease` also completed successfully with its tasks up to date. Existing Phase 4B results remain historical evidence only.
+4C-1 focused `LargeLayoutModeTest` passes. Its required `test assembleRelease` gate passed with 153 suites,
+1,578 tests, zero failures/errors/skips, and successful release assembly. A second wrapper run also completed with tasks up to date.
+4C-2 focused `DirectMessageViewModelTest` and `DirectMessageScreenTest` pass: 45 tests, zero failures/errors/skips.
+Its `test assembleRelease` gate passes with 153 suites, 1,584 tests, zero failures/errors/skips, and successful release assembly.
+Existing Phase 4B results remain historical evidence only.
 Use the repository wrapper with `--no-daemon --console=plain`, an explicit timeout, and closed stdin.
 Run `test assembleRelease` for each code slice. Run the complete Phase 4C rerun/lint gate before final completion.
 
 # Next
 
-Implement the DM-owned recipient-selection flow for the truthful wide New conversation action.
+Prepare the shared vertical navigation presentation and reusable contextual action without activation.
 
 # Blockers
 
 - No production vertical capsule/action measurements are approved. Reuse only dimensions derived from the shared presentation and existing source contracts; ask the maintainer where fit policy requires a new value.
-- DM New conversation has no recipient-free start contract. Implement recipient selection only under the existing DM owner.
+- The DM recipient finder is implemented and its contract is ready. Wire it to the wide New conversation action only in the activation slice.
 - Device, physical foldable, API 29, live-server, signing, and TalkBack behavior remain unverified.
 - Preserve the existing unrelated worktree, deleted Photo Grid test/PNGs, captures, scripts, caches, and writing-style edits.
 
 # Last safe commit
 
-`88044c3e78dd6a2cd6634059d4502f14a86d42b4` — Coordinate compact IME placement and scroll clearance.
-The 4C-1 checkpoint commit is `Characterize wide pane coordinate behavior`. Resolve its hash from Git.
-Nothing was pushed.
+`1dc1d39` — Characterize wide pane coordinate behavior.
+The 4C-2 checkpoint commit subject is `Add direct message recipient finder`. Nothing was pushed.

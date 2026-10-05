@@ -7,9 +7,9 @@ import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 /**
  * Direct-message presentation.
  *
- * The inbox, the selected conversation, and send state share one owner. Notification read state
- * and app navigation are deliberately not part of this contract. [Empty] is an inert preview
- * value.
+ * The inbox, recipient finder, selected conversation, and send state share one owner. Notification
+ * read state and app navigation are deliberately not part of this contract. [Empty] is an inert
+ * preview value.
  */
 data class DirectMessagesContract(
     val state: DirectMessageUiState,
@@ -20,6 +20,7 @@ data class DirectMessagesContract(
         fun loadMore()
         fun openConversation(conversation: DirectConversation)
         fun closeConversation()
+        fun openRecipientFinder()
         fun startConversation(account: Account)
         fun updateEditor(text: String)
         fun send()
@@ -37,6 +38,7 @@ private object DirectMessagesEmptyActions : DirectMessagesContract.Actions {
     override fun loadMore() = Unit
     override fun openConversation(conversation: DirectConversation) = Unit
     override fun closeConversation() = Unit
+    override fun openRecipientFinder() = Unit
     override fun startConversation(account: Account) = Unit
     override fun updateEditor(text: String) = Unit
     override fun send() = Unit

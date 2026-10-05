@@ -42,6 +42,7 @@ class DirectMessageViewModel @AssistedInject constructor(
     private val writeAuthority: DirectMessageWriteAuthority,
     private val uiStrings: UiStrings = UiStrings.Default,
 ) : ViewModel() {
+    private val accountSource = source
     private val directSource = source as? DirectMessageSource
     private val repository = directSource?.let {
         DirectMessageRepository(accountId, it, store, writeGeneration, ioDispatcher, writeAuthority)
@@ -50,6 +51,8 @@ class DirectMessageViewModel @AssistedInject constructor(
     val state = _state.asStateFlow()
     private var refreshJob: Job? = null
     private var threadJob: Job? = null
+    private var recipientSearchJob: Job? = null
+    private var recipientSearchGeneration = 0L
     // Read acknowledgement owns a separate lifetime. It starts only after the
     // first thread page publishes, so an active markRead never blocks a tap on
     // Continue behind the threadJob guard. Best effort only. Never writes UI.
@@ -164,6 +167,7 @@ class DirectMessageViewModel @AssistedInject constructor(
 
     fun openConversation(conversation: DirectConversation) {
         if (stopped) return
+        dismissRecipientFinder()
         val id = conversation.id
         val selection = ++selectionEpoch
         composeTarget = null
@@ -329,6 +333,7 @@ class DirectMessageViewModel @AssistedInject constructor(
 
     fun startConversation(account: Account) {
         if (stopped) return
+        dismissRecipientFinder()
         selectionEpoch += 1
         composeGeneration += 1
         composeTarget = account
@@ -351,8 +356,117 @@ class DirectMessageViewModel @AssistedInject constructor(
         )
     }
 
+    fun openRecipientFinder() {
+        if (stopped) return
+        cancelRecipientSearchRequest()
+        _state.value = _state.value.copy(
+            recipientFinder = DirectMessageRecipientFinderState(isOpen = true),
+        )
+    }
+
+    fun updateRecipientSearchQuery(query: String) {
+        if (stopped) return
+        val current = _state.value.recipientFinder
+        if (!current.isOpen || current.query == query) return
+        cancelRecipientSearchRequest()
+        _state.value = _state.value.copy(
+            recipientFinder = current.copy(
+                query = query,
+                results = emptyList(),
+                loading = false,
+                searched = false,
+                error = null,
+            ),
+        )
+    }
+
+    /** Searches the session source and rejects responses that outlive their query generation. */
+    fun searchRecipients() {
+        if (stopped) return
+        val current = _state.value.recipientFinder
+        if (!current.isOpen || current.loading) return
+        val query = current.query.trim()
+        val generation = cancelRecipientSearchRequest()
+        if (query.isBlank()) {
+            _state.value = _state.value.copy(
+                recipientFinder = current.copy(
+                    results = emptyList(),
+                    loading = false,
+                    searched = false,
+                    error = null,
+                ),
+            )
+            return
+        }
+        if (repository == null) {
+            _state.value = _state.value.copy(
+                recipientFinder = current.copy(
+                    results = emptyList(),
+                    loading = false,
+                    searched = true,
+                    error = uiStrings.directMessagesUnsupported(),
+                ),
+            )
+            return
+        }
+        val owner = accountId
+        _state.value = _state.value.copy(
+            recipientFinder = current.copy(
+                results = emptyList(),
+                loading = true,
+                searched = true,
+                error = null,
+            ),
+        )
+        recipientSearchJob = viewModelScope.launch {
+            try {
+                val accounts = withContext(ioDispatcher) { accountSource.searchAccounts(query) }
+                if (!isCurrentRecipientSearch(generation, owner, query)) return@launch
+                val results = accounts.distinctBy { it.id }.filter { account ->
+                    account.id.connection == owner.connection && account.id != owner
+                }
+                val latest = _state.value
+                _state.value = latest.copy(
+                    recipientFinder = latest.recipientFinder.copy(
+                        results = results,
+                        loading = false,
+                        error = null,
+                    ),
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                if (!isCurrentRecipientSearch(generation, owner, query)) return@launch
+                val latest = _state.value
+                _state.value = latest.copy(
+                    recipientFinder = latest.recipientFinder.copy(
+                        loading = false,
+                        error = uiStrings.sourceError(error),
+                    ),
+                )
+            }
+        }
+    }
+
+    /** Only a current finder result can become the compose recipient. */
+    fun selectRecipient(account: Account) {
+        if (stopped) return
+        val finder = _state.value.recipientFinder
+        if (!finder.isOpen || !finder.searched || finder.loading) return
+        val selected = finder.results.firstOrNull { result ->
+            result.id == account.id && result.id.connection == accountId.connection && result.id != accountId
+        } ?: return
+        startConversation(selected)
+    }
+
+    fun cancelRecipientFinder() {
+        if (stopped) return
+        dismissRecipientFinder()
+    }
+
     fun closeConversation() {
         if (stopped) return
+        dismissRecipientFinder()
         selectionEpoch += 1
         composeTarget = null
         threadJob?.cancel()
@@ -466,6 +580,10 @@ class DirectMessageViewModel @AssistedInject constructor(
         stopped = true
         inboxEpoch += 1
         selectionEpoch += 1
+        cancelRecipientSearchRequest()
+        if (_state.value.recipientFinder != DirectMessageRecipientFinderState()) {
+            _state.value = _state.value.copy(recipientFinder = DirectMessageRecipientFinderState())
+        }
         refreshJob?.cancel()
         threadJob?.cancel()
         markReadJob?.cancel()
@@ -485,6 +603,31 @@ class DirectMessageViewModel @AssistedInject constructor(
         if (id == null) return previous
         return conversations.firstOrNull { it.id == id } ?: previous
     }
+
+    private fun dismissRecipientFinder() {
+        if (_state.value.recipientFinder == DirectMessageRecipientFinderState()) return
+        cancelRecipientSearchRequest()
+        _state.value = _state.value.copy(recipientFinder = DirectMessageRecipientFinderState())
+    }
+
+    private fun cancelRecipientSearchRequest(): Long {
+        // The source may finish after cancellation, so publication also checks this generation.
+        recipientSearchGeneration += 1
+        recipientSearchJob?.cancel()
+        recipientSearchJob = null
+        return recipientSearchGeneration
+    }
+
+    private fun isCurrentRecipientSearch(
+        generation: Long,
+        owner: AccountId,
+        query: String,
+    ): Boolean = !stopped &&
+        generation == recipientSearchGeneration &&
+        accountId == owner &&
+        _state.value.recipientFinder.let { finder ->
+            finder.isOpen && finder.query.trim() == query
+        }
 
     private fun mergeThread(
         existing: List<me.foxtails.palustris.domain.Post>,

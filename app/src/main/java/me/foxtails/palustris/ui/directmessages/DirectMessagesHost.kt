@@ -16,8 +16,8 @@ import me.foxtails.palustris.ui.shell.DirectMessagesContract
 /**
  * Owns the direct-message presentation for one connected session.
  *
- * The inbox, selected conversation, and send actions stay beside the direct-message feature. The
- * shell receives only the narrow [DirectMessagesContract].
+ * The inbox, recipient finder, selected conversation, and send actions stay beside the
+ * direct-message feature. The shell receives only the narrow [DirectMessagesContract].
  */
 @Composable
 fun DirectMessagesHost(
@@ -41,6 +41,7 @@ fun DirectMessagesHost(
             override fun loadMore() { model.loadMore() }
             override fun openConversation(conversation: DirectConversation) { model.openConversation(conversation) }
             override fun closeConversation() { model.closeConversation() }
+            override fun openRecipientFinder() { model.openRecipientFinder() }
             override fun startConversation(account: Account) { model.startConversation(account) }
             override fun updateEditor(text: String) { model.updateEditor(text) }
             override fun send() { model.send() }
@@ -48,5 +49,12 @@ fun DirectMessagesHost(
             override fun retryThread() { model.retryThread() }
         }
     }
+    DirectMessageRecipientFinder(
+        state = state.recipientFinder,
+        onQueryChange = model::updateRecipientSearchQuery,
+        onSearch = model::searchRecipients,
+        onAccountSelected = model::selectRecipient,
+        onDismiss = model::cancelRecipientFinder,
+    )
     return remember(state, actions) { DirectMessagesContract(state, actions) }
 }

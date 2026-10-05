@@ -221,6 +221,15 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   draft writer cannot recreate removed drafts. Removal revokes writers before deleting rows.
 - The direct-message composer text stays with the direct-message feature owner. A screen does not
   hold it and does not clear it on Send.
+- `DirectMessageViewModel` owns the temporary recipient-finder query, results, loading, and error
+  state for one connected session. `DirectMessagesHost` renders the finder as a Material 3 modal
+  sheet and exposes only `openRecipientFinder` through `DirectMessagesContract`. Search uses the
+  session's injected `SocialSource`; it creates no search owner or cache. The model excludes the
+  signed-in account and foreign connection IDs, accepts selection only from current results, and
+  routes the selected account through `startConversation(Account)`. Cancel and session retirement
+  invalidate lookup generations without clearing the active conversation or editor. The wide
+  navigation action remains unwired until the later activation slice. ViewModel and Compose tests
+  cover cancellation, result races, account filtering, selection, lookup errors, and host UI.
 - The composer editor stays with the composer feature owner. The shell requests transitions and
   places the overlay. It does not hold editor fields.
 - Post-action family slots are typed with operation tokens. Only the owning token releases a

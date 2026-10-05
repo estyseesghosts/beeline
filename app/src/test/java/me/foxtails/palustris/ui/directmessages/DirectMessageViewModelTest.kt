@@ -74,6 +74,7 @@ class DirectMessageViewModelTest {
         val threadRequests = mutableListOf<DirectThreadRequest>()
         val threadCursors = mutableListOf<String?>()
         val sendRequests = mutableListOf<DirectMessageRequest>()
+        val recipientSearchQueries = mutableListOf<String>()
         var markReadCalls = 0
         // When set, read acknowledgement waits here. Thread publication has
         // already happened, so this exposes the open/continue race.
@@ -81,9 +82,17 @@ class DirectMessageViewModelTest {
         private val inboxPending = ArrayDeque<CompletableDeferred<Page<DirectConversation>>>()
         private val threadPending = ArrayDeque<CompletableDeferred<DirectThreadResult>>()
         private val sendPending = ArrayDeque<CompletableDeferred<Post>>()
+        private val recipientSearchPending = ArrayDeque<CompletableDeferred<List<Account>>>()
 
         override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = Page(emptyList())
         override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> = Page(emptyList())
+
+        override suspend fun searchAccounts(query: String): List<Account> {
+            recipientSearchQueries += query
+            val gate = CompletableDeferred<List<Account>>()
+            recipientSearchPending += gate
+            return withContext(NonCancellable) { gate.await() }
+        }
 
         override suspend fun conversations(cursor: String?): Page<DirectConversation> {
             inboxRequests += cursor
@@ -119,6 +128,8 @@ class DirectMessageViewModelTest {
         fun failThread(index: Int, error: Exception) { threadPending[index].completeExceptionally(error) }
         fun completeSend(index: Int, post: Post) { sendPending[index].complete(post) }
         fun failSend(index: Int, error: Exception) { sendPending[index].completeExceptionally(error) }
+        fun completeRecipientSearch(index: Int, accounts: List<Account>) { recipientSearchPending[index].complete(accounts) }
+        fun failRecipientSearch(index: Int, error: Exception) { recipientSearchPending[index].completeExceptionally(error) }
     }
 
     private suspend fun setup(
@@ -254,6 +265,148 @@ class DirectMessageViewModelTest {
             assertTrue(model.state.value.thread.isEmpty())
             // The Alice editor starts empty. Bob's text stayed with Bob's target.
             assertEquals("", model.state.value.editorText)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun cancellingRecipientFinderPreservesConversationEditorAndRejectsLateResults() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            val conversationA = conversation("a", "a-last", recipientA)
+            source.completeInbox(0, Page(listOf(conversationA)))
+            advanceUntilIdle()
+            model.openConversation(conversationA)
+            advanceUntilIdle()
+            source.completeThread(0, listOf(post("a-1", recipientA)))
+            advanceUntilIdle()
+            model.updateEditor("unsent draft")
+
+            model.openRecipientFinder()
+            model.updateRecipientSearchQuery("@bob@example.org")
+            model.searchRecipients()
+            advanceUntilIdle()
+            model.cancelRecipientFinder()
+            source.completeRecipientSearch(0, listOf(recipientB))
+            advanceUntilIdle()
+
+            val state = model.state.value
+            assertFalse(state.recipientFinder.isOpen)
+            assertTrue(state.recipientFinder.results.isEmpty())
+            assertEquals(conversationA.id, state.selectedConversationId)
+            assertEquals(conversationA.id, state.selectedConversation?.id)
+            assertEquals("unsent draft", state.editorText)
+            assertEquals(listOf("a-1"), state.thread.map { it.id.value })
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun recipientFinderRejectsStaleForeignAndUnsearchedAccounts() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            source.completeInbox(0, Page(emptyList()))
+            advanceUntilIdle()
+
+            val foreign = Account(
+                AccountId(Connection("https://elsewhere.example", Protocol.MASTODON), "remote"),
+                "Remote",
+                "@remote@elsewhere.example",
+            )
+            model.openRecipientFinder()
+            model.updateRecipientSearchQuery("@alice@example.org")
+            model.searchRecipients()
+            advanceUntilIdle()
+            model.updateRecipientSearchQuery("@bob@example.org")
+            model.searchRecipients()
+            advanceUntilIdle()
+            source.completeRecipientSearch(0, listOf(recipientA))
+            advanceUntilIdle()
+
+            assertEquals("@bob@example.org", model.state.value.recipientFinder.query)
+            assertTrue(model.state.value.recipientFinder.results.isEmpty())
+            model.selectRecipient(recipientA)
+            assertNull(model.state.value.recipient)
+
+            source.completeRecipientSearch(1, listOf(recipientB, owner, foreign, recipientB))
+            advanceUntilIdle()
+
+            assertEquals(listOf(recipientB), model.state.value.recipientFinder.results)
+            model.selectRecipient(recipientB.copy(displayName = "Untrusted display name"))
+
+            val state = model.state.value
+            assertFalse(state.recipientFinder.isOpen)
+            assertEquals(recipientB, state.recipient)
+            assertNull(state.selectedConversationId)
+            assertEquals(listOf("@alice@example.org", "@bob@example.org"), source.recipientSearchQueries)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun stoppedRecipientFinderRejectsLateSearchAndFurtherRequests() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            source.completeInbox(0, Page(emptyList()))
+            advanceUntilIdle()
+            model.openRecipientFinder()
+            model.updateRecipientSearchQuery("@alice@example.org")
+            model.searchRecipients()
+            advanceUntilIdle()
+
+            model.stop()
+            model.searchRecipients()
+            source.completeRecipientSearch(0, listOf(recipientA))
+            advanceUntilIdle()
+
+            assertEquals(listOf("@alice@example.org"), source.recipientSearchQueries)
+            assertFalse(model.state.value.recipientFinder.isOpen)
+            assertTrue(model.state.value.recipientFinder.results.isEmpty())
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun failedRecipientSearchCanBeRetriedWithoutLeavingFinder() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val source = GatedDirectSource()
+            val model = setup(source, StandardTestDispatcher(testScheduler))
+            advanceUntilIdle()
+            source.completeInbox(0, Page(emptyList()))
+            advanceUntilIdle()
+            model.openRecipientFinder()
+            model.updateRecipientSearchQuery("@alice@example.org")
+            model.searchRecipients()
+            advanceUntilIdle()
+            source.failRecipientSearch(0, java.io.IOException("lookup failed"))
+            advanceUntilIdle()
+
+            assertFalse(model.state.value.recipientFinder.loading)
+            assertTrue(model.state.value.recipientFinder.error != null)
+
+            model.searchRecipients()
+            advanceUntilIdle()
+            source.completeRecipientSearch(1, listOf(recipientA))
+            advanceUntilIdle()
+
+            assertTrue(model.state.value.recipientFinder.isOpen)
+            assertNull(model.state.value.recipientFinder.error)
+            assertEquals(listOf(recipientA), model.state.value.recipientFinder.results)
+            assertEquals(listOf("@alice@example.org", "@alice@example.org"), source.recipientSearchQueries)
         } finally {
             Dispatchers.resetMain()
         }

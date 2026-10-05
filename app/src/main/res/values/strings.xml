@@ -83,9 +83,15 @@
     <string name="dm_explanation">Private messages are federated posts, not end-to-end encrypted. History depends on what your server exposes.</string>
     <string name="dm_load_error">Messages could not load</string>
     <string name="dm_load_older">Load older messages</string>
+    <string name="dm_new_conversation">New conversation</string>
     <string name="dm_not_encrypted">Private message. Not end-to-end encrypted.</string>
     <string name="dm_private_message">Private message</string>
     <string name="dm_private_post">Private post</string>
+    <string name="dm_recipient_finder_hint">Look up an account by username or handle.</string>
+    <string name="dm_recipient_handle">Username or handle</string>
+    <string name="dm_recipient_not_found">No account found. Check the handle and try again.</string>
+    <string name="dm_recipient_search">Search</string>
+    <string name="dm_recipient_searching">Searching for accounts…</string>
     <string name="dm_send">Send direct message</string>
     <string name="dm_thread_continue">Load more messages</string>
     <string name="dm_thread_partial">Some messages could not be loaded</string>

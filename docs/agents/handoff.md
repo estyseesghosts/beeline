@@ -12,17 +12,23 @@ current implementation state. Read AGENTS.md and its required linked pages befor
 ## Current position and next action
 
 Phase 4A and all Phase 4B slices are complete. 4C-1 is committed as
-`Characterize wide pane coordinate behavior`, preceded by `88044c3`. It adds a direction-aware
+`1dc1d39` — `Characterize wide pane coordinate behavior`, preceded by `88044c3`. It adds a direction-aware
 window-to-pane coordinate transform and LTR/RTL hinge tests. Navigation presentation, pane-selection
 policy, and destination behavior remain unchanged. The orchestrator owns implementation, records,
 validation, review, and Git. The maintainer prohibits further `problem_solver` use for this task.
 
 The full test/build gate passes with 153 suites, 1,578 tests, zero failures/errors/skips, and
 successful release assembly. A second wrapper run also succeeded with Gradle tasks up to date.
-Next: 4C-2, implement recipient selection under the existing DM owner for a truthful New
-conversation action. Do not activate vertical navigation until geometry and destination-clearance
-gates pass. The task state records the serial slices, allowed files, validation, exit gates, and
-fail gates.
+4C-2 is implemented as the session-owned DM recipient finder. The session-scoped
+`DirectMessageViewModel` searches through its injected source. `DirectMessagesHost` renders the
+cancelable sheet and exposes its open action through `DirectMessagesContract`. Focused tests pass:
+30 ViewModel and 15 Compose tests. The full test/build gate passes with 153 suites, 1,584 tests,
+zero failures/errors/skips, and successful release assembly. The current checkpoint subject is
+`Add direct message recipient finder`, preceded by `1dc1d39`. Resolve the new hash from Git.
+
+Next: 4C-3, prepare the shared vertical presentation and reusable contextual action rendering
+without activation. The wide DM action will call the contract in the later activation slice. Do not
+activate vertical navigation until geometry and destination-clearance gates pass.
 
 Source inspection confirms that `LargeLayoutMode.kt` uses width-only 600/840 dp boundaries.
 `LargeScreenShell.kt` reserves an 80 dp rail and subtracts its physical offset from hinge coordinates.
@@ -34,8 +40,8 @@ safe-region fit, gesture/cutout/taskbar insets, and device hinge behavior remain
 
 ## Last safe commit
 
-`88044c3e78dd6a2cd6634059d4502f14a86d42b4` — Coordinate compact IME placement and scroll clearance.
-The 4C-1 checkpoint commit is `Characterize wide pane coordinate behavior`. Resolve its hash from Git.
+`1dc1d39` — Characterize wide pane coordinate behavior.
+The current checkpoint subject is `Add direct message recipient finder`. Resolve its hash from Git.
 Nothing was pushed.
 
 ## Limits and worktree caution

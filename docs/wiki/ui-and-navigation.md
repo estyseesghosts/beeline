@@ -47,6 +47,25 @@ Sources: `ui/navigation/ShellNavigator.kt`, `ui/PalustrisApp.kt`,
 `ShellNavigatorTest`, `ShellNavigatorRestorationTest`, `SearchPanelRestorationTest`,
 `NavigationTest`.
 
+## Direct-message recipient selection
+
+`DirectMessagesHost` keeps the inbox, conversation, editor, and recipient finder with the
+session-keyed `DirectMessageViewModel`. The host presents recipient selection in a cancelable modal
+sheet. Search uses the connected session's `SocialSource.searchAccounts` request. The finder excludes
+the signed-in account and results with a foreign connection ID. Selecting a current result calls the
+existing `startConversation(Account)` action. Canceling the finder preserves the selected
+conversation and editor. Request generations reject results after a query change, dismissal, or
+session retirement.
+
+The wide navigation action is not connected to this contract yet. Phase 4C activates that callback
+after navigation and destination-clearance gates pass.
+
+Sources: `ui/directmessages/DirectMessageViewModel.kt`,
+`ui/directmessages/DirectMessagesHost.kt`, `ui/directmessages/DirectMessageRecipientFinder.kt`,
+`ui/shell/DirectMessagesContract.kt`, `DirectMessageViewModelTest`, `DirectMessageScreenTest`.
+Verification: JVM tests cover cancellation, stale results, account filtering, selection, and lookup
+failure. Compose tests cover search, selection, and dismissal. Live-server behavior remains unverified.
+
 ## Large panes and folding coordinates
 
 `LargeLayoutMode` currently chooses compact, single-pane, or expanded-pane behavior from

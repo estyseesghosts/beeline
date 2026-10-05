@@ -6,6 +6,15 @@ import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.ThreadLimitation
 
+data class DirectMessageRecipientFinderState(
+    val isOpen: Boolean = false,
+    val query: String = "",
+    val results: List<Account> = emptyList(),
+    val loading: Boolean = false,
+    val searched: Boolean = false,
+    val error: String? = null,
+)
+
 data class DirectMessageUiState(
     val conversations: List<DirectConversation> = emptyList(),
     val selectedConversationId: ConversationId? = null,
@@ -30,4 +39,6 @@ data class DirectMessageUiState(
     val editorText: String = "",
     /** Binds accepted send completion to the text it submitted. A newer edit must survive. */
     val editorRevision: Long = 0L,
+    /** Temporary recipient lookup state. Conversation and editor state remain separate. */
+    val recipientFinder: DirectMessageRecipientFinderState = DirectMessageRecipientFinderState(),
 )
