@@ -2,6 +2,7 @@ package me.foxtails.palustris.ui.directmessages
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.R
@@ -37,12 +39,20 @@ import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
 import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 
+/**
+ * Renders the inbox with shell-supplied clearance for wide floating chrome.
+ *
+ * @param rightObstructionClearance Physical-right clearance for wide inbox content.
+ * @param bottomObstructionClearance Bottom clearance added to the wide inbox scroll range.
+ */
 @Composable
 fun DirectMessageInboxScreen(
     accountId: AccountId,
     state: DirectMessageUiState,
     compactLayout: Boolean = true,
     compactNavigationVisible: Boolean = true,
+    rightObstructionClearance: Dp = 0.dp,
+    bottomObstructionClearance: Dp = 0.dp,
     onRefresh: () -> Unit = {},
     onLoadMore: () -> Unit = {},
     onOpenConversation: (DirectConversation) -> Unit = {},
@@ -55,8 +65,14 @@ fun DirectMessageInboxScreen(
     } else {
         0.dp
     }
+    val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
     Column(Modifier.fillMaxSize().testTag("direct_message_inbox")) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp)) {
+        Column(
+            Modifier.fillMaxWidth()
+                .absolutePadding(right = wideRightClearance)
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+        ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.dm_title), Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
                 TextButton(onClick = onRefresh, enabled = !state.loading && !state.loadingMore) { Text(stringResource(R.string.common_refresh)) }
@@ -91,7 +107,7 @@ fun DirectMessageInboxScreen(
             )
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize().testTag("direct_message_conversation_list"),
-                contentPadding = PaddingValues(bottom = endClearance + 24.dp),
+                contentPadding = PaddingValues(bottom = endClearance + wideBottomClearance + 24.dp),
             ) {
                 items(
                     items = state.conversations,
@@ -100,6 +116,7 @@ fun DirectMessageInboxScreen(
                     DirectConversationRow(
                         accountId = accountId,
                         conversation = conversation,
+                        rightObstructionClearance = wideRightClearance,
                         onClick = { onOpenConversation(conversation) },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
@@ -130,18 +147,24 @@ fun DirectMessageInboxScreen(
 private fun DirectConversationRow(
     accountId: AccountId,
     conversation: DirectConversation,
+    rightObstructionClearance: Dp,
     onClick: () -> Unit,
 ) {
     val people = conversation.participants.filterNot { it.id == accountId }
     val title = people.joinToString(", ") { it.displayName.ifBlank { it.handle } }
         .ifBlank { conversation.lastPost.author.displayName.ifBlank { conversation.lastPost.author.handle } }
     Surface(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth()
+            .testTag("direct_message_conversation_surface_${conversation.id.value}"),
         color = if (conversation.unread) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = .35f)
         else MaterialTheme.colorScheme.surface,
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth()
+                .absolutePadding(right = rightObstructionClearance)
+                .clickable(onClick = onClick)
+                .testTag("direct_message_conversation_action_${conversation.id.value}")
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {

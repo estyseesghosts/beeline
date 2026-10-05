@@ -66,6 +66,25 @@ Sources: `ui/directmessages/DirectMessageViewModel.kt`,
 Verification: JVM tests cover cancellation, stale results, account filtering, selection, and lookup
 failure. Compose tests cover search, selection, and dismissal. Live-server behavior remains unverified.
 
+## Wide direct-message inbox clearance
+
+`ShellContent` forwards physical-right and bottom obstruction clearances through the existing
+destination branch. `DirectMessageInboxScreen` applies them only when the wide layout is active.
+Header text, refresh, conversation text, and row click targets stay left of physical-right clearance.
+The inbox viewport and row backgrounds keep their full width, so they can continue under floating
+chrome. Bottom clearance extends the inbox scroll range instead of padding its viewport. Compact
+layout ignores both wide-only values and keeps its current system-bar and IME clearance.
+
+The application still supplies zero clearance because floating navigation remains inactive. Tests
+inject synthetic values in LTR and RTL. They verify the viewport, row underlay, interactive bounds,
+the load-more action, final-item reach, shell-branch forwarding, and unchanged compact behavior.
+These tests do not verify production geometry or physical rendering. The DM conversation editor
+keeps its current IME policy and needs a separate clearance contract before navigation activation.
+
+Sources: `ui/shell/ShellContent.kt`, `ui/shell/ShellDestinationContent.kt`,
+`ui/shell/AppNotificationsDestinationContent.kt`, `ui/directmessages/DirectMessageInboxScreen.kt`,
+`DirectMessageScreenTest`.
+
 ## Large panes and folding coordinates
 
 `LargeLayoutMode` currently chooses compact, single-pane, or expanded-pane behavior from

@@ -215,6 +215,16 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `NavigationPresentationTest` covers six-target order, vertical alignment, 48 dp bounds, focus,
   LTR/RTL, reduced motion, profile account switching, and contextual-action bounds and callbacks.
 
+- `ShellContent` carries named physical-right and bottom obstruction clearances through the existing
+  destination host. `AppNotificationsDestinationContent` forwards them to the DM inbox only.
+  `DirectMessageInboxScreen` uses physical-right clearance for header and row interaction content,
+  while its viewport and row surfaces remain full width. Bottom clearance extends only the list
+  scroll range. Compact layout ignores both wide-only inputs and keeps its existing IME-aware policy.
+  The application currently supplies the default zero values because floating navigation is inactive.
+  `DirectMessageScreenTest` covers synthetic LTR/RTL clearance, full-width underlay, row and header
+  bounds, final-content reach, branch forwarding, and compact compatibility. The conversation editor
+  remains unchanged and needs a separate clearance contract before activation.
+
 - A contract carries no session secret, access token, source, repository, or ViewModel.
 - `sessionGeneration` and durable `sessionRevision` stay distinct.
 - The connected session uses one registered source per session. Recomposition does not create

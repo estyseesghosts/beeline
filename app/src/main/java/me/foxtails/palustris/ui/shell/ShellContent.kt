@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import me.foxtails.palustris.domain.Account
@@ -84,6 +85,8 @@ internal fun ShellContent(
     postActionOwner: PostPopupPresentation?,
     presentationMode: LargeLayoutMode,
     windowWidth: androidx.compose.ui.unit.Dp,
+    rightObstructionClearance: Dp = 0.dp,
+    bottomObstructionClearance: Dp = 0.dp,
 ) {
     val largePresentation = presentationMode != LargeLayoutMode.Compact
     val modalOverlayOpen = navigator.overlay != null || navigator.sheet != null ||
@@ -118,6 +121,8 @@ internal fun ShellContent(
                                 photoGridScrollState = photoGridScrollState,
                                 profileListState = profileListState,
                                 largePresentation = largePresentation,
+                                rightObstructionClearance = rightObstructionClearance,
+                                bottomObstructionClearance = bottomObstructionClearance,
                                 account = account,
                                 displayedProfile = displayedProfile,
                                 savedTitle = savedTitle,
@@ -170,6 +175,8 @@ internal fun ShellContent(
                         photoGridScrollState = photoGridScrollState,
                         profileListState = profileListState,
                         largePresentation = largePresentation,
+                        rightObstructionClearance = rightObstructionClearance,
+                        bottomObstructionClearance = bottomObstructionClearance,
                         account = account,
                         displayedProfile = displayedProfile,
                         savedTitle = savedTitle,

@@ -17,6 +17,7 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
@@ -68,6 +69,8 @@ internal fun ShellDestinationContent(
     photoGridScrollState: LazyStaggeredGridState,
     profileListState: LazyListState,
     largePresentation: Boolean,
+    rightObstructionClearance: Dp,
+    bottomObstructionClearance: Dp,
     account: Account?,
     displayedProfile: Account?,
     savedTitle: Int,
@@ -273,6 +276,8 @@ internal fun ShellDestinationContent(
                                 account = account,
                                 compactLayout = !largePresentation,
                                 compactNavigationVisible = navigator.navigationVisible,
+                                rightObstructionClearance = rightObstructionClearance,
+                                bottomObstructionClearance = bottomObstructionClearance,
                                 notificationAccountIdentity = notificationAccountIdentity,
                                 notificationState = notifications.state,
                                 onRefreshNotifications = notifications.actions::refresh,

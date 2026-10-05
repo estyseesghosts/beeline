@@ -3,6 +3,7 @@ package me.foxtails.palustris.ui.shell
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.ContentWarningRules
@@ -25,6 +26,8 @@ internal fun AppNotificationsDestinationContent(
     account: Account?,
     compactLayout: Boolean,
     compactNavigationVisible: Boolean,
+    rightObstructionClearance: Dp,
+    bottomObstructionClearance: Dp,
     notificationAccountIdentity: String,
     notificationState: NotificationsUiState,
     onRefreshNotifications: () -> Unit,
@@ -92,6 +95,8 @@ internal fun AppNotificationsDestinationContent(
                 state = directMessageState,
                 compactLayout = compactLayout,
                 compactNavigationVisible = compactNavigationVisible,
+                rightObstructionClearance = rightObstructionClearance,
+                bottomObstructionClearance = bottomObstructionClearance,
                 onRefresh = onRefreshDirectMessages,
                 onLoadMore = onLoadMoreDirectMessages,
                 onOpenConversation = onOpenDirectConversation,

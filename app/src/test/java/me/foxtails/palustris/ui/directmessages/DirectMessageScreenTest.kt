@@ -1,17 +1,24 @@
 package me.foxtails.palustris.ui.directmessages
 
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -31,7 +38,11 @@ import me.foxtails.palustris.ui.directmessages.DirectMessageRecipientFinder
 import me.foxtails.palustris.ui.directmessages.DirectMessageRecipientFinderState
 import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 import me.foxtails.palustris.ui.profile.ProfileScreen
+import me.foxtails.palustris.ui.notifications.NotificationsUiState
+import me.foxtails.palustris.ui.shell.AppNotificationsDestinationContent
+import me.foxtails.palustris.ui.shell.NotificationsPanel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -72,6 +83,173 @@ class DirectMessageScreenTest {
         compose.onNodeWithText("Recipient").assertIsDisplayed().performClick()
         assertEquals(conversation.id, opened?.id)
         compose.onNodeWithText("A private message").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w800dp-h1000dp-420dpi")
+    fun wideInboxKeepsViewportAndRowSurfaceFullWidthWhileClearingContent() {
+        val conversations = (0..12).map(::conversationFixture)
+        val rightClearance = 72.dp
+        val bottomClearance = 96.dp
+        val density = compose.activity.resources.displayMetrics.density
+
+        listOf(LayoutDirection.Ltr, LayoutDirection.Rtl).forEach { direction ->
+            var opened: DirectConversation? = null
+            show {
+                CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                    DirectMessageInboxScreen(
+                        accountId = owner.id,
+                        state = DirectMessageUiState(conversations = conversations),
+                        compactLayout = false,
+                        rightObstructionClearance = rightClearance,
+                        bottomObstructionClearance = bottomClearance,
+                        onOpenConversation = { opened = it },
+                    )
+                }
+            }
+
+            compose.onNodeWithTag("direct_message_conversation_list")
+                .performScrollToNode(hasText("Private message 0"))
+            val inbox = compose.onNodeWithTag("direct_message_inbox", useUnmergedTree = true)
+                .fetchSemanticsNode().boundsInRoot
+            val list = compose.onNodeWithTag("direct_message_conversation_list", useUnmergedTree = true)
+                .fetchSemanticsNode().boundsInRoot
+            val surface = compose.onNodeWithTag(
+                "direct_message_conversation_surface_conversation-0",
+                useUnmergedTree = true,
+            ).fetchSemanticsNode().boundsInRoot
+            val rowAction = compose.onNodeWithTag(
+                "direct_message_conversation_action_conversation-0",
+                useUnmergedTree = true,
+            ).fetchSemanticsNode().boundsInRoot
+            val safeRight = list.right - rightClearance.value * density
+
+            assertEquals("the inbox keeps its full-width viewport", inbox.left, list.left, 0.5f)
+            assertEquals("the inbox keeps its full-width viewport", inbox.right, list.right, 0.5f)
+            assertEquals("the inbox keeps its full-width viewport", inbox.width, list.width, 0.5f)
+            assertEquals("row backgrounds keep full width", list.left, surface.left, 0.5f)
+            assertEquals("the inbox list keeps its full-width viewport", list.right, surface.right, 0.5f)
+            assertEquals("row backgrounds keep full width", list.width, surface.width, 0.5f)
+            assertTrue("row background continues under future floating chrome", surface.right > safeRight)
+            assertTrue(
+                "row click target clears physical-right obstruction in $direction",
+                rowAction.right <= safeRight + 1f,
+            )
+
+            val refresh = compose.onNodeWithText("Refresh").fetchSemanticsNode().boundsInRoot
+            assertTrue("refresh clears physical-right obstruction in $direction", refresh.right <= safeRight + 1f)
+            compose.onNodeWithTag(
+                "direct_message_conversation_action_conversation-0",
+                useUnmergedTree = true,
+            ).performClick()
+            assertEquals(conversations.first().id, opened?.id)
+
+            compose.onNodeWithTag("direct_message_conversation_list")
+                .performScrollToNode(hasText("You're up to date"))
+            val finalContent = compose.onNodeWithText("You're up to date").assertIsDisplayed()
+                .fetchSemanticsNode().boundsInRoot
+            assertTrue(
+                "final inbox content clears bottom obstruction in $direction",
+                finalContent.bottom <= list.bottom - bottomClearance.value * density + 1f,
+            )
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w800dp-h1000dp-420dpi")
+    fun notificationsDestinationPassesClearanceToWideDirectMessageInbox() {
+        val rightClearance = 64.dp
+        val bottomClearance = 88.dp
+        var loadRequests = 0
+        show {
+            AppNotificationsDestinationContent(
+                panel = NotificationsPanel.DirectMessages,
+                account = owner,
+                compactLayout = false,
+                compactNavigationVisible = false,
+                rightObstructionClearance = rightClearance,
+                bottomObstructionClearance = bottomClearance,
+                notificationAccountIdentity = owner.id.localId,
+                notificationState = NotificationsUiState(),
+                onRefreshNotifications = {},
+                onLoadMoreNotifications = {},
+                onMarkNotificationSeen = {},
+                onDismissNotification = {},
+                onFollowRequest = { _, _ -> },
+                onOpenNotification = {},
+                onSelectQuery = {},
+                onMarkAllRead = {},
+                onOpenSettings = {},
+                directMessageState = DirectMessageUiState(
+                    conversations = listOf(conversation),
+                    nextCursor = "next-page",
+                ),
+                onRefreshDirectMessages = {},
+                onLoadMoreDirectMessages = { loadRequests++ },
+                onOpenDirectConversation = {},
+                onBackDirectConversation = {},
+                onEditorTextChange = {},
+                onSendDirectMessage = {},
+                onContinueDirectThread = {},
+                onRetryDirectThread = {},
+            )
+        }
+
+        val list = compose.onNodeWithTag("direct_message_conversation_list", useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot
+        val rowAction = compose.onNodeWithTag(
+            "direct_message_conversation_action_conversation",
+            useUnmergedTree = true,
+        ).fetchSemanticsNode().boundsInRoot
+        val density = compose.activity.resources.displayMetrics.density
+        val safeRight = list.right - rightClearance.value * density
+        assertTrue("the shell destination forwards right clearance", rowAction.right <= safeRight + 1f)
+
+        compose.onNodeWithTag("direct_message_conversation_list")
+            .performScrollToNode(hasText("Load older messages"))
+        val finalContent = compose.onNodeWithText("Load older messages").fetchSemanticsNode().boundsInRoot
+        assertTrue(
+            "the shell destination forwards bottom clearance",
+            finalContent.bottom <= list.bottom - bottomClearance.value * density + 1f,
+        )
+        assertTrue("the load-more action clears right obstruction", finalContent.right <= safeRight + 1f)
+        compose.onNodeWithText("Load older messages").performClick()
+        assertEquals(1, loadRequests)
+    }
+
+    @Test
+    fun compactInboxIgnoresWideObstructionClearanceInputs() {
+        val conversations = listOf(conversationFixture(0), conversationFixture(1))
+        fun finalContentBottom(bottomClearance: Dp): Float {
+            show {
+                DirectMessageInboxScreen(
+                    accountId = owner.id,
+                    state = DirectMessageUiState(conversations = conversations),
+                    compactLayout = true,
+                    compactNavigationVisible = false,
+                    rightObstructionClearance = 72.dp,
+                    bottomObstructionClearance = bottomClearance,
+                )
+            }
+            val list = compose.onNodeWithTag("direct_message_conversation_list", useUnmergedTree = true)
+            val listBounds = list.fetchSemanticsNode().boundsInRoot
+            val rowAction = compose.onNodeWithTag(
+                "direct_message_conversation_action_conversation-0",
+                useUnmergedTree = true,
+            ).fetchSemanticsNode().boundsInRoot
+            assertEquals("compact row hit bounds remain full width", listBounds.right, rowAction.right, 0.5f)
+            list.performScrollToNode(hasText("You're up to date"))
+            return compose.onNodeWithText("You're up to date").fetchSemanticsNode().boundsInRoot.bottom
+        }
+
+        val withoutWideClearance = finalContentBottom(0.dp)
+        val withWideClearance = finalContentBottom(96.dp)
+        assertEquals(
+            "compact list clearance does not use wide obstruction values",
+            withoutWideClearance,
+            withWideClearance,
+            1f,
+        )
     }
 
     @Test
@@ -399,5 +577,10 @@ class DirectMessageScreenTest {
         text = text,
         publishedAtEpochMillis = 0L,
         audience = Audience.Direct,
+    )
+
+    private fun conversationFixture(index: Int) = conversation.copy(
+        id = ConversationId(connection.origin, "conversation-$index"),
+        lastPost = post("last-$index", recipient, "Private message $index"),
     )
 }
