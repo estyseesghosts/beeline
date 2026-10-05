@@ -197,16 +197,23 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   verify physical folding-device coordinates.
 
 - `NavigationButton` owns interaction presentation for its composition lifetime, not destination state.
-  It shares selected tint, icon scale, press treatment, and tab semantics. Callers supply profile content and account switching.
-  `NavigationCapsule` owns material and one traveling selection indicator for its composition lifetime.
+  It shares selected tint, icon scale, press treatment, and tab semantics. Callers supply profile
+  content and account-switch callbacks. `NavigationCapsule` owns material and one traveling indicator.
   `CompactContextualNavigationBar` supplies grouped items, horizontal geometry, and callbacks.
-  `ShellNavigator` remains the selection authority. The indicator uses the existing motion scheme
+- `WideNavigationPresentation` composes the six `WideNavigationItem` values vertically with shared
+  buttons and capsule. The caller supplies selection, callbacks, and bounds. The Profile target uses
+  `AccountAvatar`; a long press requests account switching. The presenter does not choose production
+  dimensions or replace `LargeNavigationRail`.
+- `ContextualNavigationAction` carries the icon, accessibility label, enabled state, and callback.
+  `ContextualNavigationActionButton` owns its shared Material 3 rendering and motion. The compact
+  bar delegates to it; the callback remains with the shell or feature contract.
+- `ShellNavigator` remains the selection authority. The indicator uses the existing motion scheme
   and logical offsets matching evenly spaced slots. Reduced motion reads the selected index directly.
   Neither shared component dispatches navigation from animation completion.
   `CompactNavigationSelectionTest` covers interruption, reduced motion, RTL, and fixed 48 dp bounds
-  at 200% text. `NavigationTest` covers selected-icon alignment and existing shell behavior.
-  `NavigationPresentationTest` covers a six-button vertical fixture, both-axis alignment, interruption,
-  reduced motion, fixed bounds, and click/long-press callbacks. The production wide rail remains unchanged.
+  at 200% text. `NavigationTest` covers selected-icon alignment and grouped compact behavior.
+  `NavigationPresentationTest` covers six-target order, vertical alignment, 48 dp bounds, focus,
+  LTR/RTL, reduced motion, profile account switching, and contextual-action bounds and callbacks.
 
 - A contract carries no session secret, access token, source, repository, or ViewModel.
 - `sessionGeneration` and durable `sessionRevision` stay distinct.

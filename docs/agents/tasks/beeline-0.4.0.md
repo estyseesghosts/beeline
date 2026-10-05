@@ -113,19 +113,24 @@ Navigation-fit policy for later activation:
 - 4C-1 — direction-aware hinge/content coordinate characterization; commit `1dc1d39`, `Characterize wide pane coordinate behavior`, preceded by `88044c3`.
 - `LargeLayoutModeTest` covers both coordinate directions and the existing pane/hinge policy. The full test/build gate reports 153 suites, 1,578 tests, zero failures/errors/skips; release assembly succeeds.
 - Navigation presentation, pane-selection policy, and destinations remain unchanged. RTL hinge translation now uses the physical content origin. Physical hinge behavior remains unverified.
-- 4C-2 — session-owned recipient finder, active-source account lookup, candidate validation, and cancel-safe state; commit subject `Add direct message recipient finder`, preceded by `1dc1d39`.
+- 4C-2 — session-owned recipient finder, active-source account lookup, candidate validation, and cancel-safe state; commit `a0136e9`, `Add direct message recipient finder`, preceded by `1dc1d39`.
 - Focused direct-message tests pass: 30 ViewModel tests and 15 Compose tests. Full `test assembleRelease` passes with 153 suites, 1,584 tests, zero failures/errors/skips, and successful release assembly.
 - `DirectMessagesContract` now exposes the finder action. The wide navigation action remains unwired until 4C-5; presentation and destination behavior do not change in this slice.
+- 4C-3 — stateless shared vertical six-target presentation and reusable contextual action rendering; commit subject `Prepare shared vertical navigation presentation`, preceded by `a0136e9`.
+- Focused navigation checks pass: 52 tests across presentation, compact selection, shell navigation, and wide navigation. Full `test assembleRelease` passes with 153 suites, 1,585 tests, zero failures/errors/skips, and successful release assembly.
+- `LargeNavigationRail` remains unchanged. Compact presentation delegates to the shared contextual-action button; production vertical navigation remains inactive.
 
 # Current slice
 
-4C-3 prepares the shared vertical presentation and contextual-action rendering without activating it.
-The orchestrator owns implementation and Git. No child assignment exists. The preceding slice is `Add direct message recipient finder`, based on `1dc1d39`.
-Compact-narrow geometry and mappings remain fixed. Production vertical navigation remains inactive until geometry approval and destination-clearance gates pass.
+4C-4 protects destination content from future floating chrome. Split the broad destination plan into
+one destination-owned clearance contract before editing. The orchestrator owns implementation and
+Git. The preceding slice is `Prepare shared vertical navigation presentation`, based on `a0136e9`.
+Compact-narrow geometry and mappings remain fixed. Do not activate vertical navigation before all
+geometry and destination-clearance gates pass.
 
 # Files involved
 
-- Current slice: `ui/navigation/NavigationPresentation.kt`, `NavigationItem.kt`, `CompactAppNavigation.kt`, `ui/large/LargeNavigationRail.kt`, focused navigation tests, task/handoff/ownership/wiki records, and local log.
+- Current slice: select one destination owner and its focused Compose tests from the 4C-4 contract. Do not change the full viewport or combine independent destination gates.
 - Later slices use the scoped file lists above. Expand a destination into its own contract before editing if its behavior needs an independent gate.
 
 # Verification
@@ -134,13 +139,15 @@ Compact-narrow geometry and mappings remain fixed. Production vertical navigatio
 1,578 tests, zero failures/errors/skips, and successful release assembly. A second wrapper run also completed with tasks up to date.
 4C-2 focused `DirectMessageViewModelTest` and `DirectMessageScreenTest` pass: 45 tests, zero failures/errors/skips.
 Its `test assembleRelease` gate passes with 153 suites, 1,584 tests, zero failures/errors/skips, and successful release assembly.
+4C-3 focused `NavigationPresentationTest`, `CompactNavigationSelectionTest`, `NavigationTest`, and `WideNavigationTest` pass: 52 tests, zero failures/errors/skips.
+Its `test assembleRelease` gate passes with 153 suites, 1,585 tests, zero failures/errors/skips, and successful release assembly.
 Existing Phase 4B results remain historical evidence only.
 Use the repository wrapper with `--no-daemon --console=plain`, an explicit timeout, and closed stdin.
 Run `test assembleRelease` for each code slice. Run the complete Phase 4C rerun/lint gate before final completion.
 
 # Next
 
-Prepare the shared vertical navigation presentation and reusable contextual action without activation.
+Define the first destination-specific 4C-4 clearance contract before editing destination code.
 
 # Blockers
 
@@ -151,5 +158,5 @@ Prepare the shared vertical navigation presentation and reusable contextual acti
 
 # Last safe commit
 
-`1dc1d39` — Characterize wide pane coordinate behavior.
-The 4C-2 checkpoint commit subject is `Add direct message recipient finder`. Nothing was pushed.
+`a0136e9` — Add direct message recipient finder.
+The 4C-3 checkpoint commit subject is `Prepare shared vertical navigation presentation`. Nothing was pushed.

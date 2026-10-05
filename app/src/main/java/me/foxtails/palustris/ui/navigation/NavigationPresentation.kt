@@ -1,6 +1,14 @@
 package me.foxtails.palustris.ui.navigation
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -11,13 +19,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -27,14 +38,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.Account
+import me.foxtails.palustris.ui.Avatar
+import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.rememberSelectedColor
 import me.foxtails.palustris.ui.motion.rememberSelectedScale
 import me.foxtails.palustris.ui.motion.springPress
 import kotlin.math.roundToInt
+
+internal data class ContextualNavigationAction(
+    val icon: ImageVector,
+    val contentDescription: String,
+    val enabled: Boolean,
+    val onClick: () -> Unit,
+)
 
 /** Renders one stateless navigation target; the caller owns selection and navigation callbacks. */
 @Composable
@@ -45,6 +70,7 @@ internal fun NavigationButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
     content: (@Composable (Modifier) -> Unit)? = null,
 ) {
     val scheme = LocalPalustrisMotionScheme.current
@@ -72,6 +98,7 @@ internal fun NavigationButton(
                 Modifier.combinedClickable(
                     interactionSource = interactionSource,
                     indication = LocalIndication.current,
+                    onLongClickLabel = onLongClickLabel,
                     onClick = onClick,
                     onLongClick = onLongClick,
                 )
@@ -89,6 +116,95 @@ internal fun NavigationButton(
         } else if (icon != null) {
             Icon(icon, null, scaledContent, tint = selectedTint)
         }
+    }
+}
+
+/** Renders the six direct navigation targets without owning selection or navigation callbacks. */
+@Composable
+internal fun WideNavigationPresentation(
+    selectedTarget: WideNavigationItem,
+    account: Account?,
+    onTargetSelected: (WideNavigationItem) -> Unit,
+    onOpenAccounts: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    NavigationCapsule(
+        selectedIndex = WideNavigationItem.entries.indexOf(selectedTarget),
+        itemCount = WideNavigationItem.entries.size,
+        orientation = Orientation.Vertical,
+        modifier = modifier,
+    ) {
+        Column(
+            Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            WideNavigationItem.entries.forEach { target ->
+                val label = stringResource(target.item.labelRes)
+                val selected = selectedTarget == target
+                if (target == WideNavigationItem.Profile) {
+                    NavigationButton(
+                        label = label,
+                        icon = null,
+                        selected = selected,
+                        onClick = { onTargetSelected(target) },
+                        onLongClick = onOpenAccounts,
+                        onLongClickLabel = stringResource(R.string.nav_switch_account),
+                        content = { avatarModifier ->
+                            val sizedAvatar = avatarModifier.size(30.dp)
+                            if (account != null) {
+                                AccountAvatar(
+                                    account,
+                                    sizedAvatar.testTag("wide_navigation_profile_avatar"),
+                                    exposeSemantics = false,
+                                )
+                            } else {
+                                Avatar(sizedAvatar, description = null)
+                            }
+                        },
+                    )
+                } else {
+                    NavigationButton(
+                        label = label,
+                        icon = target.item.icon,
+                        selected = selected,
+                        onClick = { onTargetSelected(target) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Renders one contextual navigation action with shared motion and accessibility semantics. */
+@Composable
+internal fun ContextualNavigationActionButton(
+    action: ContextualNavigationAction,
+    modifier: Modifier = Modifier,
+) {
+    val scheme = LocalPalustrisMotionScheme.current
+    FilledIconButton(
+        onClick = action.onClick,
+        enabled = action.enabled,
+        modifier = modifier.size(56.dp).semantics { contentDescription = action.contentDescription },
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
+    ) {
+        AnimatedContent(
+            targetState = action,
+            contentKey = { it.contentDescription },
+            transitionSpec = {
+                if (scheme.reducedMotion) EnterTransition.None togetherWith ExitTransition.None
+                else (fadeIn(scheme.fastFadeIn) + scaleIn(initialScale = 0.86f, animationSpec = scheme.expressive)) togetherWith
+                    (fadeOut(scheme.fastFadeOut) + scaleOut(targetScale = 0.86f, animationSpec = scheme.expressive))
+            },
+            modifier = Modifier.size(24.dp),
+            label = "contextualAction",
+        ) { actionState -> Icon(actionState.icon, null) }
     }
 }
 

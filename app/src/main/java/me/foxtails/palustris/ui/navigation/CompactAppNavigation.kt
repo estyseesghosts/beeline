@@ -2,14 +2,6 @@
 
 package me.foxtails.palustris.ui.navigation
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -19,19 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
@@ -43,15 +28,7 @@ import me.foxtails.palustris.ui.shell.Destination
 import me.foxtails.palustris.ui.shell.NotificationsPanel
 import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.layout.CompactNavigationHeight
-import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.profile.ProfileUiState
-
-internal data class ContextualBottomAction(
-    val icon: ImageVector,
-    val contentDescription: String,
-    val enabled: Boolean,
-    val onClick: () -> Unit,
-)
 
 internal fun Modifier.bubblePressLayer(
     pressed: Boolean,
@@ -78,26 +55,26 @@ internal fun contextualActionFor(
     onEditProfile: () -> Unit,
     onFollowProfile: () -> Unit,
     onUnfollowProfile: () -> Unit,
-): ContextualBottomAction? = when (destination) {
-    Destination.Home -> ContextualBottomAction(AppIcons.Compose, stringResource(R.string.nav_compose), true, onCompose)
+): ContextualNavigationAction? = when (destination) {
+    Destination.Home -> ContextualNavigationAction(AppIcons.Compose, stringResource(R.string.nav_compose), true, onCompose)
     Destination.Search -> if (searchPanel == SearchPanel.Search) {
-        ContextualBottomAction(AppIcons.PhotoGrid, stringResource(R.string.nav_photo_grid), true, onSearchToggle)
+        ContextualNavigationAction(AppIcons.PhotoGrid, stringResource(R.string.nav_photo_grid), true, onSearchToggle)
     } else {
-        ContextualBottomAction(AppIcons.SearchBeeline, stringResource(R.string.nav_search), true, onSearchToggle)
+        ContextualNavigationAction(AppIcons.SearchBeeline, stringResource(R.string.nav_search), true, onSearchToggle)
     }
     Destination.Notifications -> if (notificationsPanel == NotificationsPanel.Notifications) {
-        ContextualBottomAction(AppIcons.DirectMessage, stringResource(R.string.nav_direct_messages), true, onNotificationsToggle)
+        ContextualNavigationAction(AppIcons.DirectMessage, stringResource(R.string.nav_direct_messages), true, onNotificationsToggle)
     } else {
-        ContextualBottomAction(AppIcons.Mail, stringResource(R.string.nav_notifications), true, onNotificationsToggle)
+        ContextualNavigationAction(AppIcons.Mail, stringResource(R.string.nav_notifications), true, onNotificationsToggle)
     }
     Destination.Profile -> when {
         profileTarget?.movedTo != null -> null
         profileTarget?.id == authenticatedAccountId && authenticatedAccountId != null ->
-            ContextualBottomAction(AppIcons.PersonEdit, stringResource(R.string.profile_edit), profileState.editableSupported, onEditProfile)
+            ContextualNavigationAction(AppIcons.PersonEdit, stringResource(R.string.profile_edit), profileState.editableSupported, onEditProfile)
         profileState.relationshipSupported == true && profileState.relationship != null -> {
             val relationship = profileState.relationship
             val following = relationship.following || relationship.requested
-            ContextualBottomAction(
+            ContextualNavigationAction(
                 icon = if (following) AppIcons.Unfollow else AppIcons.Follow,
                 contentDescription = when {
                     relationship.following -> stringResource(R.string.profile_unfollow_action)
@@ -117,12 +94,11 @@ internal fun CompactContextualNavigationBar(
     destination: Destination,
     searchPanel: SearchPanel,
     notificationsPanel: NotificationsPanel,
-    action: ContextualBottomAction?,
+    action: ContextualNavigationAction?,
     account: Account?,
     onOpenAccounts: () -> Unit,
     onDestinationSelected: (Destination) -> Unit,
 ) {
-    val scheme = LocalPalustrisMotionScheme.current
     Row(
         Modifier.fillMaxWidth().height(CompactNavigationHeight),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
@@ -180,29 +156,7 @@ internal fun CompactContextualNavigationBar(
             }
         }
         action?.let { contextualAction ->
-            FilledIconButton(
-                onClick = contextualAction.onClick,
-                enabled = contextualAction.enabled,
-                 modifier = Modifier.size(56.dp).semantics { contentDescription = contextualAction.contentDescription },
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
-            ) {
-                AnimatedContent(
-                    targetState = contextualAction,
-                    contentKey = { it.contentDescription },
-                    transitionSpec = {
-                        if (scheme.reducedMotion) EnterTransition.None togetherWith ExitTransition.None
-                        else (fadeIn(scheme.fastFadeIn) + scaleIn(initialScale = 0.86f, animationSpec = scheme.expressive)) togetherWith
-                            (fadeOut(scheme.fastFadeOut) + scaleOut(targetScale = 0.86f, animationSpec = scheme.expressive))
-                    },
-                    modifier = Modifier.size(24.dp),
-                    label = "contextualAction",
-                ) { actionState -> Icon(actionState.icon, null) }
-            }
+            ContextualNavigationActionButton(contextualAction)
         }
     }
 }

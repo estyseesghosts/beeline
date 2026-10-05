@@ -19,29 +19,37 @@ validation, review, and Git. The maintainer prohibits further `problem_solver` u
 
 The full test/build gate passes with 153 suites, 1,578 tests, zero failures/errors/skips, and
 successful release assembly. A second wrapper run also succeeded with Gradle tasks up to date.
-4C-2 is implemented as the session-owned DM recipient finder. The session-scoped
-`DirectMessageViewModel` searches through its injected source. `DirectMessagesHost` renders the
-cancelable sheet and exposes its open action through `DirectMessagesContract`. Focused tests pass:
-30 ViewModel and 15 Compose tests. The full test/build gate passes with 153 suites, 1,584 tests,
-zero failures/errors/skips, and successful release assembly. The current checkpoint subject is
-`Add direct message recipient finder`, preceded by `1dc1d39`. Resolve the new hash from Git.
+4C-2 is committed as `a0136e9` — `Add direct message recipient finder`, preceded by `1dc1d39`.
+The session-scoped `DirectMessageViewModel` searches through its injected source. `DirectMessagesHost`
+renders the cancelable sheet and exposes its open action through `DirectMessagesContract`. Focused
+tests pass: 30 ViewModel and 15 Compose tests. The full test/build gate passes with 153 suites,
+1,584 tests, zero failures/errors/skips, and successful release assembly.
 
-Next: 4C-3, prepare the shared vertical presentation and reusable contextual action rendering
-without activation. The wide DM action will call the contract in the later activation slice. Do not
-activate vertical navigation until geometry and destination-clearance gates pass.
+4C-3 prepares a stateless six-target vertical presenter and a reusable contextual-action button.
+The compact bar delegates to the shared button; the production wide rail remains unchanged. Focused
+navigation checks pass: 52 tests across presentation, compact selection, shell navigation, and wide
+navigation. The full gate passes with 153 suites, 1,585 tests, zero failures/errors/skips, and
+successful release assembly. The current checkpoint subject is
+`Prepare shared vertical navigation presentation`, preceded by `a0136e9`.
+
+Next: define the first destination-specific 4C-4 clearance contract before editing. Split independent
+destination gates into separate commits. The wide DM action remains unwired. Do not activate vertical
+navigation until geometry and destination-clearance gates pass.
 
 Source inspection confirms that `LargeLayoutMode.kt` uses width-only 600/840 dp boundaries.
 `LargeScreenShell.kt` reserves an 80 dp rail and subtracts its physical offset from hinge coordinates.
 `PalustrisApp.kt` and `ShellContent.kt` reuse `largePresentation` for navigation, content, system
 bars, and back policy. `ShellNavigator` already remembers direct Photo Grid and DM selection.
-`DirectMessagesContract` starts a conversation only for a selected account; the inbox has no
-recipient finder. `LargeLayoutModeTest` now verifies the content origin in LTR and RTL. Production
-safe-region fit, gesture/cutout/taskbar insets, and device hinge behavior remain unverified.
+`DirectMessagesContract` now exposes recipient-finder opening under the existing DM owner.
+`LargeNavigationRail` remains the current production presentation. `WideNavigationPresentation`
+tests the shared six-target vertical composition without activating it. `LargeLayoutModeTest`
+verifies the content origin in LTR and RTL. Production safe-region fit, gesture/cutout/taskbar insets,
+and device hinge behavior remain unverified.
 
 ## Last safe commit
 
-`1dc1d39` — Characterize wide pane coordinate behavior.
-The current checkpoint subject is `Add direct message recipient finder`. Resolve its hash from Git.
+`a0136e9` — Add direct message recipient finder.
+The current checkpoint subject is `Prepare shared vertical navigation presentation`.
 Nothing was pushed.
 
 ## Limits and worktree caution

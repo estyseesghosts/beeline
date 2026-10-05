@@ -101,15 +101,19 @@ The compact capsule keeps four fixed grouped positions and a separate contextual
 Search and Notifications show their remembered child icons while inactive.
 `NavigationButton` shares icon tint, scale, press treatment, and tab semantics.
 `NavigationCapsule` shares material and one traveling selection indicator across horizontal and vertical presentation.
-The compact bar supplies grouped items, profile content, and callbacks. Selection changes immediately;
-the animation does not navigate. Reduced motion moves the indicator without a spatial transition.
+`WideNavigationPresentation` arranges the six direct targets vertically with the same buttons and capsule.
+It receives selection, bounds, and callbacks from its caller. The Profile target shows the account avatar;
+tap selects Profile and long press requests account switching. `ContextualNavigationActionButton` renders
+the shared contextual action. The compact bar supplies grouped items, profile content, and callbacks.
+Selection changes immediately; the animation does not navigate. Reduced motion moves the indicator
+without a spatial transition.
 The approved capsule stays 212 × 56 dp, with four 48 dp targets.
 RTL reverses logical slot placement without changing the selected destination.
 
 Sources: `ui/navigation/CompactAppNavigation.kt`, `ui/navigation/NavigationPresentation.kt`,
 `ui/navigation/NavigationItem.kt`, `CompactNavigationSelectionTest`, `NavigationPresentationTest`, `NavigationTest`.
 Verification: Compose tests cover stable bounds, interrupted selection, RTL, reduced motion, and compact 200% text.
-A six-button vertical fixture uses the same presentation components. Its dimensions are test inputs, not approved production geometry.
+A six-target vertical test uses the shared presenter. Its dimensions are test inputs, not approved production geometry.
 The production wide rail remains unchanged. Adaptive activation and rail replacement remain planned.
 Physical rendering and TalkBack remain unverified.
 
