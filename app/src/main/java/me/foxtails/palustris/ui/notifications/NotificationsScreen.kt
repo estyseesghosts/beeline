@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -71,6 +72,8 @@ private enum class NotificationFilter(val labelRes: Int, val query: Notification
 fun NotificationsScreen(
     connected: Boolean = false,
     compactLayout: Boolean = true,
+    rightObstructionClearance: Dp = 0.dp,
+    bottomObstructionClearance: Dp = 0.dp,
     accountIdentity: String = "preview",
     notificationState: NotificationsUiState = NotificationsUiState(),
     onRefreshNotifications: () -> Unit = {},
@@ -172,6 +175,9 @@ fun NotificationsScreen(
     } else {
         0.dp
     }
+    // Clear interaction content, not the viewport or the row surfaces. Compact ignores both.
+    val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
     val title = selectedFilter?.let { stringResource(it.labelRes) }
         ?: stringResource(if (connected) R.string.notifications_title else R.string.notifications_empty_title)
     val subtitle = if (selectedFilter == null) {
@@ -195,6 +201,7 @@ fun NotificationsScreen(
                 onOpen = onOpenNotification,
                 modifier = Modifier.fillMaxSize(),
                 endClearance = notificationEndClearance,
+                rightClearance = 0.dp,
                 stateKey = "${selectedFilterName ?: "all"}:${when {
                     notificationState.loading && notificationState.items.isEmpty() -> "loading"
                     notificationState.storageUnavailable -> "storage-error"
@@ -214,7 +221,12 @@ fun NotificationsScreen(
         }
     } else {
         Column(Modifier.fillMaxSize()) {
-            FilterChipRow(chipEntries, stringResource(R.string.notification_filter_description))
+            FilterChipRow(
+                chipEntries,
+                stringResource(R.string.notification_filter_description),
+                // The top chip row clears physical right so its chips stay reachable.
+                modifier = Modifier.absolutePadding(right = wideRightClearance),
+            )
             NotificationContent(
                 title = title,
                 subtitle = subtitle,
@@ -227,7 +239,8 @@ fun NotificationsScreen(
                 onFollowRequest = onFollowRequest,
                 onOpen = onOpenNotification,
                 modifier = Modifier.weight(1f),
-                endClearance = 0.dp,
+                endClearance = wideBottomClearance,
+                rightClearance = wideRightClearance,
                 stateKey = "${selectedFilterName ?: "all"}:${when {
                     notificationState.loading && notificationState.items.isEmpty() -> "loading"
                     notificationState.storageUnavailable -> "storage-error"
@@ -255,6 +268,7 @@ private fun NotificationContent(
     onOpen: (Notification) -> Unit,
     modifier: Modifier,
     endClearance: Dp,
+    rightClearance: Dp,
     stateKey: String,
     contentWarningRules: me.foxtails.palustris.domain.ContentWarningRules,
 ) {
@@ -288,7 +302,10 @@ private fun NotificationContent(
         ) {
             if (items.isEmpty()) {
                 item {
-                    Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(
+                        Modifier.fillParentMaxSize().absolutePadding(right = rightClearance),
+                        contentAlignment = Alignment.Center,
+                    ) {
                         when {
                             state.loading && !state.refreshing -> CircularProgressIndicator()
                             state.storageUnavailable -> Column(
@@ -317,7 +334,11 @@ private fun NotificationContent(
             } else {
                 if (state.syncDelayed) item {
                     ExpandableContent(visible = state.syncDelayed) {
-                        Text(stringResource(R.string.notifications_sync_delayed), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            stringResource(R.string.notifications_sync_delayed),
+                            modifier = Modifier.absolutePadding(right = rightClearance),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
                 items(items, key = { "${it.id.connection}\u0000${it.id.value}" }) { notification ->
@@ -329,6 +350,7 @@ private fun NotificationContent(
                         onDismiss = { onDismiss(notification) },
                         onFollowRequest = { accept -> onFollowRequest(notification, accept) },
                         contentWarningRules = contentWarningRules,
+                        rightObstructionClearance = rightClearance,
                         modifier = Modifier.animateItem(
                             fadeInSpec = me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme.current.fastFadeIn,
                             fadeOutSpec = me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme.current.fastFadeOut,
@@ -337,17 +359,27 @@ private fun NotificationContent(
                     )
                 }
                 item {
-                    when {
-                        state.loadingMore -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(Modifier.padding(12.dp))
+                    Box(Modifier.fillMaxWidth().absolutePadding(right = rightClearance)) {
+                        when {
+                            state.loadingMore -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(Modifier.padding(12.dp))
+                            }
+                            state.checkpoint?.oldest != null -> TextButton(
+                                onClick = onLoadMore,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text(stringResource(R.string.notifications_load_older)) }
                         }
-                        state.checkpoint?.oldest != null -> TextButton(
-                            onClick = onLoadMore,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) { Text(stringResource(R.string.notifications_load_older)) }
                     }
                 }
-                state.error?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error) } }
+                state.error?.let { error ->
+                    item {
+                        Text(
+                            error,
+                            modifier = Modifier.absolutePadding(right = rightClearance),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
             }
             }
         }

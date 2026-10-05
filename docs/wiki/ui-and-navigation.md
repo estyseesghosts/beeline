@@ -156,6 +156,26 @@ Focused Compose tests verify tile and reveal bounds, continuation and retry call
 position and clearance, chip and hashtag selection, branch forwarding, retained grid position, and compact
 compatibility. Device rendering and production obstruction geometry remain unverified.
 
+## Wide Notifications clearance
+
+Notifications keeps its full-size wide `Column`, refresh surface, and list viewport. The top filter/query chip row,
+notification row cards and their controls, the empty state, the storage/error retry controls, the sync-delayed
+banner, the paging/load-older control, and the paging error text clear shell-supplied physical right in LTR and RTL.
+A notification row always carries a dismiss control and can carry follow-request controls, so it is not a single
+opaque target. The row card keeps its full width for visual underlay; its interactive content clears physical right
+through an absolute right inset inside the row.
+
+Wide layout has no bottom dock because its chip row sits at the top. Bottom clearance extends the wide list end
+spacing only. Compact Notifications ignores both wide inputs and keeps its floating bottom chip row, contextual-control
+placement, and scroll clearance. Chips keep their own scrolling and selection behavior, and clearance does not set
+chip travel. The application still supplies zero values because floating navigation is inactive.
+
+Sources: `ui/notifications/NotificationsScreen.kt`, `ui/notifications/NotificationRow.kt`,
+`ui/shell/AppNotificationsDestinationContent.kt`, `NotificationsClearanceTest`.
+Focused Compose tests verify viewport and row bounds, row-surface underlay, dismiss and follow-request controls and
+callbacks, load-older and retry callbacks, final-item reach, retained filter selection and scroll position, branch
+forwarding, and compact compatibility. Device rendering and production obstruction geometry remain unverified.
+
 ## Large panes and folding coordinates
 
 `LargeLayoutMode` currently chooses compact, single-pane, or expanded-pane behavior from

@@ -58,6 +58,8 @@ internal fun AppNotificationsDestinationContent(
             NotificationsScreen(
                 connected = account != null,
                 compactLayout = compactLayout,
+                rightObstructionClearance = rightObstructionClearance,
+                bottomObstructionClearance = bottomObstructionClearance,
                 accountIdentity = notificationAccountIdentity,
                 notificationState = notificationState,
                 onRefreshNotifications = onRefreshNotifications,

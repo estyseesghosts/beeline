@@ -274,6 +274,21 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   grid position, and compact compatibility.
   Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
 
+- `AppNotificationsDestinationContent` forwards both shell clearances to the notification inbox.
+  `NotificationsScreen` clears physical right in the wide top chip row and in the notification list content.
+  A notification row always carries a dismiss control and can carry follow-request controls, so it is not a single
+  opaque target. The row card keeps its full width for visual underlay; its interactive content (row open target,
+  dismiss, accept/reject) clears physical right through an absolute right inset inside the row.
+  The empty state, error/storage retry controls, sync-delayed banner, paging/load-older control, and paging error
+  text clear physical right. Bottom clearance adds to the wide list end spacing only. The wide `Column`,
+  `notification_refresh_surface`, and `notifications_content` keep their full size. Wide layout has no bottom dock;
+  its chip row sits at the top. Compact Notifications ignores both inputs and keeps its floating bottom chip row,
+  `compactContextualControlsPositioningInsets`, `compactScrollEndClearance`, and `CompactFilterDockHeight`.
+  `NotificationsClearanceTest` verifies synthetic LTR/RTL bounds, row-surface underlay, dismiss and follow-request
+  controls and callbacks, the load-older and retry callbacks, final-item reach, retained filter selection and
+  scroll position, branch forwarding, and compact compatibility.
+  Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
+
 - A contract carries no session secret, access token, source, repository, or ViewModel.
 - `sessionGeneration` and durable `sessionRevision` stay distinct.
 - The connected session uses one registered source per session. Recomposition does not create

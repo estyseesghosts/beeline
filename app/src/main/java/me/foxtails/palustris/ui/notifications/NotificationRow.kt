@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -37,6 +38,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.R
@@ -66,6 +68,7 @@ fun NotificationRow(
     onDismiss: (() -> Unit)? = null,
     onFollowRequest: ((Boolean) -> Unit)? = null,
     contentWarningRules: ContentWarningRules = LocalContentWarningRules.current,
+    rightObstructionClearance: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
     val scheme = LocalPalustrisMotionScheme.current
@@ -98,23 +101,32 @@ fun NotificationRow(
         modifier = modifier
             .fillMaxWidth()
             .testTag("notification_row_${notification.id.value}")
-            .then(onOpen?.let { callback ->
-                Modifier
-                    .springPress(interactionSource, pressedScale = scheme.largePressedScale)
-                    .clickable(
+            .then(onOpen?.let {
+                Modifier.springPress(interactionSource, pressedScale = scheme.largePressedScale)
+            } ?: Modifier),
+        shape = MaterialTheme.shapes.large,
+        color = containerColor,
+    ) {
+        Row(
+            Modifier.fillMaxWidth()
+                // Interaction content clears physical right while the row surface underlays
+                // future floating chrome. Physical right does not reverse with layout direction.
+                .absolutePadding(right = rightObstructionClearance)
+                .then(onOpen?.let { callback ->
+                    Modifier.clickable(
                         interactionSource = interactionSource,
                         indication = LocalIndication.current,
                         onClick = callback,
                     )
-            } ?: Modifier)
-            .semantics {
-                contentDescription = rowAccessibility
-                if (stateLabel.isNotBlank()) stateDescription = stateLabel
-            },
-        shape = MaterialTheme.shapes.large,
-        color = containerColor,
-    ) {
-        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.Top) {
+                } ?: Modifier)
+                .testTag("notification_row_action_${notification.id.value}")
+                .semantics {
+                    contentDescription = rowAccessibility
+                    if (stateLabel.isNotBlank()) stateDescription = stateLabel
+                }
+                .padding(12.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
             if (actor != null) AccountAvatar(actor, Modifier.size(44.dp))
             else Avatar(Modifier.size(44.dp), description = null)
             Spacer(Modifier.width(12.dp))
