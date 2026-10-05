@@ -176,6 +176,34 @@ Focused Compose tests verify viewport and row bounds, row-surface underlay, dism
 callbacks, load-older and retry callbacks, final-item reach, retained filter selection and scroll position, branch
 forwarding, and compact compatibility. Device rendering and production obstruction geometry remain unverified.
 
+## Wide Profile clearance
+
+Profile keeps its full-size `profile_content` and `profile_timeline_list` viewports. Interactive list content
+clears shell-supplied physical right in LTR and RTL. That content is the post rows, the pinned rows, the Featured
+title, the inline category chip row, the details item, the loading, empty, error, and inline-error surfaces, the
+loading-more indicator, and the load-older or up-to-date footer. Item dividers keep the full width beneath floating
+chrome. A profile row is a transparent post column, not an opaque card, so the clearance goes into the row content
+instead of a list-wide inset.
+
+The wide category dock keeps its bottom-start placement and its own spacing. It clears physical right and sits above
+supplied bottom obstruction. Wide end-of-list clearance adds that obstruction to `LargeBottomDockClearance`.
+
+The wide summary layout has two columns, and only one of them reaches the pane physical right edge. In LTR that is
+the timeline column. In RTL that is the summary column that holds the header and details. Only that column takes
+clearance, so the other column keeps its usable width. Without the summary the timeline fills the pane and always
+takes clearance.
+
+Compact Profile ignores both wide inputs and keeps its measured end clearance and its floating chip row. Chips keep
+their own scrolling and selection behavior, and clearance sets no chip travel. The application still supplies zero
+values because floating navigation is inactive.
+
+Sources: `ui/profile/ProfileScreen.kt`, `ui/profile/ProfileLargePresentation.kt`,
+`ui/profile/ProfileTimelineList.kt`, `ui/shell/ShellDestinationContent.kt`, `ProfileClearanceTest`.
+Focused Compose tests verify viewport and divider bounds, mirrored wide columns, header and row control bounds,
+dock clearance, final-row and footer reach, load-older and retry callbacks, branch forwarding, retained category
+selection and scroll position, and compact compatibility. Device rendering and production obstruction geometry
+remain unverified.
+
 ## Large panes and folding coordinates
 
 `LargeLayoutMode` currently chooses compact, single-pane, or expanded-pane behavior from

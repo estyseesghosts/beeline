@@ -3,6 +3,7 @@ package me.foxtails.palustris.ui.profile
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
@@ -10,7 +11,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyListState
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
@@ -28,6 +32,8 @@ internal fun ProfileLargePresentation(
     showSummary: Boolean,
     listState: LazyListState?,
     endContentClearance: Dp,
+    rightObstructionClearance: Dp = 0.dp,
+    bottomObstructionClearance: Dp = 0.dp,
     onCategorySelected: (ProfileCategory) -> Unit,
     onOpenDrafts: () -> Unit,
     onOpenBookmarks: () -> Unit,
@@ -57,13 +63,21 @@ internal fun ProfileLargePresentation(
     onQuote: (OwnedPost) -> Unit = {},
     onEditProfile: (() -> Unit)?,
 ) {
+    // The floating obstruction sits at the physical right edge. This Row mirrors in RTL, so the
+    // summary column reaches that edge in RTL and the timeline column reaches it in LTR. Only the
+    // column that reaches the edge takes clearance, so the other column keeps its usable width.
+    val obstructionAtTimeline = LocalLayoutDirection.current != LayoutDirection.Rtl
+    val timelineClearance = if (obstructionAtTimeline) rightObstructionClearance else 0.dp
+    val summaryClearance = if (obstructionAtTimeline) 0.dp else rightObstructionClearance
+
     @Composable
-    fun timeline() {
+    fun timeline(rightClearance: Dp) {
         ProfileTimelineList(
             account = account,
             state = state,
             compactLayout = false,
             endContentClearance = endContentClearance,
+            rightObstructionClearance = rightClearance,
             isSelf = isSelf,
             onCategorySelected = onCategorySelected,
             onOpenDrafts = onOpenDrafts,
@@ -96,6 +110,8 @@ internal fun ProfileLargePresentation(
         )
     }
 
+    // The dock keeps its bottom-start placement and its own LargeBottomDock spacing. Clearance only
+    // moves it clear of floating obstruction; it adds no dock measurement and no chip travel.
     @Composable
     fun dock(modifier: Modifier = Modifier) {
         LargeBottomDock(
@@ -124,6 +140,7 @@ internal fun ProfileLargePresentation(
                     Modifier
                         .weight(0.42f)
                         .fillMaxHeight()
+                        .absolutePadding(right = summaryClearance)
                         .verticalScroll(rememberScrollState()),
                 ) {
                     ProfileHeader(
@@ -141,14 +158,25 @@ internal fun ProfileLargePresentation(
                     )
                     details()
                 }
-                Box(Modifier.weight(0.58f).fillMaxHeight()) { timeline() }
+                Box(Modifier.weight(0.58f).fillMaxHeight()) { timeline(timelineClearance) }
             }
-            dock(Modifier.align(Alignment.BottomStart))
+            dock(
+                Modifier.align(Alignment.BottomStart).absolutePadding(
+                    right = rightObstructionClearance,
+                    bottom = bottomObstructionClearance,
+                ),
+            )
         }
     } else {
         Box(Modifier.fillMaxSize()) {
-            timeline()
-            dock(Modifier.align(Alignment.BottomStart))
+            // Without the summary the timeline fills the pane, so it always reaches the edge.
+            timeline(rightObstructionClearance)
+            dock(
+                Modifier.align(Alignment.BottomStart).absolutePadding(
+                    right = rightObstructionClearance,
+                    bottom = bottomObstructionClearance,
+                ),
+            )
         }
     }
 }

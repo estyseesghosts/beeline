@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +37,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -56,6 +58,14 @@ import me.foxtails.palustris.ui.components.FilterChipRow
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 
+/**
+ * Profile surface for one target account.
+ *
+ * The shell supplies [rightObstructionClearance] and [bottomObstructionClearance] for future floating
+ * navigation. Profile calculates neither value. Wide layout keeps its full-size viewports and clears
+ * physical right on interactive content. Compact ignores both inputs and keeps its measured end clearance
+ * and its floating chip row.
+ */
 @Composable
 fun ProfileScreen(
     account: Account? = null,
@@ -94,6 +104,8 @@ fun ProfileScreen(
     largeLayout: Boolean = false,
     largeShowSummary: Boolean = true,
     listState: LazyListState? = null,
+    rightObstructionClearance: Dp = 0.dp,
+    bottomObstructionClearance: Dp = 0.dp,
 ) {
     LaunchedEffect(account?.id) {
         account?.let(onProfileShown)
@@ -103,19 +115,23 @@ fun ProfileScreen(
         ?.takeIf { account == null || it.id == account.id }
         ?: profileState.seedAccount?.takeIf { account == null || it.id == account.id }
         ?: account
+    // Clear interactive content and the final list item, not the viewport. Compact ignores both inputs.
+    // Physical right does not reverse with the layout direction.
+    val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
+    val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
     if (displayedAccount == null) {
         EmptyState(
             icon = AppIcons.DefaultUser,
             title = stringResource(R.string.profile_empty_title),
             subtitle = stringResource(R.string.profile_empty_subtitle),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.absolutePadding(right = wideRightClearance).fillMaxSize(),
         )
         return
     }
 
     val isSelf = displayedAccount.id == authenticatedAccountId
     val endContentClearance = if (largeLayout) {
-        LargeBottomDockClearance
+        LargeBottomDockClearance + wideBottomClearance
     } else if (compactLayout) {
         compactScrollEndClearance(
             controlStackHeight = CompactFilterDockHeight,
@@ -123,7 +139,7 @@ fun ProfileScreen(
             ime = WindowInsets.ime,
         )
     } else {
-        0.dp
+        wideBottomClearance
     }
 
     if (largeLayout) {
@@ -135,6 +151,8 @@ fun ProfileScreen(
             onOpenProfileImage = onOpenProfileImage,
             listState = listState,
             endContentClearance = endContentClearance,
+            rightObstructionClearance = wideRightClearance,
+            bottomObstructionClearance = wideBottomClearance,
             onCategorySelected = onCategorySelected,
              onOpenDrafts = onOpenDrafts,
              onOpenBookmarks = onOpenBookmarks,
@@ -172,6 +190,7 @@ fun ProfileScreen(
             state = profileState,
             compactLayout = compactLayout,
             endContentClearance = endContentClearance,
+            rightObstructionClearance = wideRightClearance,
             isSelf = isSelf,
             onCategorySelected = onCategorySelected,
             onOpenDrafts = onOpenDrafts,

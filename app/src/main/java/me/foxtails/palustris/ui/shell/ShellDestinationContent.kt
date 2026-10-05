@@ -325,6 +325,8 @@ internal fun ShellDestinationContent(
                                 largeLayout = largePresentation,
                                 largeShowSummary = navigator.singlePost == null,
                                 listState = profileListState,
+                                rightObstructionClearance = rightObstructionClearance,
+                                bottomObstructionClearance = bottomObstructionClearance,
                                 compactNavigationVisible = navigator.navigationVisible,
                                 authenticatedAccountId = account?.id,
                                 onProfileShown = profile.actions::open,

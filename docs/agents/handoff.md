@@ -11,41 +11,43 @@ Read AGENTS.md and its required linked pages before continuing.
 
 ## Current position and next action
 
-Phase 4C-4 Notifications clearance is complete. The `NotificationsPanel.Notifications` branch of
-`AppNotificationsDestinationContent` forwards the shell-supplied physical-right and bottom clearances to
-`NotificationsScreen`. Wide layout keeps its full-size `Column`, `notification_refresh_surface`, and
-`notifications_content` viewport. The top filter/query chip row, the notification rows and their controls, the empty
-state, the error/storage retry controls, the sync-delayed banner, the paging/load-older control, and the paging error
-text clear physical right in LTR and RTL.
+Phase 4C-4 Profile clearance is complete. That closes every destination-clearance gate: DM inbox, DM conversation
+and editor, Home, Search, Photo Grid, Notifications, and Profile. The `Destination.Profile` branch of
+`ShellDestinationContent` forwards the shell-supplied physical-right and bottom clearances to `ProfileScreen`.
+Compact Profile ignores both inputs and keeps its measured end clearance and its floating bottom chip row. In wide
+layout the end-of-list clearance is `LargeBottomDockClearance` plus the supplied bottom obstruction.
 
-A notification row is not a single opaque target. It always carries a dismiss control and can carry follow-request
-controls, so the row card keeps its full width for visual underlay and its interactive content clears physical right
-through an absolute right inset inside the row. This matches the DM inbox row precedent. It does not use a list-wide
-content inset.
+A profile row is `PostRow`, a transparent column with separate state and footer items. Its content therefore takes
+an absolute right padding while the item divider keeps the full width for visual underlay. This matches the Home row
+precedent. It does not use the Photo Grid tile inset or the Notifications card decision.
 
-Wide Notifications has no bottom dock; its chip row sits at the top. Bottom clearance extends the wide list end
-spacing only. Compact Notifications ignores both wide inputs and keeps its floating bottom chip row, contextual-control
-placement, and scroll clearance. Chip travel and selection keep their own owners. Production clearances remain zero.
-Floating navigation remains inactive. The DM, Home, Search, and Photo Grid slices remain unchanged.
+The wide summary layout has two columns, and only one of them reaches the pane physical right edge. That column
+changes with the layout direction, because the summary `Row` mirrors in RTL. Clearance applies to the timeline column
+in LTR and to the summary column that holds the header and details in RTL. The other column keeps its usable width.
+Without the summary the timeline fills the pane and always clears. The wide category dock keeps its bottom-start
+placement and `LargeBottomDock` spacing, clears physical right, and sits above the supplied bottom obstruction. Chip
+travel and selection keep their own owners. Production clearances remain zero. Floating navigation remains inactive.
 
-Focused `NotificationsClearanceTest` passes: 8 tests. Existing suites pass unchanged: `NotificationsScreenTest` 14,
-`NotificationRouteResolverTest` 2, `NotificationLaunchHostTest` 5, `NavigationTest` 36.
-Full `test assembleRelease` passes with 157 suites, 1,624 tests, zero failures/errors/skips, and successful release
+Focused `ProfileClearanceTest` passes: 11 tests. Existing suites pass unchanged: `ProfileScreenTest` 24,
+`ProfileViewModelTest` 28, `ProfileTimelinePagerTest` 10, `WideNavigationTest` 9, `NavigationTest` 36.
+Full `test assembleRelease` passes with 158 suites, 1,635 tests, zero failures/errors/skips, and successful release
 assembly. No external Gradle build was active before the runs.
-Tests verify full viewport and list width, chip-row bounds, row-surface underlay, row action bounds, dismiss and
-follow-request controls and callbacks, load-older and retry callbacks, empty/error/sync-banner content bounds,
-final-item reach above bottom obstruction, branch forwarding, retained filter selection and scroll position, and
-compact compatibility. Direct review found no unresolved required findings. Document links and slice-only whitespace
-pass. No `problem_solver`, ADB, or live-server check ran.
+Tests verify full viewports and item-divider underlay, row and interaction bounds, the mirrored wide columns, header
+message and follow controls, dock start placement with right and bottom clearance, final-row and footer reach,
+load-older and retry callbacks, the error, empty, and null-account states, the Featured title, pinned rows, details
+fields, the inline category row, branch forwarding, retained category selection and scroll position, and compact
+compatibility in both layout directions. Direct review found no unresolved required findings. Document links and
+slice-only whitespace pass. No `problem_solver`, ADB, or live-server check ran.
 
-Next: Profile is the last destination-clearance gate. Record a Profile-specific contract before editing; do not copy
-the Notifications row decision without checking Profile row geometry and click targets. After Profile, complete 4C-5
-activation. Do not activate vertical navigation or wire the wide DM action in a clearance slice.
+Next: record the 4C-5 activation contract, then integrate safe placement and activate adaptive navigation. Two
+decisions need maintainer input there: the useful-content minimum and any placement gap, and the physical-right
+anchor against the RTL rail placement. Also verify one pre-existing gap: the wide Profile summary column has no dock
+clearance, so its final details rows can end under the existing category dock. Do not invent production geometry.
 The orchestrator remains implementation owner and Git operator. The maintainer prohibits `problem_solver` for this task.
 
 ## Last safe commit
 
-`Add Notifications obstruction clearance`, based on `4763311` — `Add Photo Grid obstruction clearance`.
+`Add Profile obstruction clearance`, based on `29c38f5` — `Add Notifications obstruction clearance`.
 Resolve this checkpoint's hash from Git. Nothing was pushed.
 
 ## Limits and worktree caution
@@ -53,6 +55,9 @@ Resolve this checkpoint's hash from Git. Nothing was pushed.
 - Physical-device IME, physical foldable, API 29, live-server, signing, and TalkBack behavior remain unverified.
 - No production floating-navigation geometry is approved. Do not invent clearance or fit values.
 - The recipient finder is implemented. Its wide New conversation callback remains for the activation slice.
+- One pre-existing flake exists: `MastodonIntegrationTest cancelingTimelinePageCancelsRequestAndAllowsRetry`
+  can fail with `IOException: Gave up waiting for queue to shut down`. It passes in isolation and is unrelated to
+  clearance work. Record it separately; do not weaken it.
 - A separate external `gradlew.bat clean installDebug` process ran in this worktree during an earlier slice and removed
   shared test results and build outputs. It was not stopped and finished on its own. Recheck shared-output
   activity before later builds. That external install's device state remains unknown.

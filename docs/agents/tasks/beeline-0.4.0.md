@@ -198,22 +198,43 @@ Navigation-fit policy for later activation:
 - Compact Notifications ignores both inputs and keeps its floating bottom chip row, contextual-control placement, and
   scroll clearance. Chip travel and selection keep their owners. Production clearances remain zero. Floating
   navigation remains inactive.
+- 4C-4 Profile clearance — commit subject `Add Profile obstruction clearance`, preceded by `29c38f5`.
+- Focused `ProfileClearanceTest` passes: 11 tests. Existing suites pass unchanged: `ProfileScreenTest` 24,
+  `ProfileViewModelTest` 28, `ProfileTimelinePagerTest` 10, `WideNavigationTest` 9, `NavigationTest` 36.
+- Full `test assembleRelease` passes with 158 suites, 1,635 tests, zero failures/errors/skips, and successful
+  release assembly.
+- The `Destination.Profile` branch forwards both clearances. `ProfileScreen` ignores both inputs in compact and adds
+  the supplied bottom obstruction to `LargeBottomDockClearance` for the wide end of list.
+- A profile row is `PostRow`, a transparent column with separate state and footer items. Its content therefore takes
+  an absolute right padding while the item divider keeps the full width, matching `HomeFeed`. The row precedent is not
+  the Photo Grid tile inset.
+- The wide summary `Row` mirrors in RTL, so the column that reaches the pane physical right edge changes with the
+  layout direction. Clearance now applies to the timeline column in LTR and to the summary column that holds the
+  header and details in RTL. The other column keeps its usable width. Without the summary the timeline fills the pane
+  and always clears.
+- The wide category dock keeps its bottom-start placement and `LargeBottomDock` spacing, clears physical right, and
+  sits above the supplied bottom obstruction. Chip travel and selection keep their owners. Production clearances
+  remain zero. Floating navigation remains inactive.
+- The wide header is not a clearance surface outside that mirrored column. The presentation without the large
+  summary (`compactLayout = false` with `largeLayout = false`) is produced only by tests, because
+  `ShellDestinationContent` always pairs `compactLayout = false` with `largeLayout = true`.
 
 # Current slice
 
-## Next bounded destination slice — Profile
+## Next slice — 4C-5 activation gate
 
-- **Objective:** Clear the wide Profile surface from future floating navigation. Profile is the last destination-clearance gate before 4C-5 activation.
-- **Status:** Contract not yet recorded. Investigate the Profile viewport, header, category controls, timeline list, and any measured dock before editing. Do not copy the Notifications row decision without checking Profile row geometry and click targets.
-- **Owner and existing abstraction:** Orchestrator; `ProfileScreen`, `ProfileTimelineList`, and `ProfileContract` own profile presentation and state. `ShellDestinationContent` supplies the shell physical-right and bottom clearances.
-- **Non-goals:** Do not fold Profile work into the completed DM, Home, Search, Photo Grid, or Notifications slices. Do not activate vertical navigation or wire the wide DM action in a clearance slice.
-- **Validation:** Record the Profile contract first. Then run focused Compose tests and `test assembleRelease` with the required wrapper flags.
-- **Git operator:** Orchestrator; one reviewed commit for the Profile slice.
+- **Objective:** Replace the production rail with one safe-region floating vertical capsule and contextual action, and select presentation from stable window geometry.
+- **Status:** Not started. All seven destination-clearance slices are complete, so 4C-5 has no unfinished clearance contract.
+- **Owner and existing abstraction:** Orchestrator; `LargeLayoutMode.kt` owns geometry, `PalustrisApp.kt` supplies window inputs, `LargeScreenShell.kt` places chrome and panes, and `ShellContent.kt` composes the existing owners.
+- **Open decisions:** The useful-content minimum and any placement gap still need maintainer approval. Reuse only dimensions derived from the shared presentation and existing source contracts. Confirm the physical-right anchor against the RTL rail placement before editing.
+- **Non-goals:** New production obstruction values, destination clearance changes, Phase 4D tabs, Phase 4E measurement redesign, and backdrop blur.
+- **Validation:** Record the 4C-5 contract before editing, then run focused geometry, navigation, shell, restoration, and destination tests, the required `test assembleRelease`, and `:app:lintDebug`.
+- **Git operator:** Orchestrator; commit only explicitly reviewed implementation and records. Do not push.
 
 # Files involved
 
-- Current slice: Profile clearance. Record its contract before editing; it needs its own bounded file list.
-- The completed Notifications slice used `NotificationsScreen.kt`, `NotificationRow.kt`, the `NotificationsPanel.Notifications` branch of `AppNotificationsDestinationContent.kt`, and new `NotificationsClearanceTest.kt`.
+- Completed slices: DM inbox, DM conversation and editor, Home, Search, Photo Grid, Notifications, and Profile clearance.
+- The Profile slice used `ProfileScreen.kt`, `ProfileLargePresentation.kt`, `ProfileTimelineList.kt`, the `Destination.Profile` branch of `ShellDestinationContent.kt`, and new `ProfileClearanceTest.kt`.
 - `ShellContent` and `ShellDestinationContent` already forward both inputs. They need no changes in the clearance slices.
 - Later slices use the scoped file lists above. Expand a destination into its own contract before editing if its behavior needs an independent gate.
 
@@ -312,21 +333,45 @@ out of composition. The comparison now uses rows that stay visible. No existing 
 Review was direct because the maintainer prohibits `problem_solver`. No unresolved required findings.
 Process checks before each Gradle run found no external Java/Gradle build. No external process was stopped.
 No ADB or live-server check ran. Device rendering and production obstruction geometry remain unverified.
+4C-4 Profile focused `ProfileClearanceTest` passes with 11 tests. The Profile, wide-navigation, and navigation suites
+pass unchanged: `ProfileScreenTest` 24, `ProfileViewModelTest` 28, `ProfileTimelinePagerTest` 10, `WideNavigationTest` 9,
+`NavigationTest` 36. Full `test assembleRelease` passes with 158 suites, 1,635 tests, zero failures/errors/skips, and
+successful release assembly.
+Fixtures cover 800 x 600 dp and 800 x 1000 dp wide layouts, an 800 x 1000 dp shell branch fixture, and 411 x 891 dp
+compact layouts. Synthetic obstruction values are test inputs, not production measurements.
+Tests cover full viewports, item-divider underlay, row and interaction bounds, the mirrored wide columns, header
+message and follow controls, the dock start placement and its right and bottom clearance, final row and up-to-date
+footer reach, load-older and retry callbacks, the error, empty, and null-account states, the Featured title, pinned
+rows, details fields, the inline category row, branch forwarding, retained category selection and scroll position,
+and compact compatibility in both layout directions.
+The first focused run failed at test compilation because `ProfileLargePresentation` lacked the `dp` import. The second
+focused run exposed one production gap and three test errors. The gap was real: the wide summary `Row` mirrors in RTL,
+so the summary column reaches the pane physical right edge in RTL. Clearance now follows that column. The three test
+errors were test setup only: a missing `onRefresh` callback recorder, branch assertions written for the presentation
+without the summary, and a retained-scroll comparison that included the row edge that clearance moves.
+A later focused run added distinct pinned and timeline divider tags plus null-account empty-state coverage, then the
+final gate was repeated. Both full gates passed with the same counts.
+Review was direct because the maintainer prohibits `problem_solver`. No unresolved required findings.
+No existing test was weakened. Process checks before each Gradle run found no external Java/Gradle build.
+No ADB or live-server check ran. Compact navigation, chip travel, dock geometry, paging, and feature state did not change.
 Use the repository wrapper with `--no-daemon --console=plain`, an explicit timeout, and closed stdin.
 Run `test assembleRelease` for each code slice. Run the complete Phase 4C rerun/lint gate before final completion.
 
 # Next
 
-Record the Profile destination-clearance contract, then implement it. Profile is the last destination-clearance
-gate. After Profile, complete the 4C-5 activation gate: integrate safe placement and activate adaptive navigation.
-Do not activate vertical navigation or wire the wide DM action in a clearance slice.
+All destination-clearance gates are complete. Complete the 4C-5 activation gate: integrate safe placement and
+activate adaptive navigation. Record the 4C-5 contract before editing. Do not invent production geometry, and do not
+change the completed clearance slices.
 
 # Blockers
 
 - No production vertical capsule/action measurements are approved. Reuse only dimensions derived from the shared presentation and existing source contracts; ask the maintainer where fit policy requires a new value.
 - The DM recipient finder is implemented and its contract is ready. Wire it to the wide New conversation action only in the activation slice.
-- Notifications and Profile need bounded contracts and passing gates before activation.
-  DM, Home, Search, Photo Grid, and Notifications are complete. Profile still needs its contract.
+- All seven destination-clearance gates are complete: DM inbox, DM conversation, Home, Search, Photo Grid, Notifications, and Profile.
+- The wide Profile summary column scroll range has no dock clearance. Its final details rows can end under the existing
+  category dock. That overlap predates the clearance slices and the dock owns it, so 4C-5 must verify it before activation.
+- The physical-right anchor needs a check against the RTL rail placement. `LargeScreenShell` places the rail at the
+  physical right in RTL, so an anchored capsule and that rail can share that edge.
 - A separate external `gradlew.bat clean installDebug` process ran in this worktree during an earlier slice and wiped
   shared build outputs. It was not stopped. Recheck shared-output activity before later Gradle gates.
   Device state was not checked.
@@ -335,5 +380,5 @@ Do not activate vertical navigation or wire the wide DM action in a clearance sl
 
 # Last safe commit
 
-`Add Notifications obstruction clearance`, based on `4763311` — Add Photo Grid obstruction clearance.
+`Add Profile obstruction clearance`, based on `29c38f5` — Add Notifications obstruction clearance.
 Resolve this checkpoint's hash from Git. Nothing was pushed.

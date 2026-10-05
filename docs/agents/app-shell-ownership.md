@@ -10,7 +10,7 @@ report are complete. No dead scaffolding remains.
 **Last reviewed:** 2026-10-05.
 
 **Source baseline:** `b629a2c` (planning). Status refreshed against `c9e06c8`.
-Phase 4C-4 clearance invariants below are recorded through the Photo Grid slice.
+Phase 4C-4 clearance invariants below are recorded through the Profile clearance slice.
 
 **Evidence:** source verified. R02 verifies the shell draft fixture with NavigationTest,
 ComposerOwnerTest, and ShellCharacterizationTest. Device and live-server behavior remain unverified.
@@ -287,6 +287,24 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `NotificationsClearanceTest` verifies synthetic LTR/RTL bounds, row-surface underlay, dismiss and follow-request
   controls and callbacks, the load-older and retry callbacks, final-item reach, retained filter selection and
   scroll position, branch forwarding, and compact compatibility.
+  Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
+
+- `ShellDestinationContent` forwards both shell clearances to Profile without changing its feature, paging,
+  category, or scroll-state owners.
+  `ProfileScreen` passes physical-right clearance to its wide owners and adds bottom obstruction to
+  `LargeBottomDockClearance` for the wide end of list. Compact ignores both inputs.
+  `ProfileLargePresentation` clears the only wide column that reaches the pane physical right edge: the timeline
+  column in LTR and the summary column that holds the header and details in RTL. The wide category dock keeps its
+  bottom-start placement and `LargeBottomDock` spacing, clears physical right, and sits above the bottom obstruction.
+  `ProfileTimelineList` clears physical right on the content it owns: post rows, pinned rows, the Featured title,
+  the inline category chip row, the details item, the loading, empty, error, and inline-error surfaces, the
+  loading-more indicator, and the load-older or up-to-date footer.
+  A profile row is `PostRow`, a transparent column, so its content takes an absolute right padding while the item
+  divider keeps the full width for visual underlay. That matches `HomeFeed`. It is not the Photo Grid tile inset.
+  `ProfileCategoryChips` takes a modifier so the inline row clears through the same value.
+  `ProfileClearanceTest` verifies synthetic LTR/RTL bounds, viewport and divider underlay, the mirrored wide
+  columns, header and row controls, dock clearance, final-row and footer reach, load-older and retry callbacks,
+  branch forwarding, retained category selection and scroll position, and compact compatibility.
   Production clearances remain zero. Device rendering and production obstruction geometry remain unverified.
 
 - A contract carries no session secret, access token, source, repository, or ViewModel.

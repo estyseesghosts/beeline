@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -64,6 +65,7 @@ internal fun ProfileTimelineList(
     state: ProfileUiState,
     compactLayout: Boolean,
     endContentClearance: Dp,
+    rightObstructionClearance: Dp = 0.dp,
     isSelf: Boolean,
     onCategorySelected: (ProfileCategory) -> Unit,
     onOpenDrafts: () -> Unit,
@@ -94,6 +96,9 @@ internal fun ProfileTimelineList(
     showInlineCategories: Boolean = !compactLayout,
     largeLayout: Boolean = false,
 ) {
+    // A profile row is a transparent column with separate state and footer items, so only the
+    // interactive content clears physical right. Item dividers keep the full width for underlay.
+    val interactionModifier = Modifier.absolutePadding(right = rightObstructionClearance)
     val list = listState ?: rememberLazyListState()
     val currentState by rememberUpdatedState(state)
     val loadMore by rememberUpdatedState(onLoadMore)
@@ -175,6 +180,7 @@ internal fun ProfileTimelineList(
                         onCategorySelected = onCategorySelected,
                         onOpenDrafts = onOpenDrafts,
                         onOpenBookmarks = onOpenBookmarks,
+                        modifier = interactionModifier,
                     )
                 }
             }
@@ -207,8 +213,11 @@ internal fun ProfileTimelineList(
                     onOpenUrl = onOpenUrl,
                     onOpenUsername = onOpenUsername,
                     largeLayout = largeLayout,
+                    interactionModifier = interactionModifier,
                 )
-                state.selectedTab == ProfileCategory.ShowMore -> item(key = "profile-details") { details() }
+                state.selectedTab == ProfileCategory.ShowMore -> item(key = "profile-details") {
+                    Box(interactionModifier) { details() }
+                }
                 else -> {
                     if (singlePinnedInPosts || pinnedErrorInPosts) {
                         profilePinnedItems(
@@ -236,6 +245,7 @@ internal fun ProfileTimelineList(
                             onOpenUrl = onOpenUrl,
                             onOpenUsername = onOpenUsername,
                             largeLayout = largeLayout,
+                            interactionModifier = interactionModifier,
                         )
                     }
                     profilePageItems(
@@ -260,6 +270,7 @@ internal fun ProfileTimelineList(
                         onOpenUrl = onOpenUrl,
                         onOpenUsername = onOpenUsername,
                         largeLayout = largeLayout,
+                        interactionModifier = interactionModifier,
                     )
                 }
             }
@@ -279,6 +290,7 @@ internal fun ProfileCategoryChips(
     onEditProfile: () -> Unit = {},
     includeShowMore: Boolean = true,
     includeEditProfile: Boolean = false,
+    modifier: Modifier = Modifier,
 ) {
     FilterChipRow(
         entries = profileChipEntries(
@@ -318,6 +330,7 @@ internal fun ProfileCategoryChips(
             }
         },
         rowContentDescription = stringResource(R.string.a11y_profile_categories),
+        modifier = modifier,
     )
 }
 
@@ -346,9 +359,10 @@ private fun LazyListScope.profilePinnedItems(
     quoteEnabled: Boolean,
     onQuote: (OwnedPost) -> Unit,
     largeLayout: Boolean,
+    interactionModifier: Modifier,
 ) {
     if (showLoading && posts.isEmpty()) item(key = "profile-pinned-loading") {
-        Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth().then(interactionModifier).padding(16.dp), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(Modifier.size(24.dp))
         }
     }
@@ -358,11 +372,12 @@ private fun LazyListScope.profilePinnedItems(
             message = state.pinnedError,
             action = stringResource(R.string.notifications_retry),
             onAction = onRefresh,
+            modifier = interactionModifier,
         )
     }
     if (posts.isNotEmpty()) {
         if (showTitle) item(key = "profile-pinned-title") {
-            Text(stringResource(R.string.profile_featured_posts), Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.profile_featured_posts), interactionModifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp), style = MaterialTheme.typography.titleMedium)
         }
         items(posts, key = { "pinned/${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
             PostRow(
@@ -385,13 +400,16 @@ private fun LazyListScope.profilePinnedItems(
                     onOpenUsername = onOpenUsername,
                     onQuote = onQuote,
                 ),
-                 modifier = Modifier.animateItem(
+                 modifier = interactionModifier.animateItem(
                     fadeInSpec = LocalPalustrisMotionScheme.current.fastFadeIn,
                     fadeOutSpec = LocalPalustrisMotionScheme.current.fastFadeOut,
                     placementSpec = LocalPalustrisMotionScheme.current.gentleOffset,
                 ),
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
+            HorizontalDivider(
+                modifier = Modifier.testTag("profile_pinned_divider_${ownedPost.post.id.value}"),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f),
+            )
         }
     }
 }
@@ -418,10 +436,11 @@ private fun LazyListScope.profilePageItems(
     quoteEnabled: Boolean,
     onQuote: (OwnedPost) -> Unit,
     largeLayout: Boolean,
+    interactionModifier: Modifier,
 ) {
     if (page == null || page.initialLoading && page.posts.isEmpty()) {
         item(key = "profile-timeline-loading") {
-            AnimatedStatePane(stateKey = "loading", modifier = Modifier.fillMaxWidth()) {
+            AnimatedStatePane(stateKey = "loading", modifier = Modifier.fillMaxWidth().then(interactionModifier)) {
                 Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
@@ -431,7 +450,7 @@ private fun LazyListScope.profilePageItems(
     }
     if (page.error != null && page.posts.isEmpty()) {
         item(key = "profile-timeline-error") {
-            AnimatedStatePane(stateKey = "error", modifier = Modifier.fillMaxWidth()) {
+            AnimatedStatePane(stateKey = "error", modifier = Modifier.fillMaxWidth().then(interactionModifier)) {
                 ProfileMessage(
                     title = if (page.needsSignIn) stringResource(R.string.sign_in_required) else stringResource(R.string.profile_posts_unavailable),
                     message = page.error,
@@ -443,7 +462,7 @@ private fun LazyListScope.profilePageItems(
     }
     if (page.posts.isEmpty() && page.error == null && !page.refreshing) {
         item(key = "profile-timeline-empty") {
-            AnimatedStatePane(stateKey = "empty", modifier = Modifier.fillMaxWidth()) {
+            AnimatedStatePane(stateKey = "empty", modifier = Modifier.fillMaxWidth().then(interactionModifier)) {
                 EmptyState(AppIcons.DefaultUser, stringResource(R.string.profile_no_posts_title), stringResource(R.string.profile_no_posts_subtitle))
             }
         }
@@ -469,16 +488,19 @@ private fun LazyListScope.profilePageItems(
                 onOpenUsername = onOpenUsername,
                 onQuote = onQuote,
             ),
-             modifier = Modifier.animateItem(
+             modifier = interactionModifier.animateItem(
                 fadeInSpec = LocalPalustrisMotionScheme.current.fastFadeIn,
                 fadeOutSpec = LocalPalustrisMotionScheme.current.fastFadeOut,
                 placementSpec = LocalPalustrisMotionScheme.current.gentleOffset,
             ),
         )
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
+        HorizontalDivider(
+            modifier = Modifier.testTag("profile_timeline_divider_${ownedPost.post.id.value}"),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f),
+        )
     }
     if (page.loadingMore) item(key = "profile-timeline-loading-more") {
-        Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth().then(interactionModifier).padding(24.dp), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(Modifier.size(24.dp))
         }
     }
@@ -488,10 +510,11 @@ private fun LazyListScope.profilePageItems(
             message = page.error,
             action = if (page.needsSignIn) stringResource(R.string.profile_timeline_try_again) else stringResource(R.string.notifications_retry),
             onAction = if (page.needsSignIn) onRefresh else onLoadMore,
+            modifier = interactionModifier,
         )
     }
     if (!page.loadingMore && page.error == null) item(key = "profile-timeline-footer") {
-        Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth().then(interactionModifier).padding(16.dp), contentAlignment = Alignment.Center) {
             if (page.nextCursor != null) {
                 TextButton(onClick = onLoadMore) {
                     Text(if (page.consecutiveEmptyPages > 0) stringResource(R.string.profile_timeline_continue_browsing) else stringResource(R.string.feed_load_older))
@@ -509,8 +532,9 @@ private fun ProfileMessage(
     message: String,
     action: String,
     onAction: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+    Column(modifier.fillMaxWidth().padding(16.dp)) {
         Text(title, style = MaterialTheme.typography.titleMedium)
         Text(message, Modifier.padding(top = 4.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
         TextButton(onClick = onAction, Modifier.padding(top = 4.dp)) { Text(action) }
