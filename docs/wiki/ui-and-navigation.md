@@ -204,6 +204,26 @@ dock clearance, final-row and footer reach, load-older and retry callbacks, bran
 selection and scroll position, and compact compatibility. Device rendering and production obstruction geometry
 remain unverified.
 
+## Forced layout direction
+
+The Display settings page has one switch that forces the layout direction. The label names the
+direction that turning the switch on produces, so it reads `Force RTL Layout` in a left-to-right
+device and `Force LTR Layout` in a right-to-left device. The label changes after the user switches.
+The switch is on when a direction is stored. Turning it off returns to the device direction.
+
+The switch changes layout only. It does not change the application language, and every user-visible
+string stays as the language provides it. Beeline has no right-to-left translations yet, so the
+setting changes the layout without changing the text.
+
+A user without the setting, or with a value from a future version, keeps the device direction.
+
+Sources: `ui/LayoutDirectionPolicy.kt`, `ui/settings/DisplaySettingsScreen.kt`,
+`ui/ConnectedApp.kt`, `domain/AppPreferences.kt`.
+
+Limits: device rendering, TalkBack, and physical foldable behavior are unverified. On a large
+foldable, a forced right-to-left layout can move a pane away from the physical hinge, because the
+pane offset uses the physical left inset with a direction-relative modifier.
+
 ## Large panes and folding coordinates
 
 `LargeLayoutMode` currently chooses compact, single-pane, or expanded-pane behavior from

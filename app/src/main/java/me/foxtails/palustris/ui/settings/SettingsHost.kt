@@ -44,6 +44,7 @@ fun SettingsHost(
     onTextSize: (me.foxtails.palustris.domain.AppTextSize) -> Unit = {},
     onFont: (me.foxtails.palustris.domain.AppFont) -> Unit = {},
     onRequest60Hz: (Boolean) -> Unit = {},
+    onLayoutDirection: (me.foxtails.palustris.domain.AppLayoutDirection) -> Unit = {},
     onLanguage: (me.foxtails.palustris.domain.AppLanguage) -> Unit = {},
     onTrackingCleanup: (Boolean) -> Unit = {},
     onContentWarningRules: (me.foxtails.palustris.domain.ContentWarningRules) -> Unit = {},
@@ -141,7 +142,7 @@ fun SettingsHost(
                     onPrivacy = { onRoute(SettingsRoute.Privacy) },
                     onLanguage = { onRoute(SettingsRoute.Language) },
                 )
-                SettingsRoute.Display -> DisplaySettingsScreen(state.preferences, onColorScheme, onColorPalette, onBackground, onTextSize, onFont, onRequest60Hz)
+                SettingsRoute.Display -> DisplaySettingsScreen(state.preferences, onColorScheme, onColorPalette, onBackground, onTextSize, onFont, onRequest60Hz, state.preferences.layoutDirection, onLayoutDirection)
                 SettingsRoute.Language -> LanguageSettingsScreen(state.preferences.language, onLanguage)
                 SettingsRoute.Notifications -> NotificationAccountsScreen(accounts, onNotificationAccount)
                 is SettingsRoute.NotificationAccount -> NotificationSettingsScreen(

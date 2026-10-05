@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -124,7 +125,11 @@ fun ConnectedApp(
         else -> "app"
     }
     PalustrisTheme(preferences = appPreferences.preferences) {
+        // Resolve the stored override against the device direction, so a forced direction never becomes
+        // the base for the next resolution.
+        val baseLayoutDirection = deviceLayoutDirection()
         CompositionLocalProvider(
+             LocalLayoutDirection provides appPreferences.preferences.layoutDirection.resolveAgainst(baseLayoutDirection),
              LocalContentWarningRules provides appPreferences.preferences.contentWarningRules.merge(postPreferences.contentWarningRules),
              LocalMutedHashtags provides postPreferences.localMutedHashtags.toSet(),
              LocalHiddenContentPresentation provides appPreferences.preferences.hiddenContentPresentation,

@@ -186,6 +186,25 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   This remains planned; current `LargeLayoutMode` uses width-only 600/840 dp cutoffs.
   The available emulator is intended for compact-wide testing, not narrow-phone acceptance.
 
+- `ui/LayoutDirectionPolicy.kt` owns the effective layout direction rule.
+  `deviceLayoutDirection()` reads `LocalConfiguration.current.layoutDirection`, which is the platform
+  authority for the device direction. A Compose override never changes that configuration value.
+  `ConnectedApp` reads it before publishing, resolves `AppLayoutDirection` against it, and provides
+  `LocalLayoutDirection` in its existing `CompositionLocalProvider`. Callers below the root must
+  resolve against `deviceLayoutDirection()` and never against `LocalLayoutDirection.current`, because
+  the published value is the forced direction there.
+  Android has no public API that sets layout direction independently of the locale, so the forcing is
+  Compose-level. `LocaleManager.applicationLocales` stays with `AppLocaleController` and is unchanged.
+  `System` is the default for an absent or unknown stored key, so an upgrade never flips an existing
+  user. The Display item carries a headline only; a supporting summary would need a third string.
+  Physical `absolutePadding` clearance sites keep following the physical right edge and must not be
+  converted. System bar and window insets stay physical.
+  Unverified: device rendering, physical foldable behavior, TalkBack, and real right-to-left
+  language support, which is a separate task. Known gap: `LargeScreenShell` converts a physical
+  `bounds.left` from `LargeLayoutMode` and applies it with direction-relative `Modifier.offset`, so
+  forced right-to-left can move a pane away from the physical hinge. That needs a physical-anchor
+  decision from the maintainer and is not fixed here.
+
 - `LargeLayoutMode.kt` owns current wide pane and folding-feature geometry. `HingeInfo.bounds` is
   translated from window pixels into the pane-content coordinate space by `LargeContentOriginPx`.
   The current LTR content origin includes the left system inset and 80 dp rail; RTL includes the

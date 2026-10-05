@@ -9,6 +9,7 @@ data class AppPreferences(
     val font: AppFont = AppFont.Device,
     val request60Hz: Boolean = false,
     val language: AppLanguage = AppLanguage.SystemDefault,
+    val layoutDirection: AppLayoutDirection = AppLayoutDirection.System,
     val cleanTrackingParameters: Boolean = false,
     val contentWarningRules: ContentWarningRules = ContentWarningRules(),
     val hiddenContentPresentation: HiddenContentPresentation = HiddenContentPresentation.Placeholder,
@@ -83,6 +84,20 @@ enum class AppLanguage(val tag: String?) {
         fun fromNameOrDefault(name: String?): AppLanguage =
             entries.firstOrNull { it.name == name } ?: SystemDefault
     }
+}
+
+/**
+ * The stored layout direction override.
+ *
+ * `System` keeps the device direction and is the value for a user whose stored file predates this
+ * preference, so an upgrade never flips an existing user. `ForceRtl` and `ForceLtr` name an explicit
+ * direction. The values are presentation only. They do not change the application locale, and they
+ * never appear as a user-facing label.
+ */
+enum class AppLayoutDirection {
+    System,
+    ForceRtl,
+    ForceLtr,
 }
 
 data class AppPreferencesState(

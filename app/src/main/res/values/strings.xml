@@ -620,6 +620,8 @@
     <string name="settings_error_save_failed">Settings could not be saved.</string>
     <string name="settings_font">Font</string>
     <string name="settings_font_open_dyslexic">OpenDyslexic</string>
+    <string name="settings_force_layout_direction_ltr">Force LTR Layout</string>
+    <string name="settings_force_layout_direction_rtl">Force RTL Layout</string>
     <string name="settings_font_serif">Serif</string>
     <string name="settings_language">Language</string>
     <string name="settings_moderation_add">Add</string>

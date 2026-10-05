@@ -23,6 +23,7 @@ import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
 import me.foxtails.palustris.domain.AppLanguage
+import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.AppPreferencesState
@@ -105,6 +106,8 @@ class FileAppPreferencesRepository(
             font = enumOrDefault(json, "font", AppFont.Device),
             request60Hz = json.optBoolean("request60Hz", false),
             language = AppLanguage.fromNameOrDefault(json.optString("language")),
+            // A missing key keeps System, so the device direction survives an upgrade unchanged.
+            layoutDirection = enumOrDefault(json, "layoutDirection", AppLayoutDirection.System),
             cleanTrackingParameters = json.optBoolean("cleanTrackingParameters", false),
             contentWarningRules = warning?.toContentWarningRules() ?: ContentWarningRules(),
             hiddenContentPresentation = enumOrDefault(json, "hiddenContentPresentation", HiddenContentPresentation.Placeholder),
@@ -122,6 +125,7 @@ class FileAppPreferencesRepository(
             .put("font", preferences.font.name)
             .put("request60Hz", preferences.request60Hz)
             .put("language", preferences.language.name)
+            .put("layoutDirection", preferences.layoutDirection.name)
             .put("cleanTrackingParameters", preferences.cleanTrackingParameters)
             .put("contentWarningRules", preferences.contentWarningRules.toJson())
             .put("hiddenContentPresentation", preferences.hiddenContentPresentation.name)

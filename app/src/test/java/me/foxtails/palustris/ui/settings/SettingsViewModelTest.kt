@@ -17,6 +17,7 @@ import me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorScheme
+import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.AppPreferencesState
@@ -220,6 +221,54 @@ class SettingsViewModelTest {
 
             assertEquals(AppBackground.Dark, repository.current.preferences.background)
             assertEquals(false, model.canRetry.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun layoutDirectionCommandStoresOnlyItsOwnFieldAndIsReversible() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = InMemoryAppPreferencesRepository(AppPreferences(background = AppBackground.Dark))
+            val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
+
+            model.setLayoutDirection(AppLayoutDirection.ForceRtl)
+            advanceUntilIdle()
+
+            var preferences = repository.observe().first().preferences
+            assertEquals(AppLayoutDirection.ForceRtl, preferences.layoutDirection)
+            // The command transforms only its own field.
+            assertEquals(AppBackground.Dark, preferences.background)
+
+            model.setLayoutDirection(AppLayoutDirection.System)
+            advanceUntilIdle()
+
+            preferences = repository.observe().first().preferences
+            assertEquals(AppLayoutDirection.System, preferences.layoutDirection)
+            assertNull(model.commandError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun aFailedLayoutDirectionCommandKeepsTheCommittedValueAndRetries() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = ToggleFailingAppPreferencesRepository(AppPreferences())
+            val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
+
+            model.setLayoutDirection(AppLayoutDirection.ForceLtr)
+            advanceUntilIdle()
+            assertEquals(AppLayoutDirection.System, repository.current.preferences.layoutDirection)
+            assertNotNull(model.commandError.value)
+
+            repository.failing = false
+            model.retryFailedCommand()
+            advanceUntilIdle()
+
+            assertEquals(AppLayoutDirection.ForceLtr, repository.current.preferences.layoutDirection)
         } finally {
             Dispatchers.resetMain()
         }

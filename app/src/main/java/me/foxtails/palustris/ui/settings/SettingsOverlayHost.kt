@@ -126,6 +126,7 @@ fun SettingsOverlayHost(
         onTextSize = settingsModel::setTextSize,
         onFont = settingsModel::setFont,
         onRequest60Hz = settingsModel::setRequest60Hz,
+        onLayoutDirection = settingsModel::setLayoutDirection,
         onLanguage = settingsModel::setLanguage,
         onTrackingCleanup = settingsModel::setTrackingCleanup,
         onContentWarningRules = settingsModel::setContentWarningRules,

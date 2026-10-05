@@ -17,6 +17,7 @@ import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
 import me.foxtails.palustris.domain.AppLanguage
+import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.AppPreferencesState
@@ -103,6 +104,13 @@ class SettingsViewModel @Inject constructor(
 
     fun setLanguage(value: AppLanguage): Unit =
         updateApp(retry = { setLanguage(value) }) { it.copy(language = value) }
+
+    /**
+     * Stores the layout direction override. The value is presentation only, so it never touches the
+     * application locale.
+     */
+    fun setLayoutDirection(value: AppLayoutDirection): Unit =
+        updateApp(retry = { setLayoutDirection(value) }) { it.copy(layoutDirection = value) }
 
     fun setTrackingCleanup(value: Boolean): Unit =
         updateApp(retry = { setTrackingCleanup(value) }) { it.copy(cleanTrackingParameters = value) }

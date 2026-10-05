@@ -27,13 +27,17 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.R
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
+import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppTextSize
+import me.foxtails.palustris.ui.deviceLayoutDirection
+import me.foxtails.palustris.ui.forcingOppositeOf
 import me.foxtails.palustris.ui.theme.appPaletteColor
 
 @Composable
@@ -45,7 +49,12 @@ fun DisplaySettingsScreen(
     onTextSize: (AppTextSize) -> Unit,
     onFont: (AppFont) -> Unit,
     onRequest60Hz: (Boolean) -> Unit,
+    layoutDirection: AppLayoutDirection = AppLayoutDirection.System,
+    onLayoutDirection: (AppLayoutDirection) -> Unit = {},
 ) {
+    // The page sits below the composition root, where LocalLayoutDirection is the forced direction.
+    // The device direction names what turning the switch on produces, so it is the base here.
+    val baseDirection = deviceLayoutDirection()
     Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
         ChoiceGroup(
             stringResource(R.string.settings_colour_style),
@@ -99,6 +108,36 @@ fun DisplaySettingsScreen(
             headlineContent = { Text(stringResource(R.string.settings_request_60hz)) },
             supportingContent = { Text(stringResource(R.string.settings_request_60hz_summary)) },
             trailingContent = { Switch(checked = preferences.request60Hz, onCheckedChange = onRequest60Hz) },
+        )
+        ListItem(
+            // The headline carries no supporting summary, because a summary needs a third string.
+            // The label always names the direction that turning the switch on produces, so it
+            // changes after the user switches.
+            headlineContent = {
+                Text(
+                    stringResource(
+                        if (baseDirection == LayoutDirection.Rtl) {
+                            R.string.settings_force_layout_direction_ltr
+                        } else {
+                            R.string.settings_force_layout_direction_rtl
+                        },
+                    ),
+                )
+            },
+            trailingContent = {
+                Switch(
+                    checked = layoutDirection != AppLayoutDirection.System,
+                    onCheckedChange = { enabled ->
+                        onLayoutDirection(
+                            if (enabled) {
+                                layoutDirection.forcingOppositeOf(baseDirection)
+                            } else {
+                                AppLayoutDirection.System
+                            },
+                        )
+                    },
+                )
+            },
         )
     }
 }
