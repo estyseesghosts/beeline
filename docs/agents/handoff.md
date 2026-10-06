@@ -22,11 +22,13 @@ Phase 2 slice 2.1 is committed at `6920602`: `HomeFeed` delegates paging and scr
 and feed rendering to private helpers without moving state.
 Phase 2 slice 2.2 is committed at `b342a3f`: `ProfileScreen` selects the presentation and
 delegates compact and compact-wide to the new `ui/profile/ProfileTimelinePresentation.kt`.
-Phase 2 slice 2.3 is implemented and gate-verified: `DestinationChipRow` keeps the chip row
+Phase 2 slice 2.3 is committed at `490f674`: `DestinationChipRow` keeps the chip row
 assembly and delegates one chip to `DestinationFilterChip` and the caret to
 `DestinationChipVisibilityButton`.
-Phase 2 slice 2.4 is next: share the notification filter-row presentation in
-`ui/notifications/NotificationsScreen.kt`.
+Phase 2 slice 2.4 is committed: `NotificationsScreen` shares the notification filter-row
+configuration through the new private `NotificationFilterRow` while keeping the compact and
+wide containers.
+Phase 2 is complete. All four slices (2.1–2.4) are committed and gate-verified.
 Do not split ShellContent. Do not push. Do not begin Phase 3.
 
 ## Ownership and caution
@@ -40,9 +42,9 @@ Recheck external Java/Gradle activity before builds. Use explicit reviewed commi
 
 ## Last safe commit
 
-Preceding safe commit: `b342a3f` — `Extract Profile timeline presentation`.
-The 2.3 slice commit subject is `Decompose destination chip rendering`.
-The next slice commit subject is `Share notification filter-row presentation`.
+Preceding safe commit: `490f674` — `Decompose destination chip rendering`.
+The 2.4 slice commit subject is `Share notification filter-row presentation`.
+Phase 2 is complete. Await user direction before starting Phase 3.
 
 ## Limits
 

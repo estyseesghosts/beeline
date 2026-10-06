@@ -447,10 +447,6 @@
     <file name="src/main/java/me/foxtails/palustris/ui/notifications/NotificationSettingsViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/ui/notifications/NotificationsScreen.kt">
-        <error line="8" column="1" source="standard:import-ordering" />
-        <error line="12" column="1" source="standard:no-unused-imports" />
-    </file>
     <file name="src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridScreen.kt">
         <error line="5" column="1" source="standard:import-ordering" />
         <error line="50" column="1" source="standard:import-ordering" />

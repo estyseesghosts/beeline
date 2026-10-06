@@ -9,21 +9,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,22 +35,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import me.foxtails.palustris.R
-import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.HiddenContentPresentation
+import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActionState
 import me.foxtails.palustris.domain.NotificationActivity
 import me.foxtails.palustris.domain.NotificationCategory
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
@@ -58,9 +59,8 @@ import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
-import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
-import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
 import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
@@ -237,14 +237,11 @@ fun NotificationsScreen(
                     .padding(horizontal = CompactOverlayHorizontalPadding)
                     .windowInsetsPadding(controlsPositioningInsets),
             ) {
-                DestinationChipRow(
+                NotificationFilterRow(
                     entries = chipEntries,
-                    rowContentDescription = stringResource(R.string.notification_filter_description),
                     listState = chipListState,
                     visible = chipRowVisible,
                     onToggleVisibility = { chipRowVisible = !chipRowVisible },
-                    rowTestTag = "notification_filters",
-                    visibilityToggleTestTag = "notification_filters_visibility",
                 )
             }
         }
@@ -283,20 +280,37 @@ fun NotificationsScreen(
                     )
                     .testTag("notification_filter_dock"),
                 content = {
-                    DestinationChipRow(
+                    NotificationFilterRow(
                         entries = chipEntries,
-                        rowContentDescription = stringResource(R.string.notification_filter_description),
                         listState = chipListState,
                         visible = chipRowVisible,
                         onToggleVisibility = { chipRowVisible = !chipRowVisible },
-                        rowTestTag = "notification_filters",
-                        visibilityToggleTestTag = "notification_filters_visibility",
                         caretPresentation = notificationCaretPresentation,
                     )
                 },
             )
         }
     }
+}
+
+@Composable
+private fun NotificationFilterRow(
+    entries: List<FilterChipEntry>,
+    listState: LazyListState,
+    visible: Boolean,
+    onToggleVisibility: () -> Unit,
+    caretPresentation: ChipCaretPresentation = ChipCaretPresentation.Inline,
+) {
+    DestinationChipRow(
+        entries = entries,
+        rowContentDescription = stringResource(R.string.notification_filter_description),
+        listState = listState,
+        visible = visible,
+        onToggleVisibility = onToggleVisibility,
+        rowTestTag = "notification_filters",
+        visibilityToggleTestTag = "notification_filters_visibility",
+        caretPresentation = caretPresentation,
+    )
 }
 
 @Composable

@@ -58,23 +58,23 @@ test-isolation (`UncaughtExceptionsBeforeTest`). They pass alone; record them an
   selectable-group semantics, reduced-motion behavior, selected-chip auto-scroll, and
   keys/test tags are unchanged. The CategoryChips import ordering is fixed and its ktlint
   baseline entry is removed.
+- 2.4 committed: preceding safe commit `490f674`, subject `Share notification filter-row
+  presentation`. New private `NotificationFilterRow` renders the shared `DestinationChipRow`
+  configuration for both the compact and wide branches. `NotificationsScreen` keeps the filter
+  state (`selectedFilterName`, `chipRowVisible`, `chipListState`, `chipEntries`) and the two
+  positioning containers: the compact `Box` with `compactContextualControlsPositioningInsets`
+  and the wide `LargeBottomDock` with `notificationCaretPresentation`. No test tag, container,
+  behavior, or state changed. The NotificationsScreen import ordering is fixed, the unused
+  `WindowInsets` import is removed, and its ktlint baseline entry is removed.
 
 # Current slice
 
-2.4 — Remove duplicate notification filter-dock assembly (`ui/notifications/NotificationsScreen.kt`,
-442 lines). Extract a private `NotificationFilterRow(...)` that receives entries, `LazyListState`,
-visibility, and the toggle callback. Compact and wide branches keep their different positioning
-containers: compact `Box` + system/control insets, wide `LargeBottomDock`. Do not make the helper
-choose layout mode. Do not centralize feature state.
-Tests: `NotificationsScreenTest`, `NotificationsClearanceTest`, `CategoryChipsGeometryTest`,
-`WideNavigationTest`.
-Commit subject: `Share notification filter-row presentation`.
+Phase 2 is complete. All four slices (2.1–2.4) are committed and gate-verified. Await user
+direction. Do not begin Phase 3.
 
 # Files involved
 
-- ui/notifications/NotificationsScreen.kt
-- docs/agents/app-shell-ownership.md and docs/wiki/ui-and-navigation.md
-- task records
+- None. Phase 2 is complete.
 
 # Verification
 
@@ -92,13 +92,17 @@ Commit subject: `Share notification filter-row presentation`.
 2.3 full gate: 51 Python tests pass, architecture audit exits 0 with zero regressions,
   1,691 JVM tests across 161 suites, lint, ktlint, debug assembly, and release assembly.
   The CategoryChips import-ordering fix removes its ktlint baseline entry with no new exemption.
-For each later slice: run focused tests, then the complete local CI-parity gate with closed
-stdin and an explicit timeout.
+2.4 focused: `NotificationsScreenTest`, `NotificationsClearanceTest`,
+  `CategoryChipsGeometryTest`, and `WideNavigationTest` pass.
+2.4 full gate: 51 Python tests pass, architecture audit exits 0 with zero regressions,
+  1,691 JVM tests across 161 suites, lint, ktlint, debug assembly, and release assembly.
+  The NotificationsScreen import-ordering fix removes its ktlint baseline entry with no new exemption.
+  Slice 2.4 was implemented by a targeted_fixer child session under a complete dispatch contract;
+  the orchestrator reviewed the diff and ran the Python test suite.
 
 # Next
 
-Implement slice 2.4, run focused tests and the full CI-parity gate, update records, and
-commit as `Share notification filter-row presentation`.
+Phase 2 is complete. Await user direction. Do not begin Phase 3.
 
 # Blockers
 
@@ -109,4 +113,4 @@ unverified.
 
 # Last safe commit
 
-b342a3f — Extract Profile timeline presentation.
+490f674 — Decompose destination chip rendering.

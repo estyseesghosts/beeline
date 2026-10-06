@@ -380,6 +380,7 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   text clear physical right. Bottom clearance adds to the wide list end spacing only. The wide container,
   `notification_refresh_surface`, and `notifications_content` keep their full size.
   The wide chip dock sits above physical navigation and bottom obstruction.
+  `NotificationFilterRow` shares the row configuration while the compact and wide branches keep their own containers.
   List-end clearance includes the shared dock clearance and that obstruction.
   Compact Notifications ignores wide inputs and keeps its floating bottom chip row,
   `compactContextualControlsPositioningInsets`, `compactScrollEndClearance`, and `CompactFilterDockHeight`.
