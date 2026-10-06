@@ -9,8 +9,8 @@ Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
 
 ## Shell route and state ownership
 
-`ShellContent` owns compact and large presentation. `ShellDestinationContent` renders destination
-branches without owning feature state. Saveable shell holders pass through both presentations.
+`ShellContent` owns compact and large presentation. `ShellDestinationContent` routes destinations
+to the feature shell adapters without owning feature state. Saveable shell holders pass through both presentations.
 Search, Photo Grid, direct messages, and profile state remain with their connected feature owners.
 The notifications shell adapter consumes the existing notification and DM contracts without unpacking them at the router boundary.
 The Home shell adapter forwards the feed contract and shell-owned chip state to `HomeFeed` without owning Home state.

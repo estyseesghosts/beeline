@@ -28,16 +28,16 @@ import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.notifications.NotificationRouteResolver
 
 /**
- * Destination scaffold and branches for the application shell.
+ * Destination router for the application shell.
  *
- * The content renders the destination scaffold with its animated branches:
- * notification detail, local pages, Home, search with Photo Grid,
- * notifications, and profile. It owns no state. Navigation and overlay
- * holders, scroll states, contracts, and callbacks arrive as parameters.
- * Saveable holders and scroll states stay with the shell and pass through
- * unchanged, so restoration keys and scroll positions stay stable. Post,
- * draft, and navigation callbacks travel as three bundles so the branch
- * wiring stays reviewable.
+ * It applies the scaffold and inset policy, animates destination changes, scopes saveable
+ * destination state, resolves the notification-detail and local-page routes, and dispatches to
+ * the feature shell adapters: [ShellHomeDestination], [ShellSearchDestination],
+ * [AppNotificationsDestinationContent], and [ShellProfileDestination]. It owns no feature state.
+ * Navigation and overlay holders, scroll states, contracts, and callbacks arrive as parameters.
+ * Saveable holders and scroll states stay with the shell and pass through unchanged, so
+ * restoration keys and scroll positions stay stable. Post, draft, and navigation callbacks
+ * travel as three bundles so the dispatch stays reviewable.
  *
  * `leftObstructionClearance` and `rightObstructionClearance` are physical. They never reverse with
  * the layout direction. Compact layout ignores both, and a row or tile that stays transparent

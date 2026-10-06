@@ -76,9 +76,10 @@ edge-swipe conditions through the policy. Completion slice C-12c reduces the rem
 post-action bubble, the emoji picker target, the media and profile-image requests, and the dialog
 flags. Slice S1a. The shell reads the holder and keeps navigation, placement, and session-bound
 validation. Only the profile dialog flag survives process recreation.
-`ui/shell/ShellDestinationContent.kt` renders the destination scaffold with its animated
-branches: notification detail, local pages, Home, search with Photo Grid, notifications, and
-profile. Slice S1b. It owns no state. Saveable holders and scroll states stay with the shell
+`ui/shell/ShellDestinationContent.kt` is the destination router. Slice S1b. It applies the
+scaffold and inset policy, animates destination changes, scopes saveable destination state,
+resolves the notification-detail and local-page routes, and dispatches to the feature shell
+adapters. It owns no state. Saveable holders and scroll states stay with the shell
 and pass through unchanged.
 `ui/shell/ShellHomeDestination.kt` adapts the shell inputs to `HomeFeed` and the wide timeline dock.
 It owns no Home state: the feed contract, list state, chip list state, chip visibility, and callbacks pass through.
