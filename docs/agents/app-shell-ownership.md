@@ -304,6 +304,9 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   the DM callback, actionless slot placement, and fallback Search/editor bounds.
 
 - `ShellDestinationContent` forwards shell clearances to Home without changing its feature or scroll-state owners.
+  `HomeFeed` keeps the fallback bubble, the derived visible rows, `HomePagingDemand`, and list-state selection.
+  `HomePagingEffects` and `HomeScrollDirectionEffect` observe that state without owning it, and `HomeFeedContent`
+  renders the list, states, and wide dock. No Home state moves.
   `HomeFeed` clears physical right inside post interaction content, error/sign-in content, and list status/footer content.
   Its pull-to-refresh and list viewports, transparent outer post extents, error surfaces, and dividers retain their width.
   Interactive media and quotes stay inside the cleared post content. Bottom clearance extends the existing list end spacing.

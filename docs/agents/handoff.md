@@ -6,30 +6,38 @@ Last reviewed: 2026-10-06
 
 ## Continuation pointer
 
-Read [tasks/hardening-0.4.0.md](tasks/hardening-0.4.0.md) for the active task, constraints, and verification.
+Read [tasks/hardening-0.4.0-phase2.md](tasks/hardening-0.4.0-phase2.md) for the active Phase 2 task, constraints, and verification.
 Read AGENTS.md and its required pages before continuing.
+The completed Phase 0 and 1 record remains at [tasks/hardening-0.4.0.md](tasks/hardening-0.4.0.md).
 The preceding adaptive-navigation record remains at [tasks/beeline-0.4.0.md](tasks/beeline-0.4.0.md).
 
 ## Current position
 
-The user requests Phases 0 and 1 of `docs/fix_0.4.0.md`, in that order.
-Phase 0 is committed: 0.1 at `3c5b2ca`, 0.2 at `a850d40`, and the mechanical ktlint repair at `63d8231`.
-Phase 1 is committed: 1.1 at `150d0d2`, 1.2 at `4af0279`, 1.3 at `52dd028`, and 1.4 at `5cf3621`.
-1.5 passes direct review and the full gate. `ShellDestinationContent` is now a router that dispatches to the four feature shell adapters.
-The 1.5 slice commit subject is `Reduce shell destination content to routing`.
-Phases 0 and 1 are complete. Do not begin Phase 2 or split ShellContent.
+The user requests Phase 2 of `docs/fix_0.4.0.md`: presentation-only decomposition of
+high-value Compose functions. State does not move. Keep every existing owner, contract,
+invariant, and test. This phase does not touch protocol, persistence, account scope, or
+navigation policy.
+Phase 0 and 1 are committed and pushed. `main` is at `f28430a`.
+Phase 2 slice 2.1 is implemented and gate-verified: `HomeFeed` now delegates paging and
+scroll effects and feed rendering to private helpers without moving state.
+Phase 2 slice 2.2 is next: extract the non-expanded Profile presentation into
+`ui/profile/ProfileTimelinePresentation.kt`.
+Do not split ShellContent. Do not push. Do not begin Phase 3.
 
 ## Ownership and caution
 
-The orchestrator owns implementation, review, records, validation, and Git. The targeted_fixer's stopped scope is reassigned to the orchestrator.
-The user prohibits problem_solver. No agents remain active. Do not push.
+The orchestrator owns implementation, review, records, validation, and Git.
+The user allows targeted_fixer for narrowly scoped work packages; keep one implementation
+owner per slice.
+The user prohibits problem_solver. Do not push.
 Preserve unrelated agent/style edits, the deleted Photo Grid test and PNGs, untracked captures, scripts, caches, and `tasks/4c.md`.
 Recheck external Java/Gradle activity before builds. Use explicit reviewed commit paths.
 
 ## Last safe commit
 
-Preceding safe commit: `5cf3621` — `Extract Profile shell destination`.
-The slice commit subject is `Reduce shell destination content to routing`.
+Preceding safe commit: `f28430a` — `Reduce shell destination content to routing`.
+The 2.1 slice commit subject is `Separate Home feed effects from rendering`.
+The next slice commit subject is `Extract Profile timeline presentation`.
 
 ## Limits
 
