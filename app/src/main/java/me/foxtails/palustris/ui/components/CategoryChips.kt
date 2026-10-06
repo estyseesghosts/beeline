@@ -1,5 +1,8 @@
 package me.foxtails.palustris.ui.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.gestures.snapping.SnapPosition
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.gestures.snapping.SnapPosition
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -38,7 +39,6 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
-import androidx.compose.animation.core.animateFloatAsState
 import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.motion.ExpandableContent
@@ -116,7 +116,7 @@ internal fun DestinationChipRow(
         if (caretPresentation == ChipCaretPresentation.Inline) {
             val interactionSource = remember { MutableInteractionSource() }
             // Keep the control outside LazyRow so it stays fixed and can be replaced independently.
-            DestinationChipCaretButton(
+            DestinationChipVisibilityButton(
                 visible = visible,
                 onToggleVisibility = onToggleVisibility,
                 caretRotation = caretRotation,
@@ -148,51 +148,61 @@ internal fun DestinationChipRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(entries, key = { it.key }) { entry ->
-                    val interactionSource = remember(entry.key) { MutableInteractionSource() }
-                    val selectedContainerColor = rememberSelectedColor(
-                        entry.selected,
-                        MaterialTheme.colorScheme.secondaryContainer,
-                        MaterialTheme.colorScheme.surfaceContainer,
-                    )
-                    val selectedContentColor = rememberSelectedColor(
-                        entry.selected,
-                        MaterialTheme.colorScheme.onSecondaryContainer,
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    val selectedScale = rememberSelectedScale(entry.selected)
-                    FilterChip(
-                        selected = entry.selected,
-                        onClick = entry.onClick,
-                        enabled = entry.enabled,
-                        interactionSource = interactionSource,
-                        label = { Text(entry.label) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = selectedContainerColor,
-                            labelColor = selectedContentColor,
-                            selectedContainerColor = selectedContainerColor,
-                            selectedLabelColor = selectedContentColor,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        ),
-                        modifier = Modifier
-                            .heightIn(min = BeelineBubbleMinHeight)
-                            .springPress(interactionSource, pressedScale = scheme.pressedScale)
-                            .graphicsLayer {
-                                scaleX = selectedScale
-                                scaleY = selectedScale
-                            }
-                            .then(entry.testTag?.let { Modifier.testTag(it) } ?: Modifier)
-                            .semantics {
-                                contentDescription = entry.contentDescription
-                                role = entry.role
-                                this.selected = entry.selected
-                                entry.stateDescription?.let { stateDescription = it }
-                            },
-                        shape = BeelineBubbleShape,
-                    )
+                    DestinationFilterChip(entry = entry)
                 }
             }
         }
     }
+}
+
+/**
+ * Renders one destination chip: its selected colors, press animation, selection scale, test tag,
+ * and accessibility semantics. The caller owns the entry and its callback.
+ */
+@Composable
+private fun DestinationFilterChip(entry: FilterChipEntry) {
+    val scheme = LocalPalustrisMotionScheme.current
+    val interactionSource = remember(entry.key) { MutableInteractionSource() }
+    val selectedContainerColor = rememberSelectedColor(
+        entry.selected,
+        MaterialTheme.colorScheme.secondaryContainer,
+        MaterialTheme.colorScheme.surfaceContainer,
+    )
+    val selectedContentColor = rememberSelectedColor(
+        entry.selected,
+        MaterialTheme.colorScheme.onSecondaryContainer,
+        MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    val selectedScale = rememberSelectedScale(entry.selected)
+    FilterChip(
+        selected = entry.selected,
+        onClick = entry.onClick,
+        enabled = entry.enabled,
+        interactionSource = interactionSource,
+        label = { Text(entry.label) },
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = selectedContainerColor,
+            labelColor = selectedContentColor,
+            selectedContainerColor = selectedContainerColor,
+            selectedLabelColor = selectedContentColor,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        ),
+        modifier = Modifier
+            .heightIn(min = BeelineBubbleMinHeight)
+            .springPress(interactionSource, pressedScale = scheme.pressedScale)
+            .graphicsLayer {
+                scaleX = selectedScale
+                scaleY = selectedScale
+            }
+            .then(entry.testTag?.let { Modifier.testTag(it) } ?: Modifier)
+            .semantics {
+                contentDescription = entry.contentDescription
+                role = entry.role
+                this.selected = entry.selected
+                entry.stateDescription?.let { stateDescription = it }
+            },
+        shape = BeelineBubbleShape,
+    )
 }
 
 /**
@@ -203,7 +213,7 @@ internal fun DestinationChipRow(
  * caret instead.
  */
 @Composable
-private fun DestinationChipCaretButton(
+private fun DestinationChipVisibilityButton(
     visible: Boolean,
     onToggleVisibility: () -> Unit,
     caretRotation: Float,

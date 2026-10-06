@@ -49,24 +49,30 @@ test-isolation (`UncaughtExceptionsBeforeTest`). They pass alone; record them an
   implementation exists. A new `ProfileScreenTest` case covers compact ↔ compact-wide
   category visibility retention. The ProfileScreen import ordering is fixed and its ktlint
   baseline entry is removed.
+- 2.3 committed: preceding safe commit `b342a3f`, subject `Decompose destination chip
+  rendering`. `DestinationChipRow` keeps the selected-entry lookup, selected-entry scroll
+  effect, visibility animation, and `LazyRow` assembly. New private `DestinationFilterChip`
+  renders one chip (colors, press animation, selection scale, test tag, and semantics).
+  The renamed private `DestinationChipVisibilityButton` renders the caret. The public/internal
+  call contract, geometry, caret position and rotation, accessibility descriptions,
+  selectable-group semantics, reduced-motion behavior, selected-chip auto-scroll, and
+  keys/test tags are unchanged. The CategoryChips import ordering is fixed and its ktlint
+  baseline entry is removed.
 
 # Current slice
 
-2.3 — Decompose shared destination-chip rendering (`ui/components/CategoryChips.kt`, 242 lines).
-Do not change its public/internal call contract. Extract private presentation helpers such as
-`DestinationChipVisibilityButton` and `DestinationFilterChip`. Keep in `DestinationChipRow`:
-selected-entry lookup, selected-entry scroll effect, visibility animation, and `LazyRow` assembly.
-Move into helpers: caret surface/button rendering, press-animation setup, and FilterChip
-color/scale/semantics rendering. Do not change: 48 dp minimum geometry, caret position, caret
-rotation, accessibility descriptions, selectable-group semantics, reduced-motion behavior,
-selected-chip auto-scroll, or keys/test tags.
-Tests: `CategoryChipsGeometryTest`, `WideNavigationTest`, `HomeFeedTest`,
-`NotificationsClearanceTest`, `ProfileClearanceTest`.
-Commit subject: `Decompose destination chip rendering`.
+2.4 — Remove duplicate notification filter-dock assembly (`ui/notifications/NotificationsScreen.kt`,
+442 lines). Extract a private `NotificationFilterRow(...)` that receives entries, `LazyListState`,
+visibility, and the toggle callback. Compact and wide branches keep their different positioning
+containers: compact `Box` + system/control insets, wide `LargeBottomDock`. Do not make the helper
+choose layout mode. Do not centralize feature state.
+Tests: `NotificationsScreenTest`, `NotificationsClearanceTest`, `CategoryChipsGeometryTest`,
+`WideNavigationTest`.
+Commit subject: `Share notification filter-row presentation`.
 
 # Files involved
 
-- ui/components/CategoryChips.kt
+- ui/notifications/NotificationsScreen.kt
 - docs/agents/app-shell-ownership.md and docs/wiki/ui-and-navigation.md
 - task records
 
@@ -81,13 +87,18 @@ Commit subject: `Decompose destination chip rendering`.
 2.2 full gate: 51 Python tests pass, architecture audit exits 0 with zero regressions,
   1,691 JVM tests across 161 suites, lint, ktlint, debug assembly, and release assembly.
   The ProfileScreen import-ordering fix removes its ktlint baseline entry with no new exemption.
+2.3 focused: `CategoryChipsGeometryTest`, `WideNavigationTest`, `HomeFeedTest`,
+  `NotificationsClearanceTest`, and `ProfileClearanceTest` pass.
+2.3 full gate: 51 Python tests pass, architecture audit exits 0 with zero regressions,
+  1,691 JVM tests across 161 suites, lint, ktlint, debug assembly, and release assembly.
+  The CategoryChips import-ordering fix removes its ktlint baseline entry with no new exemption.
 For each later slice: run focused tests, then the complete local CI-parity gate with closed
 stdin and an explicit timeout.
 
 # Next
 
-Implement slice 2.3, run focused tests and the full CI-parity gate, update records, and
-commit as `Decompose destination chip rendering`.
+Implement slice 2.4, run focused tests and the full CI-parity gate, update records, and
+commit as `Share notification filter-row presentation`.
 
 # Blockers
 
@@ -98,4 +109,4 @@ unverified.
 
 # Last safe commit
 
-6920602 — Separate Home feed effects from rendering.
+b342a3f — Extract Profile timeline presentation.

@@ -314,6 +314,8 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `ShellContent` owns Home chip visibility and `LazyListState` above the layout branches.
   It passes that state to compact navigation and the wide Home dock. Resizing preserves row state.
   `HomeTimelineTabs.kt` only builds shared `FilterChipEntry` values. `DestinationChipRow` is the sole chip renderer.
+  It keeps the selected-entry scroll and the visibility animation; `DestinationChipVisibilityButton` renders the
+  caret and `DestinationFilterChip` renders one chip.
   The shared renderer keeps its leading circular caret outside the scrollable chip row. The caret matches
   the unselected chip surface, outline, and icon colors. It stays fixed while chips are hidden.
   This placement keeps it independent from a future contextual control. The renderer scrolls the selected Home timeline into view.
