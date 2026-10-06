@@ -343,9 +343,12 @@ class MisskeyThreadContinuationTest {
     }
 
     private fun continuationStore(source: MisskeySource): MisskeyThreadContinuationStore {
-        val field: Field = MisskeySource::class.java.getDeclaredField("continuationStore")
-        field.isAccessible = true
-        return field.get(source) as MisskeyThreadContinuationStore
+        val serviceField: Field = MisskeySource::class.java.getDeclaredField("threadService")
+        serviceField.isAccessible = true
+        val service = serviceField.get(source)
+        val storeField: Field = MisskeyThreadService::class.java.getDeclaredField("continuationStore")
+        storeField.isAccessible = true
+        return storeField.get(service) as MisskeyThreadContinuationStore
     }
 
     private fun note(id: String): String = JSONObject()

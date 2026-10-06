@@ -2,7 +2,7 @@
 
 Status: current  
 Owner: Maintainers  
-Last reviewed: 2026-09-15  
+Last reviewed: 2026-10-06  
 Stale when: A stable module boundary or a primary owner changes.
 
 Sources: `AGENTS.md`, current application source, and current tests.
@@ -19,7 +19,7 @@ toward the domain.
 | --- | --- | --- |
 | Domain | `domain/` | Protocol-neutral models and contracts. |
 | Data | `data/` | Data access and persistence. |
-| Misskey adapter | `data/misskey/` | Misskey transport, mapping, and capabilities. |
+| Misskey adapter | `data/misskey/` | Misskey transport, mapping, and capabilities. `MisskeyThreadService` owns thread acquisition. |
 | Mastodon adapter | `data/mastodon/` | Mastodon transport, mapping, and capabilities. |
 | Authentication | `data/auth/` | Authentication and encrypted session storage. |
 | Notifications | `data/notifications/` | Ingestion, storage, synchronization, and push. |

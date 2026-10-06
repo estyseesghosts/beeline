@@ -5,7 +5,7 @@
 **Status:** current. Source verified. Slice 2A4 completes the authentication and dependency
 injection migration started in slice 2A3.
 
-**Last reviewed:** 2026-10-01.
+**Last reviewed:** 2026-10-06.
 
 **Source baseline:** Slice 16: `SessionLifecycle.kt` owns durable session transitions, and
 `AccountManager.kt` owns session presentation and authentication UI state.
@@ -190,6 +190,14 @@ builds an authenticated request. The validator rejects a foreign connection orig
 value. `post` and `delete` now call it, as do thread reads, reactions, favourites, reposts, saves,
 repost undo, create reply origins, and create quote identities. A foreign public URL on a locally
 fetched entity remains valid.
+
+`MisskeyThreadService` owns Misskey thread transport and acquisition. `MisskeySource` constructs one
+instance for the source lifetime. The service fetches the focal post and ancestors, runs the bounded
+breadth-first descent, and enforces the request, batch, time, depth, and node limits. It binds each
+continuation to the account, session revision, and focal post. It owns `MisskeyThreadContinuationStore`:
+at most 16 entries, ten-minute idle expiry, and consume-on-use. `MisskeySource.threadContext` validates
+the focal identity and delegates through the shared `request("thread")` error boundary. The source
+keeps request normalization, capability refresh, and the adapter facade.
 
 ## Capability States
 

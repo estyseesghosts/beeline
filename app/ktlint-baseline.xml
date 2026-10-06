@@ -138,14 +138,6 @@
     <file name="src/main/java/me/foxtails/palustris/data/misskey/MisskeyPushService.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/data/misskey/MisskeySource.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="39" column="1" source="standard:no-unused-imports" />
-        <error line="53" column="1" source="standard:no-unused-imports" />
-        <error line="59" column="1" source="standard:no-unused-imports" />
-        <error line="678" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="728" column="1" source="standard:no-consecutive-blank-lines" />
-    </file>
     <file name="src/main/java/me/foxtails/palustris/data/misskey/MisskeyThreadAcquisition.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
