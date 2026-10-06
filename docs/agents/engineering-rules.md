@@ -2,7 +2,7 @@
 
 Status: current
 Owner: Maintainers
-Last reviewed: 2026-09-30
+Last reviewed: 2026-10-05
 Stale when: Project constraints or engineering policy change.
 
 These rules are required for code changes. They preserve the detailed rules moved from root `AGENTS.md`.
@@ -418,6 +418,31 @@ Follow [the project writing style](../../importantdocs/writing_style.md) and [do
 
 ## Verification
 
+### Focused verification
+
+Run the smallest relevant checks first. Focused verification establishes evidence for the changed behavior, not overall completion.
+Use the affected feature suites and any additional device or protocol checks required by the task.
+
+### Local CI-parity completion gate
+
+The complete local gate matches the [CI build job](../../.github/workflows/android.yml).
+Run every command below after focused verification for each code slice.
+Use `python` instead of `python3` where that names the installed Python 3 interpreter.
+
+```text
+python3 -m unittest discover -s tools/tests
+python3 tools/scripts/architecture_audit.py . --baseline tools/architecture-baseline.json --check
+./gradlew --no-daemon --console=plain :app:testDebugUnitTest :app:lintDebug :app:ktlintCheck :app:assembleDebug :app:assembleRelease
+```
+
+On Windows, replace `./gradlew` with `.\gradlew.bat`.
+Keep the timeout, closed standard input, and daemon rules below.
+“Full gate” means this entire sequence, not only `test assembleRelease` or a task-specific subset.
+CI remains authoritative. Update this contract if the CI build job changes.
+API 29 instrumentation is a separate remote or device gate. Release signing and live-server checks require separate evidence.
+
+### Execution and evidence rules
+
 - Verify each implementation slice before you commit it.
 - Run the smallest relevant test set first.
 - Run focused unit tests for changed behavior.
@@ -441,8 +466,7 @@ Follow [the project writing style](../../importantdocs/writing_style.md) and [do
 - Do not bypass denied shell commands to set environment values. Report limitations under [workflow](workflow.md).
 - Set an explicit timeout for every Gradle tool call.
 - Close standard input for non-interactive Gradle calls.
-- Run `./gradlew --no-daemon --console=plain test assembleRelease` before you declare a
-  coding task complete.
+- Run the complete local CI-parity gate before you declare a coding task complete.
 - Run additional required checks for the affected feature.
 - Fix failures caused by the current slice.
 - Do not hide failing tests.

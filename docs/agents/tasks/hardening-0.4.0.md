@@ -22,11 +22,12 @@ Prepare independent 0.2 documentation while that repair runs. Commit verified sl
 
 # Completed
 
-0.1 is verified: unchanged layout policy now lives in ui/layout, with updated callers and documented paths.
+- 0.1 committed at `3c5b2ca`: unchanged layout policy now lives in ui/layout.
+- 0.2 verified: completion rules and build wiki now define the complete CI-parity sequence.
 
 # Current slice
 
-Checkpoint 0.1, then 0.2 documentation and the user-authorized mechanical ktlint repair.
+Checkpoint 0.2 documentation, then the user-authorized mechanical ktlint repair.
 The policy move passes direct review. No preference, publication, locale, or clearance behavior changed.
 The mechanical comparison preserves source bodies after normalizing approved constant names, whitespace, and equivalent string templates.
 The empty class body and two test throw expressions have equivalent behavior.
@@ -62,4 +63,4 @@ Physical-device, API 29 instrumentation, TalkBack, signing, and live-server chec
 
 # Last safe commit
 
-a04b3eb — Bottom-anchor compact-wide navigation with contextual tab caret.
+3c5b2ca — Move layout direction policy into layout package.

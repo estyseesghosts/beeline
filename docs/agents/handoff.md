@@ -14,7 +14,8 @@ The preceding adaptive-navigation record remains at [tasks/beeline-0.4.0.md](tas
 
 The user requests Phases 0 and 1 of `docs/fix_0.4.0.md`, in that order.
 0.1 relocates the unchanged layout policy to `ui/layout/`. Focused tests and architecture audit pass.
-0.2 completion documentation is prepared. The user-authorized mechanical ktlint repair is complete on the working tree.
+0.1 is committed at `3c5b2ca`. 0.2 completion documentation passes direct review and local-link checks.
+The user-authorized mechanical ktlint repair is complete on the working tree.
 The full CI-parity gate passes with 1,691 JVM tests, lint, ktlint, and debug/release assembly.
 Direct source comparison and review find no feature behavior changes. No baseline exemptions were added.
 Checkpoint Phase 0 slices separately, then start 1.1. Do not begin Phase 2 or split ShellContent.
@@ -28,8 +29,8 @@ Recheck external Java/Gradle activity before builds. Use explicit reviewed commi
 
 ## Last safe commit
 
-Preceding safe commit: `a04b3eb` — `Bottom-anchor compact-wide navigation with contextual tab caret`.
-The 0.1 checkpoint subject is `Move layout direction policy into layout package`.
+Preceding safe commit: `3c5b2ca` — `Move layout direction policy into layout package`.
+The 0.2 checkpoint subject is `Align completion verification with CI`.
 
 ## Limits
 

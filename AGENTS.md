@@ -57,6 +57,6 @@ Follow higher-priority instructions. Verify project conflicts against source, or
 
 - Verify each slice, inspect its diff, update its records, and commit only its reviewed files.
 - Use the Gradle wrapper with `--no-daemon --console=plain`, an explicit timeout, and closed standard input.
-- For code changes, run relevant tests and `test assembleRelease` before declaring completion.
+- For code changes, run focused verification and the complete [local CI-parity gate](docs/agents/engineering-rules.md#verification) before declaring completion.
 - For documentation-only work, check links, configuration, permissions, and the final diff instead of Android builds.
 - Report blocked checks and unverified device or live-server behavior. Never push unless the user requests it.

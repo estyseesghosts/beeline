@@ -2,7 +2,7 @@
 
 Status: current
 Owner: Maintainers
-Last reviewed: 2026-10-01
+Last reviewed: 2026-10-05
 Stale when: Task ownership, checkpoint order, or recovery changes.
 
 Authority: [AGENTS.md](../../AGENTS.md), [agent control](agent-control.md), and current Git state.
@@ -49,7 +49,7 @@ Complete and commit one slice before starting another.
 ## Slice checkpoint
 
 1. The implementation owner implements the bounded slice.
-2. The owner runs the smallest relevant checks, then required gates.
+2. The owner runs focused verification, then the engineering-rules [local CI-parity gate](engineering-rules.md#verification).
 3. Inspect the actual diff and complete review. Resolve required findings with the same owner.
 4. The owner updates affected documentation, task state, task log, and handoff.
 5. Inspect the final diff, including the record updates.
@@ -76,6 +76,7 @@ The next session can resolve the new hash from Git without a second record-only 
 ## Verification and completion
 
 For code changes, use [engineering verification](engineering-rules.md#verification).
+Required gates mean the complete local CI-parity sequence, not a task record's partial “full gate.”
 Use the wrapper with `--no-daemon --console=plain`. Set an explicit timeout and close standard input.
 Set `GRADLE_OPTS=-Dorg.gradle.daemon=false` in the agent environment when supported.
 Do not bypass shell permissions to set it. Report an environment limitation instead.

@@ -2,7 +2,7 @@
 
 Status: current
 Owner: Maintainers
-Last reviewed: 2026-10-01
+Last reviewed: 2026-10-05
 Stale when: Git, Gradle, device responsibilities, or permission boundaries change.
 
 Authority: [agent control](agent-control.md), [workflow](workflow.md), and [agent definitions](../../.opencode/README.md).
@@ -58,7 +58,8 @@ Use an explicit timeout and closed standard input for non-interactive runs.
 Set `GRADLE_OPTS=-Dorg.gradle.daemon=false` in the agent environment when supported.
 Do not bypass denied shell commands to set it. Report environment limitations instead.
 Run the smallest relevant check first, then required gates from [engineering rules](engineering-rules.md#verification).
-Use `test assembleRelease` before declaring a code task complete. Run other feature-required checks when applicable.
+Run focused checks, then the complete local CI-parity gate before declaring a code task complete.
+The [engineering verification contract](engineering-rules.md#verification) defines that gate. Run additional feature-required checks when applicable.
 Do not weaken tests or use source-rewriting tasks to force a green result.
 Record pre-existing failures separately from failures caused by the slice.
 For documentation-only work, use document and configuration checks instead of Android builds.
