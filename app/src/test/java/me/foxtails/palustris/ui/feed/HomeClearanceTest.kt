@@ -36,9 +36,10 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.timelineDisplayOrder
+import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
-import me.foxtails.palustris.ui.large.LargeTimelineDockContent
 import me.foxtails.palustris.ui.navigation.ShellNavigator
+import me.foxtails.palustris.ui.navigation.homeTimelineChipEntries
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
 import me.foxtails.palustris.ui.shell.AppShellFixtures
 import me.foxtails.palustris.ui.shell.DestinationDraftCallbacks
@@ -160,7 +161,16 @@ class HomeClearanceTest {
                     topContentPadding = 16.dp, bottomContentClearance = LargeBottomDockClearance,
                     rightObstructionClearance = right, bottomObstructionClearance = bottom,
                     onRefresh = {}, onLoadMore = { continued++ }, onSignIn = {},
-                    bottomDock = { LargeTimelineDockContent(setOf(Timeline.Home), Timeline.Home) {} },
+                    bottomDock = {
+                        DestinationChipRow(
+                            entries = homeTimelineChipEntries(setOf(Timeline.Home), Timeline.Home) {},
+                            rowContentDescription = "Home timelines",
+                            listState = rememberLazyListState(),
+                            visible = true,
+                            onToggleVisibility = {},
+                            rowTestTag = "home_timeline_tabs",
+                        )
+                    },
                 )
             }
             val viewport = bounds("home_feed_list")
@@ -290,6 +300,20 @@ class HomeClearanceTest {
                 assertEquals(if (withHome) Timeline.Federated else null, refreshed)
             }
         }
+    }
+
+    @Test
+    @Config(qualifiers = "w500dp-h1000dp-420dpi")
+    fun changedTimelineSelectionScrollsIntoView() {
+        val navigator = ShellNavigator()
+        show(LayoutDirection.Ltr) { destination(navigator, home = null) }
+
+        compose.runOnIdle { navigator.timeline = Timeline.Federated }
+        compose.waitForIdle()
+
+        val label = compose.activity.getString(R.string.timeline_federated)
+        val description = compose.activity.getString(R.string.large_timeline, label)
+        compose.onNodeWithContentDescription(description).assertIsDisplayed().assertIsSelected()
     }
 
     private fun scrollToEnd() {

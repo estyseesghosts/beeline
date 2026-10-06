@@ -51,8 +51,10 @@ import me.foxtails.palustris.domain.NotificationActivity
 import me.foxtails.palustris.domain.NotificationCategory
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
-import me.foxtails.palustris.ui.components.FilterChipRow
+import me.foxtails.palustris.ui.large.LargeBottomDock
+import me.foxtails.palustris.ui.large.LargeBottomDockClearance
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
 import me.foxtails.palustris.ui.EmptyState
@@ -89,6 +91,8 @@ fun NotificationsScreen(
     contentWarningRules: me.foxtails.palustris.domain.ContentWarningRules = me.foxtails.palustris.ui.posts.LocalContentWarningRules.current,
 ) {
     var selectedFilterName by rememberSaveable(accountIdentity) { mutableStateOf<String?>(null) }
+    var chipRowVisible by rememberSaveable(accountIdentity) { mutableStateOf(true) }
+    val chipListState = rememberLazyListState()
     var markAllReadConfirmationPending by rememberSaveable(accountIdentity) { mutableStateOf(false) }
     val selectedFilter = selectedFilterName?.let { name -> NotificationFilter.entries.firstOrNull { it.name == name } }
     val filters = remember { NotificationFilter.entries.toList() }
@@ -219,17 +223,19 @@ fun NotificationsScreen(
                     .padding(horizontal = CompactOverlayHorizontalPadding)
                     .windowInsetsPadding(controlsPositioningInsets),
             ) {
-                FilterChipRow(chipEntries, stringResource(R.string.notification_filter_description))
+                DestinationChipRow(
+                    entries = chipEntries,
+                    rowContentDescription = stringResource(R.string.notification_filter_description),
+                    listState = chipListState,
+                    visible = chipRowVisible,
+                    onToggleVisibility = { chipRowVisible = !chipRowVisible },
+                    rowTestTag = "notification_filters",
+                    visibilityToggleTestTag = "notification_filters_visibility",
+                )
             }
         }
     } else {
-        Column(Modifier.fillMaxSize()) {
-            FilterChipRow(
-                chipEntries,
-                stringResource(R.string.notification_filter_description),
-                // The top chip row clears both physical edges so its chips stay reachable.
-                modifier = Modifier.absolutePadding(left = wideLeftClearance, right = wideRightClearance),
-            )
+        Box(Modifier.fillMaxSize()) {
             NotificationContent(
                 title = title,
                 subtitle = subtitle,
@@ -241,8 +247,8 @@ fun NotificationsScreen(
                 onDismiss = onDismissNotification,
                 onFollowRequest = onFollowRequest,
                 onOpen = onOpenNotification,
-                modifier = Modifier.weight(1f),
-                endClearance = wideBottomClearance,
+                modifier = Modifier.fillMaxSize(),
+                endClearance = LargeBottomDockClearance + wideBottomClearance,
                 rightClearance = wideRightClearance,
                 leftClearance = wideLeftClearance,
                 stateKey = "${selectedFilterName ?: "all"}:${when {
@@ -253,6 +259,26 @@ fun NotificationsScreen(
                     else -> "content"
                 }}",
                 contentWarningRules = contentWarningRules,
+            )
+            LargeBottomDock(
+                modifier = Modifier.align(Alignment.BottomStart)
+                    .absolutePadding(
+                        left = wideLeftClearance,
+                        right = wideRightClearance,
+                        bottom = wideBottomClearance,
+                    )
+                    .testTag("notification_filter_dock"),
+                content = {
+                    DestinationChipRow(
+                        entries = chipEntries,
+                        rowContentDescription = stringResource(R.string.notification_filter_description),
+                        listState = chipListState,
+                        visible = chipRowVisible,
+                        onToggleVisibility = { chipRowVisible = !chipRowVisible },
+                        rowTestTag = "notification_filters",
+                        visibilityToggleTestTag = "notification_filters_visibility",
+                    )
+                },
             )
         }
     }

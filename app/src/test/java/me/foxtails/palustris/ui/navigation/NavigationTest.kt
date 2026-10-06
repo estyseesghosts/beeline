@@ -19,6 +19,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -867,7 +868,7 @@ class NavigationTest {
         val renewed = drafts.renewed().also { shellDraftSessions += it }
         compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = renewed.contract) } }
         compose.onNodeWithContentDescription("Profile").performClick()
-        compose.onNodeWithTag("profile_drafts_chip").performClick()
+        openProfileDrafts()
         compose.onNodeWithText("A draft stored only on this device.").assertIsDisplayed()
         compose.onNodeWithText("Delete draft").performClick()
         compose.onNodeWithText("Cancel").performClick()
@@ -887,7 +888,7 @@ class NavigationTest {
         compose.onNodeWithContentDescription("Close composer").performClick()
         compose.waitForIdle()
         compose.onNodeWithContentDescription("Profile").performClick()
-        compose.onNodeWithTag("profile_drafts_chip").performClick()
+        openProfileDrafts()
         compose.onNodeWithText("Unsaved").assertIsDisplayed()
     }
 
@@ -901,7 +902,7 @@ class NavigationTest {
         compose.waitForIdle()
         assertTrue(runBlocking { drafts.store.list(account.id) }.isEmpty())
         compose.onNodeWithContentDescription("Profile").performClick()
-        compose.onNodeWithTag("profile_drafts_chip").performClick()
+        openProfileDrafts()
         compose.onNodeWithText("No drafts yet").assertIsDisplayed()
     }
 
@@ -971,7 +972,7 @@ class NavigationTest {
         assertEquals(1, runBlocking { sharedStore.list(first.id) }.size)
         assertTrue(runBlocking { sharedStore.list(second.id) }.isEmpty())
         compose.onNodeWithContentDescription("Profile").performClick()
-        compose.onNodeWithTag("profile_drafts_chip").performClick()
+        openProfileDrafts()
         compose.onNodeWithText("No drafts yet").assertIsDisplayed()
     }
 
@@ -1002,7 +1003,7 @@ class NavigationTest {
         compose.onNodeWithContentDescription("Close composer").performClick()
         compose.waitForIdle()
         compose.onNodeWithContentDescription("Profile").performClick()
-        compose.onNodeWithTag("profile_drafts_chip").performClick()
+        openProfileDrafts()
         compose.onNodeWithText("Stable writer").assertIsDisplayed()
         assertEquals(1, saveCalls)
         assertEquals(1, runBlocking { countingStore.list(account.id) }.size)
@@ -1059,6 +1060,12 @@ class NavigationTest {
             compose.onNodeWithTag("direct_message_send").assertIsDisplayed().assertIsEnabled()
             screenshot("dm-ime-$keyboardDp")
         }
+    }
+
+    private fun openProfileDrafts() {
+        compose.onNodeWithTag("profile_categories")
+            .performScrollToNode(hasTestTag("profile_drafts_chip"))
+        compose.onNodeWithTag("profile_drafts_chip").performClick()
     }
 
     @Test fun compactPhotoGridFinalTileClearsFiltersWithImeOpenAndClosed() {

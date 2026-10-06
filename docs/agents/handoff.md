@@ -19,26 +19,24 @@ IME height does not select permanent presentation. Pane and back policy remain i
 All seven destination surfaces receive physical clearance. Wide compact fallback clears Search and the DM editor too.
 The DM New conversation action opens the existing recipient finder.
 
-4C-5c starts from `79dd743`. The anchor slice persists independent tablet and compact-wide physical anchors.
-Focused repository, settings, adaptive-placement, and detail-clearance tests pass. `:app:lintDebug` passes.
-The anchor slice is recorded as `Persist physical navigation anchors`. Next: replace both chip renderers with
-one shared renderer, add the inline visibility caret, and move wide Notifications filters to the bottom.
-Existing feature owners retain selection and data state.
+4C-5c anchor preferences are committed at `b419be1`. The shared chip slice now uses one renderer and a leading circular caret.
+Wide Notifications filters use the bottom dock. The slice is verified and is ready to commit.
+After that commit, investigate compact-wide Profile as a separate slice. The required result is the mobile Profile presentation with button placement as the only difference.
 
 ## Last safe commit
 
-Preceding safe commit: `79dd743` — `Activate safe adaptive floating navigation`.
-The 4C-5c anchor-slice commit subject is `Persist physical navigation anchors`. Nothing was pushed.
+Preceding safe commit: `b419be1` — `Persist physical navigation anchors`.
+The chip-slice commit subject is `Unify destination chip presentation`. Nothing was pushed.
 
 ## Evidence and limits
 
-- Production Kotlin, focused tests, and `:app:lintDebug` pass.
-- `:app:installDebug` succeeded on `emulator-5554` before `test assembleRelease`.
-- The full gate passes: 160 suites, 1,674 tests, zero failures, errors, or skips; release assembly succeeds.
-- Folded outer-screen rendering shows vertical navigation at 1169 × 1848 px and 420 dpi.
-  The local capture is `logs/4c5b-outer-home-ready.png`. Square-tablet and RTL placement have Compose evidence only.
-- Physical hinge coordinates, hardware tablet rendering, device RTL, TalkBack, device IME, API 29, signing,
-  and live-server recipient selection remain unverified in 4C-5b and must remain explicit limits for 4C-5c.
+- Focused chip and destination suites pass. `:app:lintDebug` passes.
+- The full gate passes: 1,685 tests, zero failures, errors, or skips; release assembly succeeds.
+- `:app:installDebug` succeeded on `emulator-5554`. The folded 445 × 704 dp screen showed Home caret styling and hide/show.
+- The folded emulator showed the Notifications bottom dock above the system bar and loaded rows above the dock.
+  The emulator was restored to OPENED. Captures are in `C:\Users\julie\AppData\Local\Temp\opencode\`.
+- The 900 × 900 dp tablet and LTR/RTL geometry have Compose evidence only. Hardware tablet, device RTL, physical hinge coordinates,
+  TalkBack, physical-device IME, API 29, release signing, and live-server behavior remain unverified.
 - The unchanged Mastodon cancellation flake did not occur in the final gate. Record future occurrences separately; do not weaken it.
 
 ## Worktree caution

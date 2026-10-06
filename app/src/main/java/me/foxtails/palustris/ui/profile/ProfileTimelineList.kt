@@ -53,8 +53,8 @@ import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.posts.PostRow
 import me.foxtails.palustris.ui.posts.PostRowEvents
 import me.foxtails.palustris.ui.posts.PostRowPresentation
+import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
-import me.foxtails.palustris.ui.components.FilterChipRow
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
@@ -93,6 +93,9 @@ internal fun ProfileTimelineList(
     header: @Composable () -> Unit,
     details: @Composable () -> Unit,
     listState: LazyListState? = null,
+    categoryChipListState: LazyListState? = null,
+    categoryRowVisible: Boolean = true,
+    onToggleCategoryRow: () -> Unit = {},
     showHeader: Boolean = true,
     showInlineCategories: Boolean = !compactLayout,
     largeLayout: Boolean = false,
@@ -173,15 +176,25 @@ internal fun ProfileTimelineList(
             if (showHeader) item(key = "profile-header") { header() }
             if (showInlineCategories) {
                 item(key = "profile-categories") {
-                    ProfileCategoryChips(
-                        selected = state.selectedTab,
-                        isSelf = isSelf,
-                        likedAvailable = state.likedAvailable,
-                        featuredAvailable = state.pinnedPosts.size > 1,
-                        onCategorySelected = onCategorySelected,
-                        onOpenDrafts = onOpenDrafts,
-                        onOpenBookmarks = onOpenBookmarks,
+                    DestinationChipRow(
+                        entries = profileCategoryChipEntries(
+                            selected = state.selectedTab,
+                            isSelf = isSelf,
+                            likedAvailable = state.likedAvailable,
+                            featuredAvailable = state.pinnedPosts.size > 1,
+                            onCategorySelected = onCategorySelected,
+                            onOpenDrafts = onOpenDrafts,
+                            onOpenBookmarks = onOpenBookmarks,
+                            includeShowMore = true,
+                            includeEditProfile = false,
+                        ),
+                        rowContentDescription = stringResource(R.string.a11y_profile_categories),
+                        listState = categoryChipListState ?: rememberLazyListState(),
+                        visible = categoryRowVisible,
+                        onToggleVisibility = onToggleCategoryRow,
                         modifier = interactionModifier,
+                        rowTestTag = "profile_categories",
+                        visibilityToggleTestTag = "profile_categories_visibility",
                     )
                 }
             }
@@ -280,7 +293,7 @@ internal fun ProfileTimelineList(
 }
 
 @Composable
-internal fun ProfileCategoryChips(
+internal fun profileCategoryChipEntries(
     selected: ProfileCategory,
     isSelf: Boolean,
     likedAvailable: Boolean = false,
@@ -291,10 +304,7 @@ internal fun ProfileCategoryChips(
     onEditProfile: () -> Unit = {},
     includeShowMore: Boolean = true,
     includeEditProfile: Boolean = false,
-    modifier: Modifier = Modifier,
-) {
-    FilterChipRow(
-        entries = profileChipEntries(
+): List<FilterChipEntry> = profileChipEntries(
             isSelf = isSelf,
             likedAvailable = likedAvailable,
             featuredAvailable = featuredAvailable,
@@ -306,6 +316,7 @@ internal fun ProfileCategoryChips(
                     label = stringResource(entry.category.labelRes),
                     selected = entry.category == selected,
                     onClick = { onCategorySelected(entry.category) },
+                    key = "profile-category:${entry.category.name}",
                 )
                 ProfileChipEntry.Drafts -> FilterChipEntry(
                     label = stringResource(R.string.profile_action_drafts),
@@ -313,6 +324,7 @@ internal fun ProfileCategoryChips(
                     contentDescription = stringResource(R.string.profile_action_drafts_description),
                     role = Role.Button,
                     testTag = "profile_drafts_chip",
+                    key = "profile-action:drafts",
                 )
                 ProfileChipEntry.Bookmarks -> FilterChipEntry(
                     label = stringResource(R.string.profile_action_bookmarks),
@@ -320,6 +332,7 @@ internal fun ProfileCategoryChips(
                     contentDescription = stringResource(R.string.profile_action_bookmarks_description),
                     role = Role.Button,
                     testTag = "profile_bookmarks_chip",
+                    key = "profile-action:bookmarks",
                 )
                 ProfileChipEntry.EditProfile -> FilterChipEntry(
                     label = stringResource(R.string.profile_edit),
@@ -327,13 +340,10 @@ internal fun ProfileCategoryChips(
                     contentDescription = stringResource(R.string.profile_edit_description),
                     role = Role.Button,
                     testTag = "profile_edit_profile_chip",
+                    key = "profile-action:edit",
                 )
             }
-        },
-        rowContentDescription = stringResource(R.string.a11y_profile_categories),
-        modifier = modifier,
-    )
-}
+        }
 
 private fun LazyListScope.profilePinnedItems(
     state: ProfileUiState,

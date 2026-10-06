@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -81,8 +82,8 @@ import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
-import me.foxtails.palustris.ui.components.FilterChipRow
 import me.foxtails.palustris.ui.posts.postHashtags
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
@@ -163,6 +164,8 @@ fun PhotoGridScreen(
 ) {
     var addHashtagDialog by rememberSaveable { mutableStateOf(false) }
     var hashtagInput by rememberSaveable { mutableStateOf("") }
+    var chipRowVisible by rememberSaveable { mutableStateOf(true) }
+    val chipListState = rememberLazyListState()
     val rows = state.posts
     val hiddenPresentation = LocalHiddenContentPresentation.current
     val mutedHashtags = LocalMutedHashtags.current
@@ -315,9 +318,12 @@ fun PhotoGridScreen(
             }
         }
         if (compactLayout) {
-            FilterChipRow(
-                chipEntries,
-                stringResource(R.string.photo_grid_filter_description),
+            DestinationChipRow(
+                entries = chipEntries,
+                rowContentDescription = stringResource(R.string.photo_grid_filter_description),
+                listState = chipListState,
+                visible = chipRowVisible,
+                onToggleVisibility = { chipRowVisible = !chipRowVisible },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
@@ -325,6 +331,8 @@ fun PhotoGridScreen(
                     .windowInsetsPadding(
                         compactContextualControlsPositioningInsets(compactNavigationVisible),
                     ),
+                rowTestTag = "photo_grid_filters",
+                visibilityToggleTestTag = "photo_grid_filters_visibility",
             )
         } else {
             LargeBottomDock(
@@ -332,7 +340,17 @@ fun PhotoGridScreen(
                 modifier = Modifier.align(Alignment.BottomStart)
                     .absolutePadding(left = wideLeftClearance, right = wideRightClearance, bottom = wideBottomClearance)
                     .testTag("photo_grid_dock"),
-                content = { FilterChipRow(chipEntries, stringResource(R.string.photo_grid_filter_description)) },
+                content = {
+                    DestinationChipRow(
+                        entries = chipEntries,
+                        rowContentDescription = stringResource(R.string.photo_grid_filter_description),
+                        listState = chipListState,
+                        visible = chipRowVisible,
+                        onToggleVisibility = { chipRowVisible = !chipRowVisible },
+                        rowTestTag = "photo_grid_filters",
+                        visibilityToggleTestTag = "photo_grid_filters_visibility",
+                    )
+                },
             )
         }
     }

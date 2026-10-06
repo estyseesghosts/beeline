@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
@@ -31,6 +32,8 @@ import me.foxtails.palustris.ui.shell.AppNotificationsDestinationContent
 import me.foxtails.palustris.ui.shell.Destination
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.feed.HomeFeed
+import me.foxtails.palustris.ui.components.DestinationChipRow
+import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.shell.LargePostOrigin
 import me.foxtails.palustris.ui.shell.LocalPage
 import me.foxtails.palustris.ui.photogrid.PhotoGridScreen
@@ -38,11 +41,11 @@ import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.search.SearchScreen
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
-import me.foxtails.palustris.ui.large.LargeTimelineDockContent
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.motion.SpringAnimatedContent
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.navigation.ShellNavigator
+import me.foxtails.palustris.ui.navigation.homeTimelineChipEntries
 import me.foxtails.palustris.ui.notifications.NotificationRouteResolver
 import me.foxtails.palustris.ui.profile.ProfileScreen
 import me.foxtails.palustris.ui.shell.timelineLabelRes
@@ -95,7 +98,11 @@ internal fun ShellDestinationContent(
     postCallbacks: DestinationPostCallbacks,
     draftCallbacks: DestinationDraftCallbacks,
     navigationCallbacks: DestinationNavigationCallbacks,
+    homeChipListState: LazyListState? = null,
+    homeChipRowVisible: Boolean = true,
+    onToggleHomeChipRow: () -> Unit = {},
 ) {
+    val timelineChipListState = homeChipListState ?: rememberLazyListState()
     Scaffold(
         modifier = paneModifier.fillMaxSize(),
         // Compact page bodies receive top/horizontal system insets only.
@@ -208,12 +215,24 @@ internal fun ShellDestinationContent(
                                 bottomContentClearance = if (largePresentation) LargeBottomDockClearance else null,
                                 refreshIndicatorTopPadding = if (largePresentation) 16.dp else null,
                                 bottomDock = if (largePresentation) ({
-                                    LargeTimelineDockContent(availableTimelines, navigator.timeline) { item ->
-                                        val changed = item != navigator.timeline
-                                        if (changed) navigator.clearSelectedPost()
-                                        navigator.timeline = item
-                                        if (changed) home.actions.refresh(item)
-                                    }
+                                    DestinationChipRow(
+                                        entries = homeTimelineChipEntries(
+                                            timelines = availableTimelines,
+                                            selected = navigator.timeline,
+                                        ) { item ->
+                                            val changed = item != navigator.timeline
+                                            if (changed) navigator.clearSelectedPost()
+                                            navigator.timeline = item
+                                            if (changed) home.actions.refresh(item)
+                                        },
+                                        rowContentDescription = stringResource(R.string.home_timeline_filter_description),
+                                        listState = timelineChipListState,
+                                        visible = homeChipRowVisible,
+                                        onToggleVisibility = onToggleHomeChipRow,
+                                        selectedEntryKey = "home-timeline:${navigator.timeline.name}",
+                                        rowTestTag = "home_timeline_tabs",
+                                        visibilityToggleTestTag = "home_timeline_visibility",
+                                    )
                                 }) else null,
                             ) else Box(Modifier.fillMaxSize()) {
                                 val wideLeft = if (largePresentation) leftObstructionClearance else 0.dp
@@ -233,11 +252,23 @@ internal fun ShellDestinationContent(
                                                 bottom = bottomObstructionClearance,
                                             ),
                                         content = {
-                                            LargeTimelineDockContent(availableTimelines, navigator.timeline) { item ->
-                                                val changed = item != navigator.timeline
-                                                if (changed) navigator.clearSelectedPost()
-                                                navigator.timeline = item
-                                            }
+                                            DestinationChipRow(
+                                                entries = homeTimelineChipEntries(
+                                                    timelines = availableTimelines,
+                                                    selected = navigator.timeline,
+                                                ) { item ->
+                                                    val changed = item != navigator.timeline
+                                                    if (changed) navigator.clearSelectedPost()
+                                                    navigator.timeline = item
+                                                },
+                                                rowContentDescription = stringResource(R.string.home_timeline_filter_description),
+                                                listState = timelineChipListState,
+                                                visible = homeChipRowVisible,
+                                                onToggleVisibility = onToggleHomeChipRow,
+                                                selectedEntryKey = "home-timeline:${navigator.timeline.name}",
+                                                rowTestTag = "home_timeline_tabs",
+                                                visibilityToggleTestTag = "home_timeline_visibility",
+                                            )
                                         },
                                     )
                                 }

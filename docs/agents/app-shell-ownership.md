@@ -4,16 +4,17 @@
 
 **Status:** current. The shell decomposition is complete. Completion slices C-01 through
 C-05, C-06a, C-06b, C-06c, C-07, C-08, C-09, C-10, C-11, C-12a through C-12d4, C-13,
-C-14, and C-15 are implemented and test verified. Steps 13, 14, and 15 of the progress
-report are complete. No dead scaffolding remains.
+C-14, and C-15 are implemented and test verified. Phase 4C-5c anchors and shared chip rows are
+source and test verified. Steps 13, 14, and 15 of the progress report are complete. No dead
+scaffolding remains.
 
 **Last reviewed:** 2026-10-05.
 
-**Source baseline:** `79dd743` (before the 4C-5c anchor slice). The anchor slice is source and focused-test verified.
+**Source baseline:** `79dd743` (before the 4C-5c anchor and chip slices). Both 4C-5c slices are source and test verified.
 
 **Evidence:** source and test verified. R02 verifies the shell draft fixture with NavigationTest,
-ComposerOwnerTest, and ShellCharacterizationTest. Phase 4C-5b verifies folded outer-screen Home on the emulator.
-Other device behavior and live-server acceptance remain unverified.
+ComposerOwnerTest, and ShellCharacterizationTest. Phase 4C-5b verifies folded outer-screen Home.
+Phase 4C-5c verifies the folded Home caret and Notifications dock on the emulator. Other device behavior and live-server acceptance remain unverified.
 
 **Completion owner:** `docs/archive/agents/decomposition-01-02-completion.md`.
 
@@ -289,10 +290,18 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   Its pull-to-refresh and list viewports, transparent outer post extents, error surfaces, and dividers retain their width.
   Interactive media and quotes stay inside the cleared post content. Bottom clearance extends the existing list end spacing.
   Only the wide timeline dock moves above bottom obstruction and clears physical right. The null-Home branch clears its dock and text.
-  `HomeTimelineTabs` retains chip scrolling, selection travel, and timeline callbacks. Obstruction clearance does not calculate chip travel.
-  Compact Home ignores wide inputs and retains its IME-aware end spacing and shell-owned tabs/navigation.
+  `ShellContent` owns Home chip visibility and `LazyListState` above the layout branches.
+  It passes that state to compact navigation and the wide Home dock. Resizing preserves row state.
+  `HomeTimelineTabs.kt` only builds shared `FilterChipEntry` values. `DestinationChipRow` is the sole chip renderer.
+  The shared renderer keeps its leading circular caret outside the scrollable chip row. The caret matches
+  the unselected chip surface, outline, and icon colors. It stays fixed while chips are hidden.
+  This placement keeps it independent from a future contextual control. The renderer scrolls the selected Home timeline into view.
+  Timeline selection and callbacks remain with `ShellNavigator` and the Home contract. Reduced motion skips animated chip travel.
+  Obstruction clearance does not calculate chip travel.
+  Compact Home ignores wide inputs and retains its IME-aware end spacing and shell-owned navigation.
   `HomeClearanceTest` verifies synthetic LTR/RTL bounds, row/divider underlay, error/sign-in callbacks, final post/footer reach,
-  branch forwarding, timeline selection, scroll-state retention, and narrow compact compatibility.
+  branch forwarding, timeline selection and callbacks, scroll-state retention, and narrow compact compatibility.
+  `CategoryChipsGeometryTest` verifies collapse, retained chip position, the persistent caret, and reduced motion.
   Production clearance is active. The folded outer-screen Home rendering is emulator verified; other hardware rendering remains unverified.
 
 - `ShellDestinationContent` forwards shell clearances to Search without changing query, category, or list-state owners.
@@ -302,10 +311,13 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   Bottom clearance adds to the wide result end spacing only. The wide dock keeps its bottom-start placement,
   `LargeBottomDock` spacing, and measured height, so obstruction clearance never moves the dock or the search field.
   Wide Search applies no IME field inset without compact fallback and keeps its current dock geometry.
-  `CategoryChips` retains chip scrolling and selection. Compact Search ignores wide inputs and keeps
+  `SearchScreen` owns saveable chip visibility and one `LazyListState` across compact and wide placement.
+  `DestinationChipRow` renders Search's shared entries and keeps its caret visible while chips are hidden.
+  Search category selection remains with the existing shell owner. Compact Search ignores wide inputs and keeps
   `compactContextualControlsPositioningInsets` and `compactScrollEndClearance`.
   `SearchClearanceTest` verifies synthetic LTR/RTL bounds, row and divider underlay, account row and continuation callbacks,
   final result reach, dock stability, chip selection, branch forwarding, retained list position, and compact IME compatibility.
+  `CategoryChipsGeometryTest` covers shared chip collapse and position retention.
   Production clearance is active. Device Search rendering remains unverified.
 
 - `ShellDestinationContent` forwards shell clearances to Photo Grid without changing its feed, preference,
@@ -318,31 +330,43 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   The full-screen error state keeps its full-size viewport and clears only its retry content.
   Bottom clearance adds to the wide grid end spacing. The wide filter-chip dock clears physical right and sits above
   supplied bottom obstruction, matching `HomeFeed`. Photo Grid has no measured dock height.
-  `FilterChipRow` retains chip travel, chip selection, and the add-hashtag entry. Obstruction clearance sets no chip travel.
+  `PhotoGridScreen` owns saveable chip visibility and one `LazyListState` across compact and wide placement.
+  Its adapter builds entries for timelines, saved hashtags, and Add hashtag. `DestinationChipRow` renders them.
+  Photo Grid selection and the add-hashtag callback remain feature-owned. Obstruction clearance sets no chip travel.
   Compact Photo Grid ignores wide inputs and keeps `compactContextualControlsPositioningInsets`,
   `compactScrollEndClearance`, and `CompactFilterDockHeight`.
   `PhotoGridClearanceTest` verifies synthetic LTR/RTL bounds, tile and reveal control bounds, continuation and retry
-  callbacks, final-tile reach, dock position and clearance, chip and hashtag selection, branch forwarding, retained
+  callbacks, final-tile reach, dock position and clearance, hashtag selection, branch forwarding, retained
   grid position, and compact compatibility.
+  `CategoryChipsGeometryTest` covers shared chip collapse and position retention.
   Production clearance is active. Device Photo Grid rendering remains unverified.
 
 - `AppNotificationsDestinationContent` forwards shell clearances to the notification inbox.
-  `NotificationsScreen` clears physical right in the wide top chip row and in the notification list content.
+  `NotificationsScreen` clears physical right in the wide bottom chip dock and in the notification list content.
+  It owns account-keyed saveable chip visibility and a chip `LazyListState`.
+  Notification query and chip callbacks remain with their screen and contract owners.
   A notification row always carries a dismiss control and can carry follow-request controls, so it is not a single
   opaque target. The row card keeps its full width for visual underlay; its interactive content (row open target,
   dismiss, accept/reject) clears physical right through an absolute right inset inside the row.
   The empty state, error/storage retry controls, sync-delayed banner, paging/load-older control, and paging error
-  text clear physical right. Bottom clearance adds to the wide list end spacing only. The wide `Column`,
-  `notification_refresh_surface`, and `notifications_content` keep their full size. Wide layout has no bottom dock;
-  its chip row sits at the top. Compact Notifications ignores wide inputs and keeps its floating bottom chip row,
+  text clear physical right. Bottom clearance adds to the wide list end spacing only. The wide container,
+  `notification_refresh_surface`, and `notifications_content` keep their full size.
+  The wide chip dock sits above physical navigation and bottom obstruction.
+  List-end clearance includes the shared dock clearance and that obstruction.
+  Compact Notifications ignores wide inputs and keeps its floating bottom chip row,
   `compactContextualControlsPositioningInsets`, `compactScrollEndClearance`, and `CompactFilterDockHeight`.
   `NotificationsClearanceTest` verifies synthetic LTR/RTL bounds, row-surface underlay, dismiss and follow-request
-  controls and callbacks, the load-older and retry callbacks, final-item reach, retained filter selection and
-  scroll position, branch forwarding, and compact compatibility.
-  Production clearance is active. Device Notifications rendering remains unverified.
+  controls and callbacks, load-older and retry callbacks, final-item reach, retained filter selection,
+  list scroll position, dock clearance, branch forwarding, and compact compatibility.
+  `CategoryChipsGeometryTest` covers shared chip collapse and position retention.
+  Production clearance is active. The folded emulator verifies the dock and loaded notification rows.
+  Hardware tablet and device RTL rendering remain unverified.
 
 - `ShellDestinationContent` forwards shell clearances to Profile without changing its feature, paging,
   category, or scroll-state owners.
+  `ProfileScreen` owns profile-keyed saveable chip visibility and one chip `LazyListState` across compact and wide placement.
+  `profileCategoryChipEntries` only builds shared entries. `DestinationChipRow` renders inline and dock placements.
+  Category selection and actions remain with their existing owners.
   `ProfileScreen` passes physical-right clearance to its wide owners and adds bottom obstruction to
   `LargeBottomDockClearance` for the wide end of list. Compact ignores wide inputs.
   `ProfileLargePresentation` assigns physical-edge clearance to the column that reaches each edge.
@@ -350,14 +374,15 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   The wide category dock keeps its bottom-start placement and `LargeBottomDock` spacing,
   clears physical right, and sits above the bottom obstruction.
   `ProfileTimelineList` clears physical right on the content it owns: post rows, pinned rows, the Featured title,
-  the inline category chip row, the details item, the loading, empty, error, and inline-error surfaces, the
+  the inline category row, the details item, the loading, empty, error, and inline-error surfaces, the
   loading-more indicator, and the load-older or up-to-date footer.
   A profile row is `PostRow`, a transparent column, so its content takes an absolute right padding while the item
   divider keeps the full width for visual underlay. That matches `HomeFeed`. It is not the Photo Grid tile inset.
-  `ProfileCategoryChips` takes a modifier so the inline row clears through the same value.
+  The shared row takes a modifier so the inline row clears through the same value.
   `ProfileClearanceTest` verifies synthetic LTR/RTL bounds, viewport and divider underlay, the mirrored wide
   columns, header and row controls, dock clearance, final-row and footer reach, load-older and retry callbacks,
-  branch forwarding, retained category selection and scroll position, and compact compatibility.
+  branch forwarding, retained category selection and list scroll position, and compact compatibility.
+  `CategoryChipsGeometryTest` covers shared chip collapse and position retention.
   Production clearance is active. Device Profile rendering remains unverified.
 
 - Every destination also clears physical left through the same content owner described for physical right.

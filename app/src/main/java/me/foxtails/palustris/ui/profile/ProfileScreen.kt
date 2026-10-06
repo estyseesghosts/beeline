@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -27,6 +28,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
@@ -53,8 +59,7 @@ import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
-import me.foxtails.palustris.ui.components.FilterChipEntry
-import me.foxtails.palustris.ui.components.FilterChipRow
+import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 
@@ -131,6 +136,11 @@ fun ProfileScreen(
         return
     }
 
+    val categoryOwnerKey = remember(displayedAccount.id) {
+        "${displayedAccount.id.connection.origin}/${displayedAccount.id.localId}"
+    }
+    var categoryRowVisible by rememberSaveable(categoryOwnerKey) { mutableStateOf(true) }
+    val categoryChipListState = rememberLazyListState()
     val isSelf = displayedAccount.id == authenticatedAccountId
     val endContentClearance = if (largeLayout) {
         LargeBottomDockClearance + wideBottomClearance
@@ -152,6 +162,9 @@ fun ProfileScreen(
             showSummary = largeShowSummary,
             onOpenProfileImage = onOpenProfileImage,
             listState = listState,
+            categoryChipListState = categoryChipListState,
+            categoryRowVisible = categoryRowVisible,
+            onToggleCategoryRow = { categoryRowVisible = !categoryRowVisible },
             endContentClearance = endContentClearance,
             rightObstructionClearance = wideRightClearance,
             leftObstructionClearance = wideLeftClearance,
@@ -233,6 +246,9 @@ fun ProfileScreen(
             },
             details = { ProfileDetails(displayedAccount) },
             listState = listState,
+            categoryChipListState = categoryChipListState,
+            categoryRowVisible = categoryRowVisible,
+            onToggleCategoryRow = { categoryRowVisible = !categoryRowVisible },
         )
 
         if (compactLayout) {
@@ -248,42 +264,24 @@ fun ProfileScreen(
                         ),
                     ),
             ) {
-                FilterChipRow(
-                    entries = profileChipEntries(
+                DestinationChipRow(
+                    entries = profileCategoryChipEntries(
                         isSelf = isSelf,
                         likedAvailable = profileState.likedAvailable,
                         featuredAvailable = profileState.pinnedPosts.size > 1,
-                    ).map { entry ->
-                        when (entry) {
-                            is ProfileChipEntry.Timeline -> FilterChipEntry(
-                                 label = stringResource(entry.category.labelRes),
-                                selected = entry.category == profileState.selectedTab,
-                                onClick = { onCategorySelected(entry.category) },
-                            )
-                            ProfileChipEntry.Drafts -> FilterChipEntry(
-                                label = stringResource(R.string.profile_action_drafts),
-                                onClick = onOpenDrafts,
-                                contentDescription = stringResource(R.string.profile_action_drafts_description),
-                                role = Role.Button,
-                                testTag = "profile_drafts_chip",
-                            )
-                             ProfileChipEntry.Bookmarks -> FilterChipEntry(
-                                 label = stringResource(R.string.profile_action_bookmarks),
-                                 onClick = onOpenBookmarks,
-                                 contentDescription = stringResource(R.string.profile_action_bookmarks_description),
-                                 role = Role.Button,
-                                 testTag = "profile_bookmarks_chip",
-                             )
-                             ProfileChipEntry.EditProfile -> FilterChipEntry(
-                                 label = stringResource(R.string.profile_edit),
-                                 onClick = onEditProfile ?: {},
-                                 contentDescription = stringResource(R.string.profile_edit_description),
-                                 role = Role.Button,
-                                 testTag = "profile_edit_profile_chip",
-                             )
-                        }
-                    },
+                        includeShowMore = true,
+                        includeEditProfile = false,
+                        selected = profileState.selectedTab,
+                        onCategorySelected = onCategorySelected,
+                        onOpenDrafts = onOpenDrafts,
+                        onOpenBookmarks = onOpenBookmarks,
+                    ),
                     rowContentDescription = stringResource(R.string.a11y_profile_categories),
+                    listState = categoryChipListState,
+                    visible = categoryRowVisible,
+                    onToggleVisibility = { categoryRowVisible = !categoryRowVisible },
+                    rowTestTag = "profile_categories",
+                    visibilityToggleTestTag = "profile_categories_visibility",
                 )
             }
         }

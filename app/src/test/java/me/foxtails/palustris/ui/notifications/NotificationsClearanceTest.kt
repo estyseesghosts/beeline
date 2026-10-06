@@ -194,7 +194,12 @@ class NotificationsClearanceTest {
             assertEquals("refresh surface reaches the viewport bottom", viewport.bottom, refresh.bottom, 1f)
             assertEquals("list content keeps the full width", viewport.left, bounds("notifications_content").left, 1f)
             assertEquals("list content keeps the full width", viewport.right, bounds("notifications_content").right, 1f)
-            assertTrue("top chip row clears physical right", chipsBounds().right <= safeRight + 1f)
+            val dock = bounds("notification_filter_dock")
+            assertTrue("bottom dock clears physical right", dock.right <= safeRight + 1f)
+            assertTrue("bottom dock clears bottom obstruction",
+                dock.bottom <= viewport.bottom - bottom.value * density + 1f)
+            assertTrue("bottom dock is below the viewport midpoint", dock.top > viewport.center.y)
+            assertTrue("chip viewport clears physical right", chipsBounds().right <= safeRight + 1f)
             val surface = bounds("notification_row_wide-0")
             val action = bounds("notification_row_action_wide-0")
             assertTrue("row surface underlays future floating chrome", surface.right > safeRight)
@@ -267,8 +272,11 @@ class NotificationsClearanceTest {
             val safeRight = viewport.right - right.value * density
             scrollToEnd()
             val finalRow = bounds("notification_row_final-8")
+            val dock = bounds("notification_filter_dock")
             val loadOlder = compose.onNodeWithText(text(R.string.notifications_load_older))
                 .assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+            assertTrue("final row clears filter dock", finalRow.bottom <= dock.top)
+            assertTrue("load-older clears filter dock", loadOlder.bottom <= dock.top)
             assertTrue("final row clears bottom obstruction",
                 finalRow.bottom <= viewport.bottom - bottom.value * density + 1f)
             assertTrue("load-older clears bottom obstruction",

@@ -14,16 +14,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
+import me.foxtails.palustris.ui.components.DestinationChipRow
+import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 
 @Composable
@@ -33,6 +37,9 @@ internal fun ProfileLargePresentation(
     isSelf: Boolean,
     showSummary: Boolean,
     listState: LazyListState?,
+    categoryChipListState: LazyListState,
+    categoryRowVisible: Boolean,
+    onToggleCategoryRow: () -> Unit,
     endContentClearance: Dp,
     rightObstructionClearance: Dp = 0.dp,
     leftObstructionClearance: Dp = 0.dp,
@@ -111,6 +118,9 @@ internal fun ProfileLargePresentation(
             header = {},
             details = details,
             listState = listState,
+            categoryChipListState = categoryChipListState,
+            categoryRowVisible = categoryRowVisible,
+            onToggleCategoryRow = onToggleCategoryRow,
             showHeader = false,
             showInlineCategories = false,
             largeLayout = true,
@@ -123,17 +133,25 @@ internal fun ProfileLargePresentation(
     fun dock(modifier: Modifier = Modifier) {
         LargeBottomDock(
             content = {
-                ProfileCategoryChips(
-                    selected = state.selectedTab,
-                    isSelf = isSelf,
-                    likedAvailable = state.likedAvailable,
-                    featuredAvailable = state.pinnedPosts.size > 1,
-                    onCategorySelected = onCategorySelected,
-                    onOpenDrafts = onOpenDrafts,
-                    onOpenBookmarks = onOpenBookmarks,
-                    onEditProfile = onEditProfile ?: {},
-                    includeShowMore = false,
-                    includeEditProfile = true,
+                DestinationChipRow(
+                    entries = profileCategoryChipEntries(
+                        selected = state.selectedTab,
+                        isSelf = isSelf,
+                        likedAvailable = state.likedAvailable,
+                        featuredAvailable = state.pinnedPosts.size > 1,
+                        onCategorySelected = onCategorySelected,
+                        onOpenDrafts = onOpenDrafts,
+                        onOpenBookmarks = onOpenBookmarks,
+                        onEditProfile = onEditProfile ?: {},
+                        includeShowMore = false,
+                        includeEditProfile = true,
+                    ),
+                    rowContentDescription = stringResource(R.string.a11y_profile_categories),
+                    listState = categoryChipListState,
+                    visible = categoryRowVisible,
+                    onToggleVisibility = onToggleCategoryRow,
+                    rowTestTag = "profile_categories",
+                    visibilityToggleTestTag = "profile_categories_visibility",
                 )
             },
             modifier = modifier,
@@ -178,7 +196,7 @@ internal fun ProfileLargePresentation(
                     right = rightObstructionClearance,
                     left = leftObstructionClearance,
                     bottom = bottomObstructionClearance,
-                ),
+                ).testTag("profile_categories_dock"),
             )
         }
     } else {
@@ -190,7 +208,7 @@ internal fun ProfileLargePresentation(
                     right = rightObstructionClearance,
                     left = leftObstructionClearance,
                     bottom = bottomObstructionClearance,
-                ),
+                ).testTag("profile_categories_dock"),
             )
         }
     }

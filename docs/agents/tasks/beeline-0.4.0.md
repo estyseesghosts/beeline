@@ -3,7 +3,7 @@
 Complete Phase 4C: adaptive floating navigation shared by compact-wide and tablet layouts.
 Keep one navigator, one destination host, and the existing feature owners.
 
-Status: 4C-5b is complete. The 4C-5c anchor slice is implemented and verified; the chip slice is next.
+Status: 4C-5b, anchor slice, and chip slice are verified. Commit the chip slice before the Profile follow-up.
 Owner: orchestrator
 Last reviewed: 2026-10-05
 Authority: [AGENTS.md](../../../AGENTS.md), current source, tests, and Git.
@@ -53,6 +53,7 @@ Home, Search, and Notifications retain Compose. Profile shares compact edit/foll
   The checkpoint subject is `Activate safe adaptive floating navigation`, based on `6dcfac4`.
   Verified slice history remains in Git instead of this task record.
 - 4C-5c sub-slice 1 persists separate tablet and compact-wide physical anchors. Focused tests and `:app:lintDebug` pass.
+  Commit: `b419be1` — `Persist physical navigation anchors`.
 
 # Completed slice — 4C-5b
 
@@ -105,7 +106,7 @@ Implementation:
 
 This task is larger than one safe implementation slice. The orchestrator owns implementation,
 review, records, validation, and Git. The maintainer prohibits `problem_solver`. Do not delegate.
-The starting commit is `79dd743` — `Activate safe adaptive floating navigation`.
+The starting commit for the chip slice is `b419be1` — `Persist physical navigation anchors`.
 
 ## Source inventory and current owners
 
@@ -121,7 +122,7 @@ The starting commit is `79dd743` — `Activate safe adaptive floating navigation
 
 ## Sub-slice 1 — Persist physical navigation anchors
 
-- **Status:** implemented and verified. Repository, settings, adaptive-placement, and detail-clearance tests pass. `:app:lintDebug` passes.
+- **Status:** committed and verified at `b419be1`. Repository, settings, adaptive-placement, and detail-clearance tests pass. `:app:lintDebug` passes.
 - **Owner:** orchestrator. Existing owners: `AppPreferencesRepository`, `SettingsViewModel`, `DisplaySettingsScreen`, `ConnectedApp`, and the shell composition root.
 - **Allowed files:** `domain/AppPreferences.kt`, `data/preferences/FileAppPreferencesRepository.kt`, `ui/settings/SettingsViewModel.kt`, `SettingsOverlayHost.kt`, `SettingsHost.kt`, `DisplaySettingsScreen.kt`, `ui/ConnectedApp.kt`, `ui/session/ConnectedSessionHost.kt`, `ui/PalustrisApp.kt`, `ui/large/LargeScreenShell.kt`, `ui/shell/AppLargeDetailPane.kt`, `ui/posts/SinglePostScreen.kt`, `app/src/main/res/values/strings.xml`, focused preference/settings/adaptive/detail tests, and this task's records/wiki/log.
 - **Objective:** persist separate tablet and compact-wide physical-left/right choices through the existing global preference repository and Display settings owner.
@@ -139,18 +140,24 @@ keeps the detail viewport full size and places edge clearance in its list conten
 Focused tests: `AppPreferencesRepositoryTest`, `SettingsViewModelTest`, `SettingsDisplayTest`,
 `AdaptiveNavigationTest`, and `SinglePostScreenTest`. Physical tablet rendering and device RTL remain unverified.
 
-## Sub-slice 2 — Unify destination chip rows and add inline visibility control
+## Completed slice — 4C-5c sub-slice 2, shared destination chip rows
 
-- **Owner:** orchestrator. Existing feature owners keep their selection and callbacks. `ShellContent` owns Home row visibility so compact and wide Home share one saveable value. Search, Photo Grid, Notifications, and Profile screen owners each own one saveable visibility value.
-- **Allowed files:** the shared chip component and `ui/navigation/HomeTimelineTabs.kt`, `ui/large/LargeBottomDock.kt`, `ui/layout/CompactOverlayMetrics.kt` if geometry requires a verified update, `ui/shell/ShellContent.kt`, `ui/feed/HomeFeed.kt`, `ui/search/SearchScreen.kt`, `ui/photogrid/PhotoGridScreen.kt`, `ui/notifications/NotificationsScreen.kt`, `ui/profile/ProfileScreen.kt`, `ui/profile/ProfileTimelineList.kt`, `ui/profile/ProfileLargePresentation.kt`, required strings, focused chip/destination/adaptive tests, and this task's records/wiki/log.
-- **Visibility lifetime:** each row starts visible. Its existing screen presentation owner stores a `rememberSaveable` visibility value. The value survives recomposition, adaptive resizing, and saved-state restoration while that screen owner remains. It resets when that saved destination owner is discarded. Home stores one value above the compact/wide branch in `ShellContent`. The shared row owns no global mutable state.
-- **Objective:** replace both existing renderers with exactly one shared Compose chip renderer and one placement contract for Home, Search, Photo Grid, Notifications, and Profile. Remove `HomeTimelineTabs` and `FilterChipRow` as renderers; feature-specific adapters may only build shared entry data. Keep each feature's callbacks, selection, query, paging, and scroll owners unchanged. Add an inline circular caret button that stays present when chips are hidden.
-- **Acceptance:** the caret is a 48 dp target derived from the existing Beeline bubble geometry. Its direction and accessible action label switch between hide and show. Toggling retains selection and chip scroll. Shared chip/caret motion respects the existing reduced-motion scheme. Chip travel does not depend on navigation clearance.
-- **Notifications placement:** move the wide row to the bottom dock. Clear physical navigation edges, system bars, and compact-fallback navigation. Extend the notification list's final scroll range past the dock. Compact placement and applicable IME behavior remain unchanged.
-- **Non-goals:** global chip manager, chip-visibility preference, feature-selection changes, navigation contextual-action replacement, new dimensions, or feature-owner migration.
-- **Validation gates:** shared component tests for bounds, callbacks, semantics, collapse, and retained state; destination regressions for Home, Search, Photo Grid, Notifications, and Profile; 445 × 704 dp outer-screen and square-tablet fixtures in LTR/RTL; compact-narrow and reduced-motion coverage; clearance from navigation, system bars, applicable IME, and final scroll content; focused tests and `:app:lintDebug`.
-- **Device and final gates:** install debug on `emulator-5554` before `assembleRelease`; inspect outer-screen chip placement and hide/show behavior; then run `test assembleRelease`. Check external Java/Gradle activity before every run and do not edit sources during builds.
-- **Fail gates:** stop if unification changes feature selection or scroll ownership, the caret disappears while collapsed, selection/state resets during resize, approved geometry must change, or a regression has failed twice for the same root cause.
+- **Result:** Home, Search, Photo Grid, Notifications, and Profile use one shared chip renderer.
+  Feature owners retain selection and callbacks. Home visibility and scroll state span compact and wide placement.
+  Each other destination owns its saveable visibility and chip scroll state.
+- **Caret:** the 48 dp circular control matches the unselected chip surface, outline, and icon colors.
+  It stays in the first logical position outside the scrollable chip row. It remains fixed when chips collapse.
+  Its direction and accessible action label switch between hide and show.
+- **Notifications:** wide filters use the bottom dock. The dock clears physical navigation and bottom obstruction.
+  List-end clearance extends past the dock. Compact placement and IME behavior remain unchanged.
+- **Tests:** component tests cover bounds, semantics, collapse, retained selection and scroll, and reduced motion.
+  Fixtures cover compact-narrow, outer-screen LTR/RTL, and square-tablet layouts. Destination tests cover clearance.
+  `WideNavigationTest` covers the wide dock and leading caret.
+- **Verification:** focused component and destination tests pass. `:app:lintDebug` passes.
+  The full `test assembleRelease` gate passes with 1,685 tests and release assembly.
+- **Device:** `:app:installDebug` succeeded on `emulator-5554`. Folded outer-screen Home hide/show and the Notifications dock were inspected. The emulator was restored to OPENED.
+- **Non-goals retained:** no global chip manager, chip-visibility preference, feature-selection changes, contextual-action replacement, new dimensions, or feature-owner migration.
+- **Records:** `app-shell-ownership.md` and `ui-and-navigation.md` document the verified ownership and presentation. The audit log is `logs/261005-203055.txt` and stays local.
 
 ## Records and limits
 
@@ -161,16 +168,23 @@ Focused tests: `AppPreferencesRepositoryTest`, `SettingsViewModelTest`, `Setting
 
 4C-5d is absorbed into 4C-5b. Do not repeat activation as an independent slice.
 
+# Next step after commit
+
+- **Objective:** make compact-wide Profile match the mobile Profile presentation.
+  Button placement is the only allowed presentation difference.
+- **Order:** commit the chip slice as `Unify destination chip presentation` before investigating Profile. Read the current Profile source, tests, and ownership rules again after that commit.
+- **Scope boundary:** keep the Profile follow-up separate. Do not fold its presentation change into the chip commit.
+
 # Blockers and limits
 
 - 4C-5b remains verified at `79dd743`.
-- The 4C-5c anchor slice is implemented and verified. Commit it before starting chip unification.
-- The shared chip renderer, inline caret, and wide Notifications bottom dock remain unimplemented.
+- The 4C-5c anchor slice is committed and verified at `b419be1`.
+- The shared chip slice is verified and awaits its own reviewed commit.
 - Device RTL, square-tablet hardware, physical hinge coordinates, TalkBack, physical-device IME, API 29, and release signing remain unverified.
 - Live-server recipient search and mutation behavior remain unverified. Chip placement is a presentation acceptance gate, not a protocol gate.
 - Recheck external Gradle activity before each build. Prior external clean/install interference remains a worktree risk.
 
 # Last safe commit
 
-Preceding safe commit: `79dd743` — `Activate safe adaptive floating navigation`.
-The 4C-5c anchor-slice commit subject is `Persist physical navigation anchors`. Nothing was pushed.
+Preceding safe commit: `b419be1` — `Persist physical navigation anchors`.
+The current chip-slice commit subject is `Unify destination chip presentation`. Nothing was pushed.

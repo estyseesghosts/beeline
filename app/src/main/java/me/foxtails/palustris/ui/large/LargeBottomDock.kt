@@ -7,8 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import me.foxtails.palustris.domain.Timeline
-import me.foxtails.palustris.ui.navigation.HomeTimelineTabs
 
 internal val LargeBottomDockClearance = 88.dp
 internal val LargeSearchDockClearance = 144.dp
@@ -26,13 +24,4 @@ internal fun LargeBottomDock(
     ) {
         content()
     }
-}
-
-@Composable
-internal fun LargeTimelineDockContent(
-    timelines: Set<Timeline>,
-    selected: Timeline,
-    onSelect: (Timeline) -> Unit,
-) {
-    HomeTimelineTabs(timelines = timelines, selected = selected, onSelect = onSelect)
 }

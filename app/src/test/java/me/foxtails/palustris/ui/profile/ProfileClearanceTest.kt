@@ -208,7 +208,7 @@ class ProfileClearanceTest {
             assertTrue("item divider underlays future floating chrome", divider.right > safeRight)
             assertTrue("category dock clears physical right", categoriesBounds().right <= safeRight + 1f)
             assertTrue("category dock keeps its bottom-start placement",
-                categoriesBounds().left <= 16f * density + 1f)
+                bounds("profile_categories_dock").left <= 16f * density + 1f)
             assertClicksClearRight(safeRight)
         }
     }

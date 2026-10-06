@@ -77,7 +77,8 @@ import me.foxtails.palustris.ui.posts.PostRow
 import me.foxtails.palustris.ui.posts.PostRowEvents
 import me.foxtails.palustris.ui.posts.PostRowPresentation
 import me.foxtails.palustris.ui.components.AccountAvatar
-import me.foxtails.palustris.ui.components.CategoryChips
+import me.foxtails.palustris.ui.components.DestinationChipRow
+import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeSearchDockClearance
@@ -139,6 +140,8 @@ fun SearchScreen(
 ) {
     var localQuery by rememberSaveable { mutableStateOf("") }
     var localTab by rememberSaveable { mutableIntStateOf(0) }
+    var chipRowVisible by rememberSaveable { mutableStateOf(true) }
+    val chipListState = rememberLazyListState()
     var largeDockHeightPx by remember { mutableIntStateOf(0) }
     val largeDockClearance = if (largeDockHeightPx > 0) {
         with(LocalDensity.current) { largeDockHeightPx.toDp() }
@@ -163,6 +166,15 @@ fun SearchScreen(
         stringResource(R.string.search_category_news),
         stringResource(R.string.search_category_for_you),
     )
+    val chipEntries = sections.mapIndexed { index, title ->
+        FilterChipEntry(
+            label = title,
+            selected = tab == index,
+            onClick = { updateTab(index) },
+            testTag = "search_category_$index",
+            key = "search-category:$index",
+        )
+    }
     fun submitSearch() {
         if (query.isNotBlank()) onSearchAccounts(query)
     }
@@ -225,7 +237,15 @@ fun SearchScreen(
                         Modifier.widthIn(max = 520.dp).fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing),
                     ) {
-                        CategoryChips(sections, tab, stringResource(R.string.search_categories_description), ::updateTab)
+                        DestinationChipRow(
+                            entries = chipEntries,
+                            rowContentDescription = stringResource(R.string.search_categories_description),
+                            listState = chipListState,
+                            visible = chipRowVisible,
+                            onToggleVisibility = { chipRowVisible = !chipRowVisible },
+                            rowTestTag = "search_categories",
+                            visibilityToggleTestTag = "search_categories_visibility",
+                        )
                         SearchField(query, ::submitSearch, ::updateQuery)
                     }
                 },
@@ -246,7 +266,15 @@ fun SearchScreen(
                     .windowInsetsPadding(controlsPositioningInsets),
                 verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing),
             ) {
-                CategoryChips(sections, tab, stringResource(R.string.search_categories_description), ::updateTab)
+                DestinationChipRow(
+                    entries = chipEntries,
+                    rowContentDescription = stringResource(R.string.search_categories_description),
+                    listState = chipListState,
+                    visible = chipRowVisible,
+                    onToggleVisibility = { chipRowVisible = !chipRowVisible },
+                    rowTestTag = "search_categories",
+                    visibilityToggleTestTag = "search_categories_visibility",
+                )
                 SearchField(query, ::submitSearch, ::updateQuery)
             }
         }

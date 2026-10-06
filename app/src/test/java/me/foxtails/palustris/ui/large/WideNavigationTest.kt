@@ -71,15 +71,19 @@ class WideNavigationTest {
         assertCapsuleAndComposer()
     }
 
-    @Test fun wideNotificationsUseNormalChipFlow() {
+    @Test fun wideNotificationsUseBottomChipDock() {
         compose.onNodeWithContentDescription("Notifications").performClick()
         compose.waitForIdle()
 
         val row = compose.onNodeWithContentDescription("Notification filters; swipe horizontally for more")
         row.assert(hasScrollAction())
         val rowBounds = row.fetchSemanticsNode().boundsInRoot
+        val dockBounds = compose.onNodeWithTag("notification_filter_dock")
+            .fetchSemanticsNode().boundsInRoot
         val placeholderBounds = compose.onNodeWithText("All caught up").fetchSemanticsNode().boundsInRoot
-        assertTrue("wide notification chips should precede the placeholder in page flow", rowBounds.bottom < placeholderBounds.top)
+        assertTrue("wide notification chips should remain inside the bottom dock", rowBounds.top >= dockBounds.top)
+        assertTrue("wide notification chips should remain inside the bottom dock", rowBounds.bottom <= dockBounds.bottom)
+        assertTrue("wide notification dock should follow the empty-state content", placeholderBounds.bottom < dockBounds.top)
         listOf("Replies", "Reposts", "Followers", "Likes").forEach { label ->
             compose.onNodeWithText(label).assertIsDisplayed().assertIsNotSelected()
         }
@@ -222,11 +226,14 @@ class WideNavigationTest {
         }
         compose.waitForIdle()
 
-        val dock = compose.onNodeWithContentDescription(
+        val chipRow = compose.onNodeWithContentDescription(
             "Profile categories; swipe horizontally for more",
         ).fetchSemanticsNode().boundsInRoot
+        val caret = compose.onNodeWithTag("profile_categories_visibility")
+            .fetchSemanticsNode().boundsInRoot
         val expectedMarginPx = 16f * compose.activity.resources.displayMetrics.density
-        assertTrue("large profile dock should start at the content spine", dock.left <= expectedMarginPx)
+        assertTrue("large profile caret should start at the content spine", caret.left <= expectedMarginPx)
+        assertTrue("large profile chips should follow the fixed caret", chipRow.left >= caret.right)
         compose.onNodeWithText("Edit profile").assertIsDisplayed()
     }
 

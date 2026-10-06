@@ -10,6 +10,9 @@
     <string name="a11y_profile_categories">Profile categories; swipe horizontally for more</string>
     <string name="a11y_sensitive_media">Sensitive media %1$d</string>
     <string name="a11y_username_description">Username %1$s</string>
+    <string name="hide_destination_chips">Hide chips</string>
+    <string name="home_timeline_filter_description">Home timelines; swipe horizontally for more</string>
+    <string name="show_destination_chips">Show chips</string>
     <string name="about_empty_subtitle">Misskey and Sharkey home timelines. Publishing and other timelines are coming later.</string>
     <string name="about_empty_title">A place for your fediverse</string>
     <string name="about_page_title">About</string>

@@ -109,13 +109,19 @@ Transparent outer rows, error surfaces, and dividers keep their existing width b
 Bottom clearance extends the existing scroll range. The wide timeline dock moves above that obstruction
 and clears physical right. Home without a feed contract also clears its dock and empty-state text.
 
-Timeline chips keep their existing scroll and selection behavior. Clearance does not set chip travel.
-Compact Home ignores wide inputs. Its shell-owned tabs, navigation, and IME-aware final spacing remain unchanged.
+The compact and wide Home rows use one chip renderer. A circular caret uses the unselected chip surface, outline, and icon colors.
+It stays in the first logical position outside the scrollable chips. It hides or shows the chips without moving or hiding itself.
+The Home timeline selection stays with `ShellNavigator`.
+`ShellContent` owns saveable visibility and one `LazyListState` above the layout branches.
+Resizing preserves both values.
+Changing the timeline scrolls the selected entry into view. Reduced motion skips that animation.
+Clearance does not set chip travel. Compact Home ignores wide inputs and keeps its IME-aware final spacing and shell-owned navigation.
 Production clearance is active. The folded outer-screen Home rendering is emulator verified.
 
-Sources: `ui/feed/HomeFeed.kt`, `ui/shell/ShellDestinationContent.kt`, `HomeClearanceTest`, `HomeFeedTest`, `NavigationTest`.
+Sources: `ui/feed/HomeFeed.kt`, `ui/shell/ShellDestinationContent.kt`, `CategoryChipsGeometryTest`, `HomeClearanceTest`, `HomeFeedTest`, `NavigationTest`.
 Focused Compose tests verify bounds, final-content reach, timeline callbacks, retained scroll position,
-and compact compatibility. Outer-screen Home is emulator verified; hardware tablet and device RTL rendering remain unverified.
+and compact compatibility. The shared-row test verifies collapse and retained chip position.
+Outer-screen Home is emulator verified; hardware tablet and device RTL rendering remain unverified.
 
 ## Wide Search clearance
 
@@ -128,13 +134,16 @@ Bottom clearance extends the wide result scroll range only. The wide search dock
 placement, its spacing, and its measured height. The search field therefore keeps its current position
 and its current wide IME behavior, which applies no field inset without compact fallback.
 Compact layout ignores wide inputs and keeps its IME-aware control placement and scroll clearance.
-Category chips keep their own scrolling and selection behavior. Clearance does not set chip travel.
+The shared chip row includes a hide/show caret.
+`SearchScreen` owns saveable visibility and chip scroll state across compact and wide placement.
+Search category selection stays with the shell owner. Its circular caret uses the unselected chip surface, outline, and icon colors.
+It stays in the first logical position outside the scrollable chips. Clearance does not set chip travel.
 Production clearance is active. Wide compact fallback uses separate positioning clearance to keep the field above navigation.
 
 Sources: `ui/search/SearchScreen.kt`, `ui/shell/ShellDestinationContent.kt`, `SearchClearanceTest`.
 Focused Compose tests verify viewport and divider bounds, interaction and dock clearance, final-content reach,
-chip selection, retained list position, synthetic IME open and close, branch forwarding, and compact
-compatibility. Device Search rendering remains unverified.
+chip selection, retained list position, synthetic IME open and close, branch forwarding, and compact compatibility.
+The shared-row test verifies collapse and retained chip position. Device Search rendering remains unverified.
 
 ## Wide Photo Grid clearance
 
@@ -146,34 +155,44 @@ Adaptive lanes recalculate for the narrower content area. Tile media no longer p
 The full-screen error state keeps its full-size viewport and clears only its retry content.
 
 Bottom clearance extends the wide grid end spacing. The wide filter-chip dock clears physical right and sits
-above that obstruction, the same way the Home timeline dock does. Chips keep their own scrolling and selection
-behavior, and clearance does not set chip travel. Compact Photo Grid ignores wide inputs and keeps its
-contextual-control placement and scroll clearance. Production clearance is active.
+above that obstruction, the same way the Home timeline dock does. The shared row keeps a circular caret in its first logical position.
+The caret stays separate from the scrollable chips.
+`PhotoGridScreen` owns saveable visibility and chip scroll state across compact and wide placement.
+Feed selection and saved hashtags keep their existing owners. Clearance does not set chip travel.
+Compact Photo Grid ignores wide inputs and keeps contextual-control placement and scroll clearance.
+Production clearance is active.
 
 Sources: `ui/photogrid/PhotoGridScreen.kt`, `ui/shell/ShellDestinationContent.kt`, `PhotoGridClearanceTest`.
 Focused Compose tests verify tile and reveal bounds, continuation and retry callbacks, final-tile reach, dock
-position and clearance, chip and hashtag selection, branch forwarding, retained grid position, and compact
-compatibility. Device Photo Grid rendering remains unverified.
+position and clearance, chip and hashtag selection, branch forwarding, retained grid position, and compact compatibility.
+The shared-row test verifies collapse and retained chip position. Device Photo Grid rendering remains unverified.
 
 ## Wide Notifications clearance
 
-Notifications keeps its full-size wide `Column`, refresh surface, and list viewport. The top filter/query chip row,
-notification row cards and their controls, the empty state, the storage/error retry controls, the sync-delayed
+Notifications keeps its full-size wide content container, refresh surface, and list viewport.
+The filter/query row moves to the bottom dock. Its circular caret stays in the first logical position,
+separate from the scrollable chips.
+`NotificationsScreen` owns account-keyed saveable visibility and chip scroll state.
+The dock clears physical edges and bottom obstruction. The list end clears the dock and obstruction.
+The notification query remains with its existing owner.
+The compact filter row stays above navigation and keeps its current IME behavior.
+Wide notification cards and controls, the empty state, storage and error retries, the sync-delayed
 banner, the paging/load-older control, and the paging error text clear shell-supplied physical right in LTR and RTL.
 A notification row always carries a dismiss control and can carry follow-request controls, so it is not a single
 opaque target. The row card keeps its full width for visual underlay; its interactive content clears physical right
 through an absolute right inset inside the row.
 
-Wide layout has no bottom dock because its chip row sits at the top. Bottom clearance extends the wide list end
-spacing only. Compact Notifications ignores wide inputs and keeps its floating bottom chip row, contextual-control
-placement, and scroll clearance. Chips keep their own scrolling and selection behavior, and clearance does not set
-chip travel. Production clearance is active.
+Bottom clearance extends the wide list end spacing past the dock.
+Compact Notifications ignores wide inputs and keeps its floating bottom chip row, contextual-control placement, and scroll clearance.
+Clearance does not set chip travel. Production clearance is active.
 
 Sources: `ui/notifications/NotificationsScreen.kt`, `ui/notifications/NotificationRow.kt`,
 `ui/shell/AppNotificationsDestinationContent.kt`, `NotificationsClearanceTest`.
-Focused Compose tests verify viewport and row bounds, row-surface underlay, dismiss and follow-request controls and
-callbacks, load-older and retry callbacks, final-item reach, retained filter selection and scroll position, branch
-forwarding, and compact compatibility. Device Notifications rendering remains unverified.
+Focused Compose tests verify viewport and row bounds, row-surface underlay, dismiss and follow-request controls,
+load-older and retry callbacks, final-item reach, retained filter selection and notification-list position, branch forwarding, and compact compatibility.
+The shared-row test verifies collapse and retained chip position.
+The folded emulator verifies the bottom dock and loaded-row clearance.
+Hardware tablet and device RTL rendering remain unverified.
 
 ## Wide Profile clearance
 
@@ -191,14 +210,18 @@ The wide summary layout has two mirrored columns. LTR places the summary left an
 Each column takes only the physical-edge clearance that it reaches. Without the summary, the timeline takes both edges.
 The summary scroll range ends past the category dock, so its final details stay reachable.
 
-Compact Profile ignores wide inputs and keeps its measured end clearance and its floating chip row. Chips keep
-their own scrolling and selection behavior, and clearance sets no chip travel. Production clearance is active.
+Compact Profile ignores wide inputs and keeps its measured end clearance and floating chip row.
+The shared chip row includes a circular caret in its first logical position, separate from the scrollable chips.
+`ProfileScreen` owns profile-keyed saveable visibility and chip scroll state across compact and wide placement.
+Category selection and profile actions keep their existing owners. Clearance sets no chip travel.
+Production clearance is active.
 
 Sources: `ui/profile/ProfileScreen.kt`, `ui/profile/ProfileLargePresentation.kt`,
 `ui/profile/ProfileTimelineList.kt`, `ui/shell/ShellDestinationContent.kt`, `ProfileClearanceTest`.
 Focused Compose tests verify viewport and divider bounds, mirrored wide columns, header and row control bounds,
 dock clearance, final-row and footer reach, load-older and retry callbacks, branch forwarding, retained category
-selection and scroll position, and compact compatibility. Device Profile rendering remains unverified.
+selection and profile-list position, and compact compatibility. The shared-row test verifies collapse and chip-position retention.
+Device Profile rendering remains unverified.
 
 All seven wide surfaces also clear shell-supplied physical left through the same content owners described above.
 Physical edges never reverse with layout direction. The viewport remains full size; clearance stays inside interactive or scroll content.

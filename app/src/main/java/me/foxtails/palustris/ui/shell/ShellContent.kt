@@ -25,15 +25,22 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
@@ -51,8 +58,9 @@ import me.foxtails.palustris.ui.layout.compactGlobalNavigationPositioningInsets
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.compactFloatingEnter
 import me.foxtails.palustris.ui.motion.compactFloatingExit
+import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.navigation.CompactContextualNavigationBar
-import me.foxtails.palustris.ui.navigation.HomeTimelineTabs
+import me.foxtails.palustris.ui.navigation.homeTimelineChipEntries
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.navigation.contextualActionFor
 import me.foxtails.palustris.ui.navigation.wideContextualAction
@@ -79,6 +87,9 @@ private fun BoxScope.CompactShellNavigation(
     navigationCallbacks: DestinationNavigationCallbacks,
     onCompose: () -> Unit,
     showTimelineTabs: Boolean,
+    homeChipListState: LazyListState,
+    homeChipRowVisible: Boolean,
+    onToggleHomeChipRow: () -> Unit,
 ) {
     val motionScheme = LocalPalustrisMotionScheme.current
     AnimatedVisibility(
@@ -98,16 +109,24 @@ private fun BoxScope.CompactShellNavigation(
                 horizontalAlignment = Alignment.End,
             ) {
                 if (showTimelineTabs && navigator.destination == Destination.Home) {
-                    HomeTimelineTabs(
-                        timelines = availableTimelines,
-                        selected = navigator.timeline,
-                        modifier = Modifier.height(CompactTimelineTabsHeight),
-                        onSelect = { item ->
+                    DestinationChipRow(
+                        entries = homeTimelineChipEntries(
+                            timelines = availableTimelines,
+                            selected = navigator.timeline,
+                        ) { item ->
                             overlay.clearPostActionBubble()
                             val changed = item != navigator.timeline
                             navigator.timeline = item
                             if (changed) home?.actions?.refresh(item)
                         },
+                        rowContentDescription = stringResource(R.string.home_timeline_filter_description),
+                        listState = homeChipListState,
+                        visible = homeChipRowVisible,
+                        onToggleVisibility = onToggleHomeChipRow,
+                        selectedEntryKey = "home-timeline:${navigator.timeline.name}",
+                        modifier = Modifier.height(CompactTimelineTabsHeight),
+                        rowTestTag = "home_timeline_tabs",
+                        visibilityToggleTestTag = "home_timeline_visibility",
                     )
                     Spacer(Modifier.height(CompactHomeTimelineSpacing))
                 }
@@ -193,6 +212,8 @@ internal fun ShellContent(
     navigationFit: NavigationFit = NavigationFit(useVerticalNavigation = false, safeRegion = null),
     anchorLeft: Boolean = presentationMode == LargeLayoutMode.Expanded,
 ) {
+    val homeChipListState = rememberLazyListState()
+    var homeChipRowVisible by rememberSaveable { mutableStateOf(true) }
     val largePresentation = presentationMode != LargeLayoutMode.Compact
     // Vertical navigation activates below the pane width cutoff, so the destination presentation
     // follows the fit policy rather than the window width alone. Pane and back policy keep using
@@ -278,6 +299,9 @@ internal fun ShellContent(
                                 postCallbacks = postCallbacks,
                                 draftCallbacks = draftCallbacks,
                                 navigationCallbacks = navigationCallbacks,
+                                homeChipListState = homeChipListState,
+                                homeChipRowVisible = homeChipRowVisible,
+                                onToggleHomeChipRow = { homeChipRowVisible = !homeChipRowVisible },
                             )
                         },
                         detailContent = { paneModifier, detailLeftClearance, detailRightClearance ->
@@ -335,6 +359,9 @@ internal fun ShellContent(
                         postCallbacks = postCallbacks,
                         draftCallbacks = draftCallbacks,
                         navigationCallbacks = navigationCallbacks,
+                        homeChipListState = homeChipListState,
+                        homeChipRowVisible = homeChipRowVisible,
+                        onToggleHomeChipRow = { homeChipRowVisible = !homeChipRowVisible },
                     )
                 }
                 // Compact fallback. A failed fit keeps the existing bottom bar, including inside a
@@ -352,6 +379,9 @@ internal fun ShellContent(
                         navigationCallbacks = navigationCallbacks,
                         onCompose = onCompose,
                         showTimelineTabs = !wideContent,
+                        homeChipListState = homeChipListState,
+                        homeChipRowVisible = homeChipRowVisible,
+                        onToggleHomeChipRow = { homeChipRowVisible = !homeChipRowVisible },
                     )
                 }
             }
