@@ -26,7 +26,6 @@ import me.foxtails.palustris.ui.motion.SpringAnimatedContent
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.notifications.NotificationRouteResolver
-import me.foxtails.palustris.ui.profile.ProfileScreen
 
 /**
  * Destination scaffold and branches for the application shell.
@@ -230,59 +229,22 @@ internal fun ShellDestinationContent(
                                 },
                                 directMessages = directMessages,
                             )
-                            Destination.Profile -> ProfileScreen(
-                                account = displayedProfile,
-                                profileState = profile.state,
-                                compactLayout = !largePresentation,
-                                largeLayout = largePresentation && !compactWidePresentation,
+                            Destination.Profile -> ShellProfileDestination(
+                                navigator = navigator,
+                                overlay = overlay,
+                                profile = profile,
+                                postCallbacks = postCallbacks,
+                                navigationCallbacks = navigationCallbacks,
+                                account = account,
+                                displayedProfile = displayedProfile,
+                                largePresentation = largePresentation,
                                 compactWidePresentation = compactWidePresentation,
-                                useCompactWideCaret = useCompactWideCaret,
-                                tabCaretHost = tabCaretHost,
-                                largeShowSummary = navigator.singlePost == null,
-                                listState = profileListState,
                                 rightObstructionClearance = rightObstructionClearance,
                                 leftObstructionClearance = leftObstructionClearance,
                                 bottomObstructionClearance = bottomObstructionClearance,
-                                compactNavigationVisible = navigator.navigationVisible,
-                                authenticatedAccountId = account?.id,
-                                onProfileShown = profile.actions::open,
-                                onCategorySelected = { category ->
-                                    if (largePresentation) navigator.clearSelectedPost()
-                                    profile.actions.selectCategory(category)
-                                },
-                                onRefresh = profile.actions::refresh,
-                                onLoadMore = profile.actions::loadMore,
-                                onFollow = profile.actions::follow,
-                                onUnfollow = profile.actions::unfollow,
-                                onMessage = navigator::openDirectMessage,
-                                onOpenProfileImage = { url -> overlay.openProfileImage(url, navigator.viewedProfile?.id ?: account?.id) },
-                                onEditProfile = navigationCallbacks.onEditProfile,
-                                onOpenDrafts = {
-                                    if (largePresentation) navigator.clearSelectedPost()
-                                    if (account != null && displayedProfile?.id == account.id) navigator.page = LocalPage.Drafts
-                                },
-                                onOpenBookmarks = {
-                                    if (largePresentation) navigator.clearSelectedPost()
-                                    if (account != null && displayedProfile?.id == account.id) navigator.page = LocalPage.SavedPosts
-                                },
-                                onOpenProfile = navigator::openProfile,
-                                onSearchHashtag = navigator::openHashtagSearch,
-                                onOpenHashtagBubble = overlay::openHashtagBubble,
-                                availableActions = postCallbacks.availableActions,
-                                onReact = postCallbacks.onReact,
-                                onReply = postCallbacks.onReply,
-                                onReshare = postCallbacks.onReshare,
-                                onBookmark = postCallbacks.onBookmark,
-                                onReaction = profile.actions::react,
-                                onOpenReactionBubble = { ownedPost, bounds ->
-                                    overlay.openReactionBubble(ownedPost, bounds, profile.actions::react)
-                                },
-                                onOpenReactionPicker = overlay::expandReactionPicker,
-                                onOpenMedia = overlay::openMedia,
-                                onOpenPost = { post -> navigationCallbacks.onOpenPost(post, LargePostOrigin.Profile) },
-                                onOpenUsername = navigator::openAccountSearch,
-                                quoteEnabled = postCallbacks.quoteEnabled,
-                                onQuote = postCallbacks.onQuote,
+                                profileListState = profileListState,
+                                useCompactWideCaret = useCompactWideCaret,
+                                tabCaretHost = tabCaretHost,
                             )
                         }
                     }

@@ -14,10 +14,10 @@ The preceding adaptive-navigation record remains at [tasks/beeline-0.4.0.md](tas
 
 The user requests Phases 0 and 1 of `docs/fix_0.4.0.md`, in that order.
 Phase 0 is committed: 0.1 at `3c5b2ca`, 0.2 at `a850d40`, and the mechanical ktlint repair at `63d8231`.
-1.1 is committed at `150d0d2`, and 1.2 at `4af0279`.
-1.3 passes direct review and the full gate. It extracts Search and Photo Grid shell routing into `ui/shell/ShellSearchDestination.kt`.
-The 1.3 slice commit subject is `Extract Search and Photo Grid shell destination`.
-Next is 1.4, which extracts Profile shell routing into `ui/shell/ShellProfileDestination.kt`.
+1.1 is committed at `150d0d2`, 1.2 at `4af0279`, and 1.3 at `52dd028`.
+1.4 passes direct review and the full gate. It extracts Profile shell routing into `ui/shell/ShellProfileDestination.kt`.
+The 1.4 slice commit subject is `Extract Profile shell destination`.
+Next is 1.5, which reduces `ShellDestinationContent` to routing and updates its KDoc.
 Do not begin Phase 2 or split ShellContent.
 
 ## Ownership and caution
@@ -29,8 +29,8 @@ Recheck external Java/Gradle activity before builds. Use explicit reviewed commi
 
 ## Last safe commit
 
-Preceding safe commit: `4af0279` — `Extract Home shell destination`.
-The slice commit subject is `Extract Search and Photo Grid shell destination`.
+Preceding safe commit: `52dd028` — `Extract Search and Photo Grid shell destination`.
+The slice commit subject is `Extract Profile shell destination`.
 
 ## Limits
 

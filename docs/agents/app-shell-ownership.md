@@ -86,6 +86,9 @@ A connected Home refreshes its feature owner on a timeline change. The empty Hom
 The compact Home chips stay with `CompactShellNavigation`, so the adapter renders only the wide dock.
 `ui/shell/ShellSearchDestination.kt` adapts the shell inputs to `SearchScreen` and `PhotoGridScreen`.
 It owns no search or Photo Grid state: the query and category stay with `ShellNavigator`, account results stay with the search owner, and Photo Grid keeps its own feed, selection, paging, and scroll state.
+`ui/shell/ShellProfileDestination.kt` adapts the shell inputs to `ProfileScreen`.
+It owns no Profile state: the target, categories, relationship, editor, and paging state stay with the Profile owner.
+The shell keeps the presentation selection and the selected-post clearing.
 `AppNotificationsDestinationContent` receives `NotificationsContract` and `DirectMessagesContract` directly.
 It adapts their state and actions to notification and DM screens. Shell routes, settings callbacks, and clearance remain explicit.
 `ui/shell/ShellOverlayHost.kt` hosts bubbles, viewers, sheets, overlays, the emoji picker,
