@@ -12,6 +12,7 @@ Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
 `ShellContent` owns compact and large presentation. `ShellDestinationContent` renders destination
 branches without owning feature state. Saveable shell holders pass through both presentations.
 Search, Photo Grid, direct messages, and profile state remain with their connected feature owners.
+The notifications shell adapter consumes the existing notification and DM contracts without unpacking them at the router boundary.
 The connected session host owns post projection and validates account and session revision before
 delivery. Characterization tests cover compact and large Search routes and profile editor and pager
 continuity.

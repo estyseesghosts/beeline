@@ -18,45 +18,44 @@ The orchestrator owns implementation, records, validation, and Git.
 The user prohibits problem_solver. The orchestrator reviews actual diffs directly before explicit-path commits.
 The user authorized a mechanical ktlint repair slice after the full gate exposed existing errors.
 The targeted_fixer stopped. The orchestrator accepted its stopped handoff and completed the mechanical repairs directly.
-Prepare independent 0.2 documentation while that repair runs. Commit verified slices separately before Phase 1.
+Commit each verified slice separately before starting the next one.
 
 # Completed
 
 - 0.1 committed at `3c5b2ca`: unchanged layout policy now lives in ui/layout.
-- 0.2 verified: completion rules and build wiki now define the complete CI-parity sequence.
-- 0.2 committed at `a850d40`.
-- Mechanical ktlint repair passes the complete gate without new exemptions or weakened tests.
+- 0.2 committed at `a850d40`: completion rules and build wiki define the complete CI-parity sequence.
+- Mechanical ktlint repair committed at `63d8231`: the full gate passes without new exemptions or weakened tests.
+- 1.1 verified: notification and DM contracts pass directly through the existing destination adapter. Focused and full gates pass.
 
 # Current slice
 
-Checkpoint the reviewed mechanical ktlint repair, then start 1.1.
-The policy move passes direct review. No preference, publication, locale, or clearance behavior changed.
-The mechanical comparison preserves source bodies after normalizing approved constant names, whitespace, and equivalent string templates.
-The empty class body and two test throw expressions have equivalent behavior.
-No baseline exemptions were added. Tests remain intact; the deleted Photo Grid test is pre-existing user work.
+1.2: extract the Home shell destination into `ui/shell/ShellHomeDestination.kt`.
+Allowed scope: the new Home adapter, the router Home branch, Home and shell tests, ownership documentation, and records.
+Acceptance: preserve the connected versus empty Home refresh distinction, timeline chip clearing, compact-wide caret registration, shell-owned homeChipListState and homeChipRowVisible, and the wide bottom dock.
+Non-goals: Home state ownership, layout, persistence, protocol, and navigation changes.
+Validation: HomeFeedTest, HomeClearanceTest, HomePagingDemandTest, NavigationTest, WideNavigationTest, ShellCharacterizationTest, then full CI parity.
+The new adapter owns wiring only, not Home state. Do not recreate chip state in the new file.
 
 # Files involved
 
-- ui/LayoutDirectionPolicy.kt -> ui/layout/LayoutDirectionPolicy.kt
-- ui/ConnectedApp.kt and ui/settings/DisplaySettingsScreen.kt
-- AppLayoutDirectionTest and SettingsDisplayTest
-- docs/agents/app-shell-ownership.md, docs/wiki/ui-and-navigation.md, and tasks/force-layout-direction.md
+- ui/shell/ShellHomeDestination.kt (new)
+- ui/shell/ShellDestinationContent.kt (short router call)
+- Home and shell tests
+- docs/agents/app-shell-ownership.md, docs/wiki/ui-and-navigation.md, and task records
 
 # Verification
 
-Architecture tool tests pass: 51 tests.
-The policy move removes the only architecture regression. Focused layout/settings tests pass.
-The initial gate exposed 94 main-source and 49 test-source ktlint errors. All reported errors are repaired.
-The final CI-parity gate passes: 51 Python tests, zero architecture regressions, 1,691 debug tests, lint, ktlint, debug assembly, and release assembly.
-All 161 JVM suites pass without failures, errors, or skips.
-Two mistakenly removed required imports were restored before the final gate.
-0.2 document links resolve, and the scoped documentation diff passes whitespace checks.
-Run the architecture audit, focused layout/settings tests, and local CI-parity gate before checkpoint.
+1.1 review: the adapter reads notifications.state, notifications.actions, directMessages.state, and directMessages.actions; shell notification and settings routes, account identity, and clearance stay explicit.
+Focused NotificationsClearanceTest, NotificationsScreenTest, DirectMessageScreenTest, WideNavigationTest, and ShellCharacterizationTest pass.
+The known MastodonIntegrationTest cancellation flake passes alone.
+The full CI-parity gate passes: 51 Python tests, zero architecture regressions, 1,691 debug tests across 161 suites, lint, ktlint, debug assembly, and release assembly.
+No baseline exemptions were added and no test was weakened.
+Run focused Home and shell tests, then the local CI-parity gate before the 1.2 checkpoint.
 Use the wrapper with closed stdin, explicit timeout, and required daemon flags.
 
 # Next
 
-Commit the reviewed Phase 0 slices separately, then start 1.1 contract forwarding.
+Start 1.2: extract the Home shell destination into `ui/shell/ShellHomeDestination.kt`.
 
 # Blockers
 
@@ -65,4 +64,4 @@ Physical-device, API 29 instrumentation, TalkBack, signing, and live-server chec
 
 # Last safe commit
 
-a850d40 — Align completion verification with CI.
+63d8231 — Repair existing ktlint gate violations.

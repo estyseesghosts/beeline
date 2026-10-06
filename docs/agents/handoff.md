@@ -13,12 +13,12 @@ The preceding adaptive-navigation record remains at [tasks/beeline-0.4.0.md](tas
 ## Current position
 
 The user requests Phases 0 and 1 of `docs/fix_0.4.0.md`, in that order.
-0.1 relocates the unchanged layout policy to `ui/layout/`. Focused tests and architecture audit pass.
-0.1 is committed at `3c5b2ca`. 0.2 is committed at `a850d40`.
-The user-authorized mechanical ktlint repair is complete on the working tree.
-The full CI-parity gate passes with 1,691 JVM tests, lint, ktlint, and debug/release assembly.
-Direct source comparison and review find no feature behavior changes. No baseline exemptions were added.
-Checkpoint Phase 0 slices separately, then start 1.1. Do not begin Phase 2 or split ShellContent.
+Phase 0 is committed: 0.1 at `3c5b2ca`, 0.2 at `a850d40`, and the mechanical ktlint repair at `63d8231`.
+The full CI-parity gate passes: 51 Python tests, zero architecture regressions, 1,691 JVM tests, lint, ktlint, and debug/release assembly.
+1.1 passes direct review and the full gate. It passes the notification and DM contracts through the shell adapter without unpacking them.
+The 1.1 slice commit subject is `Pass notification and DM contracts through shell`.
+Next is 1.2, which extracts the Home shell destination into `ui/shell/ShellHomeDestination.kt`.
+Do not begin Phase 2 or split ShellContent.
 
 ## Ownership and caution
 
@@ -29,8 +29,8 @@ Recheck external Java/Gradle activity before builds. Use explicit reviewed commi
 
 ## Last safe commit
 
-Preceding safe commit: `a850d40` — `Align completion verification with CI`.
-The mechanical checkpoint subject is `Repair existing ktlint gate violations`.
+Preceding safe commit: `63d8231` — `Repair existing ktlint gate violations`.
+The slice commit subject is `Pass notification and DM contracts through shell`.
 
 ## Limits
 

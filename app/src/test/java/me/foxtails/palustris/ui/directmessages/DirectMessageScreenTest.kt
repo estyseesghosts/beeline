@@ -45,9 +45,10 @@ import me.foxtails.palustris.ui.directmessages.DirectMessageInboxScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageRecipientFinder
 import me.foxtails.palustris.ui.directmessages.DirectMessageRecipientFinderState
 import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
-import me.foxtails.palustris.ui.notifications.NotificationsUiState
 import me.foxtails.palustris.ui.profile.ProfileScreen
 import me.foxtails.palustris.ui.shell.AppNotificationsDestinationContent
+import me.foxtails.palustris.ui.shell.DirectMessagesContract
+import me.foxtails.palustris.ui.shell.NotificationsContract
 import me.foxtails.palustris.ui.shell.NotificationsPanel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -178,28 +179,18 @@ class DirectMessageScreenTest {
                 rightObstructionClearance = rightClearance,
                 bottomObstructionClearance = bottomClearance,
                 notificationAccountIdentity = owner.id.localId,
-                notificationState = NotificationsUiState(),
-                onRefreshNotifications = {},
-                onLoadMoreNotifications = {},
-                onMarkNotificationSeen = {},
-                onDismissNotification = {},
-                onFollowRequest = { _, _ -> },
+                notifications = NotificationsContract.Empty,
                 onOpenNotification = {},
-                onSelectQuery = {},
-                onMarkAllRead = {},
                 onOpenSettings = {},
-                directMessageState = DirectMessageUiState(
-                    conversations = listOf(conversation),
-                    nextCursor = "next-page",
+                directMessages = DirectMessagesContract(
+                    state = DirectMessageUiState(
+                        conversations = listOf(conversation),
+                        nextCursor = "next-page",
+                    ),
+                    actions = object : DirectMessagesContract.Actions by DirectMessagesContract.Empty.actions {
+                        override fun loadMore() { loadRequests++ }
+                    },
                 ),
-                onRefreshDirectMessages = {},
-                onLoadMoreDirectMessages = { loadRequests++ },
-                onOpenDirectConversation = {},
-                onBackDirectConversation = {},
-                onEditorTextChange = {},
-                onSendDirectMessage = {},
-                onContinueDirectThread = {},
-                onRetryDirectThread = {},
             )
         }
 
@@ -523,13 +514,14 @@ class DirectMessageScreenTest {
             panel = NotificationsPanel.DirectMessages, account = owner,
             compactLayout = false, compactNavigationVisible = false,
             rightObstructionClearance = 72.dp, bottomObstructionClearance = bottomClearance,
-            notificationAccountIdentity = owner.id.localId, notificationState = NotificationsUiState(),
-            onRefreshNotifications = {}, onLoadMoreNotifications = {}, onMarkNotificationSeen = {},
-            onDismissNotification = {}, onFollowRequest = { _, _ -> }, onOpenNotification = {},
-            onSelectQuery = {}, onMarkAllRead = {}, onOpenSettings = {}, directMessageState = state,
-            onRefreshDirectMessages = {}, onLoadMoreDirectMessages = {}, onOpenDirectConversation = {},
-            onBackDirectConversation = {}, onEditorTextChange = onEditorTextChange,
-            onSendDirectMessage = {}, onContinueDirectThread = {}, onRetryDirectThread = {},
+            notificationAccountIdentity = owner.id.localId, notifications = NotificationsContract.Empty,
+            onOpenNotification = {}, onOpenSettings = {},
+            directMessages = DirectMessagesContract(
+                state = state,
+                actions = object : DirectMessagesContract.Actions by DirectMessagesContract.Empty.actions {
+                    override fun updateEditor(text: String) = onEditorTextChange(text)
+                },
+            ),
         )
     }
 

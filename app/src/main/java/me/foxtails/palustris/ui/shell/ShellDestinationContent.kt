@@ -31,17 +31,7 @@ import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.feed.HomeFeed
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
-import me.foxtails.palustris.ui.photogrid.PhotoGridScreen
-import me.foxtails.palustris.ui.search.SearchScreen
 import me.foxtails.palustris.ui.large.LargeBottomDock
-import me.foxtails.palustris.ui.shell.AppDestinationTopBar
-import me.foxtails.palustris.ui.shell.AppLocalPageContent
-import me.foxtails.palustris.ui.shell.AppNotificationDetailContent
-import me.foxtails.palustris.ui.shell.AppNotificationsDestinationContent
-import me.foxtails.palustris.ui.shell.Destination
-import me.foxtails.palustris.ui.shell.LargePostOrigin
-import me.foxtails.palustris.ui.shell.LocalPage
-import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.motion.SpringAnimatedContent
@@ -49,8 +39,9 @@ import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.navigation.homeTimelineChipEntries
 import me.foxtails.palustris.ui.notifications.NotificationRouteResolver
+import me.foxtails.palustris.ui.photogrid.PhotoGridScreen
 import me.foxtails.palustris.ui.profile.ProfileScreen
-import me.foxtails.palustris.ui.shell.timelineLabelRes
+import me.foxtails.palustris.ui.search.SearchScreen
 
 /**
  * Destination scaffold and branches for the application shell.
@@ -370,34 +361,19 @@ internal fun ShellDestinationContent(
                                 useCompactWideCaret = useCompactWideCaret,
                                 tabCaretHost = tabCaretHost,
                                 notificationAccountIdentity = notificationAccountIdentity,
-                                notificationState = notifications.state,
-                                onRefreshNotifications = notifications.actions::refresh,
-                                onLoadMoreNotifications = notifications.actions::loadMore,
-                                onMarkNotificationSeen = notifications.actions::markSeen,
-                                onDismissNotification = notifications.actions::dismiss,
-                                onFollowRequest = notifications.actions::respondToFollowRequest,
+                                notifications = notifications,
                                 onOpenNotification = { notification ->
                                     overlay.clearPostActionBubble()
                                     if (largePresentation) navigator.clearSelectedPost()
                                     navigator.notificationRoute = NotificationRouteResolver.resolve(notification)
                                 },
-                                onSelectQuery = notifications.actions::selectQuery,
-                                onMarkAllRead = notifications.actions::markAllRead,
                                 onOpenSettings = {
                                     if (account != null) {
                                         overlay.clearPostActionBubble()
                                         navigator.openNotificationSettingsOverlay()
                                     }
                                 },
-                                directMessageState = directMessages.state,
-                                onRefreshDirectMessages = directMessages.actions::refresh,
-                                onLoadMoreDirectMessages = directMessages.actions::loadMore,
-                                onOpenDirectConversation = directMessages.actions::openConversation,
-                                onBackDirectConversation = directMessages.actions::closeConversation,
-                                onEditorTextChange = directMessages.actions::updateEditor,
-                                onSendDirectMessage = directMessages.actions::send,
-                                onContinueDirectThread = directMessages.actions::continueThread,
-                                onRetryDirectThread = directMessages.actions::retryThread,
+                                directMessages = directMessages,
                             )
                             Destination.Profile -> ProfileScreen(
                                 account = displayedProfile,

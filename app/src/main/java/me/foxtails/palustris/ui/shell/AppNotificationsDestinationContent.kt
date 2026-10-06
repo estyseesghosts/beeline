@@ -10,18 +10,14 @@ import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.ContentWarningRules
-import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.Notification
-import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.directmessages.DirectMessageConversationScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageInboxScreen
-import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.notifications.NotificationsScreen
-import me.foxtails.palustris.ui.notifications.NotificationsUiState
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 
 /**
@@ -42,25 +38,10 @@ internal fun AppNotificationsDestinationContent(
     bottomObstructionClearance: Dp = 0.dp,
     bottomNavigationClearance: Dp = 0.dp,
     notificationAccountIdentity: String,
-    notificationState: NotificationsUiState,
-    onRefreshNotifications: () -> Unit,
-    onLoadMoreNotifications: () -> Unit,
-    onMarkNotificationSeen: (Notification?) -> Unit,
-    onDismissNotification: (Notification) -> Unit,
-    onFollowRequest: (Notification, Boolean) -> Unit,
+    notifications: NotificationsContract,
     onOpenNotification: (Notification) -> Unit,
-    onSelectQuery: (NotificationQuery) -> Unit,
-    onMarkAllRead: () -> Unit,
     onOpenSettings: () -> Unit,
-    directMessageState: DirectMessageUiState,
-    onRefreshDirectMessages: () -> Unit,
-    onLoadMoreDirectMessages: () -> Unit,
-    onOpenDirectConversation: (DirectConversation) -> Unit,
-    onBackDirectConversation: () -> Unit,
-    onEditorTextChange: (String) -> Unit,
-    onSendDirectMessage: () -> Unit,
-    onContinueDirectThread: () -> Unit,
-    onRetryDirectThread: () -> Unit,
+    directMessages: DirectMessagesContract,
     contentWarningRules: ContentWarningRules = LocalContentWarningRules.current,
     useCompactWideCaret: Boolean = false,
     tabCaretHost: CompactWideTabCaretHost? = null,
@@ -79,15 +60,15 @@ internal fun AppNotificationsDestinationContent(
                 rightObstructionClearance = wideRightClearance,
                 bottomObstructionClearance = bottomObstructionClearance,
                 accountIdentity = notificationAccountIdentity,
-                notificationState = notificationState,
-                onRefreshNotifications = onRefreshNotifications,
-                onLoadMoreNotifications = onLoadMoreNotifications,
-                onMarkNotificationSeen = onMarkNotificationSeen,
-                onDismissNotification = onDismissNotification,
-                onFollowRequest = onFollowRequest,
+                notificationState = notifications.state,
+                onRefreshNotifications = notifications.actions::refresh,
+                onLoadMoreNotifications = notifications.actions::loadMore,
+                onMarkNotificationSeen = notifications.actions::markSeen,
+                onDismissNotification = notifications.actions::dismiss,
+                onFollowRequest = notifications.actions::respondToFollowRequest,
                 onOpenNotification = onOpenNotification,
-                onSelectQuery = onSelectQuery,
-                onMarkAllRead = onMarkAllRead,
+                onSelectQuery = notifications.actions::selectQuery,
+                onMarkAllRead = notifications.actions::markAllRead,
                 onOpenSettings = onOpenSettings,
                 contentWarningRules = contentWarningRules,
                 useCompactWideCaret = useCompactWideCaret,
@@ -103,34 +84,34 @@ internal fun AppNotificationsDestinationContent(
                     right = wideRightClearance,
                 ),
             )
-        } else if (directMessageState.selectedConversationId != null || directMessageState.recipient != null) {
+        } else if (directMessages.state.selectedConversationId != null || directMessages.state.recipient != null) {
             DirectMessageConversationScreen(
                 accountId = account.id,
-                state = directMessageState,
+                state = directMessages.state,
                 compactLayout = compactLayout,
                 compactNavigationVisible = compactNavigationVisible,
                 leftObstructionClearance = wideLeftClearance,
                 rightObstructionClearance = wideRightClearance,
                 bottomObstructionClearance = bottomObstructionClearance,
-                onBack = onBackDirectConversation,
+                onBack = directMessages.actions::closeConversation,
                 bottomNavigationClearance = bottomNavigationClearance,
-                onEditorTextChange = onEditorTextChange,
-                onSend = onSendDirectMessage,
-                onContinueThread = onContinueDirectThread,
-                onRetryThread = onRetryDirectThread,
+                onEditorTextChange = directMessages.actions::updateEditor,
+                onSend = directMessages.actions::send,
+                onContinueThread = directMessages.actions::continueThread,
+                onRetryThread = directMessages.actions::retryThread,
             )
         } else {
             DirectMessageInboxScreen(
                 leftObstructionClearance = wideLeftClearance,
                 accountId = account.id,
-                state = directMessageState,
+                state = directMessages.state,
                 compactLayout = compactLayout,
                 compactNavigationVisible = compactNavigationVisible,
                 rightObstructionClearance = wideRightClearance,
                 bottomObstructionClearance = bottomObstructionClearance,
-                onRefresh = onRefreshDirectMessages,
-                onLoadMore = onLoadMoreDirectMessages,
-                onOpenConversation = onOpenDirectConversation,
+                onRefresh = directMessages.actions::refresh,
+                onLoadMore = directMessages.actions::loadMore,
+                onOpenConversation = directMessages.actions::openConversation,
             )
         }
     }
