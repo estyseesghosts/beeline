@@ -4,7 +4,7 @@ Complete Phase 2 of [the hardening plan](../../fix_0.4.0.md): presentation-only
 decomposition of high-value Compose functions. State does not move. Keep every existing
 owner, contract, invariant, and test. This phase does not touch protocol, persistence,
 account scope, or navigation policy.
-Status: in progress. Owner and Git operator: orchestrator. Last reviewed: 2026-10-06.
+Status: Phase 3 verification complete. Owner and Git operator: orchestrator. Last reviewed: 2026-10-06.
 
 # Invariants
 
@@ -69,12 +69,29 @@ test-isolation (`UncaughtExceptionsBeforeTest`). They pass alone; record them an
 
 # Current slice
 
-Phase 2 is complete. All four slices (2.1–2.4) are committed and gate-verified. Await user
-direction. Do not begin Phase 3.
+Phase 3 Slice 3.1 is committed at `0bd8e7d` and gate-verified. No code fixes were
+required. Record updates are the only remaining change.
+
+# Phase 3
+
+- 3.1 committed: preceding safe commit `2cc4d7a`, subject `Extract Misskey thread service`.
+  New `data/misskey/MisskeyThreadService.kt` owns thread transport and acquisition: focal
+  load, ancestor walk, bounded breadth-first descent, request/batch/time/depth/node limits,
+  continuation validation and consumption, error normalization, and the continuation store
+  lifetime (16 entries, ten-minute idle expiry, consume-on-use). `MisskeySource` keeps
+  request normalization, capability refresh, and the adapter facade. `threadContext`
+  validates the focal identity and delegates through `request("thread")`. Constants moved
+  with the behavior. The continuation test helper now reads the store through
+  `threadService`. The `MisskeySource` ktlint baseline entry is removed with no new
+  exemption. Documentation names `MisskeyThreadService` as the thread owner.
+- Verification used two read-only subagents: one reviewed the extraction against the
+  invariants, one checked test and documentation coverage. Both support the closeout.
+  A review question on ktlint baseline consistency was resolved by the green
+  `ktlintCheck` run.
 
 # Files involved
 
-- None. Phase 2 is complete.
+- None. Phase 3 Slice 3.1 code is committed at `0bd8e7d`. This update touches records only.
 
 # Verification
 
@@ -99,18 +116,29 @@ direction. Do not begin Phase 3.
   The NotificationsScreen import-ordering fix removes its ktlint baseline entry with no new exemption.
   Slice 2.4 was implemented by a targeted_fixer child session under a complete dispatch contract;
   the orchestrator reviewed the diff and ran the Python test suite.
+3.1 focused: `MisskeyThreadContinuationTest` (12 tests) and `MisskeyIntegrationTest`
+(49 tests) pass. `SocialSourceContractTest` is the abstract base; the Misskey integration
+suite executes its contract. No failures occurred.
+3.1 full gate: 51 Python tests pass, architecture audit exits 0 with zero regressions,
+1,692 JVM tests across 161 suites pass with zero failures, and lint, ktlint, debug
+assembly, and release assembly pass. No flakes occurred, so no rerun was required.
+3.1 device: the fresh `0bd8e7d` debug APK installs and launches on emulator-5554
+(API 37). `MainActivity` resumes with no application crash. Screenshot evidence is
+`logs/phase31-emulator-launch.png`. Thread loading with a live account remains
+unverified because no test account exists.
 
 # Next
 
-Phase 2 is complete. Await user direction. Do not begin Phase 3.
+Phase 3 is complete. The next step is Phase 4 Slice 4.1 (record architecture metric
+baseline). Do not begin Phase 4 without user direction. Do not push.
 
 # Blockers
 
 Preserve unrelated agent/style edits, deleted test/PNGs, and untracked captures, scripts,
 caches, and 4c.md.
 Physical-device, API 29 instrumentation, TalkBack, signing, and live-server checks remain
-unverified.
+unverified. Live thread loading on a real Misskey account also remains unverified.
 
 # Last safe commit
 
-490f674 — Decompose destination chip rendering.
+0bd8e7d — Extract Misskey thread service.
