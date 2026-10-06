@@ -4,7 +4,6 @@ package me.foxtails.palustris.ui.profile
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -30,9 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
@@ -45,26 +43,20 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.R
-import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.components.ChipCaretPresentation
-import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
-import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
-import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
-import me.foxtails.palustris.ui.layout.compactScrollEndClearance
-import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
-import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
-import me.foxtails.palustris.ui.large.LargeBottomDock
-import me.foxtails.palustris.ui.large.LargeBottomDockClearance
-import me.foxtails.palustris.ui.components.DestinationChipRow
+import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
+import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.large.LargeBottomDockClearance
+import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
+import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 
 /**
@@ -207,133 +199,50 @@ fun ProfileScreen(
         return
     }
 
-    val compactCategoryEntries = profileCategoryChipEntries(
+    ProfileTimelinePresentation(
+        account = displayedAccount,
+        state = profileState,
+        compactLayout = compactLayout,
+        compactWidePresentation = compactWidePresentation,
+        compactNavigationVisible = compactNavigationVisible,
         isSelf = isSelf,
-        likedAvailable = profileState.likedAvailable,
-        featuredAvailable = profileState.pinnedPosts.size > 1,
-        includeShowMore = true,
-        includeEditProfile = false,
-        selected = profileState.selectedTab,
+        endContentClearance = endContentClearance,
+        categoryChipListState = categoryChipListState,
+        categoryRowVisible = categoryRowVisible,
+        onToggleCategoryRow = { categoryRowVisible = !categoryRowVisible },
+        useCompactWideCaret = useCompactWideCaret,
+        tabCaretHost = tabCaretHost,
+        listState = listState,
+        rightObstructionClearance = wideRightClearance,
+        leftObstructionClearance = wideLeftClearance,
+        bottomObstructionClearance = wideBottomClearance,
         onCategorySelected = onCategorySelected,
         onOpenDrafts = onOpenDrafts,
         onOpenBookmarks = onOpenBookmarks,
+        onRefresh = onRefresh,
+        onLoadMore = onLoadMore,
+        onFollow = onFollow,
+        onUnfollow = onUnfollow,
+        onMessage = onMessage,
+        onOpenProfile = onOpenProfile,
+        onOpenProfileImage = onOpenProfileImage,
+        onSearchHashtag = onSearchHashtag,
+        availableActions = availableActions,
+        onReact = onReact,
+        onReply = onReply,
+        onReshare = onReshare,
+        onBookmark = onBookmark,
+        onReaction = onReaction,
+        onOpenReactionBubble = onOpenReactionBubble,
+        onOpenReactionPicker = onOpenReactionPicker,
+        onOpenHashtagBubble = onOpenHashtagBubble,
+        onOpenMedia = onOpenMedia,
+        onOpenPost = onOpenPost,
+        onOpenUrl = onOpenUrl,
+        onOpenUsername = onOpenUsername,
+        quoteEnabled = quoteEnabled,
+        onQuote = onQuote,
     )
-    if (useCompactWideCaret) {
-        CompactWideTabCaretRegistration(
-            host = tabCaretHost,
-            expanded = categoryRowVisible,
-            onToggle = { categoryRowVisible = !categoryRowVisible },
-        )
-    }
-    val profileCaretPresentation = if (useCompactWideCaret) ChipCaretPresentation.Hidden
-    else ChipCaretPresentation.Inline
-
-    Box(Modifier.fillMaxSize()) {
-        ProfileTimelineList(
-            account = displayedAccount,
-            state = profileState,
-            compactLayout = compactLayout,
-            endContentClearance = endContentClearance,
-            rightObstructionClearance = wideRightClearance,
-            leftObstructionClearance = wideLeftClearance,
-            isSelf = isSelf,
-            onCategorySelected = onCategorySelected,
-            onOpenDrafts = onOpenDrafts,
-            onOpenBookmarks = onOpenBookmarks,
-            onRefresh = onRefresh,
-            onLoadMore = onLoadMore,
-                     onOpenProfile = onOpenProfile,
-            onSearchHashtag = onSearchHashtag,
-            availableActions = availableActions,
-            onReact = onReact,
-            onReply = onReply,
-            onReshare = onReshare,
-            onBookmark = onBookmark,
-            onReaction = onReaction,
-            onOpenReactionBubble = onOpenReactionBubble,
-            onOpenReactionPicker = onOpenReactionPicker,
-            onOpenHashtagBubble = onOpenHashtagBubble,
-            onOpenMedia = onOpenMedia,
-            onOpenPost = onOpenPost,
-            onOpenUrl = onOpenUrl,
-            onOpenUsername = onOpenUsername,
-            quoteEnabled = quoteEnabled,
-            onQuote = onQuote,
-            header = {
-                Box(
-                    Modifier.fillMaxWidth().absolutePadding(
-                        left = wideLeftClearance,
-                        right = wideRightClearance,
-                    ),
-                ) {
-                    ProfileHeader(
-                        account = displayedAccount,
-                        state = profileState,
-                        isSelf = isSelf,
-                        onRefresh = onRefresh,
-                        onFollow = onFollow,
-                        onUnfollow = onUnfollow,
-                        onMessage = { onMessage(displayedAccount) },
-                        onOpenProfile = onOpenProfile,
-                        onOpenProfileImage = onOpenProfileImage,
-                    )
-                }
-            },
-            details = { ProfileDetails(displayedAccount) },
-            listState = listState,
-            showInlineCategories = !compactLayout && !compactWidePresentation,
-            categoryChipListState = categoryChipListState,
-            categoryRowVisible = categoryRowVisible,
-            onToggleCategoryRow = { categoryRowVisible = !categoryRowVisible },
-        )
-
-        if (compactLayout) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = CompactOverlayHorizontalPadding)
-                    .windowInsetsPadding(
-                        compactContextualControlsPositioningInsets(
-                            navigationVisible = compactNavigationVisible,
-                            ime = WindowInsets.ime,
-                        ),
-                ),
-            ) {
-                DestinationChipRow(
-                    entries = compactCategoryEntries,
-                    rowContentDescription = stringResource(R.string.a11y_profile_categories),
-                    listState = categoryChipListState,
-                    visible = categoryRowVisible,
-                    onToggleVisibility = { categoryRowVisible = !categoryRowVisible },
-                    rowTestTag = "profile_categories",
-                    visibilityToggleTestTag = "profile_categories_visibility",
-                )
-            }
-        } else if (compactWidePresentation) {
-            LargeBottomDock(
-                modifier = Modifier.align(Alignment.BottomStart)
-                    .absolutePadding(
-                        left = wideLeftClearance,
-                        right = wideRightClearance,
-                        bottom = wideBottomClearance,
-                    )
-                    .testTag("profile_categories_dock"),
-                content = {
-                    DestinationChipRow(
-                        entries = compactCategoryEntries,
-                        rowContentDescription = stringResource(R.string.a11y_profile_categories),
-                        listState = categoryChipListState,
-                        visible = categoryRowVisible,
-                        onToggleVisibility = { categoryRowVisible = !categoryRowVisible },
-                        rowTestTag = "profile_categories",
-                        visibilityToggleTestTag = "profile_categories_visibility",
-                        caretPresentation = profileCaretPresentation,
-                    )
-                },
-            )
-        }
-    }
 }
 
 @Composable

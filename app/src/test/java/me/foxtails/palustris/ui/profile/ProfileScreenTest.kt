@@ -860,6 +860,34 @@ class ProfileScreenTest {
         compose.onNodeWithText("Edit profile").assertDoesNotExist()
     }
 
+    @Test
+    fun compactAndCompactWideShareCategoryVisibilityState() {
+        val profile = account("adaptive", "Adaptive")
+        val compactWide = mutableStateOf(false)
+
+        show {
+            ProfileScreen(
+                account = profile,
+                profileState = profileState(profile, emptyList()),
+                compactLayout = !compactWide.value,
+                compactWidePresentation = compactWide.value,
+                authenticatedAccountId = self.id,
+            )
+        }
+
+        // The compact floating row starts expanded.
+        compose.onNodeWithContentDescription("Hide chips").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Hide chips").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Show chips").assertIsDisplayed()
+
+        // The compact-wide dock reuses the same visibility state across the placement change.
+        compose.runOnIdle { compactWide.value = true }
+        compose.waitForIdle()
+        compose.onNodeWithTag("profile_categories_dock").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Show chips").assertIsDisplayed()
+    }
+
     private fun show(content: @Composable () -> Unit) {
         compose.activity.runOnUiThread {
             compose.activity.setContent {

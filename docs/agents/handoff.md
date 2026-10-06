@@ -18,10 +18,12 @@ high-value Compose functions. State does not move. Keep every existing owner, co
 invariant, and test. This phase does not touch protocol, persistence, account scope, or
 navigation policy.
 Phase 0 and 1 are committed and pushed. `main` is at `f28430a`.
-Phase 2 slice 2.1 is implemented and gate-verified: `HomeFeed` now delegates paging and
-scroll effects and feed rendering to private helpers without moving state.
-Phase 2 slice 2.2 is next: extract the non-expanded Profile presentation into
-`ui/profile/ProfileTimelinePresentation.kt`.
+Phase 2 slice 2.1 is committed at `6920602`: `HomeFeed` delegates paging and scroll effects
+and feed rendering to private helpers without moving state.
+Phase 2 slice 2.2 is implemented and gate-verified: `ProfileScreen` selects the presentation
+and delegates compact and compact-wide to the new `ui/profile/ProfileTimelinePresentation.kt`.
+Phase 2 slice 2.3 is next: decompose the shared destination-chip rendering in
+`ui/components/CategoryChips.kt`.
 Do not split ShellContent. Do not push. Do not begin Phase 3.
 
 ## Ownership and caution
@@ -35,9 +37,9 @@ Recheck external Java/Gradle activity before builds. Use explicit reviewed commi
 
 ## Last safe commit
 
-Preceding safe commit: `f28430a` — `Reduce shell destination content to routing`.
-The 2.1 slice commit subject is `Separate Home feed effects from rendering`.
-The next slice commit subject is `Extract Profile timeline presentation`.
+Preceding safe commit: `6920602` — `Separate Home feed effects from rendering`.
+The 2.2 slice commit subject is `Extract Profile timeline presentation`.
+The next slice commit subject is `Decompose destination chip rendering`.
 
 ## Limits
 

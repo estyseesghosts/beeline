@@ -392,10 +392,12 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   category, or scroll-state owners.
   `ShellContent` identifies non-expanded wide content as compact-wide presentation.
   This includes compact-width windows when vertical navigation fits and the single-pane width mode.
-  Compact-wide Profile uses `ProfileTimelineList` for the mobile one-column header and timeline. It keeps a
-  wide bottom category dock; expanded tablet Profile keeps `ProfileLargePresentation`, whose default summary uses two columns.
+  Compact-wide Profile uses `ProfileTimelinePresentation`, which renders the mobile one-column
+  `ProfileTimelineList`, the mobile header, the details, and the category chips in a compact floating
+  row or a compact-wide bottom dock; expanded tablet Profile keeps `ProfileLargePresentation`, whose default summary uses two columns.
   The shell owns wide contextual-button placement, while Profile keeps its feature actions and category state.
-  `ProfileScreen` owns profile-keyed saveable chip visibility and one chip `LazyListState` across compact and wide placement.
+  `ProfileScreen` owns profile-keyed saveable chip visibility and one chip `LazyListState` across compact and wide placement,
+  so they survive a compact ↔ compact-wide placement change. It selects the presentation and delegates.
   `profileCategoryChipEntries` only builds shared entries. `DestinationChipRow` renders inline and dock placements.
   Category selection and actions remain with their existing owners.
   `ProfileScreen` passes physical-right clearance to its wide owners and adds bottom obstruction to

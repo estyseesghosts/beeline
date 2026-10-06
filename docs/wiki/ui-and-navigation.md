@@ -220,15 +220,17 @@ The shared chip row includes a circular caret in its first logical position, sep
 Category selection and profile actions keep their existing owners. Clearance sets no chip travel.
 Production clearance is active.
 
-Compact-wide uses the same one-column header and timeline hierarchy as mobile Profile. It keeps a wide
-bottom category dock, while the shell keeps the contextual action beside floating navigation. This
-button placement is the only permitted difference from mobile Profile. Expanded tablet Profile keeps
-`ProfileLargePresentation` and its two-column summary. `WideNavigationTest` verifies the compact-wide shell, content bounds, dock
+Compact-wide uses the same one-column header and timeline hierarchy as mobile Profile through
+`ProfileTimelinePresentation`. It keeps a wide bottom category dock, while the shell keeps the
+contextual action beside floating navigation. This button placement is the only permitted difference
+from mobile Profile. Expanded tablet Profile keeps `ProfileLargePresentation` and its two-column
+summary. `WideNavigationTest` verifies the compact-wide shell, content bounds, dock
 interaction, and shell-owned Edit profile action at 445 × 704 dp.
 
-Sources: `ui/profile/ProfileScreen.kt`, `ui/profile/ProfileLargePresentation.kt`,
-`ui/profile/ProfileTimelineList.kt`, `ui/shell/ShellContent.kt`,
-`ui/shell/ShellDestinationContent.kt`, `ProfileClearanceTest`, `WideNavigationTest`.
+Sources: `ui/profile/ProfileScreen.kt`, `ui/profile/ProfileTimelinePresentation.kt`,
+`ui/profile/ProfileLargePresentation.kt`, `ui/profile/ProfileTimelineList.kt`,
+`ui/shell/ShellContent.kt`, `ui/shell/ShellDestinationContent.kt`, `ProfileClearanceTest`,
+`WideNavigationTest`.
 Focused Compose tests verify viewport and divider bounds, mirrored wide columns, header and row control bounds,
 dock clearance, final-row and footer reach, load-older and retry callbacks, branch forwarding, retained category
 selection and profile-list position, and compact compatibility. The shared-row test verifies collapse and chip-position retention.

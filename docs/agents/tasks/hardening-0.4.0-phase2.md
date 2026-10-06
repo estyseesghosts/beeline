@@ -38,27 +38,35 @@ test-isolation (`UncaughtExceptionsBeforeTest`). They pass alone; record them an
   renders the pull-to-refresh, list, error/empty/filtered-empty states, post rows,
   loading-more/footer, and wide dock. No Home state moved. The HomeFeed import ordering is
   fixed and its ktlint baseline entry is removed.
+- 2.2 committed: preceding safe commit `6920602`, subject `Extract Profile timeline
+  presentation`. New `ui/profile/ProfileTimelinePresentation.kt` renders the compact and
+  compact-wide one-column Profile: `ProfileTimelineList`, mobile header, details, compact
+  floating category row, compact-wide `LargeBottomDock`, and destination chips.
+  `ProfileScreen` retains account resolution, `LaunchedEffect(account.id)`, physical
+  clearance normalization, the profile-keyed saveable category visibility, the category chip
+  `LazyListState`, self-profile determination, end-clearance calculation, and presentation
+  selection. Compact and compact-wide share the one presentation; no third Profile
+  implementation exists. A new `ProfileScreenTest` case covers compact ↔ compact-wide
+  category visibility retention. The ProfileScreen import ordering is fixed and its ktlint
+  baseline entry is removed.
 
 # Current slice
 
-2.2 — Extract the non-expanded Profile presentation (new `ui/profile/ProfileTimelinePresentation.kt`;
-`ui/profile/ProfileScreen.kt`, 494 lines). Move the compact + compact-wide one-column body:
-`ProfileTimelineList`, mobile header, details, compact floating category row, compact-wide
-`LargeBottomDock`, and destination chips. `ProfileScreen` retains: account resolution,
-`LaunchedEffect(account.id)`, physical clearance normalization, profile-keyed category visibility
-state, the category chip `LazyListState`, self-profile determination, end-clearance calculation,
-and presentation selection; then delegates to `ProfileLargePresentation` or
-`ProfileTimelinePresentation`. Critical: do not create category visibility or category chip list
-state inside the new presentation; `ProfileScreen` keeps ownership so state survives placement
-changes. Compact and compact-wide must share the same one-column presentation; do not create a
-third Profile implementation.
-Tests: `ProfileScreenTest`, `ProfileClearanceTest`, `WideNavigationTest`. Add an explicit
-regression test for compact ↔ compact-wide category state retention if none exists.
-Commit subject: `Extract Profile timeline presentation`.
+2.3 — Decompose shared destination-chip rendering (`ui/components/CategoryChips.kt`, 242 lines).
+Do not change its public/internal call contract. Extract private presentation helpers such as
+`DestinationChipVisibilityButton` and `DestinationFilterChip`. Keep in `DestinationChipRow`:
+selected-entry lookup, selected-entry scroll effect, visibility animation, and `LazyRow` assembly.
+Move into helpers: caret surface/button rendering, press-animation setup, and FilterChip
+color/scale/semantics rendering. Do not change: 48 dp minimum geometry, caret position, caret
+rotation, accessibility descriptions, selectable-group semantics, reduced-motion behavior,
+selected-chip auto-scroll, or keys/test tags.
+Tests: `CategoryChipsGeometryTest`, `WideNavigationTest`, `HomeFeedTest`,
+`NotificationsClearanceTest`, `ProfileClearanceTest`.
+Commit subject: `Decompose destination chip rendering`.
 
 # Files involved
 
-- ui/profile/ProfileScreen.kt and the new ui/profile/ProfileTimelinePresentation.kt
+- ui/components/CategoryChips.kt
 - docs/agents/app-shell-ownership.md and docs/wiki/ui-and-navigation.md
 - task records
 
@@ -69,13 +77,17 @@ Commit subject: `Extract Profile timeline presentation`.
   1,691 JVM tests across 161 suites, lint, ktlint, debug assembly, and release assembly.
   The import-ordering fix removes the HomeFeed ktlint baseline entry with no new exemption.
   Two known cancellation flakes failed in separate runs and pass alone (see `logs/BUGS.txt`).
+2.2 focused: `ProfileScreenTest`, `ProfileClearanceTest`, and `WideNavigationTest` pass.
+2.2 full gate: 51 Python tests pass, architecture audit exits 0 with zero regressions,
+  1,691 JVM tests across 161 suites, lint, ktlint, debug assembly, and release assembly.
+  The ProfileScreen import-ordering fix removes its ktlint baseline entry with no new exemption.
 For each later slice: run focused tests, then the complete local CI-parity gate with closed
 stdin and an explicit timeout.
 
 # Next
 
-Implement slice 2.2, run focused tests and the full CI-parity gate, update records, and
-commit as `Extract Profile timeline presentation`.
+Implement slice 2.3, run focused tests and the full CI-parity gate, update records, and
+commit as `Decompose destination chip rendering`.
 
 # Blockers
 
@@ -86,4 +98,4 @@ unverified.
 
 # Last safe commit
 
-f28430a — Reduce shell destination content to routing.
+6920602 — Separate Home feed effects from rendering.
