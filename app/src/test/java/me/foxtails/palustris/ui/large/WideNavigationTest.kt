@@ -38,6 +38,7 @@ import me.foxtails.palustris.ui.thread.PostThreadPhase
 import me.foxtails.palustris.ui.thread.PostThreadUiState
 import org.junit.Assert.assertTrue
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -98,6 +99,67 @@ class WideNavigationTest {
         compose.onNodeWithTag("large_screen_shell").assertIsDisplayed()
         compose.onNodeWithText("Select a post").assertIsDisplayed()
         compose.onNodeWithContentDescription("Timeline Home").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w445dp-h704dp-420dpi")
+    fun compactWideProfileUsesMobileColumnAndKeepsWideActions() {
+        val profile = wideProfile()
+        var selectedCategory: ProfileCategory? = null
+        val post = Post(
+            id = EntityId(profile.id.connection.origin, "compact-wide-profile-post"),
+            author = profile,
+            text = "Compact-wide profile post",
+            publishedAtEpochMillis = 0,
+            audience = Audience.Public,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                AppShellFixtures.app(
+                    account = profile,
+                    profile = AppShellFixtures.profile(
+                        ProfileUiState(
+                            targetId = profile.id,
+                            account = profile,
+                            selectedTab = ProfileCategory.Posts,
+                            pages = mapOf(
+                                ProfileTimelineTab.Posts to ProfilePageState(
+                                    posts = listOf(OwnedPost(profile.id, post)),
+                                    terminal = true,
+                                ),
+                            ),
+                        ),
+                        onSelectCategory = { selectedCategory = it },
+                    ),
+                )
+            }
+        }
+        compose.onNodeWithContentDescription("Profile").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("large_screen_shell").assertIsDisplayed()
+        compose.onNodeWithTag(LargeNavigationCapsuleTag, useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("profile_large_avatar").assertDoesNotExist()
+        compose.onNodeWithText("Compact-wide profile post").assertIsDisplayed()
+        val header = compose.onNodeWithTag("profile_header", useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot
+        val list = compose.onNodeWithTag("profile_timeline_list", useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot
+        assertEquals("compact-wide Profile keeps the header in the timeline column", list.left, header.left, 1f)
+        assertTrue("compact-wide Profile keeps a broad mobile header", header.width > list.width * 0.75f)
+        val dock = compose.onNodeWithTag("profile_categories_dock").fetchSemanticsNode().boundsInRoot
+        val categories = compose.onNodeWithContentDescription(
+            "Profile categories; swipe horizontally for more",
+        )
+        categories.assertIsDisplayed().assert(hasScrollAction())
+        val categoryBounds = categories.fetchSemanticsNode().boundsInRoot
+        assertTrue("compact-wide category chips stay inside their dock", categoryBounds.top >= dock.top)
+        assertTrue("compact-wide category chips stay inside their dock", categoryBounds.bottom <= dock.bottom)
+        compose.onNodeWithText("Media").performClick()
+        compose.runOnIdle { assertEquals(ProfileCategory.Media, selectedCategory) }
+        compose.onNodeWithContentDescription("Edit profile").assertIsDisplayed()
+        compose.onNodeWithTag("profile_edit_action").assertDoesNotExist()
+        compose.onNodeWithTag("profile_edit_profile_chip").assertDoesNotExist()
     }
 
     @Test fun directWideSelectionFollowedByFoldingKeepsGroupedDestination() {

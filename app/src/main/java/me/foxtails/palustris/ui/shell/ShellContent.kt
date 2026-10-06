@@ -219,6 +219,8 @@ internal fun ShellContent(
     // follows the fit policy rather than the window width alone. Pane and back policy keep using
     // the width-derived mode, which stays independent of navigation presentation.
     val wideContent = largePresentation || navigationFit.useVerticalNavigation
+    // Single-pane windows keep wide shell chrome without taking expanded tablet destination layouts.
+    val compactWidePresentation = wideContent && presentationMode != LargeLayoutMode.Expanded
     val compactNavigation = !navigationFit.useVerticalNavigation
     // The compact bar is the only chrome in a wide pane layout when the vertical stack cannot
     // fit, so wide content keeps its own end clearance for that bar.
@@ -278,6 +280,7 @@ internal fun ShellContent(
                                 photoGridScrollState = photoGridScrollState,
                                 profileListState = profileListState,
                                 largePresentation = wideContent,
+                                compactWidePresentation = compactWidePresentation,
                                 leftObstructionClearance = leftObstructionClearance + paneLeftClearance,
                                 rightObstructionClearance = rightObstructionClearance + paneRightClearance,
                                 bottomObstructionClearance = bottomObstructionClearance + compactFallbackClearance,
@@ -339,6 +342,7 @@ internal fun ShellContent(
                         photoGridScrollState = photoGridScrollState,
                         profileListState = profileListState,
                         largePresentation = largePresentation,
+                        compactWidePresentation = compactWidePresentation,
                         rightObstructionClearance = rightObstructionClearance,
                         leftObstructionClearance = leftObstructionClearance,
                         bottomObstructionClearance = bottomObstructionClearance,

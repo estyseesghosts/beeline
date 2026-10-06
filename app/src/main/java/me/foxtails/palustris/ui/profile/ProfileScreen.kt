@@ -58,6 +58,7 @@ import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInset
 import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
+import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
@@ -66,10 +67,9 @@ import me.foxtails.palustris.ui.media.MediaOpenRequest
 /**
  * Profile surface for one target account.
  *
- * The shell supplies [rightObstructionClearance] and [bottomObstructionClearance] for future floating
- * navigation. Profile calculates neither value. Wide layout keeps its full-size viewports and clears
- * physical right on interactive content. Compact ignores both inputs and keeps its measured end clearance
- * and its floating chip row.
+ * The shell supplies obstruction clearances for floating navigation. Profile calculates neither value.
+ * Expanded layout uses the two-column summary. Compact-wide uses the mobile content column and a wide
+ * category dock. Compact layout keeps its measured end clearance and floating chip row.
  */
 @Composable
 fun ProfileScreen(
@@ -107,6 +107,7 @@ fun ProfileScreen(
     quoteEnabled: Boolean = false,
     onQuote: (OwnedPost) -> Unit = {},
     largeLayout: Boolean = false,
+    compactWidePresentation: Boolean = false,
     largeShowSummary: Boolean = true,
     listState: LazyListState? = null,
     rightObstructionClearance: Dp = 0.dp,
@@ -142,7 +143,8 @@ fun ProfileScreen(
     var categoryRowVisible by rememberSaveable(categoryOwnerKey) { mutableStateOf(true) }
     val categoryChipListState = rememberLazyListState()
     val isSelf = displayedAccount.id == authenticatedAccountId
-    val endContentClearance = if (largeLayout) {
+    val expandedProfile = largeLayout && !compactWidePresentation
+    val endContentClearance = if (expandedProfile || compactWidePresentation) {
         LargeBottomDockClearance + wideBottomClearance
     } else if (compactLayout) {
         compactScrollEndClearance(
@@ -154,7 +156,7 @@ fun ProfileScreen(
         wideBottomClearance
     }
 
-    if (largeLayout) {
+    if (expandedProfile) {
         ProfileLargePresentation(
             account = displayedAccount,
             state = profileState,
@@ -200,6 +202,18 @@ fun ProfileScreen(
         return
     }
 
+    val compactCategoryEntries = profileCategoryChipEntries(
+        isSelf = isSelf,
+        likedAvailable = profileState.likedAvailable,
+        featuredAvailable = profileState.pinnedPosts.size > 1,
+        includeShowMore = true,
+        includeEditProfile = false,
+        selected = profileState.selectedTab,
+        onCategorySelected = onCategorySelected,
+        onOpenDrafts = onOpenDrafts,
+        onOpenBookmarks = onOpenBookmarks,
+    )
+
     Box(Modifier.fillMaxSize()) {
         ProfileTimelineList(
             account = displayedAccount,
@@ -232,20 +246,28 @@ fun ProfileScreen(
             quoteEnabled = quoteEnabled,
             onQuote = onQuote,
             header = {
-                ProfileHeader(
-                    account = displayedAccount,
-                    state = profileState,
-                    isSelf = isSelf,
-                    onRefresh = onRefresh,
-                    onFollow = onFollow,
-                    onUnfollow = onUnfollow,
-                     onMessage = { onMessage(displayedAccount) },
-                     onOpenProfile = onOpenProfile,
-                     onOpenProfileImage = onOpenProfileImage,
-                 )
+                Box(
+                    Modifier.fillMaxWidth().absolutePadding(
+                        left = wideLeftClearance,
+                        right = wideRightClearance,
+                    ),
+                ) {
+                    ProfileHeader(
+                        account = displayedAccount,
+                        state = profileState,
+                        isSelf = isSelf,
+                        onRefresh = onRefresh,
+                        onFollow = onFollow,
+                        onUnfollow = onUnfollow,
+                        onMessage = { onMessage(displayedAccount) },
+                        onOpenProfile = onOpenProfile,
+                        onOpenProfileImage = onOpenProfileImage,
+                    )
+                }
             },
             details = { ProfileDetails(displayedAccount) },
             listState = listState,
+            showInlineCategories = !compactLayout && !compactWidePresentation,
             categoryChipListState = categoryChipListState,
             categoryRowVisible = categoryRowVisible,
             onToggleCategoryRow = { categoryRowVisible = !categoryRowVisible },
@@ -262,20 +284,10 @@ fun ProfileScreen(
                             navigationVisible = compactNavigationVisible,
                             ime = WindowInsets.ime,
                         ),
-                    ),
+                ),
             ) {
                 DestinationChipRow(
-                    entries = profileCategoryChipEntries(
-                        isSelf = isSelf,
-                        likedAvailable = profileState.likedAvailable,
-                        featuredAvailable = profileState.pinnedPosts.size > 1,
-                        includeShowMore = true,
-                        includeEditProfile = false,
-                        selected = profileState.selectedTab,
-                        onCategorySelected = onCategorySelected,
-                        onOpenDrafts = onOpenDrafts,
-                        onOpenBookmarks = onOpenBookmarks,
-                    ),
+                    entries = compactCategoryEntries,
                     rowContentDescription = stringResource(R.string.a11y_profile_categories),
                     listState = categoryChipListState,
                     visible = categoryRowVisible,
@@ -284,6 +296,27 @@ fun ProfileScreen(
                     visibilityToggleTestTag = "profile_categories_visibility",
                 )
             }
+        } else if (compactWidePresentation) {
+            LargeBottomDock(
+                modifier = Modifier.align(Alignment.BottomStart)
+                    .absolutePadding(
+                        left = wideLeftClearance,
+                        right = wideRightClearance,
+                        bottom = wideBottomClearance,
+                    )
+                    .testTag("profile_categories_dock"),
+                content = {
+                    DestinationChipRow(
+                        entries = compactCategoryEntries,
+                        rowContentDescription = stringResource(R.string.a11y_profile_categories),
+                        listState = categoryChipListState,
+                        visible = categoryRowVisible,
+                        onToggleVisibility = { categoryRowVisible = !categoryRowVisible },
+                        rowTestTag = "profile_categories",
+                        visibilityToggleTestTag = "profile_categories_visibility",
+                    )
+                },
+            )
         }
     }
 }

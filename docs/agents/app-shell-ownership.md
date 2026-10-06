@@ -4,17 +4,19 @@
 
 **Status:** current. The shell decomposition is complete. Completion slices C-01 through
 C-05, C-06a, C-06b, C-06c, C-07, C-08, C-09, C-10, C-11, C-12a through C-12d4, C-13,
-C-14, and C-15 are implemented and test verified. Phase 4C-5c anchors and shared chip rows are
-source and test verified. Steps 13, 14, and 15 of the progress report are complete. No dead
-scaffolding remains.
+C-14, and C-15 are implemented and test verified. Phase 4C-5c anchors, shared chip rows, and
+compact-wide Profile are source and test verified. Steps 13, 14, and 15 of the progress report are
+complete. No dead scaffolding remains.
 
 **Last reviewed:** 2026-10-05.
 
-**Source baseline:** `79dd743` (before the 4C-5c anchor and chip slices). Both 4C-5c slices are source and test verified.
+**Source baseline:** `79dd743` (before the 4C-5c anchor, chip, and compact-wide Profile slices).
+The 4C-5c slices are source and test verified.
 
 **Evidence:** source and test verified. R02 verifies the shell draft fixture with NavigationTest,
 ComposerOwnerTest, and ShellCharacterizationTest. Phase 4C-5b verifies folded outer-screen Home.
-Phase 4C-5c verifies the folded Home caret and Notifications dock on the emulator. Other device behavior and live-server acceptance remain unverified.
+Phase 4C-5c verifies the folded Home caret and Notifications dock on the emulator.
+`WideNavigationTest` verifies compact-wide Profile at 445 × 704 dp. Device Profile rendering and live-server acceptance remain unverified.
 
 **Completion owner:** `docs/archive/agents/decomposition-01-02-completion.md`.
 
@@ -364,6 +366,11 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
 
 - `ShellDestinationContent` forwards shell clearances to Profile without changing its feature, paging,
   category, or scroll-state owners.
+  `ShellContent` identifies non-expanded wide content as compact-wide presentation.
+  This includes compact-width windows when vertical navigation fits and the single-pane width mode.
+  Compact-wide Profile uses `ProfileTimelineList` for the mobile one-column header and timeline. It keeps a
+  wide bottom category dock; expanded tablet Profile keeps `ProfileLargePresentation`, whose default summary uses two columns.
+  The shell owns wide contextual-button placement, while Profile keeps its feature actions and category state.
   `ProfileScreen` owns profile-keyed saveable chip visibility and one chip `LazyListState` across compact and wide placement.
   `profileCategoryChipEntries` only builds shared entries. `DestinationChipRow` renders inline and dock placements.
   Category selection and actions remain with their existing owners.
@@ -382,8 +389,11 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `ProfileClearanceTest` verifies synthetic LTR/RTL bounds, viewport and divider underlay, the mirrored wide
   columns, header and row controls, dock clearance, final-row and footer reach, load-older and retry callbacks,
   branch forwarding, retained category selection and list scroll position, and compact compatibility.
+  `WideNavigationTest` verifies the compact-wide one-column Profile, wide action placement, and category-dock interaction at 445 × 704 dp.
   `CategoryChipsGeometryTest` covers shared chip collapse and position retention.
-  Production clearance is active. Device Profile rendering remains unverified.
+  Focused Profile and wide-navigation tests pass. `:app:lintDebug` and `test assembleRelease` pass;
+  all 1,686 tests succeed, and release assembly succeeds. Production clearance is active.
+  Device Profile rendering remains unverified.
 
 - Every destination also clears physical left through the same content owner described for physical right.
   Home/Search/Profile dividers and row surfaces retain underlay. Photo Grid clears its opaque tile content area.

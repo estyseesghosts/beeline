@@ -3,7 +3,7 @@
 Complete Phase 4C: adaptive floating navigation shared by compact-wide and tablet layouts.
 Keep one navigator, one destination host, and the existing feature owners.
 
-Status: 4C-5b, anchor slice, and chip slice are verified. Commit the chip slice before the Profile follow-up.
+Status: 4C-5b, anchor, chip, and compact-wide Profile slices are verified. The Profile slice is ready to commit and push.
 Owner: orchestrator
 Last reviewed: 2026-10-05
 Authority: [AGENTS.md](../../../AGENTS.md), current source, tests, and Git.
@@ -164,27 +164,37 @@ Focused tests: `AppPreferencesRepositoryTest`, `SettingsViewModelTest`, `Setting
 - Update task state and handoff at each slice boundary. Update `app-shell-ownership.md` and `docs/wiki/ui-and-navigation.md` with verified ownership and behavior in the corresponding slice.
 - Create an ignored timestamped task log when implementation starts. Never stage local logs or unrelated user files.
 - Preserve modified agent definitions and writing-style changes, deleted tests/PNGs, untracked captures/scripts/caches, and `docs/agents/tasks/4c.md`.
-- Do not push. Report unavailable hardware, TalkBack, physical-device IME, and live-server checks.
+- The user explicitly authorized pushing `main` after the Profile commit. The push includes all 133 commits currently ahead of `origin/main`.
+  Report unavailable hardware, TalkBack, physical-device IME, and live-server checks.
 
 4C-5d is absorbed into 4C-5b. Do not repeat activation as an independent slice.
 
-# Next step after commit
+## Current slice — compact-wide Profile presentation
 
-- **Objective:** make compact-wide Profile match the mobile Profile presentation.
-  Button placement is the only allowed presentation difference.
-- **Order:** commit the chip slice as `Unify destination chip presentation` before investigating Profile. Read the current Profile source, tests, and ownership rules again after that commit.
-- **Scope boundary:** keep the Profile follow-up separate. Do not fold its presentation change into the chip commit.
+- **Starting commit:** `f7dc516` — `Unify destination chip presentation`.
+- **Objective:** make compact-wide Profile use the mobile one-column content presentation.
+  Button placement is the only permitted presentation difference.
+- **Finding:** before this slice, shell fit passed compact-wide content as `largeLayout`, which selected the two-column Profile summary.
+- **Owner:** `ProfileScreen` and its existing profile state/list owners. `ShellContent` identifies non-expanded wide content and passes that presentation input.
+- **Acceptance:** compact-wide Profile uses the mobile header, profile details, and timeline hierarchy. Preserve the expanded tablet summary. Keep feature selection, actions, profile state, list state, category state, and account scope unchanged. The existing wide contextual action remains shell-owned. Wide obstruction and dock clearance stay active.
+- **Non-goals:** change tablet Profile, move profile actions to a new owner, change profile categories, revise navigation geometry, or alter account/protocol behavior.
+- **Tests:** production shell coverage at 445 × 704 dp verifies one-column header and timeline bounds, the wide navigation target, and reachable category-dock interaction. Expanded tablet and compact Profile tests remain.
+- **Validation:** focused `WideNavigationTest`, `ProfileScreenTest`, and `ProfileClearanceTest` pass. `:app:lintDebug` and `test assembleRelease` pass with 1,686 tests and successful release assembly.
+  The authorized emulator is available. Device Profile rendering remains unverified because the active account content was not captured.
+- **Fail gates:** stop if correct classification needs a new layout authority, feature state moves, wide obstruction clearance regresses, or a root problem fails twice.
+- **Records:** app-shell ownership and the UI wiki now document the mode boundary and tests. The coding log is `logs/261005-210914.txt` and stays local.
 
 # Blockers and limits
 
 - 4C-5b remains verified at `79dd743`.
 - The 4C-5c anchor slice is committed and verified at `b419be1`.
-- The shared chip slice is verified and awaits its own reviewed commit.
+- Compact-wide Profile uses the mobile one-column content. Focused tests, lint, and the full release gate pass.
 - Device RTL, square-tablet hardware, physical hinge coordinates, TalkBack, physical-device IME, API 29, and release signing remain unverified.
 - Live-server recipient search and mutation behavior remain unverified. Chip placement is a presentation acceptance gate, not a protocol gate.
 - Recheck external Gradle activity before each build. Prior external clean/install interference remains a worktree risk.
 
 # Last safe commit
 
-Preceding safe commit: `b419be1` — `Persist physical navigation anchors`.
-The current chip-slice commit subject is `Unify destination chip presentation`. Nothing was pushed.
+Preceding safe commit: `f7dc516` — `Unify destination chip presentation`.
+The Profile slice commit subject is `Match compact-wide Profile to mobile layout`.
+The user authorized pushing `main`, including its 133 existing commits ahead of `origin/main`.

@@ -19,19 +19,22 @@ IME height does not select permanent presentation. Pane and back policy remain i
 All seven destination surfaces receive physical clearance. Wide compact fallback clears Search and the DM editor too.
 The DM New conversation action opens the existing recipient finder.
 
-4C-5c anchor preferences are committed at `b419be1`. The shared chip slice now uses one renderer and a leading circular caret.
-Wide Notifications filters use the bottom dock. The slice is verified and is ready to commit.
-After that commit, investigate compact-wide Profile as a separate slice. The required result is the mobile Profile presentation with button placement as the only difference.
+4C-5c anchor preferences are committed at `b419be1`. The shared chip renderer and wide Notifications dock are committed at `f7dc516`.
+Compact-wide Profile uses the mobile one-column content; button placement is the only permitted difference.
+Focused wide-navigation and Profile tests pass. `:app:lintDebug` passes.
+`test assembleRelease` passes with 1,686 tests and successful release assembly. The Profile commit and user-authorized push remain.
 
 ## Last safe commit
 
-Preceding safe commit: `b419be1` — `Persist physical navigation anchors`.
-The chip-slice commit subject is `Unify destination chip presentation`. Nothing was pushed.
+Preceding safe commit: `f7dc516` — `Unify destination chip presentation`.
+The Profile slice commit subject is `Match compact-wide Profile to mobile layout`.
+The user authorized pushing `main`, including its 133 existing commits ahead of `origin/main`.
 
 ## Evidence and limits
 
 - Focused chip and destination suites pass. `:app:lintDebug` passes.
 - The full gate passes: 1,685 tests, zero failures, errors, or skips; release assembly succeeds.
+- Compact-wide Profile tests pass. `:app:lintDebug` passes, and `test assembleRelease` passes with 1,686 tests.
 - `:app:installDebug` succeeded on `emulator-5554`. The folded 445 × 704 dp screen showed Home caret styling and hide/show.
 - The folded emulator showed the Notifications bottom dock above the system bar and loaded rows above the dock.
   The emulator was restored to OPENED. Captures are in `C:\Users\julie\AppData\Local\Temp\opencode\`.
@@ -42,7 +45,7 @@ The chip-slice commit subject is `Unify destination chip presentation`. Nothing 
 ## Worktree caution
 
 - No delegation occurred. The orchestrator owns implementation, direct review, records, validation, and Git.
-  The maintainer prohibits `problem_solver` for this task. Do not push.
+  The maintainer prohibits `problem_solver` for this task. The user authorized pushing `main` after the Profile commit.
 - Recheck external Java/Gradle activity before each build. Do not edit sources during a build.
 - Preserve modified agent definitions and `importantdocs/writing_style.md`.
 - Preserve deleted `PhotoGridFeedViewModelTest.kt` and PNGs, unrelated captures, scripts, and caches.
