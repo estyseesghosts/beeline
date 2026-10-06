@@ -437,6 +437,28 @@ class ArchitectureAuditTest(unittest.TestCase):
         result = audit.classify(report, baseline)
         self.assertIn("function-complexity-growth", {x["kind"] for x in result["regressions"]})
 
+    def test_duplicate_function_names_do_not_report_self_growth(self):
+        # Overloads, interface members, and overrides share one (file, name)
+        # key. A fresh scan of an unchanged tree must not report growth.
+        rows = [
+            {"file": "a.kt", "name": "delete", "lines": 54, "params": 2, "nesting": 3},
+            {"file": "a.kt", "name": "delete", "lines": 2, "params": 2, "nesting": 0},
+            {"file": "a.kt", "name": "delete", "lines": 3, "params": 2, "nesting": 0},
+        ]
+        same = audit.classify(
+            {"findings": [], "fileMetrics": {}, "functionMetrics": [dict(row) for row in rows]},
+            {"functionMetrics": [dict(row) for row in rows]},
+        )
+        self.assertFalse(same["regressions"])
+        # Real growth above the previous maximum still reports.
+        grown = [dict(row) for row in rows]
+        grown[0]["lines"] = 80
+        result = audit.classify(
+            {"findings": [], "fileMetrics": {}, "functionMetrics": grown},
+            {"functionMetrics": [dict(row) for row in rows]},
+        )
+        self.assertIn("function-complexity-growth", {x["kind"] for x in result["regressions"]})
+
     def test_all_warning_kinds_never_fail_check(self):
         # Each warning kind reports a signal but never fails --check alone.
         bodies = [

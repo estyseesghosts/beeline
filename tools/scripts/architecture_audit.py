@@ -487,20 +487,29 @@ def hotspot_regressions(report, baseline):
         # File hotspot needs both percentage growth and absolute growth.
         if new and old.get("lines", 0) and new["lines"] > old["lines"] * (1 + percent) and new["lines"] - old["lines"] >= thresholds["hotspotGrowthLines"]:
             out.append(finding("hotspot-growth", file, f"{old['lines']} -> {new['lines']} lines", symbol="<file>", classification="regression"))
-    old_functions = {(x.get("file"), x.get("name")): x for x in baseline.get("functionMetrics", [])}
-    for new in report.get("functionMetrics", []):
-        old = old_functions.get((new.get("file"), new.get("name")))
-        if not old:
+    old_functions: dict[tuple, list] = {}
+    for row in baseline.get("functionMetrics", []):
+        old_functions.setdefault((row.get("file"), row.get("name")), []).append(row)
+    new_functions: dict[tuple, list] = {}
+    for row in report.get("functionMetrics", []):
+        new_functions.setdefault((row.get("file"), row.get("name")), []).append(row)
+    for key, olds in old_functions.items():
+        news = new_functions.get(key)
+        if not news:
             continue
         changed = []
         # Function growth needs both percentage growth and absolute growth.
         # A small change above a warning threshold is not material by itself.
+        # Compare per-metric maxima: several rows can share one (file, name)
+        # key (overloads, interface members, overrides), so a positional match
+        # reports growth on an unchanged tree. Maxima keep real growth visible.
         for metric, absolute in (("lines", FUNCTION_GROWTH_LINES), ("params", FUNCTION_GROWTH_STEPS), ("nesting", FUNCTION_GROWTH_STEPS)):
-            before, after = old.get(metric, 0), new.get(metric, 0)
+            before = max(row.get(metric, 0) for row in olds)
+            after = max(row.get(metric, 0) for row in news)
             if after > before and before and after > before * (1 + percent) and after - before >= absolute:
                 changed.append(f"{metric} {before}->{after}")
         if changed:
-            out.append(finding("function-complexity-growth", new["file"], f"{new['name']}: {', '.join(changed)}", symbol=new["name"], classification="regression"))
+            out.append(finding("function-complexity-growth", key[0], f"{key[1]}: {', '.join(changed)}", symbol=key[1], classification="regression"))
     return out
 
 
