@@ -59,6 +59,8 @@ import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.compactFloatingEnter
 import me.foxtails.palustris.ui.motion.compactFloatingExit
 import me.foxtails.palustris.ui.components.DestinationChipRow
+import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.large.rememberCompactWideTabCaretHost
 import me.foxtails.palustris.ui.navigation.CompactContextualNavigationBar
 import me.foxtails.palustris.ui.navigation.homeTimelineChipEntries
 import me.foxtails.palustris.ui.navigation.ShellNavigator
@@ -214,6 +216,7 @@ internal fun ShellContent(
 ) {
     val homeChipListState = rememberLazyListState()
     var homeChipRowVisible by rememberSaveable { mutableStateOf(true) }
+    val compactWideTabCaretHost = rememberCompactWideTabCaretHost()
     val largePresentation = presentationMode != LargeLayoutMode.Compact
     // Vertical navigation activates below the pane width cutoff, so the destination presentation
     // follows the fit policy rather than the window width alone. Pane and back policy keep using
@@ -222,6 +225,15 @@ internal fun ShellContent(
     // Single-pane windows keep wide shell chrome without taking expanded tablet destination layouts.
     val compactWidePresentation = wideContent && presentationMode != LargeLayoutMode.Expanded
     val compactNavigation = !navigationFit.useVerticalNavigation
+    // Compact-wide hides the inline chip caret and drives the same feature-owned visibility from
+    // the contextual caret, but only while the floating stack is actually visible. A failed fit or
+    // a modal overlay keeps the inline control so chips remain toggleable.
+    val modalOverlayOpenBeforeContent = navigator.overlay != null || navigator.sheet != null ||
+        overlay.profileDialog || overlay.signOutDialog || overlay.mediaRequest != null ||
+        overlay.profileImageRequest != null || navigator.singlePost != null ||
+        overlay.emojiPickerTarget != null
+    val useCompactWideCaret = compactWidePresentation && navigationFit.useVerticalNavigation &&
+        navigator.page == null && !modalOverlayOpenBeforeContent
     // The compact bar is the only chrome in a wide pane layout when the vertical stack cannot
     // fit, so wide content keeps its own end clearance for that bar.
     val compactFallbackClearance = if (wideContent && compactNavigation && navigator.navigationVisible) {
@@ -232,10 +244,7 @@ internal fun ShellContent(
     } else {
         0.dp
     }
-    val modalOverlayOpen = navigator.overlay != null || navigator.sheet != null ||
-        overlay.profileDialog || overlay.signOutDialog || overlay.mediaRequest != null ||
-        overlay.profileImageRequest != null || navigator.singlePost != null ||
-        overlay.emojiPickerTarget != null
+    val modalOverlayOpen = modalOverlayOpenBeforeContent
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Row(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f).fillMaxHeight()) {
@@ -269,6 +278,8 @@ internal fun ShellContent(
                         ),
                         onTargetSelected = navigator::selectLargeTarget,
                         onOpenAccounts = { overlay.clearPostActionBubble(); navigator.sheet = "Accounts" },
+                        isCompactWide = compactWidePresentation,
+                        tabCaret = compactWideTabCaretHost.caretState,
                         primaryContent = { paneModifier, paneLeftClearance, paneRightClearance ->
                             ShellDestinationContent(
                                 paneModifier = paneModifier,
@@ -281,6 +292,8 @@ internal fun ShellContent(
                                 profileListState = profileListState,
                                 largePresentation = wideContent,
                                 compactWidePresentation = compactWidePresentation,
+                                useCompactWideCaret = useCompactWideCaret,
+                                tabCaretHost = compactWideTabCaretHost,
                                 leftObstructionClearance = leftObstructionClearance + paneLeftClearance,
                                 rightObstructionClearance = rightObstructionClearance + paneRightClearance,
                                 bottomObstructionClearance = bottomObstructionClearance + compactFallbackClearance,
@@ -343,6 +356,8 @@ internal fun ShellContent(
                         profileListState = profileListState,
                         largePresentation = largePresentation,
                         compactWidePresentation = compactWidePresentation,
+                        useCompactWideCaret = false,
+                        tabCaretHost = compactWideTabCaretHost,
                         rightObstructionClearance = rightObstructionClearance,
                         leftObstructionClearance = leftObstructionClearance,
                         bottomObstructionClearance = bottomObstructionClearance,

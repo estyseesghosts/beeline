@@ -51,8 +51,11 @@ import me.foxtails.palustris.domain.NotificationActivity
 import me.foxtails.palustris.domain.NotificationCategory
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
+import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
@@ -89,6 +92,8 @@ fun NotificationsScreen(
     onMarkAllRead: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     contentWarningRules: me.foxtails.palustris.domain.ContentWarningRules = me.foxtails.palustris.ui.posts.LocalContentWarningRules.current,
+    useCompactWideCaret: Boolean = false,
+    tabCaretHost: CompactWideTabCaretHost? = null,
 ) {
     var selectedFilterName by rememberSaveable(accountIdentity) { mutableStateOf<String?>(null) }
     var chipRowVisible by rememberSaveable(accountIdentity) { mutableStateOf(true) }
@@ -184,6 +189,15 @@ fun NotificationsScreen(
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
     val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
+    if (useCompactWideCaret) {
+        CompactWideTabCaretRegistration(
+            host = tabCaretHost,
+            expanded = chipRowVisible,
+            onToggle = { chipRowVisible = !chipRowVisible },
+        )
+    }
+    val notificationCaretPresentation = if (useCompactWideCaret) ChipCaretPresentation.Hidden
+    else ChipCaretPresentation.Inline
     val title = selectedFilter?.let { stringResource(it.labelRes) }
         ?: stringResource(if (connected) R.string.notifications_title else R.string.notifications_empty_title)
     val subtitle = if (selectedFilter == null) {
@@ -277,6 +291,7 @@ fun NotificationsScreen(
                         onToggleVisibility = { chipRowVisible = !chipRowVisible },
                         rowTestTag = "notification_filters",
                         visibilityToggleTestTag = "notification_filters_visibility",
+                        caretPresentation = notificationCaretPresentation,
                     )
                 },
             )

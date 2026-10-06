@@ -82,8 +82,11 @@ import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
+import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.posts.postHashtags
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
@@ -161,6 +164,8 @@ fun PhotoGridScreen(
     bottomObstructionClearance: Dp = 0.dp,
     gridState: LazyStaggeredGridState? = null,
     contentWarningRules: ContentWarningRules = LocalContentWarningRules.current,
+    useCompactWideCaret: Boolean = false,
+    tabCaretHost: CompactWideTabCaretHost? = null,
 ) {
     var addHashtagDialog by rememberSaveable { mutableStateOf(false) }
     var hashtagInput by rememberSaveable { mutableStateOf("") }
@@ -189,6 +194,15 @@ fun PhotoGridScreen(
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
     val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
+    if (useCompactWideCaret) {
+        CompactWideTabCaretRegistration(
+            host = tabCaretHost,
+            expanded = chipRowVisible,
+            onToggle = { chipRowVisible = !chipRowVisible },
+        )
+    }
+    val photoGridCaretPresentation = if (useCompactWideCaret) ChipCaretPresentation.Hidden
+    else ChipCaretPresentation.Inline
 
     LaunchedEffect(state.selectedFeed, state.initialLoadComplete) {
         requestedCursor = null
@@ -349,6 +363,7 @@ fun PhotoGridScreen(
                         onToggleVisibility = { chipRowVisible = !chipRowVisible },
                         rowTestTag = "photo_grid_filters",
                         visibilityToggleTestTag = "photo_grid_filters_visibility",
+                        caretPresentation = photoGridCaretPresentation,
                     )
                 },
             )

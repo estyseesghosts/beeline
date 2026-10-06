@@ -60,6 +60,18 @@ internal data class FilterChipEntry(
 )
 
 /**
+ * Selects where the destination chip visibility control appears.
+ *
+ * Inline keeps the existing circular control at the start of the chip row. Hidden removes that
+ * inline control while keeping chip expansion state and toggle plumbing intact, so compact-wide
+ * can present the same state through its contextual caret without a second state machine.
+ */
+enum class ChipCaretPresentation {
+    Inline,
+    Hidden,
+}
+
+/**
  * Renders destination chips and their persistent visibility control.
  *
  * The caller owns [listState] and [visible] so adaptive placement cannot reset chip state.
@@ -75,6 +87,7 @@ internal fun DestinationChipRow(
     modifier: Modifier = Modifier,
     rowTestTag: String? = null,
     visibilityToggleTestTag: String = "destination_chip_visibility",
+    caretPresentation: ChipCaretPresentation = ChipCaretPresentation.Inline,
 ) {
     val scheme = LocalPalustrisMotionScheme.current
     val selectedEntryIndex = entries.indexOfFirst { it.key == selectedEntryKey && it.selected }
@@ -100,32 +113,17 @@ internal fun DestinationChipRow(
         modifier = modifier.fillMaxWidth().heightIn(min = BeelineBubbleMinHeight),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val interactionSource = remember { MutableInteractionSource() }
-        // Keep the control outside LazyRow so it stays fixed and can be replaced independently.
-        Surface(
-            modifier = Modifier
-                .size(BeelineBubbleMinHeight)
-                .springPress(interactionSource, pressedScale = scheme.compactPressedScale),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = false),
-        ) {
-            IconButton(
-                onClick = onToggleVisibility,
+        if (caretPresentation == ChipCaretPresentation.Inline) {
+            val interactionSource = remember { MutableInteractionSource() }
+            // Keep the control outside LazyRow so it stays fixed and can be replaced independently.
+            DestinationChipCaretButton(
+                visible = visible,
+                onToggleVisibility = onToggleVisibility,
+                caretRotation = caretRotation,
+                toggleDescription = toggleDescription,
+                visibilityToggleTestTag = visibilityToggleTestTag,
                 interactionSource = interactionSource,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .semantics { contentDescription = toggleDescription }
-                    .testTag(visibilityToggleTestTag),
-            ) {
-                Icon(
-                    imageVector = AppIcons.CaretUp,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.graphicsLayer { rotationZ = caretRotation },
-                )
-            }
+            )
         }
 
         ExpandableContent(
@@ -193,6 +191,52 @@ internal fun DestinationChipRow(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Renders the existing inline circular chip visibility control.
+ *
+ * The control stays reusable for layouts that keep the caret at the start of the chip row.
+ * Compact-wide hides this presentation and drives the same [visible] state from its contextual
+ * caret instead.
+ */
+@Composable
+private fun DestinationChipCaretButton(
+    visible: Boolean,
+    onToggleVisibility: () -> Unit,
+    caretRotation: Float,
+    toggleDescription: String,
+    visibilityToggleTestTag: String,
+    interactionSource: MutableInteractionSource,
+    modifier: Modifier = Modifier,
+) {
+    val scheme = LocalPalustrisMotionScheme.current
+    // Keep the control outside LazyRow so it stays fixed and can be replaced independently.
+    Surface(
+        modifier = modifier
+            .size(BeelineBubbleMinHeight)
+            .springPress(interactionSource, pressedScale = scheme.compactPressedScale),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        border = FilterChipDefaults.filterChipBorder(enabled = true, selected = false),
+    ) {
+        IconButton(
+            onClick = onToggleVisibility,
+            interactionSource = interactionSource,
+            modifier = Modifier
+                .fillMaxSize()
+                .semantics { contentDescription = toggleDescription }
+                .testTag(visibilityToggleTestTag),
+        ) {
+            Icon(
+                imageVector = AppIcons.CaretUp,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.graphicsLayer { rotationZ = caretRotation },
+            )
         }
     }
 }

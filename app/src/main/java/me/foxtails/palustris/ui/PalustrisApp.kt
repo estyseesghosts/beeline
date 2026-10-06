@@ -169,7 +169,14 @@ fun PalustrisApp(
                 LargeLayoutMode.Compact, LargeLayoutMode.Single ->
                     compactWideNavigationAnchor == AppNavigationAnchor.Left
             }
-            val navigationFit = rememberNavigationFit(maxWidth.value, maxHeight.value, anchorLeft)
+            // Compact-wide reserves the contextual tab-caret slot in its fit, so the floating
+            // stack never overflows the safe region when chips are present. Expanded keeps base fit.
+            val navigationFit = rememberNavigationFit(
+                maxWidth.value,
+                maxHeight.value,
+                anchorLeft,
+                isCompactWide = presentationMode != LargeLayoutMode.Expanded,
+            )
             val largePresentation = presentationMode != LargeLayoutMode.Compact
             val navigationMode = NavigationModeObserver.current(LocalView.current)
             SystemBars(overlay.mediaRequest != null || overlay.profileImageRequest != null, largePresentation)

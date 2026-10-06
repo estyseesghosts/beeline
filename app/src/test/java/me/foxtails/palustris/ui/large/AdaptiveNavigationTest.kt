@@ -84,8 +84,12 @@ class AdaptiveNavigationTest {
                 compose.runOnIdle { width.value = size.first; height.value = size.second; direction.value = layoutDirection }
                 val stack = bounds(LargeFloatingNavigationTag)
                 val capsule = bounds(LargeNavigationCapsuleTag)
+                // Compact-wide reserves the contextual tab-caret slot and bottom-anchors the stack.
+                // Expanded tablet keeps the capsule-plus-action stack vertically centered.
+                val isCompactWide = size.first < 840f
+                val expectedStackHeight = if (isCompactWide) 424f else 360f
                 assertEquals(56f * density, stack.width, 1f)
-                assertEquals(360f * density, stack.height, 1f)
+                assertEquals(expectedStackHeight * density, stack.height, 1f)
                 assertEquals(296f * density, capsule.height, 1f)
                 assertEquals(if (size.first >= 840f) 8f * density else (size.first - 64f) * density, stack.left, 1f)
                 assertEquals(stack.top, capsule.top, 1f)
@@ -93,6 +97,14 @@ class AdaptiveNavigationTest {
                 assertEquals(56f * density, action.width, 1f)
                 assertEquals(56f * density, action.height, 1f)
                 assertEquals(capsule.bottom + 8f * density, action.top, 1f)
+                if (isCompactWide) {
+                    // Home exposes tab chips, so the contextual caret sits below the composer.
+                    val caret = bounds(CompactWideTabCaretTag)
+                    assertEquals(56f * density, caret.width, 1f)
+                    assertEquals(56f * density, caret.height, 1f)
+                    assertEquals(action.bottom + 8f * density, caret.top, 1f)
+                    assertEquals(stack.bottom, caret.bottom, 1f)
+                }
                 assertTrue(stack.top >= 0f && stack.bottom <= size.second * density)
             }
         }

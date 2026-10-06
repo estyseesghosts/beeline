@@ -19,6 +19,7 @@ import me.foxtails.palustris.ui.directmessages.DirectMessageConversationScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageInboxScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
+import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.notifications.NotificationsScreen
 import me.foxtails.palustris.ui.notifications.NotificationsUiState
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
@@ -61,6 +62,8 @@ internal fun AppNotificationsDestinationContent(
     onContinueDirectThread: () -> Unit,
     onRetryDirectThread: () -> Unit,
     contentWarningRules: ContentWarningRules = LocalContentWarningRules.current,
+    useCompactWideCaret: Boolean = false,
+    tabCaretHost: CompactWideTabCaretHost? = null,
 ) {
     val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
@@ -87,6 +90,8 @@ internal fun AppNotificationsDestinationContent(
                 onMarkAllRead = onMarkAllRead,
                 onOpenSettings = onOpenSettings,
                 contentWarningRules = contentWarningRules,
+                useCompactWideCaret = useCompactWideCaret,
+                tabCaretHost = tabCaretHost,
             )
         } else if (account == null) {
             EmptyState(

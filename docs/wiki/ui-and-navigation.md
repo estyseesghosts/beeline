@@ -295,6 +295,7 @@ hinge coordinates remain unverified.
 display-cutout, mandatory-gesture, and hinge geometry, then converts window pixels to dp.
 Overlapping edge insets merge by their maximum. Nonmandatory back-gesture strips do not exclude visible navigation.
 Vertical navigation requires the full controls (64 dp reserved width, 360 dp height) plus 360 dp useful content width.
+Compact-wide reserves the taller 424 dp stack (capsule, composer action, tab caret, and both gaps) plus the same content width.
 Otherwise it keeps compact navigation. IME height does not affect permanent presentation. Pane and detail selection remain independent.
 `LargeLayoutModeTest` and `AdaptiveNavigationTest` cover fit, safe placement, hinge coordinates, density conversion, and RTL physical bounds.
 
@@ -332,6 +333,23 @@ The production vertical capsule is 56 × 296 dp, with six 48 dp slots and 4 dp p
 Its separate 56 dp action sits 8 dp below it. The stack remains fixed when Profile has no contextual action.
 `LargeFloatingNavigation` replaces the rail and uses physical placement independent of RTL.
 Outer-screen Home rendering is emulator verified. TalkBack and hardware tablet rendering remain unverified.
+
+### Compact-wide tab caret
+
+Compact-wide hides the inline chip caret and shows a 56 dp contextual caret below the composer action.
+The vertical order is navigation capsule, composer action, then tab caret. The stack bottom-anchors
+from the bottom safe edge and always reserves the caret slot, so hiding the caret never moves the
+capsule or the action. The caret shares the feature-owned chip visibility state; it introduces no
+second expanded/collapsed state. Screens without tab chips show no caret. The tab-chip dock keeps its
+existing physical-edge clearance, so chips use the remaining width and never render beneath the caret.
+
+Planned polish: a future pass adds an 8 dp wide gradient blur fadeout between the tab-chip area and
+the contextual caret. This task intentionally does not implement that transition.
+
+Sources: `ui/large/CompactWideTabCaret.kt`, `ui/large/LargeFloatingNavigation.kt`,
+`ui/large/LargeScreenShell.kt`, `ui/components/CategoryChips.kt`, `CompactWideTabCaretTest`.
+Verification: Compose tests cover contextual toggle, caret absence without navigation shift,
+bottom anchoring, chip clearance, and retained inline presentation. Device rendering remains unverified.
 
 ### Compact IME placement and content clearance
 

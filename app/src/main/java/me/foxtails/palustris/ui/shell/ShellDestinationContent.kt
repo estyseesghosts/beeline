@@ -32,8 +32,11 @@ import me.foxtails.palustris.ui.shell.AppNotificationsDestinationContent
 import me.foxtails.palustris.ui.shell.Destination
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.feed.HomeFeed
+import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
+import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.shell.LargePostOrigin
 import me.foxtails.palustris.ui.shell.LocalPage
 import me.foxtails.palustris.ui.photogrid.PhotoGridScreen
@@ -102,8 +105,15 @@ internal fun ShellDestinationContent(
     homeChipListState: LazyListState? = null,
     homeChipRowVisible: Boolean = true,
     onToggleHomeChipRow: () -> Unit = {},
+    useCompactWideCaret: Boolean = false,
+    tabCaretHost: CompactWideTabCaretHost? = null,
 ) {
     val timelineChipListState = homeChipListState ?: rememberLazyListState()
+    // Compact-wide Home hides its inline caret and reports its feature-owned visibility so the
+    // floating stack can present the same state contextually. Registration happens inside the
+    // Home branch below, so screens without tab chips leave the host empty.
+    val homeCaretPresentation = if (useCompactWideCaret) ChipCaretPresentation.Hidden
+    else ChipCaretPresentation.Inline
     Scaffold(
         modifier = paneModifier.fillMaxSize(),
         // Compact page bodies receive top/horizontal system insets only.
@@ -185,7 +195,15 @@ internal fun ShellDestinationContent(
                                 largeLayout = largePresentation,
                             )
                         } else when (animatedDestination) {
-                            Destination.Home -> if (home != null) HomeFeed(
+                            Destination.Home -> {
+                                if (useCompactWideCaret) {
+                                    CompactWideTabCaretRegistration(
+                                        host = tabCaretHost,
+                                        expanded = homeChipRowVisible,
+                                        onToggle = onToggleHomeChipRow,
+                                    )
+                                }
+                                if (home != null) HomeFeed(
                                 state = home.state,
                                 compactLayout = !largePresentation,
                                 rightObstructionClearance = rightObstructionClearance,
@@ -233,6 +251,7 @@ internal fun ShellDestinationContent(
                                         selectedEntryKey = "home-timeline:${navigator.timeline.name}",
                                         rowTestTag = "home_timeline_tabs",
                                         visibilityToggleTestTag = "home_timeline_visibility",
+                                        caretPresentation = homeCaretPresentation,
                                     )
                                 }) else null,
                             ) else Box(Modifier.fillMaxSize()) {
@@ -269,10 +288,12 @@ internal fun ShellDestinationContent(
                                                 selectedEntryKey = "home-timeline:${navigator.timeline.name}",
                                                 rowTestTag = "home_timeline_tabs",
                                                 visibilityToggleTestTag = "home_timeline_visibility",
+                                                caretPresentation = homeCaretPresentation,
                                             )
                                         },
                                     )
                                 }
+                            }
                             }
                             Destination.Search -> AnimatedStatePane(
                                 stateKey = navigator.searchPanel,
@@ -316,6 +337,8 @@ internal fun ShellDestinationContent(
                                         onOpenMedia = overlay::openMedia,
                                         onOpenPost = { post -> navigationCallbacks.onOpenPost(post, LargePostOrigin.Search) },
                                         onOpenUsername = navigator::openAccountSearch,
+                                        useCompactWideCaret = useCompactWideCaret,
+                                        tabCaretHost = tabCaretHost,
                                     )
                                     SearchPanel.PhotoGrid -> PhotoGridScreen(
                                         state = photoGrid.state,
@@ -331,6 +354,8 @@ internal fun ShellDestinationContent(
                                         leftObstructionClearance = leftObstructionClearance,
                                         bottomObstructionClearance = bottomObstructionClearance,
                                         gridState = photoGridScrollState,
+                                        useCompactWideCaret = useCompactWideCaret,
+                                        tabCaretHost = tabCaretHost,
                                     )
                                 }
                             }
@@ -343,6 +368,8 @@ internal fun ShellDestinationContent(
                                 leftObstructionClearance = leftObstructionClearance,
                                 bottomObstructionClearance = bottomObstructionClearance,
                                 bottomNavigationClearance = bottomNavigationClearance,
+                                useCompactWideCaret = useCompactWideCaret,
+                                tabCaretHost = tabCaretHost,
                                 notificationAccountIdentity = notificationAccountIdentity,
                                 notificationState = notifications.state,
                                 onRefreshNotifications = notifications.actions::refresh,
@@ -379,6 +406,8 @@ internal fun ShellDestinationContent(
                                 compactLayout = !largePresentation,
                                 largeLayout = largePresentation && !compactWidePresentation,
                                 compactWidePresentation = compactWidePresentation,
+                                useCompactWideCaret = useCompactWideCaret,
+                                tabCaretHost = tabCaretHost,
                                 largeShowSummary = navigator.singlePost == null,
                                 listState = profileListState,
                                 rightObstructionClearance = rightObstructionClearance,

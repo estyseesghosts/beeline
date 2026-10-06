@@ -54,6 +54,9 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.components.ChipCaretPresentation
+import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
 import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
@@ -108,6 +111,8 @@ fun ProfileScreen(
     onQuote: (OwnedPost) -> Unit = {},
     largeLayout: Boolean = false,
     compactWidePresentation: Boolean = false,
+    useCompactWideCaret: Boolean = false,
+    tabCaretHost: CompactWideTabCaretHost? = null,
     largeShowSummary: Boolean = true,
     listState: LazyListState? = null,
     rightObstructionClearance: Dp = 0.dp,
@@ -213,6 +218,15 @@ fun ProfileScreen(
         onOpenDrafts = onOpenDrafts,
         onOpenBookmarks = onOpenBookmarks,
     )
+    if (useCompactWideCaret) {
+        CompactWideTabCaretRegistration(
+            host = tabCaretHost,
+            expanded = categoryRowVisible,
+            onToggle = { categoryRowVisible = !categoryRowVisible },
+        )
+    }
+    val profileCaretPresentation = if (useCompactWideCaret) ChipCaretPresentation.Hidden
+    else ChipCaretPresentation.Inline
 
     Box(Modifier.fillMaxSize()) {
         ProfileTimelineList(
@@ -314,6 +328,7 @@ fun ProfileScreen(
                         onToggleVisibility = { categoryRowVisible = !categoryRowVisible },
                         rowTestTag = "profile_categories",
                         visibilityToggleTestTag = "profile_categories_visibility",
+                        caretPresentation = profileCaretPresentation,
                     )
                 },
             )

@@ -35,16 +35,24 @@ import me.foxtails.palustris.ui.navigation.ContextualNavigationAction
  * The returned rect is physical window-space dp. It holds the complete stack, so the shared
  * capsule and contextual action never reach a cutout, a system bar, a mandatory gesture strip,
  * or a structural hinge. Invalid or failed fits return no bounds; the caller keeps compact navigation.
+ *
+ * Compact-wide bottom-anchors the taller stack from the bottom safe edge and always reserves the
+ * tab-caret slot, so the capsule and action stay fixed whether the caret is present or not.
  */
-internal fun floatingNavigationBounds(fit: NavigationFit, anchorLeft: Boolean): Rect? {
+internal fun floatingNavigationBounds(
+    fit: NavigationFit,
+    anchorLeft: Boolean,
+    isCompactWide: Boolean = false,
+): Rect? {
     if (!fit.useVerticalNavigation) return null
     val region = fit.safeRegion ?: return null
-    if (region.width < NavigationCapsuleTotalWidthDp || region.height < NavigationCapsuleTotalHeightDp) return null
     val width = NavigationCapsuleWidthDp
-    val height = NavigationCapsuleTotalHeightDp
+    val height = if (isCompactWide) NavigationCompactWideTotalHeightDp else NavigationCapsuleTotalHeightDp
+    if (region.width < NavigationCapsuleTotalWidthDp || region.height < height) return null
     val left = if (anchorLeft) region.left + NavigationPlacementGapDp
     else region.right - NavigationPlacementGapDp - width
-    val top = region.top + (region.height - height) / 2f
+    val top = if (isCompactWide) region.bottom - height
+    else region.top + (region.height - height) / 2f
     return Rect(left, top, left + width, top + height)
 }
 
@@ -76,6 +84,8 @@ internal fun LargeScreenShell(
     primaryContent: @Composable (Modifier, Dp, Dp) -> Unit,
     detailContent: @Composable (Modifier, Dp, Dp) -> Unit,
     modifier: Modifier = Modifier,
+    isCompactWide: Boolean = false,
+    tabCaret: TabCaretUiState? = null,
 ) {
     val adaptiveInfo = currentWindowAdaptiveInfoV2()
     val density = LocalDensity.current
@@ -86,7 +96,11 @@ internal fun LargeScreenShell(
         leftInsetPx = bars.getLeft(density, physicalDirection).toFloat(),
         topInsetPx = bars.getTop(density).toFloat(),
     )
-    val controls = if (navigationVisible) floatingNavigationBounds(navigationFit, anchorLeft) else null
+    val controls = if (navigationVisible) {
+        floatingNavigationBounds(navigationFit, anchorLeft, isCompactWide)
+    } else {
+        null
+    }
     Box(modifier.fillMaxSize().testTag(LargeScreenShellTag)) {
         BoxWithConstraints(
             Modifier.fillMaxSize().windowInsetsPadding(bars).testTag(LargeContentRegionTag),
@@ -153,6 +167,8 @@ internal fun LargeScreenShell(
                 action = action,
                 onTargetSelected = onTargetSelected,
                 onOpenAccounts = onOpenAccounts,
+                isCompactWide = isCompactWide,
+                tabCaret = tabCaret?.takeIf { isCompactWide },
                 // The stack is anchored physically, so its placement never reverses with direction.
                 modifier = Modifier.align(AbsoluteAlignment.TopLeft)
                     .absoluteOffset(controls.left.dp, controls.top.dp),

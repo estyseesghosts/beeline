@@ -33,6 +33,7 @@ internal fun rememberNavigationFit(
     windowWidthDp: Float,
     windowHeightDp: Float,
     anchorLeft: Boolean,
+    isCompactWide: Boolean = false,
 ): NavigationFit {
     val density = LocalDensity.current
     val posture = currentWindowAdaptiveInfoV2().windowPosture
@@ -52,7 +53,7 @@ internal fun rememberNavigationFit(
         )
     }
     return remember(
-        windowWidthDp, windowHeightDp, anchorLeft, permanentInsets, gestureInsets, features,
+        windowWidthDp, windowHeightDp, anchorLeft, isCompactWide, permanentInsets, gestureInsets, features,
     ) {
         calculateNavigationFit(
             windowWidthDp = windowWidthDp,
@@ -61,6 +62,7 @@ internal fun rememberNavigationFit(
             gestureInsets = gestureInsets,
             foldingFeatures = features,
             anchorLeft = anchorLeft,
+            isCompactWide = isCompactWide,
         )
     }
 }

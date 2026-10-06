@@ -1,9 +1,11 @@
 package me.foxtails.palustris.ui.large
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -55,6 +57,11 @@ internal fun WideNavigationItem.toLargeNavTarget(): LargeNavTarget = when (this)
  * parameters; this composable owns no navigation state and no measurement policy. The declared
  * size matches `NavigationCapsuleTotalHeightDp` so the caller's safe-region bounds stay exact, and
  * an absent action keeps the reserved slot instead of moving the capsule.
+ *
+ * Compact-wide bottom-anchors the same capsule and action inside the taller compact-wide bounds
+ * and adds the contextual tab caret below the action when the current screen exposes tab chips.
+ * The capsule and action keep fixed top offsets inside those bounds, so hiding the caret never
+ * moves them. The caret composes conditionally with no placeholder.
  */
 @Composable
 internal fun LargeFloatingNavigation(
@@ -64,7 +71,50 @@ internal fun LargeFloatingNavigation(
     onTargetSelected: (LargeNavTarget) -> Unit,
     onOpenAccounts: () -> Unit,
     modifier: Modifier = Modifier,
+    isCompactWide: Boolean = false,
+    tabCaret: TabCaretUiState? = null,
 ) {
+    if (isCompactWide) {
+        Box(
+            modifier = modifier
+                .width(NavigationCapsuleWidthDp.dp)
+                .height(NavigationCompactWideTotalHeightDp.dp)
+                .testTag(LargeFloatingNavigationTag),
+        ) {
+            WideNavigationPresentation(
+                selectedTarget = selectedTarget.toWideNavigationItem(),
+                account = account,
+                onTargetSelected = { onTargetSelected(it.toLargeNavTarget()) },
+                onOpenAccounts = onOpenAccounts,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .width(NavigationCapsuleWidthDp.dp)
+                    .height(NavigationCapsuleHeightDp.dp)
+                    .testTag(LargeNavigationCapsuleTag),
+            )
+            if (action != null) {
+                ContextualNavigationActionButton(
+                    action,
+                    Modifier.align(Alignment.TopCenter)
+                        .offset(y = (NavigationCapsuleHeightDp + NavigationPlacementGapDp).dp)
+                        .size(NavigationActionSizeDp.dp),
+                )
+            } else {
+                Spacer(
+                    Modifier.align(Alignment.TopCenter)
+                        .offset(y = (NavigationCapsuleHeightDp + NavigationPlacementGapDp).dp)
+                        .size(NavigationActionSizeDp.dp),
+                )
+            }
+            if (tabCaret != null) {
+                ContextualTabCaretButton(
+                    state = tabCaret,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
+            }
+        }
+        return
+    }
     Column(
         modifier = modifier
             .width(NavigationCapsuleWidthDp.dp)

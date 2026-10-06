@@ -245,6 +245,10 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `AccountAvatar`; a long press requests account switching. The presenter does not choose production
   dimensions. `LargeFloatingNavigation` replaces the production rail with a 56 × 296 dp capsule,
   an 8 dp gap, and a 56 dp contextual action. An absent action keeps its reserved slot.
+  Compact-wide bottom-anchors a taller 424 dp stack (capsule, action, 56 dp tab caret, both gaps)
+  from the bottom safe edge. The capsule and action keep fixed top offsets, so hiding the caret
+  never moves them. The caret composes conditionally with no placeholder. `CompactWideTabCaretHost`
+  mirrors the feature-owned chip visibility; it owns no expanded/collapsed state.
 - `ContextualNavigationAction` carries the icon, accessibility label, enabled state, and callback.
   `ContextualNavigationActionButton` owns its shared Material 3 rendering and motion. The compact
   bar delegates to it; the callback remains with the shell or feature contract.
@@ -298,6 +302,11 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   The shared renderer keeps its leading circular caret outside the scrollable chip row. The caret matches
   the unselected chip surface, outline, and icon colors. It stays fixed while chips are hidden.
   This placement keeps it independent from a future contextual control. The renderer scrolls the selected Home timeline into view.
+  Compact-wide hides that inline caret through `ChipCaretPresentation.Hidden` and reports the same
+  feature-owned visibility to the floating stack. The inline implementation, state, and toggle plumbing
+  remain for other layouts. Compact-wide tab chips stop before the contextual caret through existing
+  physical-edge clearance. A future polish pass adds an 8 dp wide gradient blur fadeout between the
+  chip area and the caret; this change documents that plan without implementing it.
   Timeline selection and callbacks remain with `ShellNavigator` and the Home contract. Reduced motion skips animated chip travel.
   Obstruction clearance does not calculate chip travel.
   Compact Home ignores wide inputs and retains its IME-aware end spacing and shell-owned navigation.

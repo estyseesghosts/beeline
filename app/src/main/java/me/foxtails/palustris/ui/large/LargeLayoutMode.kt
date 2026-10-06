@@ -148,12 +148,25 @@ internal const val NavigationCapsuleHeightDp = 296f
 /** The shared contextual action size. `ContextualNavigationActionButton` owns this value. */
 internal const val NavigationActionSizeDp = 56f
 
+/** The compact-wide contextual tab caret size. It matches the contextual action family. */
+internal const val NavigationCaretSizeDp = 56f
+
 /** The width the vertical navigation stack reserves, including its physical placement gap. */
 internal val NavigationCapsuleTotalWidthDp = NavigationCapsuleWidthDp + NavigationPlacementGapDp
 
 /** The height of the vertical navigation stack: capsule, gap, and contextual action. */
 internal val NavigationCapsuleTotalHeightDp =
     NavigationCapsuleHeightDp + NavigationPlacementGapDp + NavigationActionSizeDp
+
+/**
+ * The height of the compact-wide floating stack: capsule, action, caret, and both gaps.
+ *
+ * The bounds reserve the caret slot even when the current screen exposes no tabs, so hiding the
+ * contextual caret never moves the navigation capsule or the composer action.
+ */
+internal val NavigationCompactWideTotalHeightDp =
+    NavigationCapsuleHeightDp + NavigationPlacementGapDp + NavigationActionSizeDp +
+        NavigationPlacementGapDp + NavigationCaretSizeDp
 
 /** The result of the navigation fit policy. */
 internal data class NavigationFit(
@@ -180,6 +193,7 @@ internal fun calculateNavigationFit(
     cutoutBounds: Rect? = null,
     foldingFeatures: List<LargeFoldingFeature> = emptyList(),
     anchorLeft: Boolean = false,
+    isCompactWide: Boolean = false,
 ): NavigationFit {
     // Use only the permanent window geometry. IME insets never affect the fit.
     val content = Rect(
@@ -221,9 +235,11 @@ internal fun calculateNavigationFit(
         }
     }
 
+    val requiredHeight = if (isCompactWide) NavigationCompactWideTotalHeightDp
+    else NavigationCapsuleTotalHeightDp
     val fittingRegions = safeRegions.filter { region ->
         region.width >= NavigationCapsuleTotalWidthDp &&
-            region.height >= NavigationCapsuleTotalHeightDp &&
+            region.height >= requiredHeight &&
             (region.width - NavigationCapsuleTotalWidthDp) >= MinimumUsefulContentWidthDp
     }
     // The anchor selects the fitting safe region nearest its own physical edge.

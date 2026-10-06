@@ -72,6 +72,9 @@ import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.components.ChipCaretPresentation
+import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.posts.PostInteractionPresentation
 import me.foxtails.palustris.ui.posts.PostRow
 import me.foxtails.palustris.ui.posts.PostRowEvents
@@ -137,6 +140,8 @@ fun SearchScreen(
     onSharedQueryChange: (String) -> Unit = {},
     onSharedTabChange: (Int) -> Unit = {},
     listState: LazyListState? = null,
+    useCompactWideCaret: Boolean = false,
+    tabCaretHost: CompactWideTabCaretHost? = null,
 ) {
     var localQuery by rememberSaveable { mutableStateOf("") }
     var localTab by rememberSaveable { mutableIntStateOf(0) }
@@ -196,6 +201,15 @@ fun SearchScreen(
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
     val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
+    if (useCompactWideCaret) {
+        CompactWideTabCaretRegistration(
+            host = tabCaretHost,
+            expanded = chipRowVisible,
+            onToggle = { chipRowVisible = !chipRowVisible },
+        )
+    }
+    val searchCaretPresentation = if (useCompactWideCaret) ChipCaretPresentation.Hidden
+    else ChipCaretPresentation.Inline
 
     Box(Modifier.fillMaxSize()) {
         SearchContent(
@@ -245,6 +259,7 @@ fun SearchScreen(
                             onToggleVisibility = { chipRowVisible = !chipRowVisible },
                             rowTestTag = "search_categories",
                             visibilityToggleTestTag = "search_categories_visibility",
+                            caretPresentation = searchCaretPresentation,
                         )
                         SearchField(query, ::submitSearch, ::updateQuery)
                     }

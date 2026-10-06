@@ -218,4 +218,37 @@ class CategoryChipsGeometryTest {
         compose.onNodeWithTag("tablet-chip-caret").performClick()
         compose.onNodeWithTag("tablet-chip").assertIsDisplayed().assertIsSelected()
     }
+
+    @Test
+    fun hiddenCaretKeepsChipStateWithoutAnInlineControl() {
+        val visible = mutableStateOf(true)
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                PalustrisTheme {
+                    DestinationChipRow(
+                        entries = listOf(
+                            FilterChipEntry(label = "Posts", selected = true, onClick = {}, testTag = "hidden-chip"),
+                        ),
+                        rowContentDescription = "categories",
+                        listState = rememberLazyListState(),
+                        visible = visible.value,
+                        onToggleVisibility = { visible.value = !visible.value },
+                        modifier = Modifier.fillMaxWidth(),
+                        rowTestTag = "hidden-chip-row",
+                        visibilityToggleTestTag = "hidden-chip-caret",
+                        caretPresentation = ChipCaretPresentation.Hidden,
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+
+        // The inline control is absent, but chip state still flows through the shared plumbing.
+        compose.onNodeWithTag("hidden-chip-caret").assertDoesNotExist()
+        compose.onNodeWithTag("hidden-chip").assertIsDisplayed().assertIsSelected()
+        compose.runOnIdle { visible.value = false }
+        compose.onNodeWithTag("hidden-chip").assertDoesNotExist()
+        compose.runOnIdle { visible.value = true }
+        compose.onNodeWithTag("hidden-chip").assertIsDisplayed()
+    }
 }
