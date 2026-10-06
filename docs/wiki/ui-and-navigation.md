@@ -249,7 +249,7 @@ setting changes the layout without changing the text.
 
 A user without the setting, or with a value from a future version, keeps the device direction.
 
-Sources: `ui/LayoutDirectionPolicy.kt`, `ui/settings/DisplaySettingsScreen.kt`,
+Sources: `ui/layout/LayoutDirectionPolicy.kt`, `ui/settings/DisplaySettingsScreen.kt`,
 `ui/ConnectedApp.kt`, `domain/AppPreferences.kt`.
 
 Limits: device RTL, TalkBack, and physical hinge coordinates remain unverified.

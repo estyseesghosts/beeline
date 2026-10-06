@@ -60,7 +60,7 @@ behaviors. `ui/ConnectedApp.kt` publishes the effective direction from its exist
 | Preference commands | `ui/settings/SettingsViewModel.kt` |
 | Display route callbacks | `ui/settings/SettingsHost.kt` |
 | Callback wiring to the view model | `ui/settings/SettingsOverlayHost.kt` |
-| Effective layout direction rule | `ui/LayoutDirectionPolicy.kt` |
+| Effective layout direction rule | `ui/layout/LayoutDirectionPolicy.kt` |
 | Effective layout direction publication | `ui/ConnectedApp.kt` |
 | Application language | `MainActivity`, `AppLocaleOwner`, `AppLocaleController` |
 
@@ -104,7 +104,7 @@ tests worked around it with a tall viewport qualifier instead of fixing the caus
 
 - `app/src/main/java/me/foxtails/palustris/domain/AppPreferences.kt`
 - `app/src/main/java/me/foxtails/palustris/data/preferences/FileAppPreferencesRepository.kt`
-- `app/src/main/java/me/foxtails/palustris/ui/LayoutDirectionPolicy.kt`
+- `app/src/main/java/me/foxtails/palustris/ui/layout/LayoutDirectionPolicy.kt`
 - `app/src/main/java/me/foxtails/palustris/ui/settings/SettingsViewModel.kt`
 - `app/src/main/java/me/foxtails/palustris/ui/settings/SettingsHost.kt`
 - `app/src/main/java/me/foxtails/palustris/ui/settings/SettingsOverlayHost.kt`

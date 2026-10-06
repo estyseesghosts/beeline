@@ -1,4 +1,4 @@
-package me.foxtails.palustris.ui
+package me.foxtails.palustris.ui.layout
 
 import android.view.View
 import androidx.compose.runtime.Composable

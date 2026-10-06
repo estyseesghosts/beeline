@@ -44,7 +44,7 @@ import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppPreferencesState
-import me.foxtails.palustris.ui.resolveAgainst
+import me.foxtails.palustris.ui.layout.resolveAgainst
 import me.foxtails.palustris.ui.settings.DisplaySettingsScreen
 import me.foxtails.palustris.ui.settings.SettingsHost
 import me.foxtails.palustris.ui.settings.SettingsRoute

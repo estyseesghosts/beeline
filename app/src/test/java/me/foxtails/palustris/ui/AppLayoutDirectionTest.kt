@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppPreferences
+import me.foxtails.palustris.ui.layout.deviceLayoutDirection
+import me.foxtails.palustris.ui.layout.forcingOppositeOf
+import me.foxtails.palustris.ui.layout.resolveAgainst
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Rule

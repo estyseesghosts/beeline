@@ -189,7 +189,7 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   Production navigation now follows the fit policy. Pane/back policy retains the 600/840 dp cutoffs.
   The available emulator is intended for compact-wide testing, not narrow-phone acceptance.
 
-- `ui/LayoutDirectionPolicy.kt` owns the effective layout direction rule.
+- `ui/layout/LayoutDirectionPolicy.kt` owns the effective layout direction rule.
   `deviceLayoutDirection()` reads `LocalConfiguration.current.layoutDirection`, which is the platform
   authority for the device direction. A Compose override never changes that configuration value.
   `ConnectedApp` reads it before publishing, resolves `AppLayoutDirection` against it, and provides

@@ -40,8 +40,8 @@ import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppTextSize
-import me.foxtails.palustris.ui.deviceLayoutDirection
-import me.foxtails.palustris.ui.forcingOppositeOf
+import me.foxtails.palustris.ui.layout.deviceLayoutDirection
+import me.foxtails.palustris.ui.layout.forcingOppositeOf
 import me.foxtails.palustris.ui.theme.appPaletteColor
 
 @Composable

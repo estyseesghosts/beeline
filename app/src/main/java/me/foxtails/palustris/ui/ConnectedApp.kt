@@ -25,8 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,25 +38,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.foxtails.palustris.data.AccountSourceRegistry
 import me.foxtails.palustris.data.auth.DraftStore
 import me.foxtails.palustris.data.auth.DraftWriteAuthority
-import me.foxtails.palustris.data.notifications.NotificationStreamController
 import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
+import me.foxtails.palustris.data.notifications.NotificationStreamController
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.AppPreferencesState
+import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostPreferencesRepository
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
+import me.foxtails.palustris.ui.layout.deviceLayoutDirection
+import me.foxtails.palustris.ui.layout.resolveAgainst
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.motion.palustrisMotionScheme
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.notifications.NotificationLaunchHost
-import me.foxtails.palustris.ui.session.ConnectedEntryStore
-import me.foxtails.palustris.ui.session.ConnectedSessionHost
-import me.foxtails.palustris.ui.session.AccountManager
-import me.foxtails.palustris.ui.setup.SignInScreen
-import me.foxtails.palustris.ui.settings.SettingsOverlayHost
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
+import me.foxtails.palustris.ui.session.AccountManager
+import me.foxtails.palustris.ui.session.ConnectedEntryStore
+import me.foxtails.palustris.ui.session.ConnectedSessionHost
+import me.foxtails.palustris.ui.settings.SettingsOverlayHost
+import me.foxtails.palustris.ui.setup.SignInScreen
 
 @Composable
 fun ConnectedApp(
