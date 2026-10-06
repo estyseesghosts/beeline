@@ -26,9 +26,7 @@ import me.foxtails.palustris.ui.motion.SpringAnimatedContent
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.notifications.NotificationRouteResolver
-import me.foxtails.palustris.ui.photogrid.PhotoGridScreen
 import me.foxtails.palustris.ui.profile.ProfileScreen
-import me.foxtails.palustris.ui.search.SearchScreen
 
 /**
  * Destination scaffold and branches for the application shell.
@@ -187,70 +185,25 @@ internal fun ShellDestinationContent(
                                 useCompactWideCaret = useCompactWideCaret,
                                 tabCaretHost = tabCaretHost,
                             )
-                            Destination.Search -> AnimatedStatePane(
-                                stateKey = navigator.searchPanel,
-                                modifier = Modifier.fillMaxSize(),
-                            ) { panel ->
-                                when (panel) {
-                                    SearchPanel.Search -> SearchScreen(
-                                        accountSearch = search.state,
-                                        onSearchAccounts = search.actions::search,
-                                        onAccountClick = navigator::openProfile,
-                                        availableActions = postCallbacks.availableActions,
-                                        onReact = postCallbacks.onReact,
-                                        onReply = postCallbacks.onReply,
-                                        onReshare = postCallbacks.onReshare,
-                                        onBookmark = postCallbacks.onBookmark,
-                                        onReaction = postCallbacks.onReaction,
-                                        onOpenReactionBubble = { ownedPost, bounds ->
-                                            overlay.openReactionBubble(ownedPost, bounds, postCallbacks.onReaction)
-                                        },
-                                        onOpenReactionPicker = overlay::expandReactionPicker,
-                                        quoteEnabled = postCallbacks.quoteEnabled,
-                                        onQuote = postCallbacks.onQuote,
-                                        onSearchHashtag = navigator::openHashtagSearch,
-                                        onOpenHashtagBubble = overlay::openHashtagBubble,
-                                        onLoadMoreSearch = search.actions::loadMore,
-                                        initialQuery = navigator.searchPrefill,
-                                        sharedQuery = navigator.searchQuery,
-                                        sharedTab = navigator.searchCategory,
-                                        onSharedQueryChange = { navigator.searchQuery = it },
-                                        onSharedTabChange = { navigator.searchCategory = it },
-                                        rightObstructionClearance = rightObstructionClearance,
-                                        leftObstructionClearance = leftObstructionClearance,
-                                        bottomObstructionClearance = bottomObstructionClearance,
-                                        bottomNavigationClearance = bottomNavigationClearance,
-                                        listState = searchListState.takeIf { largePresentation },
-                                        largeLayout = largePresentation,
-                                        compactLayout = !largePresentation,
-                                        compactNavigationVisible = !largePresentation,
-                                        mediaOwner = account?.id,
-                                        sessionRevision = sessionRevision,
-                                        onOpenMedia = overlay::openMedia,
-                                        onOpenPost = { post -> navigationCallbacks.onOpenPost(post, LargePostOrigin.Search) },
-                                        onOpenUsername = navigator::openAccountSearch,
-                                        useCompactWideCaret = useCompactWideCaret,
-                                        tabCaretHost = tabCaretHost,
-                                    )
-                                    SearchPanel.PhotoGrid -> PhotoGridScreen(
-                                        state = photoGrid.state,
-                                        onRefresh = photoGrid.actions::refresh,
-                                        onLoadMore = photoGrid.actions::loadMore,
-                                        onSelectFeed = photoGrid.actions::selectFeed,
-                                        onAddHashtag = photoGrid.actions::addHashtag,
-                                        onClearPreferenceError = photoGrid.actions::clearPreferenceError,
-                                        onOpenPost = { post -> navigationCallbacks.onOpenPost(post, LargePostOrigin.PhotoGrid) },
-                                        compactLayout = !largePresentation,
-                                        compactNavigationVisible = !largePresentation,
-                                        rightObstructionClearance = rightObstructionClearance,
-                                        leftObstructionClearance = leftObstructionClearance,
-                                        bottomObstructionClearance = bottomObstructionClearance,
-                                        gridState = photoGridScrollState,
-                                        useCompactWideCaret = useCompactWideCaret,
-                                        tabCaretHost = tabCaretHost,
-                                    )
-                                }
-                            }
+                            Destination.Search -> ShellSearchDestination(
+                                navigator = navigator,
+                                overlay = overlay,
+                                search = search,
+                                photoGrid = photoGrid,
+                                postCallbacks = postCallbacks,
+                                navigationCallbacks = navigationCallbacks,
+                                largePresentation = largePresentation,
+                                rightObstructionClearance = rightObstructionClearance,
+                                leftObstructionClearance = leftObstructionClearance,
+                                bottomObstructionClearance = bottomObstructionClearance,
+                                bottomNavigationClearance = bottomNavigationClearance,
+                                searchListState = searchListState,
+                                photoGridScrollState = photoGridScrollState,
+                                account = account,
+                                sessionRevision = sessionRevision,
+                                useCompactWideCaret = useCompactWideCaret,
+                                tabCaretHost = tabCaretHost,
+                            )
                             Destination.Notifications -> AppNotificationsDestinationContent(
                                 panel = navigator.notificationsPanel,
                                 account = account,

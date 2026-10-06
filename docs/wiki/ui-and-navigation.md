@@ -14,6 +14,7 @@ branches without owning feature state. Saveable shell holders pass through both 
 Search, Photo Grid, direct messages, and profile state remain with their connected feature owners.
 The notifications shell adapter consumes the existing notification and DM contracts without unpacking them at the router boundary.
 The Home shell adapter forwards the feed contract and shell-owned chip state to `HomeFeed` without owning Home state.
+The Search shell adapter forwards the search and Photo Grid contracts to their screens without owning either state.
 The connected session host owns post projection and validates account and session revision before
 delivery. Characterization tests cover compact and large Search routes and profile editor and pager
 continuity.
