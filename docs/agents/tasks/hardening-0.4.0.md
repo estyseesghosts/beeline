@@ -25,37 +25,38 @@ Commit each verified slice separately before starting the next one.
 - 0.1 committed at `3c5b2ca`: unchanged layout policy now lives in ui/layout.
 - 0.2 committed at `a850d40`: completion rules and build wiki define the complete CI-parity sequence.
 - Mechanical ktlint repair committed at `63d8231`: the full gate passes without new exemptions or weakened tests.
-- 1.1 verified: notification and DM contracts pass directly through the existing destination adapter. Focused and full gates pass.
+- 1.1 committed at `150d0d2`: notification and DM contracts pass directly through the existing destination adapter.
+- 1.2 verified: the Home shell destination is extracted into `ui/shell/ShellHomeDestination.kt`. Focused and full gates pass.
 
 # Current slice
 
-1.2: extract the Home shell destination into `ui/shell/ShellHomeDestination.kt`.
-Allowed scope: the new Home adapter, the router Home branch, Home and shell tests, ownership documentation, and records.
-Acceptance: preserve the connected versus empty Home refresh distinction, timeline chip clearing, compact-wide caret registration, shell-owned homeChipListState and homeChipRowVisible, and the wide bottom dock.
-Non-goals: Home state ownership, layout, persistence, protocol, and navigation changes.
-Validation: HomeFeedTest, HomeClearanceTest, HomePagingDemandTest, NavigationTest, WideNavigationTest, ShellCharacterizationTest, then full CI parity.
-The new adapter owns wiring only, not Home state. Do not recreate chip state in the new file.
+1.3: extract Search and Photo Grid shell routing into `ui/shell/ShellSearchDestination.kt`.
+Allowed scope: the new Search and Photo Grid adapter, the router Search branch, Search and shell tests, ownership documentation, and records.
+Acceptance: preserve ShellNavigator search query and category state, SearchOwner results, PhotoGridOwner independent state, and AnimatedStatePane(navigator.searchPanel).
+Non-goals: search or Photo Grid state ownership, layout, persistence, protocol, and navigation changes.
+Validation: SearchOwnerTest, SearchPanelRestorationTest, SearchClearanceTest, PhotoGridOwnerTest, PhotoGridScreenTest, PhotoGridClearanceTest, WideNavigationTest, ShellCharacterizationTest, then full CI parity.
+The new adapter owns wiring only. Do not introduce a SearchDestinationContext or another generic bag.
 
 # Files involved
 
-- ui/shell/ShellHomeDestination.kt (new)
+- ui/shell/ShellSearchDestination.kt (new)
 - ui/shell/ShellDestinationContent.kt (short router call)
-- Home and shell tests
+- Search, Photo Grid, and shell tests
 - docs/agents/app-shell-ownership.md, docs/wiki/ui-and-navigation.md, and task records
 
 # Verification
 
-1.1 review: the adapter reads notifications.state, notifications.actions, directMessages.state, and directMessages.actions; shell notification and settings routes, account identity, and clearance stay explicit.
-Focused NotificationsClearanceTest, NotificationsScreenTest, DirectMessageScreenTest, WideNavigationTest, and ShellCharacterizationTest pass.
-The known MastodonIntegrationTest cancellation flake passes alone.
+1.2 review: the router Home branch is one call to ShellHomeDestination. The adapter keeps the connected refresh, the empty no-refresh selection, timeline chip clearing, the compact-wide caret registration, shell-owned chip state, and the wide bottom dock.
+Focused HomeFeedTest, HomeClearanceTest, HomePagingDemandTest, NavigationTest, WideNavigationTest, ShellCharacterizationTest, CompactWideTabCaretTest, and AdaptiveNavigationTest pass.
 The full CI-parity gate passes: 51 Python tests, zero architecture regressions, 1,691 debug tests across 161 suites, lint, ktlint, debug assembly, and release assembly.
-No baseline exemptions were added and no test was weakened.
-Run focused Home and shell tests, then the local CI-parity gate before the 1.2 checkpoint.
+The new file adds only warning-level audit findings. No baseline exemptions were added and no test was weakened.
+A first full gate hit the documented NotificationsViewModelTest test-isolation flake. It passed alone, and the rerun passed.
+Run focused Search and shell tests, then the local CI-parity gate before the 1.3 checkpoint.
 Use the wrapper with closed stdin, explicit timeout, and required daemon flags.
 
 # Next
 
-Start 1.2: extract the Home shell destination into `ui/shell/ShellHomeDestination.kt`.
+Start 1.3: extract Search and Photo Grid shell routing into `ui/shell/ShellSearchDestination.kt`.
 
 # Blockers
 
@@ -64,4 +65,4 @@ Physical-device, API 29 instrumentation, TalkBack, signing, and live-server chec
 
 # Last safe commit
 
-63d8231 — Repair existing ktlint gate violations.
+150d0d2 — Pass notification and DM contracts through shell.

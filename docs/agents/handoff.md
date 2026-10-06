@@ -14,10 +14,10 @@ The preceding adaptive-navigation record remains at [tasks/beeline-0.4.0.md](tas
 
 The user requests Phases 0 and 1 of `docs/fix_0.4.0.md`, in that order.
 Phase 0 is committed: 0.1 at `3c5b2ca`, 0.2 at `a850d40`, and the mechanical ktlint repair at `63d8231`.
-The full CI-parity gate passes: 51 Python tests, zero architecture regressions, 1,691 JVM tests, lint, ktlint, and debug/release assembly.
-1.1 passes direct review and the full gate. It passes the notification and DM contracts through the shell adapter without unpacking them.
-The 1.1 slice commit subject is `Pass notification and DM contracts through shell`.
-Next is 1.2, which extracts the Home shell destination into `ui/shell/ShellHomeDestination.kt`.
+1.1 is committed at `150d0d2` and passes the notification and DM contracts through the shell adapter.
+1.2 passes direct review and the full gate. It extracts the Home shell destination into `ui/shell/ShellHomeDestination.kt`.
+The 1.2 slice commit subject is `Extract Home shell destination`.
+Next is 1.3, which extracts Search and Photo Grid shell routing into `ui/shell/ShellSearchDestination.kt`.
 Do not begin Phase 2 or split ShellContent.
 
 ## Ownership and caution
@@ -29,8 +29,8 @@ Recheck external Java/Gradle activity before builds. Use explicit reviewed commi
 
 ## Last safe commit
 
-Preceding safe commit: `63d8231` — `Repair existing ktlint gate violations`.
-The slice commit subject is `Pass notification and DM contracts through shell`.
+Preceding safe commit: `150d0d2` — `Pass notification and DM contracts through shell`.
+The slice commit subject is `Extract Home shell destination`.
 
 ## Limits
 

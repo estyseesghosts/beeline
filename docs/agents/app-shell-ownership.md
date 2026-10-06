@@ -80,6 +80,10 @@ validation. Only the profile dialog flag survives process recreation.
 branches: notification detail, local pages, Home, search with Photo Grid, notifications, and
 profile. Slice S1b. It owns no state. Saveable holders and scroll states stay with the shell
 and pass through unchanged.
+`ui/shell/ShellHomeDestination.kt` adapts the shell inputs to `HomeFeed` and the wide timeline dock.
+It owns no Home state: the feed contract, list state, chip list state, chip visibility, and callbacks pass through.
+A connected Home refreshes its feature owner on a timeline change. The empty Home records the selection without a refresh.
+The compact Home chips stay with `CompactShellNavigation`, so the adapter renders only the wide dock.
 `AppNotificationsDestinationContent` receives `NotificationsContract` and `DirectMessagesContract` directly.
 It adapts their state and actions to notification and DM screens. Shell routes, settings callbacks, and clearance remain explicit.
 `ui/shell/ShellOverlayHost.kt` hosts bubbles, viewers, sheets, overlays, the emoji picker,

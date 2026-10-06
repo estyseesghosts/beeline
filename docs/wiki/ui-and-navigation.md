@@ -13,6 +13,7 @@ Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
 branches without owning feature state. Saveable shell holders pass through both presentations.
 Search, Photo Grid, direct messages, and profile state remain with their connected feature owners.
 The notifications shell adapter consumes the existing notification and DM contracts without unpacking them at the router boundary.
+The Home shell adapter forwards the feed contract and shell-owned chip state to `HomeFeed` without owning Home state.
 The connected session host owns post projection and validates account and session revision before
 delivery. Characterization tests cover compact and large Search routes and profile editor and pager
 continuity.
