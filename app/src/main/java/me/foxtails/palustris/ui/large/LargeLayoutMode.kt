@@ -130,33 +130,33 @@ internal fun calculateLargePaneLayout(
 }
 
 /** The minimum useful content width that must remain after placing the vertical navigation capsule. */
-internal const val MinimumUsefulContentWidthDp = 360f
+internal const val MINIMUM_USEFUL_CONTENT_WIDTH_DP = 360f
 
 /** The gap between the floating navigation stack and the physical safe-region edge. */
-internal const val NavigationPlacementGapDp = 8f
+internal const val NAVIGATION_PLACEMENT_GAP_DP = 8f
 
 /** The shared vertical capsule width. The shared presentation owns this value. */
-internal const val NavigationCapsuleWidthDp = 56f
+internal const val NAVIGATION_CAPSULE_WIDTH_DP = 56f
 
 /**
  * The shared vertical capsule height.
  *
  * Six 48 dp targets plus the shared capsule vertical padding of 4 dp on each side.
  */
-internal const val NavigationCapsuleHeightDp = 296f
+internal const val NAVIGATION_CAPSULE_HEIGHT_DP = 296f
 
 /** The shared contextual action size. `ContextualNavigationActionButton` owns this value. */
-internal const val NavigationActionSizeDp = 56f
+internal const val NAVIGATION_ACTION_SIZE_DP = 56f
 
 /** The compact-wide contextual tab caret size. It matches the contextual action family. */
-internal const val NavigationCaretSizeDp = 56f
+internal const val NAVIGATION_CARET_SIZE_DP = 56f
 
 /** The width the vertical navigation stack reserves, including its physical placement gap. */
-internal val NavigationCapsuleTotalWidthDp = NavigationCapsuleWidthDp + NavigationPlacementGapDp
+internal val NavigationCapsuleTotalWidthDp = NAVIGATION_CAPSULE_WIDTH_DP + NAVIGATION_PLACEMENT_GAP_DP
 
 /** The height of the vertical navigation stack: capsule, gap, and contextual action. */
 internal val NavigationCapsuleTotalHeightDp =
-    NavigationCapsuleHeightDp + NavigationPlacementGapDp + NavigationActionSizeDp
+    NAVIGATION_CAPSULE_HEIGHT_DP + NAVIGATION_PLACEMENT_GAP_DP + NAVIGATION_ACTION_SIZE_DP
 
 /**
  * The height of the compact-wide floating stack: capsule, action, caret, and both gaps.
@@ -165,8 +165,8 @@ internal val NavigationCapsuleTotalHeightDp =
  * contextual caret never moves the navigation capsule or the composer action.
  */
 internal val NavigationCompactWideTotalHeightDp =
-    NavigationCapsuleHeightDp + NavigationPlacementGapDp + NavigationActionSizeDp +
-        NavigationPlacementGapDp + NavigationCaretSizeDp
+    NAVIGATION_CAPSULE_HEIGHT_DP + NAVIGATION_PLACEMENT_GAP_DP + NAVIGATION_ACTION_SIZE_DP +
+        NAVIGATION_PLACEMENT_GAP_DP + NAVIGATION_CARET_SIZE_DP
 
 /** The result of the navigation fit policy. */
 internal data class NavigationFit(
@@ -240,7 +240,7 @@ internal fun calculateNavigationFit(
     val fittingRegions = safeRegions.filter { region ->
         region.width >= NavigationCapsuleTotalWidthDp &&
             region.height >= requiredHeight &&
-            (region.width - NavigationCapsuleTotalWidthDp) >= MinimumUsefulContentWidthDp
+            (region.width - NavigationCapsuleTotalWidthDp) >= MINIMUM_USEFUL_CONTENT_WIDTH_DP
     }
     // The anchor selects the fitting safe region nearest its own physical edge.
     val fittingRegion = if (anchorLeft) fittingRegions.minByOrNull { it.left }

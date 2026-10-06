@@ -1,13 +1,13 @@
 package me.foxtails.palustris.ui.directmessages
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -30,19 +30,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
-import me.foxtails.palustris.domain.Account
-import me.foxtails.palustris.domain.AccountId
+import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Post
-import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.Avatar
+import me.foxtails.palustris.ui.components.AccountAvatar
+import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
 import me.foxtails.palustris.ui.layout.compactGlobalNavigationPositioningInsets
-import me.foxtails.palustris.ui.emoji.InlineEmojiText
 
 /**
  * Keeps wide content clear of shell-supplied floating chrome without insetting the viewport.

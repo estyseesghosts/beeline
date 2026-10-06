@@ -73,7 +73,6 @@ class NotificationsScreenTest {
         compose.waitForIdle()
     }
 
-
     @Test fun defaultStateShowsAllNotificationsAndRequiredChipOrder() {
         showNotifications()
 
@@ -438,5 +437,4 @@ class NotificationsScreenTest {
         compose.onNodeWithText("visible body text").assertIsDisplayed()
         compose.onNodeWithText("hidden body text").assertDoesNotExist()
     }
-
 }

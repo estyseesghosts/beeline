@@ -37,13 +37,21 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val accountManager by viewModels<AccountManager>()
+
     @Inject lateinit var sourceRegistry: AccountSourceRegistry
+
     @Inject lateinit var draftStore: DraftStore
+
     @Inject lateinit var draftWriteAuthority: DraftWriteAuthority
+
     @Inject lateinit var notificationLaunchRouter: NotificationLaunchRouter
+
     @Inject lateinit var notificationStreamController: ForegroundNotificationStreamController
+
     @Inject lateinit var appPreferencesRepository: AppPreferencesRepository
+
     @Inject lateinit var postPreferencesRepository: PostPreferencesRepository
+
     @Inject lateinit var photoGridPreferencesRepository: PhotoGridPreferencesRepository
     private lateinit var refreshRateController: RefreshRateController
     private var appliedLanguage = AppLanguage.SystemDefault

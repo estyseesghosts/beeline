@@ -27,8 +27,8 @@ import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
-import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.ThreadLimitation
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.directmessages.DirectMessageViewModel
@@ -76,6 +76,7 @@ class DirectMessageViewModelTest {
         val sendRequests = mutableListOf<DirectMessageRequest>()
         val recipientSearchQueries = mutableListOf<String>()
         var markReadCalls = 0
+
         // When set, read acknowledgement waits here. Thread publication has
         // already happened, so this exposes the open/continue race.
         var markReadGate: CompletableDeferred<Unit>? = null

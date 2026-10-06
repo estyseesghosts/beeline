@@ -1,9 +1,8 @@
 package me.foxtails.palustris.data.misskey
 
-import me.foxtails.palustris.data.transport.ResponseLimitExceeded
-
 import java.util.Base64
 import kotlinx.coroutines.CancellationException
+import me.foxtails.palustris.data.transport.ResponseLimitExceeded
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
@@ -279,6 +278,7 @@ internal class MisskeyDirectMessageService(
                 if (limitations.size < MAX_CURSOR_LIMITATIONS) limitations += limitation
             }
         }
+
         // Terminal limitations stay bounded but are never dropped. When the
         // list is full the oldest non-terminal entry leaves first so the
         // terminal state survives.
@@ -746,20 +746,24 @@ internal class MisskeyDirectMessageService(
         const val THREAD_CHILD_REQUESTS_PER_CALL = 3
         const val MAX_DESCENDANT_NODES = 200
         const val MAX_PENDING_WORK = 200
+
         // Fixed thread budget per call: 1 reply root plus 20 ancestors plus
         // 3 descendant requests. The loops above enforce each part, so the total
         // stays bounded without comparing opaque identifiers.
         const val MAX_THREAD_REQUESTS = 24
+
         // Aggregate chain budget across all continuation calls, including the
         // root and ancestor reads. A chain that reaches this total stops with
         // RequestLimit and no pending continuation, even when pages keep
         // advancing. Forty requests bound an endless chain of pages that
         // contain only public, malformed, duplicate, or forked rows.
         const val MAX_THREAD_REQUESTS_TOTAL = 40
+
         // Strict bound for the cumulative limitation payload in the cursor.
         // The chain records at most a few distinct limitations; 64 leaves
         // headroom while keeping the opaque cursor bounded.
         const val MAX_CURSOR_LIMITATIONS = 64
+
         // Depth values in stored limitations stay small. The bound only keeps
         // malformed payloads out; live depths never approach it.
         const val MAX_CURSOR_LIMITATION_DEPTH = 1_000

@@ -43,7 +43,6 @@ import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.Attachment
-import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.timelineDisplayOrder

@@ -5,10 +5,7 @@
 
 package me.foxtails.palustris.ui.photogrid
 
-import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
-import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
-import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
-import me.foxtails.palustris.ui.layout.compactScrollEndClearance
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,21 +20,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,9 +49,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
-import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
-import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -64,20 +58,20 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.Image
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.media.MediaImageLoader
 import me.foxtails.palustris.domain.Attachment
-import me.foxtails.palustris.domain.MediaKind
-import me.foxtails.palustris.domain.MediaRequestDecision
-import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.ContentWarningRules
+import me.foxtails.palustris.domain.MediaKind
+import me.foxtails.palustris.domain.MediaRequestDecision
+import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.MediaRequestRole
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.AppIcons
@@ -87,16 +81,18 @@ import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
-import me.foxtails.palustris.ui.posts.postHashtags
+import me.foxtails.palustris.ui.large.LargeBottomDock
+import me.foxtails.palustris.ui.large.LargeBottomDockClearance
+import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
+import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
+import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
+import me.foxtails.palustris.ui.layout.compactScrollEndClearance
+import me.foxtails.palustris.ui.media.SensitiveMediaTile
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
+import me.foxtails.palustris.ui.posts.postHashtags
 import me.foxtails.palustris.ui.shell.timelineLabelRes
-import me.foxtails.palustris.ui.large.LargeBottomDock
-import me.foxtails.palustris.ui.large.LargeBottomDockClearance
-import me.foxtails.palustris.ui.media.SensitiveMediaTile
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 internal data class PhotoGridItem(
     val ownedPost: OwnedPost,

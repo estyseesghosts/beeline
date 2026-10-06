@@ -50,19 +50,19 @@ class CompactWideTabCaretTest {
 
     @Test fun compactWideHomeHidesInlineCaretAndTogglesChipsContextually() {
         showCompactWide()
-        compose.onNodeWithTag(CompactWideTabCaretTag, useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag(COMPACT_WIDE_TAB_CARET_TAG, useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("home_timeline_visibility", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithContentDescription("Hide chips").assertIsDisplayed()
 
-        compose.onNodeWithTag(CompactWideTabCaretTag, useUnmergedTree = true).performClick()
+        compose.onNodeWithTag(COMPACT_WIDE_TAB_CARET_TAG, useUnmergedTree = true).performClick()
         compose.waitForIdle()
 
         // The same feature-owned visibility drives both presentations: chips collapse.
         compose.onNodeWithContentDescription("Show chips").assertIsDisplayed()
         compose.onNodeWithTag("home_timeline_tabs", useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithTag(CompactWideTabCaretTag, useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag(COMPACT_WIDE_TAB_CARET_TAG, useUnmergedTree = true).assertIsDisplayed()
 
-        compose.onNodeWithTag(CompactWideTabCaretTag, useUnmergedTree = true).performClick()
+        compose.onNodeWithTag(COMPACT_WIDE_TAB_CARET_TAG, useUnmergedTree = true).performClick()
         compose.waitForIdle()
         compose.onNodeWithContentDescription("Hide chips").assertIsDisplayed()
         compose.onNodeWithTag("home_timeline_tabs", useUnmergedTree = true).assertIsDisplayed()
@@ -70,18 +70,18 @@ class CompactWideTabCaretTest {
 
     @Test fun compactWideWithoutTabsHidesCaretWithoutMovingNavigation() {
         showCompactWide()
-        val homeCapsule = bounds(LargeNavigationCapsuleTag)
-        val homeStack = bounds(LargeFloatingNavigationTag)
-        compose.onNodeWithTag(CompactWideTabCaretTag, useUnmergedTree = true).assertIsDisplayed()
+        val homeCapsule = bounds(LARGE_NAVIGATION_CAPSULE_TAG)
+        val homeStack = bounds(LARGE_FLOATING_NAVIGATION_TAG)
+        compose.onNodeWithTag(COMPACT_WIDE_TAB_CARET_TAG, useUnmergedTree = true).assertIsDisplayed()
 
         compose.onNodeWithContentDescription("Direct messages").performClick()
         compose.waitForIdle()
 
         // Direct Messages exposes no tab chips: no contextual caret and no inline caret slot.
-        compose.onNodeWithTag(CompactWideTabCaretTag, useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag(COMPACT_WIDE_TAB_CARET_TAG, useUnmergedTree = true).assertDoesNotExist()
         // The floating capsule and the full stack stay exactly where Home placed them.
-        assertEquals(homeCapsule, bounds(LargeNavigationCapsuleTag))
-        assertEquals(homeStack, bounds(LargeFloatingNavigationTag))
+        assertEquals(homeCapsule, bounds(LARGE_NAVIGATION_CAPSULE_TAG))
+        assertEquals(homeStack, bounds(LARGE_FLOATING_NAVIGATION_TAG))
         // The DM action keeps the same composer slot with its own icon.
         val dmAction = compose.onNodeWithContentDescription("New conversation")
             .fetchSemanticsNode().boundsInRoot
@@ -101,14 +101,14 @@ class CompactWideTabCaretTest {
 
     @Test fun compactWideStackBottomAnchorsWhileTabletStaysCentered() {
         showCompactWide()
-        val compactStack = bounds(LargeFloatingNavigationTag)
+        val compactStack = bounds(LARGE_FLOATING_NAVIGATION_TAG)
         // Bottom-anchored: the stack bottom meets the window bottom safe edge.
         assertEquals(height.value * density, compactStack.bottom, 2f)
         assertEquals((height.value - 424f) * density, compactStack.top, 2f)
 
         compose.runOnIdle { width.value = 900f; height.value = 900f }
         compose.waitForIdle()
-        val tabletStack = bounds(LargeFloatingNavigationTag)
+        val tabletStack = bounds(LARGE_FLOATING_NAVIGATION_TAG)
         assertEquals(360f * density, tabletStack.height, 1f)
         // Centered: equal space above and below, not bottom-anchored.
         assertEquals(tabletStack.top, 900f * density - tabletStack.bottom, 2f)
@@ -117,7 +117,7 @@ class CompactWideTabCaretTest {
 
     @Test fun compactWideChipsStopBeforeTheContextualCaret() {
         showCompactWide()
-        val caret = bounds(CompactWideTabCaretTag)
+        val caret = bounds(COMPACT_WIDE_TAB_CARET_TAG)
         val chips = compose.onNodeWithTag("home_timeline_tabs", useUnmergedTree = true)
             .fetchSemanticsNode().boundsInRoot
         assertTrue(

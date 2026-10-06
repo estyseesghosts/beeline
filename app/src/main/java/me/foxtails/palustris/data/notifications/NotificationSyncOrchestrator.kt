@@ -26,9 +26,9 @@ import me.foxtails.palustris.data.notifications.work.NoOpNotificationDeliverySch
 import me.foxtails.palustris.data.notifications.work.NotificationDeliveryScheduler
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Event
+import me.foxtails.palustris.domain.NotificationAcknowledgement
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.NotificationSyncToken
-import me.foxtails.palustris.domain.NotificationAcknowledgement
 import me.foxtails.palustris.domain.NotificationUnreadState
 import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.SocialSource
@@ -125,6 +125,7 @@ class NotificationSyncOrchestrator @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val states = mutableMapOf<AccountId, MutableStateFlow<NotificationSyncState>>()
     private val jobs = mutableMapOf<AccountId, Job>()
+
     // Account locks live for the controller lifetime. Removal never detaches them,
     // so waiters keep one order per account.
     private val accountLocks = mutableMapOf<AccountId, Mutex>()
@@ -562,6 +563,7 @@ class NotificationSyncOrchestrator @Inject constructor(
 
     private companion object {
         const val POLL_INTERVAL_MILLIS = 60_000L
+
         // Removal tombstones the exact generation at unregister time, so the
         // replacement is the common first-try success. The extra attempts cover
         // a concurrent cycle.

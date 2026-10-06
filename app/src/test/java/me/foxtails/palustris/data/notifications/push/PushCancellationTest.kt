@@ -17,7 +17,6 @@ import me.foxtails.palustris.data.SocialSourceFactory
 import me.foxtails.palustris.data.auth.AccountIndex
 import me.foxtails.palustris.data.auth.SessionStore
 import me.foxtails.palustris.data.misskey.CapabilityCache
-import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.notifications.InMemoryNotificationStore
 import me.foxtails.palustris.data.notifications.NotificationPermissionController
 import me.foxtails.palustris.data.notifications.NotificationPresentation
@@ -35,6 +34,7 @@ import me.foxtails.palustris.data.notifications.push.UnifiedPushMessageHandler
 import me.foxtails.palustris.data.notifications.push.UnifiedPushRegistrationManager
 import me.foxtails.palustris.data.notifications.push.registerWithDistributor
 import me.foxtails.palustris.data.notifications.work.NotificationWorkScheduler
+import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection

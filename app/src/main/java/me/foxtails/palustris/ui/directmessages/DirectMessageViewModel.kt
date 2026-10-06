@@ -25,8 +25,8 @@ import me.foxtails.palustris.domain.ConversationIdentity
 import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.DirectMessageRequest
 import me.foxtails.palustris.domain.DirectMessageSource
-import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.ui.UiStrings
 
 @HiltViewModel(assistedFactory = DirectMessageViewModel.Factory::class)
@@ -53,6 +53,7 @@ class DirectMessageViewModel @AssistedInject constructor(
     private var threadJob: Job? = null
     private var recipientSearchJob: Job? = null
     private var recipientSearchGeneration = 0L
+
     // Read acknowledgement owns a separate lifetime. It starts only after the
     // first thread page publishes, so an active markRead never blocks a tap on
     // Continue behind the threadJob guard. Best effort only. Never writes UI.

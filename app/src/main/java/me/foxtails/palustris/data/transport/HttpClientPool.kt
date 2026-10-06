@@ -1,9 +1,9 @@
 package me.foxtails.palustris.data.transport
 
-import me.foxtails.palustris.domain.Connection
-import okhttp3.OkHttpClient
 import java.util.LinkedHashMap
 import java.util.concurrent.TimeUnit
+import me.foxtails.palustris.domain.Connection
+import okhttp3.OkHttpClient
 
 data class HttpLayerConfig(
     val connectTimeoutSeconds: Long = 15,

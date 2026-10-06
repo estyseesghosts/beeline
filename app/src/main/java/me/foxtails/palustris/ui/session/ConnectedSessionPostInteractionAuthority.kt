@@ -8,5 +8,4 @@ internal class ConnectedSessionPostInteractionAuthority(
     val accountId: AccountId,
     val sessionRevision: Long,
     val authority: PostInteractionExecutionAuthority,
-) {
-}
+)

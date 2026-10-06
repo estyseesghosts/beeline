@@ -9,10 +9,10 @@ import kotlinx.coroutines.launch
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.domain.ProfileTimelineQuery
-import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.ProfileCapability
 import me.foxtails.palustris.domain.ProfileCapabilityQuery
+import me.foxtails.palustris.domain.ProfileTimelineQuery
+import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.ui.UiStrings

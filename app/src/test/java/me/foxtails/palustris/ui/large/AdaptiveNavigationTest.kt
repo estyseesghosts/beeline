@@ -13,25 +13,25 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onAllNodesWithContentDescription
-import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import me.foxtails.palustris.MainActivity
+import me.foxtails.palustris.domain.AppNavigationAnchor
+import me.foxtails.palustris.ui.PalustrisTheme
+import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 import me.foxtails.palustris.ui.shell.AppShellFixtures
 import me.foxtails.palustris.ui.shell.DirectMessagesContract
-import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
-import me.foxtails.palustris.ui.PalustrisTheme
-import me.foxtails.palustris.domain.AppNavigationAnchor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -82,8 +82,8 @@ class AdaptiveNavigationTest {
         for (size in listOf(445f to 704f, 900f to 900f)) {
             for (layoutDirection in LayoutDirection.entries) {
                 compose.runOnIdle { width.value = size.first; height.value = size.second; direction.value = layoutDirection }
-                val stack = bounds(LargeFloatingNavigationTag)
-                val capsule = bounds(LargeNavigationCapsuleTag)
+                val stack = bounds(LARGE_FLOATING_NAVIGATION_TAG)
+                val capsule = bounds(LARGE_NAVIGATION_CAPSULE_TAG)
                 // Compact-wide reserves the contextual tab-caret slot and bottom-anchors the stack.
                 // Expanded tablet keeps the capsule-plus-action stack vertically centered.
                 val isCompactWide = size.first < 840f
@@ -99,7 +99,7 @@ class AdaptiveNavigationTest {
                 assertEquals(capsule.bottom + 8f * density, action.top, 1f)
                 if (isCompactWide) {
                     // Home exposes tab chips, so the contextual caret sits below the composer.
-                    val caret = bounds(CompactWideTabCaretTag)
+                    val caret = bounds(COMPACT_WIDE_TAB_CARET_TAG)
                     assertEquals(56f * density, caret.width, 1f)
                     assertEquals(56f * density, caret.height, 1f)
                     assertEquals(action.bottom + 8f * density, caret.top, 1f)
@@ -122,7 +122,7 @@ class AdaptiveNavigationTest {
                     height.value = if (size == 445f) 704f else 900f
                     direction.value = layoutDirection
                 }
-                assertEquals(expectedLeft * density, bounds(LargeFloatingNavigationTag).left, 1f)
+                assertEquals(expectedLeft * density, bounds(LARGE_FLOATING_NAVIGATION_TAG).left, 1f)
             }
         }
     }
@@ -144,7 +144,7 @@ class AdaptiveNavigationTest {
         show()
         compose.onNodeWithContentDescription("Photo grid").performClick()
         compose.runOnIdle { width.value = 400f }
-        compose.onNodeWithTag(LargeFloatingNavigationTag).assertDoesNotExist()
+        compose.onNodeWithTag(LARGE_FLOATING_NAVIGATION_TAG).assertDoesNotExist()
         compose.onNodeWithText("No media posts available").assertIsDisplayed()
         compose.onAllNodesWithContentDescription("Home").onLast().performClick()
         compose.onNodeWithContentDescription("Photo grid").performClick()
@@ -156,7 +156,7 @@ class AdaptiveNavigationTest {
         compose.runOnIdle { width.value = 900f; height.value = 900f }
         compose.onNodeWithText("Select a post").assertIsDisplayed()
         compose.runOnIdle { height.value = 350f }
-        compose.onNodeWithTag(LargeFloatingNavigationTag).assertDoesNotExist()
+        compose.onNodeWithTag(LARGE_FLOATING_NAVIGATION_TAG).assertDoesNotExist()
         compose.onNodeWithContentDescription("Compose post").assertIsDisplayed()
         compose.onNodeWithText("Select a post").assertIsDisplayed()
     }
@@ -180,13 +180,13 @@ class AdaptiveNavigationTest {
             compose.waitForIdle()
         }
         dispatch(0)
-        val closed = bounds(LargeFloatingNavigationTag)
+        val closed = bounds(LARGE_FLOATING_NAVIGATION_TAG)
         assertEquals(381f * density, closed.left, 1f)
         assertTrue(closed.top >= 24f * density && closed.bottom <= 680f * density)
         dispatch(400)
-        assertEquals(closed, bounds(LargeFloatingNavigationTag))
+        assertEquals(closed, bounds(LARGE_FLOATING_NAVIGATION_TAG))
         compose.runOnIdle { direction.value = LayoutDirection.Rtl }
-        assertEquals(closed, bounds(LargeFloatingNavigationTag))
+        assertEquals(closed, bounds(LARGE_FLOATING_NAVIGATION_TAG))
     }
 
     @Test fun wideCompactFallbackKeepsSearchFieldAndDmEditorAboveNavigation() {
@@ -240,12 +240,12 @@ class AdaptiveNavigationTest {
         assertTrue(primary.right < detail.left)
         assertEquals(48f, leftClearance, 0.01f)
         assertEquals(0f, rightClearance, 0.01f)
-        assertEquals(bounds(LargeFloatingNavigationTag).top, bounds(LargeNavigationCapsuleTag).top, 1f)
+        assertEquals(bounds(LARGE_FLOATING_NAVIGATION_TAG).top, bounds(LARGE_NAVIGATION_CAPSULE_TAG).top, 1f)
         compose.runOnIdle { direction.value = LayoutDirection.Rtl }
         assertEquals(primary, bounds("physical_primary"))
         assertEquals(detail, bounds("physical_detail"))
         compose.runOnIdle { visible.value = false }
-        compose.onNodeWithTag(LargeFloatingNavigationTag).assertDoesNotExist()
+        compose.onNodeWithTag(LARGE_FLOATING_NAVIGATION_TAG).assertDoesNotExist()
         compose.runOnIdle { assertEquals(0f, leftClearance, 0.01f) }
     }
 
@@ -303,9 +303,9 @@ class AdaptiveNavigationTest {
         assertEquals(0f, primaryRight, 0.01f)
         assertEquals(0f, detailLeft, 0.01f)
         assertEquals(48f, detailRight, 0.25f)
-        val rightStack = bounds(LargeFloatingNavigationTag)
+        val rightStack = bounds(LARGE_FLOATING_NAVIGATION_TAG)
         compose.runOnIdle { direction.value = LayoutDirection.Rtl }
-        assertEquals(rightStack, bounds(LargeFloatingNavigationTag))
+        assertEquals(rightStack, bounds(LARGE_FLOATING_NAVIGATION_TAG))
         assertEquals(48f, detailRight, 0.25f)
     }
 }

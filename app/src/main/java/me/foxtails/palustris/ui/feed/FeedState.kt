@@ -2,10 +2,10 @@ package me.foxtails.palustris.ui.feed
 
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityStatus
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.SavedPostsCapability
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.search.AccountSearchState

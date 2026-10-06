@@ -1,14 +1,14 @@
 package me.foxtails.palustris.data.transport
 
+import java.io.IOException
+import java.io.InputStream
+import java.util.concurrent.atomic.AtomicBoolean
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okio.BufferedSink
 import okio.source
-import java.io.IOException
-import java.io.InputStream
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Owns one upload input stream for a single multipart upload call.

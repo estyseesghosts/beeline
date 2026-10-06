@@ -46,11 +46,11 @@ internal fun floatingNavigationBounds(
 ): Rect? {
     if (!fit.useVerticalNavigation) return null
     val region = fit.safeRegion ?: return null
-    val width = NavigationCapsuleWidthDp
+    val width = NAVIGATION_CAPSULE_WIDTH_DP
     val height = if (isCompactWide) NavigationCompactWideTotalHeightDp else NavigationCapsuleTotalHeightDp
     if (region.width < NavigationCapsuleTotalWidthDp || region.height < height) return null
-    val left = if (anchorLeft) region.left + NavigationPlacementGapDp
-    else region.right - NavigationPlacementGapDp - width
+    val left = if (anchorLeft) region.left + NAVIGATION_PLACEMENT_GAP_DP
+    else region.right - NAVIGATION_PLACEMENT_GAP_DP - width
     val top = if (isCompactWide) region.bottom - height
     else region.top + (region.height - height) / 2f
     return Rect(left, top, left + width, top + height)
@@ -101,9 +101,9 @@ internal fun LargeScreenShell(
     } else {
         null
     }
-    Box(modifier.fillMaxSize().testTag(LargeScreenShellTag)) {
+    Box(modifier.fillMaxSize().testTag(LARGE_SCREEN_SHELL_TAG)) {
         BoxWithConstraints(
-            Modifier.fillMaxSize().windowInsetsPadding(bars).testTag(LargeContentRegionTag),
+            Modifier.fillMaxSize().windowInsetsPadding(bars).testTag(LARGE_CONTENT_REGION_TAG),
         ) {
             val features = adaptiveInfo.windowPosture.hingeList.map { hinge ->
                 LargeFoldingFeature(
@@ -201,5 +201,5 @@ private fun BoxScope.PaneSlot(
     }
 }
 
-internal const val LargeScreenShellTag = "large_screen_shell"
-internal const val LargeContentRegionTag = "large_content_region"
+internal const val LARGE_SCREEN_SHELL_TAG = "large_screen_shell"
+internal const val LARGE_CONTENT_REGION_TAG = "large_content_region"

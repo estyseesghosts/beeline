@@ -3,15 +3,15 @@ package me.foxtails.palustris.data.mastodon
 import java.io.InputStream
 import java.net.URLEncoder
 import java.util.UUID
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
-import me.foxtails.palustris.data.transport.HttpResponse
+import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
-import me.foxtails.palustris.data.transport.ResponseLimitExceeded
+import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.data.transport.HttpStatusFailure
+import me.foxtails.palustris.data.transport.ResponseLimitExceeded
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -19,7 +19,6 @@ import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.Connection
-import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.ConversationId
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.CustomEmoji
@@ -33,6 +32,7 @@ import me.foxtails.palustris.domain.EditableProfilePatch
 import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.Event
 import me.foxtails.palustris.domain.NotificationCheckpoint
 import me.foxtails.palustris.domain.ModerationAccount
@@ -46,7 +46,6 @@ import me.foxtails.palustris.domain.NotificationCursor
 import me.foxtails.palustris.domain.NotificationPage
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.NotificationUnreadState
-import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
@@ -65,10 +64,8 @@ import me.foxtails.palustris.domain.ReportRequest
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
-import me.foxtails.palustris.domain.ThreadAcquisitionState
 import me.foxtails.palustris.domain.ThreadContext
 import me.foxtails.palustris.domain.ThreadContinuation
-import me.foxtails.palustris.domain.ThreadRefreshHint
 import me.foxtails.palustris.domain.ThreadSessionKey
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.hashtagBody

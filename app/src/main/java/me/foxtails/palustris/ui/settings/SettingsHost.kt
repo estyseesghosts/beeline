@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.domain.AccountId
-import me.foxtails.palustris.domain.AppPreferencesState
 import me.foxtails.palustris.domain.AppNavigationAnchor
+import me.foxtails.palustris.domain.AppPreferencesState
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.PostPreferences

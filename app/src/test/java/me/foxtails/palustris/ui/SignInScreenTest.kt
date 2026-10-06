@@ -77,6 +77,7 @@ class SignInScreenTest {
             File("build/ui-screenshots/$name.png").apply { parentFile?.mkdirs() }.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
     }
+
     @Test fun firstStartShowsSparseSetupAndServerEntryFillsTheField() {
         compose.waitUntil(5000) { compose.onAllNodesWithText("sign in").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("i'm new, what's this?").assertIsDisplayed()
@@ -87,6 +88,7 @@ class SignInScreenTest {
         compose.onNode(hasSetTextAction()).assertTextContains("sharkey.world")
         capture("sign-in")
     }
+
     @Test fun contentWarningsRequireExplicitReveal() {
         val account = Account(AccountId(Connection("https://example.org", Protocol.MISSKEY), "a"), "A person", "@person@example.org")
         val post = Post(EntityId("https://example.org", "p"), account, "Text hidden by a content warning", System.currentTimeMillis(), Audience.Public, contentWarning = "Spoilers")
@@ -166,6 +168,7 @@ class SignInScreenTest {
         compose.onNodeWithText("Publishing is disabled for this account.").assertIsDisplayed()
         compose.onNodeWithText("Publish").assertIsNotEnabled()
     }
+
     @Test fun feedActionsPreserveTheAccountThatFetchedThePost() {
         val fetchingAccount = Account(AccountId(Connection("https://example.org", Protocol.MISSKEY), "owner"), "Owner", "@owner@example.org")
         val author = Account(AccountId(Connection("https://example.org", Protocol.MISSKEY), "author"), "Author", "@author@example.org")

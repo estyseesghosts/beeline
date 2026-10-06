@@ -321,9 +321,8 @@ class SettingsViewModelTest {
 
         override fun observe(): Flow<AppPreferencesState> = values.asStateFlow()
 
-        override suspend fun update(transform: (AppPreferences) -> AppPreferences) {
+        override suspend fun update(transform: (AppPreferences) -> AppPreferences) =
             throw java.io.IOException("write failed")
-        }
     }
 
     private class CancellingAppPreferencesRepository : AppPreferencesRepository {
@@ -331,8 +330,7 @@ class SettingsViewModelTest {
 
         override fun observe(): Flow<AppPreferencesState> = values.asStateFlow()
 
-        override suspend fun update(transform: (AppPreferences) -> AppPreferences) {
+        override suspend fun update(transform: (AppPreferences) -> AppPreferences) =
             throw CancellationException("cancelled")
-        }
     }
 }

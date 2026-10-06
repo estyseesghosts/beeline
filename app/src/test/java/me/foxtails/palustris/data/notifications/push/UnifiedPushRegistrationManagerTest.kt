@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import me.foxtails.palustris.data.AccountSourceRegistry
@@ -14,13 +14,13 @@ import me.foxtails.palustris.data.auth.AccountIndex
 import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.data.auth.SessionStore
 import me.foxtails.palustris.data.misskey.CapabilityCache
-import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.notifications.InMemoryNotificationStore
 import me.foxtails.palustris.data.notifications.NotificationPermissionController
 import me.foxtails.palustris.data.notifications.NotificationPresentation
 import me.foxtails.palustris.data.notifications.NotificationPresenter
 import me.foxtails.palustris.data.notifications.NotificationRepository
 import me.foxtails.palustris.data.notifications.work.NotificationWorkScheduler
+import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
@@ -212,7 +212,8 @@ class UnifiedPushRegistrationManagerTest {
     }
 
     @Test
-    fun registryReplacementWithOldRepositoryTokenEndsAsNoWork() = runBlocking {        val store = FakeSessionStore(mapOf(account to session(account, revision = 1)))
+    fun registryReplacementWithOldRepositoryTokenEndsAsNoWork() = runBlocking {
+        val store = FakeSessionStore(mapOf(account to session(account, revision = 1)))
         val setup = setup(store)
         val old = NotificationSyncToken(account, 1)
         setup.repository.activate(old)

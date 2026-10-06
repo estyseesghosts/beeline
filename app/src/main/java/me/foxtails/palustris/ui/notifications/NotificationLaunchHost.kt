@@ -6,11 +6,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.foxtails.palustris.data.auth.AccountRef
-import me.foxtails.palustris.data.notifications.NotificationLaunch
 import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.domain.AccountId
-import me.foxtails.palustris.ui.session.AccountManager
 import me.foxtails.palustris.ui.navigation.AppRoute
+import me.foxtails.palustris.ui.session.AccountManager
 
 /**
  * Owns the notification launch handoff.

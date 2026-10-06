@@ -35,7 +35,6 @@ import me.foxtails.palustris.domain.PushSubscriptionSpec
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
-import org.unifiedpush.android.connector.FailedReason
 import org.unifiedpush.android.connector.data.PushEndpoint
 import org.unifiedpush.android.connector.data.PushMessage
 import org.unifiedpush.android.connector.keys.DefaultKeyManager

@@ -16,11 +16,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.R
+import me.foxtails.palustris.data.notifications.NotificationLaunch
+import me.foxtails.palustris.data.notifications.NotificationLaunchCodec
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Notification
-import me.foxtails.palustris.data.notifications.NotificationLaunch
-import me.foxtails.palustris.data.notifications.NotificationLaunchCodec
 
 data class NotificationPresentation(
     val accountId: AccountId,
@@ -71,7 +71,6 @@ class NotificationPresentationFactory @Inject constructor(
             androidId = AndroidNotificationIds.id(notification.id),
         )
     }
-
 }
 
 @Singleton

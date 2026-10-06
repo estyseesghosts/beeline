@@ -1,8 +1,6 @@
 package me.foxtails.palustris.data.mastodon
 
 import kotlinx.coroutines.runBlocking
-import me.foxtails.palustris.data.mastodon.MastodonSource
-import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.notifications.InMemoryNotificationStore
 import me.foxtails.palustris.data.notifications.NotificationRepository
 import me.foxtails.palustris.data.notifications.NotificationSynchronizer

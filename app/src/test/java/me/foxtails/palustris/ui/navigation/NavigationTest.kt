@@ -5,10 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.view.ViewGroup
-import androidx.core.graphics.Insets
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowCompat
+import androidx.activity.compose.setContent
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
@@ -21,6 +18,7 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -32,46 +30,55 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipe
+import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeUp
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.activity.compose.setContent
-import org.junit.Before
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
-import me.foxtails.palustris.ui.shell.AppShellFixtures
-import me.foxtails.palustris.ui.shell.DirectMessagesContract
-import me.foxtails.palustris.ui.shell.PhotoGridContract
-import me.foxtails.palustris.ui.photogrid.PhotoGridFeedState
-import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.data.auth.AccountRef
+import me.foxtails.palustris.data.auth.DraftStore
+import me.foxtails.palustris.data.auth.DraftWriteAuthority
+import me.foxtails.palustris.data.auth.InMemoryDraftStore
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
-import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.EditableProfile
+import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActivity
-import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PollOption
-import me.foxtails.palustris.domain.MediaKind
+import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.ProfileTimelineTab
+import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
 import me.foxtails.palustris.ui.feed.FeedState
-import me.foxtails.palustris.ui.search.AccountSearchState
 import me.foxtails.palustris.ui.notifications.NotificationsUiState
-import me.foxtails.palustris.ui.PalustrisApp
+import me.foxtails.palustris.ui.photogrid.PhotoGridFeedState
 import me.foxtails.palustris.ui.profile.ProfileCategory
 import me.foxtails.palustris.ui.profile.ProfilePageState
 import me.foxtails.palustris.ui.profile.ProfileUiState
+import me.foxtails.palustris.ui.search.AccountSearchState
+import me.foxtails.palustris.ui.shell.AppShellFixtures
+import me.foxtails.palustris.ui.shell.DirectMessagesContract
+import me.foxtails.palustris.ui.shell.PhotoGridContract
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -80,14 +87,6 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 import java.io.IOException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.runBlocking
-import me.foxtails.palustris.data.auth.DraftStore
-import me.foxtails.palustris.data.auth.DraftWriteAuthority
-import me.foxtails.palustris.data.auth.InMemoryDraftStore
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -97,6 +96,7 @@ import kotlin.math.floor
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class NavigationTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+
     @Before fun previewShell() { compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app() } } }
 
     private val captureScreenshots = System.getProperty("beeline.captureScreenshots") == "true"
@@ -235,7 +235,7 @@ class NavigationTest {
         val overlapTop = maxOf(content.top, leftControl.top, rightControl.top).toInt() + 4
         val overlapBottom = minOf(content.bottom, leftControl.bottom, rightControl.bottom).toInt() - 4
         assertTrue(
-            "${contentTag} should overlap the transparent gap between $leftControlDescription and $rightControlDescription",
+            "$contentTag should overlap the transparent gap between $leftControlDescription and $rightControlDescription",
             gapLeft < gapRight && overlapTop < overlapBottom,
         )
 
@@ -248,7 +248,7 @@ class NavigationTest {
             }
         }
         assertTrue(
-            "${contentTag} should paint fixture content through the transparent control gap, but found $contrastingPixels contrasting pixels",
+            "$contentTag should paint fixture content through the transparent control gap, but found $contrastingPixels contrasting pixels",
             contrastingPixels >= 4,
         )
     }
@@ -262,7 +262,7 @@ class NavigationTest {
         val overlapTop = maxOf(content.top, action.top).toInt() + 4
         val overlapBottom = minOf(content.bottom, action.bottom).toInt() - 4
         assertTrue(
-            "${contentTag} should overlap the transparent gap beside $actionDescription",
+            "$contentTag should overlap the transparent gap beside $actionDescription",
             gapLeft < gapRight && overlapTop < overlapBottom,
         )
 
@@ -275,7 +275,7 @@ class NavigationTest {
             }
         }
         assertTrue(
-            "${contentTag} should paint fixture content beside $actionDescription, but found $contrastingPixels contrasting pixels",
+            "$contentTag should paint fixture content beside $actionDescription, but found $contrastingPixels contrasting pixels",
             contrastingPixels >= 4,
         )
     }

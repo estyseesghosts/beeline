@@ -109,9 +109,9 @@ internal fun ContextualTabCaretButton(
     FilledIconButton(
         onClick = state.onToggle,
         modifier = modifier
-            .size(NavigationCaretSizeDp.dp)
+            .size(NAVIGATION_CARET_SIZE_DP.dp)
             .semantics { contentDescription = description }
-            .testTag(CompactWideTabCaretTag),
+            .testTag(COMPACT_WIDE_TAB_CARET_TAG),
         interactionSource = interactionSource,
         colors = IconButtonDefaults.filledIconButtonColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -126,4 +126,4 @@ internal fun ContextualTabCaretButton(
     }
 }
 
-internal const val CompactWideTabCaretTag = "compact_wide_tab_caret"
+internal const val COMPACT_WIDE_TAB_CARET_TAG = "compact_wide_tab_caret"

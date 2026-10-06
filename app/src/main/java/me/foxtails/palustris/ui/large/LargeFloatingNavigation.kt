@@ -77,9 +77,9 @@ internal fun LargeFloatingNavigation(
     if (isCompactWide) {
         Box(
             modifier = modifier
-                .width(NavigationCapsuleWidthDp.dp)
+                .width(NAVIGATION_CAPSULE_WIDTH_DP.dp)
                 .height(NavigationCompactWideTotalHeightDp.dp)
-                .testTag(LargeFloatingNavigationTag),
+                .testTag(LARGE_FLOATING_NAVIGATION_TAG),
         ) {
             WideNavigationPresentation(
                 selectedTarget = selectedTarget.toWideNavigationItem(),
@@ -88,22 +88,22 @@ internal fun LargeFloatingNavigation(
                 onOpenAccounts = onOpenAccounts,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .width(NavigationCapsuleWidthDp.dp)
-                    .height(NavigationCapsuleHeightDp.dp)
-                    .testTag(LargeNavigationCapsuleTag),
+                    .width(NAVIGATION_CAPSULE_WIDTH_DP.dp)
+                    .height(NAVIGATION_CAPSULE_HEIGHT_DP.dp)
+                    .testTag(LARGE_NAVIGATION_CAPSULE_TAG),
             )
             if (action != null) {
                 ContextualNavigationActionButton(
                     action,
                     Modifier.align(Alignment.TopCenter)
-                        .offset(y = (NavigationCapsuleHeightDp + NavigationPlacementGapDp).dp)
-                        .size(NavigationActionSizeDp.dp),
+                        .offset(y = (NAVIGATION_CAPSULE_HEIGHT_DP + NAVIGATION_PLACEMENT_GAP_DP).dp)
+                        .size(NAVIGATION_ACTION_SIZE_DP.dp),
                 )
             } else {
                 Spacer(
                     Modifier.align(Alignment.TopCenter)
-                        .offset(y = (NavigationCapsuleHeightDp + NavigationPlacementGapDp).dp)
-                        .size(NavigationActionSizeDp.dp),
+                        .offset(y = (NAVIGATION_CAPSULE_HEIGHT_DP + NAVIGATION_PLACEMENT_GAP_DP).dp)
+                        .size(NAVIGATION_ACTION_SIZE_DP.dp),
                 )
             }
             if (tabCaret != null) {
@@ -117,11 +117,11 @@ internal fun LargeFloatingNavigation(
     }
     Column(
         modifier = modifier
-            .width(NavigationCapsuleWidthDp.dp)
+            .width(NAVIGATION_CAPSULE_WIDTH_DP.dp)
             .height(NavigationCapsuleTotalHeightDp.dp)
-            .testTag(LargeFloatingNavigationTag),
+            .testTag(LARGE_FLOATING_NAVIGATION_TAG),
         verticalArrangement = Arrangement.spacedBy(
-            space = NavigationPlacementGapDp.dp,
+            space = NAVIGATION_PLACEMENT_GAP_DP.dp,
             alignment = Alignment.CenterVertically,
         ),
     ) {
@@ -131,17 +131,17 @@ internal fun LargeFloatingNavigation(
             onTargetSelected = { onTargetSelected(it.toLargeNavTarget()) },
             onOpenAccounts = onOpenAccounts,
             modifier = Modifier
-                .width(NavigationCapsuleWidthDp.dp)
-                .height(NavigationCapsuleHeightDp.dp)
-                .testTag(LargeNavigationCapsuleTag),
+                .width(NAVIGATION_CAPSULE_WIDTH_DP.dp)
+                .height(NAVIGATION_CAPSULE_HEIGHT_DP.dp)
+                .testTag(LARGE_NAVIGATION_CAPSULE_TAG),
         )
         if (action != null) {
-            ContextualNavigationActionButton(action, Modifier.size(NavigationActionSizeDp.dp))
+            ContextualNavigationActionButton(action, Modifier.size(NAVIGATION_ACTION_SIZE_DP.dp))
         } else {
-            Spacer(Modifier.size(NavigationActionSizeDp.dp))
+            Spacer(Modifier.size(NAVIGATION_ACTION_SIZE_DP.dp))
         }
     }
 }
 
-internal const val LargeFloatingNavigationTag = "large_floating_navigation"
-internal const val LargeNavigationCapsuleTag = "large_navigation_capsule"
+internal const val LARGE_FLOATING_NAVIGATION_TAG = "large_floating_navigation"
+internal const val LARGE_NAVIGATION_CAPSULE_TAG = "large_navigation_capsule"

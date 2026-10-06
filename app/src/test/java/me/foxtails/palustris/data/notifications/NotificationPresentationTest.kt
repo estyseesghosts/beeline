@@ -1,9 +1,12 @@
 package me.foxtails.palustris.data.notifications
 
-import androidx.test.core.app.ApplicationProvider
 import android.app.NotificationManager
 import android.app.PendingIntent
+import androidx.test.core.app.ApplicationProvider
+import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.data.notifications.NotificationChannelKind
+import me.foxtails.palustris.data.notifications.NotificationLaunch
+import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.data.notifications.NotificationPresentationFactory
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -16,11 +19,8 @@ import me.foxtails.palustris.domain.NotificationLabel
 import me.foxtails.palustris.domain.NotificationReaction
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.data.notifications.NotificationLaunch
-import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
-import me.foxtails.palustris.MainActivity
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

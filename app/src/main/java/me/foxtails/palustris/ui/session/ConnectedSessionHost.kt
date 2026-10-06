@@ -21,8 +21,8 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
+import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.ui.PalustrisApp
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.composer.asDraftsContract
@@ -32,12 +32,12 @@ import me.foxtails.palustris.ui.feed.FeedHost
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.notifications.NotificationSettingsHost
 import me.foxtails.palustris.ui.notifications.NotificationsHost
+import me.foxtails.palustris.ui.photogrid.PhotoGridHost
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
-import me.foxtails.palustris.ui.posts.PostPopupOwner
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
+import me.foxtails.palustris.ui.posts.PostPopupOwner
 import me.foxtails.palustris.ui.profile.ProfileHost
 import me.foxtails.palustris.ui.saved.SavedCollectionsHost
-import me.foxtails.palustris.ui.photogrid.PhotoGridHost
 import me.foxtails.palustris.ui.search.SearchHost
 import me.foxtails.palustris.ui.shell.AccountSwitcher
 import me.foxtails.palustris.ui.shell.ComposerContract

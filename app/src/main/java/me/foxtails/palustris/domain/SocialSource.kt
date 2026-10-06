@@ -6,9 +6,11 @@ import kotlinx.coroutines.flow.flowOf
 /** Transport-independent boundary implemented by individual server adapters. */
 interface SocialSource {
     val capabilities: ServerCapabilities
+
     /** Artwork policy for the primary favourite action. This is not a feature capability. */
     val favouriteArtworkStyle: FavouriteArtworkStyle
         get() = FavouriteArtworkStyle.Heart
+
     /**
      * Observable capability snapshot. A feature host collects this instead of reading
      * [capabilities] once, so a refreshed probe can update capability-driven controls.
@@ -21,6 +23,7 @@ interface SocialSource {
     suspend fun profile(id: AccountId): Account = unsupported("profile")
     suspend fun profileTimeline(query: ProfileTimelineQuery, cursor: String? = null): Page<Post> =
         unsupported("profile.timeline")
+
     /**
      * Capability defaults must be conservative because this contract has no target ownership
      * information. Adapters that can serve a target must provide target-aware evidence.
@@ -75,8 +78,10 @@ interface SocialSource {
     suspend fun search(query: String): List<Post> = unsupported("search")
     suspend fun searchHashtag(tag: String, cursor: String? = null): Page<Post> = unsupported("hashtag search")
     suspend fun searchAccounts(query: String): List<Account> = unsupported("account search")
+
     /** Legacy page shape retained for source compatibility during the adapter migration. */
     suspend fun notifications(cursor: String? = null): Page<Notification> = unsupported("notifications")
+
     suspend fun notifications(query: NotificationQuery, cursor: NotificationCursor? = null): NotificationPage =
         unsupported("notifications")
     suspend fun fetchNewerNotifications(

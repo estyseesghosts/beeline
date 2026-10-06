@@ -14,29 +14,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import me.foxtails.palustris.domain.AccountId
-import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.CapabilityStatus
+import me.foxtails.palustris.domain.DEFAULT_FAVOURITE_EMOJI
 import me.foxtails.palustris.domain.EmojiChoice
+import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostActionResult
 import me.foxtails.palustris.domain.PostPreferencesRepository
-import me.foxtails.palustris.domain.PostReactionReducer
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
-import me.foxtails.palustris.domain.ReactionSelectionMode
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.ThreadContext
-import me.foxtails.palustris.domain.ThreadLimitation
-import me.foxtails.palustris.domain.ThreadRow
 import me.foxtails.palustris.domain.ThreadSessionKey
 import me.foxtails.palustris.domain.ThreadTreeBuilder
+import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.mergeExternalActionFields
-import me.foxtails.palustris.domain.DEFAULT_FAVOURITE_EMOJI
 import me.foxtails.palustris.domain.normalizeFavouriteEmoji
-import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.ui.posts.PostActionFamily
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.posts.PostInteractionMutationOwner
@@ -199,8 +195,7 @@ class PostThreadViewModel @AssistedInject constructor(
         if (!value) {
             automaticRefreshJob?.cancel()
             loadJob?.cancel()
-        }
-        else if (_state.value.refreshing) scheduleAutomaticRefresh(_state.value)
+        } else if (_state.value.refreshing) scheduleAutomaticRefresh(_state.value)
     }
 
     fun acceptPublishedReply(created: OwnedPost) {

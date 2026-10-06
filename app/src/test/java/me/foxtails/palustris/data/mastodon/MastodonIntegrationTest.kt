@@ -1,28 +1,20 @@
 package me.foxtails.palustris.data.mastodon
 
-import java.io.ByteArrayInputStream
-import java.io.IOException
-import java.io.InputStream
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
-import me.foxtails.palustris.data.mastodon.MastodonMapper
-import me.foxtails.palustris.data.mastodon.MastodonSource
-import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.data.transport.HttpResponse
-import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
-import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.EditableProfileCapabilities
 import me.foxtails.palustris.domain.EditableProfileField
 import me.foxtails.palustris.domain.EditableProfilePatch
@@ -58,6 +50,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.io.InputStream
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -260,7 +257,9 @@ class MastodonIntegrationTest {
 
     @Test
     fun sourceUsesLinkCursorAndBearerTimelineRequest() = runBlocking {
-        server.enqueue(MockResponse().setBody("[${status("newest")}]" ).addHeader(
+        server.enqueue(MockResponse().setBody(
+            "[${status("newest")}]",
+        ).addHeader(
             "Link", "<$origin/api/v1/timelines/home?max_id=newest>; rel=\"next\"",
         ))
         server.enqueue(MockResponse().setBody("[${status("older")}]"))
@@ -327,7 +326,9 @@ class MastodonIntegrationTest {
     @Test
     fun timelineLocalAndFederatedKeepTheirRouteFiltersOnSecondPage() = runBlocking {
         val source = source()
-        server.enqueue(MockResponse().setBody("[${status("local-one")}]" ).addHeader(
+        server.enqueue(MockResponse().setBody(
+            "[${status("local-one")}]",
+        ).addHeader(
             "Link", "<$origin/api/v1/timelines/public?local=true&max_id=local-one>; rel=\"next\"",
         ))
         server.enqueue(MockResponse().setBody("[]"))
@@ -481,7 +482,7 @@ class MastodonIntegrationTest {
             .put("pleroma", JSONObject().put("metadata", JSONObject()
                 .put("features", JSONArray().put("pleroma_emoji_reactions"))))
             .toString()))
-        server.enqueue(MockResponse().setBody("[${status("newest")}]" ).addHeader(
+        server.enqueue(MockResponse().setBody("[${status("newest")}]").addHeader(
             "Link", "<$origin/api/v1/timelines/home?max_id=newest>; rel=\"next\"",
         ))
         server.enqueue(MockResponse().setBody("[${status("older")}]"))
@@ -567,7 +568,9 @@ class MastodonIntegrationTest {
 
     @Test
     fun bookmarksUseOpaqueRouteBoundCursorAndPreserveTransportOrder() = runBlocking {
-        server.enqueue(MockResponse().setBody("[${status("newest")},${status("middle")}]" ).addHeader(
+        server.enqueue(MockResponse().setBody(
+            "[${status("newest")},${status("middle")}]",
+        ).addHeader(
             "Link", "<$origin/api/v1/bookmarks?limit=40&max_id=middle>; rel=\"next\"",
         ))
         server.enqueue(MockResponse().setBody("[${status("older")}]"))
@@ -1665,7 +1668,6 @@ class MastodonIntegrationTest {
         clock = clock,
         onCapabilitiesUpdated = onCapabilitiesUpdated,
     )
-
 
     private fun profileResponse(id: String) = JSONObject()
         .put("id", id)

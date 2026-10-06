@@ -38,6 +38,7 @@ class DirectMessageWriteAuthority @Inject constructor() {
         val generation = AtomicLong(initialGeneration)
         val mutex = Mutex()
         var users = 0
+
         @Volatile var retiring = false
     }
 

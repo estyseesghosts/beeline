@@ -39,6 +39,7 @@ import me.foxtails.palustris.ui.posts.PostRepostConfirmationState
 import me.foxtails.palustris.ui.shell.AccountSwitcher
 import me.foxtails.palustris.ui.shell.BookmarksContract
 import me.foxtails.palustris.ui.shell.ComposerContract
+import me.foxtails.palustris.ui.shell.Destination
 import me.foxtails.palustris.ui.shell.DestinationDraftCallbacks
 import me.foxtails.palustris.ui.shell.DestinationNavigationCallbacks
 import me.foxtails.palustris.ui.shell.DestinationPostCallbacks
@@ -46,26 +47,24 @@ import me.foxtails.palustris.ui.shell.DirectMessagesContract
 import me.foxtails.palustris.ui.shell.DraftsContract
 import me.foxtails.palustris.ui.shell.EmojiPresentation
 import me.foxtails.palustris.ui.shell.HomeContract
+import me.foxtails.palustris.ui.shell.LargePostOrigin
 import me.foxtails.palustris.ui.shell.NotificationSettingsContract
 import me.foxtails.palustris.ui.shell.NotificationsContract
+import me.foxtails.palustris.ui.shell.NotificationsPanel
+import me.foxtails.palustris.ui.shell.Overlay
 import me.foxtails.palustris.ui.shell.PhotoGridContract
 import me.foxtails.palustris.ui.shell.PostInteractions
 import me.foxtails.palustris.ui.shell.ProfileContract
 import me.foxtails.palustris.ui.shell.SearchContract
+import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.shell.ShellContent
 import me.foxtails.palustris.ui.shell.ShellDetailCallbacks
 import me.foxtails.palustris.ui.shell.ShellEffects
-import me.foxtails.palustris.ui.shell.ThreadContract
-import me.foxtails.palustris.ui.shell.Destination
-import me.foxtails.palustris.ui.shell.LargePostOrigin
-import me.foxtails.palustris.ui.shell.NotificationsPanel
-import me.foxtails.palustris.ui.shell.Overlay
-import me.foxtails.palustris.ui.shell.SearchPanel
-import me.foxtails.palustris.ui.shell.savedCollectionTitle
-import me.foxtails.palustris.ui.shell.resolveSelectedPost
-import me.foxtails.palustris.ui.shell.supportsComments
 import me.foxtails.palustris.ui.shell.ShellOverlayHost
+import me.foxtails.palustris.ui.shell.ThreadContract
 import me.foxtails.palustris.ui.shell.rememberShellOverlayPresenter
+import me.foxtails.palustris.ui.shell.resolveSelectedPost
+import me.foxtails.palustris.ui.shell.savedCollectionTitle
 
 @Composable
 fun PalustrisApp(

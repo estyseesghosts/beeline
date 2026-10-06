@@ -3,13 +3,13 @@ package me.foxtails.palustris.ui.shell
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.ui.composer.ComposerOwner
 import me.foxtails.palustris.ui.media.MediaTransitionRegistry
 import me.foxtails.palustris.ui.navigation.ShellNavigator
-import me.foxtails.palustris.ui.posts.PostRepostConfirmationState
 import me.foxtails.palustris.ui.posts.PostPopupPresentation
+import me.foxtails.palustris.ui.posts.PostRepostConfirmationState
 
 /** Applies shell side effects without owning shell state or rendering content. */
 @Composable

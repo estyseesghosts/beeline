@@ -7,8 +7,8 @@ import kotlinx.coroutines.test.runTest
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
-import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.CapabilityStatus
+import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post

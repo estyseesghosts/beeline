@@ -1,8 +1,6 @@
 package me.foxtails.palustris.data.mastodon
 
 import kotlinx.coroutines.runBlocking
-import me.foxtails.palustris.data.mastodon.MastodonCapabilityProbe
-import me.foxtails.palustris.data.misskey.MisskeyApi
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.PostAction

@@ -1,8 +1,8 @@
 package me.foxtails.palustris.ui.shell
 
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
-import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.Timeline
 
 /**

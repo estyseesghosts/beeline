@@ -18,8 +18,8 @@ import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.directmessages.DirectMessageConversationScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageInboxScreen
 import me.foxtails.palustris.ui.directmessages.DirectMessageUiState
-import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.notifications.NotificationsScreen
 import me.foxtails.palustris.ui.notifications.NotificationsUiState
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules

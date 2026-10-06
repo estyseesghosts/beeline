@@ -7,23 +7,23 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import me.foxtails.palustris.data.SocialSourceFactory
-import me.foxtails.palustris.data.notifications.NotificationStreamController
-import me.foxtails.palustris.data.notifications.NotificationSyncController
-import me.foxtails.palustris.data.notifications.push.PushRegistrationManager
 import me.foxtails.palustris.data.directmessages.DirectMessageStore
 import me.foxtails.palustris.data.directmessages.DirectMessageWriteAuthority
 import me.foxtails.palustris.data.misskey.CapabilityCache
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
-import me.foxtails.palustris.domain.PostPreferencesRepository
+import me.foxtails.palustris.data.notifications.NotificationStreamController
+import me.foxtails.palustris.data.notifications.NotificationSyncController
+import me.foxtails.palustris.data.notifications.push.PushRegistrationManager
+import me.foxtails.palustris.di.IoDispatcher
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EmojiCatalogRepository
 import me.foxtails.palustris.domain.EmojiPickerPreferencesRepository
 import me.foxtails.palustris.domain.NotificationSyncToken
+import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
+import me.foxtails.palustris.domain.PostPreferencesRepository
+import me.foxtails.palustris.domain.PushSessionState
 import me.foxtails.palustris.domain.Session
 import me.foxtails.palustris.domain.SocialSource
-import me.foxtails.palustris.domain.PushSessionState
-import me.foxtails.palustris.di.IoDispatcher
 import org.json.JSONObject
 
 /** Owns durable account transitions and the resources that follow a session lifetime. */

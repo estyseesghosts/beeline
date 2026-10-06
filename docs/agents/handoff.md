@@ -14,7 +14,7 @@ The preceding adaptive-navigation record remains at [tasks/beeline-0.4.0.md](tas
 
 The user requests Phases 0 and 1 of `docs/fix_0.4.0.md`, in that order.
 0.1 relocates the unchanged layout policy to `ui/layout/`. Focused tests and architecture audit pass.
-0.1 is committed at `3c5b2ca`. 0.2 completion documentation passes direct review and local-link checks.
+0.1 is committed at `3c5b2ca`. 0.2 is committed at `a850d40`.
 The user-authorized mechanical ktlint repair is complete on the working tree.
 The full CI-parity gate passes with 1,691 JVM tests, lint, ktlint, and debug/release assembly.
 Direct source comparison and review find no feature behavior changes. No baseline exemptions were added.
@@ -29,8 +29,8 @@ Recheck external Java/Gradle activity before builds. Use explicit reviewed commi
 
 ## Last safe commit
 
-Preceding safe commit: `3c5b2ca` — `Move layout direction policy into layout package`.
-The 0.2 checkpoint subject is `Align completion verification with CI`.
+Preceding safe commit: `a850d40` — `Align completion verification with CI`.
+The mechanical checkpoint subject is `Repair existing ktlint gate violations`.
 
 ## Limits
 

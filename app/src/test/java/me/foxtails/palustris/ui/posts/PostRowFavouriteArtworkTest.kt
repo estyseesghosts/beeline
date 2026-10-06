@@ -4,8 +4,8 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
-import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.EmojiChoice
+import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post

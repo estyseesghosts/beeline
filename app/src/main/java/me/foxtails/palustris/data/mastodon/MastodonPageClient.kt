@@ -82,5 +82,4 @@ internal class MastodonPageClient(
     private fun identity(route: MastodonPageRoute) = MastodonPageCursor.Identity(
         origin, account, sessionRevision, sourceInstance, route.name, route.query,
     )
-
 }

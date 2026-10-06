@@ -9,14 +9,13 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import me.foxtails.palustris.ui.shell.AppShellFixtures
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -27,18 +26,18 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.ui.PalustrisApp
 import me.foxtails.palustris.ui.PalustrisTheme
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.profile.ProfileCategory
 import me.foxtails.palustris.ui.profile.ProfilePageState
 import me.foxtails.palustris.ui.profile.ProfileScreen
 import me.foxtails.palustris.ui.profile.ProfileUiState
+import me.foxtails.palustris.ui.shell.AppShellFixtures
 import me.foxtails.palustris.ui.thread.PostThreadPhase
 import me.foxtails.palustris.ui.thread.PostThreadUiState
-import org.junit.Assert.assertTrue
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -138,7 +137,7 @@ class WideNavigationTest {
         compose.waitForIdle()
 
         compose.onNodeWithTag("large_screen_shell").assertIsDisplayed()
-        compose.onNodeWithTag(LargeNavigationCapsuleTag, useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag(LARGE_NAVIGATION_CAPSULE_TAG, useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("profile_large_avatar").assertDoesNotExist()
         compose.onNodeWithText("Compact-wide profile post").assertIsDisplayed()
         val header = compose.onNodeWithTag("profile_header", useUnmergedTree = true)
@@ -315,7 +314,7 @@ class WideNavigationTest {
         compose.onNodeWithContentDescription("Timeline Home").assertIsDisplayed()
         compose.onNodeWithContentDescription("Search").assertIsDisplayed()
         compose.onNodeWithContentDescription("Notifications").assertIsDisplayed()
-        compose.onNodeWithTag(LargeNavigationCapsuleTag, useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag(LARGE_NAVIGATION_CAPSULE_TAG, useUnmergedTree = true).assertIsDisplayed()
         listOf("Home", "Search", "Photo grid", "Notifications", "Direct messages", "Profile").forEach {
             compose.onNodeWithContentDescription(it).assertIsDisplayed()
         }

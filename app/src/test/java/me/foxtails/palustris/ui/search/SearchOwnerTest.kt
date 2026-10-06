@@ -1,7 +1,7 @@
 package me.foxtails.palustris.ui.search
 
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import me.foxtails.palustris.domain.Account

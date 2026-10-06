@@ -10,11 +10,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.SocialSource
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.shell.PhotoGridContract
 import me.foxtails.palustris.ui.shell.PostProjectionCoordinator

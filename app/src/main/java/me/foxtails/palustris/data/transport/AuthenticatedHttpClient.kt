@@ -1,5 +1,10 @@
 package me.foxtails.palustris.data.transport
 
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.InputStream
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -18,11 +23,6 @@ import okhttp3.Response
 import okhttp3.ResponseBody
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.io.IOException
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 /**
  * Executes authenticated requests for one connection with no stored credentials.
