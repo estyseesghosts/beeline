@@ -41,7 +41,7 @@ import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
 import me.foxtails.palustris.ui.components.PillAction
 
-private const val COMPACT_HASHTAG_LIMIT = 6
+private const val COMPACT_HASHTAG_LIMIT = 5
 
 @Composable
 internal fun HashtagBubble(

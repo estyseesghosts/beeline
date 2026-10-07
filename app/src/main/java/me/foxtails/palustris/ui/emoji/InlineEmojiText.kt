@@ -1,11 +1,15 @@
 package me.foxtails.palustris.ui.emoji
 
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.appendInlineContent
@@ -26,6 +30,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -53,6 +58,7 @@ import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
+import me.foxtails.palustris.ui.motion.springClickable
 
 /**
  * One annotated rich-text renderer for emoji-aware text. Post callers can opt into inline
@@ -338,9 +344,10 @@ private fun buildInlineContent(
                                 label = segment.displayLabel,
                                 description = context.getString(R.string.a11y_link_description, segment.displayLabel),
                                 emSize = emSize,
-                                width = entityWidthEm(segment.displayLabel, true, emSize, textMeasurer, density, bubbleTextStyle),
+                                width = entityWidthEm(segment.displayLabel, true, DisplayIsolation.LeftToRight, emSize, textMeasurer, density, bubbleTextStyle),
                                 onClick = { onOpenUrl(segment.target) },
                                 leadingIcon = AppIcons.LinkBeeline,
+                                isolation = DisplayIsolation.LeftToRight,
                             ),
                         )
                     } else {
@@ -354,9 +361,10 @@ private fun buildInlineContent(
                             label = segment.displayLabel,
                             description = context.getString(R.string.a11y_username_description, segment.displayLabel),
                             emSize = emSize,
-                            width = entityWidthEm(segment.displayLabel, false, emSize, textMeasurer, density, bubbleTextStyle),
+                            width = entityWidthEm(segment.displayLabel, false, DisplayIsolation.FirstStrong, emSize, textMeasurer, density, bubbleTextStyle),
                             onClick = onOpenUsername?.let { callback -> { callback(segment.target) } },
                             leadingIcon = null,
+                            isolation = DisplayIsolation.FirstStrong,
                         ),
                     )
                 }
@@ -368,9 +376,10 @@ private fun buildInlineContent(
                             label = hashtagLabel,
                             description = context.getString(R.string.a11y_hashtag_description, segment.displayLabel),
                             emSize = emSize,
-                            width = entityWidthEm(hashtagLabel, true, emSize, textMeasurer, density, bubbleTextStyle),
+                            width = entityWidthEm(hashtagLabel, true, DisplayIsolation.FirstStrong, emSize, textMeasurer, density, bubbleTextStyle),
                             onClick = onSearchHashtag?.let { callback -> { callback(segment.target) } },
                             leadingIcon = AppIcons.Hashtag,
+                            isolation = DisplayIsolation.FirstStrong,
                         ),
                     )
                 }
@@ -388,6 +397,7 @@ private fun entityContent(
     width: TextUnit,
     onClick: (() -> Unit)?,
     leadingIcon: androidx.compose.ui.graphics.vector.ImageVector?,
+    isolation: DisplayIsolation,
 ): androidx.compose.foundation.text.InlineTextContent = androidx.compose.foundation.text.InlineTextContent(
     placeholder = androidx.compose.ui.text.Placeholder(
         width = width,
@@ -398,12 +408,13 @@ private fun entityContent(
     val iconSize = with(LocalDensity.current) {
         if (emSize == TextUnit.Unspecified) 14.dp else emSize.toDp() * .78f
     }
+    val interactionSource = remember { MutableInteractionSource() }
     Surface(
         modifier = Modifier
             .fillMaxSize()
             .then(
                 onClick?.let { callback ->
-                    Modifier.clickable(role = Role.Button, onClick = callback)
+                    Modifier.springClickable(interactionSource, role = Role.Button, onClick = callback)
                 } ?: Modifier,
             )
             .semantics {
@@ -414,46 +425,65 @@ private fun entityContent(
         color = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
     ) {
-        Box(Modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxSize().padding(horizontal = ENTITY_EDGE_PADDING),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (leadingIcon != null) {
+                Icon(leadingIcon, contentDescription = null, modifier = Modifier.size(iconSize).testTag("entity_icon"))
+                Spacer(Modifier.width(ENTITY_ICON_GAP))
+            }
             androidx.compose.material3.Text(
-                text = label,
-                modifier = Modifier.align(Alignment.Center),
+                text = isolateDisplayDirection(label, isolation),
+                modifier = Modifier.testTag("entity_label"),
                 style = MaterialTheme.typography.labelMedium,
                 maxLines = 1,
                 softWrap = false,
-                overflow = TextOverflow.Clip,
+                overflow = TextOverflow.Ellipsis,
             )
-            if (leadingIcon != null) {
-                Icon(
-                    leadingIcon,
-                    contentDescription = null,
-                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 6.dp).size(iconSize),
-                )
-            }
         }
     }
 }
 
+private val ENTITY_EDGE_PADDING = 6.dp
+private val ENTITY_ICON_GAP = 4.dp
+
+private enum class DisplayIsolation(val opener: Char) {
+    /** Domains and addresses read left to right even inside right-to-left text. */
+    LeftToRight('⁦'),
+
+    /** Names and tags take the direction of their own first strong character. */
+    FirstStrong('⁨'),
+}
+
+private const val DIRECTION_ISOLATE_CLOSE = '⁩'
+
+/** Adds invisible isolates for display only. The tap target and copied text keep the exact original string. */
+private fun isolateDisplayDirection(label: String, isolation: DisplayIsolation): String =
+    "${isolation.opener}$label$DIRECTION_ISOLATE_CLOSE"
+
 private fun entityWidthEm(
     label: String,
-    isLink: Boolean,
+    hasIcon: Boolean,
+    isolation: DisplayIsolation,
     emSize: TextUnit,
     textMeasurer: TextMeasurer,
     density: androidx.compose.ui.unit.Density,
     bubbleTextStyle: TextStyle,
 ): TextUnit {
     val labelWidthPx = textMeasurer.measure(
-        text = AnnotatedString(label),
+        text = AnnotatedString(isolateDisplayDirection(label, isolation)),
         style = bubbleTextStyle,
         maxLines = 1,
     ).size.width.toFloat()
     val parentFontSizePx = with(density) {
         (if (emSize == TextUnit.Unspecified) 16.sp else emSize).toPx()
     }
-    val horizontalPaddingPx = with(density) { 12.dp.toPx() }
-    val iconWidthPx = if (isLink) {
+    val horizontalPaddingPx = with(density) { (ENTITY_EDGE_PADDING * 2).toPx() }
+    val iconWidthPx = if (hasIcon) {
         with(density) { (if (emSize == TextUnit.Unspecified) 14.dp else emSize.toDp() * .78f).toPx() } +
-            with(density) { 3.dp.toPx() }
+            with(density) { ENTITY_ICON_GAP.toPx() }
     } else {
         0f
     }

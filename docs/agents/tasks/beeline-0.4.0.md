@@ -3,7 +3,7 @@
 Complete Beeline 0.4.0 Phase 3B and Phase 5 (post content and social actions): slices 3B, 5A, 5C, 5B, 5D.
 Spec: `docs/beeline_0.4.0.md`. Handoff prompt: [phase-5-posts-handoff-prompt.md](phase-5-posts-handoff-prompt.md).
 
-Status: 3B committed (`Add the shared haptic event map (3B)`); 5A in verification; 5C, 5B, 5D not started.
+Status: 3B committed (`Add the shared haptic event map (3B)`); 5A committed (`Share post content policy between row and Photo Grid detail (5A)`); 5C in verification; 5B, 5D not started.
 Owner: orchestrator
 Last reviewed: 2026-10-07
 Authority: [AGENTS.md](../../../AGENTS.md), current source, tests, and Git.
@@ -34,7 +34,7 @@ These are recorded in `logs/BUGS.txt` as a follow-up slice, outside Phase 5.
 
 # Current slice
 
-5A shared post content policy (`ui/posts/PostContentPolicy.kt`). Next: 5C.
+5A shared post content policy (`ui/posts/PostContentPolicy.kt`). 5C inline entity spacing, bidi isolation, press response, five-tag compact bubble. Next: 5B.
 
 # Verification
 

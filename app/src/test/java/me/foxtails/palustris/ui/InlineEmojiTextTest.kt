@@ -3,7 +3,9 @@ package me.foxtails.palustris.ui.emoji
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import me.foxtails.palustris.MainActivity
@@ -143,6 +145,52 @@ class InlineEmojiTextTest {
         assertEquals("https://example.org/guide", openedUrl)
         assertEquals("@handle@mastodon.social", openedUsername)
         assertEquals("#Zurich", searchedHashtag)
+    }
+
+    @Test
+    fun entityLogogramsKeepSpaceFromTheirLabelsAtNormalAndLargeText() {
+        for (scale in listOf(1f, 2f)) {
+            show {
+                androidx.compose.runtime.CompositionLocalProvider(
+                    androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(
+                        androidx.compose.ui.platform.LocalDensity.current.density,
+                        scale,
+                    ),
+                ) {
+                    InlineEmojiText(
+                        "see https://example.org/a-very-long-path about #Zurich",
+                        emptyMap(),
+                        enableInlineEntities = true,
+                    )
+                }
+            }
+            val icons = compose.onAllNodesWithTag("entity_icon", useUnmergedTree = true)
+            val labels = compose.onAllNodesWithTag("entity_label", useUnmergedTree = true)
+            assertEquals(2, icons.fetchSemanticsNodes().size)
+            for (i in 0 until 2) {
+                val icon = icons[i].fetchSemanticsNode().boundsInRoot
+                val label = labels[i].fetchSemanticsNode().boundsInRoot
+                assertTrue("icon must end before the label at scale $scale", icon.right + 1f <= label.left)
+            }
+        }
+    }
+
+    @Test
+    fun entityLabelsAreDirectionIsolatedButTargetsStayExact() {
+        var openedUrl = ""
+        show {
+            InlineEmojiText(
+                "مرحبا https://example.org/guide مرحبا",
+                emptyMap(),
+                enableInlineEntities = true,
+                onOpenUrl = { openedUrl = it },
+            )
+        }
+        compose.onNodeWithContentDescription("Link example.org").performClick()
+        assertEquals("https://example.org/guide", openedUrl)
+        val label = compose.onNodeWithTag("entity_label", useUnmergedTree = true).fetchSemanticsNode()
+        val text = label.config[androidx.compose.ui.semantics.SemanticsProperties.Text].joinToString("") { it.text }
+        assertEquals("⁦example.org⁩", text)
     }
 
     @Test

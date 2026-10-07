@@ -908,6 +908,7 @@ private fun show(
             "8 hashtags: #tag1, #tag2, #tag3, #tag4, #tag5, #tag6, #tag7 and #tag8",
         ).performClick()
         compose.onNodeWithTag("hashtag_bubble_compact", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("hashtag_bubble_#tag6", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("hashtag_bubble_#tag7", useUnmergedTree = true).assertDoesNotExist()
 
         compose.onNodeWithContentDescription("see all?").performClick()

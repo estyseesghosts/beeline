@@ -455,6 +455,12 @@ The row and Photo Grid detail share one content policy in `ui/posts/PostContentP
 
 Sources: `ui/posts/PostContentPolicy.kt`, `PostContentPolicyTest`, `SinglePostScreenTest`.
 
+## Inline entity bubbles and hashtag bubble
+
+Inline link, username, and hashtag bubbles in `InlineEmojiText` lay out the logogram, a 4 dp icon-to-text gap, and the label in one row. The measured placeholder width reserves the icon, the gap, and 6 dp edge padding, so the icon never overlaps the text at any font scale. The label gets invisible direction isolates for display only (left-to-right for domains, first-strong for names and tags); the tap target and copied text keep the exact original string. Bubbles share the `springClickable` press response. The compact hashtag bubble shows at most five tags that fit the measured height; `See all` lists every tag and `See less` returns.
+
+Sources: `ui/emoji/InlineEmojiText.kt`, `ui/posts/HashtagBubble.kt`, `InlineEmojiTextTest`, `HomeFeedTest`.
+
 ## Post Quote Previews
 
 Rows and Photo Grid detail use one quote preview presentation. The precedence is parent content-warning rules, server-hidden content, a muted-tag warning, the quote content warning, then the quote body. Server-hidden quotes keep a non-revealable placeholder. A quote with an account-local muted hashtag shows a revealable `muted word: #tag` warning before its text or media is composed. After reveal, a quote content warning still hides its body. Muted words remain deferred because no client-side matched-word data exists; re-entry requires approved adapter and domain work with Mastodon and Misskey semantics verified independently. The hidden-content Remove preference applies to parent posts and Photo Grid filtering, not quote cards.
