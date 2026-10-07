@@ -50,6 +50,8 @@ Follow higher-priority instructions. Verify project conflicts against source, or
 - Use `problem_solver` for read-only investigation and review. Do not create separate reviewer, ADB, or Git agents.
 - Assign one implementation owner and one Git operator per slice. Do not mutate a delegated scope concurrently.
 - Other agents do not spawn subagents unless the user explicitly requests delegation.
+- Use only project-provided subagents (`.claude/agents/`, `.opencode/agents/`). Never use general-purpose or built-in subagents.
+- Use `finder` (Haiku, read-only) for codebase exploration and symbol tracing. Use `implementer` (Haiku) for bite-sized, narrowly scoped changes with explicit files, deliverables, and non-goals. Delegate to them by default to speed up work; design, verification, and commits stay with the owner.
 - Investigation and review are read-only. Use optional investigation only when it reduces uncertainty.
 - Stop after two failed fixes for one root problem. Follow all stop conditions in [agent control](docs/agents/agent-control.md).
 
