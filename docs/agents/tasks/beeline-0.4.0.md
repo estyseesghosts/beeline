@@ -3,7 +3,7 @@
 Finish Phase 4D and 4E: one universal tab bar whose chips travel to both physical display edges,
 and measured high-font clearance. Keep one navigator, one destination host, and the existing feature owners.
 
-Status: audit and slice 1 (stable tab IDs) complete. Slice 2 is next.
+Status: audit, slice 1 (stable tab IDs), and slice 2 (edge travel) complete. Slice 3 (4E1) is next.
 Owner: orchestrator
 Last reviewed: 2026-10-07
 Authority: [AGENTS.md](../../../AGENTS.md), current source, tests, and Git.
@@ -27,7 +27,7 @@ Authority: [AGENTS.md](../../../AGENTS.md), current source, tests, and Git.
 | Gap | State | Evidence |
 | --- | --- | --- |
 | 1 Caret position | Done by decision | Logical-first is intended; source already matches. Docs and baseline need the wording fixed. |
-| 2 Edge travel | **Open** | Wide Home, Search, Photo Grid, Notifications, and Profile docks wrap `DestinationChipRow` in `absolutePadding(left, right = obstruction clearance)` plus `LargeBottomDock` 12 dp padding. The scroll viewport ends at the clearance boundary. Compact rows sit inside `CompactOverlayHorizontalPadding` (16 dp), and wide Search also caps the chip row at 520 dp. |
+| 2 Edge travel | **Done in slice 2** (was open) | Wide Home, Search, Photo Grid, Notifications, and Profile docks wrap `DestinationChipRow` in `absolutePadding(left, right = obstruction clearance)` plus `LargeBottomDock` 12 dp padding. The scroll viewport ends at the clearance boundary. Compact rows sit inside `CompactOverlayHorizontalPadding` (16 dp), and wide Search also caps the chip row at 520 dp. |
 | 3 Stable IDs | **Done in slice 1** (was open) | `FilterChipEntry.key` defaults to `"$role:$label"`. Notifications (Mark-all, filters, Settings) and Photo Grid (timelines, hashtags, Add) pass no key. Mark-all changes label while confirming, so its key changes. Equal labels would crash `LazyRow`. Home, Search, and Profile already pass stable keys. |
 | 4 4E1 numeric clearance | Open, needs device measurement | Source uses the greater of IME and system-bar insets (`compactGlobalNavigationPositioningInsets`). The 136/147 px baseline failure is not re-measured. |
 | 5 4E2 | Open | Depends on slice 2. |
@@ -39,7 +39,7 @@ This task is larger than one safe implementation slice. Each slice is committed 
 
 1. **Stable tab IDs.** Give Notifications and Photo Grid entries explicit stable keys. Tests assert the keys survive label change and duplicate labels.
 2. **4D5 edge travel.** `DestinationChipRow` takes physical left and right resting insets. The chip viewport fills the display width.
-   The caret overlays the logical-first end. `contentPadding` keeps the resting first and last chips clear of the caret and the floating navigation,
+   The viewport starts beside the inline caret (chips never scroll beneath it, which would steal taps) and reaches the far display edge; with the caret hidden it starts at the display edge. `contentPadding` keeps the resting first and last chips clear of the caret and the floating navigation,
    while the scroll path continues under both. Callers stop wrapping the row in side padding and pass the clearance instead.
    Compact rows pass the 16 dp overlay padding as a resting inset. Wide Search keeps the 520 dp field but not a 520 dp chip row.
    Tests cover wide Home, Search, Photo Grid, Notifications, and Profile in LTR and RTL.
@@ -56,4 +56,4 @@ Physical devices, TalkBack, API 29, signing, and live accounts stay unverified. 
 
 # Last safe commit
 
-`51455c5`; slice 1 is `Use stable keys for Notifications and Photo Grid chips`.
+`51455c5`; slice 1 is `Use stable keys for Notifications and Photo Grid chips`. Slice 2 is `Let chip rows travel to the display edge`.

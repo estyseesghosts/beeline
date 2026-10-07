@@ -340,19 +340,22 @@ fun PhotoGridScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = CompactOverlayHorizontalPadding)
                     .windowInsetsPadding(
                         compactContextualControlsPositioningInsets(compactNavigationVisible),
                     ),
                 rowTestTag = "photo_grid_filters",
                 visibilityToggleTestTag = "photo_grid_filters_visibility",
+                leftInset = CompactOverlayHorizontalPadding,
+                rightInset = CompactOverlayHorizontalPadding,
             )
         } else {
             LargeBottomDock(
                 // The wide dock clears the floating chrome the same way the Home timeline dock does.
                 modifier = Modifier.align(Alignment.BottomStart)
-                    .absolutePadding(left = wideLeftClearance, right = wideRightClearance, bottom = wideBottomClearance)
+                    .absolutePadding(bottom = wideBottomClearance)
                     .testTag("photo_grid_dock"),
+                leftClearance = wideLeftClearance,
+                rightClearance = wideRightClearance,
                 content = {
                     DestinationChipRow(
                         entries = chipEntries,

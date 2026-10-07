@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
@@ -29,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -38,9 +40,12 @@ import androidx.compose.ui.semantics.selectableGroup
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.large.LocalLargeDockEdgeInsets
 import me.foxtails.palustris.ui.motion.ExpandableContent
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.rememberSelectedColor
@@ -75,6 +80,11 @@ enum class ChipCaretPresentation {
  * Renders destination chips and their persistent visibility control.
  *
  * The caller owns [listState] and [visible] so adaptive placement cannot reset chip state.
+ * The row fills its container. The chip scroll path reaches the far container edge and passes beneath
+ * floating chrome there. [leftInset] and [rightInset] are physical resting insets: the first and last
+ * chips rest clear of them, and an inline caret sits inside the logical-start inset. Chips never scroll
+ * beneath that caret, which occupies the first logical position; with the caret hidden the path starts at
+ * the container edge. Physical insets never follow layout direction.
  */
 @Composable
 internal fun DestinationChipRow(
@@ -88,6 +98,8 @@ internal fun DestinationChipRow(
     rowTestTag: String? = null,
     visibilityToggleTestTag: String = "destination_chip_visibility",
     caretPresentation: ChipCaretPresentation = ChipCaretPresentation.Inline,
+    leftInset: Dp = LocalLargeDockEdgeInsets.current.left,
+    rightInset: Dp = LocalLargeDockEdgeInsets.current.right,
 ) {
     val scheme = LocalPalustrisMotionScheme.current
     val selectedEntryIndex = entries.indexOfFirst { it.key == selectedEntryKey && it.selected }
@@ -108,14 +120,19 @@ internal fun DestinationChipRow(
     val toggleDescription = stringResource(
         if (visible) R.string.hide_destination_chips else R.string.show_destination_chips,
     )
+    val inlineCaret = caretPresentation == ChipCaretPresentation.Inline
+    val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
+    val startInset = if (ltr) leftInset else rightInset
+    val endInset = if (ltr) rightInset else leftInset
 
     Row(
         modifier = modifier.fillMaxWidth().heightIn(min = BeelineBubbleMinHeight),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (caretPresentation == ChipCaretPresentation.Inline) {
+        if (inlineCaret) {
             val interactionSource = remember { MutableInteractionSource() }
             // Keep the control outside LazyRow so it stays fixed and can be replaced independently.
+            // Chips never scroll beneath it, so it cannot steal a chip tap.
             DestinationChipVisibilityButton(
                 visible = visible,
                 onToggleVisibility = onToggleVisibility,
@@ -123,6 +140,7 @@ internal fun DestinationChipRow(
                 toggleDescription = toggleDescription,
                 visibilityToggleTestTag = visibilityToggleTestTag,
                 interactionSource = interactionSource,
+                modifier = Modifier.padding(start = startInset),
             )
         }
 
@@ -144,7 +162,12 @@ internal fun DestinationChipRow(
                         if (entries.any { it.role == Role.Tab }) selectableGroup()
                     }
                     .then(rowTestTag?.let { Modifier.testTag(it) } ?: Modifier),
-                contentPadding = PaddingValues(start = 8.dp, end = 2.dp),
+                // The path reaches the far display edge. Content padding only sets where the first and
+                // last chips rest. Without an inline caret the path also starts at the display edge.
+                contentPadding = PaddingValues(
+                    start = 8.dp + if (inlineCaret) 0.dp else startInset,
+                    end = endInset + 2.dp,
+                ),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(entries, key = { it.key }) { entry ->

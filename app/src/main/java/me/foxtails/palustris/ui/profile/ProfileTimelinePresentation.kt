@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
@@ -168,7 +167,6 @@ internal fun ProfileTimelinePresentation(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = CompactOverlayHorizontalPadding)
                     .windowInsetsPadding(
                         compactContextualControlsPositioningInsets(
                             navigationVisible = compactNavigationVisible,
@@ -184,17 +182,17 @@ internal fun ProfileTimelinePresentation(
                     onToggleVisibility = onToggleCategoryRow,
                     rowTestTag = "profile_categories",
                     visibilityToggleTestTag = "profile_categories_visibility",
+                    leftInset = CompactOverlayHorizontalPadding,
+                    rightInset = CompactOverlayHorizontalPadding,
                 )
             }
         } else if (compactWidePresentation) {
             LargeBottomDock(
                 modifier = Modifier.align(Alignment.BottomStart)
-                    .absolutePadding(
-                        left = leftObstructionClearance,
-                        right = rightObstructionClearance,
-                        bottom = bottomObstructionClearance,
-                    )
+                    .absolutePadding(bottom = bottomObstructionClearance)
                     .testTag("profile_categories_dock"),
+                leftClearance = leftObstructionClearance,
+                rightClearance = rightObstructionClearance,
                 content = {
                     DestinationChipRow(
                         entries = compactCategoryEntries,

@@ -15,6 +15,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.LayoutDirection
@@ -277,5 +278,101 @@ class CategoryChipsGeometryTest {
 
         compose.onNodeWithTag("chip-first").assertIsDisplayed()
         compose.onNodeWithTag("chip-second").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w445dp-h704dp-420dpi")
+    fun chipPathReachesFarDisplayEdgeAndNeverScrollsBeneathTheCaret() {
+        for (direction in LayoutDirection.entries) {
+            compose.activity.runOnUiThread {
+                compose.activity.setContent {
+                    PalustrisTheme {
+                        CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                            DestinationChipRow(
+                                entries = (0..9).map { index ->
+                                    FilterChipEntry(
+                                        label = "Category $index",
+                                        onClick = {},
+                                        testTag = "edge-chip-$index",
+                                        key = "edge-$index",
+                                    )
+                                },
+                                rowContentDescription = "categories",
+                                listState = rememberLazyListState(),
+                                visible = true,
+                                onToggleVisibility = {},
+                                rowTestTag = "edge-row",
+                                visibilityToggleTestTag = "edge-caret",
+                                leftInset = 72.dp,
+                                rightInset = 20.dp,
+                            )
+                        }
+                    }
+                }
+            }
+            compose.waitForIdle()
+            // rememberLazyListState is saveable, so a second setContent can restore the first scroll.
+            compose.onNodeWithTag("edge-row").performScrollToNode(hasText("Category 0"))
+            compose.waitForIdle()
+            val density = compose.density
+            val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
+            val row = compose.onNodeWithTag("edge-row").fetchSemanticsNode().boundsInRoot
+            val caret = compose.onNodeWithTag("edge-caret").fetchSemanticsNode().boundsInRoot
+            val first = compose.onNodeWithTag("edge-chip-0").fetchSemanticsNode().boundsInRoot
+            val leftPx = with(density) { 72.dp.toPx() }
+            val rightPx = with(density) { 20.dp.toPx() }
+            if (direction == LayoutDirection.Ltr) {
+                // Logical-first caret: physical left in LTR, clear of the 72 dp physical-left inset.
+                assertEquals(root.left + leftPx, caret.left, 0.5f)
+                // The path reaches the far physical edge; chips never scroll beneath the caret.
+                assertEquals(root.right, row.right, 0.01f)
+                assertEquals(caret.right, row.left, 0.5f)
+                assertEquals(true, first.left >= caret.right)
+            } else {
+                // The caret follows the logical start to the physical right. Physical insets stay put.
+                assertEquals(root.right - rightPx, caret.right, 0.5f)
+                assertEquals(root.left, row.left, 0.01f)
+                assertEquals(caret.left, row.right, 0.5f)
+                assertEquals(true, first.right <= caret.left)
+            }
+            // The far-end resting chip clears its physical inset; the path itself still reaches the display edge.
+            val rest = compose.onNodeWithTag("edge-row")
+            if (direction == LayoutDirection.Ltr) {
+                assertEquals(true, rest.restingChipEdge(compose, direction, physicalLeft = false) <= root.right - rightPx + 1f)
+            } else {
+                assertEquals(true, rest.restingChipEdge(compose, direction, physicalLeft = true) >= root.left + leftPx - 1f)
+            }
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w445dp-h704dp-420dpi")
+    fun hiddenCaretPathStartsAtDisplayEdgeAndRestsClearOfPhysicalInset() {
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                PalustrisTheme {
+                    DestinationChipRow(
+                        entries = (0..3).map { index ->
+                            FilterChipEntry(label = "Tab $index", onClick = {}, testTag = "hid-chip-$index", key = "hid-$index")
+                        },
+                        rowContentDescription = "categories",
+                        listState = rememberLazyListState(),
+                        visible = true,
+                        onToggleVisibility = {},
+                        rowTestTag = "hid-row",
+                        caretPresentation = ChipCaretPresentation.Hidden,
+                        leftInset = 80.dp,
+                        rightInset = 20.dp,
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+        val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
+        val row = compose.onNodeWithTag("hid-row").fetchSemanticsNode().boundsInRoot
+        val first = compose.onNodeWithTag("hid-chip-0").fetchSemanticsNode().boundsInRoot
+        assertEquals(root.left, row.left, 0.01f)
+        assertEquals(root.right, row.right, 0.01f)
+        assertEquals(with(compose.density) { (80.dp + 8.dp).toPx() }, first.left, 0.5f)
     }
 }

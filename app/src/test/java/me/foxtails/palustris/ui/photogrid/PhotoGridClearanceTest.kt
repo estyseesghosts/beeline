@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -45,6 +47,7 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.PalustrisTheme
+import me.foxtails.palustris.ui.components.restingChipEdge
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.shell.AppShellFixtures
@@ -82,6 +85,10 @@ class PhotoGridClearanceTest {
     private val bottom = 96.dp
     private val density get() = compose.activity.resources.displayMetrics.density
 
+    private fun chipsRest(direction: LayoutDirection, physicalLeft: Boolean): Float = compose
+        .onNodeWithContentDescription(compose.activity.getString(R.string.photo_grid_filter_description))
+        .restingChipEdge(compose, direction, physicalLeft)
+
     private fun bounds(tag: String): Rect = compose.onNodeWithTag(tag, useUnmergedTree = true)
         .fetchSemanticsNode().boundsInRoot
 
@@ -117,7 +124,8 @@ class PhotoGridClearanceTest {
     private fun assertClicksClearRight(safeRight: Float) {
         val nodes = compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
         assertTrue("fixture must exercise interactions", nodes.isNotEmpty())
-        nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
+        // Chips scroll beneath floating chrome by design; chipsRest asserts where they rest.
+        nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 && !it.isChipRowEntry() }.forEach {
             assertTrue("click target ${it.config} crosses physical right: ${it.boundsInRoot}",
                 it.boundsInRoot.right <= safeRight + 1f)
         }
@@ -175,7 +183,7 @@ class PhotoGridClearanceTest {
             val viewport = bounds("photo_grid_test_viewport")
             assertEquals(viewport, bounds("photo_grid_content"))
             val safeLeft = viewport.left + right.value * density
-            assertTrue(chipsBounds().left >= safeLeft - 1f)
+            assertTrue(chipsRest(direction, true) >= safeLeft - 1f)
             compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
                 .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
                     assertTrue("Photo Grid interaction clears physical left", it.boundsInRoot.left >= safeLeft - 1f)
@@ -253,7 +261,7 @@ class PhotoGridClearanceTest {
             val viewport = bounds("photo_grid_content")
             val safeRight = viewport.right - right.value * density
             val dock = bounds("photo_grid_dock")
-            assertTrue("wide dock clears physical right", dock.right <= safeRight + 1f)
+            assertEquals("wide dock spans to the physical right edge", viewport.right, dock.right, 1f)
             assertTrue("wide dock clears bottom obstruction", dock.bottom <= viewport.bottom - bottom.value * density + 1f)
             scrollToEnd()
             val finalTile = tileBounds("final-13")
@@ -348,15 +356,14 @@ class PhotoGridClearanceTest {
             compose.waitForIdle()
             val dock = bounds("photo_grid_dock")
             assertEquals("clearance must not resize the dock", unmeasuredDock.height, dock.height, 1f)
-            assertTrue("dock clears physical right", dock.right <= safeRight + 1f)
-            assertTrue("chip row clears physical right", chipsBounds().right <= safeRight + 1f)
+            assertEquals("dock spans to the physical right edge", viewport.right, dock.right, 1f)
+            assertTrue("chip row clears physical right", chipsRest(direction, false) <= safeRight + 1f)
             assertClicksClearRight(safeRight)
             compose.onNodeWithContentDescription(text(R.string.photo_grid_filter_description)).assert(hasScrollAction())
             val savedHashtag = "#fixture"
+            // Chips scroll beneath the floating chrome, so only the resting end chips are held clear (chipsRest above).
             compose.onNodeWithContentDescription(text(R.string.photo_grid_filter_description))
                 .performScrollToNode(hasText(savedHashtag))
-            assertTrue("reachable chip clears physical right",
-                compose.onNodeWithText(savedHashtag).fetchSemanticsNode().boundsInRoot.right <= safeRight + 1f)
             compose.onNodeWithText(savedHashtag).assertIsDisplayed().performClick()
             assertEquals("Hashtag(tag=fixture)", selected)
             // The add entry is the last chip, so scroll it into view before touching it.
@@ -382,8 +389,8 @@ class PhotoGridClearanceTest {
             val gridViewport = bounds("photo_grid_content")
             assertTrue("branch grid clears physical right",
                 tileBounds("branch-0").right <= safeRight + 1f)
-            assertTrue("branch dock clears physical right", bounds("photo_grid_dock").right <= safeRight + 1f)
-            assertTrue("branch chip row clears physical right", chipsBounds().right <= safeRight + 1f)
+            assertEquals("branch dock spans to the physical right edge", viewport.right, bounds("photo_grid_dock").right, 1f)
+            assertTrue("branch chip row clears physical right", chipsRest(direction, false) <= safeRight + 1f)
             assertTrue("branch dock clears bottom obstruction",
                 bounds("photo_grid_dock").bottom <= gridViewport.bottom - bottom.value * density + 1f)
             assertClicksClearRight(safeRight)
@@ -502,3 +509,6 @@ class PhotoGridClearanceTest {
 
     private val connection = Connection("https://fixture.example", Protocol.MASTODON)
 }
+
+private fun SemanticsNode.isChipRowEntry() =
+    parent?.config?.contains(SemanticsProperties.SelectableGroup) == true

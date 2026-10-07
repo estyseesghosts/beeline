@@ -12,8 +12,7 @@ The completed hardening records remain at [tasks/hardening-0.4.0.md](tasks/harde
 
 ## Current position
 
-Hardening Phases 0-5 are complete. Phase 4D5/4E is in progress: the audit is recorded, and slice 1 (stable tab IDs
-for Notifications and Photo Grid) is committed with a passing full gate. Next is slice 2, edge-to-edge chip travel.
+Hardening Phases 0-5 are complete. Phase 4D5/4E is in progress: the audit is recorded, and slices 1 (stable tab IDs) and 2 (chip travel to the display edge) are committed with passing full gates. Next is slice 3 (4E1, measured clearance).
 The caret stays in the first logical position (user decision); it flips in RTL. Do not push without user direction.
 
 ## Ownership and caution

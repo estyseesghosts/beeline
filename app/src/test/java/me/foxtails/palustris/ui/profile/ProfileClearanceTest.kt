@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasClickAction
@@ -43,6 +45,7 @@ import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.PalustrisTheme
+import me.foxtails.palustris.ui.components.restingChipEdge
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.shell.AppShellFixtures
@@ -86,6 +89,10 @@ class ProfileClearanceTest {
     )
     private val density get() = compose.activity.resources.displayMetrics.density
 
+    private fun chipsRest(direction: LayoutDirection, physicalLeft: Boolean): Float = compose
+        .onNodeWithContentDescription(compose.activity.getString(R.string.a11y_profile_categories))
+        .restingChipEdge(compose, direction, physicalLeft)
+
     private fun bounds(tag: String): Rect = compose.onNodeWithTag(tag, useUnmergedTree = true)
         .fetchSemanticsNode().boundsInRoot
 
@@ -120,7 +127,8 @@ class ProfileClearanceTest {
     private fun assertClicksClearRight(safeRight: Float) {
         val nodes = compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
         assertTrue("fixture must exercise interactions", nodes.isNotEmpty())
-        nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
+        // Chips scroll beneath floating chrome by design; chipsRest asserts where they rest.
+        nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 && !it.isChipRowEntry() }.forEach {
             assertTrue("click target ${it.config} crosses physical right: ${it.boundsInRoot}",
                 it.boundsInRoot.right <= safeRight + 1f)
         }
@@ -206,7 +214,7 @@ class ProfileClearanceTest {
             val divider = bounds("profile_timeline_divider_wide-0")
             assertEquals("item divider underlays future floating chrome", viewport.right, divider.right, 1f)
             assertTrue("item divider underlays future floating chrome", divider.right > safeRight)
-            assertTrue("category dock clears physical right", categoriesBounds().right <= safeRight + 1f)
+            assertTrue("category chips rest clear of physical right", chipsRest(direction, false) <= safeRight + 1f)
             assertTrue("category dock keeps its bottom-start placement",
                 bounds("profile_categories_dock").left <= 16f * density + 1f)
             assertClicksClearRight(safeRight)
@@ -244,7 +252,7 @@ class ProfileClearanceTest {
                 bounds("profile_message_action").right <= safeRight + 1f)
             assertTrue("follow action clears physical right",
                 bounds("profile_follow_action").right <= safeRight + 1f)
-            assertTrue("summary category dock clears physical right", categoriesBounds().right <= safeRight + 1f)
+            assertTrue("summary category chips rest clear of physical right", chipsRest(direction, false) <= safeRight + 1f)
             val timeline = bounds("profile_timeline_list")
             val row = bounds("post_row_summary-0")
             if (direction == LayoutDirection.Ltr) {
@@ -285,7 +293,7 @@ class ProfileClearanceTest {
                     assertEquals("bounded timeline keeps its width", timeline.left, row.left, 1f)
                     assertTrue(bounds("profile_header").left >= safeLeft - 1f)
                 }
-                assertTrue(categoriesBounds().left >= safeLeft - 1f)
+                assertTrue(chipsRest(direction, true) >= safeLeft - 1f)
                 compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
                     .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
                         assertTrue("Profile interaction clears physical left", it.boundsInRoot.left >= safeLeft - 1f)
@@ -502,7 +510,7 @@ class ProfileClearanceTest {
             val safeRight = safeRight()
             // The inline presentation renders the header inside the list. The shell never selects
             // it, so this test covers the chip row and the timeline rows it owns.
-            assertTrue("inline category row clears physical right", categoriesBounds().right <= safeRight + 1f)
+            assertTrue("inline category row clears physical right", chipsRest(direction, false) <= safeRight + 1f)
             assertTrue("timeline row clears physical right", bounds("post_row_inline-0").right <= safeRight + 1f)
             compose.onNodeWithContentDescription(text(R.string.profile_tab_media)).performClick().assertIsSelected()
             assertEquals(ProfileCategory.Media, selected)
@@ -529,7 +537,7 @@ class ProfileClearanceTest {
                 assertTrue("branch summary column clears physical right",
                     bounds("profile_header").right <= safeRight + 1f)
             }
-            assertTrue("branch category dock clears physical right", categoriesBounds().right <= safeRight + 1f)
+            assertTrue("branch category chips rest clear of physical right", chipsRest(direction, false) <= safeRight + 1f)
             assertTrue("branch category dock clears bottom obstruction",
                 categoriesBounds().bottom <= viewport.bottom - bottom.value * density + 1f)
             scrollToEnd()
@@ -625,3 +633,6 @@ class ProfileClearanceTest {
         )
     }
 }
+
+private fun SemanticsNode.isChipRowEntry() =
+    parent?.config?.contains(SemanticsProperties.SelectableGroup) == true

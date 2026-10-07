@@ -127,9 +127,9 @@ internal fun ProfileLargePresentation(
     }
 
     // The dock keeps its bottom-start placement and its own LargeBottomDock spacing. Clearance only
-    // moves it clear of floating obstruction; it adds no dock measurement and no chip travel.
+    // moves it clear of floating obstruction; it adds no dock measurement. Chips scroll beneath it to the display edge.
     @Composable
-    fun dock(modifier: Modifier = Modifier) {
+    fun dock(modifier: Modifier = Modifier, leftClearance: Dp, rightClearance: Dp) {
         LargeBottomDock(
             content = {
                 DestinationChipRow(
@@ -154,6 +154,8 @@ internal fun ProfileLargePresentation(
                 )
             },
             modifier = modifier,
+            leftClearance = leftClearance,
+            rightClearance = rightClearance,
         )
     }
 
@@ -191,11 +193,11 @@ internal fun ProfileLargePresentation(
                 }
             }
             dock(
-                Modifier.align(Alignment.BottomStart).absolutePadding(
-                    right = rightObstructionClearance,
-                    left = leftObstructionClearance,
-                    bottom = bottomObstructionClearance,
-                ).testTag("profile_categories_dock"),
+                Modifier.align(Alignment.BottomStart)
+                    .absolutePadding(bottom = bottomObstructionClearance)
+                    .testTag("profile_categories_dock"),
+                leftClearance = leftObstructionClearance,
+                rightClearance = rightObstructionClearance,
             )
         }
     } else {
@@ -203,11 +205,11 @@ internal fun ProfileLargePresentation(
             // Without the summary the timeline fills the pane, so it always reaches the edge.
             timeline(rightObstructionClearance, leftObstructionClearance)
             dock(
-                Modifier.align(Alignment.BottomStart).absolutePadding(
-                    right = rightObstructionClearance,
-                    left = leftObstructionClearance,
-                    bottom = bottomObstructionClearance,
-                ).testTag("profile_categories_dock"),
+                Modifier.align(Alignment.BottomStart)
+                    .absolutePadding(bottom = bottomObstructionClearance)
+                    .testTag("profile_categories_dock"),
+                leftClearance = leftObstructionClearance,
+                rightClearance = rightObstructionClearance,
             )
         }
     }

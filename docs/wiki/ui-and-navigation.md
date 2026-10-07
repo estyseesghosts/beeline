@@ -119,7 +119,7 @@ The Home timeline selection stays with `ShellNavigator`.
 `ShellContent` owns saveable visibility and one `LazyListState` above the layout branches.
 Resizing preserves both values.
 Changing the timeline scrolls the selected entry into view. Reduced motion skips that animation.
-Clearance does not set chip travel. Compact Home ignores wide inputs and keeps its IME-aware final spacing and shell-owned navigation.
+Clearance sets where chips rest, not where they travel (see Chip travel). Compact Home ignores wide inputs and keeps its IME-aware final spacing and shell-owned navigation.
 Production clearance is active. The folded outer-screen Home rendering is emulator verified.
 
 Sources: `ui/feed/HomeFeed.kt`, `ui/shell/ShellDestinationContent.kt`, `CategoryChipsGeometryTest`, `HomeClearanceTest`, `HomeFeedTest`, `NavigationTest`.
@@ -141,7 +141,7 @@ Compact layout ignores wide inputs and keeps its IME-aware control placement and
 The shared chip row includes a hide/show caret.
 `SearchScreen` owns saveable visibility and chip scroll state across compact and wide placement.
 Search category selection stays with the shell owner. Its circular caret uses the unselected chip surface, outline, and icon colors.
-It stays in the first logical position outside the scrollable chips. Clearance does not set chip travel.
+It stays in the first logical position outside the scrollable chips. Clearance sets resting insets only (see Chip travel).
 Production clearance is active. Wide compact fallback uses separate positioning clearance to keep the field above navigation.
 
 Sources: `ui/search/SearchScreen.kt`, `ui/shell/ShellDestinationContent.kt`, `SearchClearanceTest`.
@@ -162,7 +162,7 @@ Bottom clearance extends the wide grid end spacing. The wide filter-chip dock cl
 above that obstruction, the same way the Home timeline dock does. The shared row keeps a circular caret in its first logical position.
 The caret stays separate from the scrollable chips.
 `PhotoGridScreen` owns saveable visibility and chip scroll state across compact and wide placement.
-Feed selection and saved hashtags keep their existing owners. Clearance does not set chip travel.
+Feed selection and saved hashtags keep their existing owners. Clearance sets resting insets only (see Chip travel).
 Compact Photo Grid ignores wide inputs and keeps contextual-control placement and scroll clearance.
 Production clearance is active.
 
@@ -188,7 +188,7 @@ through an absolute right inset inside the row.
 
 Bottom clearance extends the wide list end spacing past the dock.
 Compact Notifications ignores wide inputs and keeps its floating bottom chip row, contextual-control placement, and scroll clearance.
-Clearance does not set chip travel. Production clearance is active.
+Clearance sets resting insets only (see Chip travel). Production clearance is active.
 
 Sources: `ui/notifications/NotificationsScreen.kt`, `ui/notifications/NotificationRow.kt`,
 `ui/shell/AppNotificationsDestinationContent.kt`, `NotificationsClearanceTest`.
@@ -217,7 +217,7 @@ The summary scroll range ends past the category dock, so its final details stay 
 Compact Profile ignores wide inputs and keeps its measured end clearance and floating chip row.
 The shared chip row includes a circular caret in its first logical position, separate from the scrollable chips.
 `ProfileScreen` owns profile-keyed saveable visibility and chip scroll state across compact and wide placement.
-Category selection and profile actions keep their existing owners. Clearance sets no chip travel.
+Category selection and profile actions keep their existing owners. Clearance sets resting insets only (see Chip travel).
 Production clearance is active.
 
 Compact-wide uses the same one-column header and timeline hierarchy as mobile Profile through
@@ -347,7 +347,7 @@ The vertical order is navigation capsule, composer action, then tab caret. The s
 from the bottom safe edge and always reserves the caret slot, so hiding the caret never moves the
 capsule or the action. The caret shares the feature-owned chip visibility state; it introduces no
 second expanded/collapsed state. Screens without tab chips show no caret. The tab-chip dock keeps its
-existing physical-edge clearance, so chips use the remaining width and never render beneath the caret.
+physical-edge clearance as resting insets: the last chip rests clear of the caret and capsule, and the path continues beneath them.
 
 Planned polish: a future pass adds an 8 dp wide gradient blur fadeout between the tab-chip area and
 the contextual caret. This task intentionally does not implement that transition.
@@ -474,3 +474,17 @@ Sources: `domain/SocialSource.kt`, `domain/FavouriteArtworkStyle.kt`,
 `data/misskey/MisskeySource.kt`, `data/mastodon/MastodonSource.kt`,
 `SocialSourceContractTest`, `MastodonSourceContractTest`,
 `PostRowFavouriteArtworkTest`.
+
+## Chip travel
+
+`DestinationChipRow` fills its container. Its chip viewport reaches the far physical display edge and passes
+beneath floating navigation there. `leftInset` and `rightInset` are physical resting insets (navigation
+clearance plus an edge gap; compact rows pass 16 dp). The first and last chips rest clear of them, and the
+inline caret sits inside the logical-start inset. The caret occupies the first logical position, so it moves
+to the physical right in RTL by decision. Chips never scroll beneath the caret, so it cannot steal a tap.
+With the caret hidden (compact-wide), the path starts at the display edge. `LargeBottomDock` spans its
+container and provides the wide insets through `LocalLargeDockEdgeInsets`. The Search field keeps its 520 dp
+bound and clears the same insets. Tab keys are stable IDs for every destination.
+Tests: `CategoryChipsGeometryTest`, the destination `*ClearanceTest` suites, `NavigationTest`.
+Chips scrolled under floating chrome by a semantic scroll action are not held clear; only resting chips are.
+Device rendering, TalkBack focus scrolling, and RTL locale behavior remain unverified.

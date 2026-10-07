@@ -59,6 +59,7 @@ import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
+import me.foxtails.palustris.ui.large.LocalLargeDockEdgeInsets
 import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
@@ -237,7 +238,6 @@ fun NotificationsScreen(
             )
             Box(
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                    .padding(horizontal = CompactOverlayHorizontalPadding)
                     .windowInsetsPadding(controlsPositioningInsets),
             ) {
                 NotificationFilterRow(
@@ -245,6 +245,7 @@ fun NotificationsScreen(
                     listState = chipListState,
                     visible = chipRowVisible,
                     onToggleVisibility = { chipRowVisible = !chipRowVisible },
+                    edgeInset = CompactOverlayHorizontalPadding,
                 )
             }
         }
@@ -276,12 +277,10 @@ fun NotificationsScreen(
             )
             LargeBottomDock(
                 modifier = Modifier.align(Alignment.BottomStart)
-                    .absolutePadding(
-                        left = wideLeftClearance,
-                        right = wideRightClearance,
-                        bottom = wideBottomClearance,
-                    )
+                    .absolutePadding(bottom = wideBottomClearance)
                     .testTag("notification_filter_dock"),
+                leftClearance = wideLeftClearance,
+                rightClearance = wideRightClearance,
                 content = {
                     NotificationFilterRow(
                         entries = chipEntries,
@@ -303,6 +302,7 @@ private fun NotificationFilterRow(
     visible: Boolean,
     onToggleVisibility: () -> Unit,
     caretPresentation: ChipCaretPresentation = ChipCaretPresentation.Inline,
+    edgeInset: Dp? = null,
 ) {
     DestinationChipRow(
         entries = entries,
@@ -313,6 +313,8 @@ private fun NotificationFilterRow(
         rowTestTag = "notification_filters",
         visibilityToggleTestTag = "notification_filters_visibility",
         caretPresentation = caretPresentation,
+        leftInset = edgeInset ?: LocalLargeDockEdgeInsets.current.left,
+        rightInset = edgeInset ?: LocalLargeDockEdgeInsets.current.right,
     )
 }
 

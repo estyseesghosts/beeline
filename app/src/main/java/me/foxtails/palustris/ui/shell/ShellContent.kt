@@ -102,11 +102,11 @@ private fun BoxScope.CompactShellNavigation(
         Box(
             Modifier.fillMaxWidth()
                 .windowInsetsPadding(compactGlobalNavigationPositioningInsets())
-                .padding(CompactOverlayHorizontalPadding, CompactOverlayVerticalPadding),
+                .padding(vertical = CompactOverlayVerticalPadding),
             contentAlignment = Alignment.Center,
         ) {
             Column(
-                Modifier.widthIn(max = 480.dp).fillMaxWidth(),
+                Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.End,
             ) {
                 if (showTimelineTabs && navigator.destination == Destination.Home) {
@@ -128,44 +128,51 @@ private fun BoxScope.CompactShellNavigation(
                         modifier = Modifier.height(CompactTimelineTabsHeight),
                         rowTestTag = "home_timeline_tabs",
                         visibilityToggleTestTag = "home_timeline_visibility",
+                        leftInset = CompactOverlayHorizontalPadding,
+                        rightInset = CompactOverlayHorizontalPadding,
                     )
                     Spacer(Modifier.height(CompactHomeTimelineSpacing))
                 }
-                CompactContextualNavigationBar(
-                    destination = navigator.destination,
-                    searchPanel = navigator.searchPanel,
-                    notificationsPanel = navigator.notificationsPanel,
-                    action = contextualActionFor(
+                Box(
+                    Modifier.padding(horizontal = CompactOverlayHorizontalPadding)
+                        .widthIn(max = 480.dp).fillMaxWidth(),
+                ) {
+                    CompactContextualNavigationBar(
                         destination = navigator.destination,
                         searchPanel = navigator.searchPanel,
                         notificationsPanel = navigator.notificationsPanel,
-                        profileTarget = displayedProfile,
-                        authenticatedAccountId = account?.id,
-                        profileState = profile.state,
-                        onCompose = onCompose,
-                        onSearchToggle = {
-                            navigator.searchPanelName = if (navigator.searchPanel == SearchPanel.Search) {
-                                SearchPanel.PhotoGrid.name
-                            } else {
-                                SearchPanel.Search.name
-                            }
-                        },
-                        onNotificationsToggle = {
-                            navigator.notificationsPanelName =
-                                if (navigator.notificationsPanel == NotificationsPanel.Notifications) {
-                                    NotificationsPanel.DirectMessages.name
+                        action = contextualActionFor(
+                            destination = navigator.destination,
+                            searchPanel = navigator.searchPanel,
+                            notificationsPanel = navigator.notificationsPanel,
+                            profileTarget = displayedProfile,
+                            authenticatedAccountId = account?.id,
+                            profileState = profile.state,
+                            onCompose = onCompose,
+                            onSearchToggle = {
+                                navigator.searchPanelName = if (navigator.searchPanel == SearchPanel.Search) {
+                                    SearchPanel.PhotoGrid.name
                                 } else {
-                                    NotificationsPanel.Notifications.name
+                                    SearchPanel.Search.name
                                 }
-                        },
-                        onEditProfile = navigationCallbacks.onEditProfile,
-                        onFollowProfile = profile.actions::follow,
-                        onUnfollowProfile = profile.actions::unfollow,
-                    ),
-                    account = account,
-                    onOpenAccounts = { overlay.clearPostActionBubble(); navigator.sheet = "Accounts" },
-                    onDestinationSelected = navigator::selectDestination,
-                )
+                            },
+                            onNotificationsToggle = {
+                                navigator.notificationsPanelName =
+                                    if (navigator.notificationsPanel == NotificationsPanel.Notifications) {
+                                        NotificationsPanel.DirectMessages.name
+                                    } else {
+                                        NotificationsPanel.Notifications.name
+                                    }
+                            },
+                            onEditProfile = navigationCallbacks.onEditProfile,
+                            onFollowProfile = profile.actions::follow,
+                            onUnfollowProfile = profile.actions::unfollow,
+                        ),
+                        account = account,
+                        onOpenAccounts = { overlay.clearPostActionBubble(); navigator.sheet = "Accounts" },
+                        onDestinationSelected = navigator::selectDestination,
+                    )
+                }
             }
         }
     }

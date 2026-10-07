@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasClickAction
@@ -37,6 +39,7 @@ import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.components.DestinationChipRow
+import me.foxtails.palustris.ui.components.restingChipEdge
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.navigation.homeTimelineChipEntries
@@ -70,6 +73,10 @@ class HomeClearanceTest {
     private val bottom = 96.dp
     private val density get() = compose.activity.resources.displayMetrics.density
 
+    private fun chipsRest(direction: LayoutDirection, physicalLeft: Boolean): Float = compose
+        .onNodeWithTag("home_timeline_tabs", useUnmergedTree = true)
+        .restingChipEdge(compose, direction, physicalLeft)
+
     private fun bounds(tag: String): Rect = compose.onNodeWithTag(tag, useUnmergedTree = true)
         .fetchSemanticsNode().boundsInRoot
 
@@ -89,7 +96,8 @@ class HomeClearanceTest {
     private fun assertClicksClearRight(safeRight: Float) {
         val nodes = compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
         assertTrue("fixture must exercise interactions", nodes.isNotEmpty())
-        nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
+        // Chips scroll beneath floating chrome by design; chipsRest asserts where they rest.
+        nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 && !it.isChipRowEntry() }.forEach {
             assertTrue("click target ${it.config} crosses physical right: ${it.boundsInRoot}",
                 it.boundsInRoot.right <= safeRight + 1f)
         }
@@ -175,7 +183,7 @@ class HomeClearanceTest {
             }
             val viewport = bounds("home_feed_list")
             val tabs = bounds("home_timeline_tabs")
-            assertTrue(tabs.right <= viewport.right - right.value * density + 1f)
+            assertTrue(chipsRest(direction, false) <= viewport.right - right.value * density + 1f)
             assertTrue(tabs.bottom <= viewport.bottom - bottom.value * density + 1f)
             scrollToEnd()
             val footer = compose.onNodeWithText("Load older posts").fetchSemanticsNode().boundsInRoot
@@ -282,7 +290,7 @@ class HomeClearanceTest {
                 show(direction) { destination(navigator, home) }
                 val viewport = bounds("home_test_viewport")
                 val tabs = bounds("home_timeline_tabs")
-                assertTrue(tabs.right <= viewport.right - right.value * density + 1f)
+                assertTrue(chipsRest(direction, false) <= viewport.right - right.value * density + 1f)
                 assertTrue(tabs.bottom <= viewport.bottom - bottom.value * density + 1f)
                 if (withHome) {
                     assertTrue(bounds("post_row_branch").right <= viewport.right - right.value * density + 1f)
@@ -340,3 +348,6 @@ class HomeClearanceTest {
         )
     }
 }
+
+private fun SemanticsNode.isChipRowEntry() =
+    parent?.config?.contains(SemanticsProperties.SelectableGroup) == true

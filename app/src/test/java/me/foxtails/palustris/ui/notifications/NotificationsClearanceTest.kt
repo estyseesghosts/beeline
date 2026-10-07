@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasClickAction
@@ -42,6 +44,7 @@ import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.timelineDisplayOrder
+import me.foxtails.palustris.ui.components.restingChipEdge
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.shell.AppShellFixtures
@@ -81,6 +84,10 @@ class NotificationsClearanceTest {
     private val bottom = 96.dp
     private val density get() = compose.activity.resources.displayMetrics.density
 
+    private fun chipsRest(direction: LayoutDirection, physicalLeft: Boolean): Float = compose
+        .onNodeWithContentDescription(compose.activity.getString(R.string.notification_filter_description))
+        .restingChipEdge(compose, direction, physicalLeft)
+
     private fun bounds(tag: String): Rect = compose.onNodeWithTag(tag, useUnmergedTree = true)
         .fetchSemanticsNode().boundsInRoot
 
@@ -108,7 +115,8 @@ class NotificationsClearanceTest {
     private fun assertClicksClearRight(safeRight: Float) {
         val nodes = compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
         assertTrue("fixture must exercise interactions", nodes.isNotEmpty())
-        nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
+        // Chips scroll beneath floating chrome by design; chipsRest asserts where they rest.
+        nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 && !it.isChipRowEntry() }.forEach {
             assertTrue("click target ${it.config} crosses physical right: ${it.boundsInRoot}",
                 it.boundsInRoot.right <= safeRight + 1f)
         }
@@ -165,7 +173,7 @@ class NotificationsClearanceTest {
             assertEquals(viewport.left, bounds("notifications_content").left, 1f)
             assertTrue(bounds("notification_row_left").left < safeLeft)
             assertTrue(bounds("notification_row_action_left").left >= safeLeft - 1f)
-            assertTrue(chipsBounds().left >= safeLeft - 1f)
+            assertTrue(chipsRest(direction, true) >= safeLeft - 1f)
             compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
                 .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
                     assertTrue("Notification interaction clears physical left", it.boundsInRoot.left >= safeLeft - 1f)
@@ -195,11 +203,11 @@ class NotificationsClearanceTest {
             assertEquals("list content keeps the full width", viewport.left, bounds("notifications_content").left, 1f)
             assertEquals("list content keeps the full width", viewport.right, bounds("notifications_content").right, 1f)
             val dock = bounds("notification_filter_dock")
-            assertTrue("bottom dock clears physical right", dock.right <= safeRight + 1f)
+            assertEquals("bottom dock spans to the physical right edge", viewport.right, dock.right, 1f)
             assertTrue("bottom dock clears bottom obstruction",
                 dock.bottom <= viewport.bottom - bottom.value * density + 1f)
             assertTrue("bottom dock is below the viewport midpoint", dock.top > viewport.center.y)
-            assertTrue("chip viewport clears physical right", chipsBounds().right <= safeRight + 1f)
+            assertTrue("chip viewport clears physical right", chipsRest(direction, false) <= safeRight + 1f)
             val surface = bounds("notification_row_wide-0")
             val action = bounds("notification_row_action_wide-0")
             assertTrue("row surface underlays future floating chrome", surface.right > safeRight)
@@ -360,7 +368,7 @@ class NotificationsClearanceTest {
             val viewport = bounds("notification_test_viewport")
             val safeRight = viewport.right - right.value * density
             val list = bounds("notifications_content")
-            assertTrue("branch chip row clears physical right", chipsBounds().right <= safeRight + 1f)
+            assertTrue("branch chip row clears physical right", chipsRest(direction, false) <= safeRight + 1f)
             assertTrue("branch row action clears physical right",
                 bounds("notification_row_action_branch-0").right <= safeRight + 1f)
             scrollToEnd()
@@ -439,3 +447,6 @@ class NotificationsClearanceTest {
         )
     }
 }
+
+private fun SemanticsNode.isChipRowEntry() =
+    parent?.config?.contains(SemanticsProperties.SelectableGroup) == true

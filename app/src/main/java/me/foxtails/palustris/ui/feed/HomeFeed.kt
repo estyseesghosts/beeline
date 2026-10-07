@@ -418,7 +418,9 @@ private fun HomeFeedContent(
             LargeBottomDock(
                 content = it,
                 modifier = Modifier.align(Alignment.BottomStart)
-                    .absolutePadding(left = wideLeftClearance, right = wideRightClearance, bottom = wideBottomClearance),
+                    .absolutePadding(bottom = wideBottomClearance),
+                leftClearance = wideLeftClearance,
+                rightClearance = wideRightClearance,
             )
         }
     }

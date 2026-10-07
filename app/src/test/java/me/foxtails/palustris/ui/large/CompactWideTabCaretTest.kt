@@ -12,8 +12,10 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.MainActivity
+import me.foxtails.palustris.ui.components.restingChipEdge
 import me.foxtails.palustris.ui.shell.AppShellFixtures
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -118,11 +120,12 @@ class CompactWideTabCaretTest {
     @Test fun compactWideChipsStopBeforeTheContextualCaret() {
         showCompactWide()
         val caret = bounds(COMPACT_WIDE_TAB_CARET_TAG)
-        val chips = compose.onNodeWithTag("home_timeline_tabs", useUnmergedTree = true)
-            .fetchSemanticsNode().boundsInRoot
+        // The chip path continues beneath the floating stack; the resting end chip clears the caret.
+        val restingRight = compose.onNodeWithTag("home_timeline_tabs", useUnmergedTree = true)
+            .restingChipEdge(compose, LayoutDirection.Ltr, physicalLeft = false)
         assertTrue(
-            "tab chips must not render underneath the contextual caret",
-            chips.right <= caret.left + 1f,
+            "resting tab chips must not render underneath the contextual caret",
+            restingRight <= caret.left + 1f,
         )
     }
 }

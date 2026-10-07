@@ -316,7 +316,7 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   `HomeTimelineTabs.kt` only builds shared `FilterChipEntry` values. `DestinationChipRow` is the sole chip renderer.
   It keeps the selected-entry scroll and the visibility animation; `DestinationChipVisibilityButton` renders the
   caret and `DestinationFilterChip` renders one chip.
-  The shared renderer keeps its leading circular caret outside the scrollable chip row. The caret matches
+  The shared renderer keeps its logical-first circular caret outside the scrollable chip row. The caret matches
   the unselected chip surface, outline, and icon colors. It stays fixed while chips are hidden.
   This placement keeps it independent from a future contextual control. The renderer scrolls the selected Home timeline into view.
   Compact-wide hides that inline caret through `ChipCaretPresentation.Hidden` and reports the same
@@ -492,3 +492,10 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
 - Contract verification is JVM and Robolectric only.
 - Live-server and physical-device behavior are unverified.
 - The Android 15 system-bar instrumentation failure remains in `logs/BUGS.txt`.
+
+## Chip travel (Phase 4D5)
+
+`DestinationChipRow` takes physical `leftInset`/`rightInset` (default from `LocalLargeDockEdgeInsets`, provided by
+`LargeBottomDock`). The viewport reaches the far display edge; insets only set resting positions. Callers no longer
+wrap chip rows in side padding. Compact rows pass `CompactOverlayHorizontalPadding`. Feature owners still own
+selection and scroll state. Chips never scroll beneath the inline caret.

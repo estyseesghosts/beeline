@@ -76,6 +76,7 @@ import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeSearchDockClearance
+import me.foxtails.palustris.ui.large.LocalLargeDockEdgeInsets
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.CompactSearchControlsSpacing
 import me.foxtails.palustris.ui.layout.CompactSearchDockHeight
@@ -241,9 +242,11 @@ fun SearchScreen(
         )
         if (largeLayout) {
             LargeBottomDock(
+                leftClearance = wideLeftClearance,
+                rightClearance = wideRightClearance,
                 content = {
                     Column(
-                        Modifier.widthIn(max = 520.dp).fillMaxWidth(),
+                        Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing),
                     ) {
                         DestinationChipRow(
@@ -256,14 +259,22 @@ fun SearchScreen(
                             visibilityToggleTestTag = "search_categories_visibility",
                             caretPresentation = searchCaretPresentation,
                         )
-                        SearchField(query, ::submitSearch, ::updateQuery)
+                        // The field keeps its bounded width and clears the floating chrome. The chips do not.
+                        val dockInsets = LocalLargeDockEdgeInsets.current
+                        Box(
+                            Modifier.fillMaxWidth()
+                                .absolutePadding(left = dockInsets.left, right = dockInsets.right),
+                        ) {
+                            Box(Modifier.widthIn(max = 520.dp).fillMaxWidth()) {
+                                SearchField(query, ::submitSearch, ::updateQuery)
+                            }
+                        }
                     }
                 },
                 // Physical edges narrow the dock. Only compact fallback navigation moves it upward.
                 // Measurement excludes fallback placement padding so end clearance does not count it twice.
                 modifier = Modifier.align(Alignment.BottomStart)
                     .padding(bottom = bottomNavigationClearance)
-                    .absolutePadding(left = wideLeftClearance, right = wideRightClearance)
                     .onSizeChanged { largeDockHeightPx = it.height }
                     .testTag("search_dock"),
             )
@@ -272,7 +283,6 @@ fun SearchScreen(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = CompactOverlayHorizontalPadding)
                     .windowInsetsPadding(controlsPositioningInsets),
                 verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing),
             ) {
@@ -284,8 +294,12 @@ fun SearchScreen(
                     onToggleVisibility = { chipRowVisible = !chipRowVisible },
                     rowTestTag = "search_categories",
                     visibilityToggleTestTag = "search_categories_visibility",
+                    leftInset = CompactOverlayHorizontalPadding,
+                    rightInset = CompactOverlayHorizontalPadding,
                 )
-                SearchField(query, ::submitSearch, ::updateQuery)
+                Box(Modifier.fillMaxWidth().padding(horizontal = CompactOverlayHorizontalPadding)) {
+                    SearchField(query, ::submitSearch, ::updateQuery)
+                }
             }
         }
     }

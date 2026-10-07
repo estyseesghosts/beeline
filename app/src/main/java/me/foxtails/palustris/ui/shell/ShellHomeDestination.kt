@@ -131,11 +131,9 @@ internal fun ShellHomeDestination(
         if (largePresentation) {
             LargeBottomDock(
                 modifier = Modifier.align(Alignment.BottomStart)
-                    .absolutePadding(
-                        left = wideLeft,
-                        right = wideRight,
-                        bottom = bottomObstructionClearance,
-                    ),
+                    .absolutePadding(bottom = bottomObstructionClearance),
+                leftClearance = wideLeft,
+                rightClearance = wideRight,
                 content = {
                     DestinationChipRow(
                         entries = homeTimelineChipEntries(
