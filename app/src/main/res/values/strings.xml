@@ -369,6 +369,7 @@
     <string name="post_action_hashtags_see_all">see all?</string>
     <string name="post_action_interaction_selected">Favorite or reaction selected</string>
     <string name="post_action_not_selected">Not selected</string>
+    <string name="post_action_pending">Pending</string>
     <string name="post_action_quote">Quote post</string>
     <string name="post_action_reactions_collapsed">Choose a reaction</string>
     <string name="post_action_reactions_expanded">Expanded reaction choices</string>

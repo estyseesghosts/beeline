@@ -6,8 +6,10 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.posts.PostActionFamily
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** Typed family slots reject busy callers and release only the owning token. */
@@ -70,5 +72,21 @@ class PostInteractionExecutionAuthorityTest {
         authority.release(token)
 
         assertNotNull(authority.acquire(account, 7L, PostActionFamily.Bookmark, target))
+    }
+
+    @Test
+    fun pendingFollowsTheOwnedSlotAndIsScopedToSessionAndTarget() {
+        val authority = PostInteractionExecutionAuthority()
+        val families = setOf(PostActionFamily.Favorite)
+        assertFalse(authority.isPending(account, 1L, target, families))
+
+        val token = authority.acquire(account, 1L, PostActionFamily.Favorite, target)!!
+
+        assertTrue(authority.isPending(account, 1L, target, families))
+        assertFalse(authority.isPending(account, 2L, target, families))
+        assertFalse(authority.isPending(account, 1L, EntityId("https://authority.example", "other"), families))
+        assertFalse(authority.isPending(account, 1L, target, setOf(PostActionFamily.Bookmark)))
+        authority.release(token)
+        assertFalse(authority.isPending(account, 1L, target, families))
     }
 }

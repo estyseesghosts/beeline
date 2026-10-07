@@ -1,5 +1,8 @@
 package me.foxtails.palustris.ui.posts
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EntityId
 
@@ -41,7 +44,8 @@ class PostInteractionExecutionAuthority {
         val target: EntityId,
     )
 
-    private val slots = mutableSetOf<Slot>()
+    // Observable so every surface recomposes when an action starts or settles. Writes stay synchronized.
+    private var slots by mutableStateOf(emptySet<Slot>())
 
     /** Reserves the family slot. Returns null when another surface owns it. */
     @Synchronized
@@ -53,13 +57,26 @@ class PostInteractionExecutionAuthority {
     ): OperationToken? {
         val slot = Slot(accountId, sessionRevision, family, target)
         if (slot in slots) return null
-        slots += slot
+        slots = slots + slot
         return OperationToken(accountId, sessionRevision, family, target)
     }
 
     /** Releases only the slot owned by [token]. A foreign or repeated release changes nothing. */
     @Synchronized
     fun release(token: OperationToken) {
-        slots -= Slot(token.accountId, token.sessionRevision, token.family, token.target)
+        slots = slots - Slot(token.accountId, token.sessionRevision, token.family, token.target)
+    }
+
+    /**
+     * True while any of [families] is in flight for [target] in this session. The answer is the same on every surface
+     * because all of them share this authority, and it is observable from Compose.
+     */
+    fun isPending(
+        accountId: AccountId,
+        sessionRevision: Long,
+        target: EntityId,
+        families: Set<PostActionFamily>,
+    ): Boolean = slots.any {
+        it.accountId == accountId && it.sessionRevision == sessionRevision && it.target == target && it.family in families
     }
 }

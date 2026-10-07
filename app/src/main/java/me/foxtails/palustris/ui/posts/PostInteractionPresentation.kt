@@ -6,7 +6,10 @@
 
 package me.foxtails.palustris.ui.posts
 
+import androidx.annotation.PluralsRes
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
@@ -42,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.boundsInWindow
@@ -70,6 +74,7 @@ import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.emoji.CustomEmojiImage
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
+import me.foxtails.palustris.ui.motion.PalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.PopEffect
 import me.foxtails.palustris.ui.motion.rememberSelectedColor
 import me.foxtails.palustris.ui.motion.springPress
@@ -81,6 +86,9 @@ private val CircleShapeForReaction = RoundedCornerShape(50)
 private val ReactionChipHeight = 32.dp
 private val ReactionEmojiSlotSize = 20.dp
 private val ReactionChipMinWidth = 56.dp
+
+/** A selected control that the server has not confirmed yet is dimmed so it does not look settled. */
+private const val PENDING_ALPHA = 0.6f
 
 internal data class PostInteractionPresentation(
     val showInteractionSummary: Boolean,
@@ -107,6 +115,8 @@ internal fun ReactionRow(
     showReactionNumbers: Boolean = false,
 ) {
     val scheme = LocalPalustrisMotionScheme.current
+    val reactionPending = LocalPostPendingLookup.current.isPending(ownedPost, PostControlFamilies.Reaction)
+    val pendingDescription = stringResource(R.string.post_action_pending)
     FlowRow(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -116,7 +126,10 @@ internal fun ReactionRow(
             val interactionSource = remember(reaction.emoji) { androidx.compose.foundation.interaction.MutableInteractionSource() }
             val countText = pluralStringResource(R.plurals.reaction_count, reaction.count, reaction.count)
             val reactionDescription = stringResource(R.string.post_reaction_accessibility, reaction.emoji, countText)
-            val selectedStateDescription = if (reaction.selected) {
+            val chipPending = reactionPending && reaction.selected
+            val selectedStateDescription = if (chipPending) {
+                pendingDescription
+            } else if (reaction.selected) {
                 if (enabled) stringResource(R.string.emoji_reaction_remove, reaction.emoji)
                 else stringResource(R.string.emoji_reaction_selected, reaction.emoji)
             } else null
@@ -129,6 +142,7 @@ internal fun ReactionRow(
                 modifier = Modifier
                     .heightIn(min = ReactionChipHeight)
                     .widthIn(min = ReactionChipMinWidth)
+                    .alpha(if (chipPending) PENDING_ALPHA else 1f)
                     .springPress(interactionSource, pressedScale = scheme.compactPressedScale)
                     .combinedClickable(
                         enabled = enabled,
@@ -161,11 +175,7 @@ internal fun ReactionRow(
                         Box(Modifier.widthIn(min = 16.dp).testTag("reaction_count_${reaction.emoji}"), contentAlignment = Alignment.Center) {
                             AnimatedContent(
                                 targetState = reaction.count,
-                                transitionSpec = {
-                                    if (scheme.reducedMotion) EnterTransition.None togetherWith ExitTransition.None
-                                    else (fadeIn(scheme.fastFadeIn) + scaleIn(initialScale = 0.86f, animationSpec = scheme.expressive)) togetherWith
-                                        (fadeOut(scheme.fastFadeOut) + scaleOut(targetScale = 0.86f, animationSpec = scheme.expressive))
-                                },
+                                transitionSpec = { countTransform(scheme) },
                                 label = "reactionCount",
                             ) { count -> Text(count.toString(), style = MaterialTheme.typography.labelMedium) }
                         }
@@ -175,6 +185,15 @@ internal fun ReactionRow(
         }
     }
 }
+
+/** The one count transition. Reaction chips and the summary row share it so an icon and its count move together. */
+private fun <S> AnimatedContentTransitionScope<S>.countTransform(scheme: PalustrisMotionScheme): ContentTransform =
+    if (scheme.reducedMotion) {
+        EnterTransition.None togetherWith ExitTransition.None
+    } else {
+        (fadeIn(scheme.fastFadeIn) + scaleIn(initialScale = 0.86f, animationSpec = scheme.expressive)) togetherWith
+            (fadeOut(scheme.fastFadeOut) + scaleOut(targetScale = 0.86f, animationSpec = scheme.expressive))
+    }
 
 @Composable
 internal fun InteractionSummaryRow(counts: PostInteractionCounts) {
@@ -194,14 +213,25 @@ internal fun InteractionSummaryRow(counts: PostInteractionCounts) {
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         metrics.forEach { (name, resourceAndCount) ->
-            val (resource, count) = resourceAndCount
-            Text(
-                pluralStringResource(resource, count, count),
-                Modifier.testTag("interaction_metric_$name"),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.labelMedium,
-            )
+            InteractionMetric(name, resourceAndCount.first, resourceAndCount.second)
         }
+    }
+}
+
+@Composable
+private fun InteractionMetric(name: String, @PluralsRes resource: Int, count: Int) {
+    val scheme = LocalPalustrisMotionScheme.current
+    AnimatedContent(
+        targetState = count,
+        modifier = Modifier.testTag("interaction_metric_$name"),
+        transitionSpec = { countTransform(scheme) },
+        label = "interactionMetric",
+    ) { value ->
+        Text(
+            pluralStringResource(resource, value, value),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelMedium,
+        )
     }
 }
 
@@ -227,12 +257,14 @@ internal fun InteractionRow(
     onShare: (OwnedPost, Rect) -> Unit,
 ) {
     val actionDescription = stringResource(R.string.post_actions)
+    val pendingLookup = LocalPostPendingLookup.current
     Row(Modifier.fillMaxWidth().heightIn(min = PostInteractionRowHeight).padding(horizontal = 8.dp).semantics { contentDescription = actionDescription }, verticalAlignment = Alignment.CenterVertically) {
         InteractionButton(Modifier.weight(1f), AppIcons.Comment, stringResource(R.string.post_action_reply), PostAction.Reply in availableActions, onClick = { onReply(ownedPost) })
         InteractionButton(
             Modifier.weight(1f), AppIcons.RepostBeeline,
             stringResource(if (ownedPost.post.reposted) R.string.post_action_undo_repost else R.string.post_action_repost),
             PostAction.Reshare in availableActions, ownedPost.post.reposted, onClick = {},
+            pending = pendingLookup.isPending(ownedPost, PostControlFamilies.Repost),
             onClickWithBounds = { bounds -> onRepostConfirmationRequest(ownedPost, bounds) },
             onLongClick = if (quoteEnabled) ({ onQuote(ownedPost) }) else null,
             customActionLabel = if (quoteEnabled) stringResource(R.string.post_action_quote) else null,
@@ -246,6 +278,7 @@ internal fun InteractionRow(
                 Modifier.fillMaxWidth(), favouriteIconFor(ownedPost, favouriteArtworkStyle),
                 stringResource(if (ownedPost.post.favourited) R.string.post_action_unfavorite else R.string.post_action_favorite),
                 favouriteEnabled || reactionEnabled, ownedPost.post.hasVisibleInteractionSelection(),
+                pending = pendingLookup.isPending(ownedPost, PostControlFamilies.Favourite),
                 onClick = { if (favouriteEnabled) onReact(ownedPost) },
                 onClickWithBounds = if (reactionEnabled) ({ bounds -> if (!favouriteEnabled) openReactionBubble(bounds) }) else null,
                 reactionGestureKey = "${ownedPost.fetchedBy}:${ownedPost.post.id}:${ownedPost.sessionRevision}",
@@ -255,7 +288,7 @@ internal fun InteractionRow(
                 onLongClick = if (reactionEnabled) ::openReactionBubble else null,
             )
         }
-        InteractionButton(Modifier.weight(1f), if (ownedPost.post.saved) AppIcons.FilledBookmark else AppIcons.HollowBookmark, stringResource(if (ownedPost.post.saved) R.string.post_action_remove_bookmark else R.string.post_action_bookmark), PostAction.Bookmark in availableActions, ownedPost.post.saved, onClick = { onBookmark(ownedPost) })
+        InteractionButton(Modifier.weight(1f), if (ownedPost.post.saved) AppIcons.FilledBookmark else AppIcons.HollowBookmark, stringResource(if (ownedPost.post.saved) R.string.post_action_remove_bookmark else R.string.post_action_bookmark), PostAction.Bookmark in availableActions, ownedPost.post.saved, pending = pendingLookup.isPending(ownedPost, PostControlFamilies.Bookmark), onClick = { onBookmark(ownedPost) })
         InteractionButton(Modifier.weight(1f), AppIcons.ShareBeeline, stringResource(R.string.post_action_share), onClick = {}, onClickWithBounds = { bounds -> onShare(ownedPost, bounds) })
     }
     if (pendingRepost?.fetchedBy == ownedPost.fetchedBy && pendingRepost.postId == ownedPost.post.id) {
@@ -277,6 +310,7 @@ private fun InteractionButton(
     enabled: Boolean = true,
     isSelected: Boolean = false,
     selectedIndicator: String? = null,
+    pending: Boolean = false,
     onClick: () -> Unit,
     onClickWithBounds: ((Rect) -> Unit)? = null,
     onLongClick: ((Rect) -> Unit)? = null,
@@ -292,7 +326,13 @@ private fun InteractionButton(
     val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val scheme = LocalPalustrisMotionScheme.current
     val density = LocalDensity.current
-    val selectedDescription = stringResource(if (isSelected) R.string.post_action_selected else R.string.post_action_not_selected)
+    val selectedDescription = stringResource(
+        when {
+            pending -> R.string.post_action_pending
+            isSelected -> R.string.post_action_selected
+            else -> R.string.post_action_not_selected
+        },
+    )
     val interactionSelectedDescription = stringResource(R.string.post_action_interaction_selected)
     Box(
         modifier = modifier.heightIn(min = PostInteractionRowHeight).onGloballyPositioned { bounds = it.boundsInWindow() }.then(
@@ -315,7 +355,7 @@ private fun InteractionButton(
         contentAlignment = Alignment.Center,
     ) {
         PopEffect(popTrigger) {
-            Icon(icon, label, Modifier.size(PostInteractionIconSize), tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else 0.38f))
+            Icon(icon, label, Modifier.size(PostInteractionIconSize), tint = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = if (pending) PENDING_ALPHA else 1f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else 0.38f))
             selectedIndicator?.let { indicator ->
                 Text(
                     indicator,

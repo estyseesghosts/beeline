@@ -33,9 +33,11 @@ import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.notifications.NotificationSettingsHost
 import me.foxtails.palustris.ui.notifications.NotificationsHost
 import me.foxtails.palustris.ui.photogrid.PhotoGridHost
+import me.foxtails.palustris.ui.posts.LocalPostPendingLookup
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.posts.PostPopupOwner
+import me.foxtails.palustris.ui.posts.pendingLookup
 import me.foxtails.palustris.ui.profile.ProfileHost
 import me.foxtails.palustris.ui.saved.SavedCollectionsHost
 import me.foxtails.palustris.ui.search.SearchHost
@@ -257,7 +259,11 @@ fun ConnectedSessionHost(
         )
     }
 
-    CompositionLocalProvider(LocalPostPopupOwner provides postActionOwner) {
+    val pendingLookup = remember(postInteractionAuthority) { postInteractionAuthority.pendingLookup() }
+    CompositionLocalProvider(
+        LocalPostPopupOwner provides postActionOwner,
+        LocalPostPendingLookup provides pendingLookup,
+    ) {
         PalustrisApp(
             account = account,
             sessionGeneration = sessionGeneration,

@@ -1077,6 +1077,41 @@ class SinglePostScreenTest {
         compose.onNodeWithTag("repost_choice_quote", useUnmergedTree = true).assertIsDisplayed()
     }
 
+    @Test fun pendingRepostIsDescribedAsPendingNotConfirmed() {
+        val post = Post(
+            EntityId("https://example.org", "pending-repost"),
+            account,
+            "Pending repost",
+            0,
+            Audience.Public,
+            attachments = listOf(image("pending-repost")),
+            reposted = true,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                androidx.compose.runtime.CompositionLocalProvider(
+                    me.foxtails.palustris.ui.posts.LocalPostPendingLookup provides
+                        me.foxtails.palustris.ui.posts.PostPendingLookup { _, families ->
+                            me.foxtails.palustris.ui.posts.PostActionFamily.Reshare in families
+                        },
+                ) {
+                    SinglePostScreen(
+                        ownedPost = OwnedPost(account.id, post),
+                        presentation = SinglePostPresentation.PhotoGrid,
+                        onClose = {},
+                        availableActions = setOf(PostAction.Reshare, PostAction.Bookmark),
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+
+        val repost = compose.onNodeWithContentDescription("Undo repost").fetchSemanticsNode()
+        assertEquals("Pending", repost.config[androidx.compose.ui.semantics.SemanticsProperties.StateDescription])
+        val bookmark = compose.onNodeWithContentDescription("Bookmark").fetchSemanticsNode()
+        assertEquals("Not selected", bookmark.config[androidx.compose.ui.semantics.SemanticsProperties.StateDescription])
+    }
+
     @Test fun photoPostDetailRendersUpdatedInteractionState() {
         val post = Post(
             EntityId("https://example.org", "photo-state"),

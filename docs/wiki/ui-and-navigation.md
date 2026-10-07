@@ -523,3 +523,15 @@ the running API (API 29 uses `KEYBOARD_TAP` and `LONG_PRESS` where `CONFIRM` and
 `PalustrisTheme` provides `LocalPalustrisHaptics`; the default is silent. The platform call honors the system
 touch-feedback setting, so Beeline adds no haptic preference. Fire an event once per discrete moment, never per drag frame.
 Sources: `ui/motion/HapticEvents.kt`, `HapticEventsTest`. Device haptic feel is unverified.
+
+## Post action pending state
+
+`PostInteractionExecutionAuthority` owns which action families are in flight per session, account, and target, and
+exposes that as observable state through `isPending`. `LocalPostPendingLookup` (provided by `ConnectedSessionHost`)
+carries it to every surface, so the row, the single post detail, and the Photo Grid detail show the same state.
+A pending control keeps its optimistic icon and count but is dimmed and described as "Pending" to accessibility
+services, never as confirmed. Counts animate through one `countTransform`. A second tap while an action is in flight is
+rejected; after it settles a tap toggles back. Failure restores the icon and a known count (an unknown count stays
+unknown) and reports once through `onFailure`.
+Sources: `PostInteractionExecutionAuthority.kt`, `PostPendingLookup.kt`, `PostInteractionPresentation.kt`,
+`PostInteractionMutationOwnerTest`. Device visuals are unverified.

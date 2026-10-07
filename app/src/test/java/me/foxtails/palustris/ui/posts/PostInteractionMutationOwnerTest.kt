@@ -148,6 +148,7 @@ class PostInteractionMutationOwnerTest {
         fun completeRemove(index: Int) { removePending[index].complete(Unit) }
         fun failRemove(index: Int, error: Exception) { removePending[index].completeExceptionally(error) }
         fun completeReshared(index: Int, result: PostActionResult) { resharedPending[index].complete(result) }
+        fun failReshared(index: Int, error: Exception) { resharedPending[index].completeExceptionally(error) }
     }
 
     private inner class RowStore {
@@ -315,6 +316,139 @@ class PostInteractionMutationOwnerTest {
         advanceUntilIdle()
         assertEquals(listOf("👍"), store.get("post").selectedReactions.map { it.submissionValue })
         assertEquals(listOf("👍"), store.get("wrapper").selectedReactions.map { it.submissionValue })
+    }
+
+    @Test
+    fun rapidOppositeTapIsRejectedInFlightThenTogglesBackAfterSettling() = runTest {
+        val source = GatedMutationSource()
+        val store = RowStore()
+        store.seed(post(counts = PostInteractionCounts(favouriteCount = 3)))
+        val mutations = owner(source, store, scope = this)
+
+        mutations.favorite(store.owned("post"))
+        mutations.favorite(store.owned("post"))
+        advanceUntilIdle()
+        assertEquals(1, source.favouriteCalls.size)
+        assertTrue(store.get("post").favourited)
+        assertEquals(4, store.get("post").interactionCounts.favouriteCount)
+
+        source.completeFavourite(0, PostActionResult(selected = true))
+        advanceUntilIdle()
+        mutations.favorite(store.owned("post"))
+        advanceUntilIdle()
+
+        assertEquals(2, source.favouriteCalls.size)
+        assertFalse(store.get("post").favourited)
+        assertEquals(3, store.get("post").interactionCounts.favouriteCount)
+        source.completeFavourite(1, PostActionResult(selected = false))
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun pendingIsVisibleWhileInFlightAndClearsOnSuccessAndFailure() = runTest {
+        val source = GatedMutationSource()
+        val store = RowStore()
+        store.seed(post(counts = PostInteractionCounts(repostCount = 2)))
+        val authority = PostInteractionExecutionAuthority()
+        val mutations = owner(source, store, authority, scope = this)
+        val target = EntityId(connection.origin, "post")
+        fun pending() = authority.isPending(accountId, 1L, target, PostControlFamilies.Repost)
+
+        mutations.reshare(store.owned("post"))
+        advanceUntilIdle()
+        assertTrue(pending())
+        assertTrue(store.get("post").reposted)
+
+        source.completeReshared(0, PostActionResult(selected = true))
+        advanceUntilIdle()
+        assertFalse(pending())
+        assertTrue(store.get("post").reposted)
+
+        mutations.bookmark(store.owned("post"))
+        advanceUntilIdle()
+        assertTrue(authority.isPending(accountId, 1L, target, PostControlFamilies.Bookmark))
+        assertFalse(pending())
+        source.failSaved(0, java.io.IOException("offline"))
+        advanceUntilIdle()
+        assertFalse(authority.isPending(accountId, 1L, target, PostControlFamilies.Bookmark))
+        assertFalse(store.get("post").saved)
+        assertEquals(1, store.failures.size)
+    }
+
+    @Test
+    fun failedRepostRestoresIconAndKnownCountAndReportsOnce() = runTest {
+        val source = GatedMutationSource()
+        val store = RowStore()
+        store.seed(post(counts = PostInteractionCounts(repostCount = 2)))
+        val mutations = owner(source, store, scope = this)
+
+        mutations.reshare(store.owned("post"))
+        advanceUntilIdle()
+        assertEquals(3, store.get("post").interactionCounts.repostCount)
+        source.failReshared(0, java.io.IOException("offline"))
+        advanceUntilIdle()
+
+        assertFalse(store.get("post").reposted)
+        assertEquals(2, store.get("post").interactionCounts.repostCount)
+        assertEquals(1, store.failures.size)
+    }
+
+    @Test
+    fun unknownRepostCountStaysUnknownThroughOptimisticAndFailure() = runTest {
+        val source = GatedMutationSource()
+        val store = RowStore()
+        store.seed(post())
+        val mutations = owner(source, store, scope = this)
+
+        mutations.reshare(store.owned("post"))
+        advanceUntilIdle()
+        assertEquals(null, store.get("post").interactionCounts.repostCount)
+        assertTrue(store.get("post").reposted)
+        source.completeReshared(0, PostActionResult(selected = true))
+        advanceUntilIdle()
+        assertEquals(null, store.get("post").interactionCounts.repostCount)
+    }
+
+    @Test
+    fun readOnlyActionsNeitherChangeTheRowNorCallTheSource() = runTest {
+        val source = GatedMutationSource()
+        val store = RowStore()
+        store.seed(post())
+        val mutations = PostInteractionMutationOwner(
+            accountId = accountId,
+            source = source,
+            sessionRevision = 1L,
+            scope = this,
+            isActionAvailable = { false },
+            favouriteEmoji = { "❤" },
+            updatePost = store::apply,
+            onFailure = { store.failures += it },
+            executionAuthority = PostInteractionExecutionAuthority(),
+        )
+
+        mutations.react(store.owned("post"), EmojiChoice("👍", "👍", null))
+        mutations.favorite(store.owned("post"))
+        advanceUntilIdle()
+
+        assertTrue(source.reactedCalls.isEmpty())
+        assertTrue(source.favouriteCalls.isEmpty())
+        assertTrue(store.get("post").selectedReactions.isEmpty())
+        assertFalse(store.get("post").favourited)
+    }
+
+    @Test
+    fun actionFromAnotherAccountIsIgnored() = runTest {
+        val source = GatedMutationSource()
+        val store = RowStore()
+        store.seed(post())
+        val mutations = owner(source, store, scope = this)
+        val other = AccountId(connection, "someone-else")
+
+        mutations.favorite(OwnedPost(other, store.get("post"), 1L))
+        advanceUntilIdle()
+
+        assertTrue(source.favouriteCalls.isEmpty())
+        assertFalse(store.get("post").favourited)
     }
 
     @Test
