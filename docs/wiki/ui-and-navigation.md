@@ -535,3 +535,11 @@ rejected; after it settles a tap toggles back. Failure restores the icon and a k
 unknown) and reports once through `onFailure`.
 Sources: `PostInteractionExecutionAuthority.kt`, `PostPendingLookup.kt`, `PostInteractionPresentation.kt`,
 `PostInteractionMutationOwnerTest`. Device visuals are unverified.
+
+## Media Transition Ownership
+
+`MediaTransitionRegistry` maps one `MediaTransitionKey` (account, post, attachment id, tile group) to the feed thumbnail that the viewer opens from and returns to. Keys use attachment identity, so a reordered attachment list keeps its keys. A tile publishes its source only while it shows its media: a tile behind a sensitive cover is removed from the registry, so the viewer neither opens from it nor returns to it, and falls back to a fade. A tile republishes when it is revealed or its preview decodes, because neither triggers layout. Tiles remove their source on disposal.
+
+The viewer draws the transition image only while the selected page is revealed. A closed sensitive cover loads nothing and stays visible. An account change releases every source of other accounts and ends the active viewer owner; a session change ends the active owner. A stale owner cannot end, hand off, or re-hide a newer transition.
+
+Sources: `ui/media/MediaTransitionState.kt`, `MediaTransitionRegistryExtensions.kt`, `PostMediaCarousel.kt`, `MediaViewerScreen.kt`, `ui/shell/ShellEffects.kt`, `MediaTransitionStateTest`, `PostMediaCarouselTest`, `MediaViewerScreenTest`. Device visuals are unverified.

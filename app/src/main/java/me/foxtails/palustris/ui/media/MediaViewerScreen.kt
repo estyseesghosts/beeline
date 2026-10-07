@@ -144,7 +144,9 @@ fun MediaViewerScreen(
         }
         val selectedDestinationFrame = destinationFrame(viewport, selectedAttachment, density, fullDimensions[selectedPage])
         val selectedSourceFrame = sourceFrame(selectedSource, Rect.Zero, selectedAttachment)
-        val transitionLayerVisible = transition.phase != MediaViewerPhase.Open || !selectedFullReady
+        val selectedRevealed = !selectedAttachment.sensitive || revealedPages[selectedPage] == true
+        // The transition layer would paint the image over a sensitive cover that is still closed.
+        val transitionLayerVisible = selectedRevealed && (transition.phase != MediaViewerPhase.Open || !selectedFullReady)
         val mediaLoader = remember(context) { MediaImageLoader.get(context) }
         val fullRequest = remember(
             selectedAttachment,

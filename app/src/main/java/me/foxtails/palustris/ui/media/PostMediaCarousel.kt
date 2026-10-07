@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -120,7 +122,7 @@ fun PostMediaCarousel(
                     onOpenMedia = onOpenMedia,
                     visibleViewport = visibleViewport,
                     sourceKeys = attachments.indices.map { attachmentIndex ->
-                        MediaTransitionKey.forAttachment(ownedPost, attachmentIndex, "$sourceGroup-$attachmentIndex")
+                        MediaTransitionKey.forAttachment(ownedPost, attachmentIndex, sourceGroup)
                     },
                     modifier = Modifier
                         .width(width)
@@ -209,26 +211,37 @@ private fun MediaPreviewTile(
     } else {
         stringResource(R.string.a11y_sensitive_media, index + 1)
     }
+    val tileLayout = remember { TileLayout() }
+    val publishSource = {
+        tileLayout.coordinates?.takeIf { it.isAttached }?.let { coordinates ->
+            registry.updateWhileRevealed(
+                transitionKey,
+                revealed,
+                MediaTransitionSource(
+                    fullBounds = coordinates.fullBoundsInRoot(),
+                    visibleBounds = coordinates.visibleBoundsInRoot(visibleViewport),
+                    cornerRadiusPx = with(density) { 12.dp.toPx() },
+                    previewRequest = imageRequest,
+                    imageWidth = decodedPreviewSize?.width
+                        ?: (attachment.previewWidth ?: attachment.width ?: 4).toFloat(),
+                    imageHeight = decodedPreviewSize?.height
+                        ?: (attachment.previewHeight ?: attachment.height ?: 3).toFloat(),
+                ),
+            )
+        }
+    }
     DisposableEffect(transitionKey) {
         onDispose { registry.remove(transitionKey) }
+    }
+    // Layout does not re-run when a tile is revealed or its preview decodes, so republish then.
+    LaunchedEffect(transitionKey, revealed, imageRequest, decodedPreviewSize) {
+        if (revealed) publishSource() else registry.remove(transitionKey)
     }
     Surface(
         modifier = modifier
             .onGloballyPositioned { coordinates ->
-                val fullBounds = coordinates.fullBoundsInRoot()
-                registry.updateIfVisible(
-                    transitionKey,
-                    MediaTransitionSource(
-                        fullBounds = fullBounds,
-                        visibleBounds = coordinates.visibleBoundsInRoot(visibleViewport),
-                        cornerRadiusPx = with(density) { 12.dp.toPx() },
-                        previewRequest = imageRequest,
-                        imageWidth = decodedPreviewSize?.width
-                            ?: (attachment.previewWidth ?: attachment.width ?: 4).toFloat(),
-                        imageHeight = decodedPreviewSize?.height
-                            ?: (attachment.previewHeight ?: attachment.height ?: 3).toFloat(),
-                    ),
-                )
+                tileLayout.coordinates = coordinates
+                publishSource()
             }
             .clip(RoundedCornerShape(12.dp))
             .testTag("post_media_frame_${ownedPost.post.id.value}_$index")
@@ -286,6 +299,11 @@ private fun MediaPreviewTile(
             }
         }
     }
+}
+
+/** Holds the latest layout of one tile so its registry source can be republished without a layout pass. */
+private class TileLayout {
+    var coordinates: LayoutCoordinates? = null
 }
 
 @Composable

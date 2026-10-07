@@ -68,6 +68,9 @@ class MediaTransitionRegistry {
     val currentActiveKey: MediaTransitionKey?
         get() = activeKey.value
 
+    internal val registeredKeys: Set<MediaTransitionKey>
+        get() = sources.keys.toSet()
+
     fun update(key: MediaTransitionKey, value: Rect) {
         if (value.width > 0f && value.height > 0f) {
             val previous = sources[key]
@@ -92,6 +95,16 @@ class MediaTransitionRegistry {
 
     fun remove(key: MediaTransitionKey) {
         sources.remove(key)
+    }
+
+    /**
+     * Drops every source and any active viewer owner that belongs to another account.
+     * Pass null when no account is signed in. Same-account sources stay registered because
+     * their tiles will not re-publish unless they move.
+     */
+    fun releaseOtherAccounts(account: String?) {
+        sources.keys.filter { it.account != account }.forEach(sources::remove)
+        if (activeKey.value?.account != account) endActive()
     }
 
     fun boundsFor(key: MediaTransitionKey): Rect? = sources[key]?.fullBounds

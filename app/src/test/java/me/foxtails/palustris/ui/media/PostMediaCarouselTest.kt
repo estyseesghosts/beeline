@@ -4,6 +4,13 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import me.foxtails.palustris.MainActivity
@@ -179,6 +186,67 @@ class PostMediaCarouselTest {
         } finally {
             server.shutdown()
         }
+    }
+
+    @Test
+    fun sensitiveTileIsNotATransitionSourceUntilRevealed() {
+        val registry = MediaTransitionRegistry()
+        val owned = OwnedPost(account.id, post("cover", listOf(image("cover").copy(sensitive = true))))
+        showWithRegistry(registry, owned)
+
+        assertTrue(registry.registeredKeys.isEmpty())
+        compose.onNodeWithText("Show sensitive media").performClick()
+        compose.waitForIdle()
+
+        assertEquals(listOf("cover"), registry.registeredKeys.map { it.attachment })
+    }
+
+    @Test
+    fun releasingAnotherAccountLeavesNoSourceBehind() {
+        val registry = MediaTransitionRegistry()
+        val owned = OwnedPost(account.id, post("account", listOf(image("one"))))
+        showWithRegistry(registry, owned)
+        assertEquals(1, registry.registeredKeys.size)
+
+        compose.runOnIdle { registry.releaseOtherAccounts("someone-else") }
+
+        assertTrue(registry.registeredKeys.isEmpty())
+    }
+
+    @Test
+    fun sourceKeysFollowAttachmentIdentityAfterReorder() {
+        val registry = MediaTransitionRegistry()
+        var attachments by mutableStateOf(listOf(image("a"), image("b")))
+        var opened: MediaOpenRequest? = null
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                CompositionLocalProvider(LocalMediaTransitionRegistry provides registry) {
+                    PostMediaCarousel(OwnedPost(account.id, post("order", attachments)), onOpenMedia = { opened = it })
+                }
+            }
+        }
+        compose.waitForIdle()
+        val groupBefore = registry.registeredKeys.map { it.occurrence }.toSet()
+
+        compose.runOnIdle { attachments = attachments.reversed() }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Open media 1 of 2").performClick()
+
+        assertEquals("b", opened?.transitionKey?.attachment)
+        assertEquals(listOf("b", "a"), opened?.sourceKeys?.map { it.attachment })
+        assertEquals(groupBefore, opened?.sourceKeys?.map { it.occurrence }?.toSet())
+        assertEquals(setOf("a", "b"), registry.registeredKeys.map { it.attachment }.toSet())
+    }
+
+    private fun showWithRegistry(registry: MediaTransitionRegistry, owned: OwnedPost) {
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                CompositionLocalProvider(LocalMediaTransitionRegistry provides registry) {
+                    PostMediaCarousel(owned, onOpenMedia = {})
+                }
+            }
+        }
+        compose.waitForIdle()
     }
 
     private fun show(vararg posts: Post) {

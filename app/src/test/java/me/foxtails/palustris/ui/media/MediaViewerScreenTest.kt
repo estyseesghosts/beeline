@@ -278,6 +278,49 @@ class MediaViewerScreenTest {
     }
 
     @Test
+    fun coveredSensitiveAttachmentLoadsNothingUntilRevealed() {
+        val image = markerPng(android.graphics.Color.RED, android.graphics.Color.BLUE)
+        val server = MockWebServer()
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = MockResponse().setBody(Buffer().write(image))
+        }
+        server.start()
+        val coveredPost = post.copy(
+            id = EntityId("https://example.org", "covered"),
+            attachments = listOf(
+                post.attachments[0].copy(
+                    url = server.url("/covered-full.png").toString(),
+                    previewUrl = server.url("/covered-preview.png").toString(),
+                    sensitive = true,
+                ),
+            ),
+        )
+
+        try {
+            compose.activity.runOnUiThread {
+                compose.activity.setContent {
+                    MediaViewerScreen(
+                        request = MediaOpenRequest(OwnedPost(account.id, coveredPost), attachmentIndex = 0, revealed = false),
+                        onClose = {},
+                    )
+                }
+            }
+            compose.mainClock.advanceTimeBy(1_000)
+            compose.waitForIdle()
+
+            compose.onNodeWithText("Show media").assertIsDisplayed()
+            assertEquals(0, server.requestCount)
+
+            compose.onNodeWithText("Show media").performClick()
+            compose.mainClock.advanceTimeBy(1_000)
+            compose.waitForIdle()
+            compose.waitUntil(timeoutMillis = 3_000) { server.requestCount > 0 }
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    @Test
     fun transitionCanvasUsesTheRequestedImageFrameAndRoundedClip() {
         val fixture = Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888)
         for (y in 0 until fixture.height) {
@@ -396,5 +439,4 @@ class MediaViewerScreenTest {
             bitmap.recycle()
         }.toByteArray()
     }
-
 }

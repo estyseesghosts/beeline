@@ -15,6 +15,7 @@ import me.foxtails.palustris.ui.media.fitRect
 import me.foxtails.palustris.ui.media.lerpRect
 import me.foxtails.palustris.ui.media.shouldDismiss
 import me.foxtails.palustris.ui.media.updateIfVisible
+import me.foxtails.palustris.ui.media.updateWhileRevealed
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -110,6 +111,43 @@ class MediaTransitionStateTest {
 
         registry.updateIfVisible(key, MediaTransitionSource(fullBounds = full, visibleBounds = Rect(0f, 0f, 0f, 0f)))
         assertNull(registry.sourceFor(key))
+    }
+
+    @Test
+    fun coveredTileIsRemovedAndRevealedTileIsPublished() {
+        val registry = MediaTransitionRegistry()
+        val key = MediaTransitionKey("account", "post", "attachment")
+        val source = MediaTransitionSource(fullBounds = Rect(0f, 0f, 100f, 100f))
+
+        registry.updateWhileRevealed(key, revealed = true, source = source)
+        assertEquals(source, registry.sourceFor(key))
+        registry.updateWhileRevealed(key, revealed = false, source = source)
+        assertNull(registry.sourceFor(key))
+    }
+
+    @Test
+    fun releasingOtherAccountsKeepsOnlyTheCurrentAccountAndItsViewer() {
+        val registry = MediaTransitionRegistry()
+        val mine = MediaTransitionKey("mine", "post", "a")
+        val theirs = MediaTransitionKey("theirs", "post", "a")
+        val bounds = Rect(0f, 0f, 10f, 10f)
+        registry.update(mine, bounds)
+        registry.update(theirs, bounds)
+        val ownerOfMine = registry.begin(mine)
+
+        registry.releaseOtherAccounts("mine")
+        assertEquals(bounds, registry.boundsFor(mine))
+        assertNull(registry.boundsFor(theirs))
+        assertTrue(registry.isOwnerActive(ownerOfMine))
+
+        val ownerOfTheirs = registry.begin(theirs)
+        registry.releaseOtherAccounts("mine")
+        assertFalse(registry.isOwnerActive(ownerOfTheirs))
+        assertNull(registry.currentActiveKey)
+        assertFalse(registry.isSourceHidden(theirs))
+
+        registry.releaseOtherAccounts(null)
+        assertNull(registry.boundsFor(mine))
     }
 
     @Test

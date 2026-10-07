@@ -35,7 +35,7 @@ internal fun ShellEffects(
     }
 
     LaunchedEffect(accountId) {
-        mediaTransitionRegistry.endActive()
+        mediaTransitionRegistry.releaseOtherAccounts(accountId?.toString())
         overlay.clearForAccountChange()
         repostConfirmationOwner.dismiss()
         thread.actions.deactivate()
@@ -43,6 +43,7 @@ internal fun ShellEffects(
     // A same-account reauthentication changes the durable revision but not the account id.
     // Rebind the popup authority so a stale handler cannot run a later reaction selection.
     LaunchedEffect(sessionGeneration, sessionRevision) {
+        mediaTransitionRegistry.endActive()
         overlay.clearForSessionChange()
     }
     LaunchedEffect(navigator.destination, navigator.searchPanel, accountId, sessionGeneration) {

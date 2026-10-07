@@ -12,6 +12,18 @@ internal fun MediaTransitionRegistry.updateIfVisible(key: MediaTransitionKey, so
     }
 }
 
+/**
+ * Publishes [source] only while the tile shows its media. A tile behind a sensitive cover is
+ * never a transition source, so the viewer cannot draw or return to hidden content.
+ */
+internal fun MediaTransitionRegistry.updateWhileRevealed(
+    key: MediaTransitionKey,
+    revealed: Boolean,
+    source: MediaTransitionSource,
+) {
+    if (revealed) updateIfVisible(key, source) else remove(key)
+}
+
 private fun Rect.isValid(): Boolean = width > 0f && height > 0f
 
 internal fun Rect.visiblePartIn(viewport: Rect?): Rect = if (viewport == null) {
