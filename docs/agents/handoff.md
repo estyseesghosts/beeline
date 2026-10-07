@@ -6,40 +6,23 @@ Last reviewed: 2026-10-07
 
 ## Continuation pointer
 
-Read [tasks/beeline-0.4.0.md](tasks/beeline-0.4.0.md) for the active Phase 4D5/4E task, audit, and slice plan.
+Read [tasks/beeline-0.4.0.md](tasks/beeline-0.4.0.md) for the active Phase 3B and Phase 5 task.
 Read AGENTS.md and its required pages before continuing.
-The completed hardening records remain at [tasks/hardening-0.4.0.md](tasks/hardening-0.4.0.md) and [tasks/hardening-0.4.0-phase2.md](tasks/hardening-0.4.0-phase2.md).
 
 ## Current position
 
-Hardening Phases 0-5 are complete. Phase 4D5/4E is in progress: the audit is recorded, and slices 1 (stable tab IDs), 2 (chip travel to the display edge), and 2b (pane margin bleed so chips reach the physical edge) are committed with passing full gates. Slice 3 lifts the wide Search dock above the IME. Slice 4 recorded the 200% emulator checks (4E2) and the six font200 captures. No further 4D/4E slice is open.
-The caret stays in the first logical position (user decision); it flips in RTL. Do not push without user direction.
+Phases 0-4 are complete except the audit gaps listed in the task file. Slice 3B (haptic event map) is implemented.
+Next slices, in order: 5A, 5C, 5B, 5D. Do not push without user direction.
 
 ## Ownership and caution
 
-The orchestrator owns implementation, review, records, validation, and Git.
-The user allows targeted_fixer for narrowly scoped work packages; keep one implementation
-owner per slice.
-Two read-only subagents supported this closeout: one reviewed the extraction against the
-invariants, one checked test and documentation coverage.
-Preserve unrelated agent/style edits, the deleted Photo Grid test and PNGs, untracked captures, scripts, caches, and `tasks/4c.md`.
-Recheck external Java/Gradle activity before builds. Use explicit reviewed commit paths.
+The orchestrator owns implementation, verification, records, and Git. Subagents: `finder` and `implementer` only.
+Preserve unrelated untracked captures, scripts, caches, and `tasks/4c.md`. Recheck external Java and Gradle activity before builds.
 
 ## Last safe commit
 
-Preceding safe commit: `51455c5` — `Reconcile documentation and record Phase 5 acceptance (H14)`.
-The slice 1 commit `Use stable keys for Notifications and Photo Grid chips` follows it; resolve its hash from Git.
-The ktlint baseline still carries 177 file entries. Six deferred entries remain by decision:
-`SavedCollectionsHost` (filename), `ConnectedApp` and `PostThreadViewModel` (keyword-spacing),
-`MastodonIntegrationTest` (paren-spacing), `NavigationTest` (string-template), and
-`SettingsViewModelTest` (function-expression-body).
+Preceding safe commit: `e02df3a7`. Resolve the 3B slice hash from Git.
 
 ## Limits
 
-Physical-device rendering, API 29 instrumentation, TalkBack, signing, and live-server behavior remain unverified.
-The local release assembly does not establish release signing or runtime acceptance.
-The Phase 5 debug build installs and launches on emulator-5554 (API 37); see
-`logs/phase5-launch2/screenshot.png` and `logs/phase5-search.png`. No application crash appears
-in logcat. A SIGABRT in an emulator HAL process (`android.hardwar`) is not the application.
-Compact-wide, tablet, IME, Profile chips, restoration, and forced RTL runtime checks were not run.
-Live thread loading on a real Misskey account remains unverified; no test account exists.
+Physical devices, TalkBack, API 29 instrumentation, signing, device haptic feel, and live-server behavior remain unverified.
