@@ -68,7 +68,6 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostInteractionCounts
 import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.ui.AppIcons
-import me.foxtails.palustris.ui.components.PillAction
 import me.foxtails.palustris.ui.emoji.CustomEmojiImage
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.PopEffect
@@ -224,6 +223,7 @@ internal fun InteractionRow(
     onRepostConfirmationRequest: (OwnedPost, Rect) -> Unit = { _, _ -> },
     onRepostConfirmationDismiss: () -> Unit = {},
     onRepostConfirmationConfirm: (OwnedPost) -> Unit = {},
+    onRepostQuote: (OwnedPost) -> Unit = {},
     onShare: (OwnedPost, Rect) -> Unit,
 ) {
     val actionDescription = stringResource(R.string.post_actions)
@@ -259,17 +259,13 @@ internal fun InteractionRow(
         InteractionButton(Modifier.weight(1f), AppIcons.ShareBeeline, stringResource(R.string.post_action_share), onClick = {}, onClickWithBounds = { bounds -> onShare(ownedPost, bounds) })
     }
     if (pendingRepost?.fetchedBy == ownedPost.fetchedBy && pendingRepost.postId == ownedPost.post.id) {
-        androidx.compose.ui.window.Popup(
-            popupPositionProvider = WindowAnchorPositionProvider(pendingRepost.anchorBounds, BubblePlacement.Below),
-            onDismissRequest = onRepostConfirmationDismiss,
-            properties = androidx.compose.ui.window.PopupProperties(focusable = true, dismissOnBackPress = true, dismissOnClickOutside = true),
-        ) {
-            PillAction(
-                label = stringResource(if (pendingRepost.selected) R.string.post_action_undo_repost_confirmation else R.string.post_action_repost_confirmation),
-                onClick = { onRepostConfirmationConfirm(ownedPost) },
-                modifier = Modifier.testTag("repost_confirmation"),
-            )
-        }
+        RepostChoice(
+            pending = pendingRepost,
+            quoteEnabled = quoteEnabled,
+            onDismiss = onRepostConfirmationDismiss,
+            onRepost = { onRepostConfirmationConfirm(ownedPost) },
+            onQuote = { onRepostQuote(ownedPost) },
+        )
     }
 }
 

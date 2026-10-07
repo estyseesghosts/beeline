@@ -64,4 +64,36 @@ class PostRepostConfirmationStateTest {
 
         assertEquals(true, result?.post?.reposted)
     }
+
+    @Test
+    fun quoteRoutesTheCurrentPostAndClearsPendingState() {
+        val owner = PostRepostConfirmationState()
+        var result: OwnedPost? = null
+        val target = post()
+        owner.request(target, Rect.Zero)
+
+        owner.quote(target, onQuote = { result = it })
+
+        assertEquals(target, result)
+        assertNull(owner.pending)
+    }
+
+    @Test
+    fun quoteIsDroppedWhenTheSessionChangedAfterTheChoiceOpened() {
+        val owner = PostRepostConfirmationState()
+        var called = false
+        owner.request(post(), Rect.Zero)
+
+        owner.quote(post().copy(sessionRevision = 5L), onQuote = { called = true })
+
+        assertEquals(false, called)
+        assertNull(owner.pending)
+    }
+
+    @Test
+    fun quoteWithoutAnOpenChoiceDoesNothing() {
+        var called = false
+        PostRepostConfirmationState().quote(post(), onQuote = { called = true })
+        assertEquals(false, called)
+    }
 }

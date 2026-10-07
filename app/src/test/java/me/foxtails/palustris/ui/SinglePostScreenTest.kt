@@ -4,45 +4,46 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
-import me.foxtails.palustris.domain.ContentWarningRules
-import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostInteractionCounts
-import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.ui.posts.SinglePostScreen
-import me.foxtails.palustris.ui.posts.SinglePostPresentation
+import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
+import me.foxtails.palustris.ui.posts.SinglePostPresentation
+import me.foxtails.palustris.ui.posts.SinglePostScreen
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -968,6 +969,112 @@ class SinglePostScreenTest {
 
         compose.onNodeWithContentDescription("Repost").performClick()
         compose.onNodeWithTag("repost_confirmation", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    private fun showRepostChoice(
+        reposted: Boolean = false,
+        quoteEnabled: Boolean = true,
+        fontScale: Float = 1f,
+        onReshare: (OwnedPost) -> Unit = {},
+        onQuote: (OwnedPost) -> Unit = {},
+    ) {
+        val post = Post(
+            EntityId("https://example.org", "repost-choice"),
+            account,
+            "Choice post",
+            0,
+            Audience.Public,
+            attachments = listOf(image("repost-choice")),
+            reposted = reposted,
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                androidx.compose.runtime.CompositionLocalProvider(
+                    me.foxtails.palustris.ui.posts.LocalPostRepostConfirmationState provides
+                        me.foxtails.palustris.ui.posts.PostRepostConfirmationState(),
+                    androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(
+                        androidx.compose.ui.platform.LocalDensity.current.density,
+                        fontScale,
+                    ),
+                ) {
+                    SinglePostScreen(
+                        ownedPost = OwnedPost(account.id, post),
+                        presentation = SinglePostPresentation.PhotoGrid,
+                        onClose = {},
+                        availableActions = setOf(PostAction.Reshare),
+                        quoteEnabled = quoteEnabled,
+                        onReshare = onReshare,
+                        onQuote = onQuote,
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+    }
+
+    @Test fun repostTapOffersRepostAndQuoteWithoutSending() {
+        var reshared = 0
+        showRepostChoice(onReshare = { reshared++ })
+
+        compose.onNodeWithContentDescription("Repost").performClick()
+
+        compose.onNodeWithTag("repost_confirmation", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("repost_choice_quote", useUnmergedTree = true).assertIsDisplayed()
+        assertEquals(0, reshared)
+    }
+
+    @Test fun repostChoiceSendsOnlyWhenRepostIsChosen() {
+        var reshared = 0
+        var quoted = 0
+        showRepostChoice(onReshare = { reshared++ }, onQuote = { quoted++ })
+
+        compose.onNodeWithContentDescription("Repost").performClick()
+        compose.onNodeWithTag("repost_confirmation", useUnmergedTree = true).performClick()
+
+        assertEquals(1, reshared)
+        assertEquals(0, quoted)
+        compose.onAllNodesWithTag("repost_choice", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test fun quoteChoiceRoutesToTheComposerWithoutReposting() {
+        var reshared = 0
+        var quotedPost: OwnedPost? = null
+        showRepostChoice(onReshare = { reshared++ }, onQuote = { quotedPost = it })
+
+        compose.onNodeWithContentDescription("Repost").performClick()
+        compose.onNodeWithTag("repost_choice_quote", useUnmergedTree = true).performClick()
+
+        assertEquals("repost-choice", quotedPost?.post?.id?.value)
+        assertEquals(0, reshared)
+        compose.onAllNodesWithTag("repost_choice", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test fun unsupportedQuoteIsNotOffered() {
+        showRepostChoice(quoteEnabled = false)
+
+        compose.onNodeWithContentDescription("Repost").performClick()
+
+        compose.onNodeWithTag("repost_confirmation", useUnmergedTree = true).assertIsDisplayed()
+        compose.onAllNodesWithTag("repost_choice_quote", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test fun largeFontOpensTheChoiceAsASheetWithBothOptions() {
+        showRepostChoice(fontScale = 2f)
+
+        compose.onNodeWithContentDescription("Repost").performClick()
+
+        compose.onNodeWithTag("repost_choice", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("repost_confirmation", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("repost_choice_quote", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test fun repostedPostOffersUndoRepostAndStillOffersQuote() {
+        showRepostChoice(reposted = true)
+
+        compose.onNodeWithContentDescription("Undo repost").performClick()
+
+        compose.onNodeWithTag("repost_confirmation", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("repost_choice_quote", useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test fun photoPostDetailRendersUpdatedInteractionState() {

@@ -461,6 +461,12 @@ Inline link, username, and hashtag bubbles in `InlineEmojiText` lay out the logo
 
 Sources: `ui/emoji/InlineEmojiText.kt`, `ui/posts/HashtagBubble.kt`, `InlineEmojiTextTest`, `HomeFeedTest`.
 
+## Repost and Quote choice
+
+A tap on the repost action opens a source-anchored choice from `ui/posts/PostRepostChoice.kt`: `Repost` or `Undo repost`, and `Quote` only when the current source supports quoting. A tap alone never sends. Long press and the accessibility custom action still open the composer for Quote. The first choice takes focus when it opens. Back, an outside tap, a stale post, a changed repost state, and a session change close the choice without sending (`PostRepostConfirmationState` owns this). At font scale 1.5 and above the choice opens as a bottom sheet; otherwise it is a popup that flips above or below at screen edges. Repost goes through the existing mutation owner and authority, which keep optimistic repost and rollback; Quote goes to the existing target-aware composer through the shell `onQuote` callback.
+
+Sources: `ui/posts/PostRepostChoice.kt`, `PostRepostConfirmationState.kt`, `PostInteractionPresentation.kt`, `SinglePostScreenTest`, `PostRepostConfirmationStateTest`.
+
 ## Post Quote Previews
 
 Rows and Photo Grid detail use one quote preview presentation. The precedence is parent content-warning rules, server-hidden content, a muted-tag warning, the quote content warning, then the quote body. Server-hidden quotes keep a non-revealable placeholder. A quote with an account-local muted hashtag shows a revealable `muted word: #tag` warning before its text or media is composed. After reveal, a quote content warning still hides its body. Muted words remain deferred because no client-side matched-word data exists; re-entry requires approved adapter and domain work with Mastodon and Misskey semantics verified independently. The hidden-content Remove preference applies to parent posts and Photo Grid filtering, not quote cards.

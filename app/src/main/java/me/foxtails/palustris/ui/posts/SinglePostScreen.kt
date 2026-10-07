@@ -246,6 +246,7 @@ internal fun SinglePostScreen(
                     onRepostConfirmationRequest = repostConfirmationOwner::request,
                     onRepostConfirmationDismiss = repostConfirmationOwner::dismiss,
                     onRepostConfirmationConfirm = { target -> repostConfirmationOwner.confirm(target, onReshare) },
+            onRepostQuote = { target -> repostConfirmationOwner.quote(target, onQuote) },
                     onShare = { target, bounds -> postActionOwner?.open(target, bounds) },
                  )
               if (post.reactions.any { it.count > 0 }) {

@@ -190,7 +190,7 @@ class SignInScreenTest {
 
         compose.onNodeWithContentDescription("Favorite").performClick()
         compose.onNodeWithContentDescription("Repost").performClick()
-        compose.onNodeWithText("repost?").performClick()
+        compose.onNodeWithTag("repost_confirmation", useUnmergedTree = true).performClick()
         assertEquals(fetchingAccount.id, favoritedPost?.fetchedBy)
         assertEquals(fetchingAccount.id, resharedPost?.fetchedBy)
     }
@@ -262,7 +262,7 @@ class SignInScreenTest {
         compose.waitForIdle()
         compose.onNodeWithTag("home_timeline_tab_Federated").assertIsDisplayed().performClick()
         compose.onNodeWithContentDescription("Repost").performClick()
-        compose.onNodeWithText("repost?").performClick()
+        compose.onNodeWithTag("repost_confirmation", useUnmergedTree = true).performClick()
         assertEquals(second.id, actionPost?.fetchedBy)
     }
 

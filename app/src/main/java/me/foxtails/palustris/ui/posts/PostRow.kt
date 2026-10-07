@@ -182,6 +182,7 @@ internal fun PostRow(
             onRepostConfirmationRequest = repostConfirmationOwner::request,
             onRepostConfirmationDismiss = repostConfirmationOwner::dismiss,
             onRepostConfirmationConfirm = { target -> repostConfirmationOwner.confirm(target, onReshare) },
+            onRepostQuote = { target -> repostConfirmationOwner.quote(target, onQuote) },
             onShare = { target, bounds -> postActionOwner?.open(target, bounds) },
            )
       }

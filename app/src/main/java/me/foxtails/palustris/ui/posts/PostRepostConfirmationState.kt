@@ -45,10 +45,17 @@ internal class PostRepostConfirmationState {
 
     fun confirm(post: OwnedPost, onReshare: (OwnedPost) -> Unit) {
         val current = pending ?: return
-        val samePost = current.fetchedBy == post.fetchedBy &&
-            current.postId == post.post.id &&
-            current.sessionRevision == post.sessionRevision
-        if (samePost && current.selected == post.post.reposted) onReshare(post)
+        if (current.isCurrentFor(post) && current.selected == post.post.reposted) onReshare(post)
         pending = null
     }
+
+    /** Routes the Quote choice to the composer only while the choice still names this post and session. */
+    fun quote(post: OwnedPost, onQuote: (OwnedPost) -> Unit) {
+        val current = pending ?: return
+        if (current.isCurrentFor(post)) onQuote(post)
+        pending = null
+    }
+
+    private fun PendingRepostConfirmation.isCurrentFor(post: OwnedPost): Boolean =
+        fetchedBy == post.fetchedBy && postId == post.post.id && sessionRevision == post.sessionRevision
 }
