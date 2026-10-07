@@ -8,6 +8,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -27,6 +28,7 @@ internal fun MediaTransitionImage(
     imageLoader: coil.ImageLoader,
     useFullImage: Boolean,
     onFullImageReady: () -> Unit,
+    alpha: Float = 1f,
 ) {
     if (!frame.visibleBounds.isValid() || (previewRequest == null && fullRequest == null)) return
     val previewPainter = previewRequest?.let { rememberAsyncImagePainter(it, imageLoader) }
@@ -37,14 +39,15 @@ internal fun MediaTransitionImage(
     }
     val painter = if (useFullImage && fullReady) fullPainter else previewPainter ?: fullPainter
     if (painter == null) return
-    MediaTransitionImageCanvas(painter, frame)
+    MediaTransitionImageCanvas(painter, frame, alpha)
 }
 
 @Composable
-internal fun MediaTransitionImageCanvas(painter: Painter, frame: MediaTransitionFrame) {
+internal fun MediaTransitionImageCanvas(painter: Painter, frame: MediaTransitionFrame, alpha: Float = 1f) {
     if (!frame.visibleBounds.isValid() || !frame.clipBounds.isValid() || !frame.imageBounds.isValid()) return
     Box(
         Modifier
+            .graphicsLayer { this.alpha = alpha }
             .drawWithCache {
                 val radius = frame.cornerRadiusPx.coerceIn(
                     0f,

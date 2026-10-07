@@ -41,6 +41,9 @@ class MediaViewerTransitionState(
     private var closeTargetFrame = destinationFrame
     private var animationToken = 0
     private var dismissViewport = Rect.Zero
+    private var returnStartBackdrop = 1f
+    private var closeStartBackdrop = 1f
+    private var closeFadesContent = false
 
     var destinationBounds by mutableStateOf(destinationBounds)
         private set
@@ -84,12 +87,19 @@ class MediaViewerTransitionState(
             else -> 0f
         }
 
+    /** The backdrop fades with an unzoomed drag, then continues from that level when returning or closing. */
     val backgroundAlpha: Float
         get() = when (phase) {
             MediaViewerPhase.Opening -> opening.value
-            MediaViewerPhase.Closing -> 1f - closing.value
+            MediaViewerPhase.Dragging -> draggedBackdropAlpha()
+            MediaViewerPhase.Returning -> returnStartBackdrop + (1f - returnStartBackdrop) * returning.value.coerceIn(0f, 1f)
+            MediaViewerPhase.Closing -> closeStartBackdrop * (1f - closing.value)
             else -> 1f
         }.coerceIn(0f, 1f)
+
+    /** The image fades instead of travelling when no valid thumbnail remains to return to. */
+    val contentAlpha: Float
+        get() = if (phase == MediaViewerPhase.Closing && closeFadesContent) (1f - closing.value).coerceIn(0f, 1f) else 1f
 
     val chromeAlpha: Float
         get() = when (phase) {
@@ -172,6 +182,7 @@ class MediaViewerTransitionState(
         if (phase != MediaViewerPhase.Dragging) return
         val token = ++animationToken
         returnStartFrame = draggedFrame()
+        returnStartBackdrop = draggedBackdropAlpha()
         phase = MediaViewerPhase.Returning
         returning.snapTo(0f)
         if (motionScheme.reducedMotion) {
@@ -195,11 +206,12 @@ class MediaViewerTransitionState(
     ) {
         if (phase == MediaViewerPhase.Closing) return
         val token = ++animationToken
+        closeStartBackdrop = backgroundAlpha
         closeStartFrame = visualFrame
-        closeTargetFrame = targetFrame
-            ?.takeIf { it.clipBounds.isValid() }
+        val validTarget = targetFrame?.takeIf { it.clipBounds.isValid() }
             ?: targetBounds?.takeIf { it.isValid() }?.let(::frameForBounds)
-            ?: fallbackCloseFrame(closeStartFrame, viewport, Offset(dragX, dragY))
+        closeFadesContent = validTarget == null
+        closeTargetFrame = validTarget ?: fallbackCloseFrame(closeStartFrame, viewport, Offset(dragX, dragY))
         phase = MediaViewerPhase.Closing
         closeCenterX.snapTo(closeStartFrame.clipBounds.center.x)
         closeCenterY.snapTo(closeStartFrame.clipBounds.center.y)
@@ -229,11 +241,17 @@ class MediaViewerTransitionState(
         return transformFrame(destinationFrame, destinationFrame.clipBounds.center, scale, Offset(dragX, dragY))
     }
 
+    private fun draggedBackdropAlpha(): Float =
+        1f - dismissProgress(Offset(dragX, dragY), dismissDistance()) * BACKDROP_DRAG_FADE
+
     private fun dismissDistance(): Float = minOf(
         dismissViewport.width.takeIf { it > 0f } ?: destinationBounds.width,
         dismissViewport.height.takeIf { it > 0f } ?: destinationBounds.height,
     ) * 0.20f
 }
+
+/** How much of the backdrop a full dismiss-distance drag removes. */
+private const val BACKDROP_DRAG_FADE = 0.6f
 
 private fun frameForBounds(bounds: Rect): MediaTransitionFrame = MediaTransitionFrame(bounds, bounds)
 
@@ -261,11 +279,12 @@ private fun transformRect(rect: Rect, center: Offset, scale: Float, offset: Offs
 
 private fun fallbackCloseFrame(start: MediaTransitionFrame, viewport: Rect, drag: Offset): MediaTransitionFrame {
     val direction = if (drag.getDistance() > 0f) drag / drag.getDistance() else Offset(0f, 1f)
+    // No thumbnail to return to: settle near the release point while the image fades out.
     return transformFrame(
         start,
         start.clipBounds.center,
-        0.82f,
-        direction * maxOf(viewport.width, viewport.height) * 0.9f,
+        0.9f,
+        direction * maxOf(viewport.width, viewport.height) * 0.05f,
     )
 }
 

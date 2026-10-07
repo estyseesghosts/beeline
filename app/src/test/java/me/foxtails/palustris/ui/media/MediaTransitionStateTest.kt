@@ -358,6 +358,53 @@ class MediaTransitionStateTest {
     }
 
     @Test
+    fun backdropFadesWithAnUnzoomedDragAndRestoresOnReturn() = runBlocking {
+        val source = Rect(20f, 40f, 220f, 240f)
+        val destination = Rect(0f, 0f, 1_000f, 1_000f)
+        val state = MediaViewerTransitionState(source, destination, me.foxtails.palustris.ui.motion.PalustrisMotionScheme.standard(true))
+        state.updateViewport(destination)
+
+        assertEquals(1f, state.backgroundAlpha, 0.001f)
+        state.beginDrag()
+        state.dragBy(Offset(0f, 100f))
+        val partial = state.backgroundAlpha
+        assertTrue(partial < 1f && partial > 0.3f)
+        state.dragBy(Offset(0f, 400f))
+        assertEquals(0.4f, state.backgroundAlpha, 0.001f)
+
+        state.returnToOpen()
+        assertEquals(1f, state.backgroundAlpha, 0.001f)
+        assertEquals(1f, state.contentAlpha, 0.001f)
+    }
+
+    @Test
+    fun closeWithoutAReturnSourceFadesTheImageInsteadOfTravelling() = runBlocking {
+        val destination = Rect(0f, 0f, 1_000f, 1_000f)
+        val state = MediaViewerTransitionState(Rect.Zero, destination, me.foxtails.palustris.ui.motion.PalustrisMotionScheme.standard(true))
+        state.updateViewport(destination)
+        state.beginDrag()
+        state.dragBy(Offset(0f, 250f))
+
+        state.close(targetBounds = null, viewport = destination)
+
+        assertEquals(MediaViewerPhase.Closing, state.phase)
+        assertEquals(0f, state.contentAlpha, 0.001f)
+        assertEquals(0f, state.backgroundAlpha, 0.001f)
+    }
+
+    @Test
+    fun closeToAValidThumbnailKeepsTheImageOpaque() = runBlocking {
+        val source = Rect(20f, 40f, 220f, 240f)
+        val destination = Rect(0f, 0f, 1_000f, 1_000f)
+        val state = MediaViewerTransitionState(source, destination, me.foxtails.palustris.ui.motion.PalustrisMotionScheme.standard(true))
+
+        state.close(source, destination)
+
+        assertEquals(1f, state.contentAlpha, 0.001f)
+        assertEquals(source, state.visualBounds)
+    }
+
+    @Test
     fun zoomStateExposesWhetherDismissIsAllowed() {
         val state = ZoomableMediaState()
 

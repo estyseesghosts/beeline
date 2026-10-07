@@ -546,4 +546,6 @@ Sources: `PostInteractionExecutionAuthority.kt`, `PostPendingLookup.kt`, `PostIn
 
 The viewer draws the transition image only while the selected page is revealed. A closed sensitive cover loads nothing and stays visible. An account change releases every source of other accounts and ends the active viewer owner; a session change ends the active owner. A stale owner cannot end, hand off, or re-hide a newer transition.
 
+Viewer dismissal: an unzoomed drag fades the backdrop (down to 40% at the dismiss distance) and the fade continues from that level when the viewer returns or closes, so there is no flash. Zoom keeps priority over drag and paging. Close travels to the registered thumbnail when it is still valid; otherwise the image settles near the release point and fades out. Reduced motion snaps the phases without overshoot.
+
 Sources: `ui/media/MediaTransitionState.kt`, `MediaTransitionRegistryExtensions.kt`, `PostMediaCarousel.kt`, `MediaViewerScreen.kt`, `ui/shell/ShellEffects.kt`, `MediaTransitionStateTest`, `PostMediaCarouselTest`, `MediaViewerScreenTest`. Device visuals are unverified.

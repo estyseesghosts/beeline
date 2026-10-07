@@ -350,6 +350,7 @@ fun MediaViewerScreen(
                     fullRequest = fullRequest,
                     imageLoader = mediaLoader.imageLoader,
                     useFullImage = transition.phase == MediaViewerPhase.Open && selectedFullReady,
+                    alpha = transition.contentAlpha,
                     onFullImageReady = {
                         if (pagerState.currentPage == selectedPage && selectedTransitionKey == selectedKey) {
                             fullReadyPages[selectedPage] = true

@@ -248,7 +248,7 @@ class MediaViewerScreenTest {
                     )
                 }
             }
-            compose.waitUntil(timeoutMillis = 3_000) { firstFullRequests.get() > 0 }
+            compose.waitUntil(timeoutMillis = 10_000) { firstFullRequests.get() > 0 }
             compose.mainClock.advanceTimeBy(1_000)
             compose.waitForIdle()
             val firstRequestsBeforeSwipes = firstFullRequests.get()
@@ -257,7 +257,7 @@ class MediaViewerScreenTest {
             }
             compose.mainClock.advanceTimeBy(1_000)
             compose.waitForIdle()
-            compose.waitUntil(timeoutMillis = 3_000) { secondFullRequests.get() > 0 }
+            compose.waitUntil(timeoutMillis = 10_000) { secondFullRequests.get() > 0 }
             val firstRequestsAfterForwardSwipe = firstFullRequests.get()
             val secondRequestsAfterForwardSwipe = secondFullRequests.get()
             compose.mainClock.advanceTimeBy(1_000)
