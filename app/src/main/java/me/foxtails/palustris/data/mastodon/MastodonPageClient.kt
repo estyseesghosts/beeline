@@ -1,11 +1,11 @@
 package me.foxtails.palustris.data.mastodon
 
-import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.domain.SourceError
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 internal class MastodonPageClient(
     private val origin: String,

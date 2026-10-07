@@ -13,6 +13,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import me.foxtails.palustris.data.AccountSourceRegistry
@@ -22,17 +26,13 @@ import me.foxtails.palustris.data.notifications.ForegroundNotificationStreamCont
 import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppPreferencesRepository
-import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
-import me.foxtails.palustris.ui.session.AccountManager
+import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.ui.ConnectedApp
 import me.foxtails.palustris.ui.display.RefreshRateController
 import me.foxtails.palustris.ui.localization.AppLocaleController
 import me.foxtails.palustris.ui.localization.AppLocaleOwner
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import me.foxtails.palustris.ui.session.AccountManager
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

@@ -13,16 +13,6 @@
     <file name="src/androidTest/java/me/foxtails/palustris/RoomNotificationStoreInstrumentedTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/MainActivity.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="38" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="39" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="40" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="41" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="42" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="43" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="44" column="1" source="standard:spacing-between-declarations-with-annotations" />
-    </file>
     <file name="src/main/java/me/foxtails/palustris/PalustrisApplication.kt">
         <error line="19" column="1" source="standard:spacing-between-declarations-with-annotations" />
     </file>
@@ -93,14 +83,6 @@
         <error line="3" column="1" source="standard:no-unused-imports" />
         <error line="9" column="1" source="standard:no-unused-imports" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/data/mastodon/MastodonPageClient.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-    </file>
-    <file name="src/main/java/me/foxtails/palustris/data/mastodon/MastodonSource.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="61" column="1" source="standard:no-unused-imports" />
-        <error line="64" column="1" source="standard:no-unused-imports" />
-    </file>
     <file name="src/main/java/me/foxtails/palustris/data/mastodon/MastodonThreadService.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
@@ -141,9 +123,6 @@
     <file name="src/main/java/me/foxtails/palustris/data/misskey/MisskeyThreadAcquisition.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/data/notifications/AndroidNotificationPresenter.kt">
-        <error line="8" column="1" source="standard:no-unused-imports" />
-    </file>
     <file name="src/main/java/me/foxtails/palustris/data/notifications/LegacyNotificationFileImporter.kt">
         <error line="70" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
@@ -160,9 +139,6 @@
     <file name="src/main/java/me/foxtails/palustris/data/notifications/NotificationRepositoryState.kt">
         <error line="3" column="1" source="standard:no-unused-imports" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/data/notifications/NotificationSyncOrchestrator.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-    </file>
     <file name="src/main/java/me/foxtails/palustris/data/notifications/db/NotificationDao.kt">
         <error line="47" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
@@ -177,10 +153,6 @@
     </file>
     <file name="src/main/java/me/foxtails/palustris/data/notifications/push/UnifiedPushMessageHandler.kt">
         <error line="23" column="1" source="standard:no-unused-imports" />
-    </file>
-    <file name="src/main/java/me/foxtails/palustris/data/notifications/push/UnifiedPushRegistrationManager.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="37" column="1" source="standard:no-unused-imports" />
     </file>
     <file name="src/main/java/me/foxtails/palustris/data/notifications/work/NotificationWorkers.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -262,57 +234,6 @@
         <error line="18" column="1" source="standard:no-unused-imports" />
         <error line="45" column="19" source="standard:property-naming" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/ui/PalustrisApp.kt">
-        <error line="9" column="1" source="standard:import-ordering" />
-        <error line="10" column="1" source="standard:no-unused-imports" />
-        <error line="12" column="1" source="standard:no-unused-imports" />
-        <error line="13" column="1" source="standard:no-unused-imports" />
-        <error line="14" column="1" source="standard:no-unused-imports" />
-        <error line="15" column="1" source="standard:no-unused-imports" />
-        <error line="16" column="1" source="standard:no-unused-imports" />
-        <error line="17" column="1" source="standard:no-unused-imports" />
-        <error line="18" column="1" source="standard:no-unused-imports" />
-        <error line="19" column="1" source="standard:no-unused-imports" />
-        <error line="20" column="1" source="standard:no-unused-imports" />
-        <error line="27" column="1" source="standard:no-unused-imports" />
-        <error line="37" column="1" source="standard:no-unused-imports" />
-        <error line="38" column="1" source="standard:no-unused-imports" />
-        <error line="39" column="1" source="standard:no-unused-imports" />
-        <error line="41" column="1" source="standard:no-unused-imports" />
-        <error line="42" column="1" source="standard:no-unused-imports" />
-        <error line="51" column="1" source="standard:no-unused-imports" />
-        <error line="52" column="1" source="standard:no-unused-imports" />
-        <error line="53" column="1" source="standard:no-unused-imports" />
-        <error line="54" column="1" source="standard:no-unused-imports" />
-        <error line="55" column="1" source="standard:no-unused-imports" />
-        <error line="56" column="1" source="standard:no-unused-imports" />
-        <error line="58" column="1" source="standard:no-unused-imports" />
-        <error line="59" column="1" source="standard:no-unused-imports" />
-        <error line="60" column="1" source="standard:no-unused-imports" />
-        <error line="61" column="1" source="standard:no-unused-imports" />
-        <error line="63" column="1" source="standard:no-unused-imports" />
-        <error line="64" column="1" source="standard:no-unused-imports" />
-        <error line="65" column="1" source="standard:no-unused-imports" />
-        <error line="67" column="1" source="standard:no-unused-imports" />
-        <error line="69" column="1" source="standard:no-unused-imports" />
-        <error line="70" column="1" source="standard:no-unused-imports" />
-        <error line="72" column="1" source="standard:no-unused-imports" />
-        <error line="73" column="1" source="standard:no-unused-imports" />
-        <error line="74" column="1" source="standard:no-unused-imports" />
-        <error line="76" column="1" source="standard:no-unused-imports" />
-        <error line="79" column="1" source="standard:no-unused-imports" />
-        <error line="82" column="1" source="standard:no-unused-imports" />
-        <error line="83" column="1" source="standard:no-unused-imports" />
-        <error line="84" column="1" source="standard:no-unused-imports" />
-        <error line="85" column="1" source="standard:no-unused-imports" />
-        <error line="86" column="1" source="standard:no-unused-imports" />
-        <error line="120" column="1" source="standard:no-unused-imports" />
-        <error line="124" column="1" source="standard:no-unused-imports" />
-        <error line="125" column="1" source="standard:no-unused-imports" />
-        <error line="126" column="1" source="standard:no-unused-imports" />
-        <error line="130" column="1" source="standard:no-unused-imports" />
-        <error line="134" column="1" source="standard:no-unused-imports" />
-    </file>
     <file name="src/main/java/me/foxtails/palustris/ui/PostActionBubbles.kt">
         <error line="5" column="1" source="standard:import-ordering" />
         <error line="33" column="1" source="standard:no-unused-imports" />
@@ -367,9 +288,6 @@
     <file name="src/main/java/me/foxtails/palustris/ui/large/LargeNavigationRail.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="10" column="1" source="standard:no-unused-imports" />
-    </file>
-    <file name="src/main/java/me/foxtails/palustris/ui/large/LargeScreenShell.kt">
-        <error line="5" column="1" source="standard:import-ordering" />
     </file>
     <file name="src/main/java/me/foxtails/palustris/ui/localization/AppLocaleController.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -452,27 +370,6 @@
     <file name="src/main/java/me/foxtails/palustris/ui/posts/ContentWarningPresentation.kt">
         <error line="6" column="1" source="standard:no-unused-imports" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/ui/posts/PostRow.kt">
-        <error line="9" column="1" source="standard:import-ordering" />
-        <error line="32" column="1" source="standard:no-unused-imports" />
-        <error line="33" column="1" source="standard:no-unused-imports" />
-        <error line="34" column="1" source="standard:no-unused-imports" />
-        <error line="35" column="1" source="standard:no-unused-imports" />
-        <error line="53" column="1" source="standard:no-unused-imports" />
-        <error line="54" column="1" source="standard:no-unused-imports" />
-        <error line="55" column="1" source="standard:no-unused-imports" />
-        <error line="66" column="1" source="standard:no-unused-imports" />
-        <error line="71" column="1" source="standard:no-unused-imports" />
-        <error line="88" column="1" source="standard:no-unused-imports" />
-        <error line="92" column="1" source="standard:no-unused-imports" />
-        <error line="93" column="1" source="standard:no-unused-imports" />
-        <error line="95" column="1" source="standard:no-unused-imports" />
-        <error line="96" column="1" source="standard:no-unused-imports" />
-        <error line="97" column="1" source="standard:no-unused-imports" />
-        <error line="98" column="1" source="standard:no-unused-imports" />
-        <error line="117" column="1" source="standard:no-unused-imports" />
-        <error line="123" column="1" source="standard:no-unused-imports" />
-    </file>
     <file name="src/main/java/me/foxtails/palustris/ui/posts/PostShareSheet.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="21" column="1" source="standard:no-unused-imports" />
@@ -494,10 +391,6 @@
     <file name="src/main/java/me/foxtails/palustris/ui/profile/ProfileHeader.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/ui/profile/ProfileLargePresentation.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="20" column="1" source="standard:no-unused-imports" />
-    </file>
     <file name="src/main/java/me/foxtails/palustris/ui/profile/ProfileTimelineList.kt">
         <error line="5" column="1" source="standard:import-ordering" />
     </file>
@@ -509,18 +402,7 @@
     <file name="src/main/java/me/foxtails/palustris/ui/saved/SavedPostsScreen.kt">
         <error line="5" column="1" source="standard:import-ordering" />
     </file>
-    <file name="src/main/java/me/foxtails/palustris/ui/search/SearchScreen.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="18" column="1" source="standard:no-unused-imports" />
-        <error line="19" column="1" source="standard:no-unused-imports" />
-        <error line="22" column="1" source="standard:no-unused-imports" />
-        <error line="25" column="1" source="standard:no-unused-imports" />
-        <error line="61" column="1" source="standard:no-unused-imports" />
-    </file>
     <file name="src/main/java/me/foxtails/palustris/ui/settings/ContentWarningSettingsScreen.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-    </file>
-    <file name="src/main/java/me/foxtails/palustris/ui/settings/DisplaySettingsScreen.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
     <file name="src/main/java/me/foxtails/palustris/ui/settings/ModerationListScreen.kt">
@@ -540,12 +422,6 @@
         <error line="3" column="1" source="standard:no-unused-imports" />
         <error line="4" column="1" source="standard:no-unused-imports" />
         <error line="5" column="1" source="standard:no-unused-imports" />
-    </file>
-    <file name="src/main/java/me/foxtails/palustris/ui/setup/SetupScreens.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="9" column="1" source="standard:no-unused-imports" />
-        <error line="17" column="1" source="standard:no-unused-imports" />
-        <error line="27" column="1" source="standard:no-unused-imports" />
     </file>
     <file name="src/main/java/me/foxtails/palustris/ui/thread/PostThreadUiState.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -647,12 +523,6 @@
     <file name="src/test/java/me/foxtails/palustris/ui/NotificationsViewModelTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
-    <file name="src/test/java/me/foxtails/palustris/ui/SignInScreenTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="67" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="77" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="154" column="1" source="standard:spacing-between-declarations-with-annotations" />
-    </file>
     <file name="src/test/java/me/foxtails/palustris/ui/SinglePostScreenTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
@@ -678,10 +548,6 @@
     <file name="src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="45" column="1" source="standard:no-unused-imports" />
-    </file>
-    <file name="src/test/java/me/foxtails/palustris/ui/large/WideNavigationTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="29" column="1" source="standard:no-unused-imports" />
     </file>
     <file name="src/test/java/me/foxtails/palustris/ui/media/MediaTransitionStateTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -716,14 +582,6 @@
     <file name="src/test/java/me/foxtails/palustris/ui/notifications/NotificationLaunchRouterTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
-    <file name="src/test/java/me/foxtails/palustris/ui/notifications/NotificationsScreenTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="72" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="304" column="1" source="standard:no-blank-line-before-rbrace" />
-    </file>
-    <file name="src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridFeedViewModelTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-    </file>
     <file name="src/test/java/me/foxtails/palustris/ui/photogrid/PhotoGridScreenTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
@@ -756,9 +614,6 @@
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
     <file name="src/test/java/me/foxtails/palustris/ui/settings/ModerationViewModelTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-    </file>
-    <file name="src/test/java/me/foxtails/palustris/ui/settings/SettingsDisplayTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
     <file name="src/test/java/me/foxtails/palustris/ui/settings/SettingsViewModelTest.kt">

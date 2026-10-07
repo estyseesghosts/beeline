@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -19,10 +20,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeUp
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import me.foxtails.palustris.MainActivity
-import me.foxtails.palustris.ui.notifications.NotificationsUiState
-import me.foxtails.palustris.ui.notifications.NotificationsScreen
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
@@ -33,6 +31,8 @@ import me.foxtails.palustris.domain.NotificationActivity
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostContentVisibility
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.ui.notifications.NotificationsScreen
+import me.foxtails.palustris.ui.notifications.NotificationsUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule

@@ -50,13 +50,11 @@ import me.foxtails.palustris.ui.shell.HomeContract
 import me.foxtails.palustris.ui.shell.LargePostOrigin
 import me.foxtails.palustris.ui.shell.NotificationSettingsContract
 import me.foxtails.palustris.ui.shell.NotificationsContract
-import me.foxtails.palustris.ui.shell.NotificationsPanel
 import me.foxtails.palustris.ui.shell.Overlay
 import me.foxtails.palustris.ui.shell.PhotoGridContract
 import me.foxtails.palustris.ui.shell.PostInteractions
 import me.foxtails.palustris.ui.shell.ProfileContract
 import me.foxtails.palustris.ui.shell.SearchContract
-import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.shell.ShellContent
 import me.foxtails.palustris.ui.shell.ShellDetailCallbacks
 import me.foxtails.palustris.ui.shell.ShellEffects

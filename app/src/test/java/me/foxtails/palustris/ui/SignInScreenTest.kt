@@ -10,25 +10,20 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import me.foxtails.palustris.ui.feed.HomeFeatureFixtures
-import me.foxtails.palustris.ui.shell.AppShellFixtures
+import java.io.File
+import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.MainActivity
-import me.foxtails.palustris.ui.PalustrisTheme
-import me.foxtails.palustris.ui.setup.SetupIntroductionPreview
-import me.foxtails.palustris.ui.setup.SetupInitialScreen
-import me.foxtails.palustris.ui.setup.SetupServerScreen
-import me.foxtails.palustris.ui.session.SessionUi
-import me.foxtails.palustris.ui.feed.FeedState
+import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Attachment
@@ -44,8 +39,14 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.ReactionSelectionMode
 import me.foxtails.palustris.domain.Timeline
-import me.foxtails.palustris.data.auth.AccountRef
-import kotlinx.coroutines.runBlocking
+import me.foxtails.palustris.ui.PalustrisTheme
+import me.foxtails.palustris.ui.feed.FeedState
+import me.foxtails.palustris.ui.feed.HomeFeatureFixtures
+import me.foxtails.palustris.ui.session.SessionUi
+import me.foxtails.palustris.ui.setup.SetupInitialScreen
+import me.foxtails.palustris.ui.setup.SetupIntroductionPreview
+import me.foxtails.palustris.ui.setup.SetupServerScreen
+import me.foxtails.palustris.ui.shell.AppShellFixtures
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -54,7 +55,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
-import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-420dpi")

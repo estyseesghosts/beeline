@@ -16,17 +16,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.components.DestinationChipRow
+import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 
 @Composable

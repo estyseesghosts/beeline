@@ -14,14 +14,12 @@ The preceding adaptive-navigation record remains at [tasks/beeline-0.4.0.md](tas
 
 ## Current position
 
-Phase 0, Phase 1, and Phase 2 are committed and gate-verified.
-Phase 3 Slice 3.1 is committed at `0bd8e7d` (`Extract Misskey thread service`) and
-gate-verified with no code fixes: `MisskeyThreadService` owns thread transport,
-acquisition, and the continuation store lifetime, and `MisskeySource` delegates through
-`request("thread")`.
-The task record now carries the Phase 3 section with focused results, full gate results,
-and device evidence.
-Do not push. Do not begin Phase 4 without user direction.
+Phase 0 through Phase 4 are committed and gate-verified. Phase 4 Slice 4.1 recorded the
+architecture metrics baseline (`22e62d5`). Slice 4.2 sorted imports and removed unused
+imports in 20 files, and removed 18 stale entries from `app/ktlint-baseline.xml`. It added no
+baseline exemption and changed no behavior. The task record carries the Phase 4 section.
+Phase 5 (documentation integrity and final acceptance) is next.
+Do not push. Do not begin Phase 5 without user direction.
 
 ## Ownership and caution
 
@@ -35,9 +33,12 @@ Recheck external Java/Gradle activity before builds. Use explicit reviewed commi
 
 ## Last safe commit
 
-Preceding safe commit: `0bd8e7d` — `Extract Misskey thread service`.
-Phase 3 is complete. The next step is Phase 4 Slice 4.1 (record architecture metric
-baseline). Await user direction before starting Phase 4.
+Preceding safe commit: `22e62d5` — `Record complete architecture metrics baseline (Slice 4.1, after b8b0ba5)`.
+Slice 4.2 is the commit that follows it; resolve its hash from Git.
+The ktlint baseline still carries 177 file entries. Six deferred entries remain by decision:
+`SavedCollectionsHost` (filename), `ConnectedApp` and `PostThreadViewModel` (keyword-spacing),
+`MastodonIntegrationTest` (paren-spacing), `NavigationTest` (string-template), and
+`SettingsViewModelTest` (function-expression-body).
 
 ## Limits
 
@@ -46,3 +47,6 @@ The local release assembly does not establish release signing or runtime accepta
 The fresh `0bd8e7d` debug build installs and launches on emulator-5554 (API 37) with
 `MainActivity` resumed and no application crash; see `logs/phase31-emulator-launch.png`.
 Live thread loading on a real Misskey account remains unverified; no test account exists.
+The Slice 4.2 debug build installs and launches on emulator-5554 (API 37) with `MainActivity`
+resumed; see `logs/phase42-emulator-launch.png`. A SIGABRT in an emulator HAL process
+(`android.hardwar`) appeared in the crash log and is not the application.

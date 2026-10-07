@@ -16,6 +16,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import java.io.File
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -45,7 +46,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
-import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w800dp-h1000dp-420dpi")

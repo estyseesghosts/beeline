@@ -36,14 +36,14 @@ import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
+import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.media.PostMediaCarousel
 import me.foxtails.palustris.ui.motion.ExpandableContent
-import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
 import me.foxtails.palustris.ui.posts.LocalPostRepostConfirmationState
-import me.foxtails.palustris.ui.AppIcons
 
 private val PostMetadataVerticalPadding = 2.dp * 1.06f
 private val PostChromeHeight = 44.dp + (PostMetadataVerticalPadding * 2f)

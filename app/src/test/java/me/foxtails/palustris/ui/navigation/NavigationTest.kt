@@ -37,6 +37,11 @@ import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import java.io.File
+import java.io.IOException
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -85,11 +90,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
-import java.io.File
-import java.io.IOException
-import kotlin.math.abs
-import kotlin.math.ceil
-import kotlin.math.floor
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-420dpi")

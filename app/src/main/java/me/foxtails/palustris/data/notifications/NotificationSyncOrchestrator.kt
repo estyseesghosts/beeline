@@ -30,8 +30,8 @@ import me.foxtails.palustris.domain.NotificationAcknowledgement
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.NotificationSyncToken
 import me.foxtails.palustris.domain.NotificationUnreadState
-import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.SourceError
 
 enum class NotificationStreamStatus {
     Stopped,

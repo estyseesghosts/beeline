@@ -4,7 +4,7 @@ Complete Phase 2 of [the hardening plan](../../fix_0.4.0.md): presentation-only
 decomposition of high-value Compose functions. State does not move. Keep every existing
 owner, contract, invariant, and test. This phase does not touch protocol, persistence,
 account scope, or navigation policy.
-Status: Phase 3 verification complete. Owner and Git operator: orchestrator. Last reviewed: 2026-10-06.
+Status: Phase 4 verification complete. Owner and Git operator: orchestrator. Last reviewed: 2026-10-06.
 
 # Invariants
 
@@ -89,6 +89,23 @@ required. Record updates are the only remaining change.
   A review question on ktlint baseline consistency was resolved by the green
   `ktlintCheck` run.
 
+# Phase 4
+
+- 4.1 committed at `22e62d5`: complete architecture metrics baseline.
+- 4.2 committed: preceding safe commit `22e62d5`, subject `Clean ktlint debt in touched files (Slice 4.2)`.
+  Import blocks were ASCII-sorted in 17 files and unused imports were removed from 3
+  (`AndroidNotificationPresenter`, `PalustrisApp`, `SearchScreen`). 18 baseline file entries
+  were removed from `app/ktlint-baseline.xml`; the baseline holds 177 file entries. Emptying
+  every other entry fails `ktlintCheck` on unedited files, so the handoff's earlier claim of 190
+  pruned files did not match the tree and was not applied. No new exemption was added.
+- Deferred by decision: `SavedCollectionsHost` (`filename`), `ConnectedApp` and
+  `PostThreadViewModel` (`keyword-spacing`), `MastodonIntegrationTest` (`paren-spacing`),
+  `NavigationTest` (`string-template` x4), `SettingsViewModelTest` (`function-expression-body` x2).
+- 4.2 full gate: 52 Python tests pass, architecture audit exits 0 (675 findings, no
+  regressions), JVM tests, lint, ktlint, debug assembly, and release assembly pass. No flakes.
+- 4.2 device: debug APK installs and launches on emulator-5554 (API 37), `MainActivity`
+  resumed, evidence `logs/phase42-emulator-launch.png`.
+
 # Files involved
 
 - None. Phase 3 Slice 3.1 code is committed at `0bd8e7d`. This update touches records only.
@@ -129,8 +146,8 @@ unverified because no test account exists.
 
 # Next
 
-Phase 3 is complete. The next step is Phase 4 Slice 4.1 (record architecture metric
-baseline). Do not begin Phase 4 without user direction. Do not push.
+Phase 4 is complete. The next step is Phase 5 (documentation integrity and final acceptance).
+Do not begin Phase 5 without user direction. Do not push.
 
 # Blockers
 
@@ -141,4 +158,4 @@ unverified. Live thread loading on a real Misskey account also remains unverifie
 
 # Last safe commit
 
-0bd8e7d — Extract Misskey thread service.
+22e62d5 — Record complete architecture metrics baseline (Slice 4.1). Slice 4.2 follows it.

@@ -15,16 +15,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -69,17 +67,13 @@ import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.components.ChipCaretPresentation
-import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
-import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
-import me.foxtails.palustris.ui.posts.PostInteractionPresentation
-import me.foxtails.palustris.ui.posts.PostRow
-import me.foxtails.palustris.ui.posts.PostRowEvents
-import me.foxtails.palustris.ui.posts.PostRowPresentation
 import me.foxtails.palustris.ui.components.AccountAvatar
+import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
+import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeSearchDockClearance
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
@@ -90,6 +84,10 @@ import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.springPress
+import me.foxtails.palustris.ui.posts.PostInteractionPresentation
+import me.foxtails.palustris.ui.posts.PostRow
+import me.foxtails.palustris.ui.posts.PostRowEvents
+import me.foxtails.palustris.ui.posts.PostRowPresentation
 
 /**
  * Keeps the Search viewport full size while wide obstruction inputs clear interaction content.

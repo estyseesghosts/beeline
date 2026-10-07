@@ -17,8 +17,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.AbsoluteAlignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
