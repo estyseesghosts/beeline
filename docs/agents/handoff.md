@@ -12,7 +12,7 @@ The completed hardening records remain at [tasks/hardening-0.4.0.md](tasks/harde
 
 ## Current position
 
-Hardening Phases 0-5 are complete. Phase 4D5/4E is in progress: the audit is recorded, and slices 1 (stable tab IDs), 2 (chip travel to the display edge), and 2b (pane margin bleed so chips reach the physical edge) are committed with passing full gates. Slice 3 lifts the wide Search dock above the IME. Next is slice 4 (4E2 and the six font200 screens).
+Hardening Phases 0-5 are complete. Phase 4D5/4E is in progress: the audit is recorded, and slices 1 (stable tab IDs), 2 (chip travel to the display edge), and 2b (pane margin bleed so chips reach the physical edge) are committed with passing full gates. Slice 3 lifts the wide Search dock above the IME. Slice 4 recorded the 200% emulator checks (4E2) and the six font200 captures. No further 4D/4E slice is open.
 The caret stays in the first logical position (user decision); it flips in RTL. Do not push without user direction.
 
 ## Ownership and caution

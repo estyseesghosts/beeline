@@ -3,7 +3,7 @@
 Finish Phase 4D and 4E: one universal tab bar whose chips travel to both physical display edges,
 and measured high-font clearance. Keep one navigator, one destination host, and the existing feature owners.
 
-Status: audit, slices 1, 2, 2b, and 3 (4E1 wide Search IME and empty-state clearance) complete. Slice 4 (4E2, font200 recapture) is next.
+Status: audit and slices 1, 2, 2b, 3, and 4 complete. Remaining unverified items are listed under Limits.
 Owner: orchestrator
 Last reviewed: 2026-10-07
 Authority: [AGENTS.md](../../../AGENTS.md), current source, tests, and Git.
@@ -30,8 +30,8 @@ Authority: [AGENTS.md](../../../AGENTS.md), current source, tests, and Git.
 | 2 Edge travel | **Done in slice 2** (was open) | Wide Home, Search, Photo Grid, Notifications, and Profile docks wrap `DestinationChipRow` in `absolutePadding(left, right = obstruction clearance)` plus `LargeBottomDock` 12 dp padding. The scroll viewport ends at the clearance boundary. Compact rows sit inside `CompactOverlayHorizontalPadding` (16 dp), and wide Search also caps the chip row at 520 dp. |
 | 3 Stable IDs | **Done in slice 1** (was open) | `FilterChipEntry.key` defaults to `"$role:$label"`. Notifications (Mark-all, filters, Settings) and Photo Grid (timelines, hashtags, Add) pass no key. Mark-all changes label while confirming, so its key changes. Equal labels would crash `LazyRow`. Home, Search, and Profile already pass stable keys. |
 | 4 4E1 numeric clearance | **Partly done in slice 3**: wide Search dock now rises above the IME (measured defect: dock hidden behind the keyboard in compact-wide at 100% and 200%); empty states clear the dock. Compact capsule 136/147 px not re-measured | Source uses the greater of IME and system-bar insets (`compactGlobalNavigationPositioningInsets`). The 136/147 px baseline failure is not re-measured. |
-| 5 4E2 | Open | Depends on slice 2. |
-| 6 Font200 recapture | Open | Device work after slice 3. |
+| 5 4E2 | **Done in slice 4 (emulator)** | At fontScale 2.0 in compact-wide with the vertical capsule, chip rows span the display, scroll beneath the capsule and caret, and rest the last chip clear. Home, Notifications, Photo Grid, Profile, and Search checked on `emulator-5554`. |
+| 6 Font200 recapture | **Done in slice 4** | Six screens captured locally in `logs/s3/font200/` (gitignored). Not a physical device. |
 
 # Slice plan
 
@@ -52,7 +52,7 @@ Fail gates: two failed fixes for one root problem; unapproved geometry values; c
 
 # Limits
 
-Physical devices, TalkBack, API 29, signing, and live accounts stay unverified. The emulator is `emulator-5554` (API 37).
+Physical devices, TalkBack, API 29, signing, live accounts, a real RTL locale, and the compact-narrow capsule IME measurement (136/147 px) stay unverified. The emulator is `emulator-5554` (API 37).
 
 # Last safe commit
 
