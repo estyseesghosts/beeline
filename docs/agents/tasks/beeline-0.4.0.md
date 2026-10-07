@@ -10,11 +10,15 @@ Phase 3B and Phase 5 are pushed (`origin/main` at `fc058f55`). Phase 6 is in pro
 | 6C dense Photo Grid, calm detail | done |
 | 6B viewer drag, zoom, safe return | done |
 
+## Device evidence (emulator-5554, signed in, API 37, 2026-10-07)
+
+`logs/phase6-viewer.png`, `phase6-viewer-drag.png`, `phase6-viewer-after.png`: viewer opens from a feed thumbnail, the backdrop is translucent mid-drag, and release returns to the feed without a flash. `phase6-grid-light.png`: live Photo Grid. `phase6-detail-dark.png`: dark theme (Home). Not checked on device: pure-black theme, 200% text, wide layout, RTL, reduced motion, sensitive and content-warning media (no such post in the feed), zoomed drag.
+
 ## Open items
 
 - 6B gesture-level zoomed-drag behavior, rapid dismiss/reopen, and lifecycle interruption are unverified on a device; a Robolectric zoomed-swipe test did not reproduce zoom and was dropped.
 
-- Device checks need a signed-in account: Repost / Quote choice (including Back dismissal), pending dimming, bubble spacing, 200% text, themes, compact and wide layouts, haptic feel, sensitive-cover viewer behavior, thumbnail return.
+- Device checks still open: Repost / Quote choice (including Back dismissal), pending dimming, bubble spacing, 200% text, themes, compact and wide layouts, haptic feel, sensitive-cover viewer behavior, thumbnail return.
 - 200% font-scale tests for 3C1, 3C2 and 4E1; the implicit 3A spacing scale.
 - `architecture_audit.py --check` fails at the clean base with four `function-complexity-growth` regressions (`DestinationChipRow`, `LargeBottomDock`, `LargeScreenShell`, `ProfileLargePresentation.dock`). Phase 6 must add none.
 - Known flakes, each passing alone: `NotificationsViewModelTest.dismissRemovesRowWhenProtocolHasNoServerDismissEndpoint`, `MediaViewerScreenTest.selectedAttachmentsRemainOnFullQualityAfterSwipingBack`, `MastodonIntegrationTest` cancellation.
