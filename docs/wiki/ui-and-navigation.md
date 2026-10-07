@@ -492,3 +492,7 @@ pads other destinations, and chip destinations restore it through their clearanc
 Tests: `CategoryChipsGeometryTest`, the destination `*ClearanceTest` suites, `NavigationTest`, `WideNavigationTest`.
 Chips scrolled under floating chrome by a semantic scroll action are not held clear; only resting chips are.
 Device rendering, TalkBack focus scrolling, and RTL locale behavior remain unverified.
+
+## IME and large text (Phase 4E1)
+
+Wide Search lifts its dock, and the end of its results, by the IME height that the pane's system-bar inset does not already clear (`max(bottomNavigationClearance, ime - systemBars)`). The viewport keeps its size; compact fallback clearance already includes the IME. Search empty states take the dock's end clearance. Device (emulator, API 37, compact-wide): at 100% and 200% font the field and chips sit above the keyboard. Tests: `SearchClearanceTest` (IME lift, 200% font scale). The compact capsule, other docks, and physical devices remain unmeasured.

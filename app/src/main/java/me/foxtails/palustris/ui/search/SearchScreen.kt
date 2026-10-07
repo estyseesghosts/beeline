@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -197,6 +198,16 @@ fun SearchScreen(
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
     val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
+    // The keyboard covers the pane bottom, so the wide dock and the end of the results rise above the part of
+    // the IME that the system-bar inset does not already clear. Compact fallback clearance already includes it.
+    val density = LocalDensity.current
+    val wideImeLift = if (compactLayout) {
+        0.dp
+    } else {
+        with(density) {
+            (WindowInsets.ime.getBottom(this) - WindowInsets.systemBars.getBottom(this)).coerceAtLeast(0).toDp()
+        }
+    }
     if (useCompactWideCaret) {
         CompactWideTabCaretRegistration(
             host = tabCaretHost,
@@ -226,7 +237,7 @@ fun SearchScreen(
             quoteEnabled = quoteEnabled,
             onQuote = onQuote,
             onLoadMoreSearch = onLoadMoreSearch,
-            endClearance = if (largeLayout) largeDockClearance + wideBottomClearance else searchEndClearance,
+            endClearance = if (largeLayout) largeDockClearance + maxOf(wideBottomClearance, wideImeLift) else searchEndClearance,
             rightClearance = wideRightClearance,
             leftClearance = wideLeftClearance,
             mediaOwner = mediaOwner,
@@ -274,7 +285,7 @@ fun SearchScreen(
                 // Physical edges narrow the dock. Only compact fallback navigation moves it upward.
                 // Measurement excludes fallback placement padding so end clearance does not count it twice.
                 modifier = Modifier.align(Alignment.BottomStart)
-                    .padding(bottom = bottomNavigationClearance)
+                    .padding(bottom = maxOf(bottomNavigationClearance, wideImeLift))
                     .onSizeChanged { largeDockHeightPx = it.height }
                     .testTag("search_dock"),
             )
@@ -395,6 +406,7 @@ private fun SearchContent(
                         2 -> stringResource(R.string.search_popular_links)
                         else -> stringResource(R.string.search_suggested_accounts)
                     },
+                    bottomClearance = endClearance,
                 )
             }
         }
@@ -544,7 +556,7 @@ private fun AccountSearchResults(
     val scheme = LocalPalustrisMotionScheme.current
     when {
         state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        state.error != null -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_account_failed), state.error)
+        state.error != null -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_account_failed), state.error, bottomClearance = endClearance)
         state.accounts.isNotEmpty() -> LazyColumn(
             state = listState ?: rememberLazyListState(),
             modifier = Modifier.fillMaxSize().testTag("search_account_results"),
@@ -570,8 +582,8 @@ private fun AccountSearchResults(
                 )
             }
         }
-        query.isBlank() -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_find_account), stringResource(R.string.search_account_prompt))
-        state.query == query.trim() -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_no_account), stringResource(R.string.search_no_account_prompt))
-        else -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_ready), stringResource(R.string.search_ready_prompt))
+        query.isBlank() -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_find_account), stringResource(R.string.search_account_prompt), bottomClearance = endClearance)
+        state.query == query.trim() -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_no_account), stringResource(R.string.search_no_account_prompt), bottomClearance = endClearance)
+        else -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_ready), stringResource(R.string.search_ready_prompt), bottomClearance = endClearance)
     }
 }

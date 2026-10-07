@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
@@ -43,12 +44,14 @@ fun EmptyState(
     subtitle: String,
     modifier: Modifier = Modifier,
     stateKey: Any? = null,
+    bottomClearance: Dp = 0.dp,
 ) {
     AnimatedStatePane(
         stateKey = stateKey ?: title,
         modifier = modifier.fillMaxSize(),
     ) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        // The message centers in the space above any floating dock.
+        Box(Modifier.fillMaxSize().padding(bottom = bottomClearance), contentAlignment = Alignment.Center) {
             Column(Modifier.widthIn(max = 340.dp).padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.secondaryContainer) {
                     Icon(icon, null, Modifier.padding(22.dp).size(36.dp), tint = MaterialTheme.colorScheme.onSecondaryContainer)

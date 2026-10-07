@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsNode
@@ -36,6 +37,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.Insets
@@ -306,7 +308,7 @@ class SearchClearanceTest {
 
     @Test
     @Config(qualifiers = "w800dp-h1000dp-420dpi")
-    fun wideFieldKeepsImePositionAndDockWhenBottomClearanceChanges() {
+    fun wideFieldRisesAboveImeAndKeepsDockWhenBottomClearanceChanges() {
         for (direction in LayoutDirection.entries) {
             val clearance = mutableStateOf(0.dp)
             show(direction) {
@@ -347,8 +349,42 @@ class SearchClearanceTest {
                 assertTrue("final result clears the dock at IME $keyboardDp",
                     bounds("post_row_ime-11").bottom <= bounds("search_dock").top)
             }
-            assertEquals("wide Search applies no IME field inset", fieldBottoms[0], fieldBottoms[1], 1f)
+            // The keyboard covers the pane bottom, so the dock rises by the IME height beyond the system-bar inset
+            // (360 dp keyboard, 24 dp system bar). The viewport stays full size and the field returns on close.
+            assertEquals("wide Search lifts the field above the IME", fieldBottoms[0] - 336f * density, fieldBottoms[1], 1f)
             assertEquals("wide Search keeps its field position after IME close", fieldBottoms[0], fieldBottoms[2], 1f)
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w800dp-h1000dp-420dpi")
+    fun wideDockStaysAboveImeAtDoubleFontScale() {
+        for (direction in LayoutDirection.entries) {
+            show(direction) {
+                CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale = 2f)) {
+                    SearchScreen(
+                        accountSearch = AccountSearchState(query = "#fixture", tagQuery = "fixture", posts = posts(12, "big")),
+                        compactLayout = false, largeLayout = true,
+                        rightObstructionClearance = right,
+                    )
+                }
+            }
+            compose.onNode(hasSetTextAction()).performTextInput("#fixture")
+            val keyboardDp = 360
+            applyKeyboardInsets(keyboardDp)
+            val root = bounds("search_test_viewport")
+            // The harness has no pane system-bar padding, so the 24 dp system bar sits below the lifted dock.
+            val keyboardTop = root.bottom - keyboardDp * density
+            val field = fieldBounds()
+            val chips = chipsBounds()
+            assertTrue("field stays above the keyboard at 200% in $direction", field.bottom <= keyboardTop + 24 * density + 1f)
+            assertTrue("chips stay above the field at 200% in $direction", chips.bottom <= field.top + 1f)
+            assertTrue("chips stay on screen at 200% in $direction", chips.top >= root.top)
+            assertTrue("field does not shrink to nothing at 200% in $direction", field.height > 0f)
+            scrollToEnd("search_hashtag_results")
+            assertTrue("final result clears the dock at 200% with the keyboard open",
+                bounds("post_row_big-11").bottom <= bounds("search_dock").top)
+            applyKeyboardInsets(0)
         }
     }
 

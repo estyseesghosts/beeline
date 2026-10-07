@@ -155,13 +155,13 @@ The approved values below are Pixel Fold emulator observations at 420 dpi (densi
 
 | Measure | Applies to | Proposed prototype method | Owner | Approved value | Status |
 | --- | --- | --- | --- | --- | --- |
-| High-font compact obstruction and usable content | Compact navigation and scroll content at 200% | Measure overlay hit bounds vs final scroll item with IME open and closed; both postures | UI maintainers | contract approved via decisions 1-3 and 5; numeric targets derived in packet 4E1 from the approved clearance anchors | contract approved 2026-09-23; numeric targets pending 4E1 |
+| High-font compact obstruction and usable content | Compact navigation and scroll content at 200% | Measure overlay hit bounds vs final scroll item with IME open and closed; both postures | UI maintainers | contract approved via decisions 1-3 and 5; numeric targets derived in packet 4E1 from the approved clearance anchors | contract approved 2026-09-23; numeric targets partly derived in 4E1: wide Search dock rises by IME height beyond the system-bar inset (device and `SearchClearanceTest`, 100% and 200%); compact capsule and the other docks not re-measured |
 | Compact floating height | Compact navigation | Prototype with content and IME; check reach and overlap | UI maintainers | 212 x 56 dp capsule; four 48 dp targets; 56 dp contextual button (emulator-observed) | approved 2026-09-23 (emulator); physical device unverified |
 | Compact edge clearance | Compact navigation and content | Measure system bars, gesture regions, and last-row reach | UI maintainers | 36 dp bottom inset; end and final-item clearance inside scroll content anchored to this inset | approved 2026-09-23 (emulator); physical device unverified |
 | Wide/foldable safe-pane clearance | Wide dock/navigation | Test separating hinge and system insets on both panes | UI maintainers | 80 dp rail width; 56 dp rail targets; detail split at 50 percent of 2208 px; wide layout renders at 2208x1840 including half-folded | approved 2026-09-23 (emulator); physical device unverified |
 | High-font tab collapse | Universal tab bar | Test translated labels and 200% font with focus and edge gestures | UI maintainers | chip row 48 dp at font 1.0, 56 dp at font 200 (heights approved) | heights approved 2026-09-23; collapse behavior prototype required per 0B decision 1 before 4D1 |
 | Media dismissal threshold | Media viewer | Test distance and velocity across compact/wide devices | UI maintainers | pending; media viewer not captured | pending device measurement |
-| Physical-left caret | Universal tab bar | Verify physical anchor and hit target in real RTL locale | UI maintainers | pending; RTL blocked | pending device measurement |
+| First-logical-position caret | Universal tab bar | Verify anchor and hit target in a real RTL locale | UI maintainers | decided 2026-10-07: logical-first, flips in RTL (supersedes physical-left) | real RTL locale unverified |
 | Physical-bottom-right wide action | Wide navigation | Verify physical anchor, hinge safe pane, and RTL | UI maintainers | pending; dock not built until 4C | pending device measurement |
 
 Decisions 1–3 and 5 from the plan's "0B decisions" section constrain this prototype: horizontal scrolling tabs with a caret; stacked profile stats; Search field and navigation stay visible; content clears overlays.
@@ -174,7 +174,7 @@ Approved prototype baseline values (approved 2026-09-23; emulator-observed at 42
 - Chip row height: 48 dp at font 1.0 and 56 dp at font 200% — approved 2026-09-23 (emulator-observed); collapse behavior still needs the decision 1 prototype.
 - Wide detail split: 50 percent of 2208 px — approved 2026-09-23 (emulator-observed).
 - Search field to IME clearance: 47 px (18 dp) at font 1.0 — approved 2026-09-23 (emulator-observed).
-- IME failure evidence: nav capsule 136/147 px under the IME frame. This fails decision 3, which requires navigation to stay visible with the IME open; packet 4E1 will fix it. This is not an approved design value.
+- IME failure evidence: nav capsule 136/147 px under the IME frame. This fails decision 3, which requires navigation to stay visible with the IME open; packet 4E1 targets it. Source now uses the greater of IME and navigation-bar insets; this capsule value has not been re-measured on device. This is not an approved design value.
 
 Motion timings belong to existing `ui/motion/MotionTokens.kt` in a later slice. Slice 0B writes no timing values.
 
