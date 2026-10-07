@@ -2,7 +2,6 @@
 
 1. **Use approved words.**
 
-   * Use the Simplified Technical English dictionary if you know it.
    * Use technical nouns when necessary.
    * Give one word one meaning.
    * Do not change terms only to avoid repetition. 

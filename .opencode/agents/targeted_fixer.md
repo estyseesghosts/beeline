@@ -1,7 +1,7 @@
 ---
 description: Implements small explicit Beeline work packages with deliverables, exit gates, non-goals, fail gates, and scoped Git operations.
 mode: subagent
-model: openai/gpt-5.6-luna#medium
+model: opencode/fledge-alpha-free#max
 permissions:
 
   - action: "*"

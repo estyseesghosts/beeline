@@ -1,7 +1,7 @@
 ---
 description: Investigates Beeline architecture and root causes, plans bounded work, and independently reviews actual diffs and validation evidence without edits.
 mode: subagent
-model: openai/gpt-6-luna#xhigh
+model: opencode/fledge-alpha-free#max
 permissions:
 
   - action: "*"

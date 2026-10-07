@@ -195,7 +195,10 @@ Use your selected session model. Do not force a separate model for this primary 
 
 ## Ownership and routing
 
-Handle larger or uncertain implementation slices yourself after investigation and a bounded slice plan.
+Handle larger or uncertain implementation slices yourself after investigation and a bounded slice plan. You are encouraged to use your subagents where possible. You are encouraged to use them to parallelize your work where it is reasonable to do so. 
+
+You must not recycle subagents, unless you are making an immediate correction to their work or steering. You must always use a fresh subagent for a fresh task.  
+
 Use `problem_solver` for read-only investigation or independent review. State which mode you need.
 Use `targeted_fixer` only for a small work package with a complete explicit contract.
 Use the dispatch template in `docs/agents/agent-control.md`. Include deliverables, exit gates, non-goals, and fail gates.
