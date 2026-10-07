@@ -98,6 +98,45 @@ class PhotoGridScreenTest {
     }
 
     @Test
+    fun tileAspectIsClampedForExtremeAndSquareAndStandardRatios() {
+        fun ratio(w: Int?, h: Int?) = photoGridAspectRatio(image("r").copy(width = w, height = h, previewWidth = null, previewHeight = null))
+        assertEquals(1f, ratio(500, 500), 0.001f)
+        assertEquals(0.8f, ratio(400, 500), 0.001f)
+        assertEquals(16f / 9f, ratio(1600, 900), 0.001f)
+        assertEquals(0.5f, ratio(100, 1000), 0.001f)
+        assertEquals(2f, ratio(1000, 100), 0.001f)
+        assertEquals(4f / 3f, ratio(null, null), 0.001f)
+    }
+
+    @Test
+    fun collapsedContentWarningCoversTheTileUntilRulesExpandIt() {
+        val warned = OwnedPost(account.id, post("warned", listOf(image("warned"))).copy(contentWarning = "Spoilers"))
+
+        assertEquals("Spoilers", photoGridItems(listOf(warned)).single().collapsedWarning)
+        assertEquals(
+            null,
+            photoGridItems(listOf(warned), me.foxtails.palustris.domain.ContentWarningRules(expandAll = true)).single().collapsedWarning,
+        )
+        assertEquals(null, photoGridItems(listOf(OwnedPost(account.id, post("plain", listOf(image("plain")))))).single().collapsedWarning)
+    }
+
+    @Test
+    fun coveredWarningTileShowsOnlyTheWarningAndStillOpensThePost() {
+        var opened: OwnedPost? = null
+        show(
+            state = PhotoGridFeedState(
+                posts = listOf(OwnedPost(account.id, post("cw", listOf(image("cw"))).copy(contentWarning = "Spoilers"))),
+            ),
+            onOpenPost = { opened = it },
+        )
+
+        compose.onNodeWithText("Spoilers").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Spoilers").performClick()
+
+        assertEquals("cw", opened?.post?.id?.value)
+    }
+
+    @Test
     fun searchPanelsMapToSeparateLargeNavigationTargets() {
         assertEquals(
             LargeNavTarget.Search,

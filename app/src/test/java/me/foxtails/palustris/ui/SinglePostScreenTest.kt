@@ -633,6 +633,30 @@ class SinglePostScreenTest {
         compose.onAllNodesWithText("secret #mutedtag", useUnmergedTree = true).assertCountEquals(0)
     }
 
+    @Test fun photoGridDetailCoversPhotosUntilTheContentWarningIsExpanded() {
+        val post = Post(
+            EntityId("https://example.org", "cw-photo"), account, "warned body", 0, Audience.Public,
+            contentWarning = "Spoilers", attachments = listOf(image("cw-photo")),
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(
+                    OwnedPost(account.id, post), SinglePostPresentation.PhotoGrid, onClose = {},
+                    contentWarningRules = ContentWarningRules(),
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("single_post_photo_cover", useUnmergedTree = true).assertIsDisplayed()
+        compose.onAllNodesWithText("warned body", useUnmergedTree = true).assertCountEquals(0)
+        compose.onAllNodesWithText("Show content")[0].performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("single_post_photo_cover", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithText("warned body").assertIsDisplayed()
+    }
+
     @Test fun mutedQuoteRevealDoesNotOpenQuoteAndRevealsItsBody() {
         val quoted = Post(
             EntityId("https://example.org", "isolated-quote"), account, "revealable quote #mute", 0, Audience.Public,

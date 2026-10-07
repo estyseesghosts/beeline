@@ -5,6 +5,7 @@ package me.foxtails.palustris.ui.posts
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -217,11 +218,15 @@ internal fun SinglePostScreen(
                 onOpenHashtagBubble = onOpenHashtagBubble,
                 postOwned = ownedPost,
             )
-              PhotoPager(ownedPost, photos, viewportHeight = detailViewportHeight)
+              if (contentVisible) {
+                  PhotoPager(ownedPost, photos, viewportHeight = detailViewportHeight)
+              } else {
+                  PhotoPagerCover(photos, detailViewportHeight) { expanded = true }
+              }
              val remainingAttachmentIndices = post.attachments.indices.filter { index ->
                  post.attachments[index].kind != MediaKind.Image && post.attachments[index].kind != MediaKind.AnimatedImage
              }
-              if (remainingAttachmentIndices.isNotEmpty()) {
+              if (contentVisible && remainingAttachmentIndices.isNotEmpty()) {
                   PostMediaCarousel(
                      ownedPost = ownedPost,
                      onOpenMedia = onOpenMedia,
@@ -363,6 +368,33 @@ private fun ThreadStatus(
     }
 }
 
+private fun photoPagerHeight(maxWidth: Dp, viewportHeight: Dp?, photos: List<Attachment>): Dp =
+    if (viewportHeight != null) {
+        resolveSharedPhotoPagerHeight(maxWidth, viewportHeight, photos)
+    } else {
+        (maxWidth * .75f).coerceAtLeast(240.dp)
+    }
+
+/**
+ * Stands in for the photo pager while a collapsed content warning covers the post's media.
+ * It keeps the pager height so expanding the warning does not move the post below it.
+ */
+@Composable
+private fun PhotoPagerCover(photos: List<Attachment>, viewportHeight: Dp, onUncover: () -> Unit) {
+    BoxWithConstraints(Modifier.fillMaxWidth().testTag("single_post_photo_pager")) {
+        Column(
+            Modifier.fillMaxWidth().height(photoPagerHeight(maxWidth, viewportHeight, photos))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .testTag("single_post_photo_cover"),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(stringResource(R.string.content_warning), style = MaterialTheme.typography.labelLarge)
+            TextButton(onClick = onUncover) { Text(stringResource(R.string.content_warning_show)) }
+        }
+    }
+}
+
 @Composable
 private fun PhotoPager(
     ownedPost: OwnedPost,
@@ -376,11 +408,7 @@ private fun PhotoPager(
         // layouts. Single photos use their natural height. Multi-photo posts
         // share the smallest height so the active photo never gains vertical
         // letterboxing and the pager height stays stable across pages.
-        val photoHeight = if (viewportHeight != null) {
-            resolveSharedPhotoPagerHeight(maxWidth, viewportHeight, photos)
-        } else {
-            (maxWidth * .75f).coerceAtLeast(240.dp)
-        }
+        val photoHeight = photoPagerHeight(maxWidth, viewportHeight, photos)
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth().height(photoHeight),

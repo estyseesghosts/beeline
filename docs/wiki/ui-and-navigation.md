@@ -446,8 +446,12 @@ height is the smallest aspect-aware height. The shared height prevents
 vertical letterboxing for the active photo. Horizontal letterboxing on
 taller pages is the accepted tradeoff.
 
-Sources: `ui/posts/SinglePostScreen.kt`, `ui/photogrid/PhotoPagerSizing.kt`,
-`SinglePostScreenTest`.
+While a content warning is collapsed, a cover of the same height replaces the pager (and the non-image media carousel is not composed), so expanding the warning does not shift the post below. The decision is `isPostContentVisible`, shared with the row.
+
+Grid tiles apply the same rule: a post whose warning is collapsed shows its warning text instead of the photo and still opens the post; rules that expand by default show the photo. Tile aspect is the attachment aspect clamped to 1:2 through 2:1 so one extreme image cannot dominate a lane; unknown dimensions keep 4:3.
+
+Sources: `ui/posts/SinglePostScreen.kt`, `ui/photogrid/PhotoPagerSizing.kt`, `ui/photogrid/PhotoGridScreen.kt`,
+`SinglePostScreenTest`, `PhotoGridScreenTest`.
 
 ## Post Content Policy
 

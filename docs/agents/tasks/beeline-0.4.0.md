@@ -2,13 +2,13 @@
 
 ## Status
 
-Phase 3B and Phase 5 are pushed (`origin/main` at `fc058f55`). Phase 6 is in progress: 6A is done in the commit titled "Keep hidden media out of thumbnail-to-viewer transitions (6A)". Next slice: 6C, then 6B (needs 6A).
+Phase 3B and Phase 5 are pushed (`origin/main` at `fc058f55`). Phase 6 is in progress: 6A is done in the commit titled "Keep hidden media out of thumbnail-to-viewer transitions (6A)". 6C is done in the commit titled "Cover collapsed content warnings in Photo Grid tiles and detail (6C)". Next slice: 6B.
 
 | Slice | State |
 | --- | --- |
 | 6A thumbnail-to-viewer ownership | done |
-| 6C dense Photo Grid, calm detail | next (gate 1C met: `9e977dea`, `71c6f7de`) |
-| 6B viewer drag, zoom, safe return | after 6C |
+| 6C dense Photo Grid, calm detail | done |
+| 6B viewer drag, zoom, safe return | next |
 
 ## Open items
 

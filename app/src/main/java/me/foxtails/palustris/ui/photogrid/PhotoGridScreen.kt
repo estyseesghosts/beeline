@@ -91,6 +91,7 @@ import me.foxtails.palustris.ui.media.SensitiveMediaTile
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
+import me.foxtails.palustris.ui.posts.isPostContentVisible
 import me.foxtails.palustris.ui.posts.postHashtags
 import me.foxtails.palustris.ui.shell.timelineLabelRes
 
@@ -99,23 +100,35 @@ internal data class PhotoGridItem(
     val attachmentIndex: Int,
     val attachment: Attachment,
     val hiddenByRules: Boolean = false,
+    /** Non-null while a collapsed content warning covers the tile; the text is the warning itself. */
+    val collapsedWarning: String? = null,
 )
 
 internal fun photoGridItems(posts: List<OwnedPost>, rules: ContentWarningRules = ContentWarningRules(), hiddenPresentation: me.foxtails.palustris.domain.HiddenContentPresentation = me.foxtails.palustris.domain.HiddenContentPresentation.Placeholder, mutedHashtags: Set<String> = emptySet()): List<PhotoGridItem> = posts.mapNotNull { ownedPost ->
     val post = ownedPost.post
     val hashtags = postHashtags(post.text, post.emoji)
     if (ContentWarningPolicy.matchesHashtagMute(hashtags, mutedHashtags)) return@mapNotNull null
-    val hidden = ContentWarningPolicy.decide(
-            post.contentWarning,
-            hashtags,
-            rules,
-            post.contentVisibility,
-            bodyText = post.text,
-        ) == ContentWarningDecision.Hidden
+    val decision = ContentWarningPolicy.decide(
+        post.contentWarning,
+        hashtags,
+        rules,
+        post.contentVisibility,
+        bodyText = post.text,
+    )
+    val hidden = decision == ContentWarningDecision.Hidden
     if (hidden && hiddenPresentation == me.foxtails.palustris.domain.HiddenContentPresentation.Remove) return@mapNotNull null
     post.attachments.withIndex()
         .firstOrNull { (_, attachment) -> attachment.isPhotoGridDisplayable() }
-        ?.let { (index, attachment) -> PhotoGridItem(ownedPost, index, attachment, hidden) }
+        ?.let { (index, attachment) ->
+            val coveredByWarning = !hidden && !isPostContentVisible(decision, post.contentWarning != null, expanded = false)
+            PhotoGridItem(
+                ownedPost,
+                index,
+                attachment,
+                hidden,
+                collapsedWarning = if (coveredByWarning) post.contentWarning.orEmpty() else null,
+            )
+        }
 }
 
 private fun Attachment.isPhotoGridDisplayable(): Boolean =
@@ -127,11 +140,15 @@ private fun Attachment.isPhotoGridDisplayable(): Boolean =
         explicitlyOpened = false,
     ) is MediaRequestDecision.Request
 
+/** Narrowest and widest tile width-to-height ratio, so one extreme image cannot dominate a lane. */
+internal const val PHOTO_GRID_MIN_TILE_ASPECT = 0.5f
+internal const val PHOTO_GRID_MAX_TILE_ASPECT = 2f
+
 internal fun photoGridAspectRatio(attachment: Attachment): Float {
     val width = attachment.width ?: attachment.previewWidth
     val height = attachment.height ?: attachment.previewHeight
     return if (width != null && height != null && width > 0 && height > 0) {
-        width.toFloat() / height.toFloat()
+        (width.toFloat() / height.toFloat()).coerceIn(PHOTO_GRID_MIN_TILE_ASPECT, PHOTO_GRID_MAX_TILE_ASPECT)
     } else {
         4f / 3f
     }
@@ -429,6 +446,10 @@ internal fun PhotoGridTile(
         ) { Text(hiddenMessage, Modifier.padding(12.dp)) }
         return
     }
+    if (item.collapsedWarning != null) {
+        PhotoGridWarningTile(item, item.collapsedWarning, onOpenPost, modifier)
+        return
+    }
     val context = LocalContext.current
     val density = LocalDensity.current
     val mediaImageLoader = remember(context) { MediaImageLoader.get(context) }
@@ -497,6 +518,37 @@ internal fun PhotoGridTile(
                 contentScale = ContentScale.Crop,
             )
         }
+    }
+}
+
+/** Stands in for a tile whose content warning is collapsed; tapping still opens the post. */
+@Composable
+private fun PhotoGridWarningTile(
+    item: PhotoGridItem,
+    warningText: String,
+    onOpenPost: (OwnedPost) -> Unit,
+    modifier: Modifier,
+) {
+    val warning = warningText.ifBlank { stringResource(R.string.content_warning) }
+    Box(
+        modifier.fillMaxWidth().aspectRatio(photoGridAspectRatio(item.attachment))
+            .clip(RoundedCornerShape(2.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable { onOpenPost(item.ownedPost) }
+            .testTag("photo_grid_tile_${photoGridItemKey(item)}")
+            .semantics {
+                contentDescription = warning
+                role = Role.Button
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            warning,
+            Modifier.padding(12.dp),
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 4,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        )
     }
 }
 
