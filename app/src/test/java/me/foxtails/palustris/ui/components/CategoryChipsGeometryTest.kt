@@ -251,4 +251,31 @@ class CategoryChipsGeometryTest {
         compose.runOnIdle { visible.value = true }
         compose.onNodeWithTag("hidden-chip").assertIsDisplayed()
     }
+
+    @Test
+    fun explicitKeysKeepChipsWithEqualLabelsIndependent() {
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                PalustrisTheme {
+                    DestinationChipRow(
+                        entries = listOf("first", "second").map { id ->
+                            FilterChipEntry(
+                                label = "Same",
+                                onClick = {},
+                                testTag = "chip-$id",
+                                key = "test-chip:$id",
+                            )
+                        },
+                        rowContentDescription = "categories",
+                        listState = rememberLazyListState(),
+                        visible = true,
+                        onToggleVisibility = {},
+                    )
+                }
+            }
+        }
+
+        compose.onNodeWithTag("chip-first").assertIsDisplayed()
+        compose.onNodeWithTag("chip-second").assertIsDisplayed()
+    }
 }

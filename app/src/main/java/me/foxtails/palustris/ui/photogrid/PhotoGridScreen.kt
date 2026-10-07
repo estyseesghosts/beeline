@@ -231,6 +231,7 @@ fun PhotoGridScreen(
                     selected = selectedTimeline == timeline,
                     onClick = { onSelectFeed(PhotoGridFeed.TimelineFeed(timeline)) },
                     contentDescription = stringResource(timelineLabelRes(timeline)),
+                    key = "photo-grid-timeline:${timeline.name}",
                 ),
             )
         }
@@ -241,6 +242,7 @@ fun PhotoGridScreen(
                     selected = (state.selectedFeed as? PhotoGridFeed.Hashtag)?.tag == tag,
                     onClick = { onSelectFeed(PhotoGridFeed.Hashtag(tag)) },
                     contentDescription = tag,
+                    key = "photo-grid-hashtag:$tag",
                 ),
             )
         }
@@ -255,6 +257,7 @@ fun PhotoGridScreen(
                 role = Role.Button,
                 contentDescription = stringResource(R.string.photo_grid_add_hashtag),
                 testTag = "photo_grid_add_hashtag",
+                key = "photo-grid-action:add-hashtag",
             ),
         )
     }

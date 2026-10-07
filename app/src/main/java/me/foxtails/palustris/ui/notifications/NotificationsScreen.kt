@@ -130,6 +130,7 @@ fun NotificationsScreen(
                     contentDescription = stringResource(R.string.notification_action_mark_all_read_description),
                     role = Role.Button,
                     testTag = "notification_mark_all_read",
+                    key = "notification-action:mark-all-read",
                 ),
             )
         }
@@ -139,6 +140,7 @@ fun NotificationsScreen(
                     label = stringResource(filter.labelRes),
                     selected = selectedFilterName == filter.name,
                     onClick = { toggleFilter(filter) },
+                    key = "notification-filter:${filter.name}",
                 ),
             )
         }
@@ -150,6 +152,7 @@ fun NotificationsScreen(
                     contentDescription = stringResource(R.string.notification_action_settings_description),
                     role = Role.Button,
                     testTag = "notification_settings",
+                    key = "notification-action:settings",
                 ),
             )
         }

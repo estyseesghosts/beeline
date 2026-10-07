@@ -6,20 +6,15 @@ Last reviewed: 2026-10-07
 
 ## Continuation pointer
 
-Read [tasks/hardening-0.4.0-phase2.md](tasks/hardening-0.4.0-phase2.md) for the active
-hardening task, constraints, and verification.
+Read [tasks/beeline-0.4.0.md](tasks/beeline-0.4.0.md) for the active Phase 4D5/4E task, audit, and slice plan.
 Read AGENTS.md and its required pages before continuing.
-The completed Phase 0 and 1 record remains at [tasks/hardening-0.4.0.md](tasks/hardening-0.4.0.md).
-The preceding adaptive-navigation record remains at [tasks/beeline-0.4.0.md](tasks/beeline-0.4.0.md).
+The completed hardening records remain at [tasks/hardening-0.4.0.md](tasks/hardening-0.4.0.md) and [tasks/hardening-0.4.0-phase2.md](tasks/hardening-0.4.0-phase2.md).
 
 ## Current position
 
-Phase 0 through Phase 5 are complete. Phase 5 reconciled the architecture documentation
-with source (four stale links fixed, final shape named), passed the full CI-parity gate
-(52 Python tests, 1,692 JVM tests in 161 suites, lint, ktlint, debug and release assembly),
-and captured Home and Search on emulator-5554 (API 37). The task record carries the Phase 5
-section and the list of unverified items. The hardening plan has no remaining planned slice.
-Do not push without user direction.
+Hardening Phases 0-5 are complete. Phase 4D5/4E is in progress: the audit is recorded, and slice 1 (stable tab IDs
+for Notifications and Photo Grid) is committed with a passing full gate. Next is slice 2, edge-to-edge chip travel.
+The caret stays in the first logical position (user decision); it flips in RTL. Do not push without user direction.
 
 ## Ownership and caution
 
@@ -33,8 +28,8 @@ Recheck external Java/Gradle activity before builds. Use explicit reviewed commi
 
 ## Last safe commit
 
-Preceding safe commit: `9d2edf5` — `Clean ktlint debt in touched files (Slice 4.2)`.
-The Phase 5 documentation and records commit (H14) follows it; resolve its hash from Git.
+Preceding safe commit: `51455c5` — `Reconcile documentation and record Phase 5 acceptance (H14)`.
+The slice 1 commit `Use stable keys for Notifications and Photo Grid chips` follows it; resolve its hash from Git.
 The ktlint baseline still carries 177 file entries. Six deferred entries remain by decision:
 `SavedCollectionsHost` (filename), `ConnectedApp` and `PostThreadViewModel` (keyword-spacing),
 `MastodonIntegrationTest` (paren-spacing), `NavigationTest` (string-template), and
