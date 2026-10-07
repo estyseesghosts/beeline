@@ -71,6 +71,20 @@ class WideNavigationTest {
         assertCapsuleAndComposer()
     }
 
+    @Test fun wideHomeChipRowBreaksOutOfPaneMarginAtTheDisplayEdges() {
+        compose.waitForIdle()
+        val row = compose.onNodeWithContentDescription("Home timelines; swipe horizontally for more")
+            .fetchSemanticsNode().boundsInRoot
+        val root = compose.onNodeWithTag("large_screen_shell").fetchSemanticsNode().boundsInRoot
+        val marginPx = LARGE_OUTER_MARGIN_DP * compose.activity.resources.displayMetrics.density
+        // The pane margin does not clip chips: the row spans the display on every side that touches it.
+        assertTrue("row reaches the left display edge", row.left <= root.left + 1f)
+        assertTrue("row reaches the right display edge", row.right >= root.right - 1f)
+        // Chips still rest clear of the margin and the caret before any scrolling.
+        val first = compose.onNodeWithContentDescription("Timeline Home").fetchSemanticsNode().boundsInRoot
+        assertTrue("first chip rests clear of the display edge", first.left >= root.left + marginPx - 1f)
+    }
+
     @Test fun wideNotificationsUseBottomChipDock() {
         compose.onNodeWithContentDescription("Notifications").performClick()
         compose.waitForIdle()
@@ -144,7 +158,9 @@ class WideNavigationTest {
             .fetchSemanticsNode().boundsInRoot
         val list = compose.onNodeWithTag("profile_timeline_list", useUnmergedTree = true)
             .fetchSemanticsNode().boundsInRoot
-        assertEquals("compact-wide Profile keeps the header in the timeline column", list.left, header.left, 1f)
+        // The list viewport reaches the display edge so chips can travel there; content keeps the pane margin.
+        val marginPx = LARGE_OUTER_MARGIN_DP * compose.activity.resources.displayMetrics.density
+        assertEquals("compact-wide Profile header rests at the pane margin", list.left + marginPx, header.left, 1f)
         assertTrue("compact-wide Profile keeps a broad mobile header", header.width > list.width * 0.75f)
         val dock = compose.onNodeWithTag("profile_categories_dock").fetchSemanticsNode().boundsInRoot
         val categories = compose.onNodeWithContentDescription(

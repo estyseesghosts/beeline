@@ -3,6 +3,7 @@ package me.foxtails.palustris.ui.shell
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
@@ -21,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.large.LocalPaneEdgeBleed
+import me.foxtails.palustris.ui.large.PaneEdgeBleed
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.motion.SpringAnimatedContent
 import me.foxtails.palustris.ui.navigation.AppRoute
@@ -83,6 +86,17 @@ internal fun ShellDestinationContent(
     tabCaretHost: CompactWideTabCaretHost? = null,
 ) {
     val timelineChipListState = homeChipListState ?: rememberLazyListState()
+    // A destination with a chip row spans the pane's bleed, so its chips reach the display edge, and keeps
+    // the outer margin as clearance. Every other surface gets the same margin back as padding.
+    val bleed = LocalPaneEdgeBleed.current
+    val chipDestination = largePresentation && navigator.page == null && navigator.notificationRoute == null &&
+        when (navigator.destination) {
+            Destination.Home, Destination.Search, Destination.Profile -> true
+            Destination.Notifications -> navigator.notificationsPanel == NotificationsPanel.Notifications
+        }
+    val marginBleed = if (chipDestination) PaneEdgeBleed() else bleed
+    val paneLeftClearance = (leftObstructionClearance - marginBleed.left).coerceAtLeast(0.dp)
+    val paneRightClearance = (rightObstructionClearance - marginBleed.right).coerceAtLeast(0.dp)
     Scaffold(
         modifier = paneModifier.fillMaxSize(),
         // Compact page bodies receive top/horizontal system insets only.
@@ -96,15 +110,20 @@ internal fun ShellDestinationContent(
             else -> ScaffoldDefaults.contentWindowInsets
         },
         topBar = {
-            AppDestinationTopBar(
-                page = navigator.page,
-                notificationRoute = navigator.notificationRoute,
-                savedTitle = savedTitle,
-                onBack = { overlay.clearPostActionBubble(); if (navigator.page != null) navigator.page = null else navigator.notificationRoute = null },
-            )
+            Box(Modifier.absolutePadding(left = marginBleed.left, right = marginBleed.right)) {
+                AppDestinationTopBar(
+                    page = navigator.page,
+                    notificationRoute = navigator.notificationRoute,
+                    savedTitle = savedTitle,
+                    onBack = { overlay.clearPostActionBubble(); if (navigator.page != null) navigator.page = null else navigator.notificationRoute = null },
+                )
+            }
         }
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
+        Box(
+            Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
+                .absolutePadding(left = marginBleed.left, right = marginBleed.right),
+        ) {
             SpringAnimatedContent(
                 stateKey = navigator.destination,
                 direction = navigator.destinationTransitionDirection,
@@ -173,8 +192,8 @@ internal fun ShellDestinationContent(
                                 navigationCallbacks = navigationCallbacks,
                                 home = home,
                                 largePresentation = largePresentation,
-                                rightObstructionClearance = rightObstructionClearance,
-                                leftObstructionClearance = leftObstructionClearance,
+                                rightObstructionClearance = paneRightClearance,
+                                leftObstructionClearance = paneLeftClearance,
                                 bottomObstructionClearance = bottomObstructionClearance,
                                 availableTimelines = availableTimelines,
                                 homeListState = homeListState,
@@ -192,8 +211,8 @@ internal fun ShellDestinationContent(
                                 postCallbacks = postCallbacks,
                                 navigationCallbacks = navigationCallbacks,
                                 largePresentation = largePresentation,
-                                rightObstructionClearance = rightObstructionClearance,
-                                leftObstructionClearance = leftObstructionClearance,
+                                rightObstructionClearance = paneRightClearance,
+                                leftObstructionClearance = paneLeftClearance,
                                 bottomObstructionClearance = bottomObstructionClearance,
                                 bottomNavigationClearance = bottomNavigationClearance,
                                 searchListState = searchListState,
@@ -208,8 +227,8 @@ internal fun ShellDestinationContent(
                                 account = account,
                                 compactLayout = !largePresentation,
                                 compactNavigationVisible = navigator.navigationVisible,
-                                rightObstructionClearance = rightObstructionClearance,
-                                leftObstructionClearance = leftObstructionClearance,
+                                rightObstructionClearance = paneRightClearance,
+                                leftObstructionClearance = paneLeftClearance,
                                 bottomObstructionClearance = bottomObstructionClearance,
                                 bottomNavigationClearance = bottomNavigationClearance,
                                 useCompactWideCaret = useCompactWideCaret,
@@ -239,8 +258,8 @@ internal fun ShellDestinationContent(
                                 displayedProfile = displayedProfile,
                                 largePresentation = largePresentation,
                                 compactWidePresentation = compactWidePresentation,
-                                rightObstructionClearance = rightObstructionClearance,
-                                leftObstructionClearance = leftObstructionClearance,
+                                rightObstructionClearance = paneRightClearance,
+                                leftObstructionClearance = paneLeftClearance,
                                 bottomObstructionClearance = bottomObstructionClearance,
                                 profileListState = profileListState,
                                 useCompactWideCaret = useCompactWideCaret,

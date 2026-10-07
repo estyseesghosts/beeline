@@ -485,6 +485,10 @@ to the physical right in RTL by decision. Chips never scroll beneath the caret, 
 With the caret hidden (compact-wide), the path starts at the display edge. `LargeBottomDock` spans its
 container and provides the wide insets through `LocalLargeDockEdgeInsets`. The Search field keeps its 520 dp
 bound and clears the same insets. Tab keys are stable IDs for every destination.
-Tests: `CategoryChipsGeometryTest`, the destination `*ClearanceTest` suites, `NavigationTest`.
+On Home, Search, Photo Grid, Notifications, and Profile, `LargeScreenShell(chipEdgeBleed = true)` widens the primary
+pane by the outer margin (`LARGE_OUTER_MARGIN_DP`, 16 dp) on each side that touches the display, so the row reaches
+the physical edge. `LocalPaneEdgeBleed` carries the amount. Non-chip content follows the margin again: the shell
+pads other destinations, and chip destinations restore it through their clearance. A detail-only pane gets no bleed.
+Tests: `CategoryChipsGeometryTest`, the destination `*ClearanceTest` suites, `NavigationTest`, `WideNavigationTest`.
 Chips scrolled under floating chrome by a semantic scroll action are not held clear; only resting chips are.
 Device rendering, TalkBack focus scrolling, and RTL locale behavior remain unverified.

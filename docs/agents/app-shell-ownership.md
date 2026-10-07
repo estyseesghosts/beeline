@@ -499,3 +499,8 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
 `LargeBottomDock`). The viewport reaches the far display edge; insets only set resting positions. Callers no longer
 wrap chip rows in side padding. Compact rows pass `CompactOverlayHorizontalPadding`. Feature owners still own
 selection and scroll state. Chips never scroll beneath the inline caret.
+
+`LargeScreenShell(chipEdgeBleed)` widens the primary pane by `LARGE_OUTER_MARGIN_DP` on display-touching sides and
+publishes `LocalPaneEdgeBleed`. `ShellDestinationContent` restores the margin for non-chip destinations. Chip
+destinations keep the widened pane and receive the bleed inside their physical clearance. No bleed applies when
+only detail is shown.

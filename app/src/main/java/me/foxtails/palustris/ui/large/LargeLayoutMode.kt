@@ -45,6 +45,9 @@ internal fun largeLayoutMode(windowWidthDp: Float): LargeLayoutMode = when {
     else -> LargeLayoutMode.Expanded
 }
 
+/** The outer margin that keeps pane content off the physical display edge. Chip rows alone break out of it. */
+internal const val LARGE_OUTER_MARGIN_DP = 16f
+
 /** Calculates pane bounds after the outer margins and any separating feature are removed. */
 internal fun calculateLargePaneLayout(
     windowWidthDp: Float,
@@ -52,7 +55,7 @@ internal fun calculateLargePaneLayout(
     contentHeightDp: Float,
     density: Float,
     foldingFeatures: List<LargeFoldingFeature> = emptyList(),
-    outerMarginDp: Float = 16f,
+    outerMarginDp: Float = LARGE_OUTER_MARGIN_DP,
     dividerDp: Float = 1f,
     minimumListDp: Float = 320f,
     minimumDetailDp: Float = 360f,

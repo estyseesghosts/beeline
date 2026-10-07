@@ -3,7 +3,7 @@
 Finish Phase 4D and 4E: one universal tab bar whose chips travel to both physical display edges,
 and measured high-font clearance. Keep one navigator, one destination host, and the existing feature owners.
 
-Status: audit, slice 1 (stable tab IDs), and slice 2 (edge travel) complete. Slice 3 (4E1) is next.
+Status: audit, slice 1 (stable tab IDs), slice 2 (edge travel), and slice 2b (pane margin bleed) complete. Slice 3 (4E1) is next.
 Owner: orchestrator
 Last reviewed: 2026-10-07
 Authority: [AGENTS.md](../../../AGENTS.md), current source, tests, and Git.
@@ -56,4 +56,5 @@ Physical devices, TalkBack, API 29, signing, and live accounts stay unverified. 
 
 # Last safe commit
 
-`51455c5`; slice 1 is `Use stable keys for Notifications and Photo Grid chips`. Slice 2 is `Let chip rows travel to the display edge`.
+`51455c5`; slice 1 is `Use stable keys for Notifications and Photo Grid chips`. Slice 2 is `Let chip rows travel to the display edge`. Slice 2b is `Let chip rows break out of the pane margin`:
+the pane outer margin still clipped chips 16 dp inside the display, so the primary pane bleeds into it for chip destinations.

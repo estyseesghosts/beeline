@@ -286,6 +286,7 @@ internal fun ShellContent(
                         onOpenAccounts = { overlay.clearPostActionBubble(); navigator.sheet = "Accounts" },
                         isCompactWide = compactWidePresentation,
                         tabCaret = compactWideTabCaretHost.caretState,
+                        chipEdgeBleed = true,
                         primaryContent = { paneModifier, paneLeftClearance, paneRightClearance ->
                             ShellDestinationContent(
                                 paneModifier = paneModifier,

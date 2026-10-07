@@ -86,6 +86,7 @@ internal fun LargeScreenShell(
     modifier: Modifier = Modifier,
     isCompactWide: Boolean = false,
     tabCaret: TabCaretUiState? = null,
+    chipEdgeBleed: Boolean = false,
 ) {
     val adaptiveInfo = currentWindowAdaptiveInfoV2()
     val density = LocalDensity.current
@@ -128,7 +129,34 @@ internal fun LargeScreenShell(
                 right = (primary.right + origin.x) / density.density,
                 bottom = (primary.bottom + origin.y) / density.density,
             )
-            val primaryClearance = navigationPaneClearance(windowPane, controls, anchorLeft).dp
+            // A chip row breaks out of the outer margin on the sides where the primary pane touches it.
+            // Single-pane detail keeps the margin, and so does every side that borders another pane.
+            val marginPx = LARGE_OUTER_MARGIN_DP * density.density
+            val bleed = if (chipEdgeBleed && !(hasDetail && !showDetail)) {
+                PaneEdgeBleed(
+                    left = if (primary.left <= marginPx + 1f) windowPane.left.dp else 0.dp,
+                    right = if (primary.right >= with(density) { maxWidth.toPx() } - marginPx - 1f) {
+                        (windowWidth.value - windowPane.right).coerceAtLeast(0f).dp
+                    } else {
+                        0.dp
+                    },
+                )
+            } else {
+                PaneEdgeBleed()
+            }
+            val primarySlot = Rect(
+                left = primary.left - bleed.left.value * density.density,
+                top = primary.top,
+                right = primary.right + bleed.right.value * density.density,
+                bottom = primary.bottom,
+            )
+            val bleedPane = Rect(
+                left = windowPane.left - bleed.left.value,
+                top = windowPane.top,
+                right = windowPane.right + bleed.right.value,
+                bottom = windowPane.bottom,
+            )
+            val primaryClearance = navigationPaneClearance(bleedPane, controls, anchorLeft).dp
             // On a split layout, either physical anchor can overlap the detail pane instead.
             val detailWindowPane = layout.detail?.let { detail ->
                 Rect(
@@ -141,15 +169,18 @@ internal fun LargeScreenShell(
             val detailClearance = detailWindowPane?.let {
                 navigationPaneClearance(it, controls, anchorLeft).dp
             } ?: primaryClearance
-            val primaryLeftClearance = if (anchorLeft) primaryClearance else 0.dp
-            val primaryRightClearance = if (anchorLeft) 0.dp else primaryClearance
+            // The widened pane keeps the margin as clearance on a bleeding side.
+            val primaryLeftClearance = maxOf(if (anchorLeft) primaryClearance else 0.dp, bleed.left)
+            val primaryRightClearance = maxOf(if (anchorLeft) 0.dp else primaryClearance, bleed.right)
             val detailLeftClearance = if (anchorLeft) detailClearance else 0.dp
             val detailRightClearance = if (anchorLeft) 0.dp else detailClearance
-            PaneSlot(primary, density) { paneModifier ->
+            PaneSlot(primarySlot, density) { paneModifier ->
                 if (hasDetail && !showDetail) {
                     detailContent(paneModifier, primaryLeftClearance, primaryRightClearance)
                 } else {
-                    primaryContent(paneModifier, primaryLeftClearance, primaryRightClearance)
+                    CompositionLocalProvider(LocalPaneEdgeBleed provides bleed) {
+                        primaryContent(paneModifier, primaryLeftClearance, primaryRightClearance)
+                    }
                 }
             }
             if (twoPane && (showDetail || !hasDetail)) {
