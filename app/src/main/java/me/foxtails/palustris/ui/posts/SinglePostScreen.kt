@@ -42,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -58,8 +57,6 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
-import me.foxtails.palustris.ui.emoji.InlineEmojiText
-import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.media.MediaPage
 import me.foxtails.palustris.ui.media.PostMediaCarousel
@@ -199,8 +196,7 @@ internal fun SinglePostScreen(
              val warningDecision = remember(post.contentWarning, hashtags, contentWarningRules) {
                  ContentWarningPolicy.decide(post.contentWarning, hashtags, contentWarningRules, post.contentVisibility, post.text)
             }
-             val contentVisible = warningDecision != ContentWarningDecision.Hidden &&
-                 (post.contentWarning == null || expanded || warningDecision == ContentWarningDecision.ExpandedByDefault)
+             val contentVisible = isPostContentVisible(warningDecision, post.contentWarning != null, expanded)
              val locallyMuted = ContentWarningPolicy.matchesHashtagMute(
                  hashtags,
                  LocalMutedHashtags.current,
@@ -261,18 +257,7 @@ internal fun SinglePostScreen(
                       showReactionNumbers = true,
                   )
               }
-             if (post.contentWarning != null) {
-                InlineEmojiText(
-                    post.contentWarning.ifBlank { stringResource(R.string.content_warning) },
-                    post.emoji,
-                    Modifier.padding(horizontal = 16.dp),
-                    MaterialTheme.typography.bodyLarge,
-                )
-                TextButton(
-                    onClick = { expanded = !expanded },
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                ) { Text(stringResource(if (expanded) R.string.content_warning_hide else R.string.content_warning_show)) }
-            }
+             PostContentWarningToggle(ownedPost, expanded) { expanded = !expanded }
               if (contentVisible) {
                   PostBodyContent(
                       post = post,
@@ -285,30 +270,8 @@ internal fun SinglePostScreen(
                   )
               }
              InteractionSummaryRow(post.interactionCounts)
-             post.pollOptions.forEach { option ->
-                Surface(
-                    Modifier.padding(horizontal = 16.dp, vertical = 4.dp).fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.surfaceContainer,
-                ) {
-                    Row(Modifier.padding(12.dp)) {
-                        InlineEmojiText(option.text, post.emoji, Modifier.weight(1f), MaterialTheme.typography.bodyMedium)
-                        Text(pluralStringResource(R.plurals.post_poll_votes, option.votes, option.votes), style = MaterialTheme.typography.labelLarge)
-                    }
-                }
-            }
-            post.quote?.let { quote ->
-                QuotePreviewCard(
-                    quote,
-                    contentWarningRules,
-                    LocalMutedHashtags.current,
-                    "${ownedPost.sessionRevision}:${post.id.connection}:${post.id.value}",
-                    ownedPost.fetchedBy.toString(),
-                    R.string.single_post_view_quote,
-                ) {
-                    ExternalLinkHandler.open(context, quote.url)
-                }
-            }
+             PostPollOptions(ownedPost)
+             PostQuoteSection(ownedPost, contentWarningRules, R.string.single_post_view_quote)
                     }
                 }
             }

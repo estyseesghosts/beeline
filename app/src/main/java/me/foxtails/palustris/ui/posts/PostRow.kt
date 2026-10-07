@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
@@ -38,8 +36,6 @@ import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
-import me.foxtails.palustris.ui.emoji.InlineEmojiText
-import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.media.PostMediaCarousel
 import me.foxtails.palustris.ui.motion.ExpandableContent
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
@@ -89,8 +85,7 @@ internal fun PostRow(
     LaunchedEffect(ownedPost.fetchedBy, post.id, ownedPost.sessionRevision, post.reposted) {
         repostConfirmationOwner.reconcile(ownedPost)
     }
-    val contentVisible = warningDecision != ContentWarningDecision.Hidden &&
-        (post.contentWarning == null || expanded || warningDecision == ContentWarningDecision.ExpandedByDefault)
+    val contentVisible = isPostContentVisible(warningDecision, post.contentWarning != null, expanded)
     if (warningDecision == ContentWarningDecision.Hidden && LocalHiddenContentPresentation.current == me.foxtails.palustris.domain.HiddenContentPresentation.Remove) return
     val bodyTruncated = isPostBodyTruncated(post, displayPresentation, truncateBody)
     Column(modifier.fillMaxWidth().testTag("post_row_${post.id.value}")) {
@@ -133,10 +128,7 @@ internal fun PostRow(
             return@Column
         }
         if (post.replyTo != null) Text(stringResource(R.string.post_reply), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        if (post.contentWarning != null) {
-            InlineEmojiText(post.contentWarning.ifBlank { stringResource(R.string.content_warning) }, post.emoji, Modifier.padding(horizontal = 16.dp), MaterialTheme.typography.bodyLarge)
-            TextButton(onClick = { expanded = !expanded }, modifier = Modifier.padding(horizontal = 4.dp)) { Text(stringResource(if (expanded) R.string.content_warning_hide else R.string.content_warning_show)) }
-        }
+        PostContentWarningToggle(ownedPost, expanded) { expanded = !expanded }
         ExpandableContent(visible = contentVisible, modifier = Modifier.fillMaxWidth()) {
             PostBodyContent(
                 post = post,
@@ -148,26 +140,8 @@ internal fun PostRow(
                 onSearchHashtag = onSearchHashtag,
             )
             PostMediaCarousel(ownedPost = ownedPost, onOpenMedia = onOpenMedia)
-            post.pollOptions.forEach { option ->
-                Surface(Modifier.padding(horizontal = 16.dp, vertical = 4.dp).fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer) {
-                    Row(Modifier.padding(12.dp)) {
-                        InlineEmojiText(option.text, post.emoji, Modifier.weight(1f), MaterialTheme.typography.bodyMedium)
-                        Text(pluralStringResource(R.plurals.post_poll_votes, option.votes, option.votes), style = MaterialTheme.typography.labelLarge)
-                    }
-                }
-            }
-            post.quote?.let { quote ->
-                QuotePreviewCard(
-                    quote,
-                    contentWarningRules,
-                    LocalMutedHashtags.current,
-                    "${ownedPost.sessionRevision}:${post.id.connection}:${post.id.value}",
-                    ownedPost.fetchedBy.toString(),
-                    R.string.post_view_quoted,
-                ) {
-                    ExternalLinkHandler.open(context, quote.url)
-                }
-            }
+            PostPollOptions(ownedPost)
+            PostQuoteSection(ownedPost, contentWarningRules, R.string.post_view_quoted)
         }
         if (largeLayout && !bodyTruncated && onOpenPost != null) {
             TextButton(
