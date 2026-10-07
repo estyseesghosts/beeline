@@ -2,7 +2,7 @@
 
 Status: current
 Owner: Maintainers
-Last reviewed: 2026-10-06
+Last reviewed: 2026-10-07
 
 ## Continuation pointer
 
@@ -14,12 +14,12 @@ The preceding adaptive-navigation record remains at [tasks/beeline-0.4.0.md](tas
 
 ## Current position
 
-Phase 0 through Phase 4 are committed and gate-verified. Phase 4 Slice 4.1 recorded the
-architecture metrics baseline (`22e62d5`). Slice 4.2 sorted imports and removed unused
-imports in 20 files, and removed 18 stale entries from `app/ktlint-baseline.xml`. It added no
-baseline exemption and changed no behavior. The task record carries the Phase 4 section.
-Phase 5 (documentation integrity and final acceptance) is next.
-Do not push. Do not begin Phase 5 without user direction.
+Phase 0 through Phase 5 are complete. Phase 5 reconciled the architecture documentation
+with source (four stale links fixed, final shape named), passed the full CI-parity gate
+(52 Python tests, 1,692 JVM tests in 161 suites, lint, ktlint, debug and release assembly),
+and captured Home and Search on emulator-5554 (API 37). The task record carries the Phase 5
+section and the list of unverified items. The hardening plan has no remaining planned slice.
+Do not push without user direction.
 
 ## Ownership and caution
 
@@ -33,8 +33,8 @@ Recheck external Java/Gradle activity before builds. Use explicit reviewed commi
 
 ## Last safe commit
 
-Preceding safe commit: `22e62d5` — `Record complete architecture metrics baseline (Slice 4.1, after b8b0ba5)`.
-Slice 4.2 is the commit that follows it; resolve its hash from Git.
+Preceding safe commit: `9d2edf5` — `Clean ktlint debt in touched files (Slice 4.2)`.
+The Phase 5 documentation and records commit (H14) follows it; resolve its hash from Git.
 The ktlint baseline still carries 177 file entries. Six deferred entries remain by decision:
 `SavedCollectionsHost` (filename), `ConnectedApp` and `PostThreadViewModel` (keyword-spacing),
 `MastodonIntegrationTest` (paren-spacing), `NavigationTest` (string-template), and
@@ -44,9 +44,8 @@ The ktlint baseline still carries 177 file entries. Six deferred entries remain 
 
 Physical-device rendering, API 29 instrumentation, TalkBack, signing, and live-server behavior remain unverified.
 The local release assembly does not establish release signing or runtime acceptance.
-The fresh `0bd8e7d` debug build installs and launches on emulator-5554 (API 37) with
-`MainActivity` resumed and no application crash; see `logs/phase31-emulator-launch.png`.
+The Phase 5 debug build installs and launches on emulator-5554 (API 37); see
+`logs/phase5-launch2/screenshot.png` and `logs/phase5-search.png`. No application crash appears
+in logcat. A SIGABRT in an emulator HAL process (`android.hardwar`) is not the application.
+Compact-wide, tablet, IME, Profile chips, restoration, and forced RTL runtime checks were not run.
 Live thread loading on a real Misskey account remains unverified; no test account exists.
-The Slice 4.2 debug build installs and launches on emulator-5554 (API 37) with `MainActivity`
-resumed; see `logs/phase42-emulator-launch.png`. A SIGABRT in an emulator HAL process
-(`android.hardwar`) appeared in the crash log and is not the application.

@@ -32,13 +32,13 @@ Beeline is one Android module in `:app`. Beeline uses Kotlin, Jetpack Compose, a
 
 | Area | Status | Source owner |
 | --- | --- | --- |
-| Timelines | Available | [`FeedViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/FeedViewModel.kt) |
+| Timelines | Available | [`FeedViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/feed/FeedViewModel.kt) |
 | Profiles and relationships | Available. Includes follow, block, mute, and report. | [`ProfileViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/profile/ProfileViewModel.kt), [`PostPopupOwner.kt`](../../app/src/main/java/me/foxtails/palustris/ui/posts/PostPopupOwner.kt) |
 | Threads | Available | [`PostThreadViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/thread/PostThreadViewModel.kt) |
 | Notifications | Available | [`NotificationRepository.kt`](../../app/src/main/java/me/foxtails/palustris/data/notifications/NotificationRepository.kt) |
 | Direct messages | Available. Federated direct posts, not encrypted. | [`DirectMessageViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/directmessages/DirectMessageViewModel.kt) |
-| Bookmarks and likes | Available | [`SavedPostsViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/SavedPostsViewModel.kt) |
-| Photo Grid | Available. It belongs to the Search destination and keeps independent state. | [`PhotoGridScreen.kt`](../../app/src/main/java/me/foxtails/palustris/ui/PhotoGridScreen.kt) |
+| Bookmarks and likes | Available | [`SavedPostsViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/saved/SavedPostsViewModel.kt) |
+| Photo Grid | Available. It belongs to the Search destination and keeps independent state. | [`PhotoGridScreen.kt`](../../app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridScreen.kt) |
 | Emoji catalog and reactions | Available | [`EmojiCatalogViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/emoji/EmojiCatalogViewModel.kt) |
 | Moderation lists | Available. Blocked accounts, muted accounts, and muted hashtags. | [`ModerationViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/settings/ModerationViewModel.kt) |
 | Settings | Available | [`SettingsHost.kt`](../../app/src/main/java/me/foxtails/palustris/ui/settings/SettingsHost.kt) |

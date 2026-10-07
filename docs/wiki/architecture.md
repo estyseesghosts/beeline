@@ -19,7 +19,7 @@ toward the domain.
 | --- | --- | --- |
 | Domain | `domain/` | Protocol-neutral models and contracts. |
 | Data | `data/` | Data access and persistence. |
-| Misskey adapter | `data/misskey/` | Misskey transport, mapping, and capabilities. `MisskeyThreadService` owns thread acquisition. |
+| Misskey adapter | `data/misskey/` | Misskey transport, mapping, and capabilities. `MisskeySource` is the adapter entry point. It delegates to the `Misskey*Service` collaborators: timeline, profile, notification, direct-message, moderation, push, stream, and thread. `MisskeyThreadService` owns thread acquisition. |
 | Mastodon adapter | `data/mastodon/` | Mastodon transport, mapping, and capabilities. |
 | Authentication | `data/auth/` | Authentication and encrypted session storage. |
 | Notifications | `data/notifications/` | Ingestion, storage, synchronization, and push. |
@@ -28,7 +28,7 @@ toward the domain.
 | Media | `data/media/` | Image loading and AVIF decoding. |
 | Emoji | `data/emoji/` | Emoji catalog cache and assets. |
 | Dependency injection | `di/` | Hilt providers. |
-| Presentation | `ui/` | Compose screens, ViewModels, and shell contracts. |
+| Presentation | `ui/` | Compose screens, ViewModels, and shell contracts. The shell adapters in `ui/shell/` are `ShellHomeDestination`, `ShellSearchDestination`, `AppNotificationsDestinationContent`, and `ShellProfileDestination`. They forward narrow contracts and own no feature state. `ProfileTimelinePresentation` in `ui/profile/` renders the Profile timeline. Home splits paging demand (`HomePagingDemand`, `HomePagingEffects`) from rendering (`HomeFeedContent`) inside `ui/feed/HomeFeed.kt`. |
 
 `domain/` does not import `data/`, `ui/`, or `di/`.
 
@@ -47,7 +47,7 @@ toward the domain.
 - [`AccountId`](../../app/src/main/java/me/foxtails/palustris/domain/AccountId.kt) is a connection origin plus a local ID. The protocol is metadata.
 - [`Connection`](../../app/src/main/java/me/foxtails/palustris/domain/Connection.kt) is a validated HTTPS origin. `isValid()` rejects credentials, paths, queries, and fragments.
 - [`Session`](../../app/src/main/java/me/foxtails/palustris/domain/Session.kt) holds the token, capabilities, access grant, push state, and `sessionRevision`.
-- [`AccountManager`](../../app/src/main/java/me/foxtails/palustris/ui/AccountManager.kt) owns account and session state. It restores sessions, runs sign-in, switches accounts, updates profiles, and removes accounts.
+- [`AccountManager`](../../app/src/main/java/me/foxtails/palustris/ui/session/AccountManager.kt) owns account and session state. It restores sessions, runs sign-in, switches accounts, updates profiles, and removes accounts.
 - [`AccountSourceRegistry`](../../app/src/main/java/me/foxtails/palustris/data/AccountSourceRegistry.kt) owns source identity at application scope. A source is valid only for its registered generation.
 
 Keep three identities separate:

@@ -4,7 +4,7 @@ Complete Phase 2 of [the hardening plan](../../fix_0.4.0.md): presentation-only
 decomposition of high-value Compose functions. State does not move. Keep every existing
 owner, contract, invariant, and test. This phase does not touch protocol, persistence,
 account scope, or navigation policy.
-Status: Phase 4 verification complete. Owner and Git operator: orchestrator. Last reviewed: 2026-10-06.
+Status: Phase 5 complete; the hardening plan is complete except the unverified items below. Owner and Git operator: orchestrator. Last reviewed: 2026-10-07.
 
 # Invariants
 
@@ -106,6 +106,32 @@ required. Record updates are the only remaining change.
 - 4.2 device: debug APK installs and launches on emulator-5554 (API 37), `MainActivity`
   resumed, evidence `logs/phase42-emulator-launch.png`.
 
+# Phase 5
+
+- 5.1 documentation reconciliation (source verified). A scripted path check covered the wiki,
+  the agent pages, and the task record. Fixed four stale links: `AccountManager` now links to
+  `ui/session/`, `HttpClientPool` to `data/transport/`, and `overview.md` links
+  `FeedViewModel`, `SavedPostsViewModel`, and `PhotoGridScreen` to their feature packages.
+  `docs/wiki/architecture.md` now names the final shape: `MisskeySource` with its
+  `Misskey*Service` collaborators (including `MisskeyThreadService`), the four shell adapters,
+  `ProfileTimelinePresentation`, and the Home paging and rendering split. Each name exists in source.
+  Remaining path-check hits are historical records or the user's deleted Photo Grid test.
+- 5.2 final gate on the final tree: 52 Python tests pass, architecture audit exits 0 (675
+  findings, no regressions), and `testDebugUnitTest` (forced rerun), lint, ktlint, debug
+  assembly, and release assembly pass. 1,692 JVM tests ran in 161 suites with zero failures,
+  errors, or skips. No flakes occurred. `function_audit` and `file_audit` are diagnostic only;
+  their warnings (for example `SinglePostScreen`, `ShellContent`, `MastodonIntegrationTest`)
+  stay as review candidates. Both audits also scan a stale agent worktree under `.claude/worktrees/`.
+- 5.3 runtime (device verified, emulator-5554, API 37, 1169 x 1848): the debug APK installs and
+  `MainActivity` resumes. Home shows the Home, Local, and Federated chips and the floating
+  navigation. Search opens with its chips and composer. No `FATAL EXCEPTION` appears in
+  logcat. Evidence: `logs/phase5-launch2/screenshot.png`, `logs/phase5-search.png`.
+- Unverified, with reason: API 29 instrumentation (the `instrumentation-api29` job needs a push,
+  which the user has not authorized); compact-wide and expanded layouts on this emulator, IME
+  behavior, Profile chips, navigation restoration, and forced RTL (not exercised in this run);
+  TalkBack, physical devices, and signing (no hardware or keys); live Misskey and Mastodon
+  accounts (no test accounts).
+
 # Files involved
 
 - None. Phase 3 Slice 3.1 code is committed at `0bd8e7d`. This update touches records only.
@@ -146,8 +172,7 @@ unverified because no test account exists.
 
 # Next
 
-Phase 4 is complete. The next step is Phase 5 (documentation integrity and final acceptance).
-Do not begin Phase 5 without user direction. Do not push.
+The hardening plan is complete. Close the unverified items above when hardware, accounts, or a push are authorized. Do not push without user direction.
 
 # Blockers
 
@@ -158,4 +183,4 @@ unverified. Live thread loading on a real Misskey account also remains unverifie
 
 # Last safe commit
 
-22e62d5 — Record complete architecture metrics baseline (Slice 4.1). Slice 4.2 follows it.
+9d2edf5 — Clean ktlint debt in touched files (Slice 4.2). The Phase 5 commit (H14) follows it.

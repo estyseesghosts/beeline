@@ -1,0 +1,6 @@
+serial: emulator-5554
+model: sdk_gphone16k_x86_64
+android: 17
+sdk: 37
+size: Physical size: 1169x1848
+density: Physical density: 420
