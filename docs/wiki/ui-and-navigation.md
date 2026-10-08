@@ -534,6 +534,18 @@ the running API (API 29 uses `KEYBOARD_TAP` and `LONG_PRESS` where `CONFIRM` and
 touch-feedback setting, so Beeline adds no haptic preference. Fire an event once per discrete moment, never per drag frame.
 Sources: `ui/motion/HapticEvents.kt`, `HapticEventsTest`. Device haptic feel is unverified.
 
+## Search entry states (Phase 7D)
+
+`SearchScreen` renders one field in three visual states (`SearchEntryMode`): `Idle` (compact bubble with the placeholder),
+`Entry` (expanded while the field has focus, where the IME shows), and `Results` (compact bubble that still shows the query).
+`searchEntryMode(query, focused)` derives the state; the query and tab stay with Search and `ShellNavigator`, and focus stays
+in the field. The field stays composed through every state, so the query, caret, and focus survive; only its width animates
+(`gentleSize`, snapped under reduced motion). The IME search action submits and clears focus, which collapses to `Results`.
+With the keyboard already hidden, Back clears focus before it leaves Search. Tall and wide presentations share the field
+and differ only in the width their caller grants. A query cleared by an account change returns the field to `Idle`.
+Sources: `SearchEntryStatesTest`, `SearchClearanceTest`. Focus is not saved across rotation (the query is). Device feel and
+the IME transition on hardware are unverified.
+
 ## Trigger surfaces (Phase 7C)
 
 `ui/motion/TriggerSurface.kt` is the one trigger-to-surface presentation contract. It owns animation state only:

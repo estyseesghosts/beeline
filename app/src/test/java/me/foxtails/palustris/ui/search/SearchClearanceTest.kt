@@ -279,6 +279,9 @@ class SearchClearanceTest {
                     onSharedTabChange = { selectedTab.value = it },
                 )
             }
+            // The idle bubble is narrow. Focus expands the field to its widest state, which must clear.
+            compose.onNodeWithContentDescription(text(R.string.search_field)).performClick()
+            compose.waitForIdle()
             val viewport = bounds("search_test_viewport")
             val safeRight = viewport.right - wideRight.value * density
             val unmeasuredDock = bounds("search_dock")
