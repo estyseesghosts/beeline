@@ -14,7 +14,8 @@ import me.foxtails.palustris.ui.shell.DraftsContract
  * Creates and binds the composer owner for the connected session.
  *
  * The owner survives recomposition and process recreation. It reloads drafts for the active
- * account. A session replacement retires restored reply and quote targets.
+ * account. Restored reply and quote targets stay only when they were chosen under the same account
+ * and session revision; see [ComposerOwner.bindSession].
  */
 @Composable
 fun rememberComposerOwner(
@@ -33,7 +34,6 @@ fun rememberComposerOwner(
     owner.draftsContract = draftsContract
     owner.sessionRevision = sessionRevision
     LaunchedEffect(context.account?.id, draftsContract) { owner.refreshDrafts() }
-    LaunchedEffect(context.account?.id) { owner.resetTargets() }
-    LaunchedEffect(sessionGeneration, sessionRevision) { owner.resetTargets() }
+    LaunchedEffect(context.account?.id, sessionGeneration, sessionRevision) { owner.bindSession() }
     return owner
 }

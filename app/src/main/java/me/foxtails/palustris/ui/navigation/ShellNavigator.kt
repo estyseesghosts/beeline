@@ -95,6 +95,15 @@ internal class ShellNavigator internal constructor() {
         overlayKey = EDIT_PROFILE_OVERLAY_KEY
     }
 
+    /**
+     * Closes an edit-profile overlay that has no live editor behind it. A restored overlay key or a
+     * key carried across an account change outlives the profile editor, which lives with the
+     * session's profile owner. Call it only when the owner is bound, never on a fresh open.
+     */
+    fun closeEditProfileWithoutEditor(editorOpen: Boolean) {
+        if (overlay == Overlay.EditProfile && !editorOpen) closeOverlay()
+    }
+
     fun openNotificationSettingsOverlay() {
         overlayKey = NOTIFICATION_SETTINGS_OVERLAY_KEY
     }
@@ -239,8 +248,8 @@ internal class ShellNavigator internal constructor() {
      * account-bound query, category, prefill, page, viewed profile, and selected post
      * before those fields reach visible content or event callbacks, then adopts the
      * current owner. Destination, timeline, panels, non-composer overlays, sheets, route, and
-     * visibility stay per [resetForAccount]. The composer overlay is never restored because
-     * reply/quote targets do not survive process recreation.
+     * visibility stay per [resetForAccount]. The composer overlay is never restored; the
+     * composer owner keeps and verifies the editor and its reply/quote targets.
      */
     internal fun bindSession(accountId: AccountId?, sessionRevision: Long): NavigatorSessionBind {
         val currentOrigin = accountId?.connection?.origin
@@ -347,10 +356,9 @@ internal class ShellNavigator internal constructor() {
                             timeline = safeTimeline(saved[2])
                             page = null
                             (saved[4] as? String)?.takeIf { it.isNotEmpty() }?.let { sheet = it }
-                            // The composer overlay is never restored: reply/quote targets do not
-                            // survive process recreation, and reopening the saved text as a new
-                            // post would silently retarget a reply. Broader editor recovery is
-                            // Phase 7A/7B work.
+                            // The composer overlay is never restored. ComposerOwner keeps the editor
+                            // and its account-bound targets and verifies them on rebind, so the
+                            // user reopens the same reply or quote from the compose button.
                             (saved[5] as? String)?.takeIf { it.isNotEmpty() && it != COMPOSER_OVERLAY_KEY }
                                 ?.let { overlayKey = it }
                             searchPanelName = safeSearchPanel(saved[6])
@@ -369,10 +377,9 @@ internal class ShellNavigator internal constructor() {
                             destination = safeDestination(saved[5])
                             destinationTransitionDirection = (saved[6] as? Number)?.toInt() ?: 0
                             timeline = safeTimeline(saved[7])
-                            // The composer overlay is never restored: reply/quote targets do not
-                            // survive process recreation, and reopening the saved text as a new
-                            // post would silently retarget a reply. Broader editor recovery is
-                            // Phase 7A/7B work.
+                            // The composer overlay is never restored. ComposerOwner keeps the editor
+                            // and its account-bound targets and verifies them on rebind, so the
+                            // user reopens the same reply or quote from the compose button.
                             val hasBoundOwner = boundOrigin != null || boundProtocolName != null ||
                                 boundLocalId != null || boundRevision != null
                             if (!hasBoundOwner) {

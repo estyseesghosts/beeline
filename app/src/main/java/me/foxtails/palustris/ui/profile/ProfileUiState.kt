@@ -52,10 +52,15 @@ data class ProfileUiState(
     val editorCapabilities: EditableProfileCapabilities = EditableProfileCapabilities(),
     /** Working copy of the editable profile. Owned here so the shell holds no editor state. */
     val editorDraft: EditableProfile? = null,
+    /**
+     * The profile the working copy was started from. A later server load moves it only while the
+     * working copy is untouched, so a patch never reverts fields the user did not edit.
+     */
+    val editorDraftBase: EditableProfile? = null,
 ) {
     /** The profile the working copy is compared against and patched from. */
     val editorBase: EditableProfile?
-        get() = editable ?: (account ?: seedAccount)?.toEditableProfile()
+        get() = editorDraftBase ?: editable ?: (account ?: seedAccount)?.toEditableProfile()
 
     /** True when the working copy differs from the loaded base. */
     val editorDirty: Boolean

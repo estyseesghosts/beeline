@@ -350,6 +350,35 @@ class ShellNavigatorTest {
     }
 
     @Test
+    fun restoredEditProfileOverlayClosesWhenNoEditorSurvived() {
+        val navigator = ShellNavigator()
+        navigator.bindSession(accountId, 7L)
+        navigator.openEditProfileOverlay()
+        val saved = with(scope) { with(saver) { save(navigator) } }!!
+        val restored = saver.restore(saved)!!
+        assertEquals(Overlay.EditProfile, restored.overlay)
+
+        restored.closeEditProfileWithoutEditor(editorOpen = false)
+        assertNull(restored.overlay)
+    }
+
+    @Test
+    fun editProfileOverlayStaysWhileItsEditorIsOpen() {
+        val navigator = ShellNavigator()
+        navigator.openEditProfileOverlay()
+        navigator.closeEditProfileWithoutEditor(editorOpen = true)
+        assertEquals(Overlay.EditProfile, navigator.overlay)
+    }
+
+    @Test
+    fun missingEditorDoesNotCloseOtherOverlays() {
+        val navigator = ShellNavigator()
+        navigator.openNotificationSettingsOverlay()
+        navigator.closeEditProfileWithoutEditor(editorOpen = false)
+        assertEquals(Overlay.NotificationSettings, navigator.overlay)
+    }
+
+    @Test
     fun notificationSettingsOverlayStillRestores() {
         val navigator = ShellNavigator()
         navigator.bindSession(accountId, 7L)

@@ -65,11 +65,14 @@ class ComposerOwner internal constructor(
     var closing by mutableStateOf(false)
         private set
 
-    private var quoteOf by mutableStateOf<EntityId?>(null)
-    private var replyTo by mutableStateOf<EntityId?>(null)
-    private var savedQuoteOf by mutableStateOf<String?>(null)
-    private var savedReplyTo by mutableStateOf<String?>(null)
+    private val quoteOf: EntityId? get() = editor.quoteOf
+    private val replyTo: EntityId? get() = editor.replyTo
+
+    /** The full target post chosen in this process. A restored editor falls back to its saved preview. */
     private var target by mutableStateOf<OwnedPost?>(null)
+
+    /** The account and revision this owner last verified restored targets against. */
+    private var boundSession: Pair<AccountId?, Long>? = null
 
     /** Advances on each editor change. An obsolete save callback cannot act on a newer version. */
     private var editorRevision = 0L
@@ -81,14 +84,14 @@ class ComposerOwner internal constructor(
     val submitting: Boolean get() = submission != null
 
     val editor: ComposerEditorState get() = editorState.value
-    val quoteTarget: OwnedPost? get() = target
+    val quoteTarget: OwnedPost? get() = target ?: previewTarget(editor.quoteOf ?: editor.replyTo, editor.targetPreview)
     val isReply: Boolean get() = replyTo != null
 
     val hasChanges: Boolean
         get() = editor.text != editor.savedText ||
             (if (editor.warningEnabled) editor.warning else "") != editor.savedWarning ||
-            quoteOf?.value != savedQuoteOf ||
-            replyTo?.value != savedReplyTo ||
+            editor.quoteOf?.value != editor.savedQuoteOf ||
+            editor.replyTo?.value != editor.savedReplyTo ||
             editor.audience != editor.savedAudience
 
     val canPublish: Boolean
@@ -101,9 +104,7 @@ class ComposerOwner internal constructor(
     fun setAudience(audience: Audience) { mutateEditor { it.copy(audience = audience) } }
     fun removeTargets() {
         target = null
-        quoteOf = null
-        replyTo = null
-        editorRevision += 1
+        mutateEditor { it.copy(quoteOf = null, replyTo = null, targetPreview = null) }
     }
 
     fun consumeNavigation() { navigation = null }
@@ -127,14 +128,51 @@ class ComposerOwner internal constructor(
         )
     }
 
-    /** Clears restored reply and quote targets after a session replacement. */
+    /**
+     * Retires reply and quote targets that no longer belong to the connected session. The editor
+     * text goes with them: keeping it would silently turn a reply into a new post.
+     */
     fun resetTargets() {
+        if (editor.hasTargets) mutateEditor { ComposerEditorState() }
         target = null
-        quoteOf = null
-        replyTo = null
-        savedQuoteOf = null
-        savedReplyTo = null
         submission = null
+    }
+
+    /**
+     * Verifies restored targets against the connected account and session revision.
+     *
+     * Targets chosen under the same account and revision stay. The same account under a new
+     * revision saves the editor as a draft, which keeps its reply or quote link, then clears it;
+     * a failed save keeps the editor on the current revision. Any other account clears the editor.
+     * A change after the first bind also fences a pending submission.
+     */
+    fun bindSession() {
+        val accountId = context.account?.id
+        val current = accountId to sessionRevision
+        val previous = boundSession
+        boundSession = current
+        if (previous != null && previous != current) submission = null
+        val restored = editor
+        if (!restored.hasTargets) return
+        if (restored.boundAccount == accountId && restored.boundRevision == sessionRevision) return
+        if (accountId == null || restored.boundAccount != accountId) {
+            resetTargets()
+            return
+        }
+        val submittedRevision = editorRevision
+        draftsContract.actions.save(
+            draftValue(),
+            onResult = {
+                if (editorRevision == submittedRevision) {
+                    target = null
+                    mutateEditor { ComposerEditorState() }
+                }
+                refreshDrafts()
+            },
+            onError = {
+                editorState.value = editor.copy(boundRevision = sessionRevision, error = uiStrings.composerDraftSaveFailed())
+            },
+        )
     }
 
     fun requestNew() {
@@ -144,13 +182,15 @@ class ComposerOwner internal constructor(
             requestDraft(first)
             return
         }
-        val audience = runCatching {
-            PostingVisibilityPolicy.forNewPost(
-                context.contract.postPreferences,
-                ServerCapabilities(audiences = context.contract.availableAudiences),
-            )
-        }.getOrDefault(context.contract.postPreferences.defaultAudience)
-        mutateEditor { it.copy(audience = audience, savedAudience = audience) }
+        if (!hasChanges && !editor.hasTargets) {
+            val audience = runCatching {
+                PostingVisibilityPolicy.forNewPost(
+                    context.contract.postPreferences,
+                    ServerCapabilities(audiences = context.contract.availableAudiences),
+                )
+            }.getOrDefault(context.contract.postPreferences.defaultAudience)
+            mutateEditor { it.copy(audience = audience, savedAudience = audience) }
+        }
         navigation = ComposerNavigation.New
     }
 
@@ -160,9 +200,19 @@ class ComposerOwner internal constructor(
         if (context.anyOverlayOpen || hasChanges) return
         val audience = replyAudience(post)
         resetForTarget()
-        mutateEditor { it.copy(audience = audience, savedAudience = audience, error = null) }
+        val replyId = post.post.actionTargetId ?: post.post.id
+        mutateEditor {
+            it.copy(
+                audience = audience,
+                savedAudience = audience,
+                error = null,
+                replyTo = replyId,
+                targetPreview = previewOf(post),
+                boundAccount = account.id,
+                boundRevision = sessionRevision,
+            )
+        }
         target = post
-        replyTo = post.post.actionTargetId ?: post.post.id
         navigation = ComposerNavigation.Reply(post)
     }
 
@@ -172,14 +222,26 @@ class ComposerOwner internal constructor(
         if (context.anyOverlayOpen || hasChanges) return
         val audience = replyAudience(post)
         resetForTarget()
-        mutateEditor { it.copy(audience = audience, savedAudience = audience, error = null) }
+        mutateEditor {
+            it.copy(
+                audience = audience,
+                savedAudience = audience,
+                error = null,
+                quoteOf = post.post.id,
+                targetPreview = previewOf(post),
+                boundAccount = account.id,
+                boundRevision = sessionRevision,
+            )
+        }
         target = post
-        quoteOf = post.post.id
         navigation = ComposerNavigation.Quote(post)
     }
 
     fun requestDraft(item: PostDraft) {
         resetForTarget()
+        val account = context.account
+        val quote = item.quoteOf?.takeIf { it.connection == account?.id?.connection?.origin }
+        val reply = item.replyTo?.takeIf { it.connection == account?.id?.connection?.origin }
         mutateEditor {
             ComposerEditorState(
                 draftId = item.id,
@@ -190,21 +252,23 @@ class ComposerOwner internal constructor(
                 warningEnabled = !item.contentWarning.isNullOrBlank(),
                 audience = item.audience,
                 savedAudience = item.audience,
+                quoteOf = quote,
+                replyTo = reply,
+                savedQuoteOf = quote?.value,
+                savedReplyTo = reply?.value,
+                targetPreview = item.quotePreview,
+                boundAccount = account?.id,
+                boundRevision = sessionRevision,
             )
         }
-        val account = context.account
-        quoteOf = item.quoteOf?.takeIf { it.connection == account?.id?.connection?.origin }
-        replyTo = item.replyTo?.takeIf { it.connection == account?.id?.connection?.origin }
         target = draftTarget(item)
-        savedQuoteOf = quoteOf?.value
-        savedReplyTo = replyTo?.value
         navigation = ComposerNavigation.Draft(item.id)
     }
 
     /** Saves the current editor as a draft. Clears the dirty baseline only after success. */
     fun save(onSaved: () -> Unit = {}) {
         val current = editor
-        if (current.text.isBlank() && current.warning.isBlank() && quoteOf == null && replyTo == null) {
+        if (current.text.isBlank() && current.warning.isBlank() && current.quoteOf == null && current.replyTo == null) {
             onSaved()
             return
         }
@@ -221,10 +285,10 @@ class ComposerOwner internal constructor(
                         savedText = item.text,
                         savedWarning = item.contentWarning.orEmpty(),
                         savedAudience = item.audience,
+                        savedQuoteOf = item.quoteOf?.value,
+                        savedReplyTo = item.replyTo?.value,
                         error = null,
                     )
-                    savedQuoteOf = item.quoteOf?.value
-                    savedReplyTo = item.replyTo?.value
                 }
                 refreshDrafts()
                 closing = false
@@ -321,10 +385,6 @@ class ComposerOwner internal constructor(
         submission = null
         mutateEditor { ComposerEditorState() }
         target = null
-        quoteOf = null
-        replyTo = null
-        savedQuoteOf = null
-        savedReplyTo = null
     }
 
     private fun clearAfterPublish(submitted: ComposerSubmission) {
@@ -332,10 +392,6 @@ class ComposerOwner internal constructor(
         if (editorRevision == submitted.revision && context.account?.id == submitted.accountId) {
             mutateEditor { ComposerEditorState() }
             target = null
-            quoteOf = null
-            replyTo = null
-            savedQuoteOf = null
-            savedReplyTo = null
         }
         submission = null
     }
@@ -358,22 +414,27 @@ class ComposerOwner internal constructor(
             contentWarning = editor.warning.takeIf { editor.warningEnabled && it.isNotBlank() },
             quoteOf = quoteOf?.takeIf { it.connection == account?.id?.connection?.origin },
             replyTo = replyTo?.takeIf { it.connection == account?.id?.connection?.origin },
-            quotePreview = target?.let { target ->
-                PostDraftQuotePreview(
-                    authorDisplayName = target.post.author.displayName,
-                    authorHandle = target.post.author.handle,
-                    text = target.post.text,
-                    url = target.post.url,
-                )
-            },
+            quotePreview = target?.let(::previewOf) ?: editor.targetPreview,
         )
     }
 
+    private fun previewOf(target: OwnedPost) = PostDraftQuotePreview(
+        authorDisplayName = target.post.author.displayName,
+        authorHandle = target.post.author.handle,
+        text = target.post.text,
+        url = target.post.url,
+    )
+
     private fun draftTarget(item: PostDraft): OwnedPost? {
         val owner = context.account ?: return null
-        val targetId = item.quoteOf ?: return null
-        val preview = item.quotePreview ?: return null
-        if (item.accountId != owner.id || targetId.connection != owner.id.connection.origin) return null
+        if (item.accountId != owner.id) return null
+        return previewTarget(item.quoteOf, item.quotePreview)
+    }
+
+    /** Rebuilds a plain-text target post from a saved preview for the connected account. */
+    private fun previewTarget(targetId: EntityId?, preview: PostDraftQuotePreview?): OwnedPost? {
+        val owner = context.account ?: return null
+        if (targetId == null || preview == null || targetId.connection != owner.id.connection.origin) return null
         val author = Account(
             id = AccountId(Connection(targetId.connection, owner.id.connection.protocol), "draft-quote-author"),
                 displayName = preview.authorDisplayName.ifBlank { preview.authorHandle.ifBlank { uiStrings.composerQuotedPost() } },

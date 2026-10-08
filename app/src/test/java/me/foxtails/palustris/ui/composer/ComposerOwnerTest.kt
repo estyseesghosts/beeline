@@ -304,4 +304,99 @@ class ComposerOwnerTest {
         assertEquals("first and second", owner.editor.text)
         assertFalse(owner.submitting)
     }
+
+    private fun roundTrip(state: ComposerEditorState): ComposerEditorState {
+        val saver = ComposerEditorState.Saver
+        val saved = with(saver) { androidx.compose.runtime.saveable.SaverScope { true }.save(state) }
+        return saver.restore(saved!!)!!
+    }
+
+    private fun restoredOwner(
+        state: ComposerEditorState,
+        drafts: DraftsContract.Actions = RecordingDrafts(),
+        revision: Long = 0L,
+        restoredAccount: Account = account,
+    ): ComposerOwner {
+        val owner = ComposerOwner(
+            mutableStateOf(state),
+            UiStrings.from(androidx.test.core.app.ApplicationProvider.getApplicationContext()),
+        )
+        owner.context = ComposerOwnerContext(account = restoredAccount, contract = contract(RecordingComposer()))
+        owner.draftsContract = DraftsContract(drafts)
+        owner.sessionRevision = revision
+        return owner
+    }
+
+    private fun replyState(): ComposerEditorState {
+        val source = owner()
+        source.requestReply(OwnedPost(accountId, post("a", audience = Audience.Followers)))
+        source.setText("typed reply")
+        return roundTrip(source.editor)
+    }
+
+    @Test
+    fun restoredReplyKeepsItsVerifiedTargetForTheSameSession() {
+        val restored = restoredOwner(replyState())
+        restored.bindSession()
+
+        assertTrue(restored.isReply)
+        assertEquals("typed reply", restored.editor.text)
+        assertEquals("a", restored.quoteTarget?.post?.id?.value)
+        assertEquals(Audience.Followers, restored.editor.audience)
+    }
+
+    @Test
+    fun restoredReplyIsClearedForAnotherAccountInsteadOfBecomingANewPost() {
+        val restored = restoredOwner(replyState(), restoredAccount = otherAccount)
+        restored.bindSession()
+
+        assertFalse(restored.isReply)
+        assertNull(restored.quoteTarget)
+        assertEquals("", restored.editor.text)
+    }
+
+    @Test
+    fun restoredReplyUnderANewRevisionBecomesAReplyDraft() {
+        val drafts = RecordingDrafts()
+        val restored = restoredOwner(replyState(), drafts = drafts, revision = 3L)
+        restored.bindSession()
+
+        assertEquals(1, drafts.saved.size)
+        assertEquals("a", drafts.saved.single().replyTo?.value)
+        assertEquals("typed reply", drafts.saved.single().text)
+        assertFalse(restored.isReply)
+        assertEquals("", restored.editor.text)
+    }
+
+    @Test
+    fun failedDraftSaveKeepsTheReplyEditableOnTheNewRevision() {
+        val drafts = RecordingDrafts().apply { failSave = true }
+        val restored = restoredOwner(replyState(), drafts = drafts, revision = 3L)
+        restored.bindSession()
+
+        assertTrue(restored.isReply)
+        assertEquals("typed reply", restored.editor.text)
+        assertEquals(3L, restored.editor.boundRevision)
+        assertTrue(restored.editor.error != null)
+    }
+
+    @Test
+    fun newRequestOnARestoredReplyKeepsItsAudience() {
+        val restored = restoredOwner(replyState())
+        restored.bindSession()
+        restored.requestNew()
+
+        assertEquals(Audience.Followers, restored.editor.audience)
+        assertTrue(restored.isReply)
+    }
+
+    @Test
+    fun legacyEditorSnapshotsRestoreWithoutTargets() {
+        val saver = ComposerEditorState.Saver
+        val legacy = listOf(null, "body", "", "", "", false, "Public", "Public", null)
+        val restored = saver.restore(legacy)!!
+
+        assertEquals("body", restored.text)
+        assertFalse(restored.hasTargets)
+    }
 }

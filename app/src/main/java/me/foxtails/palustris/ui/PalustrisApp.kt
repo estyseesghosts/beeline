@@ -130,7 +130,7 @@ fun PalustrisApp(
             sessionRevision = sessionRevision,
         )
         val hasDraftChanges = composerOwner.hasChanges
-        ShellEffects(account?.id, sessionGeneration, sessionRevision, composerOwner, navigator, mediaTransitionRegistry, overlay, repostConfirmationOwner, thread, photoGrid, photoGridScrollState, postActionOwner)
+        ShellEffects(account?.id, sessionGeneration, sessionRevision, composerOwner, navigator, mediaTransitionRegistry, overlay, repostConfirmationOwner, thread, photoGrid, photoGridScrollState, postActionOwner, profile.state.editorOpen)
 
         fun openComposer() { overlay.clearPostActionBubble(); composerOwner.requestNew() }
         fun closeComposer() {

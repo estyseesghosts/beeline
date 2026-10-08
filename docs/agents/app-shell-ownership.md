@@ -100,7 +100,8 @@ preserves the z-order around the compact single-post surface. The host owns no s
 warning, audience, the dirty snapshot, the drafts list, reply and quote restoration, and the publish
 flow. It publishes `ComposerNavigation` requests. `PalustrisApp` applies a request by placing the
 composer overlay. The shell keeps overlay placement and back precedence. The editor state uses a
-saveable snapshot. A session replacement clears restored reply and quote targets.
+saveable snapshot that includes reply and quote target ids with the account and session revision
+they were chosen under. `bindSession` verifies them after restoration or a session change.
 `ui/composer/ComposerOverlayHost.kt` owns the composer sheet assembly beside the owner: the save
 control, the editor bindings, publish with its confirmation message, and tracking cleanup. The
 shell keeps the placement condition with open, guarded close, and emoji-picker target requests.
@@ -483,8 +484,8 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   and durable session revision synchronously before display. Matching restoration preserves
   the Search query, category, safe local page, and remembered panels. A mismatched owner
   clears the account-bound query, category, prefill, page, viewed profile, and selected post.
-  The composer overlay is never restored because reply/quote targets do not survive process
-  recreation. Old payloads keep safe navigation memory without account-bound text. Malformed payloads
+  The composer overlay is never restored; `ComposerOwner` verifies its saved targets. A restored
+  edit-profile overlay key closes when no profile editor is open. Old payloads keep safe navigation memory without account-bound text. Malformed payloads
   restore a safe navigator.
 
 ## Limits

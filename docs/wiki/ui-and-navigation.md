@@ -44,8 +44,14 @@ Matching restoration preserves the Search query, category, safe local page, and 
 Search/Photo Grid and Notification/DM panels. A mismatched owner clears the account-bound
 query, category, prefill, and page synchronously before display; destination, timeline,
 panels, non-composer overlays, sheets, and visibility stay. The composer overlay is never
-restored because reply/quote targets do not survive process recreation. Old or malformed payloads restore safe
-navigation memory without account-bound text.
+restored. `ComposerOwner` keeps the editor and its reply or quote target ids bound to the account
+and session revision they were chosen under. On rebind the same account and revision keep the
+target, the same account under a new revision saves the editor as a draft that keeps its link,
+and another account clears the editor, so a reply never becomes a new post. The edit-profile
+overlay key can be restored, but its editor lives with the session's profile owner; when no
+editor is open at first composition or account change the shell closes the overlay. The profile
+editor patches against the profile its working copy started from, not a later server load.
+Old or malformed payloads restore safe navigation memory without account-bound text.
 
 Sources: `ui/navigation/ShellNavigator.kt`, `ui/PalustrisApp.kt`,
 `ShellNavigatorTest`, `ShellNavigatorRestorationTest`, `SearchPanelRestorationTest`,

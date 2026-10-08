@@ -166,9 +166,11 @@ class ProfileViewModel @AssistedInject constructor(
     fun openEditor() {
         if (stopped || _state.value.targetId != accountId) return
         editorGeneration += 1
+        val start = _state.value.copy(editorDraftBase = null).editorBase
         _state.value = _state.value.copy(
             editorOpen = true,
-            editorDraft = _state.value.editorBase,
+            editorDraft = start,
+            editorDraftBase = start,
             editableLoading = true,
             editableError = null,
             editError = null,
@@ -194,6 +196,7 @@ class ProfileViewModel @AssistedInject constructor(
         _state.value = _state.value.copy(
             editorOpen = false,
             editorDraft = null,
+            editorDraftBase = null,
             editableLoading = false,
             savingProfile = false,
             editError = null,
@@ -204,7 +207,7 @@ class ProfileViewModel @AssistedInject constructor(
     fun saveEditor(patch: EditableProfilePatch, onSuccess: (Account) -> Unit = {}) {
         if (stopped || _state.value.savingProfile || _state.value.targetId != accountId) return
         if (patch.isEmpty) {
-            _state.value = _state.value.copy(editorOpen = false, editorDraft = null, editError = null)
+            _state.value = _state.value.copy(editorOpen = false, editorDraft = null, editorDraftBase = null, editError = null)
             _state.value.account?.let(onSuccess)
             return
         }
@@ -225,6 +228,7 @@ class ProfileViewModel @AssistedInject constructor(
                         editError = null,
                         editorOpen = false,
                         editorDraft = null,
+                        editorDraftBase = null,
                     )
                     merged?.let(onSuccess)
                 }
@@ -279,8 +283,12 @@ class ProfileViewModel @AssistedInject constructor(
             try {
                 val editable = source.loadEditableProfile()
                 if (isEditorCurrent(targetEditorGeneration, accountId)) {
-                    _state.value = _state.value.copy(
+                    val current = _state.value
+                    val untouched = current.editorDraft == current.editorDraftBase
+                    _state.value = current.copy(
                         editable = editable,
+                        editorDraft = if (untouched) editable else current.editorDraft,
+                        editorDraftBase = if (untouched) editable else current.editorDraftBase,
                         editableLoading = false,
                         editableError = null,
                     )

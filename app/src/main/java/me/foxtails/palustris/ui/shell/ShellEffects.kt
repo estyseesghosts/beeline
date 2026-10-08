@@ -26,7 +26,14 @@ internal fun ShellEffects(
     photoGrid: PhotoGridContract,
     photoGridScrollState: LazyStaggeredGridState,
     postActionOwner: PostPopupPresentation?,
+    profileEditorOpen: Boolean,
 ) {
+    // The profile editor lives with the session's profile owner. After process recreation or an
+    // account change the saved overlay key has no editor, so close it rather than show nothing.
+    LaunchedEffect(accountId, sessionGeneration, sessionRevision) {
+        navigator.closeEditProfileWithoutEditor(profileEditorOpen)
+    }
+
     LaunchedEffect(composerOwner.navigation) {
         if (composerOwner.navigation != null) {
             navigator.openComposerOverlay()

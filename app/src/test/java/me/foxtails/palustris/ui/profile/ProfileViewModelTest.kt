@@ -488,6 +488,47 @@ class ProfileViewModelTest {
         assertFalse(model.state.value.editorOpen)
     }
 
+    @Test fun lateEditorLoadKeepsTheUserEditsAndTheirOriginalBase() = runProfileTest {
+        val gate = CompletableDeferred<Unit>()
+        val source = FakeSource().apply {
+            editableLoadGates[self.id] = gate
+            editableResults[self.id] = editableProfile(self, "Server")
+        }
+        val model = model(source)
+        model.open(self)
+        advanceUntilIdle()
+        model.openEditor()
+        runCurrent()
+        val startedFrom = model.state.value.editorBase!!
+        model.updateEditor(startedFrom.copy(biography = "typed bio"))
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals("typed bio", model.state.value.editorDraft?.biography)
+        assertEquals(startedFrom, model.state.value.editorBase)
+        assertEquals("Server", model.state.value.editable?.displayName)
+        assertTrue(model.state.value.editorDirty)
+    }
+
+    @Test fun lateEditorLoadReplacesAnUntouchedDraftAndItsBase() = runProfileTest {
+        val gate = CompletableDeferred<Unit>()
+        val source = FakeSource().apply {
+            editableLoadGates[self.id] = gate
+            editableResults[self.id] = editableProfile(self, "Server")
+        }
+        val model = model(source)
+        model.open(self)
+        advanceUntilIdle()
+        model.openEditor()
+        runCurrent()
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals("Server", model.state.value.editorDraft?.displayName)
+        assertEquals("Server", model.state.value.editorBase?.displayName)
+        assertFalse(model.state.value.editorDirty)
+    }
+
     @Test fun unsupportedAdvancedFieldsProduceNoNetworkUpdates() = runProfileTest {
         val source = FakeSource(
             ServerCapabilities(
