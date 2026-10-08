@@ -52,13 +52,17 @@ import me.foxtails.palustris.ui.components.BeelineBubbleShape
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.rememberSelectedColor
 import me.foxtails.palustris.ui.motion.rememberSelectedScale
+import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
 import me.foxtails.palustris.ui.motion.springPress
+import me.foxtails.palustris.ui.motion.triggerSurfaceSource
 
 internal data class ContextualNavigationAction(
     val icon: ImageVector,
     val contentDescription: String,
     val enabled: Boolean,
     val onClick: () -> Unit,
+    /** Set when the action opens a surface that grows from the button. */
+    val triggerSource: TriggerSurfaceSource? = null,
 )
 
 /** Renders one stateless navigation target; the caller owns selection and navigation callbacks. */
@@ -186,7 +190,8 @@ internal fun ContextualNavigationActionButton(
     FilledIconButton(
         onClick = action.onClick,
         enabled = action.enabled,
-        modifier = modifier.size(56.dp).semantics { contentDescription = action.contentDescription },
+        modifier = modifier.size(56.dp).triggerSurfaceSource(action.triggerSource)
+            .semantics { contentDescription = action.contentDescription },
         colors = IconButtonDefaults.filledIconButtonColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,

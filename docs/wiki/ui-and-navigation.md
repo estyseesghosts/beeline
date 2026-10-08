@@ -534,6 +534,23 @@ the running API (API 29 uses `KEYBOARD_TAP` and `LONG_PRESS` where `CONFIRM` and
 touch-feedback setting, so Beeline adds no haptic preference. Fire an event once per discrete moment, never per drag frame.
 Sources: `ui/motion/HapticEvents.kt`, `HapticEventsTest`. Device haptic feel is unverified.
 
+## Trigger surfaces (Phase 7C)
+
+`ui/motion/TriggerSurface.kt` is the one trigger-to-surface presentation contract. It owns animation state only:
+measured trigger bounds (`TriggerSurfaceSource`, set by `Modifier.triggerSurfaceSource`), open progress
+(`TriggerSurfaceState`), the scrim fade, focus entry and return, hiding the keyboard before it closes, and an
+accessible `dismiss` action. `TriggerSurfaceGeometry.pivot` is the placement rule: a missing, empty, or off-screen
+trigger returns `null` and the surface only fades, as does reduced motion. The composer sheet, the edit-profile
+sheet, and the post share card use it. Material 3 keeps sheet drag and slide; the contract adds the scale from the
+trigger, the fade, and the scrim. The share card is a popup, so its position provider reports where it placed the card.
+Content, drafts, and dismissal rules stay in `ui/composer/`, `ui/profile/`, and `ui/posts/`. The contract registers no
+back handler; the shell owns back priority and the guarded close. A close the caller declines (a guarded close)
+reopens the surface instead of leaving it invisible. The contextual action button carries the source for Compose and
+Edit profile (`ContextualNavigationAction.triggerSource`). `ShellOverlayPresenter` holds the two sources; `ShellEffects`
+invalidates them on account, session, and window-size change. Back and scrim-tap dismissal remove the surface without
+the reverse animation. A followers-only or direct post asks for an explicit choice before Copy or Share leaves Beeline.
+Sources: `TriggerSurfaceTest`, `PostShareSheetTest`. Device motion and the sheet-to-trigger look are unverified.
+
 ## Post action pending state
 
 `PostInteractionExecutionAuthority` owns which action families are in flight per session, account, and target, and

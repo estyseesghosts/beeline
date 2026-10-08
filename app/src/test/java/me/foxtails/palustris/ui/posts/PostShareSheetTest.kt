@@ -17,6 +17,7 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.PalustrisTheme
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -63,5 +64,56 @@ class PostShareSheetTest {
         compose.onNodeWithText("Copy link").assertDoesNotExist()
         compose.onNodeWithText("Share with another app").assertDoesNotExist()
         compose.onAllNodesWithText("Share post").assertCountEquals(0)
+    }
+
+    private fun shareFixture(audience: Audience, onShare: () -> Unit) {
+        val connection = Connection("https://example.org", Protocol.MISSKEY)
+        val account = Account(AccountId(connection, "owner"), "Owner", "@owner@example.org")
+        val post = Post(EntityId(connection.origin, "post"), account, "Post", 0, audience, url = "https://example.org/post")
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                PalustrisTheme {
+                    PostShareSheet(post = post, onDismiss = {}, onShare = onShare)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun publicPostSharesWithoutAnExtraStep() {
+        var shared = 0
+        shareFixture(Audience.Public) { shared++ }
+
+        compose.onNodeWithTag("post_share_system").performClick()
+
+        assertEquals(1, shared)
+        compose.onNodeWithTag("post_share_private").assertDoesNotExist()
+    }
+
+    @Test
+    fun privatePostNeedsAnExplicitChoiceBeforeLeavingBeeline() {
+        var shared = 0
+        shareFixture(Audience.Followers) { shared++ }
+
+        compose.onNodeWithTag("post_share_system").performClick()
+        compose.onNodeWithTag("post_share_private").assertIsDisplayed()
+        assertEquals(0, shared)
+
+        compose.onNodeWithTag("post_share_private_cancel").performClick()
+        compose.onNodeWithTag("post_share_private").assertDoesNotExist()
+        assertEquals(0, shared)
+
+        compose.onNodeWithTag("post_share_system").performClick()
+        compose.onNodeWithTag("post_share_private_confirm").performClick()
+        assertEquals(1, shared)
+    }
+
+    @Test
+    fun directPostAlsoAsksBeforeCopyingItsLink() {
+        shareFixture(Audience.Direct) {}
+
+        compose.onNodeWithTag("post_share_copy").performClick()
+
+        compose.onNodeWithTag("post_share_private").assertIsDisplayed()
     }
 }

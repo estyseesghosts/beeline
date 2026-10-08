@@ -422,6 +422,10 @@
     <string name="post_share_card_description">Actions for %1$s</string>
     <string name="post_share_clip_label">Post</string>
     <string name="post_share_confirm_block_with_handle">confirm block %1$s?</string>
+    <string name="post_share_private_followers">This post is for followers only. Sharing it outside Beeline can show its link or text to people who cannot see it.</string>
+    <string name="post_share_private_direct">This post is a direct message. Sharing it outside Beeline can show its link or text to people who cannot see it.</string>
+    <string name="post_share_private_confirm">Share anyway</string>
+    <string name="post_share_private_cancel">Keep private</string>
     <string name="post_share_copied">Copied to clipboard</string>
     <string name="post_share_copy_failed">Could not copy the link.</string>
     <string name="post_share_copy_link">Copy</string>

@@ -178,6 +178,7 @@ internal fun ShellOverlayHost(
         onRequestEmoji = { field -> overlay.emojiPickerTarget = EmojiPickerTarget.Composer(field) },
         pendingEmojiInsertion = overlay.pendingEmojiInsertion,
         onEmojiInsertionApplied = { overlay.pendingEmojiInsertion = null },
+        triggerSource = overlay.composerTrigger,
     )
 
     if (navigator.overlay == Overlay.EditProfile && account != null) EditProfileSheet(
@@ -196,6 +197,7 @@ internal fun ShellOverlayHost(
             }
         },
         onClose = onCloseProfile,
+        triggerSource = overlay.editProfileTrigger,
     )
 
     if (overlay.emojiPickerTarget != null) {

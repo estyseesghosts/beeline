@@ -11,6 +11,7 @@ import me.foxtails.palustris.domain.TrackingParameterCleaner
 import me.foxtails.palustris.ui.composer.ComposeScreen
 import me.foxtails.palustris.ui.composer.ComposerSheet
 import me.foxtails.palustris.ui.emoji.ComposerField
+import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
 import me.foxtails.palustris.ui.shell.ComposerContract
 
 /**
@@ -29,6 +30,7 @@ fun ComposerOverlayHost(
     onRequestEmoji: (ComposerField) -> Unit,
     pendingEmojiInsertion: Pair<EmojiChoice, ComposerField>?,
     onEmojiInsertionApplied: () -> Unit,
+    triggerSource: TriggerSurfaceSource? = null,
 ) {
     val context = LocalContext.current
     val replySentMessage = stringResource(R.string.reply_sent)
@@ -38,6 +40,7 @@ fun ComposerOverlayHost(
         onSaveDraft = { owner.save { onClose() } },
         saveEnabled = owner.editor.text.isNotBlank() || owner.isReply,
         closing = owner.closing,
+        triggerSource = triggerSource,
     ) {
         ComposeScreen(
             text = owner.editor.text,

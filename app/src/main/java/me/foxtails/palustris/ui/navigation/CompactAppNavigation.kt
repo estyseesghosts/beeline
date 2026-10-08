@@ -28,6 +28,7 @@ import me.foxtails.palustris.ui.shell.Destination
 import me.foxtails.palustris.ui.shell.NotificationsPanel
 import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.layout.CompactNavigationHeight
+import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
 import me.foxtails.palustris.ui.profile.ProfileUiState
 
 internal fun Modifier.bubblePressLayer(
@@ -62,8 +63,10 @@ internal fun contextualActionFor(
     onEditProfile: () -> Unit,
     onFollowProfile: () -> Unit,
     onUnfollowProfile: () -> Unit,
+    composeTrigger: TriggerSurfaceSource? = null,
+    editProfileTrigger: TriggerSurfaceSource? = null,
 ): ContextualNavigationAction? = when (destination) {
-    Destination.Home -> ContextualNavigationAction(AppIcons.Compose, stringResource(R.string.nav_compose), true, onCompose)
+    Destination.Home -> ContextualNavigationAction(AppIcons.Compose, stringResource(R.string.nav_compose), true, onCompose, composeTrigger)
     Destination.Search -> if (searchPanel == SearchPanel.Search) {
         ContextualNavigationAction(AppIcons.PhotoGrid, stringResource(R.string.nav_photo_grid), true, onSearchToggle)
     } else {
@@ -81,6 +84,7 @@ internal fun contextualActionFor(
         onEditProfile = onEditProfile,
         onFollowProfile = onFollowProfile,
         onUnfollowProfile = onUnfollowProfile,
+        editProfileTrigger = editProfileTrigger,
     )
 }
 
@@ -98,6 +102,7 @@ internal fun profileContextualAction(
     onEditProfile: () -> Unit,
     onFollowProfile: () -> Unit,
     onUnfollowProfile: () -> Unit,
+    editProfileTrigger: TriggerSurfaceSource? = null,
 ): ContextualNavigationAction? = when {
     profileTarget?.movedTo != null -> null
     profileTarget?.id == authenticatedAccountId && authenticatedAccountId != null ->
@@ -106,6 +111,7 @@ internal fun profileContextualAction(
             stringResource(R.string.profile_edit),
             profileState.editableSupported,
             onEditProfile,
+            editProfileTrigger,
         )
     profileState.relationshipSupported == true && profileState.relationship != null -> {
         val relationship = profileState.relationship
@@ -145,6 +151,8 @@ internal fun wideContextualAction(
     onEditProfile: () -> Unit,
     onFollowProfile: () -> Unit,
     onUnfollowProfile: () -> Unit,
+    composeTrigger: TriggerSurfaceSource? = null,
+    editProfileTrigger: TriggerSurfaceSource? = null,
 ): ContextualNavigationAction? = when (target) {
     WideNavigationItem.Home,
     WideNavigationItem.Search,
@@ -155,6 +163,7 @@ internal fun wideContextualAction(
         stringResource(R.string.nav_compose),
         true,
         onCompose,
+        composeTrigger,
     )
     WideNavigationItem.DirectMessages -> ContextualNavigationAction(
         AppIcons.DirectMessage,
@@ -169,6 +178,7 @@ internal fun wideContextualAction(
         onEditProfile = onEditProfile,
         onFollowProfile = onFollowProfile,
         onUnfollowProfile = onUnfollowProfile,
+        editProfileTrigger = editProfileTrigger,
     )
 }
 

@@ -17,6 +17,7 @@ import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.emoji.EmojiPickerTarget
 import me.foxtails.palustris.ui.media.ImageViewerContent
 import me.foxtails.palustris.ui.media.MediaOpenRequest
+import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
 import me.foxtails.palustris.ui.posts.PostActionBubbleTarget
 import me.foxtails.palustris.ui.posts.ReactionBubbleMode
 
@@ -42,6 +43,10 @@ internal class ShellOverlayPresenter internal constructor() {
     var profileImageRequest by mutableStateOf<ImageViewerContent?>(null)
     var profileDialog by mutableStateOf(false)
     var signOutDialog by mutableStateOf(false)
+
+    /** Measured buttons that open the composer and profile editor surfaces. Geometry only. */
+    val composerTrigger = TriggerSurfaceSource()
+    val editProfileTrigger = TriggerSurfaceSource()
 
     var account: Account? = null
     var sessionRevision: Long = 0L

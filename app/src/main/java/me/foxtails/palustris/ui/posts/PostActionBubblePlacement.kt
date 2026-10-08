@@ -14,6 +14,7 @@ internal class WindowAnchorPositionProvider(
     private val targetBounds: Rect,
     private val placement: BubblePlacement,
     private val edgeMargin: Int = 8,
+    private val onPlaced: ((IntOffset) -> Unit)? = null,
 ) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
@@ -47,6 +48,6 @@ internal class WindowAnchorPositionProvider(
         }
         val maxY = (windowSize.height - popupContentSize.height - margin).coerceAtLeast(margin)
         val y = if (preferredY in margin..maxY) preferredY else alternateY.coerceIn(margin, maxY)
-        return IntOffset(x, y)
+        return IntOffset(x, y).also { onPlaced?.invoke(it) }
     }
 }

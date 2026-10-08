@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -43,9 +44,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.motion.TriggerSurface
+import me.foxtails.palustris.ui.motion.rememberTriggerSurfaceState
 import me.foxtails.palustris.ui.posts.BubblePlacement
 import me.foxtails.palustris.ui.posts.WindowAnchorPositionProvider
 import me.foxtails.palustris.ui.components.PillAction
@@ -65,8 +69,15 @@ internal fun PostShareSheet(
     onCopyLink: () -> Unit,
     onShare: () -> Unit,
 ) {
+    val surface = rememberTriggerSurfaceState()
+    var placed by remember { mutableStateOf<Offset?>(null) }
     Popup(
-        popupPositionProvider = WindowAnchorPositionProvider(target.anchorBounds, BubblePlacement.Above, edgeMargin = 16),
+        popupPositionProvider = WindowAnchorPositionProvider(
+            target.anchorBounds,
+            BubblePlacement.Above,
+            edgeMargin = 16,
+            onPlaced = { placed = Offset(it.x.toFloat(), it.y.toFloat()) },
+        ),
         onDismissRequest = onDismiss,
         properties = PopupProperties(
             focusable = true,
@@ -74,17 +85,25 @@ internal fun PostShareSheet(
             dismissOnClickOutside = true,
         ),
     ) {
-        ShareActionCard(
-            target = target,
-            relationship = relationship,
-            report = report,
-            onDismiss = onDismiss,
-            onRelationshipAction = onRelationshipAction,
-            onSubmitReport = onSubmitReport,
-            onOpenDirectMessage = onOpenDirectMessage,
-            onCopyLink = onCopyLink,
-            onShare = onShare,
-        )
+        TriggerSurface(
+            state = surface,
+            trigger = { target.anchorBounds },
+            dismissLabel = stringResource(R.string.composer_close),
+            onClosed = onDismiss,
+            surfaceOrigin = { placed },
+        ) {
+            ShareActionCard(
+                target = target,
+                relationship = relationship,
+                report = report,
+                onDismiss = onDismiss,
+                onRelationshipAction = onRelationshipAction,
+                onSubmitReport = onSubmitReport,
+                onOpenDirectMessage = onOpenDirectMessage,
+                onCopyLink = onCopyLink,
+                onShare = onShare,
+            )
+        }
     }
 }
 
@@ -131,6 +150,12 @@ private fun ShareActionCard(
     var problemOpen by remember(target.post.id, target.ownerAccountId, target.sessionRevision) { mutableStateOf(false) }
     var comment by remember(target.post.id, target.ownerAccountId, target.sessionRevision) { mutableStateOf("") }
     var blockConfirmation by remember(target.post.id, target.ownerAccountId, target.sessionRevision) { mutableStateOf(false) }
+    var pendingExternal by remember(target.post.id, target.ownerAccountId, target.sessionRevision) { mutableStateOf<(() -> Unit)?>(null) }
+    val privateNotice = when (target.post.audience) {
+        Audience.Followers -> R.string.post_share_private_followers
+        Audience.Direct -> R.string.post_share_private_direct
+        else -> null
+    }
     val handle = shortActionHandle(target.author.handle)
     val self = target.author.id == target.ownerAccountId
     val current = relationship.relationship
@@ -280,13 +305,25 @@ private fun ShareActionCard(
             }
             if (!reportOpen) {
                 Spacer(Modifier.height(6.dp))
-                BottomShareActions(
-                    hasLink = target.post.url?.isNotBlank() == true,
-                    enabled = true,
-                    onOpenDirectMessage = onOpenDirectMessage,
-                    onCopyLink = onCopyLink,
-                    onShare = onShare,
-                )
+                val confirm = pendingExternal
+                if (confirm != null && privateNotice != null) {
+                    PrivateShareConfirmation(
+                        message = stringResource(privateNotice),
+                        onConfirm = { pendingExternal = null; confirm() },
+                        onCancel = { pendingExternal = null },
+                    )
+                } else {
+                    // A private post leaves Beeline only after an explicit choice.
+                    fun external(action: () -> Unit): () -> Unit =
+                        if (privateNotice == null) action else ({ pendingExternal = action })
+                    BottomShareActions(
+                        hasLink = target.post.url?.isNotBlank() == true,
+                        enabled = true,
+                        onOpenDirectMessage = onOpenDirectMessage,
+                        onCopyLink = external(onCopyLink),
+                        onShare = external(onShare),
+                    )
+                }
             }
             relationship.error?.let {
                 Text(it, modifier = Modifier.testTag("post_share_relationship_error"), color = MaterialTheme.colorScheme.error)
@@ -335,6 +372,24 @@ private fun ProblemHeading(handle: String, onClick: () -> Unit) {
         style = MaterialTheme.typography.labelLarge,
         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
     )
+}
+
+@Composable
+private fun PrivateShareConfirmation(message: String, onConfirm: () -> Unit, onCancel: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().testTag("post_share_private"),
+        shape = BeelineNestedSurfaceShape,
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+    ) {
+        Column(Modifier.fillMaxWidth().padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(message, style = MaterialTheme.typography.bodyMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ShareCell(AppIcons.Close, stringResource(R.string.post_share_private_cancel), true, onCancel, Modifier.weight(1f).testTag("post_share_private_cancel"))
+                ShareCell(AppIcons.ShareBeeline, stringResource(R.string.post_share_private_confirm), true, onConfirm, Modifier.weight(1f).testTag("post_share_private_confirm"))
+            }
+        }
+    }
 }
 
 @Composable

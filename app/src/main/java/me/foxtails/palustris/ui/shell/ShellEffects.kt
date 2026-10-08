@@ -34,6 +34,14 @@ internal fun ShellEffects(
         navigator.closeEditProfileWithoutEditor(profileEditorOpen)
     }
 
+    // Remembered trigger bounds describe one account on one window shape. Forget them when either
+    // changes so an open surface fades instead of growing from a stale position.
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    LaunchedEffect(accountId, sessionGeneration, configuration.screenWidthDp, configuration.screenHeightDp) {
+        overlay.composerTrigger.invalidate()
+        overlay.editProfileTrigger.invalidate()
+    }
+
     LaunchedEffect(composerOwner.navigation) {
         if (composerOwner.navigation != null) {
             navigator.openComposerOverlay()
