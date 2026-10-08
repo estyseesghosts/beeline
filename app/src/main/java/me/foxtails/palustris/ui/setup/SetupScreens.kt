@@ -1,6 +1,8 @@
 package me.foxtails.palustris.ui.setup
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -31,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,6 +58,8 @@ import androidx.compose.ui.unit.sp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.AppMessages
 import me.foxtails.palustris.data.misskey.ServerAddress
+import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
+import me.foxtails.palustris.ui.motion.springPress
 import me.foxtails.palustris.ui.session.SessionUi
 
 @Composable
@@ -174,7 +180,7 @@ internal fun SetupServerScreen(
             Spacer(Modifier.height(8.dp))
             SetupTextAction(stringResource(if (state.addingAccount) R.string.sign_in_cancel else R.string.sign_in_different_instance), onCancel, enabled = !state.busy)
         } else {
-            Column(Modifier.fillMaxWidth().imePadding()) {
+            Column(Modifier.fillMaxWidth().imePadding().animateContentSize(LocalPalustrisMotionScheme.current.gentleSize)) {
                 validationError?.let {
                     Text(it, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), color = MaterialTheme.colorScheme.error)
                 }
@@ -250,10 +256,12 @@ private fun LogoSurface(modifier: Modifier) {
 
 @Composable
 private fun SetupPrimaryAction(label: String, onClick: () -> Unit, enabled: Boolean = true) {
+    val interactionSource = remember { MutableInteractionSource() }
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier.fillMaxWidth().height(64.dp).widthIn(max = 480.dp),
+        interactionSource = interactionSource,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).widthIn(max = 480.dp).springPress(interactionSource, enabled),
         shape = RoundedCornerShape(percent = 50),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
@@ -264,15 +272,18 @@ private fun SetupPrimaryAction(label: String, onClick: () -> Unit, enabled: Bool
 
 @Composable
 private fun SetupSecondaryAction(label: String, onClick: () -> Unit, enabled: Boolean = true) {
+    val interactionSource = remember { MutableInteractionSource() }
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .heightIn(min = 64.dp)
             .widthIn(max = 480.dp)
+            .springPress(interactionSource, enabled)
             .clip(RoundedCornerShape(percent = 50))
             .semantics { role = Role.Button },
         onClick = onClick,
         enabled = enabled,
+        interactionSource = interactionSource,
         shape = RoundedCornerShape(percent = 50),
         color = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -297,6 +308,7 @@ private fun SetupServerField(
     onSubmit: () -> Unit,
     onValueChange: (String) -> Unit,
 ) {
+    val fieldLabel = stringResource(R.string.setup_server_placeholder)
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -310,14 +322,20 @@ private fun SetupServerField(
             autoCorrectEnabled = false,
         ),
         keyboardActions = KeyboardActions(onGo = { onSubmit() }),
-        modifier = Modifier.fillMaxWidth().height(64.dp).widthIn(max = 480.dp).testTag("setup_server_field"),
+        // The pill grows with large text instead of clipping. A long origin scrolls inside the one line.
+        modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).widthIn(max = 480.dp)
+            .testTag("setup_server_field")
+            .semantics { contentDescription = fieldLabel },
         decorationBox = { field ->
             Surface(
                 shape = RoundedCornerShape(percent = 50),
                 color = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
-                Box(Modifier.fillMaxSize().padding(horizontal = 20.dp), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 20.dp, vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
                     if (value.isEmpty()) Text(stringResource(R.string.setup_server_placeholder), style = MaterialTheme.typography.labelLarge)
                     field()
                 }

@@ -546,6 +546,16 @@ and differ only in the width their caller grants. A query cleared by an account 
 Sources: `SearchEntryStatesTest`, `SearchClearanceTest`. Focus is not saved across rotation (the query is). Device feel and
 the IME transition on hardware are unverified.
 
+## Sign-in bubbles (Phase 7E)
+
+The server entry in `ui/setup/SetupScreens.kt` reuses only the Search bubble style and motion. The pill grows with large text
+(`heightIn(min = 64.dp)`), a long origin scrolls inside its one line, and the error message and field resize with `gentleSize`.
+The setup actions use `springPress`. Authentication keeps URL validation (`ServerAddress.normalize`), protocol detection,
+registration, and callback handling; the screen only calls `onNext`, `onComplete`, `onReopen`, and `onCancel`.
+`setupTransitionAnimates` switches without motion to or from the pending screen, the browser callback handoff.
+Sources: `SignInBubbleTest`, `SignInScreenTest`. Password-manager behavior, device keyboard movement, and the hardware
+callback return are unverified.
+
 ## Trigger surfaces (Phase 7C)
 
 `ui/motion/TriggerSurface.kt` is the one trigger-to-surface presentation contract. It owns animation state only:

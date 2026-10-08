@@ -26,7 +26,14 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.session.SessionUi
 
-private enum class SetupDestination { Initial, Server, Pending }
+internal enum class SetupDestination { Initial, Server, Pending }
+
+/**
+ * Whether a setup screen change animates. Reaching or leaving the pending screen is the browser
+ * callback handoff; the authentication flow owns that moment, so it switches without motion.
+ */
+internal fun setupTransitionAnimates(from: SetupDestination, to: SetupDestination, reducedMotion: Boolean): Boolean =
+    !reducedMotion && from != SetupDestination.Pending && to != SetupDestination.Pending
 
 @Composable
 fun SignInScreen(
@@ -73,7 +80,7 @@ fun SignInScreen(
             targetState = destination,
             modifier = Modifier.fillMaxSize(),
             transitionSpec = {
-                if (motion.reducedMotion) EnterTransition.None togetherWith ExitTransition.None
+                if (!setupTransitionAnimates(initialState, targetState, motion.reducedMotion)) EnterTransition.None togetherWith ExitTransition.None
                 else fadeIn(motion.fastFadeIn) togetherWith fadeOut(motion.fastFadeOut)
             },
             label = "setupDestination",
