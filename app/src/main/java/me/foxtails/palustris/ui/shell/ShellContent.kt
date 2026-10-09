@@ -234,14 +234,15 @@ internal fun ShellContent(
     val compactWidePresentation = wideContent && presentationMode != LargeLayoutMode.Expanded
     val compactNavigation = !navigationFit.useVerticalNavigation
     // Compact-wide hides the inline chip caret and drives the same feature-owned visibility from
-    // the contextual caret, but only while the floating stack is actually visible. A failed fit or
-    // a modal overlay keeps the inline control so chips remain toggleable.
+    // the contextual caret, but only while the floating stack is laid out. A failed fit or a local
+    // page keeps the inline control. A modal overlay only hides the stack, so the caret stays
+    // hidden and the chip row does not change behind the overlay.
     val modalOverlayOpenBeforeContent = navigator.overlay != null || navigator.sheet != null ||
         overlay.profileDialog || overlay.signOutDialog || overlay.mediaRequest != null ||
         overlay.profileImageRequest != null || navigator.singlePost != null ||
         overlay.emojiPickerTarget != null
     val useCompactWideCaret = compactWidePresentation && navigationFit.useVerticalNavigation &&
-        navigator.page == null && !modalOverlayOpenBeforeContent
+        navigator.page == null && navigator.singlePost == null
     // The compact bar is the only chrome in a wide pane layout when the vertical stack cannot
     // fit, so wide content keeps its own end clearance for that bar.
     val compactFallbackClearance = if (wideContent && compactNavigation && navigator.navigationVisible) {
@@ -272,6 +273,7 @@ internal fun ShellContent(
                         anchorLeft = anchorLeft,
                         // Modal surfaces and local pages hide the floating stack, as compact does.
                         navigationVisible = navigator.page == null && !modalOverlayOpen,
+                        reserveHiddenNavigation = navigator.page == null && navigator.singlePost == null,
                         action = wideContextualAction(
                             target = selectedTarget.toWideNavigationItem(),
                             profileTarget = displayedProfile,

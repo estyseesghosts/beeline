@@ -87,6 +87,7 @@ internal fun LargeScreenShell(
     isCompactWide: Boolean = false,
     tabCaret: TabCaretUiState? = null,
     chipEdgeBleed: Boolean = false,
+    reserveHiddenNavigation: Boolean = false,
 ) {
     val adaptiveInfo = currentWindowAdaptiveInfoV2()
     val density = LocalDensity.current
@@ -97,7 +98,8 @@ internal fun LargeScreenShell(
         leftInsetPx = bars.getLeft(density, physicalDirection).toFloat(),
         topInsetPx = bars.getTop(density).toFloat(),
     )
-    val controls = if (navigationVisible) {
+    // A transient overlay hides the stack but keeps its space, so panes do not reflow behind it.
+    val controls = if (navigationVisible || reserveHiddenNavigation) {
         floatingNavigationBounds(navigationFit, anchorLeft, isCompactWide)
     } else {
         null
@@ -191,7 +193,7 @@ internal fun LargeScreenShell(
                 }
             }
         }
-        if (controls != null) {
+        if (controls != null && navigationVisible) {
             LargeFloatingNavigation(
                 selectedTarget = selectedTarget,
                 account = account,

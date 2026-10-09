@@ -249,6 +249,35 @@ class AdaptiveNavigationTest {
         compose.runOnIdle { assertEquals(0f, leftClearance, 0.01f) }
     }
 
+    @Test fun overlayHiddenNavigationKeepsPaneBoundsAndClearance() {
+        val visible = mutableStateOf(true)
+        var leftClearance = 0f
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                PalustrisTheme {
+                    LargeScreenShell(
+                        windowWidth = 900.dp, selectedTarget = LargeNavTarget.Profile, account = null,
+                        hasDetail = false, twoPane = true,
+                        navigationFit = calculateNavigationFit(900f, 900f, Rect.Zero, anchorLeft = true),
+                        anchorLeft = true, navigationVisible = visible.value, action = null,
+                        onTargetSelected = {}, onOpenAccounts = {},
+                        reserveHiddenNavigation = true,
+                        primaryContent = { modifier, left, _ ->
+                            leftClearance = left.value
+                            Box(modifier.testTag("reserved_primary"))
+                        },
+                        detailContent = { modifier, _, _ -> Box(modifier.testTag("reserved_detail")) },
+                    )
+                }
+            }
+        }
+        val primary = bounds("reserved_primary")
+        compose.runOnIdle { visible.value = false }
+        compose.onNodeWithTag(LARGE_FLOATING_NAVIGATION_TAG).assertDoesNotExist()
+        assertEquals(primary, bounds("reserved_primary"))
+        compose.runOnIdle { assertEquals(48f, leftClearance, 0.01f) }
+    }
+
     @Test fun anchorClearanceFollowsThePaneUnderTheControlsInBothDirections() {
         val anchorLeft = mutableStateOf(true)
         var primaryLeft = 0f
