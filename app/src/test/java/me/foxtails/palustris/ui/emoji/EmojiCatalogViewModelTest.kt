@@ -209,6 +209,62 @@ class EmojiCatalogViewModelTest {
         }
     }
 
+    @Test
+    fun failedPinWriteClearsPendingKeepsPreferencesAndReportsFailure() = runTest {
+        val preferences = FakePreferencesRepository(failure = java.io.IOException("disk"))
+        val model = model(FakeRepository(EmojiCatalogSnapshot(listOf(oldEmoji), now - HOUR)), preferences)
+        runCurrent()
+
+        model.togglePinnedEmoji(":old:")
+        assertEquals(setOf(":old:"), model.state.value.pendingPins)
+        advanceUntilIdle()
+
+        assertTrue(model.state.value.pendingPins.isEmpty())
+        assertTrue(model.state.value.pinFailed)
+        assertTrue(model.state.value.preferences.pinnedEmoji.isEmpty())
+        model.loadIfNeeded()
+        assertFalse(model.state.value.pinFailed)
+    }
+
+    @Test
+    fun pinWriteStaysPendingUntilTheWriteEndsAndIgnoresRepeats() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val preferences = FakePreferencesRepository(gate = gate)
+        val model = model(FakeRepository(EmojiCatalogSnapshot(listOf(oldEmoji), now - HOUR)), preferences)
+        runCurrent()
+
+        model.togglePinnedEmoji(":old:")
+        model.togglePinnedEmoji(":old:")
+        runCurrent()
+        assertEquals(setOf(":old:"), model.state.value.pendingPins)
+        assertEquals(0, preferences.updates)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(1, preferences.updates)
+        assertTrue(model.state.value.pendingPins.isEmpty())
+        assertFalse(model.state.value.pinFailed)
+        assertEquals(listOf(":old:"), preferences.preferences.pinnedEmoji)
+    }
+
+    @Test
+    fun stoppingTheModelClearsTransientPinState() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val model = model(FakeRepository(null), FakePreferencesRepository(gate = gate))
+        runCurrent()
+        model.togglePinnedEmoji(":old:")
+        runCurrent()
+
+        model.stop()
+
+        assertTrue(model.state.value.pendingPins.isEmpty())
+        assertFalse(model.state.value.pinFailed)
+        assertEquals(account, model.state.value.accountId)
+        gate.complete(Unit)
+        advanceUntilIdle()
+    }
+
     private fun model(
         repository: EmojiCatalogRepository,
         preferences: FakePreferencesRepository = FakePreferencesRepository(),
@@ -297,8 +353,12 @@ class EmojiCatalogViewModelTest {
 
     private class FakePreferencesRepository(
         initial: EmojiPickerPreferences = EmojiPickerPreferences(),
+        private val failure: Exception? = null,
+        private val gate: CompletableDeferred<Unit>? = null,
     ) : EmojiPickerPreferencesRepository {
         var preferences = initial
+        var updates = 0
+            private set
 
         override fun observe(accountId: AccountId) = kotlinx.coroutines.flow.flowOf(preferences)
 
@@ -306,6 +366,9 @@ class EmojiCatalogViewModelTest {
             accountId: AccountId,
             transform: (EmojiPickerPreferences) -> EmojiPickerPreferences,
         ) {
+            gate?.await()
+            failure?.let { throw it }
+            updates += 1
             preferences = transform(preferences)
         }
 

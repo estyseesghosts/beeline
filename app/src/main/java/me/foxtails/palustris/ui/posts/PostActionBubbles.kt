@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.heightIn
@@ -49,6 +48,8 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.ui.emoji.EmojiCatalogState
 import me.foxtails.palustris.ui.emoji.EmojiChoiceGrid
+import me.foxtails.palustris.ui.emoji.EmojiPreferenceActions
+import me.foxtails.palustris.ui.emoji.pinState
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 
 private const val BUBBLE_DISMISS_DURATION_MILLIS = 150L
@@ -267,11 +268,10 @@ private fun ReactionBubble(
                  selectedIdentities = selectedIdentities,
                  preferences = catalog.preferences,
                  compact = false,
+                 pins = catalog.pinState(),
                  modifier = Modifier.heightIn(max = 520.dp).padding(horizontal = 8.dp, vertical = 8.dp),
                  testTag = "reaction_bubble_grid",
-                  onToggleGroupCollapsed = onToggleGroupCollapsed,
-                  onToggleGroupPinned = onToggleGroupPinned,
-                  onTogglePinnedEmoji = onTogglePinnedEmoji,
+                  actions = EmojiPreferenceActions(onToggleGroupCollapsed, onToggleGroupPinned, onTogglePinnedEmoji),
                  onEmojiSelected = onSelected,
             )
         } else {
@@ -286,9 +286,11 @@ private fun ReactionBubble(
                 },
                 selectedIdentities = selectedIdentities,
                 compact = true,
+                preferences = catalog.preferences,
+                pins = catalog.pinState(),
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
                  testTag = "reaction_bubble_grid",
-                 onTogglePinnedEmoji = onTogglePinnedEmoji,
+                 actions = EmojiPreferenceActions(togglePinnedEmoji = onTogglePinnedEmoji),
                  onEmojiSelected = onSelected,
             )
         }

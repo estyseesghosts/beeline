@@ -471,6 +471,16 @@ Inline link, username, and hashtag bubbles in `InlineEmojiText` lay out the logo
 
 Sources: `ui/emoji/InlineEmojiText.kt`, `ui/posts/HashtagBubble.kt`, `InlineEmojiTextTest`, `HomeFeedTest`.
 
+## Emoji picker tile (Phase 8A)
+
+`EmojiPickerTile` is the one tile for the compact pop-out and the full picker. It owns press, selected, pending, and pin presentation and its accessibility state. A tap selects the emoji. A long press asks for a pin change through a confirmation pill. TalkBack and keyboard users reach the same confirmation through a custom action named Pin emoji or Unpin emoji.
+
+The tile has a 48 dp minimum width and height. Combined Unicode sequences and server images stay centered and are not clipped at large font scales.
+
+`EmojiCatalogViewModel.togglePinnedEmoji` is the only pin writer. It adds the identity to `EmojiCatalogState.pendingPins` until the preference write ends. A pending tile is dimmed, reports Saving, and ignores input. The pinned state follows the saved preferences, so a failed write never looks successful. After a failed write the picker shows one error line, and the next picker opening clears it. Group collapse and group pin writes catch failures in the same way.
+
+Sources: `ui/emoji/EmojiPickerTile.kt`, `ui/emoji/EmojiPicker.kt`, `ui/emoji/EmojiCatalogViewModel.kt`, `EmojiPickerTest`, `EmojiCatalogViewModelTest`.
+
 ## Repost and Quote choice
 
 A tap on the repost action opens a source-anchored choice from `ui/posts/PostRepostChoice.kt`: `Repost` or `Undo repost`, and `Quote` only when the current source supports quoting. A tap alone never sends. Long press and the accessibility custom action still open the composer for Quote. The first choice takes focus when it opens. Back, an outside tap, a stale post, a changed repost state, and a session change close the choice without sending (`PostRepostConfirmationState` owns this). At font scale 1.5 and above the choice opens as a bottom sheet; otherwise it is a popup that flips above or below at screen edges. Repost goes through the existing mutation owner and authority, which keep optimistic repost and rollback; Quote goes to the existing target-aware composer through the shell `onQuote` callback.

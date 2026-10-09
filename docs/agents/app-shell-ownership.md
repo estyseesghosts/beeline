@@ -111,7 +111,7 @@ Test code binds test-only recorders in `app/src/test/java/me/foxtails/palustris/
 | Contract | Owner | State | Actions |
 | --- | --- | --- | --- |
 | `AccountSwitcher` | `AccountManager` | Account references | Switch, add, settings, sign out |
-| `EmojiPresentation` | `EmojiCatalogViewModel` | Catalog and capabilities | Load, retry, group and pin preferences |
+| `EmojiPresentation` | `EmojiCatalogViewModel` | Catalog, capabilities, pending pins, pin failure | Load, retry, group and pin preferences |
 | `NotificationSettingsContract` | `NotificationSettingsViewModel` | One target account and settings | Eleven settings commands |
 | `BookmarksContract` | bookmark `SavedPostsViewModel` | Bookmark collection | Refresh, paging, remove, permissions, react |
 | `NotificationsContract` | `NotificationsViewModel` | Notification inbox | Refresh, paging, read, dismiss, follow, query |

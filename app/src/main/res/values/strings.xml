@@ -128,11 +128,15 @@
     <string name="emoji_pin_group">Pin %1$s</string>
     <string name="emoji_pin_limit_group">Cannot pin %1$s; five groups are already pinned</string>
     <string name="emoji_pin_question">pin emoji?</string>
+    <string name="emoji_pin_action">Pin emoji</string>
+    <string name="emoji_pin_failed">Could not save the emoji change. Try again.</string>
+    <string name="emoji_pin_state_saving">Saving</string>
     <string name="emoji_pin_state_pinned">Pinned emoji</string>
     <string name="emoji_pin_state_unpinned">Unpinned emoji</string>
     <string name="emoji_reaction_remove">Remove the %1$s reaction</string>
     <string name="emoji_reaction_selected">%1$s reaction selected</string>
     <string name="emoji_remove_question">remove emoji?</string>
+    <string name="emoji_unpin_action">Unpin emoji</string>
     <string name="emoji_unpin_group">Unpin %1$s</string>
     <string name="error_draft_delete">Draft could not be deleted.</string>
     <string name="error_drafts_load">Drafts could not be loaded.</string>

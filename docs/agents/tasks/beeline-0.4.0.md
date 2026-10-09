@@ -2,26 +2,22 @@
 
 ## Status
 
-Phase 3B, Phase 5, and Phase 6 are pushed (`origin/main` at `efc9a3eb`). Phase 7 is complete locally and pushed once at its end because the user asked for it: 7A and 7B ("Verify restored composer targets and close orphaned profile editors (7A, 7B)"), 7C ("Add one trigger-to-surface presentation contract for composer, profile editor, and share (7C)"), 7D ("Render Search as idle, entry, and results bubbles in one field (7D)"), and 7E ("Reuse bubble style and motion on sign-in without touching authentication (7E)"). Next is Phase 8 in `docs/beeline_0.4.0.md`.
+Phases 3B, 5, 6, and 7 are pushed (`origin/main` at `cfbd6ff3`). Phase 8 is in progress: 8A is done. Next is 8B, then 8C (needs 8A and 8B).
 
 | Slice | State |
 | --- | --- |
-| 7A composer open-overlay restoration | done |
-| 7B profile editor restoration | done |
-| 7C trigger-to-surface contract | done |
-| 7D Search three visual states | done |
-| 7E sign-in bubbles | done |
+| 8A one emoji tile | done |
+| 8B picker identity, grouping, account scope | next |
+| 8C compact pop-out and full picker | after 8B |
 
 ## Decisions
 
-- 7A: reply and quote target ids live in the saveable `ComposerEditorState` with the account and session revision they were chosen under. `ComposerOwner.bindSession` keeps verified targets, drafts the editor (keeping its reply link) for the same account under a new revision, and clears it for another account. The composer overlay is still never restored. `requestNew` keeps the audience of a restored reply.
-- 7B: a restored `EditProfile` overlay key closes when no profile editor is open at first composition or account change. The profile patch uses the base the draft started from (`editorDraftBase`).
-- 7C: Back and scrim-tap dismissal skip the reverse animation; the contract has no back handler. A followers-only or direct post asks before Copy or Share.
-- 7D: focus is not saved across rotation; the query is.
+- 8A: `EmojiPickerTile` replaces `PickerCell`. `EmojiCatalogViewModel` owns `pendingPins` and `pinFailed`. The pinned state follows saved preferences, never the request. The grid takes `EmojiPinState` and `EmojiPreferenceActions` so its parameter count stays at the audit baseline.
+- 7A to 7E decisions are recorded in the Phase 7 commits and `docs/wiki/ui-and-navigation.md`.
 
 ## Device evidence
 
-None for Phase 7. Compose/Robolectric tests only. Unverified on a device: trigger-to-sheet motion, the share card scale, Search bubble to IME transition, sign-in keyboard movement and password managers, browser callback return, pure-black theme, 200% text on hardware, wide layout, RTL, reduced motion, process-death restoration of the composer and profile editor.
+8A on emulator-5554 (Mastodon account, debug build, light theme, 100% font): composer picker opens, long press shows the pin confirmation, confirm moves the emoji to Favorite, and a forced write failure (read-only `no_backup`) shows the error line without a pinned tile or a crash. Unverified: dark theme, 200% font scale, reduced motion, TalkBack action, account switch, API 29.
 
 ## Open items
 

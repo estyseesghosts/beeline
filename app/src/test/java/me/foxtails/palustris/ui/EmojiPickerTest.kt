@@ -1,20 +1,26 @@
 package me.foxtails.palustris.ui.emoji
 
 import androidx.activity.compose.setContent
-import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -33,6 +39,7 @@ import me.foxtails.palustris.domain.ReactionSelectionMode
 import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.ui.PalustrisTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -311,6 +318,79 @@ class EmojiPickerTest {
     }
 
     @Test
+    fun pendingTileIgnoresTapsAndReportsSaving() {
+        var selected: EmojiChoice? = null
+        show(
+            target = EmojiPickerTarget.Composer(ComposerField.Text),
+            catalog = EmojiCatalogState(items = catalogEmoji, pendingPins = setOf(":wave:")),
+            onEmojiSelected = { selected = it },
+        )
+
+        val tile = compose.onNodeWithTag("emoji_picker_cell_:wave:", useUnmergedTree = true)
+        tile.performClick()
+
+        assertEquals(null, selected)
+        tile.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Saving"))
+        assertFalse(tile.fetchSemanticsNode().config.contains(SemanticsActions.CustomActions))
+    }
+
+    @Test
+    fun failedPinWriteShowsMessageAndNoPinnedState() {
+        show(
+            target = EmojiPickerTarget.Composer(ComposerField.Text),
+            catalog = EmojiCatalogState(items = catalogEmoji, pinFailed = true),
+        )
+
+        compose.onNodeWithTag("emoji_pin_failure").assertIsDisplayed()
+        compose.onNodeWithTag("emoji_picker_cell_:wave:", useUnmergedTree = true)
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Unpinned emoji"))
+    }
+
+    @Test
+    fun pinAccessibilityActionOpensTheSameConfirmationAsLongPress() {
+        var pinned: String? = null
+        show(
+            target = EmojiPickerTarget.Composer(ComposerField.Text),
+            onTogglePinnedEmoji = { pinned = it },
+        )
+
+        val actions = compose.onNodeWithTag("emoji_picker_cell_:wave:", useUnmergedTree = true)
+            .fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        assertEquals(listOf("Pin emoji"), actions.map { it.label })
+        compose.activity.runOnUiThread { actions.single().action() }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("pin emoji?").assertIsDisplayed()
+        assertEquals(null, pinned)
+        compose.onNodeWithTag("emoji_pin_confirmation").performClick()
+        assertEquals(":wave:", pinned)
+    }
+
+    @Test
+    fun combinedGlyphTileKeepsTheMinimumTarget() {
+        val family = "👨‍👩‍👧"
+        val combined = post.copy(reactions = listOf(Reaction(family, 1, selected = false)))
+        show(target = EmojiPickerTarget.Reaction(OwnedPost(account.id, combined, 1L)))
+        compose.onNodeWithTag("emoji_picker_search").performTextInput(family)
+
+        compose.onNodeWithTag("emoji_picker_cell_$family", useUnmergedTree = true)
+            .assertIsDisplayed()
+            .assertWidthIsAtLeast(48.dp)
+            .assertHeightIsAtLeast(48.dp)
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun tilesKeepTheMinimumTargetAtDoubleFontScale() {
+        show(target = EmojiPickerTarget.Composer(ComposerField.Text))
+
+        compose.onNodeWithTag("emoji_picker_cell_:wave:", useUnmergedTree = true)
+            .assertIsDisplayed()
+            .assertWidthIsAtLeast(48.dp)
+            .assertHeightIsAtLeast(48.dp)
+    }
+
+    @Test
     fun longPressingPinnedEmojiOpensRemovalConfirmation() {
         var pinned: String? = null
         show(
@@ -373,8 +453,10 @@ class EmojiPickerTest {
                         preferences = me.foxtails.palustris.domain.EmojiPickerPreferences(
                             pinnedEmoji = listOf(":blob:"),
                         ),
-                        onToggleGroupCollapsed = { collapsed = it },
-                        onToggleGroupPinned = { pinned = it },
+                        actions = EmojiPreferenceActions(
+                            toggleGroupCollapsed = { collapsed = it },
+                            toggleGroupPinned = { pinned = it },
+                        ),
                         onEmojiSelected = {},
                     )
                 }

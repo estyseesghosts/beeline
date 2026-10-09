@@ -1,9 +1,9 @@
 # Handoff
 
-Phase 3B, Phase 5, and Phase 6 were pushed earlier. Phase 7 is complete: 7A and 7B ("Verify restored composer targets and close orphaned profile editors (7A, 7B)"), 7C ("Add one trigger-to-surface presentation contract for composer, profile editor, and share (7C)"), 7D ("Render Search as idle, entry, and results bubbles in one field (7D)"), and 7E ("Reuse bubble style and motion on sign-in without touching authentication (7E)"). The last safe commit before Phase 7 is `efc9a3eb`. Next is Phase 8 in `docs/beeline_0.4.0.md`.
+Phase 3B, Phase 5, Phase 6, and Phase 7 are pushed (`origin/main` at `cfbd6ff3`). Phase 8 is in progress in `docs/beeline_0.4.0.md`. Packet 8A ("Extract one emoji tile with pending state and failed-write handling (8A)") is committed. Next is 8B, then 8C. The last safe commit before Phase 8 is `cfbd6ff3`.
 
-Read `docs/agents/tasks/beeline-0.4.0.md` for decisions and open items, and `docs/wiki/ui-and-navigation.md` ("Navigation restoration", "Search entry states", "Sign-in bubbles", "Trigger surfaces") for the owning sections.
+Read `docs/agents/tasks/beeline-0.4.0.md` for decisions and open items, and `docs/wiki/ui-and-navigation.md` ("Emoji picker tile (Phase 8A)") for the owning section.
 
 Gradle test tasks that leave a gated call pending inside `runTest` hang until the timeout, and the daemon then reports "disappeared unexpectedly". Complete every gate before the test ends.
 
-Phase 7 is pushed once at its end because the user asked for it. Do not push again unless asked.
+Push at the end of Phase 8 because the user asked for it.

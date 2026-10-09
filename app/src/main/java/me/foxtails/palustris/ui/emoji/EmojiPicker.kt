@@ -6,20 +6,14 @@
 
 package me.foxtails.palustris.ui.emoji
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,8 +24,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,29 +47,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.EmojiChoice
-import me.foxtails.palustris.domain.EmojiPickerGroupIds
 import me.foxtails.palustris.domain.EmojiPickerPreferences
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.ReactionSelectionMode
@@ -258,9 +245,8 @@ fun EmojiPickerHost(
                                 post.myReaction?.let(::add)
                             }
                         }.orEmpty(),
-                        onToggleGroupCollapsed = onToggleGroupCollapsed,
-                        onToggleGroupPinned = onToggleGroupPinned,
-                         onTogglePinnedEmoji = onTogglePinnedEmoji,
+                        pins = catalog.pinState(),
+                        actions = EmojiPreferenceActions(onToggleGroupCollapsed, onToggleGroupPinned, onTogglePinnedEmoji),
                          onCloseRequest = onDismiss,
                         onEmojiSelected = { choice ->
                             onEmojiSelected(choice)
@@ -322,11 +308,10 @@ fun EmojiChoiceGrid(
     selectedIdentities: Set<String> = emptySet(),
     preferences: EmojiPickerPreferences = EmojiPickerPreferences(),
     compact: Boolean = false,
+    pins: EmojiPinState = EmojiPinState(),
     modifier: Modifier = Modifier,
     testTag: String = "emoji_picker_grid",
-    onToggleGroupCollapsed: (String) -> Unit = {},
-    onToggleGroupPinned: (String) -> Unit = {},
-    onTogglePinnedEmoji: (String) -> Unit = {},
+    actions: EmojiPreferenceActions = EmojiPreferenceActions(),
     onCloseRequest: () -> Unit = {},
     onEmojiSelected: (EmojiChoice) -> Unit,
 ) {
@@ -341,7 +326,15 @@ fun EmojiChoiceGrid(
     val recentChoices = remember(recents) {
         recents.map { EmojiChoice(it, it) }
     }
-    var pendingPin by remember { mutableStateOf<PendingEmojiPin?>(null) }
+    // The confirmation belongs to one account scope; a new scope starts without it.
+    var pendingPin by remember(pins.scopeKey) { mutableStateOf<PendingEmojiPin?>(null) }
+    val useChoice: (EmojiChoice) -> Unit = { choice ->
+        recents = (listOf(choice.submissionValue) + recents.filterNot { it == choice.submissionValue }).take(RECENT_LIMIT)
+        onEmojiSelected(choice)
+    }
+    val requestPin: (EmojiChoice, Rect) -> Unit = { choice, bounds ->
+        pendingPin = PendingEmojiPin(choice, bounds, choice.submissionValue in preferences.pinnedEmoji)
+    }
     val serverChoices = remember(catalogItems, additionalChoices) {
         (catalogItems.filter { it.visibleInPicker }.map { item ->
             EmojiChoice(
@@ -368,43 +361,37 @@ fun EmojiChoiceGrid(
         }.distinctBy { it.choice.submissionValue }
     }
     if (compact) {
-        Box(modifier.fillMaxWidth()) {
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(48.dp),
-                state = gridState,
-                modifier = Modifier.fillMaxWidth().heightIn(max = 160.dp).testTag(testTag),
-                contentPadding = PaddingValues(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                items(compactChoices, key = { "compact-${it.choice.submissionValue}" }) { picker ->
-                    PickerCell(
-                        choice = picker.choice,
-                        selected = picker.selected,
-                        pinned = picker.choice.submissionValue in preferences.pinnedEmoji,
-                        onClick = {
-                            recents = (listOf(picker.choice.submissionValue) +
-                                recents.filterNot { it == picker.choice.submissionValue }).take(RECENT_LIMIT)
-                            onEmojiSelected(picker.choice)
-                        },
-                        onLongClick = { bounds ->
-                            pendingPin = PendingEmojiPin(
-                                picker.choice,
-                                bounds,
-                                picker.choice.submissionValue in preferences.pinnedEmoji,
-                            )
-                        },
-                    )
+        Column(modifier.fillMaxWidth()) {
+            if (pins.failed) PinFailureMessage()
+            Box(Modifier.fillMaxWidth()) {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(48.dp),
+                    state = gridState,
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 160.dp).testTag(testTag),
+                    contentPadding = PaddingValues(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    items(compactChoices, key = { "compact-${it.choice.submissionValue}" }) { picker ->
+                        EmojiPickerTile(
+                            choice = picker.choice,
+                            selected = picker.selected,
+                            pinned = picker.choice.submissionValue in preferences.pinnedEmoji,
+                            pending = picker.choice.submissionValue in pins.pendingPins,
+                            onClick = { useChoice(picker.choice) },
+                            onLongClick = { bounds -> requestPin(picker.choice, bounds) },
+                        )
+                    }
                 }
+                EmojiPinConfirmationPopup(
+                    pending = pendingPin,
+                    onConfirm = { pending ->
+                        actions.togglePinnedEmoji(pending.choice.submissionValue)
+                        pendingPin = null
+                    },
+                    onDismiss = { pendingPin = null },
+                )
             }
-            EmojiPinConfirmationPopup(
-                pending = pendingPin,
-                onConfirm = { pending ->
-                    onTogglePinnedEmoji(pending.choice.submissionValue)
-                    pendingPin = null
-                },
-                onDismiss = { pendingPin = null },
-            )
         }
         return
     }
@@ -434,6 +421,7 @@ fun EmojiChoiceGrid(
         alpha = if (gridState.isScrollInProgress) 0.85f else 0.45f,
     )
     Column(Modifier.fillMaxWidth()) {
+        if (pins.failed) PinFailureMessage()
         TextField(
             value = query,
             onValueChange = { query = it },
@@ -485,28 +473,19 @@ fun EmojiChoiceGrid(
                     item(key = "header-${group.id}", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                         EmojiGroupHeader(
                             group = group,
-                            onToggleCollapsed = onToggleGroupCollapsed,
-                            onTogglePinned = onToggleGroupPinned,
+                            onToggleCollapsed = actions.toggleGroupCollapsed,
+                            onTogglePinned = actions.toggleGroupPinned,
                         )
                     }
                     group.choices.forEach { choice ->
                         item(key = "${group.id}-${choice.submissionValue}") {
-                            PickerCell(
+                            EmojiPickerTile(
                                 choice = choice,
                                 selected = choice.submissionValue in selectedIdentities,
                                 pinned = choice.submissionValue in preferences.pinnedEmoji,
-                                onClick = {
-                                    recents = (listOf(choice.submissionValue) +
-                                        recents.filterNot { it == choice.submissionValue }).take(RECENT_LIMIT)
-                                    onEmojiSelected(choice)
-                                },
-                                onLongClick = { bounds ->
-                                    pendingPin = PendingEmojiPin(
-                                        choice,
-                                        bounds,
-                                        choice.submissionValue in preferences.pinnedEmoji,
-                                    )
-                                },
+                                pending = choice.submissionValue in pins.pendingPins,
+                                onClick = { useChoice(choice) },
+                                onLongClick = { bounds -> requestPin(choice, bounds) },
                             )
                         }
                     }
@@ -515,7 +494,7 @@ fun EmojiChoiceGrid(
             EmojiPinConfirmationPopup(
                 pending = pendingPin,
                 onConfirm = { pending ->
-                    onTogglePinnedEmoji(pending.choice.submissionValue)
+                    actions.togglePinnedEmoji(pending.choice.submissionValue)
                     pendingPin = null
                 },
                 onDismiss = { pendingPin = null },
@@ -544,64 +523,14 @@ fun EmojiChoiceGrid(
 }
 
 @Composable
-private fun PickerCell(
-    choice: EmojiChoice,
-    selected: Boolean,
-    pinned: Boolean,
-    onClick: () -> Unit,
-    onLongClick: (Rect) -> Unit,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    var bounds by remember { mutableStateOf(Rect.Zero) }
-    val background = when {
-        selected -> MaterialTheme.colorScheme.secondaryContainer
-        pressed -> MaterialTheme.colorScheme.surfaceContainer
-        else -> Color.Transparent
-    }
-    val custom = choice.emoji
-    val description = custom?.let { stringResource(R.string.custom_emoji_image_description, it.shortcode) }
-        ?: choice.displayText
-    val pinStateDescription = stringResource(
-        if (pinned) R.string.emoji_pin_state_pinned else R.string.emoji_pin_state_unpinned,
+private fun PinFailureMessage() {
+    Text(
+        stringResource(R.string.emoji_pin_failed),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).testTag("emoji_pin_failure"),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.error,
+        textAlign = TextAlign.Center,
     )
-    Box(
-        Modifier
-            .heightIn(min = 48.dp)
-            .background(background, RoundedCornerShape(12.dp))
-            .onGloballyPositioned { bounds = it.boundsInWindow() }
-            .combinedClickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-                onLongClick = { onLongClick(bounds) },
-            )
-            .semantics {
-                contentDescription = description
-                role = Role.Button
-                this.selected = selected
-                stateDescription = pinStateDescription
-            }
-            .testTag("emoji_picker_cell_${choice.submissionValue}"),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (custom != null) {
-            CustomEmojiImage(
-                emoji = custom,
-                fallbackText = custom.token,
-                modifier = Modifier.size(32.dp),
-            )
-        } else {
-            Text(
-                choice.displayText,
-                fontSize = 24.sp,
-                maxLines = 1,
-                softWrap = false,
-                overflow = TextOverflow.Clip,
-                textAlign = TextAlign.Center,
-            )
-        }
-    }
 }
 
 @Composable

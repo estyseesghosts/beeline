@@ -18,6 +18,7 @@ import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.EmojiCatalogRepository
 import me.foxtails.palustris.domain.EmojiCatalogSnapshot
 import me.foxtails.palustris.domain.EmojiPickerGroupIds
+import me.foxtails.palustris.domain.EmojiPickerPreferences
 import me.foxtails.palustris.domain.EmojiPickerPreferencesRepository
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
@@ -36,7 +37,7 @@ class EmojiCatalogViewModel @AssistedInject constructor(
     private val preferencesRepository: EmojiPickerPreferencesRepository,
     private val uiStrings: UiStrings = UiStrings.Default,
 ) : ViewModel() {
-    private val _state = MutableStateFlow(EmojiCatalogState())
+    private val _state = MutableStateFlow(EmojiCatalogState(accountId = accountId))
     val state = _state.asStateFlow()
     private var loadJob: Job? = null
     private var preferencesJob: Job? = null
@@ -51,6 +52,8 @@ class EmojiCatalogViewModel @AssistedInject constructor(
     }
 
     fun loadIfNeeded() {
+        // Each picker opening starts without the previous pin failure.
+        if (_state.value.pinFailed) _state.value = _state.value.copy(pinFailed = false)
         if (stopped || loadJob?.isActive == true || _state.value.unsupported) return
         loadJob = viewModelScope.launch {
             // Cancellation stays cancellation: a stopped load must not fall through
@@ -81,7 +84,7 @@ class EmojiCatalogViewModel @AssistedInject constructor(
     fun toggleGroupCollapsed(groupId: String) {
         if (stopped) return
         viewModelScope.launch {
-            preferencesRepository.update(accountId) { current ->
+            updatePreferences { current ->
                 current.copy(
                     collapsedGroups = if (groupId in current.collapsedGroups) {
                         current.collapsedGroups - groupId
@@ -96,7 +99,7 @@ class EmojiCatalogViewModel @AssistedInject constructor(
     fun toggleGroupPinned(groupId: String) {
         if (stopped || !EmojiPickerGroupIds.isServer(groupId)) return
         viewModelScope.launch {
-            preferencesRepository.update(accountId) { current ->
+            updatePreferences { current ->
                 current.copy(
                     pinnedGroups = if (groupId in current.pinnedGroups) {
                         current.pinnedGroups.filterNot { it == groupId }
@@ -108,23 +111,36 @@ class EmojiCatalogViewModel @AssistedInject constructor(
         }
     }
 
+    /**
+     * Toggles one pinned emoji. The identity stays in [EmojiCatalogState.pendingPins] until the
+     * write ends. The pinned state follows the saved preferences, so a failed write never shows
+     * as pinned. A second request for a pending identity is ignored.
+     */
     fun togglePinnedEmoji(identity: String) {
         if (stopped || identity.isBlank() || identity.any(Char::isISOControl)) return
-        viewModelScope.launch {
-            preferencesRepository.update(accountId) { current ->
-                current.copy(
-                    pinnedEmoji = if (identity in current.pinnedEmoji) {
-                        current.pinnedEmoji.filterNot { it == identity }
-                    } else {
-                        current.pinnedEmoji + identity
-                    },
-                )
-            }
-        }
+        if (identity in _state.value.pendingPins) return
+        _state.value = _state.value.copy(pendingPins = _state.value.pendingPins + identity, pinFailed = false)
+        viewModelScope.launch { finishPin(identity, updatePreferences { it.withPinnedEmoji(identity) }) }
     }
+
+    private fun finishPin(identity: String, saved: Boolean) {
+        _state.value = _state.value.copy(pendingPins = _state.value.pendingPins - identity, pinFailed = !saved)
+    }
+
+    /** Returns false when the preference write fails. Cancellation still propagates. */
+    private suspend fun updatePreferences(transform: (EmojiPickerPreferences) -> EmojiPickerPreferences): Boolean =
+        try {
+            preferencesRepository.update(accountId, transform)
+            true
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            false
+        }
 
     fun stop() {
         stopped = true
+        _state.value = _state.value.copy(pendingPins = emptySet(), pinFailed = false)
         loadJob?.cancel()
         preferencesJob?.cancel()
     }
@@ -172,7 +188,7 @@ class EmojiCatalogViewModel @AssistedInject constructor(
         val currentCatalogIdentities = items.filter { it.visibleInPicker }
             .mapTo(mutableSetOf()) { it.submissionValue }
         viewModelScope.launch {
-            preferencesRepository.update(accountId) { current ->
+            updatePreferences { current ->
                 current.copy(
                     collapsedGroups = current.collapsedGroups.filterNot { group ->
                         EmojiPickerGroupIds.isServer(group) && group !in groups
@@ -203,3 +219,7 @@ class EmojiCatalogViewModel @AssistedInject constructor(
         const val FRESHNESS_MILLIS = 24L * 60L * 60L * 1000L
     }
 }
+
+private fun EmojiPickerPreferences.withPinnedEmoji(identity: String): EmojiPickerPreferences = copy(
+    pinnedEmoji = if (identity in pinnedEmoji) pinnedEmoji.filterNot { it == identity } else pinnedEmoji + identity,
+)
