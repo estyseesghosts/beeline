@@ -75,20 +75,11 @@ sealed interface EmojiPickerTarget {
     data class Composer(val field: ComposerField) : EmojiPickerTarget
 }
 
-private data class PickerChoice(
-    val choice: EmojiChoice,
-    val category: String?,
-    val section: PickerSection,
-    val selected: Boolean,
-)
-
 private data class PendingEmojiPin(
     val choice: EmojiChoice,
     val bounds: Rect,
     val pinned: Boolean,
 )
-
-private enum class PickerSection { Recent, Unicode, Server }
 
 @Composable
 private fun EmojiPickerGroup.labelText(): String = when (val label = label) {
@@ -317,16 +308,10 @@ fun EmojiChoiceGrid(
     onEmojiSelected: (EmojiChoice) -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
-    val unicodeChoices = remember {
-        DefaultUnicodeEmojis.map { EmojiChoice(it, it) }
-    }
     val gridState = rememberLazyGridState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val recentIdentities = recents.identities
-    val recentChoices = remember(recentIdentities) {
-        recentIdentities.map { EmojiChoice(it, it) }
-    }
     // The confirmation belongs to one account scope; a new scope starts without it.
     var pendingPin by remember(pins.scopeKey) { mutableStateOf<PendingEmojiPin?>(null) }
     val useChoice: (EmojiChoice) -> Unit = { choice ->
@@ -336,30 +321,8 @@ fun EmojiChoiceGrid(
     val requestPin: (EmojiChoice, Rect) -> Unit = { choice, bounds ->
         pendingPin = PendingEmojiPin(choice, bounds, choice.submissionValue in preferences.pinnedEmoji)
     }
-    val serverChoices = remember(catalogItems, additionalChoices) {
-        (catalogItems.filter { it.visibleInPicker }.map { item ->
-            EmojiChoice(
-                submissionValue = item.submissionValue,
-                displayText = item.token,
-                emoji = item,
-            )
-        } + additionalChoices).distinctBy { it.submissionValue }
-    }
-    val allChoices = remember(recentChoices, unicodeChoices, serverChoices, selectedIdentities) {
-        buildList {
-            recentChoices.forEach { add(PickerChoice(it, null, PickerSection.Recent, false)) }
-            unicodeChoices.forEach { add(PickerChoice(it, null, PickerSection.Unicode, false)) }
-            serverChoices.forEach { add(PickerChoice(it, it.emoji?.category, PickerSection.Server, false)) }
-        }.distinctBy { it.choice.submissionValue }
-            .map { it.copy(selected = it.choice.submissionValue in selectedIdentities) }
-    }
-    val compactChoices = remember(allChoices) {
-        buildList {
-            addAll(allChoices.filter { it.section == PickerSection.Recent })
-            addAll(allChoices.filter { it.section == PickerSection.Unicode }.take(COMPACT_UNICODE_LIMIT))
-            addAll(allChoices.filter { it.section == PickerSection.Server }.take(COMPACT_SERVER_LIMIT))
-            addAll(allChoices.filter { it.selected })
-        }.distinctBy { it.choice.submissionValue }
+    val compactChoices = remember(catalogItems, additionalChoices, recentIdentities, selectedIdentities, preferences) {
+        buildCompactEmojiChoices(catalogItems, additionalChoices, recentIdentities, selectedIdentities, preferences)
     }
     if (compact) {
         Column(modifier.fillMaxWidth()) {
@@ -373,14 +336,14 @@ fun EmojiChoiceGrid(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    items(compactChoices, key = { "compact-${it.choice.submissionValue}" }) { picker ->
+                    items(compactChoices, key = { "compact-${it.submissionValue}" }) { choice ->
                         EmojiPickerTile(
-                            choice = picker.choice,
-                            selected = picker.selected,
-                            pinned = picker.choice.submissionValue in preferences.pinnedEmoji,
-                            pending = picker.choice.submissionValue in pins.pendingPins,
-                            onClick = { useChoice(picker.choice) },
-                            onLongClick = { bounds -> requestPin(picker.choice, bounds) },
+                            choice = choice,
+                            selected = choice.submissionValue in selectedIdentities,
+                            pinned = choice.submissionValue in preferences.pinnedEmoji,
+                            pending = choice.submissionValue in pins.pendingPins,
+                            onClick = { useChoice(choice) },
+                            onLongClick = { bounds -> requestPin(choice, bounds) },
                         )
                     }
                 }
@@ -570,6 +533,3 @@ private fun EmojiPinConfirmationPopup(
         )
     }
 }
-
-private const val COMPACT_UNICODE_LIMIT = 8
-private const val COMPACT_SERVER_LIMIT = 4

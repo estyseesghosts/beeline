@@ -115,6 +115,54 @@ internal fun buildEmojiPickerGroups(
     }
 }
 
+/**
+ * The compact pop-out choices in one predictable, bounded order. Each section keeps the order of
+ * its source and a fixed limit. The sections are, from first to last:
+ * selected reactions, pinned favorites, recents, post-specific custom emoji, standard emoji, and
+ * server custom emoji. An emoji appears once, at its first section. Selected reactions are always
+ * included so expanding or reopening never hides them. Collapsed groups do not affect this list.
+ */
+internal fun buildCompactEmojiChoices(
+    catalogItems: List<CustomEmoji>,
+    additionalChoices: List<EmojiChoice>,
+    recentIdentities: List<String>,
+    selectedIdentities: Set<String>,
+    preferences: EmojiPickerPreferences,
+): List<EmojiChoice> {
+    val server = catalogItems.filter { it.visibleInPicker }
+        .map { EmojiChoice(it.submissionValue, it.token, it) }
+        .distinctBy { it.submissionValue }
+    val serverById = server.associateBy { it.submissionValue }
+    val postSpecific = additionalChoices.map { choice ->
+        val emoji = choice.emoji ?: serverById[choice.submissionValue]?.emoji
+        choice.copy(displayText = emoji?.token ?: choice.displayText, emoji = emoji)
+    }.distinctBy { it.submissionValue }
+    val standard = DefaultUnicodeEmojis.map { EmojiChoice(it, it) }
+    val known = linkedMapOf<String, EmojiChoice>().apply {
+        server.forEach { put(it.submissionValue, it) }
+        postSpecific.forEach { putIfAbsent(it.submissionValue, it) }
+        standard.forEach { putIfAbsent(it.submissionValue, it) }
+    }
+    val customPostSpecific = postSpecific.filter { it.isCustomIdentity() && it.submissionValue !in serverById }
+    return buildList {
+        addAll(selectedIdentities.mapNotNull(known::get))
+        addAll(preferences.pinnedEmoji.mapNotNull(known::get).take(COMPACT_FAVORITE_LIMIT))
+        addAll(
+            recentIdentities.mapNotNull { known[it] ?: it.takeUnless(String::isCustomIdentity)?.let { id -> EmojiChoice(id, id) } }
+                .take(COMPACT_RECENT_LIMIT),
+        )
+        addAll(customPostSpecific.take(COMPACT_POST_SPECIFIC_LIMIT))
+        addAll(standard.take(COMPACT_STANDARD_LIMIT))
+        addAll(server.take(COMPACT_SERVER_LIMIT))
+    }.distinctBy { it.submissionValue }
+}
+
+internal const val COMPACT_FAVORITE_LIMIT = 8
+internal const val COMPACT_RECENT_LIMIT = 6
+internal const val COMPACT_POST_SPECIFIC_LIMIT = 4
+internal const val COMPACT_STANDARD_LIMIT = 8
+internal const val COMPACT_SERVER_LIMIT = 4
+
 private fun EmojiChoice.isCustomIdentity(): Boolean = emoji != null || submissionValue.startsWith(":")
 
 private fun String.isCustomIdentity(): Boolean = startsWith(":")

@@ -491,6 +491,18 @@ A failed catalog load keeps the previous snapshot and shows the error with a ret
 
 Sources: `ui/emoji/EmojiRecents.kt`, `ui/emoji/EmojiCatalogState.kt`, `ui/emoji/EmojiCatalogViewModel.kt`, `EmojiPickerTest`, `EmojiCatalogViewModelTest`, `EmojiPickerPreferencesRepositoryTest`, `EmojiAssetStoreTest` (shared downloads).
 
+## Reaction picker sizes (Phase 8C)
+
+The reaction picker has two deliberate sizes and one choice contract. The compact pop-out and the full picker use the same `EmojiPickerTile`, the same `EmojiCatalogState`, the same `EmojiRecents`, and the same `onReactionSelected(ownedPost, choice)` callback. `PostActionBubbleHost` keeps the target until it closes, so expanding never changes the post.
+
+The compact pop-out shows the reactions you selected, then at most 30 more emoji in this order: pinned favorites (8), recents (6), post-specific custom emoji (4), standard emoji (8), and server custom emoji (4). An emoji appears once. `buildCompactEmojiChoices` owns this order. Selected reactions always appear, so expanding or reopening never hides them.
+
+`reactionPickerSurface` chooses the surface. The compact pop-out stays anchored above the post action. The expanded picker is anchored too, with a height of 360 to 520 dp from the roomier side of the anchor. It moves to a bottom sheet (`ReactionPickerSheet`) when the font scale is 1.5 or more, when neither side has 360 dp, or when the anchor is missing or off screen. A missing anchor opens the full picker in the sheet at once. The sheet uses the same grid, recents, and callbacks.
+
+Reduced motion shows and hides the pop-out at once. The pin confirmation is a nested focusable popup, so it should receive Back before the picker. No test or device run has confirmed this order. An account or session change clears the target and the reaction callback in `ShellOverlayPresenter`. A server without reaction mutation never opens the picker, and a target that loses the capability dismisses.
+
+Sources: `ui/posts/PostActionBubbles.kt`, `ui/posts/ReactionPickerSheet.kt`, `ui/emoji/EmojiPickerGrouping.kt`, `PostActionBubbleHostTest`, `ReactionPickerSurfaceTest`, `ReactionBubbleOwnershipTest`, `CompactEmojiChoicesTest`, `ReactionPickerGestureTest`.
+
 ## Repost and Quote choice
 
 A tap on the repost action opens a source-anchored choice from `ui/posts/PostRepostChoice.kt`: `Repost` or `Undo repost`, and `Quote` only when the current source supports quoting. A tap alone never sends. Long press and the accessibility custom action still open the composer for Quote. The first choice takes focus when it opens. Back, an outside tap, a stale post, a changed repost state, and a session change close the choice without sending (`PostRepostConfirmationState` owns this). At font scale 1.5 and above the choice opens as a bottom sheet; otherwise it is a popup that flips above or below at screen edges. Repost goes through the existing mutation owner and authority, which keep optimistic repost and rollback; Quote goes to the existing target-aware composer through the shell `onQuote` callback.
