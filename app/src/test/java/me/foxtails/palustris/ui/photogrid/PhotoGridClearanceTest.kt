@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -43,6 +44,7 @@ import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.timelineDisplayOrder
@@ -106,6 +108,11 @@ class PhotoGridClearanceTest {
 
     private fun text(label: Int) = compose.activity.getString(label)
 
+    private fun favouriteBounds(): List<Rect> = compose.onAllNodes(hasClickAction(), useUnmergedTree = true)
+        .fetchSemanticsNodes()
+        .filter { it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("photo_grid_favourite_") == true }
+        .map { it.boundsInRoot }
+
     private fun show(direction: LayoutDirection, content: @Composable () -> Unit) {
         compose.activity.runOnUiThread {
             compose.activity.setContent {
@@ -121,13 +128,20 @@ class PhotoGridClearanceTest {
         compose.waitForIdle()
     }
 
+    /** The cards underlap the rail by this much; their image surface may reach it but no control may. */
+    private val underlapPx get() = PhotoGridRailUnderlap.value * density
+
+    private fun SemanticsNode.isCardSurface() =
+        config.getOrNull(SemanticsProperties.TestTag)?.startsWith("photo_grid_tile_") == true
+
     private fun assertClicksClearRight(safeRight: Float) {
         val nodes = compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
         assertTrue("fixture must exercise interactions", nodes.isNotEmpty())
         // Chips scroll beneath floating chrome by design; chipsRest asserts where they rest.
         nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 && !it.isChipRowEntry() }.forEach {
+            val allowance = if (it.isCardSurface()) underlapPx else 0f
             assertTrue("click target ${it.config} crosses physical right: ${it.boundsInRoot}",
-                it.boundsInRoot.right <= safeRight + 1f)
+                it.boundsInRoot.right <= safeRight + allowance + 1f)
         }
     }
 
@@ -178,7 +192,7 @@ class PhotoGridClearanceTest {
         for (direction in LayoutDirection.entries) {
             show(direction) {
                 PhotoGridScreen(state = state("left", count = 6), compactLayout = false,
-                    leftObstructionClearance = right)
+                    leftObstructionClearance = right, cardActions = PhotoGridCardActions(setOf(PostAction.Favorite)))
             }
             val viewport = bounds("photo_grid_test_viewport")
             assertEquals(viewport, bounds("photo_grid_content"))
@@ -186,9 +200,12 @@ class PhotoGridClearanceTest {
             assertTrue(chipsRest(direction, true) >= safeLeft - 1f)
             compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
                 .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
-                    assertTrue("Photo Grid interaction clears physical left", it.boundsInRoot.left >= safeLeft - 1f)
+                    val allowance = if (it.isCardSurface()) underlapPx else 0f
+                    assertTrue("Photo Grid interaction clears physical left", it.boundsInRoot.left >= safeLeft - allowance - 1f)
                 }
-            assertTrue(tileBounds("left-0").left >= safeLeft - 1f)
+            assertTrue(tileBounds("left-0").left >= safeLeft - underlapPx - 1f)
+            favouriteBounds().forEach { assertTrue("favorite clears physical left", it.left >= safeLeft - 1f) }
+            assertTrue("a card underlaps the left rail", (0 until 6).any { tileBounds("left-$it").left < safeLeft - 1f })
         }
     }
 
@@ -201,6 +218,7 @@ class PhotoGridClearanceTest {
                     compactLayout = false,
                     rightObstructionClearance = right,
                     bottomObstructionClearance = bottom,
+                    cardActions = PhotoGridCardActions(setOf(PostAction.Favorite)),
                     onOpenPost = { opened = it.post.id.value },
                 )
             }
@@ -211,8 +229,11 @@ class PhotoGridClearanceTest {
             (0 until 6).forEach { index ->
                 val tile = tileBounds("wide-$index")
                 assertTrue("tile wide-$index starts inside the viewport", tile.left >= viewport.left - 1f)
-                assertTrue("tile wide-$index clears physical right", tile.right <= safeRight + 1f)
+                assertTrue("tile wide-$index stays within the underlap", tile.right <= safeRight + underlapPx + 1f)
             }
+            assertTrue("a card underlaps the rail", (0 until 6).any { tileBounds("wide-$it").right > safeRight + 1f })
+            favouriteBounds().also { assertTrue("favorites are shown", it.isNotEmpty()) }
+                .forEach { assertTrue("favorite clears physical right", it.right <= safeRight + 1f) }
             assertClicksClearRight(safeRight)
             compose.onNodeWithTag("photo_grid_tile_${tileKey("wide-0")}", useUnmergedTree = true).performClick()
             assertEquals("wide-0", opened)
@@ -388,7 +409,7 @@ class PhotoGridClearanceTest {
             val safeRight = viewport.right - right.value * density
             val gridViewport = bounds("photo_grid_content")
             assertTrue("branch grid clears physical right",
-                tileBounds("branch-0").right <= safeRight + 1f)
+                tileBounds("branch-0").right <= safeRight + underlapPx + 1f)
             assertEquals("branch dock spans to the physical right edge", viewport.right, bounds("photo_grid_dock").right, 1f)
             assertTrue("branch chip row clears physical right", chipsRest(direction, false) <= safeRight + 1f)
             assertTrue("branch dock clears bottom obstruction",

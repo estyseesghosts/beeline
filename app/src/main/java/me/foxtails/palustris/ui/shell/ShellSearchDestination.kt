@@ -7,9 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import me.foxtails.palustris.domain.Account
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.navigation.ShellNavigator
+import me.foxtails.palustris.ui.photogrid.PhotoGridCardActions
 import me.foxtails.palustris.ui.photogrid.PhotoGridScreen
 import me.foxtails.palustris.ui.search.SearchScreen
 
@@ -43,6 +45,7 @@ internal fun ShellSearchDestination(
     sessionRevision: Long,
     useCompactWideCaret: Boolean,
     tabCaretHost: CompactWideTabCaretHost?,
+    favouriteArtworkStyle: FavouriteArtworkStyle = FavouriteArtworkStyle.Heart,
 ) {
     AnimatedStatePane(
         stateKey = navigator.searchPanel,
@@ -97,6 +100,12 @@ internal fun ShellSearchDestination(
                 onAddHashtag = photoGrid.actions::addHashtag,
                 onClearPreferenceError = photoGrid.actions::clearPreferenceError,
                 onOpenPost = { post -> navigationCallbacks.onOpenPost(post, LargePostOrigin.PhotoGrid) },
+                cardActions = PhotoGridCardActions(
+                    availableActions = postCallbacks.availableActions,
+                    favouriteArtworkStyle = favouriteArtworkStyle,
+                    onFavourite = postCallbacks.onReact,
+                    onQuickView = overlay::openPhotoQuickView,
+                ),
                 compactLayout = !largePresentation,
                 compactNavigationVisible = !largePresentation,
                 rightObstructionClearance = rightObstructionClearance,

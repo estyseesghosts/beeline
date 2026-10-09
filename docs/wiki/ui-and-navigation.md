@@ -157,11 +157,10 @@ The shared-row test verifies collapse and retained chip position. Device Search 
 
 ## Wide Photo Grid clearance
 
-Photo Grid keeps its full-size grid viewport. Tiles, the load-older control, the paging-error surface,
-the up-to-date label, and the empty state clear shell-supplied physical right in LTR and RTL.
-A tile is opaque media and one click target, so the clearance goes into the grid's own content inset
-instead of inside each tile. A per-tile inset would leave an untappable strip in every lane.
-Adaptive lanes recalculate for the narrower content area. Tile media no longer passes under floating chrome.
+Photo Grid keeps its full-size grid viewport. Each entry is a card: an inset 16 dp image, a one-line caption, and a fixed 64 dp footer with avatar, display name, and the favorite button. Lane and row gaps are 8 dp, outer padding is 8 dp, and the image ratio clamps to 1:2 through 16:9.
+In wide layouts the grid's content inset is the shell-supplied physical clearance less `PhotoGridRailUnderlap` (16 dp), never below the outer padding. Cards in the lane next to the rail therefore underlap it by up to 16 dp. The rail draws over the card surface.
+No control may sit under the rail. That lane gets a footer inset equal to the underlap actually reached, found from `LazyStaggeredGridItemInfo.lane` and the adaptive lane count, mirrored for layout direction and for the physical left anchor. Full-line rows (load-older, paging error, up-to-date, empty) are inset by the full underlap.
+A tap on the image in the underlapped strip can reach the rail instead. That is accepted. The lane is known after the first measure, so a new card in the outer lane can show a one-frame footer inset change; this is unverified on device beyond the emulator.
 The full-screen error state keeps its full-size viewport and clears only its retry content.
 
 Bottom clearance extends the wide grid end spacing. The wide filter-chip dock clears physical right and sits
@@ -637,3 +636,10 @@ The viewer draws the transition image only while the selected page is revealed. 
 Viewer dismissal: an unzoomed drag fades the backdrop (down to 40% at the dismiss distance) and the fade continues from that level when the viewer returns or closes, so there is no flash. Zoom keeps priority over drag and paging. Close travels to the registered thumbnail when it is still valid; otherwise the image settles near the release point and fades out. Reduced motion snaps the phases without overshoot.
 
 Sources: `ui/media/MediaTransitionState.kt`, `MediaTransitionRegistryExtensions.kt`, `PostMediaCarousel.kt`, `MediaViewerScreen.kt`, `ui/shell/ShellEffects.kt`, `MediaTransitionStateTest`, `PostMediaCarouselTest`, `MediaViewerScreenTest`. Device visuals are unverified.
+
+## Photo Grid quick-view
+
+A press and hold on a revealed image card opens the quick-view. `ShellOverlayPresenter.photoQuickView` owns the target. `ShellBubbleHost` draws it before the reaction bubble and share sheet, so the scrim covers the rail and both surfaces open above it. It counts as a modal overlay, so the rail hides while it is open.
+The target holds the post (with account and session revision), attachment index, and card bounds. `openPhotoQuickView` rejects foreign posts and stale revisions, and account or session changes clear it.
+Entries follow `actionsForPost`: Heart (or Star) plus React when both exist, otherwise one Favourite; Reply; Repost, confirmed inline before it runs; Share, which opens the existing share sheet. Every action closes the quick-view first. Unrevealed, content-warning, and hidden cards have no quick-view. Each card also offers a "More actions" accessibility action.
+Drag-and-release (plan slice 5) and focus return to the card are not implemented.

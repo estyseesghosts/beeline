@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.Account
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.LocalPaneEdgeBleed
@@ -221,6 +222,7 @@ internal fun ShellDestinationContent(
                                 sessionRevision = sessionRevision,
                                 useCompactWideCaret = useCompactWideCaret,
                                 tabCaretHost = tabCaretHost,
+                                favouriteArtworkStyle = home?.state?.favouriteArtworkStyle ?: FavouriteArtworkStyle.Heart,
                             )
                             Destination.Notifications -> AppNotificationsDestinationContent(
                                 panel = navigator.notificationsPanel,

@@ -21,13 +21,13 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.PalustrisTheme
+import me.foxtails.palustris.ui.large.LargeNavTarget
 import me.foxtails.palustris.ui.photogrid.PhotoGridFeedState
 import me.foxtails.palustris.ui.photogrid.PhotoGridScreen
-import me.foxtails.palustris.ui.shell.Destination
-import me.foxtails.palustris.ui.shell.SearchPanel
-import me.foxtails.palustris.ui.large.LargeNavTarget
 import me.foxtails.palustris.ui.photogrid.photoGridAspectRatio
 import me.foxtails.palustris.ui.photogrid.photoGridItems
+import me.foxtails.palustris.ui.shell.Destination
+import me.foxtails.palustris.ui.shell.SearchPanel
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -104,7 +104,8 @@ class PhotoGridScreenTest {
         assertEquals(0.8f, ratio(400, 500), 0.001f)
         assertEquals(16f / 9f, ratio(1600, 900), 0.001f)
         assertEquals(0.5f, ratio(100, 1000), 0.001f)
-        assertEquals(2f, ratio(1000, 100), 0.001f)
+        assertEquals(16f / 9f, ratio(1000, 100), 0.001f)
+        assertEquals(16f / 9f, ratio(3000, 1000), 0.001f)
         assertEquals(4f / 3f, ratio(null, null), 0.001f)
     }
 
@@ -232,6 +233,67 @@ class PhotoGridScreenTest {
 
         assertEquals(1, loadCount)
         compose.onNodeWithContentDescription("Open post").assertIsDisplayed()
+    }
+
+    @Test
+    fun cardShowsCaptionAuthorAndFavouriteButtonThatDoesNotOpenThePost() {
+        var opened = 0
+        var favourited: OwnedPost? = null
+        showWithActions(
+            PhotoGridFeedState(posts = listOf(OwnedPost(account.id, post("card", listOf(image("card")))))),
+            actions = setOf(me.foxtails.palustris.domain.PostAction.Favorite),
+            onOpenPost = { opened++ },
+            onFavourite = { favourited = it },
+        )
+
+        compose.onNodeWithText("card").assertIsDisplayed()
+        compose.onNodeWithText("Photo Grid").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Favorite").performClick()
+
+        assertEquals("card", favourited?.post?.id?.value)
+        assertEquals(0, opened)
+    }
+
+    @Test
+    fun noFavouriteButtonWithoutTheFavoriteAction() {
+        showWithActions(
+            PhotoGridFeedState(posts = listOf(OwnedPost(account.id, post("none", listOf(image("none")))))),
+            actions = emptySet(),
+        )
+
+        compose.onNodeWithContentDescription("Favorite").assertDoesNotExist()
+    }
+
+    @Test
+    fun captionFallsBackToAltTextAndHidesWhenBothAreEmpty() {
+        fun caption(text: String, alt: String?) = photoGridCaption(
+            photoGridItems(
+                listOf(OwnedPost(account.id, post("c", listOf(image("c").copy(description = alt))).copy(text = text))),
+            ).single(),
+        )
+        assertEquals("first", caption("\n first \nsecond", "alt"))
+        assertEquals("alt", caption("  ", " alt "))
+        assertEquals(null, caption("", null))
+    }
+
+    private fun showWithActions(
+        state: PhotoGridFeedState,
+        actions: Set<me.foxtails.palustris.domain.PostAction>,
+        onOpenPost: (OwnedPost) -> Unit = {},
+        onFavourite: (OwnedPost) -> Unit = {},
+    ) {
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                PalustrisTheme {
+                    PhotoGridScreen(
+                        state = state,
+                        onOpenPost = onOpenPost,
+                        cardActions = PhotoGridCardActions(actions, onFavourite = onFavourite),
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
     }
 
     private fun show(state: PhotoGridFeedState, onOpenPost: (OwnedPost) -> Unit = {}) {

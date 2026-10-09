@@ -18,6 +18,7 @@ import me.foxtails.palustris.ui.emoji.EmojiPickerTarget
 import me.foxtails.palustris.ui.media.ImageViewerContent
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
+import me.foxtails.palustris.ui.photogrid.PhotoQuickViewTarget
 import me.foxtails.palustris.ui.posts.PostActionBubbleTarget
 import me.foxtails.palustris.ui.posts.ReactionBubbleMode
 
@@ -35,6 +36,7 @@ import me.foxtails.palustris.ui.posts.ReactionBubbleMode
  */
 internal class ShellOverlayPresenter internal constructor() {
     var postActionBubbleTarget by mutableStateOf<PostActionBubbleTarget?>(null)
+    var photoQuickView by mutableStateOf<PhotoQuickViewTarget?>(null)
     var pendingExpandedReactionTarget by mutableStateOf<OwnedPost?>(null)
     var postReactionHandler by mutableStateOf<((OwnedPost, EmojiChoice) -> Unit)?>(null)
     var pendingEmojiInsertion by mutableStateOf<Pair<EmojiChoice, ComposerField>?>(null)
@@ -56,6 +58,18 @@ internal class ShellOverlayPresenter internal constructor() {
         postActionBubbleTarget = null
         pendingExpandedReactionTarget = null
         postReactionHandler = null
+    }
+
+    // Rejects foreign posts and stale revisions, then replaces any open bubble with the quick-view.
+    fun openPhotoQuickView(target: PhotoQuickViewTarget) {
+        val owner = account ?: return
+        if (target.ownedPost.fetchedBy != owner.id || target.ownedPost.sessionRevision != sessionRevision) return
+        clearPostActionBubble()
+        photoQuickView = target
+    }
+
+    fun clearPhotoQuickView() {
+        photoQuickView = null
     }
 
     fun openHashtagBubble(ownedPost: OwnedPost, hashtags: List<String>, bounds: Rect) {
@@ -120,6 +134,7 @@ internal class ShellOverlayPresenter internal constructor() {
     // Clears transient overlay values for an account change. Dialog flags and
     // the profile-image request stay. The shell still owns stream teardown.
     fun clearForAccountChange() {
+        photoQuickView = null
         mediaRequest = null
         emojiPickerTarget = null
         postActionBubbleTarget = null
@@ -130,6 +145,7 @@ internal class ShellOverlayPresenter internal constructor() {
     // Rebinds popup authority after a session replacement. A stale reaction
     // handler must not run a later selection.
     fun clearForSessionChange() {
+        photoQuickView = null
         postActionBubbleTarget = null
         pendingExpandedReactionTarget = null
         postReactionHandler = null

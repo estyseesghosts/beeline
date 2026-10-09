@@ -6,14 +6,11 @@
 package me.foxtails.palustris.ui.photogrid
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.absolutePadding
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,7 +24,6 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,23 +43,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import me.foxtails.palustris.R
-import me.foxtails.palustris.data.media.MediaImageLoader
 import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
@@ -72,6 +65,7 @@ import me.foxtails.palustris.domain.MediaRequestDecision
 import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.MediaRequestRole
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.AppIcons
@@ -87,7 +81,6 @@ import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
 import me.foxtails.palustris.ui.layout.compactScrollEndClearance
-import me.foxtails.palustris.ui.media.SensitiveMediaTile
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
@@ -140,9 +133,19 @@ private fun Attachment.isPhotoGridDisplayable(): Boolean =
         explicitlyOpened = false,
     ) is MediaRequestDecision.Request
 
-/** Narrowest and widest tile width-to-height ratio, so one extreme image cannot dominate a lane. */
+/** How far a card in the outermost lane may extend under the floating rail. */
+internal val PhotoGridRailUnderlap = 16.dp
+
+/** Grid padding on a wide edge: the rail clearance less the underlap, never below the outer padding. */
+internal fun photoGridEdgePadding(clearance: Dp): Dp = maxOf(clearance - PhotoGridRailUnderlap, PhotoGridOuterPadding)
+
+/** Mirrors [StaggeredGridCells.Adaptive]: as many lanes of at least [minLanePx] as fit, at least one. */
+internal fun photoGridLaneCount(availablePx: Int, spacingPx: Int, minLanePx: Int): Int =
+    maxOf((availablePx + spacingPx) / (minLanePx + spacingPx), 1)
+
+/** Narrowest and widest image width-to-height ratio, so one extreme image cannot dominate a lane. A card is never wider than 16:9. */
 internal const val PHOTO_GRID_MIN_TILE_ASPECT = 0.5f
-internal const val PHOTO_GRID_MAX_TILE_ASPECT = 2f
+internal const val PHOTO_GRID_MAX_TILE_ASPECT = 16f / 9f
 
 internal fun photoGridAspectRatio(attachment: Attachment): Float {
     val width = attachment.width ?: attachment.previewWidth
@@ -170,6 +173,7 @@ fun PhotoGridScreen(
     onAddHashtag: (String, () -> Unit) -> Unit = { _, onSuccess -> onSuccess() },
     onClearPreferenceError: () -> Unit = {},
     onOpenPost: (OwnedPost) -> Unit = {},
+    cardActions: PhotoGridCardActions = PhotoGridCardActions(),
     compactLayout: Boolean = true,
     compactNavigationVisible: Boolean = false,
     rightObstructionClearance: Dp = 0.dp,
@@ -206,6 +210,36 @@ fun PhotoGridScreen(
     // adaptive. Physical left and physical right do not reverse with the layout direction.
     val wideRightClearance = if (compactLayout) 0.dp else rightObstructionClearance
     val wideLeftClearance = if (compactLayout) 0.dp else leftObstructionClearance
+    // Cards underlap the floating rail by up to PhotoGridRailUnderlap. Their footer controls do not:
+    // the lane next to the rail insets its footer by the underlap actually reached.
+    val gridLeftPadding = if (compactLayout) PhotoGridOuterPadding else photoGridEdgePadding(wideLeftClearance)
+    val gridRightPadding = if (compactLayout) PhotoGridOuterPadding else photoGridEdgePadding(wideRightClearance)
+    val leftUnderlap = (wideLeftClearance - gridLeftPadding).coerceAtLeast(0.dp)
+    val rightUnderlap = (wideRightClearance - gridRightPadding).coerceAtLeast(0.dp)
+    // Full-line rows (loading, retry, continuation, empty) are controls or text, so they stay clear of the rail.
+    val footerRowInset = Modifier.absolutePadding(left = leftUnderlap, right = rightUnderlap)
+    val favourite = remember(cardActions) {
+        if (PostAction.Favorite in cardActions.availableActions) {
+            PhotoGridFavourite(cardActions.favouriteArtworkStyle, cardActions.onFavourite)
+        } else {
+            null
+        }
+    }
+    val layoutDirection = LocalLayoutDirection.current
+    val density = LocalDensity.current
+    // Lane of each visible card by key, and the lane count the adaptive cells produce. Lanes are
+    // laid out start to end, so the physical edges swap with the layout direction.
+    val laneByKey by remember(list) {
+        derivedStateOf { list.layoutInfo.visibleItemsInfo.associate { it.key to it.lane } }
+    }
+    val laneCount by remember(list, gridLeftPadding, gridRightPadding, density) {
+        derivedStateOf {
+            with(density) {
+                val available = list.layoutInfo.viewportSize.width - (gridLeftPadding + gridRightPadding).roundToPx()
+                if (available <= 0) 0 else photoGridLaneCount(available, PhotoGridGap.roundToPx(), 150.dp.roundToPx())
+            }
+        }
+    }
     val wideBottomClearance = if (compactLayout) 0.dp else bottomObstructionClearance
     if (useCompactWideCaret) {
         CompactWideTabCaretRegistration(
@@ -294,34 +328,47 @@ fun PhotoGridScreen(
                     columns = StaggeredGridCells.Adaptive(150.dp),
                     state = list,
                     modifier = Modifier.fillMaxSize().testTag("photo_grid_content"),
-                    verticalItemSpacing = 3.dp,
-                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalItemSpacing = PhotoGridGap,
+                    horizontalArrangement = Arrangement.spacedBy(PhotoGridGap),
                     contentPadding = PaddingValues.Absolute(
-                        left = wideLeftClearance,
-                        right = wideRightClearance,
-                        bottom = bottomClearance + wideBottomClearance + 3.dp,
+                        left = gridLeftPadding,
+                        right = gridRightPadding,
+                        bottom = bottomClearance + wideBottomClearance + PhotoGridGap,
                     ),
                 ) {
                     items(
                         items = mediaItems,
                         key = { item -> photoGridItemKey(item) },
                     ) { item ->
-                        PhotoGridTile(item = item, onOpenPost = onOpenPost)
+                        val lane = laneByKey[photoGridItemKey(item)]
+                        val startLane = lane == 0
+                        val endLane = lane != null && laneCount > 0 && lane == laneCount - 1
+                        val rtl = layoutDirection == LayoutDirection.Rtl
+                        PhotoGridTile(
+                            item = item,
+                            onOpenPost = onOpenPost,
+                            chrome = PhotoGridCardChrome(
+                                favourite = favourite,
+                                leftRailInset = if (if (rtl) endLane else startLane) leftUnderlap else 0.dp,
+                                rightRailInset = if (if (rtl) startLane else endLane) rightUnderlap else 0.dp,
+                                onQuickView = cardActions.onQuickView,
+                            ),
+                        )
                     }
                     if (state.loadingMore) {
                         item(key = "photo-grid-loading-more", span = StaggeredGridItemSpan.FullLine) {
                             Box(
-                                Modifier.fillMaxWidth().padding(20.dp),
+                                footerRowInset.fillMaxWidth().padding(20.dp),
                                 contentAlignment = Alignment.Center,
                             ) { CircularProgressIndicator(Modifier.size(24.dp)) }
                         }
                     } else if (state.error != null && mediaItems.isNotEmpty()) {
                         item(key = "photo-grid-paging-error", span = StaggeredGridItemSpan.FullLine) {
-                            PhotoGridPagingError(state.error, onLoadMore)
+                            Box(footerRowInset) { PhotoGridPagingError(state.error, onLoadMore) }
                         }
                     } else if (state.nextCursor != null) {
                         item(key = "photo-grid-load-more", span = StaggeredGridItemSpan.FullLine) {
-                            TextButton(onClick = onLoadMore, modifier = Modifier.fillMaxWidth()) {
+                            TextButton(onClick = onLoadMore, modifier = footerRowInset.fillMaxWidth()) {
                                 Text(stringResource(R.string.photo_grid_load_older))
                             }
                         }
@@ -329,7 +376,7 @@ fun PhotoGridScreen(
                         item(key = "photo-grid-up-to-date", span = StaggeredGridItemSpan.FullLine) {
                             Text(
                                 stringResource(R.string.photo_grid_up_to_date),
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                modifier = footerRowInset.fillMaxWidth().padding(16.dp),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -340,7 +387,7 @@ fun PhotoGridScreen(
                                 AppIcons.PhotoGrid,
                                 stringResource(R.string.photo_grid_empty_title),
                                 stringResource(R.string.photo_grid_empty_subtitle),
-                                modifier = Modifier.fillMaxWidth().height(300.dp),
+                                modifier = footerRowInset.fillMaxWidth().height(300.dp),
                             )
                         }
                     }
@@ -431,129 +478,7 @@ fun PhotoGridScreen(
     }
 }
 
-@Composable
-internal fun PhotoGridTile(
-    item: PhotoGridItem,
-    onOpenPost: (OwnedPost) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    if (item.hiddenByRules) {
-        val hiddenMessage = stringResource(R.string.content_hidden_settings)
-        Box(
-            modifier.fillMaxWidth().aspectRatio(photoGridAspectRatio(item.attachment))
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .semantics { contentDescription = hiddenMessage },
-            contentAlignment = Alignment.Center,
-        ) { Text(hiddenMessage, Modifier.padding(12.dp)) }
-        return
-    }
-    if (item.collapsedWarning != null) {
-        PhotoGridWarningTile(item, item.collapsedWarning, onOpenPost, modifier)
-        return
-    }
-    val context = LocalContext.current
-    val density = LocalDensity.current
-    val mediaImageLoader = remember(context) { MediaImageLoader.get(context) }
-    var revealed by rememberSaveable(
-        item.ownedPost.fetchedBy,
-        item.ownedPost.post.id.connection,
-        item.ownedPost.post.id.value,
-        item.attachment.id ?: item.attachmentIndex,
-    ) { mutableStateOf(!item.attachment.sensitive) }
-    val decision = remember(item.attachment, revealed) {
-        MediaRequestPolicy.resolve(
-            attachment = item.attachment,
-            role = MediaRequestRole.Preview,
-            revealed = revealed,
-            explicitlyOpened = false,
-        )
-    }
-    val imageRequest = remember(item, decision) {
-        (decision as? MediaRequestDecision.Request)?.let { request ->
-            mediaImageLoader.request(
-                context = context,
-                decision = request,
-                accountIdentity = item.ownedPost.fetchedBy.toString(),
-                postIdentity = "${item.ownedPost.post.id.connection}/${item.ownedPost.post.id.value}",
-                attachment = item.attachment,
-                attachmentIndex = item.attachmentIndex,
-                decodeWidthPx = with(density) { 240.dp.roundToPx() },
-                decodeHeightPx = with(density) { 240.dp.roundToPx() },
-            )
-        }
-    }
-    val painter = imageRequest?.let { rememberAsyncImagePainter(it, mediaImageLoader.imageLoader) }
-    val tileKey = photoGridItemKey(item)
-    val tileDescription = if (revealed) {
-        stringResource(R.string.post_open)
-    } else {
-        stringResource(R.string.a11y_sensitive_media, item.attachmentIndex + 1)
-    }
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(photoGridAspectRatio(item.attachment))
-            .clip(RoundedCornerShape(2.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .then(
-                if (revealed) {
-                    Modifier.clickable { onOpenPost(item.ownedPost) }
-                } else {
-                    Modifier
-                },
-            )
-            .testTag("photo_grid_tile_$tileKey")
-            .semantics {
-                contentDescription = tileDescription
-                role = Role.Button
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        if (!revealed) {
-            SensitiveMediaTile(onReveal = { revealed = true })
-        } else if (painter != null) {
-            Image(
-                painter = painter,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-        }
-    }
-}
-
-/** Stands in for a tile whose content warning is collapsed; tapping still opens the post. */
-@Composable
-private fun PhotoGridWarningTile(
-    item: PhotoGridItem,
-    warningText: String,
-    onOpenPost: (OwnedPost) -> Unit,
-    modifier: Modifier,
-) {
-    val warning = warningText.ifBlank { stringResource(R.string.content_warning) }
-    Box(
-        modifier.fillMaxWidth().aspectRatio(photoGridAspectRatio(item.attachment))
-            .clip(RoundedCornerShape(2.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable { onOpenPost(item.ownedPost) }
-            .testTag("photo_grid_tile_${photoGridItemKey(item)}")
-            .semantics {
-                contentDescription = warning
-                role = Role.Button
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            warning,
-            Modifier.padding(12.dp),
-            style = MaterialTheme.typography.labelLarge,
-            maxLines = 4,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-        )
-    }
-}
-
-private fun photoGridItemKey(item: PhotoGridItem): String =
+internal fun photoGridItemKey(item: PhotoGridItem): String =
     "${item.ownedPost.fetchedBy.connection.origin}/${item.ownedPost.post.id.connection}/${item.ownedPost.post.id.value}/${item.attachment.id ?: item.attachmentIndex}"
 
 @Composable

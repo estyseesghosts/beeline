@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.Timeline
@@ -248,7 +249,7 @@ internal fun ShellContent(
     val modalOverlayOpenBeforeContent = navigator.overlay != null || navigator.sheet != null ||
         overlay.profileDialog || overlay.signOutDialog || overlay.mediaRequest != null ||
         overlay.profileImageRequest != null || navigator.singlePost != null ||
-        overlay.emojiPickerTarget != null
+        overlay.emojiPickerTarget != null || overlay.photoQuickView != null
     val useCompactWideCaret = compactWidePresentation && navigationFit.useVerticalNavigation &&
         navigator.page == null && navigator.singlePost == null
     // Compact-narrow moves the caret into the bar only while the dead space left of the pill can
@@ -438,6 +439,14 @@ internal fun ShellContent(
                 }
             }
         }
+        ShellPhotoQuickViewHost(
+            overlay = overlay,
+            postActionOwner = postActionOwner,
+            postCallbacks = postCallbacks,
+            favouriteArtworkStyle = home?.state?.favouriteArtworkStyle ?: FavouriteArtworkStyle.Heart,
+            account = account,
+            sessionRevision = sessionRevision,
+        )
         ShellBubbleHost(
             navigator = navigator,
             overlay = overlay,

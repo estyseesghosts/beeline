@@ -362,6 +362,12 @@
     <string name="photo_grid_paging_error">Couldn\'t load more photos</string>
     <string name="photo_grid_preference_save_failed">The hashtag could not be saved. Try again.</string>
     <string name="photo_grid_up_to_date">You\'re up to date</string>
+    <string name="photo_quick_view_open">More actions</string>
+    <string name="photo_quick_view_title">Photo quick view</string>
+    <string name="photo_quick_view_close">Close quick view</string>
+    <string name="photo_quick_view_heart">Heart</string>
+    <string name="photo_quick_view_star">Star</string>
+    <string name="photo_quick_view_react">React</string>
     <string name="post_action_bookmark">Bookmark</string>
     <string name="post_action_bubble_collapsed">Collapsed</string>
     <string name="post_action_bubble_expanded">Expanded</string>

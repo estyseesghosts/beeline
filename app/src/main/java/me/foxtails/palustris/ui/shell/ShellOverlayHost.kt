@@ -4,10 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.CapabilityStatus
+import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.ui.composer.ComposerOverlayHost
 import me.foxtails.palustris.ui.composer.ComposerOwner
@@ -21,6 +23,7 @@ import me.foxtails.palustris.ui.media.ImageViewerContentScreen
 import me.foxtails.palustris.ui.media.MediaViewerScreen
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.notifications.NotificationSettingsSheet
+import me.foxtails.palustris.ui.photogrid.PhotoQuickView
 import me.foxtails.palustris.ui.posts.PostActionBubbleHost
 import me.foxtails.palustris.ui.posts.PostPopupPresentation
 import me.foxtails.palustris.ui.posts.PostShareSheet
@@ -31,6 +34,42 @@ import me.foxtails.palustris.ui.shell.AppDialogs
 import me.foxtails.palustris.ui.shell.AppSelectionSheet
 import me.foxtails.palustris.ui.shell.Destination
 import me.foxtails.palustris.ui.shell.Overlay
+
+/**
+ * Photo Grid quick-view hosting for the application shell.
+ *
+ * Rendered before [ShellBubbleHost] so the reaction bubble and share sheet it opens draw above it.
+ * It owns no state: the overlay presenter holds the target, which is dropped here when the account
+ * or session revision no longer matches.
+ */
+@Composable
+internal fun ShellPhotoQuickViewHost(
+    overlay: ShellOverlayPresenter,
+    postActionOwner: PostPopupPresentation?,
+    postCallbacks: DestinationPostCallbacks,
+    favouriteArtworkStyle: FavouriteArtworkStyle,
+    account: Account?,
+    sessionRevision: Long,
+) {
+    overlay.photoQuickView?.let { quickView ->
+        val owner = account
+        if (owner == null || quickView.ownedPost.fetchedBy != owner.id || quickView.ownedPost.sessionRevision != sessionRevision) {
+            LaunchedEffect(quickView) { overlay.clearPhotoQuickView() }
+        } else {
+            PhotoQuickView(
+                target = quickView,
+                availableActions = postCallbacks.availableActions,
+                favouriteArtworkStyle = favouriteArtworkStyle,
+                onDismiss = overlay::clearPhotoQuickView,
+                onFavourite = postCallbacks.onReact,
+                onReact = { post, bounds -> overlay.openReactionBubble(post, bounds, postCallbacks.onReaction) },
+                onReply = postCallbacks.onReply,
+                onRepost = postCallbacks.onReshare,
+                onShare = { post, bounds -> postActionOwner?.open(post, bounds) },
+            )
+        }
+    }
+}
 
 /**
  * Bubble and share-sheet hosting for the application shell.
