@@ -28,20 +28,7 @@ internal fun ShellEffects(
     postActionOwner: PostPopupPresentation?,
     profileEditorOpen: Boolean,
 ) {
-    // The profile editor lives with the session's profile owner. After process recreation or an
-    // account change the saved overlay key has no editor, so close it rather than show nothing.
-    LaunchedEffect(accountId, sessionGeneration, sessionRevision) {
-        navigator.closeEditProfileWithoutEditor(profileEditorOpen)
-    }
-
-    // Remembered trigger bounds describe one account on one window shape. Forget them when either
-    // changes so an open surface fades instead of growing from a stale position.
-    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-    LaunchedEffect(accountId, sessionGeneration, configuration.screenWidthDp, configuration.screenHeightDp) {
-        overlay.composerTrigger.invalidate()
-        overlay.editProfileTrigger.invalidate()
-    }
-
+    SurfaceBindingEffects(accountId, sessionGeneration, sessionRevision, navigator, overlay, profileEditorOpen)
     LaunchedEffect(composerOwner.navigation) {
         if (composerOwner.navigation != null) {
             navigator.openComposerOverlay()
@@ -94,5 +81,32 @@ internal fun ShellEffects(
     }
     LaunchedEffect(overlay.pendingExpandedReactionTarget, overlay.postActionBubbleTarget) {
         overlay.promotePendingExpansion()
+    }
+}
+
+/**
+ * Binds the shell's open surfaces to the connected session.
+ *
+ * The profile editor lives with the session's profile owner. After process recreation or an account
+ * change the saved overlay key has no editor, so it closes rather than show nothing. Remembered
+ * trigger bounds describe one account on one window shape; they are forgotten when either changes so
+ * an open surface fades instead of growing from a stale position.
+ */
+@Composable
+private fun SurfaceBindingEffects(
+    accountId: AccountId?,
+    sessionGeneration: Long,
+    sessionRevision: Long,
+    navigator: ShellNavigator,
+    overlay: ShellOverlayPresenter,
+    profileEditorOpen: Boolean,
+) {
+    LaunchedEffect(accountId, sessionGeneration, sessionRevision) {
+        navigator.closeEditProfileWithoutEditor(profileEditorOpen)
+    }
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    LaunchedEffect(accountId, sessionGeneration, configuration.screenWidthDp, configuration.screenHeightDp) {
+        overlay.composerTrigger.invalidate()
+        overlay.editProfileTrigger.invalidate()
     }
 }

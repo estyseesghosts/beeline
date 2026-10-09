@@ -69,41 +69,43 @@ internal fun PostShareSheet(
     onCopyLink: () -> Unit,
     onShare: () -> Unit,
 ) {
+    ShareSurface(target.anchorBounds, onDismiss) {
+        ShareActionCard(
+            target = target,
+            relationship = relationship,
+            report = report,
+            onDismiss = onDismiss,
+            onRelationshipAction = onRelationshipAction,
+            onSubmitReport = onSubmitReport,
+            onOpenDirectMessage = onOpenDirectMessage,
+            onCopyLink = onCopyLink,
+            onShare = onShare,
+        )
+    }
+}
+
+/** Places the share card by its anchor and grows it from that anchor. Holds no share state. */
+@Composable
+private fun ShareSurface(anchor: Rect, onDismiss: () -> Unit, content: @Composable () -> Unit) {
     val surface = rememberTriggerSurfaceState()
     var placed by remember { mutableStateOf<Offset?>(null) }
     Popup(
         popupPositionProvider = WindowAnchorPositionProvider(
-            target.anchorBounds,
+            anchor,
             BubblePlacement.Above,
             edgeMargin = 16,
             onPlaced = { placed = Offset(it.x.toFloat(), it.y.toFloat()) },
         ),
         onDismissRequest = onDismiss,
-        properties = PopupProperties(
-            focusable = true,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-        ),
+        properties = PopupProperties(focusable = true, dismissOnBackPress = true, dismissOnClickOutside = true),
     ) {
         TriggerSurface(
             state = surface,
-            trigger = { target.anchorBounds },
+            trigger = { anchor },
             dismissLabel = stringResource(R.string.composer_close),
             onClosed = onDismiss,
             surfaceOrigin = { placed },
-        ) {
-            ShareActionCard(
-                target = target,
-                relationship = relationship,
-                report = report,
-                onDismiss = onDismiss,
-                onRelationshipAction = onRelationshipAction,
-                onSubmitReport = onSubmitReport,
-                onOpenDirectMessage = onOpenDirectMessage,
-                onCopyLink = onCopyLink,
-                onShare = onShare,
-            )
-        }
+        ) { content() }
     }
 }
 

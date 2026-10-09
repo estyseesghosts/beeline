@@ -182,44 +182,34 @@ class ComposerOwner internal constructor(
             requestDraft(first)
             return
         }
-        if (!hasChanges && !editor.hasTargets) {
-            val audience = runCatching {
-                PostingVisibilityPolicy.forNewPost(
-                    context.contract.postPreferences,
-                    ServerCapabilities(audiences = context.contract.availableAudiences),
-                )
-            }.getOrDefault(context.contract.postPreferences.defaultAudience)
-            mutateEditor { it.copy(audience = audience, savedAudience = audience) }
-        }
+        // A restored reply or an edited post keeps its audience; only a blank editor takes the default.
+        if (!hasChanges && !editor.hasTargets) applyNewPostAudience()
         navigation = ComposerNavigation.New
     }
 
     fun requestReply(post: OwnedPost) {
         val account = context.account ?: return
-        if (post.fetchedBy != account.id || !context.canReply) return
-        if (context.anyOverlayOpen || hasChanges) return
-        val audience = replyAudience(post)
-        resetForTarget()
-        val replyId = post.post.actionTargetId ?: post.post.id
-        mutateEditor {
-            it.copy(
-                audience = audience,
-                savedAudience = audience,
-                error = null,
-                replyTo = replyId,
-                targetPreview = previewOf(post),
-                boundAccount = account.id,
-                boundRevision = sessionRevision,
-            )
-        }
-        target = post
+        if (post.fetchedBy != account.id || !context.canReply || context.anyOverlayOpen || hasChanges) return
+        bindTarget(post, account.id, reply = post.post.actionTargetId ?: post.post.id, quote = null)
         navigation = ComposerNavigation.Reply(post)
     }
 
     fun requestQuote(post: OwnedPost) {
         val account = context.account ?: return
-        if (post.fetchedBy != account.id || !context.canQuote) return
-        if (context.anyOverlayOpen || hasChanges) return
+        if (post.fetchedBy != account.id || !context.canQuote || context.anyOverlayOpen || hasChanges) return
+        bindTarget(post, account.id, reply = null, quote = post.post.id)
+        navigation = ComposerNavigation.Quote(post)
+    }
+
+    fun requestDraft(item: PostDraft) {
+        resetForTarget()
+        mutateEditor { draftEditorState(item) }
+        target = draftTarget(item)
+        navigation = ComposerNavigation.Draft(item.id)
+    }
+
+    /** Starts an editor for [post] and binds its reply or quote id to the current account and revision. */
+    private fun bindTarget(post: OwnedPost, accountId: AccountId, reply: EntityId?, quote: EntityId?) {
         val audience = replyAudience(post)
         resetForTarget()
         mutateEditor {
@@ -227,42 +217,50 @@ class ComposerOwner internal constructor(
                 audience = audience,
                 savedAudience = audience,
                 error = null,
-                quoteOf = post.post.id,
+                replyTo = reply,
+                quoteOf = quote,
                 targetPreview = previewOf(post),
-                boundAccount = account.id,
+                boundAccount = accountId,
                 boundRevision = sessionRevision,
             )
         }
         target = post
-        navigation = ComposerNavigation.Quote(post)
     }
 
-    fun requestDraft(item: PostDraft) {
-        resetForTarget()
-        val account = context.account
-        val quote = item.quoteOf?.takeIf { it.connection == account?.id?.connection?.origin }
-        val reply = item.replyTo?.takeIf { it.connection == account?.id?.connection?.origin }
-        mutateEditor {
-            ComposerEditorState(
-                draftId = item.id,
-                text = item.text,
-                savedText = item.text,
-                warning = item.contentWarning.orEmpty(),
-                savedWarning = item.contentWarning.orEmpty(),
-                warningEnabled = !item.contentWarning.isNullOrBlank(),
-                audience = item.audience,
-                savedAudience = item.audience,
-                quoteOf = quote,
-                replyTo = reply,
-                savedQuoteOf = quote?.value,
-                savedReplyTo = reply?.value,
-                targetPreview = item.quotePreview,
-                boundAccount = account?.id,
-                boundRevision = sessionRevision,
-            )
-        }
-        target = draftTarget(item)
-        navigation = ComposerNavigation.Draft(item.id)
+    private fun applyNewPostAudience() {
+        val audience = newPostAudience()
+        mutateEditor { it.copy(audience = audience, savedAudience = audience) }
+    }
+
+    private fun newPostAudience(): Audience = runCatching {
+        PostingVisibilityPolicy.forNewPost(
+            context.contract.postPreferences,
+            ServerCapabilities(audiences = context.contract.availableAudiences),
+        )
+    }.getOrDefault(context.contract.postPreferences.defaultAudience)
+
+    /** The editor for a saved draft. Its reply and quote ids stay only for the current server. */
+    private fun draftEditorState(item: PostDraft): ComposerEditorState {
+        val account = context.account?.id
+        val quote = item.quoteOf?.takeIf { it.connection == account?.connection?.origin }
+        val reply = item.replyTo?.takeIf { it.connection == account?.connection?.origin }
+        return ComposerEditorState(
+            draftId = item.id,
+            text = item.text,
+            savedText = item.text,
+            warning = item.contentWarning.orEmpty(),
+            savedWarning = item.contentWarning.orEmpty(),
+            warningEnabled = !item.contentWarning.isNullOrBlank(),
+            audience = item.audience,
+            savedAudience = item.audience,
+            quoteOf = quote,
+            replyTo = reply,
+            savedQuoteOf = quote?.value,
+            savedReplyTo = reply?.value,
+            targetPreview = item.quotePreview,
+            boundAccount = account,
+            boundRevision = sessionRevision,
+        )
     }
 
     /** Saves the current editor as a draft. Clears the dirty baseline only after success. */

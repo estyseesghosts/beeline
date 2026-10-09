@@ -1,9 +1,9 @@
 # Handoff
 
-Phase 3B and Phase 5 are pushed. Phase 6 is complete: 6A ("Keep hidden media out of thumbnail-to-viewer transitions"), 6C ("Cover collapsed content warnings in Photo Grid tiles and detail"), and 6B ("Fade the viewer backdrop with drag and fade out without a return source"). The last safe commit before 6B is `3f7c2ee1`. Next is Phase 7 in `docs/beeline_0.4.0.md`.
+Phase 3B, Phase 5, and Phase 6 were pushed earlier. Phase 7 is complete: 7A and 7B ("Verify restored composer targets and close orphaned profile editors (7A, 7B)"), 7C ("Add one trigger-to-surface presentation contract for composer, profile editor, and share (7C)"), 7D ("Render Search as idle, entry, and results bubbles in one field (7D)"), and 7E ("Reuse bubble style and motion on sign-in without touching authentication (7E)"). The last safe commit before Phase 7 is `efc9a3eb`. Next is Phase 8 in `docs/beeline_0.4.0.md`.
 
-Read `docs/agents/tasks/beeline-0.4.0.md` for open items and `docs/wiki/ui-and-navigation.md` ("Media Transition Ownership", "Photo Grid Detail Media") for the owning sections.
+Read `docs/agents/tasks/beeline-0.4.0.md` for decisions and open items, and `docs/wiki/ui-and-navigation.md` ("Navigation restoration", "Search entry states", "Sign-in bubbles", "Trigger surfaces") for the owning sections.
 
 Gradle test tasks that leave a gated call pending inside `runTest` hang until the timeout, and the daemon then reports "disappeared unexpectedly". Complete every gate before the test ends.
 
-Phase 6 is pushed once at its end because the user asked for it. Do not push again unless asked.
+Phase 7 is pushed once at its end because the user asked for it. Do not push again unless asked.

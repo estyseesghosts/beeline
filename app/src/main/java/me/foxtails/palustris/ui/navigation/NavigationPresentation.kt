@@ -50,9 +50,9 @@ import me.foxtails.palustris.ui.Avatar
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
+import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
 import me.foxtails.palustris.ui.motion.rememberSelectedColor
 import me.foxtails.palustris.ui.motion.rememberSelectedScale
-import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
 import me.foxtails.palustris.ui.motion.springPress
 import me.foxtails.palustris.ui.motion.triggerSurfaceSource
 

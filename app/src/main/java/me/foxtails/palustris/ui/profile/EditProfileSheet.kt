@@ -7,12 +7,12 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.R
-import me.foxtails.palustris.ui.motion.TriggerSurface
-import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
-import me.foxtails.palustris.ui.motion.rememberTriggerSurfaceState
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EditableProfile
 import me.foxtails.palustris.domain.EditableProfileCapabilities
+import me.foxtails.palustris.ui.motion.TriggerSurface
+import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
+import me.foxtails.palustris.ui.motion.rememberTriggerSurfaceState
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)

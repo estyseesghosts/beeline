@@ -2,9 +2,9 @@ package me.foxtails.palustris.ui.search
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -50,14 +50,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -456,46 +456,45 @@ private fun SearchField(query: String, onSubmit: () -> Unit, onQueryChange: (Str
     val mode = searchEntryMode(query, focused)
     // With the keyboard already hidden, Back first closes the entry instead of leaving Search.
     BackHandler(enabled = focused) { focusManager.clearFocus() }
-    Box(Modifier.fillMaxWidth()) {
-        TextField(
-            value = query,
-            onValueChange = onQueryChange,
-            modifier = Modifier
-                .animateContentSize(scheme.gentleSize)
-                .then(if (mode == SearchEntryMode.Entry) Modifier.fillMaxWidth() else Modifier.widthIn(max = SearchBubbleMaxWidth))
-                .onFocusChanged { focused = it.isFocused }
-                .semantics {
-                    contentDescription = searchFieldDescription
-                    this[SearchEntryModeKey] = mode
-                },
-            placeholder = { Text(stringResource(R.string.search_placeholder_handle), maxLines = 1) },
-            leadingIcon = { Icon(AppIcons.SearchBeeline, null) },
-            trailingIcon = {
-                AnimatedContent(
-                    targetState = query.isNotEmpty(),
-                    transitionSpec = {
-                        if (scheme.reducedMotion) EnterTransition.None togetherWith ExitTransition.None
-                        else (fadeIn(scheme.fastFadeIn) + scaleIn(initialScale = 0.86f, animationSpec = scheme.expressive)) togetherWith
-                            (fadeOut(scheme.fastFadeOut) + scaleOut(targetScale = 0.86f, animationSpec = scheme.expressive))
-                    },
-                    label = "searchClearVisibility",
-                ) { visible -> if (visible) ActionIcon(AppIcons.Close, stringResource(R.string.search_clear), { onQueryChange("") }) }
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = {
-                onSubmit()
-                focusManager.clearFocus()
-            }),
-            shape = CircleShape,
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            ),
-        )
-    }
+    val width = if (mode == SearchEntryMode.Entry) Modifier.fillMaxWidth() else Modifier.widthIn(max = SearchBubbleMaxWidth)
+    val submit = { onSubmit(); focusManager.clearFocus() }
+    TextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = Modifier.animateContentSize(scheme.gentleSize).then(width)
+            .onFocusChanged { focused = it.isFocused }
+            .semantics { contentDescription = searchFieldDescription; this[SearchEntryModeKey] = mode },
+        placeholder = { Text(stringResource(R.string.search_placeholder_handle), maxLines = 1) },
+        leadingIcon = { Icon(AppIcons.SearchBeeline, null) },
+        trailingIcon = { SearchClearButton(query.isNotEmpty()) { onQueryChange("") } },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { submit() }),
+        shape = CircleShape,
+        colors = searchFieldColors(),
+    )
+}
+
+@Composable
+private fun searchFieldColors() = TextFieldDefaults.colors(
+    focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+    unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+)
+
+@Composable
+private fun SearchClearButton(visible: Boolean, onClear: () -> Unit) {
+    val scheme = LocalPalustrisMotionScheme.current
+    AnimatedContent(
+        targetState = visible,
+        transitionSpec = {
+            if (scheme.reducedMotion) EnterTransition.None togetherWith ExitTransition.None
+            else (fadeIn(scheme.fastFadeIn) + scaleIn(initialScale = 0.86f, animationSpec = scheme.expressive)) togetherWith
+                (fadeOut(scheme.fastFadeOut) + scaleOut(targetScale = 0.86f, animationSpec = scheme.expressive))
+        },
+        label = "searchClearVisibility",
+    ) { shown -> if (shown) ActionIcon(AppIcons.Close, stringResource(R.string.search_clear), onClear) }
 }
 
 @Composable

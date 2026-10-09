@@ -26,8 +26,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.dismiss
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.util.lerp
 import kotlinx.coroutines.launch
 
 /**
