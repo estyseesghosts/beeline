@@ -77,4 +77,20 @@ class CompactNarrowTabCaretTest {
         compose.onNodeWithTag(COMPACT_WIDE_TAB_CARET_TAG, useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("home_timeline_visibility", useUnmergedTree = true).assertIsDisplayed()
     }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-420dpi")
+    fun everyChipDestinationHidesItsInlineCaretBesideTheContextualOne() {
+        showApp()
+        listOf(
+            "Search" to "search_categories_visibility",
+            "Notifications" to "notification_filters_visibility",
+            "Profile" to "profile_categories_visibility",
+        ).forEach { (destination, inlineTag) ->
+            compose.onNodeWithContentDescription(destination).performClick()
+            compose.waitForIdle()
+            compose.onNodeWithTag(COMPACT_WIDE_TAB_CARET_TAG, useUnmergedTree = true).assertIsDisplayed()
+            compose.onNodeWithTag(inlineTag, useUnmergedTree = true).assertDoesNotExist()
+        }
+    }
 }

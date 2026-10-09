@@ -245,6 +245,7 @@ fun NotificationsScreen(
                     listState = chipListState,
                     visible = chipRowVisible,
                     onToggleVisibility = { chipRowVisible = !chipRowVisible },
+                    caretPresentation = notificationCaretPresentation,
                     edgeInset = CompactOverlayHorizontalPadding,
                 )
             }

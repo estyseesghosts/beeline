@@ -362,6 +362,7 @@ fun PhotoGridScreen(
                     ),
                 rowTestTag = "photo_grid_filters",
                 visibilityToggleTestTag = "photo_grid_filters_visibility",
+                caretPresentation = photoGridCaretPresentation,
                 leftInset = CompactOverlayHorizontalPadding,
                 rightInset = CompactOverlayHorizontalPadding,
             )

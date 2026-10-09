@@ -182,6 +182,7 @@ internal fun ProfileTimelinePresentation(
                     onToggleVisibility = onToggleCategoryRow,
                     rowTestTag = "profile_categories",
                     visibilityToggleTestTag = "profile_categories_visibility",
+                    caretPresentation = profileCaretPresentation,
                     leftInset = CompactOverlayHorizontalPadding,
                     rightInset = CompactOverlayHorizontalPadding,
                 )

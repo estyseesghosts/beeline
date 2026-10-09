@@ -310,6 +310,7 @@ fun SearchScreen(
                     onToggleVisibility = { chipRowVisible = !chipRowVisible },
                     rowTestTag = "search_categories",
                     visibilityToggleTestTag = "search_categories_visibility",
+                    caretPresentation = searchCaretPresentation,
                     leftInset = CompactOverlayHorizontalPadding,
                     rightInset = CompactOverlayHorizontalPadding,
                 )
