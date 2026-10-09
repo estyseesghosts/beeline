@@ -8,7 +8,6 @@ package me.foxtails.palustris.ui.photogrid
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -124,10 +123,10 @@ internal fun PhotoGridTile(
     var bounds by remember { mutableStateOf(Rect.Zero) }
     val haptics = LocalHapticFeedback.current
     val quickViewLabel = stringResource(R.string.photo_quick_view_open)
-    val openQuickView: (() -> Unit)? = onQuickView?.let { open ->
-        {
+    val openQuickView: ((PhotoQuickViewDrag?) -> Unit)? = onQuickView?.let { open ->
+        { drag ->
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-            open(PhotoQuickViewTarget(item.ownedPost, item.attachmentIndex, bounds))
+            open(PhotoQuickViewTarget(item.ownedPost, item.attachmentIndex, bounds, drag))
         }
     }
     PhotoGridCard(item, modifier, favourite, leftRailInset, rightRailInset, caption = photoGridCaption(item), showMeta = true) {
@@ -140,11 +139,11 @@ internal fun PhotoGridTile(
                 .onGloballyPositioned { bounds = it.boundsInRoot() }
                 .then(
                     if (revealed) {
-                        Modifier.combinedClickable(
-                            onClick = { onOpenPost(item.ownedPost) },
-                            onLongClick = openQuickView,
-                            onLongClickLabel = quickViewLabel,
-                        )
+                        Modifier
+                            .photoQuickViewGesture(enabled = openQuickView != null, origin = { bounds.topLeft }) {
+                                openQuickView?.invoke(it)
+                            }
+                            .clickable { onOpenPost(item.ownedPost) }
                     } else {
                         Modifier
                     },
@@ -155,7 +154,7 @@ internal fun PhotoGridTile(
                     role = Role.Button
                     if (revealed && openQuickView != null) {
                         customActions = listOf(
-                            CustomAccessibilityAction(quickViewLabel) { openQuickView(); true },
+                            CustomAccessibilityAction(quickViewLabel) { openQuickView(null); true },
                         )
                     }
                 },

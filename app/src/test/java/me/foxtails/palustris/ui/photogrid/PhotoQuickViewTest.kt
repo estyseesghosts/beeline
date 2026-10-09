@@ -1,6 +1,9 @@
 package me.foxtails.palustris.ui.photogrid
 
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
@@ -182,6 +185,67 @@ class PhotoQuickViewTest {
             useUnmergedTree = true,
         ).performTouchInput { longClick() }
         assertNull(quick)
+    }
+
+    @Test fun releasingOverAnEntryRunsIt() = dragAndRelease(releaseOnShare = true)
+
+    @Test fun releasingElsewhereKeepsTheQuickViewOpen() = dragAndRelease(releaseOnShare = false)
+
+    private fun dragAndRelease(releaseOnShare: Boolean) {
+        run {
+            var shared = 0
+            var opened by androidx.compose.runtime.mutableStateOf<PhotoQuickViewTarget?>(null)
+            compose.activity.runOnUiThread {
+                compose.activity.setContent {
+                    PalustrisTheme {
+                      androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()) {
+                        PhotoGridScreen(
+                            state = PhotoGridFeedState(posts = listOf(ownedPost)),
+                            cardActions = PhotoGridCardActions(onQuickView = { opened = it }),
+                        )
+                        opened?.let {
+                            PhotoQuickView(
+                                target = it,
+                                availableActions = emptySet(),
+                                favouriteArtworkStyle = FavouriteArtworkStyle.Heart,
+                                onDismiss = { opened = null },
+                                onFavourite = {},
+                                onReact = { _, _ -> },
+                                onReply = {},
+                                onRepost = {},
+                                onShare = { _, _ -> shared++ },
+                            )
+                        }
+                      }
+                    }
+                }
+            }
+            compose.waitForIdle()
+            val tile = compose.onNodeWithTag(
+                "photo_grid_tile_https://example.org/https://example.org/q/q-image",
+                useUnmergedTree = true,
+            )
+            val tileTopLeft = tile.fetchSemanticsNode().boundsInRoot.topLeft
+            tile.performTouchInput {
+                down(center)
+                advanceEventTime(1_000)
+                move(10)
+            }
+            compose.waitForIdle()
+            compose.onNodeWithTag("photo_quick_view_share").assertExists()
+            val target = if (releaseOnShare) {
+                compose.onNodeWithTag("photo_quick_view_share").fetchSemanticsNode().boundsInRoot.center
+            } else {
+                androidx.compose.ui.geometry.Offset(5f, 5f)
+            }
+            tile.performTouchInput {
+                moveTo(target - tileTopLeft)
+                up()
+            }
+            compose.waitForIdle()
+            assertEquals(if (releaseOnShare) 1 else 0, shared)
+            if (!releaseOnShare) compose.onNodeWithTag("photo_quick_view_share").assertExists()
+        }
     }
 
     @Test fun presenterDropsTheTargetOnSessionOrAccountChange() {

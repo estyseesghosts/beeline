@@ -8,6 +8,8 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,15 +33,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToUp
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -52,6 +63,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.withTimeoutOrNull
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.media.MediaImageLoader
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
@@ -77,7 +89,60 @@ data class PhotoQuickViewTarget(
     val ownedPost: OwnedPost,
     val attachmentIndex: Int,
     val anchorBounds: Rect,
+    /** The press that opened the quick-view while it is still down; null when opened without a press. */
+    val drag: PhotoQuickViewDrag? = null,
 )
+
+/**
+ * The finger that opened the quick-view, tracked in window coordinates. The card owns the pointer,
+ * so it reports here and the quick-view only reads: [pointer] while the finger moves, [releasedAt]
+ * when it lifts.
+ */
+class PhotoQuickViewDrag {
+    var pointer by mutableStateOf<Offset?>(null)
+        internal set
+    var releasedAt by mutableStateOf<Offset?>(null)
+        internal set
+}
+
+/**
+ * Detects a press and hold, opens the quick-view with a [PhotoQuickViewDrag], and keeps following the
+ * same finger until it lifts. Observes in the initial pass and consumes the press once it counts as
+ * a long press, so neither the card tap nor grid scrolling also act on it. A move past touch slop
+ * before the hold completes is left to scrolling.
+ */
+internal fun Modifier.photoQuickViewGesture(
+    enabled: Boolean,
+    origin: () -> Offset,
+    onOpen: (PhotoQuickViewDrag) -> Unit,
+): Modifier = if (!enabled) this else pointerInput(Unit) {
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        var cancelled = false
+        val timedOut = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+            while (!cancelled) {
+                val change = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id }
+                cancelled = change == null || change.changedToUp() || change.isConsumed ||
+                    (change.position - down.position).getDistance() > viewConfiguration.touchSlop
+            }
+        } == null
+        if (cancelled || !timedOut) return@awaitEachGesture
+        val drag = PhotoQuickViewDrag()
+        onOpen(drag)
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            val change = event.changes.firstOrNull { it.id == down.id }
+            event.changes.forEach { it.consume() }
+            if (change == null) break
+            val at = origin() + change.position
+            if (change.changedToUp() || !change.pressed) {
+                drag.releasedAt = at
+                break
+            }
+            drag.pointer = at
+        }
+    }
+}
 
 /** One menu entry the quick-view can offer for a post, in display order. */
 internal enum class PhotoQuickViewEntry { Favourite, Heart, React, Reply, Repost, Share }
@@ -121,6 +186,9 @@ internal fun PhotoQuickView(
     val entries = photoQuickViewEntries(actionsForPost(availableActions, post))
     var confirmingRepost by remember(target) { mutableStateOf(false) }
     var menuBounds by remember(target) { mutableStateOf(Rect.Zero) }
+    val rows = remember(target) { QuickViewRows(target.drag) }
+    // Lifting over an entry runs it; lifting anywhere else leaves the quick-view open.
+    LaunchedEffect(target.drag?.releasedAt) { target.drag?.releasedAt?.let(rows::activateAt) }
     val title = stringResource(R.string.photo_quick_view_title)
     val reducedMotion = LocalPalustrisMotionScheme.current.reducedMotion
     val visibleState = remember(target) { MutableTransitionState(reducedMotion).apply { targetState = true } }
@@ -197,24 +265,24 @@ internal fun PhotoQuickView(
                                 val label = stringResource(
                                     if (post.reposted) R.string.post_action_undo_repost else R.string.post_action_repost,
                                 )
-                                QuickViewRow(AppIcons.Repost, label, "photo_quick_view_repost_confirm") {
+                                QuickViewRow(rows, AppIcons.Repost, label, "photo_quick_view_repost_confirm") {
                                     onDismiss()
                                     onRepost(ownedPost)
                                 }
-                                QuickViewRow(AppIcons.More, stringResource(R.string.dialog_cancel), "photo_quick_view_repost_cancel") {
+                                QuickViewRow(rows, AppIcons.More, stringResource(R.string.dialog_cancel), "photo_quick_view_repost_cancel") {
                                     confirmingRepost = false
                                 }
                             } else {
                                 entries.forEach { entry ->
                                     when (entry) {
-                                        PhotoQuickViewEntry.Favourite -> QuickViewRow(
+                                        PhotoQuickViewEntry.Favourite -> QuickViewRow(rows,
                                             favouriteIconFor(ownedPost, favouriteArtworkStyle),
                                             stringResource(
                                                 if (post.favourited) R.string.post_action_unfavorite else R.string.post_action_favorite,
                                             ),
                                             "photo_quick_view_favourite",
                                         ) { onDismiss(); onFavourite(ownedPost) }
-                                        PhotoQuickViewEntry.Heart -> QuickViewRow(
+                                        PhotoQuickViewEntry.Heart -> QuickViewRow(rows,
                                             favouriteIconFor(ownedPost, favouriteArtworkStyle),
                                             stringResource(
                                                 if (favouriteArtworkStyle == FavouriteArtworkStyle.Star) {
@@ -225,22 +293,22 @@ internal fun PhotoQuickView(
                                             ),
                                             "photo_quick_view_heart",
                                         ) { onDismiss(); onFavourite(ownedPost) }
-                                        PhotoQuickViewEntry.React -> QuickViewRow(
+                                        PhotoQuickViewEntry.React -> QuickViewRow(rows,
                                             AppIcons.More,
                                             stringResource(R.string.photo_quick_view_react),
                                             "photo_quick_view_react",
                                         ) { onDismiss(); onReact(ownedPost, menuBounds) }
-                                        PhotoQuickViewEntry.Reply -> QuickViewRow(
+                                        PhotoQuickViewEntry.Reply -> QuickViewRow(rows,
                                             AppIcons.Reply,
                                             stringResource(R.string.post_action_reply),
                                             "photo_quick_view_reply",
                                         ) { onDismiss(); onReply(ownedPost) }
-                                        PhotoQuickViewEntry.Repost -> QuickViewRow(
+                                        PhotoQuickViewEntry.Repost -> QuickViewRow(rows,
                                             AppIcons.Repost,
                                             stringResource(if (post.reposted) R.string.post_action_undo_repost else R.string.post_action_repost),
                                             "photo_quick_view_repost",
                                         ) { confirmingRepost = true }
-                                        PhotoQuickViewEntry.Share -> QuickViewRow(
+                                        PhotoQuickViewEntry.Share -> QuickViewRow(rows,
                                             AppIcons.Share,
                                             stringResource(R.string.post_action_share),
                                             "photo_quick_view_share",
@@ -304,10 +372,36 @@ private fun PhotoQuickViewImage(target: PhotoQuickViewTarget, heightCap: android
     }
 }
 
+/** Where each menu entry is and what it does, so a finger lifted over one can run it. */
+private class QuickViewRows(private val drag: PhotoQuickViewDrag?) {
+    val bounds = mutableStateMapOf<String, Rect>()
+    val clicks = HashMap<String, () -> Unit>()
+
+    fun isUnderPointer(tag: String): Boolean {
+        val at = drag?.pointer ?: return false
+        return drag.releasedAt == null && bounds[tag]?.contains(at) == true
+    }
+
+    fun activateAt(at: Offset) {
+        val tag = bounds.entries.firstOrNull { it.value.contains(at) }?.key ?: return
+        clicks[tag]?.invoke()
+    }
+}
+
 @Composable
-private fun QuickViewRow(icon: ImageVector, label: String, tag: String, onClick: () -> Unit) {
+private fun QuickViewRow(rows: QuickViewRows, icon: ImageVector, label: String, tag: String, onClick: () -> Unit) {
+    SideEffect { rows.clicks[tag] = onClick }
+    DisposableEffect(tag) {
+        onDispose {
+            rows.bounds.remove(tag)
+            rows.clicks.remove(tag)
+        }
+    }
+    val highlighted = rows.isUnderPointer(tag)
     Row(
         Modifier.fillMaxWidth()
+            .onGloballyPositioned { rows.bounds[tag] = it.boundsInRoot() }
+            .background(if (highlighted) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
             .heightIn(min = 48.dp)
             .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 16.dp)

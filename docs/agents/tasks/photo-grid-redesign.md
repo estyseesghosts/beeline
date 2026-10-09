@@ -8,7 +8,7 @@ Short tap opens the post. No control sits under the rail. Quick-view acts only f
 
 # Decisions
 
-- Slices 1 to 4 landed in one commit; slice 5 (drag and release) is not done.
+- Slices 1 to 4 landed in one commit (56fec6fc). Slice 5 (drag and release) is a second commit.
 - 16:9 clamp applies to the image area.
 - Collapsed content-warning cards show the warning in the image area and no footer caption, to avoid duplicating covered text.
 - Repost confirms inline in the quick-view because the existing confirmation renders only inside post rows.
@@ -16,7 +16,7 @@ Short tap opens the post. No control sits under the rail. Quick-view acts only f
 
 # Completed
 
-- Slices 1 to 4.
+- Slices 1 to 5.
 
 # Current slice
 
@@ -28,11 +28,11 @@ ui/photogrid/PhotoGridScreen.kt, PhotoQuickView.kt, ui/shell overlay, bubble hos
 
 # Verification
 
-Photo Grid unit tests pass; emulator (Pixel 10 Pro Fold cover screen, compact-wide): cards, underlap, favorite toggle, long-press quick-view, share sheet.
+Photo Grid unit tests pass; emulator (Pixel 10 Pro Fold cover screen, compact-wide): cards, underlap, favorite toggle, long-press quick-view, share sheet, drag-and-release onto Share and release over the scrim.
 
 # Next
 
-Optional slice 5; verify on a phone-width device and an expanded layout.
+Verify on a phone-width device and an expanded layout; focus return to the card.
 
 # Blockers
 
