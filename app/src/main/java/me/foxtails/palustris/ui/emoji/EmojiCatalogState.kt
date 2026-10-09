@@ -7,7 +7,8 @@ import me.foxtails.palustris.domain.EmojiPickerPreferences
 /**
  * Compose-friendly catalog state; only server-supplied picker-visible entries appear.
  *
- * [accountId] names the account that owns the catalog and the preferences. [pendingPins] holds
+ * [accountId] names the account that owns the catalog and the preferences. [scope] identifies
+ * one catalog owner, so a replaced session or account yields a new scope. [pendingPins] holds
  * identities whose pin change is still being saved. [pinFailed] is true after a failed save.
  * Both are transient and belong to one catalog owner.
  */
@@ -23,6 +24,7 @@ data class EmojiCatalogState(
     val accountId: AccountId? = null,
     val pendingPins: Set<String> = emptySet(),
     val pinFailed: Boolean = false,
+    val scope: Any = Unit,
 )
 
 /** Transient pin presentation for the picker grid: saving identities, failure, and account scope. */
@@ -40,4 +42,4 @@ class EmojiPreferenceActions(
 )
 
 /** Pin presentation derived from the catalog owner state. */
-fun EmojiCatalogState.pinState(): EmojiPinState = EmojiPinState(pendingPins, pinFailed, accountId)
+fun EmojiCatalogState.pinState(): EmojiPinState = EmojiPinState(pendingPins, pinFailed, scope)

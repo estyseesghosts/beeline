@@ -107,4 +107,30 @@ class EmojiPickerPreferencesRepositoryTest {
         assertTrue(restored.observe(account).first().pinnedGroups.isEmpty())
         assertTrue(restored.observe(account).first().pinnedEmoji.isEmpty())
     }
+
+    @Test
+    fun pinnedEmojiKeepTheirOrderAfterRecreation() = runBlocking {
+        val repository = FileEmojiPickerPreferencesRepository(context)
+        repository.update(account) { it.copy(pinnedEmoji = listOf(":b:", "❤", ":a:")) }
+
+        val restored = FileEmojiPickerPreferencesRepository(context)
+
+        assertEquals(listOf(":b:", "❤", ":a:"), restored.observe(account).first().pinnedEmoji)
+    }
+
+    @Test
+    fun failedWriteThrowsAndLeavesStoredPreferencesUnchanged() = runBlocking {
+        val repository = FileEmojiPickerPreferencesRepository(context)
+        repository.update(account) { it.copy(pinnedEmoji = listOf(":a:")) }
+        val blocker = java.io.File(context.noBackupFilesDir, "emoji-picker-preferences.json.new")
+        blocker.mkdirs()
+
+        val failure = runCatching { repository.update(account) { it.copy(pinnedEmoji = listOf(":a:", ":b:")) } }
+
+        assertTrue(failure.isFailure)
+        assertEquals(listOf(":a:"), repository.observe(account).first().pinnedEmoji)
+        blocker.delete()
+        repository.update(account) { it.copy(pinnedEmoji = listOf(":a:", ":b:")) }
+        assertEquals(listOf(":a:", ":b:"), repository.observe(account).first().pinnedEmoji)
+    }
 }

@@ -1,6 +1,9 @@
 package me.foxtails.palustris.ui.emoji
 
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -388,6 +391,108 @@ class EmojiPickerTest {
             .assertIsDisplayed()
             .assertWidthIsAtLeast(48.dp)
             .assertHeightIsAtLeast(48.dp)
+    }
+
+    @Test
+    fun recentsSurviveExpandingFromCompactToFull() {
+        val recents = EmojiRecents()
+        var compact by mutableStateOf(true)
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                if (compact) {
+                    EmojiChoiceGrid(catalogItems = catalogEmoji, compact = true, recents = recents, onEmojiSelected = {})
+                } else {
+                    EmojiChoiceGrid(catalogItems = catalogEmoji, compact = false, recents = recents, onEmojiSelected = {})
+                }
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("emoji_picker_cell_:wave:", useUnmergedTree = true).performClick()
+        assertEquals(listOf(":wave:"), recents.identities)
+        compose.runOnIdle { compact = false }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Recent").assertIsDisplayed()
+        assertEquals(listOf(":wave:"), recents.identities)
+    }
+
+    @Test
+    fun pinConfirmationClearsWhenTheCatalogScopeChanges() {
+        var catalog by mutableStateOf(EmojiCatalogState(items = catalogEmoji, scope = "first"))
+        var pinned: String? = null
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                EmojiPickerHost(
+                    target = EmojiPickerTarget.Composer(ComposerField.Text),
+                    catalog = catalog,
+                    selectionMode = ReactionSelectionMode.Single,
+                    mutationSupported = true,
+                    onLoadCatalog = {},
+                    onRetryCatalog = {},
+                    onDismiss = {},
+                    onEmojiSelected = {},
+                    onTogglePinnedEmoji = { pinned = it },
+                )
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithTag("emoji_picker_cell_:wave:", useUnmergedTree = true).performTouchInput { longClick() }
+        compose.onNodeWithTag("emoji_pin_confirmation").assertIsDisplayed()
+
+        compose.runOnIdle { catalog = catalog.copy(scope = "second") }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("emoji_pin_confirmation").assertDoesNotExist()
+        assertEquals(null, pinned)
+    }
+
+    @Test
+    fun longPressWithoutConfirmationNeitherSelectsNorPins() {
+        var selected: EmojiChoice? = null
+        var pinned: String? = null
+        show(
+            target = EmojiPickerTarget.Composer(ComposerField.Text),
+            onEmojiSelected = { selected = it },
+            onTogglePinnedEmoji = { pinned = it },
+        )
+
+        compose.onNodeWithTag("emoji_picker_cell_:wave:", useUnmergedTree = true).performTouchInput { longClick() }
+        compose.onNodeWithTag("emoji_pin_confirmation").assertIsDisplayed()
+
+        assertEquals(null, selected)
+        assertEquals(null, pinned)
+    }
+
+    @Test
+    fun expandingKeepsTheSelectedReactionSelected() {
+        var compact by mutableStateOf(true)
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                if (compact) {
+                    EmojiChoiceGrid(
+                        catalogItems = catalogEmoji,
+                        selectedIdentities = setOf(":blob:"),
+                        compact = true,
+                        onEmojiSelected = {},
+                    )
+                } else {
+                    EmojiChoiceGrid(
+                        catalogItems = catalogEmoji,
+                        selectedIdentities = setOf(":blob:"),
+                        compact = false,
+                        onEmojiSelected = {},
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithTag("emoji_picker_cell_:blob:", useUnmergedTree = true).assertIsSelected()
+
+        compose.runOnIdle { compact = false }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("emoji_picker_cell_:blob:", useUnmergedTree = true).assertIsSelected()
     }
 
     @Test

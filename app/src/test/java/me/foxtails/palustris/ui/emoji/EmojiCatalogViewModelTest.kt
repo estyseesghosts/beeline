@@ -265,6 +265,102 @@ class EmojiCatalogViewModelTest {
         advanceUntilIdle()
     }
 
+    @Test
+    fun emptyCatalogIsEmptyWithoutAnError() = runTest {
+        val model = model(FakeRepository(EmojiCatalogSnapshot(emptyList(), now - HOUR)))
+
+        model.loadIfNeeded()
+        advanceUntilIdle()
+
+        assertTrue(model.state.value.empty)
+        assertTrue(model.state.value.items.isEmpty())
+        assertNull(model.state.value.error)
+        assertTrue(model.state.value.hasSnapshot)
+    }
+
+    @Test
+    fun failingFirstLoadReportsErrorAndRetryRecovers() = runTest {
+        val repository = FakeRepository(null, failure = IllegalStateException("offline"))
+        val model = model(repository)
+
+        model.loadIfNeeded()
+        advanceUntilIdle()
+        assertNotNull(model.state.value.error)
+        assertFalse(model.state.value.hasSnapshot)
+        assertTrue(model.state.value.items.isEmpty())
+
+        repository.failure = null
+        model.retry()
+        advanceUntilIdle()
+
+        assertNull(model.state.value.error)
+        assertTrue(model.state.value.hasSnapshot)
+        assertEquals(listOf(":new:"), model.state.value.items.map { it.submissionValue })
+    }
+
+    @Test
+    fun groupCollapseTogglesAndSurvivesAFailedWrite() = runTest {
+        val preferences = FakePreferencesRepository()
+        val model = model(FakeRepository(null), preferences)
+        runCurrent()
+
+        model.toggleGroupCollapsed(EmojiPickerGroupIds.Unicode)
+        advanceUntilIdle()
+        assertEquals(setOf(EmojiPickerGroupIds.Unicode), preferences.preferences.collapsedGroups)
+        model.toggleGroupCollapsed(EmojiPickerGroupIds.Unicode)
+        advanceUntilIdle()
+        assertTrue(preferences.preferences.collapsedGroups.isEmpty())
+
+        preferences.failure = java.io.IOException("disk")
+        model.toggleGroupCollapsed(EmojiPickerGroupIds.Unicode)
+        advanceUntilIdle()
+        assertTrue(preferences.preferences.collapsedGroups.isEmpty())
+    }
+
+    @Test
+    fun pinnedEmojiKeepPinOrderAcrossUnpinAndRepin() = runTest {
+        val preferences = FakePreferencesRepository()
+        val model = model(FakeRepository(null), preferences)
+        runCurrent()
+
+        listOf(":a:", ":b:", ":c:", ":a:", ":a:").forEach {
+            model.togglePinnedEmoji(it)
+            advanceUntilIdle()
+        }
+
+        assertEquals(listOf(":b:", ":c:", ":a:"), preferences.preferences.pinnedEmoji)
+    }
+
+    @Test
+    fun replacedAccountHasItsOwnScopeAndWritesOnlyItsOwnPreferences() = runTest {
+        val store = AccountPreferencesRepository()
+        val first = accountModel(account, store)
+        val second = accountModel(cancellationAccount, store)
+        runCurrent()
+
+        first.togglePinnedEmoji(":a:")
+        advanceUntilIdle()
+        first.stop()
+        first.togglePinnedEmoji(":ignored:")
+        second.togglePinnedEmoji(":b:")
+        advanceUntilIdle()
+
+        assertEquals(listOf(":a:"), store.values.getValue(account).pinnedEmoji)
+        assertEquals(listOf(":b:"), store.values.getValue(cancellationAccount).pinnedEmoji)
+        assertEquals(account, first.state.value.accountId)
+        assertEquals(cancellationAccount, second.state.value.accountId)
+        assertTrue(first.state.value.scope !== second.state.value.scope)
+    }
+
+    private fun accountModel(accountId: AccountId, preferences: EmojiPickerPreferencesRepository) =
+        EmojiCatalogViewModel(
+            accountId = accountId,
+            source = CatalogSource(),
+            repository = FakeRepository(null),
+            clock = Clock.fixed(Instant.ofEpochMilli(now), ZoneOffset.UTC),
+            preferencesRepository = preferences,
+        )
+
     private fun model(
         repository: EmojiCatalogRepository,
         preferences: FakePreferencesRepository = FakePreferencesRepository(),
@@ -294,7 +390,7 @@ class EmojiCatalogViewModelTest {
     private class FakeRepository(
         private var snapshot: EmojiCatalogSnapshot?,
         private val gate: CompletableDeferred<Unit>? = null,
-        private val failure: Exception? = null,
+        var failure: Exception? = null,
     ) : EmojiCatalogRepository {
         var refreshCalls = 0
             private set
@@ -353,7 +449,7 @@ class EmojiCatalogViewModelTest {
 
     private class FakePreferencesRepository(
         initial: EmojiPickerPreferences = EmojiPickerPreferences(),
-        private val failure: Exception? = null,
+        var failure: Exception? = null,
         private val gate: CompletableDeferred<Unit>? = null,
     ) : EmojiPickerPreferencesRepository {
         var preferences = initial
@@ -373,6 +469,24 @@ class EmojiCatalogViewModelTest {
         }
 
         override suspend fun remove(accountId: AccountId) = Unit
+    }
+
+    private class AccountPreferencesRepository : EmojiPickerPreferencesRepository {
+        val values = mutableMapOf<AccountId, EmojiPickerPreferences>()
+
+        override fun observe(accountId: AccountId): Flow<EmojiPickerPreferences> =
+            kotlinx.coroutines.flow.flowOf(values[accountId] ?: EmojiPickerPreferences())
+
+        override suspend fun update(
+            accountId: AccountId,
+            transform: (EmojiPickerPreferences) -> EmojiPickerPreferences,
+        ) {
+            values[accountId] = transform(values[accountId] ?: EmojiPickerPreferences())
+        }
+
+        override suspend fun remove(accountId: AccountId) {
+            values.remove(accountId)
+        }
     }
 
     private class InertPreferencesRepository : EmojiPickerPreferencesRepository {

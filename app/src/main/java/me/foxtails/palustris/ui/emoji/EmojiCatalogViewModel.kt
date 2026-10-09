@@ -37,7 +37,7 @@ class EmojiCatalogViewModel @AssistedInject constructor(
     private val preferencesRepository: EmojiPickerPreferencesRepository,
     private val uiStrings: UiStrings = UiStrings.Default,
 ) : ViewModel() {
-    private val _state = MutableStateFlow(EmojiCatalogState(accountId = accountId))
+    private val _state = MutableStateFlow(EmojiCatalogState(accountId = accountId, scope = Any()))
     val state = _state.asStateFlow()
     private var loadJob: Job? = null
     private var preferencesJob: Job? = null

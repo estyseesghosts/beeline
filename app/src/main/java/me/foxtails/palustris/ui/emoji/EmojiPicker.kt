@@ -309,6 +309,7 @@ fun EmojiChoiceGrid(
     preferences: EmojiPickerPreferences = EmojiPickerPreferences(),
     compact: Boolean = false,
     pins: EmojiPinState = EmojiPinState(),
+    recents: EmojiRecents = rememberEmojiRecents(),
     modifier: Modifier = Modifier,
     testTag: String = "emoji_picker_grid",
     actions: EmojiPreferenceActions = EmojiPreferenceActions(),
@@ -316,20 +317,20 @@ fun EmojiChoiceGrid(
     onEmojiSelected: (EmojiChoice) -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
-    var recents by rememberSaveable { mutableStateOf(listOf<String>()) }
     val unicodeChoices = remember {
         DefaultUnicodeEmojis.map { EmojiChoice(it, it) }
     }
     val gridState = rememberLazyGridState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    val recentChoices = remember(recents) {
-        recents.map { EmojiChoice(it, it) }
+    val recentIdentities = recents.identities
+    val recentChoices = remember(recentIdentities) {
+        recentIdentities.map { EmojiChoice(it, it) }
     }
     // The confirmation belongs to one account scope; a new scope starts without it.
     var pendingPin by remember(pins.scopeKey) { mutableStateOf<PendingEmojiPin?>(null) }
     val useChoice: (EmojiChoice) -> Unit = { choice ->
-        recents = (listOf(choice.submissionValue) + recents.filterNot { it == choice.submissionValue }).take(RECENT_LIMIT)
+        recents.use(choice.submissionValue)
         onEmojiSelected(choice)
     }
     val requestPin: (EmojiChoice, Rect) -> Unit = { choice, bounds ->
@@ -395,11 +396,11 @@ fun EmojiChoiceGrid(
         }
         return
     }
-    val groups = remember(catalogItems, additionalChoices, recents, selectedIdentities, query, preferences) {
+    val groups = remember(catalogItems, additionalChoices, recentIdentities, selectedIdentities, query, preferences) {
         buildEmojiPickerGroups(
             catalogItems = catalogItems,
             additionalChoices = additionalChoices,
-            recentIdentities = recents,
+            recentIdentities = recentIdentities,
             selectedIdentities = selectedIdentities,
             searchQuery = query,
             preferences = preferences,
@@ -570,6 +571,5 @@ private fun EmojiPinConfirmationPopup(
     }
 }
 
-private const val RECENT_LIMIT = 16
 private const val COMPACT_UNICODE_LIMIT = 8
 private const val COMPACT_SERVER_LIMIT = 4

@@ -50,6 +50,7 @@ import me.foxtails.palustris.ui.emoji.EmojiCatalogState
 import me.foxtails.palustris.ui.emoji.EmojiChoiceGrid
 import me.foxtails.palustris.ui.emoji.EmojiPreferenceActions
 import me.foxtails.palustris.ui.emoji.pinState
+import me.foxtails.palustris.ui.emoji.rememberEmojiRecents
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 
 private const val BUBBLE_DISMISS_DURATION_MILLIS = 150L
@@ -196,6 +197,8 @@ private fun ReactionBubble(
 ) {
     val expanded = target.mode == ReactionBubbleMode.Expanded
     val post = target.ownedPost.post
+    // One recents holder for both sizes keeps the recents when the pop-out expands.
+    val recents = rememberEmojiRecents()
     val selectedIdentities = remember(post) {
         buildSet {
             post.selectedReactions.forEach { add(it.submissionValue) }
@@ -269,6 +272,7 @@ private fun ReactionBubble(
                  preferences = catalog.preferences,
                  compact = false,
                  pins = catalog.pinState(),
+                 recents = recents,
                  modifier = Modifier.heightIn(max = 520.dp).padding(horizontal = 8.dp, vertical = 8.dp),
                  testTag = "reaction_bubble_grid",
                   actions = EmojiPreferenceActions(onToggleGroupCollapsed, onToggleGroupPinned, onTogglePinnedEmoji),
@@ -288,6 +292,7 @@ private fun ReactionBubble(
                 compact = true,
                 preferences = catalog.preferences,
                 pins = catalog.pinState(),
+                recents = recents,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
                  testTag = "reaction_bubble_grid",
                  actions = EmojiPreferenceActions(togglePinnedEmoji = onTogglePinnedEmoji),

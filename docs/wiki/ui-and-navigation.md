@@ -481,6 +481,16 @@ The tile has a 48 dp minimum width and height. Combined Unicode sequences and se
 
 Sources: `ui/emoji/EmojiPickerTile.kt`, `ui/emoji/EmojiPicker.kt`, `ui/emoji/EmojiCatalogViewModel.kt`, `EmojiPickerTest`, `EmojiCatalogViewModelTest`.
 
+## Emoji picker identity and scope (Phase 8B)
+
+`EmojiCatalogViewModel` is the one owner of the catalog, the pending pins, and the picker preferences for one account and one session. `EmojiHost` creates it per account and session generation and stops it with the connected entry. Each owner puts a new `EmojiCatalogState.scope` token in its state. The picker clears the pin confirmation when that token changes, so a replaced session or account never confirms a pin for the old owner.
+
+An emoji keeps one identity, its `submissionValue`. Grid keys, pins, selection, and recents all use it. Favorites and group collapse persist per account in `FileEmojiPickerPreferencesRepository`. Recents do not persist. `EmojiRecents` holds them for one presentation, and the compact pop-out and the full picker of that presentation share it. Expanding therefore keeps the recents, the selected reactions, and the post that the reaction targets.
+
+A failed catalog load keeps the previous snapshot and shows the error with a retry. An empty catalog is not an error. The read-only reaction list is unchanged.
+
+Sources: `ui/emoji/EmojiRecents.kt`, `ui/emoji/EmojiCatalogState.kt`, `ui/emoji/EmojiCatalogViewModel.kt`, `EmojiPickerTest`, `EmojiCatalogViewModelTest`, `EmojiPickerPreferencesRepositoryTest`, `EmojiAssetStoreTest` (shared downloads).
+
 ## Repost and Quote choice
 
 A tap on the repost action opens a source-anchored choice from `ui/posts/PostRepostChoice.kt`: `Repost` or `Undo repost`, and `Quote` only when the current source supports quoting. A tap alone never sends. Long press and the accessibility custom action still open the composer for Quote. The first choice takes focus when it opens. Back, an outside tap, a stale post, a changed repost state, and a session change close the choice without sending (`PostRepostConfirmationState` owns this). At font scale 1.5 and above the choice opens as a bottom sheet; otherwise it is a popup that flips above or below at screen edges. Repost goes through the existing mutation owner and authority, which keep optimistic repost and rollback; Quote goes to the existing target-aware composer through the shell `onQuote` callback.
