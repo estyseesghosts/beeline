@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -208,11 +207,10 @@ internal fun CompactContextualNavigationBar(
 ) {
     Row(
         Modifier.fillMaxWidth().height(CompactNavigationHeight),
-        horizontalArrangement = Arrangement.spacedBy(CompactNavigationControlSpacing, Alignment.End),
+        // The caret, pill, and action form one group with equal gaps, centered however many controls show.
+        horizontalArrangement = Arrangement.spacedBy(CompactNavigationControlSpacing, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Spacer(Modifier.weight(1f))
-        // The caret takes the dead space left of the pill, so the pill and action never move.
         tabCaret?.let { ContextualTabCaretButton(it) }
         NavigationCapsule(
             selectedIndex = destination.ordinal,
