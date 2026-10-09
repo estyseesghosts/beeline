@@ -27,6 +27,10 @@ import me.foxtails.palustris.ui.Avatar
 import me.foxtails.palustris.ui.shell.Destination
 import me.foxtails.palustris.ui.shell.NotificationsPanel
 import me.foxtails.palustris.ui.shell.SearchPanel
+import me.foxtails.palustris.ui.large.ContextualTabCaretButton
+import me.foxtails.palustris.ui.large.TabCaretUiState
+import me.foxtails.palustris.ui.layout.CompactNavigationCapsuleWidth
+import me.foxtails.palustris.ui.layout.CompactNavigationControlSpacing
 import me.foxtails.palustris.ui.layout.CompactNavigationHeight
 import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
 import me.foxtails.palustris.ui.profile.ProfileUiState
@@ -191,18 +195,21 @@ internal fun CompactContextualNavigationBar(
     account: Account?,
     onOpenAccounts: () -> Unit,
     onDestinationSelected: (Destination) -> Unit,
+    tabCaret: TabCaretUiState? = null,
 ) {
     Row(
         Modifier.fillMaxWidth().height(CompactNavigationHeight),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+        horizontalArrangement = Arrangement.spacedBy(CompactNavigationControlSpacing, Alignment.End),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Spacer(Modifier.weight(1f))
+        // The caret takes the dead space left of the pill, so the pill and action never move.
+        tabCaret?.let { ContextualTabCaretButton(it) }
         NavigationCapsule(
             selectedIndex = destination.ordinal,
             itemCount = Destination.entries.size,
             orientation = Orientation.Horizontal,
-            modifier = Modifier.width(212.dp).height(56.dp),
+            modifier = Modifier.width(CompactNavigationCapsuleWidth).height(56.dp),
         ) {
             Row(
                 Modifier.fillMaxSize(),

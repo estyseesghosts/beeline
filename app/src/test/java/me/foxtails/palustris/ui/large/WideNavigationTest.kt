@@ -310,7 +310,7 @@ class WideNavigationTest {
             .fetchSemanticsNode().boundsInRoot
         val expectedMarginPx = 16f * compose.activity.resources.displayMetrics.density
         assertTrue("large profile caret should start at the content spine", caret.left <= expectedMarginPx)
-        assertTrue("large profile chips should follow the fixed caret", chipRow.left >= caret.right)
+        assertTrue("large profile caret is the first item of the chip row", chipRow.left <= caret.left)
         compose.onNodeWithText("Edit profile").assertIsDisplayed()
     }
 

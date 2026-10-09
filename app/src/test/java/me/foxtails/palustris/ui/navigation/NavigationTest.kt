@@ -353,7 +353,7 @@ class NavigationTest {
 
         assertTrue("notification chips should be above the contextual action", chips.bottom < action.top)
         assertTrue("notification chips should be above the navigation pill", chips.bottom < navigation.top)
-        assertTrue("notification chips should keep compact side margins", chips.left / density >= 16f)
+        assertTrue("notification chip path reaches the left display edge", chips.left / density <= 1f)
         assertTrue("notification chips reach the display edge", chips.right / density >= 411f - 1f)
         assertTrue(
             "resting notification chips keep compact side margins",
@@ -375,7 +375,7 @@ class NavigationTest {
         assertTrue("timeline tabs should expose a readable row", selector.height / density >= 48f)
         assertTrue("selector should be below the content top", selector.top > 96f * density)
         assertTrue("timeline tabs should be above the navigation action", tabs.bottom < action.top)
-        assertTrue("timeline tabs should keep compact side margins", tabs.left / density >= 16f)
+        assertTrue("timeline tab path reaches the left display edge", tabs.left / density <= 1f)
         assertTrue("timeline tabs reach the display edge", tabs.right / density >= 411f - 1f)
         assertTrue(
             "resting timeline tabs keep compact side margins",
@@ -675,7 +675,7 @@ class NavigationTest {
         val action = bounds("Edit profile")
         val density = compose.activity.resources.displayMetrics.density
         assertTrue("profile categories should be above navigation", categories.bottom < action.top)
-        assertTrue("profile categories should keep compact side margins", categories.left / density >= 16f)
+        assertTrue("profile category path reaches the left display edge", categories.left / density <= 1f)
         assertTrue("profile categories reach the display edge", categories.right / density >= 411f - 1f)
         assertTrue(
             "resting profile categories keep compact side margins",

@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -75,7 +76,7 @@ class CategoryChipsGeometryTest {
     }
 
     @Test
-    fun caretStaysVisibleAndSelectionAndScrollSurviveCollapse() {
+    fun collapseLeavesTheCaretFirstAndSelectionSurvivesCollapse() {
         val visible = mutableStateOf(true)
         compose.activity.runOnUiThread {
             compose.activity.setContent {
@@ -95,6 +96,7 @@ class CategoryChipsGeometryTest {
                         visible = visible.value,
                         onToggleVisibility = { visible.value = !visible.value },
                         rowTestTag = "category-row",
+                        selectedEntryKey = "category-8",
                         visibilityToggleTestTag = "category-visibility",
                     )
                 }
@@ -104,6 +106,9 @@ class CategoryChipsGeometryTest {
         compose.onNodeWithContentDescription("categories")
             .performScrollToNode(hasText("Category 8"))
         compose.onNodeWithTag("category-chip-8").assertIsSelected()
+        // The caret scrolls with the chips, so bring it back before collapsing.
+        compose.onNodeWithContentDescription("categories")
+            .performScrollToNode(hasTestTag("category-visibility"))
         val expandedCaret = compose.onNodeWithTag("category-visibility")
             .fetchSemanticsNode().boundsInRoot
         compose.onNodeWithContentDescription("Hide chips").performClick()
@@ -282,7 +287,7 @@ class CategoryChipsGeometryTest {
 
     @Test
     @Config(qualifiers = "w445dp-h704dp-420dpi")
-    fun chipPathReachesFarDisplayEdgeAndNeverScrollsBeneathTheCaret() {
+    fun inlineCaretIsTheFirstScrollingItemAndChipPathReachesBothDisplayEdges() {
         for (direction in LayoutDirection.entries) {
             compose.activity.runOnUiThread {
                 compose.activity.setContent {
@@ -312,7 +317,7 @@ class CategoryChipsGeometryTest {
             }
             compose.waitForIdle()
             // rememberLazyListState is saveable, so a second setContent can restore the first scroll.
-            compose.onNodeWithTag("edge-row").performScrollToNode(hasText("Category 0"))
+            compose.onNodeWithTag("edge-row").performScrollToNode(hasTestTag("edge-caret"))
             compose.waitForIdle()
             val density = compose.density
             val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
@@ -321,20 +326,23 @@ class CategoryChipsGeometryTest {
             val first = compose.onNodeWithTag("edge-chip-0").fetchSemanticsNode().boundsInRoot
             val leftPx = with(density) { 72.dp.toPx() }
             val rightPx = with(density) { 20.dp.toPx() }
+            val gapPx = with(density) { 8.dp.toPx() }
+            // The row itself spans the whole container: the caret is part of it, not beside it.
+            assertEquals(root.left, row.left, 0.01f)
+            assertEquals(root.right, row.right, 0.01f)
             if (direction == LayoutDirection.Ltr) {
                 // Logical-first caret: physical left in LTR, clear of the 72 dp physical-left inset.
                 assertEquals(root.left + leftPx, caret.left, 0.5f)
-                // The path reaches the far physical edge; chips never scroll beneath the caret.
-                assertEquals(root.right, row.right, 0.01f)
-                assertEquals(caret.right, row.left, 0.5f)
-                assertEquals(true, first.left >= caret.right)
+                assertEquals(caret.right + gapPx, first.left, 0.5f)
             } else {
                 // The caret follows the logical start to the physical right. Physical insets stay put.
                 assertEquals(root.right - rightPx, caret.right, 0.5f)
-                assertEquals(root.left, row.left, 0.01f)
-                assertEquals(caret.left, row.right, 0.5f)
-                assertEquals(true, first.right <= caret.left)
+                assertEquals(caret.left - gapPx, first.right, 0.5f)
             }
+            // Scrolling to the last chip carries the caret out of the row with the other chips.
+            compose.onNodeWithTag("edge-row").performScrollToNode(hasText("Category 9"))
+            compose.waitForIdle()
+            compose.onNodeWithTag("edge-caret").assertDoesNotExist()
             // The far-end resting chip clears its physical inset; the path itself still reaches the display edge.
             val rest = compose.onNodeWithTag("edge-row")
             if (direction == LayoutDirection.Ltr) {

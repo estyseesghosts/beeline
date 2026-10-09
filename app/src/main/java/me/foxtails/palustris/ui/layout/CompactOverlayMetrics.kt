@@ -28,6 +28,27 @@ internal val CompactSearchDockHeight = CompactFilterDockHeight + CompactSearchFi
 internal val CompactContextualControlsPositioningClearance = CompactNavigationHeight +
     CompactOverlayControlSpacing + CompactOverlayVerticalPadding
 internal val LegacyFeedBottomClearance = 96.dp
+internal val CompactNavigationCapsuleWidth = 212.dp
+internal val CompactNavigationControlSize = 56.dp
+internal val CompactNavigationControlSpacing = 8.dp
+internal val CompactNavigationBarMaxWidth = 480.dp
+
+/** The width of the compact navigation bar: the window less both side paddings, capped at its maximum. */
+internal fun compactNavigationBarWidth(windowWidth: Dp): Dp =
+    (windowWidth - CompactOverlayHorizontalPadding * 2f).coerceIn(0.dp, CompactNavigationBarMaxWidth)
+
+/**
+ * Whether the compact bar has dead space left of the pill for a contextual tab caret.
+ *
+ * The bar is end-aligned: capsule and contextual action keep their place, and the caret needs its
+ * own control and one gap in the space to their left. The contextual action slot is always counted,
+ * so the choice never changes when a screen has no action. Narrower windows keep the inline caret.
+ */
+internal fun compactContextualCaretFits(windowWidth: Dp): Boolean {
+    val required = CompactNavigationCapsuleWidth + CompactNavigationControlSize * 2f +
+        CompactNavigationControlSpacing * 2f
+    return compactNavigationBarWidth(windowWidth) >= required
+}
 
 /** Places compact chrome above either the system bars or the IME, never their sum. */
 @Composable

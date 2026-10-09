@@ -349,5 +349,12 @@ class HomeClearanceTest {
     }
 }
 
-private fun SemanticsNode.isChipRowEntry() =
-    parent?.config?.contains(SemanticsProperties.SelectableGroup) == true
+// The inline caret is part of the scrolling row too, so any descendant of the group scrolls with it.
+private fun SemanticsNode.isChipRowEntry(): Boolean {
+    var node = parent
+    while (node != null) {
+        if (node.config.contains(SemanticsProperties.SelectableGroup)) return true
+        node = node.parent
+    }
+    return false
+}

@@ -45,10 +45,12 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.large.LargeLayoutMode
 import me.foxtails.palustris.ui.large.LargeScreenShell
 import me.foxtails.palustris.ui.large.NavigationFit
+import me.foxtails.palustris.ui.large.TabCaretUiState
 import me.foxtails.palustris.ui.large.rememberCompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.toWideNavigationItem
 import me.foxtails.palustris.ui.layout.CompactHomeTimelineSpacing
@@ -56,6 +58,7 @@ import me.foxtails.palustris.ui.layout.CompactNavigationHeight
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.CompactOverlayVerticalPadding
 import me.foxtails.palustris.ui.layout.CompactTimelineTabsHeight
+import me.foxtails.palustris.ui.layout.compactContextualCaretFits
 import me.foxtails.palustris.ui.layout.compactGlobalNavigationPositioningInsets
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.compactFloatingEnter
@@ -91,6 +94,7 @@ private fun BoxScope.CompactShellNavigation(
     homeChipListState: LazyListState,
     homeChipRowVisible: Boolean,
     onToggleHomeChipRow: () -> Unit,
+    tabCaret: TabCaretUiState? = null,
 ) {
     val motionScheme = LocalPalustrisMotionScheme.current
     AnimatedVisibility(
@@ -128,6 +132,9 @@ private fun BoxScope.CompactShellNavigation(
                         modifier = Modifier.height(CompactTimelineTabsHeight),
                         rowTestTag = "home_timeline_tabs",
                         visibilityToggleTestTag = "home_timeline_visibility",
+                        // A contextual caret in the bar replaces the inline control.
+                        caretPresentation = if (tabCaret != null) ChipCaretPresentation.Hidden
+                        else ChipCaretPresentation.Inline,
                         leftInset = CompactOverlayHorizontalPadding,
                         rightInset = CompactOverlayHorizontalPadding,
                     )
@@ -173,6 +180,7 @@ private fun BoxScope.CompactShellNavigation(
                         account = account,
                         onOpenAccounts = { overlay.clearPostActionBubble(); navigator.sheet = "Accounts" },
                         onDestinationSelected = navigator::selectDestination,
+                        tabCaret = tabCaret,
                     )
                 }
             }
@@ -242,6 +250,10 @@ internal fun ShellContent(
         overlay.profileImageRequest != null || navigator.singlePost != null ||
         overlay.emojiPickerTarget != null
     val useCompactWideCaret = compactWidePresentation && navigationFit.useVerticalNavigation &&
+        navigator.page == null && navigator.singlePost == null
+    // Compact-narrow moves the caret into the bar only while the dead space left of the pill can
+    // hold it. Narrower windows, local pages, and post detail keep the inline control.
+    val useNarrowContextualCaret = !wideContent && compactContextualCaretFits(windowWidth) &&
         navigator.page == null && navigator.singlePost == null
     // The compact bar is the only chrome in a wide pane layout when the vertical stack cannot
     // fit, so wide content keeps its own end clearance for that bar.
@@ -369,7 +381,7 @@ internal fun ShellContent(
                         profileListState = profileListState,
                         largePresentation = largePresentation,
                         compactWidePresentation = compactWidePresentation,
-                        useCompactWideCaret = false,
+                        useCompactWideCaret = useNarrowContextualCaret,
                         tabCaretHost = compactWideTabCaretHost,
                         rightObstructionClearance = rightObstructionClearance,
                         leftObstructionClearance = leftObstructionClearance,
@@ -414,6 +426,7 @@ internal fun ShellContent(
                         homeChipListState = homeChipListState,
                         homeChipRowVisible = homeChipRowVisible,
                         onToggleHomeChipRow = { homeChipRowVisible = !homeChipRowVisible },
+                        tabCaret = compactWideTabCaretHost.caretState.takeIf { useNarrowContextualCaret },
                     )
                 }
             }
