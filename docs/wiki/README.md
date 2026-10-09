@@ -13,6 +13,7 @@ This directory contains human-facing Beeline documentation.
 
 - [Overview](overview.md)
 - [Architecture](architecture.md)
+- [Changelog](changelog.md)
 
 ### Planned
 
