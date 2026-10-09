@@ -35,9 +35,10 @@ class CompactNarrowTabCaretTest {
     }
 
     @Test fun fitPolicyNeedsRoomForCapsuleActionCaretAndGaps() {
-        // 212 + 56 + 56 + 2 * 8 = 340 dp of bar, plus 16 dp of padding on each side.
-        assertFalse(compactContextualCaretFits(360.dp))
-        assertFalse(compactContextualCaretFits(371.dp))
+        // 200 + 56 + 56 + 2 * 8 = 328 dp of bar, plus 16 dp of padding on each side.
+        assertFalse(compactContextualCaretFits(320.dp))
+        assertFalse(compactContextualCaretFits(359.dp))
+        assertTrue(compactContextualCaretFits(360.dp))
         assertTrue(compactContextualCaretFits(372.dp))
         assertTrue(compactContextualCaretFits(384.dp))
         assertTrue(compactContextualCaretFits(599.dp))
@@ -60,7 +61,18 @@ class CompactNarrowTabCaretTest {
 
     @Test
     @Config(qualifiers = "w360dp-h800dp-420dpi")
-    fun narrowestCompactKeepsTheInlineCaret() {
+    fun commonPhoneWidthGetsTheContextualCaret() {
+        showApp()
+        val caret = compose.onNodeWithTag(COMPACT_WIDE_TAB_CARET_TAG, useUnmergedTree = true)
+            .assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+        val pill = compose.onNodeWithContentDescription("Home").fetchSemanticsNode().boundsInRoot
+        assertTrue(caret.right <= pill.left)
+        compose.onNodeWithTag("home_timeline_visibility", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h800dp-420dpi")
+    fun foldCoverWidthKeepsTheInlineCaret() {
         showApp()
         compose.onNodeWithTag(COMPACT_WIDE_TAB_CARET_TAG, useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("home_timeline_visibility", useUnmergedTree = true).assertIsDisplayed()

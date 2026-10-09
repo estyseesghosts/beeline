@@ -246,7 +246,7 @@ internal fun NavigationCapsule(
         shadowElevation = 6.dp,
     ) {
         val capsulePadding = if (orientation == Orientation.Horizontal) {
-            Modifier.padding(horizontal = 4.dp)
+            Modifier.padding(horizontal = 2.dp)
         } else {
             Modifier.padding(vertical = 4.dp)
         }

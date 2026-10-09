@@ -28,7 +28,7 @@ internal val CompactSearchDockHeight = CompactFilterDockHeight + CompactSearchFi
 internal val CompactContextualControlsPositioningClearance = CompactNavigationHeight +
     CompactOverlayControlSpacing + CompactOverlayVerticalPadding
 internal val LegacyFeedBottomClearance = 96.dp
-internal val CompactNavigationCapsuleWidth = 212.dp
+internal val CompactNavigationCapsuleWidth = 200.dp
 internal val CompactNavigationControlSize = 56.dp
 internal val CompactNavigationControlSpacing = 8.dp
 internal val CompactNavigationBarMaxWidth = 480.dp
