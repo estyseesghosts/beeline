@@ -64,11 +64,13 @@ internal fun ZoomableMediaImage(
     state: ZoomableMediaState = rememberZoomableMediaState(request.data),
     onImageReady: () -> Unit = {},
     onImageDimensionsReady: (Size) -> Unit = {},
+    placeholderRequest: ImageRequest? = null,
 ) {
     val transformState = rememberTransformableState { zoomChange, panChange, _ ->
         state.applyTransform(zoomChange, panChange)
     }
     val painter = rememberAsyncImagePainter(model = request, imageLoader = imageLoader)
+    val placeholderPainter = placeholderRequest?.let { rememberAsyncImagePainter(model = it, imageLoader = imageLoader) }
     LaunchedEffect(painter.state) {
         if (painter.state is AsyncImagePainter.State.Success) {
             val size = (painter.state as AsyncImagePainter.State.Success).painter.intrinsicSize
@@ -97,6 +99,16 @@ internal fun ZoomableMediaImage(
             }
             .semantics { this.contentDescription = contentDescription },
     ) {
+        // The preview stays beneath the full image, so a page never shows a blank frame while the
+        // full image loads and the swap lands on the same bounds.
+        if (placeholderPainter != null) {
+            Image(
+                painter = placeholderPainter,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit,
+            )
+        }
         Image(
             painter = painter,
             contentDescription = contentDescription,

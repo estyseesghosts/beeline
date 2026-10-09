@@ -146,7 +146,12 @@ fun MediaViewerScreen(
         val selectedSourceFrame = sourceFrame(selectedSource, Rect.Zero, selectedAttachment)
         val selectedRevealed = !selectedAttachment.sensitive || revealedPages[selectedPage] == true
         // The transition layer would paint the image over a sensitive cover that is still closed.
-        val transitionLayerVisible = selectedRevealed && (transition.phase != MediaViewerPhase.Open || !selectedFullReady)
+        // Once open, the layer only bridges the opened page until its full image is ready. A page
+        // reached by swiping is drawn by the pager itself, so it moves with the carousel.
+        val bridgingOpenedPage = selectedPage == request.attachmentIndex.coerceIn(0, attachments.lastIndex) &&
+            !selectedFullReady && !pagerState.isScrollInProgress
+        val transitionLayerVisible = selectedRevealed &&
+            (transition.phase != MediaViewerPhase.Open || bridgingOpenedPage)
         val mediaLoader = remember(context) { MediaImageLoader.get(context) }
         val fullRequest = remember(
             selectedAttachment,

@@ -71,9 +71,28 @@ internal fun MediaPage(
     val mediaLoader = MediaImageLoader.get(context)
     val role = if (fullQuality) MediaRequestRole.Full else MediaRequestRole.Preview
     val decision = MediaRequestPolicy.resolve(attachment, role, revealed = true, explicitlyOpened = fullQuality)
+    val previewDecision = if (fullQuality) {
+        MediaRequestPolicy.resolve(attachment, MediaRequestRole.Preview, revealed = true, explicitlyOpened = false)
+    } else {
+        null
+    }
     BoxWithConstraints(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        val decodeWidthPx = with(androidx.compose.ui.platform.LocalDensity.current) { maxWidth.toPx().toInt() }
+        val decodeHeightPx = with(androidx.compose.ui.platform.LocalDensity.current) { maxHeight.toPx().toInt() }
         when (decision) {
             is MediaRequestDecision.Request -> ZoomableMediaImage(
+                placeholderRequest = (previewDecision as? MediaRequestDecision.Request)?.let {
+                    mediaLoader.request(
+                        context = context,
+                        decision = it,
+                        accountIdentity = accountIdentity,
+                        postIdentity = postIdentity,
+                        attachment = attachment,
+                        attachmentIndex = index,
+                        decodeWidthPx = decodeWidthPx,
+                        decodeHeightPx = decodeHeightPx,
+                    )
+                },
                 request = MediaImageLoader.get(context).request(
                     context = context,
                     decision = decision,
@@ -81,8 +100,8 @@ internal fun MediaPage(
                     postIdentity = postIdentity,
                     attachment = attachment,
                     attachmentIndex = index,
-                    decodeWidthPx = with(androidx.compose.ui.platform.LocalDensity.current) { maxWidth.toPx().toInt() },
-                    decodeHeightPx = with(androidx.compose.ui.platform.LocalDensity.current) { maxHeight.toPx().toInt() },
+                    decodeWidthPx = decodeWidthPx,
+                    decodeHeightPx = decodeHeightPx,
                 ),
                  imageLoader = mediaLoader.imageLoader,
                   contentDescription = attachment.description ?: stringResource(R.string.media_page_count, index + 1, 1),
