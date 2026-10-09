@@ -77,6 +77,7 @@ fun InlineEmojiText(
     onOpenUsername: ((String) -> Unit)? = null,
     onSearchHashtag: ((String) -> Unit)? = null,
     onTextTap: (() -> Unit)? = null,
+    onTextLayout: ((TextLayoutResult) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val resolvedStyle = style.copy(
@@ -145,6 +146,7 @@ fun InlineEmojiText(
             maxLines = maxLines,
             overflow = overflow,
             inlineContent = inlineContent,
+            onTextLayout = onTextLayout,
         )
         return
     }
@@ -179,7 +181,10 @@ fun InlineEmojiText(
         maxLines = maxLines,
         overflow = overflow,
         inlineContent = inlineContent,
-        onTextLayout = { layoutResult = it },
+        onTextLayout = {
+            layoutResult = it
+            onTextLayout?.invoke(it)
+        },
     )
 }
 

@@ -15,6 +15,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
@@ -135,8 +136,11 @@ internal fun ProfileTimelinePresentation(
             quoteEnabled = quoteEnabled,
             onQuote = onQuote,
             header = {
+                // Compact-wide lets the banner bleed to the display edges, so the header applies the
+                // clearance itself; every other layout pads the whole header.
+                val bannerBleed = compactWidePresentation
                 Box(
-                    Modifier.fillMaxWidth().absolutePadding(
+                    if (bannerBleed) Modifier.fillMaxWidth() else Modifier.fillMaxWidth().absolutePadding(
                         left = leftObstructionClearance,
                         right = rightObstructionClearance,
                     ),
@@ -151,6 +155,8 @@ internal fun ProfileTimelinePresentation(
                         onMessage = { onMessage(account) },
                         onOpenProfile = onOpenProfile,
                         onOpenProfileImage = onOpenProfileImage,
+                        leftInset = if (bannerBleed) leftObstructionClearance else 0.dp,
+                        rightInset = if (bannerBleed) rightObstructionClearance else 0.dp,
                     )
                 }
             },

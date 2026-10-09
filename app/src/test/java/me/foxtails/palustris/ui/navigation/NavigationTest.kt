@@ -556,7 +556,8 @@ class NavigationTest {
     }
 
     @Test fun compactProfileUnderlapsCategoriesAndFinalSectionCanScrollClear() {
-        val biography = longFixtureText("Profile")
+        // The biography is smaller than body text, so it needs enough lines to still reach the dock.
+        val biography = longFixtureText("Profile", lines = 40)
         val account = fixtureAccount("profile", biography)
         val posts = (0..8).map { index ->
             fixturePost("profile-$index", account, "Profile post $index")

@@ -1,6 +1,7 @@
 package me.foxtails.palustris.ui.profile
 
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -369,6 +371,31 @@ class ProfileScreenTest {
         compose.onNodeWithText("Following").assertIsDisplayed().performClick()
         compose.onNodeWithText("unfollow?").assertIsDisplayed().performClick()
         assertEquals(1, unfollows)
+    }
+
+    @Test
+    fun longHandleSplitsAtTheDomainAndLongNameStaysOnOneLine() {
+        val profile = account("remote", "A long display name").copy(
+            handle = "@averyveryverylongusername@averyveryverylongdomain.example",
+        )
+
+        show {
+            androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.width(260.dp)) {
+                ProfileHeader(
+                    account = profile,
+                    state = profileState(profile, emptyList()),
+                    isSelf = false,
+                    onRefresh = {},
+                    onFollow = {},
+                    onUnfollow = {},
+                )
+            }
+        }
+
+        compose.onNodeWithText("@averyveryverylongusername\n@averyveryverylongdomain.example").assertIsDisplayed()
+        val name = compose.onNodeWithText("A long display name").fetchSemanticsNode().boundsInRoot
+        val oneLinePx = 48 * compose.activity.resources.displayMetrics.density
+        assertTrue("display name stays on one line", name.height < oneLinePx)
     }
 
     @Test

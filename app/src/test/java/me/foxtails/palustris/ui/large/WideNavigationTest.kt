@@ -158,10 +158,14 @@ class WideNavigationTest {
             .fetchSemanticsNode().boundsInRoot
         val list = compose.onNodeWithTag("profile_timeline_list", useUnmergedTree = true)
             .fetchSemanticsNode().boundsInRoot
-        // The list viewport reaches the display edge so chips can travel there; content keeps the pane margin.
+        // The list viewport reaches the display edge so chips and the banner can travel there; text keeps the pane margin.
         val marginPx = LARGE_OUTER_MARGIN_DP * compose.activity.resources.displayMetrics.density
-        assertEquals("compact-wide Profile header rests at the pane margin", list.left + marginPx, header.left, 1f)
-        assertTrue("compact-wide Profile keeps a broad mobile header", header.width > list.width * 0.75f)
+        assertEquals("compact-wide Profile banner bleeds to the display edge", list.left, header.left, 1f)
+        assertEquals("compact-wide Profile banner spans the whole pane", list.width, header.width, 1f)
+        val displayName = compose.onNodeWithTag("profile_display_name", useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot
+        val contentPaddingPx = 16 * compose.activity.resources.displayMetrics.density
+        assertEquals("compact-wide Profile text rests at the pane margin", list.left + marginPx + contentPaddingPx, displayName.left, 1f)
         val dock = compose.onNodeWithTag("profile_categories_dock").fetchSemanticsNode().boundsInRoot
         val categories = compose.onNodeWithContentDescription(
             "Profile categories; swipe horizontally for more",
