@@ -50,7 +50,6 @@ import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.large.LargeLayoutMode
 import me.foxtails.palustris.ui.large.LargeScreenShell
 import me.foxtails.palustris.ui.large.NavigationFit
-import me.foxtails.palustris.ui.large.TabCaretUiState
 import me.foxtails.palustris.ui.large.rememberCompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.toWideNavigationItem
 import me.foxtails.palustris.ui.layout.CompactHomeTimelineSpacing
@@ -63,6 +62,7 @@ import me.foxtails.palustris.ui.layout.compactGlobalNavigationPositioningInsets
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.compactFloatingEnter
 import me.foxtails.palustris.ui.motion.compactFloatingExit
+import me.foxtails.palustris.ui.navigation.CompactCaretSlot
 import me.foxtails.palustris.ui.navigation.CompactContextualNavigationBar
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.navigation.contextualActionFor
@@ -94,7 +94,7 @@ private fun BoxScope.CompactShellNavigation(
     homeChipListState: LazyListState,
     homeChipRowVisible: Boolean,
     onToggleHomeChipRow: () -> Unit,
-    tabCaret: TabCaretUiState? = null,
+    caretSlot: CompactCaretSlot = CompactCaretSlot.Inline,
 ) {
     val motionScheme = LocalPalustrisMotionScheme.current
     AnimatedVisibility(
@@ -133,7 +133,7 @@ private fun BoxScope.CompactShellNavigation(
                         rowTestTag = "home_timeline_tabs",
                         visibilityToggleTestTag = "home_timeline_visibility",
                         // A contextual caret in the bar replaces the inline control.
-                        caretPresentation = if (tabCaret != null) ChipCaretPresentation.Hidden
+                        caretPresentation = if (caretSlot is CompactCaretSlot.Shown) ChipCaretPresentation.Hidden
                         else ChipCaretPresentation.Inline,
                         leftInset = CompactOverlayHorizontalPadding,
                         rightInset = CompactOverlayHorizontalPadding,
@@ -180,7 +180,7 @@ private fun BoxScope.CompactShellNavigation(
                         account = account,
                         onOpenAccounts = { overlay.clearPostActionBubble(); navigator.sheet = "Accounts" },
                         onDestinationSelected = navigator::selectDestination,
-                        tabCaret = tabCaret,
+                        caretSlot = caretSlot,
                     )
                 }
             }
@@ -429,7 +429,11 @@ internal fun ShellContent(
                         homeChipListState = homeChipListState,
                         homeChipRowVisible = homeChipRowVisible,
                         onToggleHomeChipRow = { homeChipRowVisible = !homeChipRowVisible },
-                        tabCaret = compactWideTabCaretHost.caretState.takeIf { useNarrowContextualCaret },
+                        caretSlot = when {
+                            !useNarrowContextualCaret -> CompactCaretSlot.Inline
+                            else -> compactWideTabCaretHost.caretState?.let(CompactCaretSlot::Shown)
+                                ?: CompactCaretSlot.Empty
+                        },
                     )
                 }
             }

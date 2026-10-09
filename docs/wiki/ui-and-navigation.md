@@ -346,6 +346,17 @@ Its separate 56 dp action sits 8 dp below it. The stack remains fixed when Profi
 `LargeFloatingNavigation` replaces the rail and uses physical placement independent of RTL.
 Outer-screen Home rendering is emulator verified. TalkBack and hardware tablet rendering remain unverified.
 
+### Compact-narrow caret slot
+
+On compact-narrow windows of 372 dp or more, `CompactContextualNavigationBar` takes a `CompactCaretSlot`.
+`Shown` and `Empty` place the pill between two equal-weight slots, so the pill is centered on screen and
+the contextual action keeps its place whether or not the caret or the action shows. An emptied slot stays
+empty. `Inline` is for windows too narrow for the slot, local pages, and post detail. The caret stays in the
+chip row there, and the pill and action form one group centered with equal gaps.
+
+Sources: `ui/navigation/CompactAppNavigation.kt`, `ui/navigation/CompactNavigationPill.kt`,
+`ui/shell/ShellContent.kt`, `CompactNavigationCaretSlotTest`.
+
 ### Compact-wide tab caret
 
 Compact-wide hides the inline chip caret and shows a 56 dp contextual caret below the composer action.

@@ -40,9 +40,9 @@ internal fun compactNavigationBarWidth(windowWidth: Dp): Dp =
 /**
  * Whether the compact bar has dead space left of the pill for a contextual tab caret.
  *
- * The bar is end-aligned: capsule and contextual action keep their place, and the caret needs its
- * own control and one gap in the space to their left. The contextual action slot is always counted,
- * so the choice never changes when a screen has no action. Narrower windows keep the inline caret.
+ * The pill stays centered between equal caret and action slots, so each slot needs one control and
+ * one gap beside the capsule. Both slots are always counted, so the choice never changes when a
+ * screen has no action or the caret hides. Narrower windows keep the inline caret.
  */
 internal fun compactContextualCaretFits(windowWidth: Dp): Boolean {
     val required = CompactNavigationCapsuleWidth + CompactNavigationControlSize * 2f +
