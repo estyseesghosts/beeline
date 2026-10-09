@@ -39,6 +39,12 @@ import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.motion.PopEffect
 
+/**
+ * Physical insets for everything in the header except the banner, which spans the full header width.
+ * [statusBar] is set when the pane already extends under the status bar but its insets are consumed.
+ */
+internal data class ProfileHeaderInsets(val left: Dp = 0.dp, val right: Dp = 0.dp, val statusBar: Dp? = null)
+
 @Composable
 internal fun ProfileHeader(
     account: Account,
@@ -52,13 +58,13 @@ internal fun ProfileHeader(
     onOpenProfileImage: (String) -> Unit = {},
     onEditProfile: (() -> Unit)? = null,
     largeSummary: Boolean = false,
-    // Physical insets for everything except the banner, which spans the full header width.
-    leftInset: Dp = 0.dp,
-    rightInset: Dp = 0.dp,
+    insets: ProfileHeaderInsets = ProfileHeaderInsets(),
 ) {
+    val leftInset = insets.left
+    val rightInset = insets.right
     val context = LocalContext.current
     val mediaImageLoader = remember(context) { MediaImageLoader.get(context) }
-    val statusBarHeight = with(LocalDensity.current) {
+    val statusBarHeight = insets.statusBar ?: with(LocalDensity.current) {
         WindowInsets.statusBars.getTop(this).toDp()
     }.coerceAtLeast(1.dp)
     Column(Modifier.fillMaxWidth().testTag("profile_header")) {

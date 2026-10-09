@@ -26,6 +26,7 @@ import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
+import me.foxtails.palustris.ui.large.LocalPaneEdgeBleed
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
 import me.foxtails.palustris.ui.media.MediaOpenRequest
@@ -139,6 +140,7 @@ internal fun ProfileTimelinePresentation(
                 // Compact-wide lets the banner bleed to the display edges, so the header applies the
                 // clearance itself; every other layout pads the whole header.
                 val bannerBleed = compactWidePresentation
+                val topBleed = LocalPaneEdgeBleed.current.top
                 Box(
                     if (bannerBleed) Modifier.fillMaxWidth() else Modifier.fillMaxWidth().absolutePadding(
                         left = leftObstructionClearance,
@@ -155,8 +157,11 @@ internal fun ProfileTimelinePresentation(
                         onMessage = { onMessage(account) },
                         onOpenProfile = onOpenProfile,
                         onOpenProfileImage = onOpenProfileImage,
-                        leftInset = if (bannerBleed) leftObstructionClearance else 0.dp,
-                        rightInset = if (bannerBleed) rightObstructionClearance else 0.dp,
+                        insets = ProfileHeaderInsets(
+                            left = if (bannerBleed) leftObstructionClearance else 0.dp,
+                            right = if (bannerBleed) rightObstructionClearance else 0.dp,
+                            statusBar = topBleed.takeIf { it > 0.dp },
+                        ),
                     )
                 }
             },

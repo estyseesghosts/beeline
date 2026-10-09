@@ -87,6 +87,7 @@ internal fun LargeScreenShell(
     isCompactWide: Boolean = false,
     tabCaret: TabCaretUiState? = null,
     chipEdgeBleed: Boolean = false,
+    topEdgeBleed: Boolean = false,
     reserveHiddenNavigation: Boolean = false,
 ) {
     val adaptiveInfo = currentWindowAdaptiveInfoV2()
@@ -133,28 +134,26 @@ internal fun LargeScreenShell(
             )
             // A chip row breaks out of the outer margin on the sides where the primary pane touches it.
             // Single-pane detail keeps the margin, and so does every side that borders another pane.
-            val marginPx = LARGE_OUTER_MARGIN_DP * density.density
-            val bleed = if (chipEdgeBleed && !(hasDetail && !showDetail)) {
-                PaneEdgeBleed(
-                    left = if (primary.left <= marginPx + 1f) windowPane.left.dp else 0.dp,
-                    right = if (primary.right >= with(density) { maxWidth.toPx() } - marginPx - 1f) {
-                        (windowWidth.value - windowPane.right).coerceAtLeast(0f).dp
-                    } else {
-                        0.dp
-                    },
-                )
-            } else {
-                PaneEdgeBleed()
-            }
+            val bleed = paneEdgeBleed(
+                primary = primary,
+                windowPane = windowPane,
+                regionWidthPx = with(density) { maxWidth.toPx() },
+                windowWidthDp = windowWidth.value,
+                density = density.density,
+                sides = PaneBleedSides(
+                    horizontal = chipEdgeBleed && !(hasDetail && !showDetail),
+                    top = topEdgeBleed && !(hasDetail && !showDetail),
+                ),
+            )
             val primarySlot = Rect(
                 left = primary.left - bleed.left.value * density.density,
-                top = primary.top,
+                top = primary.top - bleed.top.value * density.density,
                 right = primary.right + bleed.right.value * density.density,
                 bottom = primary.bottom,
             )
             val bleedPane = Rect(
                 left = windowPane.left - bleed.left.value,
-                top = windowPane.top,
+                top = windowPane.top - bleed.top.value,
                 right = windowPane.right + bleed.right.value,
                 bottom = windowPane.bottom,
             )

@@ -305,6 +305,9 @@ internal fun ShellContent(
                         isCompactWide = compactWidePresentation,
                         tabCaret = compactWideTabCaretHost.caretState,
                         chipEdgeBleed = true,
+                        // The profile banner underlaps the status bar; no other destination moves.
+                        topEdgeBleed = compactWidePresentation && navigator.destination == Destination.Profile &&
+                            navigator.page == null && navigator.notificationRoute == null,
                         primaryContent = { paneModifier, paneLeftClearance, paneRightClearance ->
                             ShellDestinationContent(
                                 paneModifier = paneModifier,
