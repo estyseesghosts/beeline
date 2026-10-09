@@ -129,6 +129,15 @@ internal fun profileContextualAction(
             },
             enabled = !profileState.relationshipMutation,
             onClick = if (following) onUnfollowProfile else onFollowProfile,
+            // A pending request cancels directly; only a real follow or unfollow asks first.
+            followChoice = if (relationship.requested && !relationship.following) {
+                null
+            } else {
+                ContextualFollowChoice(
+                    following = relationship.following,
+                    onConfirm = if (relationship.following) onUnfollowProfile else onFollowProfile,
+                )
+            },
         )
     }
     else -> null

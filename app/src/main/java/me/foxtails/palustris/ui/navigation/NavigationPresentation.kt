@@ -32,11 +32,17 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -55,6 +61,8 @@ import me.foxtails.palustris.ui.motion.rememberSelectedColor
 import me.foxtails.palustris.ui.motion.rememberSelectedScale
 import me.foxtails.palustris.ui.motion.springPress
 import me.foxtails.palustris.ui.motion.triggerSurfaceSource
+import me.foxtails.palustris.ui.profile.FollowChoice
+import me.foxtails.palustris.ui.profile.FollowChoiceState
 
 internal data class ContextualNavigationAction(
     val icon: ImageVector,
@@ -63,6 +71,14 @@ internal data class ContextualNavigationAction(
     val onClick: () -> Unit,
     /** Set when the action opens a surface that grows from the button. */
     val triggerSource: TriggerSurfaceSource? = null,
+    /** Set when a tap opens a confirmation bubble instead of running [onClick]. */
+    val followChoice: ContextualFollowChoice? = null,
+)
+
+/** A Follow or Unfollow confirmation for the contextual action; [onConfirm] runs only from the bubble. */
+internal data class ContextualFollowChoice(
+    val following: Boolean,
+    val onConfirm: () -> Unit,
 )
 
 /** Renders one stateless navigation target; the caller owns selection and navigation callbacks. */
@@ -180,6 +196,22 @@ internal fun WideNavigationPresentation(
     }
 }
 
+/** Shows the Follow / Unfollow bubble for an open [choice]; confirming it runs the action's callback. */
+@Composable
+private fun ContextualFollowBubble(followChoice: ContextualFollowChoice?, choice: FollowChoiceState) {
+    val anchor = choice.anchor
+    if (followChoice == null || anchor == null) return
+    FollowChoice(
+        anchor = anchor,
+        following = followChoice.following,
+        onDismiss = choice::dismiss,
+        onConfirm = {
+            choice.dismiss()
+            followChoice.onConfirm()
+        },
+    )
+}
+
 /** Renders one contextual navigation action with shared motion and accessibility semantics. */
 @Composable
 internal fun ContextualNavigationActionButton(
@@ -187,10 +219,15 @@ internal fun ContextualNavigationActionButton(
     modifier: Modifier = Modifier,
 ) {
     val scheme = LocalPalustrisMotionScheme.current
+    // The description changes with the relationship, so a state change discards an open bubble.
+    val choice = remember(action.contentDescription, action.enabled) { FollowChoiceState() }
+    var bounds by remember { mutableStateOf(Rect.Zero) }
+    ContextualFollowBubble(action.followChoice, choice)
     FilledIconButton(
-        onClick = action.onClick,
+        onClick = if (action.followChoice != null) ({ choice.request(bounds) }) else action.onClick,
         enabled = action.enabled,
         modifier = modifier.size(56.dp).triggerSurfaceSource(action.triggerSource)
+            .onGloballyPositioned { bounds = it.boundsInWindow() }
             .semantics { contentDescription = action.contentDescription },
         colors = IconButtonDefaults.filledIconButtonColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,

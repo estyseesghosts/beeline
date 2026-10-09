@@ -140,6 +140,7 @@
     <string name="profile_tab_show_more">Mostrar más…</string>
     <string name="profile_unfollow_action">Dejar de seguir</string>
     <string name="profile_unfollow_confirm">¿Dejar de seguir?</string>
+    <string name="profile_follow_confirm">¿Seguir?</string>
     <string name="search_category_for_you">Para ti</string>
     <string name="search_category_hashtags">Hashtags</string>
     <string name="search_category_news">Noticias</string>

@@ -28,8 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -167,32 +170,30 @@ internal fun ProfileHeader(
                         if (state.relationshipSupported == true && state.relationship != null) {
                             val relationship = state.relationship
                             val following = relationship.following || relationship.requested
-                            var confirmUnfollow by remember(account.id, relationship.following) { mutableStateOf(false) }
-                            if (relationship.following && confirmUnfollow && !state.relationshipMutation) {
-                                me.foxtails.palustris.ui.components.PillAction(
-                                    label = stringResource(R.string.profile_unfollow_confirm),
-                                    onClick = {
-                                        confirmUnfollow = false
-                                        onUnfollow()
+                            val choice = remember(account.id, relationship.following, relationship.requested, state.relationshipMutation) {
+                                FollowChoiceState()
+                            }
+                            var buttonBounds by remember { mutableStateOf(Rect.Zero) }
+                            choice.anchor?.let { anchor ->
+                                FollowChoice(
+                                    anchor = anchor,
+                                    following = relationship.following,
+                                    onDismiss = choice::dismiss,
+                                    onConfirm = {
+                                        choice.dismiss()
+                                        if (relationship.following) onUnfollow() else onFollow()
                                     },
-                                    modifier = Modifier.testTag("profile_unfollow_confirm"),
-                                    contentDescription = stringResource(R.string.profile_unfollow_confirm),
-                                    leadingIcon = me.foxtails.palustris.ui.AppIcons.Unfollow,
                                 )
-                            } else {
+                            }
+                            run {
                                 Button(
                                     onClick = {
-                                        when {
-                                            relationship.following -> confirmUnfollow = true
-                                            following -> onUnfollow()
-                                            else -> {
-                                                confirmUnfollow = false
-                                                onFollow()
-                                            }
-                                        }
+                                        if (relationship.requested && !relationship.following) onUnfollow() else choice.request(buttonBounds)
                                     },
                                     enabled = !state.relationshipMutation,
-                                    modifier = Modifier.testTag("profile_follow_action"),
+                                    modifier = Modifier
+                                        .onGloballyPositioned { buttonBounds = it.boundsInWindow() }
+                                        .testTag("profile_follow_action"),
                                 ) {
                                     if (state.relationshipMutation) {
                                         CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)

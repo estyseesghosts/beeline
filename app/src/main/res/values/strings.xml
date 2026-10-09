@@ -529,6 +529,7 @@
     <string name="profile_timeline_try_again">Try again</string>
     <string name="profile_unfollow_action">Unfollow profile</string>
     <string name="profile_unfollow_confirm">unfollow?</string>
+    <string name="profile_follow_confirm">follow?</string>
     <string name="quote_sent">quote sent</string>
     <plurals name="reaction_count">
         <item quantity="one">%1$d reaction</item>

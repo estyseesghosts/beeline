@@ -128,6 +128,7 @@
     <string name="profile_tab_reposts">Republicações</string>
     <string name="profile_unfollow_action">Deixar de seguir</string>
     <string name="profile_unfollow_confirm">Deixar de seguir?</string>
+    <string name="profile_follow_confirm">Seguir?</string>
     <string name="search_category_for_you">Para ti</string>
     <string name="search_category_hashtags">Hashtags</string>
     <string name="search_category_news">Notícias</string>

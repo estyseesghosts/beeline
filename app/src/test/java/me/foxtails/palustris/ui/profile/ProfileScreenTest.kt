@@ -349,6 +349,8 @@ class ProfileScreenTest {
 
         compose.onNodeWithTag("profile_follow_action").assertIsDisplayed()
         compose.onNodeWithText("Follow").assertIsDisplayed().performClick()
+        assertEquals(0, follows)
+        compose.onNodeWithText("follow?").assertIsDisplayed().performClick()
         assertEquals(1, follows)
         compose.onNodeWithText("Edit profile").assertDoesNotExist()
 
@@ -367,6 +369,31 @@ class ProfileScreenTest {
         compose.onNodeWithText("Following").assertIsDisplayed().performClick()
         compose.onNodeWithText("unfollow?").assertIsDisplayed().performClick()
         assertEquals(1, unfollows)
+    }
+
+    @Test
+    fun contextualFollowActionAsksBeforeSending() {
+        var confirms = 0
+        var plainClicks = 0
+
+        show {
+            me.foxtails.palustris.ui.navigation.ContextualNavigationActionButton(
+                me.foxtails.palustris.ui.navigation.ContextualNavigationAction(
+                    icon = me.foxtails.palustris.ui.AppIcons.Follow,
+                    contentDescription = "Follow profile",
+                    enabled = true,
+                    onClick = { plainClicks++ },
+                    followChoice = me.foxtails.palustris.ui.navigation.ContextualFollowChoice(false) { confirms++ },
+                ),
+            )
+        }
+
+        compose.onNodeWithContentDescription("Follow profile").performClick()
+        assertEquals(0, confirms)
+        compose.onNodeWithText("follow?").assertIsDisplayed().performClick()
+        assertEquals(1, confirms)
+        assertEquals(0, plainClicks)
+        compose.onNodeWithText("follow?").assertDoesNotExist()
     }
 
     @Test
