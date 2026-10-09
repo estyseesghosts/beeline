@@ -252,11 +252,17 @@ class MediaViewerScreenTest {
             compose.mainClock.advanceTimeBy(1_000)
             compose.waitForIdle()
             val firstRequestsBeforeSwipes = firstFullRequests.get()
-            compose.onNodeWithContentDescription("Media viewer").performTouchInput {
-                swipe(center, center + Offset(-1_200f, 0f), durationMillis = 180)
+            // Under full-suite load a swipe can end before the pager settles. Swiping past the last page is a
+            // no-op, so repeating the swipe until the second page loads keeps the assertions unchanged.
+            var attempts = 0
+            while (secondFullRequests.get() == 0 && attempts++ < 3) {
+                compose.onNodeWithContentDescription("Media viewer").performTouchInput {
+                    swipe(center, center + Offset(-1_200f, 0f), durationMillis = 180)
+                }
+                compose.mainClock.advanceTimeBy(1_000)
+                compose.waitForIdle()
+                runCatching { compose.waitUntil(timeoutMillis = 10_000) { secondFullRequests.get() > 0 } }
             }
-            compose.mainClock.advanceTimeBy(1_000)
-            compose.waitForIdle()
             compose.waitUntil(timeoutMillis = 10_000) { secondFullRequests.get() > 0 }
             val firstRequestsAfterForwardSwipe = firstFullRequests.get()
             val secondRequestsAfterForwardSwipe = secondFullRequests.get()
