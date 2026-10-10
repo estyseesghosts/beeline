@@ -8,6 +8,17 @@ import org.junit.Test
 
 class VideoUploadPolicyTest {
     @Test
+    fun efficiencyNeedsACommonCodecNoDownscaleAndALowBitrate() {
+        val sixtySeconds = 60_000L
+        val lean = source(5L * 1024 * 1024)
+        assertTrue(VideoUploadPolicy.alreadyEfficient(lean, 640, 360, sixtySeconds))
+        assertFalse(VideoUploadPolicy.alreadyEfficient(lean.copy(videoCodecMime = "video/hevc"), 640, 360, sixtySeconds))
+        assertFalse(VideoUploadPolicy.alreadyEfficient(lean, 1920, 1080, sixtySeconds))
+        assertFalse(VideoUploadPolicy.alreadyEfficient(source(80L * 1024 * 1024), 640, 360, sixtySeconds))
+        assertFalse(VideoUploadPolicy.alreadyEfficient(lean, null, null, sixtySeconds))
+    }
+
+    @Test
     fun landscapeHeightCapIsTheTier() {
         assertEquals(900, VideoUploadPolicy.heightCap(1920, 1080))
         assertEquals(900, VideoUploadPolicy.heightCap(1080, 1080))
@@ -46,13 +57,19 @@ class VideoUploadPolicyTest {
     }
 
     @Test
-    fun smallFileWithAnUnlistedContainerOrCodecIsTranscoded() {
-        val quicktime = source(1_000_000, container = "video/x-matroska")
-        assertEquals(VideoUploadFormat.Webm, VideoUploadPolicy.choose(quicktime, mastodonWithWebm, true))
-        val hevc = source(1_000_000, codec = "video/hevc")
-        assertEquals(VideoUploadFormat.H264Mp4, VideoUploadPolicy.choose(hevc, mastodonWithoutWebm, false))
-        val unknown = source(1_000_000, codec = null)
-        assertEquals(VideoUploadFormat.H264Mp4, VideoUploadPolicy.choose(unknown, mastodonWithoutWebm, false))
+    fun smallFileWithAnUnlistedContainerIsTranscoded() {
+        val matroska = source(1_000_000, container = "video/x-matroska")
+        assertEquals(VideoUploadFormat.Webm, VideoUploadPolicy.choose(matroska, mastodonWithWebm, true))
+        assertEquals(VideoUploadFormat.H264Mp4, VideoUploadPolicy.choose(matroska, mastodonWithoutWebm, false))
+    }
+
+    @Test
+    fun smallFileIsKeptWhateverItsCodec() {
+        for (codec in listOf("video/hevc", "video/av01", null)) {
+            val small = source(1_000_000, codec = codec)
+            assertEquals(VideoUploadFormat.Original, VideoUploadPolicy.choose(small, mastodonWithoutWebm, false))
+            assertEquals(VideoUploadFormat.Original, VideoUploadPolicy.choose(small, misskey, true))
+        }
     }
 
     @Test

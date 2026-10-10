@@ -18,6 +18,17 @@ import org.robolectric.annotation.Config
 @Config(sdk = [35])
 class MastodonMapperTest {
     @Test
+    fun videoAttachmentCarriesItsDuration() {
+        val video = MastodonMapper.attachment(
+            JSONObject().put("id", "v1").put("type", "video").put("url", "https://cdn.example/v.mp4")
+                .put("meta", JSONObject().put("original", JSONObject().put("width", 1280).put("height", 720).put("duration", 15.52))),
+        )
+        assertEquals(15_520L, video.durationMs)
+        val none = MastodonMapper.attachment(JSONObject().put("id", "v2").put("type", "video").put("url", "https://cdn.example/w.mp4"))
+        assertNull(none.durationMs)
+    }
+
+    @Test
     fun attachmentPreservesIndependentRolesAndMetadata() {
         val attachment = MastodonMapper.attachment(
             JSONObject()

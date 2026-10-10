@@ -86,6 +86,8 @@ internal fun MediaPage(
             zoomState = zoomState,
             onReady = onImageReady,
             onVideoSize = onImageDimensionsReady,
+            // The open transition lands on the padded content bounds that images use, so the video must match.
+            contentPadding = if (edgeToEdge) 0.dp else MediaPageHorizontalPadding,
             modifier = modifier,
         )
         return

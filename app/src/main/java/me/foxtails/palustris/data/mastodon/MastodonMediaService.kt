@@ -83,6 +83,8 @@ internal class MastodonMediaService(
         const val STATUS_PARTIAL = 206
         const val FIRST_POLL_MILLIS = 1_000L
         const val MAX_POLL_MILLIS = 5_000L
-        const val MAX_WAIT_MILLIS = 60_000L
+
+        /** A video can take minutes to process on the server. */
+        const val MAX_WAIT_MILLIS = 300_000L
     }
 }

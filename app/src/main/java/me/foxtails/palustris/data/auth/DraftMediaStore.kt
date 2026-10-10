@@ -46,18 +46,9 @@ class DraftMediaStore internal constructor(
             val temporary = File(target.parentFile, "${target.name}.${System.nanoTime()}.tmp")
             var written = 0L
             try {
-                val cipher = Cipher.getInstance(TRANSFORMATION)
-                cipher.init(Cipher.ENCRYPT_MODE, accountFiles.secretKey())
                 FileOutputStream(temporary).use { file ->
-                    file.write(cipher.iv)
-                    val buffer = ByteArray(BUFFER_BYTES)
-                    while (true) {
-                        val read = source.read(buffer)
-                        if (read < 0) break
-                        cipher.update(buffer, 0, read)?.let(file::write)
-                        written += read
-                    }
-                    file.write(cipher.doFinal())
+                    // Chunked, so a large video never has to fit in memory when it is read back.
+                    written = DraftMediaCipher.encrypt(source, file, accountFiles.secretKey())
                     file.fd.sync()
                 }
                 java.nio.file.Files.move(
@@ -71,20 +62,30 @@ class DraftMediaStore internal constructor(
             written
         }
 
-    /** Opens the decrypted bytes. The caller closes the stream. A damaged file fails at the end of the read. */
+    /**
+     * Opens the decrypted bytes. The caller closes the stream. A damaged file fails when the damaged chunk is
+     * read. A file written before the chunked format is a single AES-GCM message, which the platform decrypts
+     * only after it has buffered all of it, so only small, old files are read that way.
+     */
     suspend fun open(accountId: AccountId, draftId: String, mediaId: String): InputStream =
         withContext(Dispatchers.IO) {
             val file = FileInputStream(fileFor(accountId, draftId, mediaId))
             try {
-                val iv = ByteArray(IV_BYTES)
+                val head = ByteArray(IV_BYTES)
                 var offset = 0
                 while (offset < IV_BYTES) {
-                    val read = file.read(iv, offset, IV_BYTES - offset)
+                    val read = file.read(head, offset, IV_BYTES - offset)
                     if (read < 0) throw IOException("Draft media file is truncated.")
                     offset += read
                 }
+                if (DraftMediaCipher.isChunked(head)) return@withContext DraftMediaCipher.decryptingStream(file.buffered(), accountFiles.secretKey())
+                // The platform buffers a whole single-message file to decrypt it. A large one stalls the app in
+                // garbage collection, so it fails at once and the draft's owner attaches the file again.
+                if (fileFor(accountId, draftId, mediaId).length() > LEGACY_MAX_BYTES) {
+                    throw IOException("Draft media was saved in an old format and is too large to open. Attach it again.")
+                }
                 val cipher = Cipher.getInstance(TRANSFORMATION)
-                cipher.init(Cipher.DECRYPT_MODE, accountFiles.secretKey(), GCMParameterSpec(TAG_BITS, iv))
+                cipher.init(Cipher.DECRYPT_MODE, accountFiles.secretKey(), GCMParameterSpec(TAG_BITS, head))
                 CipherInputStream(file, cipher)
             } catch (error: Exception) {
                 file.close()
@@ -151,7 +152,9 @@ class DraftMediaStore internal constructor(
         const val TRANSFORMATION = "AES/GCM/NoPadding"
         const val IV_BYTES = 12
         const val TAG_BITS = 128
-        const val BUFFER_BYTES = 16 * 1024
+
+        /** The largest older single-message file that is still decrypted in memory. */
+        const val LEGACY_MAX_BYTES = 8L * 1024 * 1024
         const val ORPHAN_GRACE_MILLIS = 24L * 60 * 60 * 1000
         val SAFE_NAME = Regex("[A-Za-z0-9_-]{1,64}")
     }

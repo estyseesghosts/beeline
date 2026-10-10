@@ -177,4 +177,66 @@ class DraftMediaStoreTest {
 
         assertTrue(mediaFile("pending", "m1") != null)
     }
+
+    private fun roundTrip(size: Int) = runBlocking {
+        val plain = ByteArray(size) { (it * 31 % 251).toByte() }
+        assertEquals(size.toLong(), media.write(account, "big", "m$size", ByteArrayInputStream(plain)))
+        assertArrayEquals(plain, media.open(account, "big", "m$size").use { it.readBytes() })
+    }
+
+    @Test
+    fun aLargeFileSpansSeveralChunksAndRoundTrips() = roundTrip(DraftMediaCipher.CHUNK_BYTES * 2 + 12_345)
+
+    @Test
+    fun aFileOfExactlyWholeChunksRoundTrips() {
+        roundTrip(DraftMediaCipher.CHUNK_BYTES)
+        roundTrip(DraftMediaCipher.CHUNK_BYTES * 3)
+    }
+
+    @Test
+    fun anEmptyFileRoundTrips() = roundTrip(0)
+
+    @Test
+    fun aDroppedFinalChunkIsDetected() = runBlocking {
+        write(account, "d1", "m1", ByteArray(DraftMediaCipher.CHUNK_BYTES * 2 + 10) { 3 })
+        val file = mediaFile("d1", "m1")!!
+        val record = 12 + DraftMediaCipher.CHUNK_BYTES + 16
+        file.writeBytes(file.readBytes().copyOf(16 + record * 2))
+
+        assertTrue(runCatching { media.open(account, "d1", "m1").use { it.readBytes() } }.isFailure)
+    }
+
+    @Test
+    fun reorderedChunksAreDetected() = runBlocking {
+        write(account, "d1", "m1", ByteArray(DraftMediaCipher.CHUNK_BYTES * 2 + 10) { (it % 7).toByte() })
+        val file = mediaFile("d1", "m1")!!
+        val bytes = file.readBytes()
+        val record = 12 + DraftMediaCipher.CHUNK_BYTES + 16
+        val swapped = bytes.copyOfRange(0, 16) + bytes.copyOfRange(16 + record, 16 + 2 * record) +
+            bytes.copyOfRange(16, 16 + record) + bytes.copyOfRange(16 + 2 * record, bytes.size)
+        file.writeBytes(swapped)
+
+        assertTrue(runCatching { media.open(account, "d1", "m1").use { it.readBytes() } }.isFailure)
+    }
+
+    @Test
+    fun aFileInTheOlderSingleMessageFormatStillOpens() = runBlocking {
+        val plain = ByteArray(5_000) { (it % 13).toByte() }
+        val cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding").apply { init(javax.crypto.Cipher.ENCRYPT_MODE, key) }
+        val legacy = cipher.iv + cipher.doFinal(plain)
+        write(account, "d1", "seed", ByteArray(1))
+        val file = mediaFile("d1", "seed")!!
+        file.writeBytes(legacy)
+
+        assertArrayEquals(plain, media.open(account, "d1", "seed").use { it.readBytes() })
+    }
+
+    @Test
+    fun aLargeFileInTheOlderFormatFailsAtOnceInsteadOfStallingTheApp() = runBlocking {
+        write(account, "d1", "seed", ByteArray(1))
+        val file = mediaFile("d1", "seed")!!
+        file.writeBytes(ByteArray(9 * 1024 * 1024) { 1 })
+
+        assertTrue(runCatching { media.open(account, "d1", "seed").use { it.readBytes() } }.isFailure)
+    }
 }

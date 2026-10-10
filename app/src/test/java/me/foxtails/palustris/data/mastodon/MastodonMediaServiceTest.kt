@@ -101,13 +101,13 @@ class MastodonMediaServiceTest {
     @Test
     fun pollingStopsAfterTheWaitBudget() = runBlocking {
         server.enqueue(MockResponse().setResponseCode(202).setBody(media("m4", url = null)))
-        repeat(40) { server.enqueue(MockResponse().setResponseCode(206).setBody(media("m4", url = null))) }
+        repeat(80) { server.enqueue(MockResponse().setResponseCode(206).setBody(media("m4", url = null))) }
 
         assertThrows(SourceError.ServerError::class.java) {
             runBlocking { service().upload(request()) }
         }
 
-        assertTrue(pauses.sum() >= 60_000L)
+        assertTrue(pauses.sum() >= 300_000L)
         assertTrue(pauses.max() <= 5_000L)
     }
 

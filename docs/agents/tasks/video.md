@@ -60,6 +60,14 @@ Written, uncommitted:
 - Slices 3 to 5 debt: duration badge on video tiles (`Attachment` has no duration), retry control on a failed tile, pinch zoom on video, the reveal animation frame by frame, audio output, a non-zero start position from a feed tile.
 - Mastodon refuses a post that mixes a video with images. The composer does not prevent it.
 
+# Device run 2026-10-10 (SM-G986W, Misskey dvd.chat demo account)
+
+- Publish works end to end: a 20 s 1080p clip became a post with an autoplaying video. The earlier hang came from decrypting a 25 MB draft through one AES-GCM message (heap thrash). Drafts now use chunked AEAD, and an old large draft fails fast.
+- Open transition: the viewer open frame used a 4:3 fallback when the server sent no video size, then snapped to the real frame. The coordinator now remembers decoded sizes by URL and the viewer uses them. Verified frame by frame for a video that had played in the feed. A video that never played and has no server size still falls back to 4:3.
+- Added: duration badge and retry control on tiles (unit tested only on host).
+- The user confirmed on the phone: pinch zoom on video, audio output, and the start position handed off from a feed tile.
+- Still unverified: Mastodon account upload (the user is testing it) and the retry control on a failed tile.
+
 # Next
 
 1. Sign in on the phone and attach a real video in the composer. Check the poster, progress text, and a live upload.

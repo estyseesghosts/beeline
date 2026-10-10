@@ -81,6 +81,9 @@ fun VideoTileContent(
             paused = coordinator?.paused == true,
             onToggleSound = { coordinator?.toggleSound(tileKey) },
             onTogglePause = { coordinator?.togglePause(tileKey) },
+            durationMs = attachment.durationMs,
+            failed = coordinator?.isFailed(tileKey) == true,
+            onRetry = { coordinator?.retry(tileKey) },
         )
     }
 }

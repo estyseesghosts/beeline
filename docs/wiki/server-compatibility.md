@@ -141,9 +141,10 @@ and `FfmpegBridgeTest`. Live-server uploads are unverified.
 - The picker offers videos when `PostingCapabilities.acceptsVideo` is true. That holds when the server lists no
   types or lists at least one `video/` type. Mastodon without a type list reports images only, so it offers none.
 - The publisher prepares each video in this order. The first rule that applies wins.
-  1. Original. A file under 2 MiB (exclusive) is sent unchanged when the server accepts its container and codec.
-  2. WebM. VP9 video and Opus audio, when the server accepts WebM and the device passes the benchmark.
-  3. H.264 MP4. H.264 video and AAC audio through Media3 Transformer and the device codecs.
+  1. Original. A file under 2 MiB (exclusive) is sent unchanged when the server accepts its container. The codec does not matter.
+  2. WebM. VP9 video and Opus audio, when the server accepts WebM, the device passes the benchmark, and the source is at most 1080p. A larger source skips the benchmark and goes to MP4.
+  3. H.264 MP4. H.264 video and AAC audio through Media3 Transformer and the device codecs. A clip that is already efficient (common codec, no downscale, bitrate within 2.5 times the target) is sent as it is.
+  Every conversion has a bitrate target: 0.07 bits per pixel at 30 fps (75 percent of that for VP9), at most 90 percent of the source bitrate, and within the size limit. A conversion that is not smaller than the source is dropped when the server accepts the original.
 - The upload tier is 900p. It limits the shorter edge. A 1920x1080 clip becomes 1600x900. A 1080x1920 clip becomes
   900x1600. A smaller clip is never scaled up. The WebM path caps the frame rate at 30.
 - Mastodon gate: `video/webm` must appear in `media_attachments.supported_mime_types`. Otherwise the upload uses MP4.
@@ -153,6 +154,8 @@ and `FfmpegBridgeTest`. Live-server uploads are unverified.
 - Device gate: the process must run on arm64-v8a and the FFmpeg library must load. The benchmark encodes 3 seconds at a
   900 pixel short edge and must reach 1.5 times realtime. The result is cached under the device model, the SDK level, and
   the FFmpeg build id. A failed benchmark counts as too slow.
+- Draft media uses a chunked AES-GCM format (`DraftMediaCipher`, 1 MiB chunks). The older single-message format cannot stream, so a large old draft fails with an error instead of stalling. Attach the video again.
+- Upload calls have no total timeout. They fail after 120 s without progress. Mastodon processing polls for up to 300 s.
 - Size limit: `maxVideoBytes` is the Mastodon `video_size_limit` (default 99 MiB) or the Misskey file size limit.
   A result over the limit stops the publish with `ResourceLimit`.
 - Mastodon answers a large upload with 202. The existing `MastodonMediaService` polling handles it, so video uses

@@ -288,6 +288,7 @@ object MastodonMapper {
             previewHeight = smallMeta?.positiveInt("height"),
             blurhash = json.nullableString("blurhash"),
             remoteOriginalUrl = json.nullableString("remote_url"),
+            durationMs = originalMeta?.optDouble("duration")?.takeIf { it.isFinite() && it > 0.0 }?.let { (it * 1000).toLong() },
         )
     }
 

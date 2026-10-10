@@ -100,7 +100,7 @@ class AuthenticatedHttpClient(
         val owner = UploadStreamOwner(file)
         try {
             val multipart = uploadForm(fields, fileName, owner.body(mimeType))
-            return execute(request(origin, path, bearerToken).post(OneShotRequestBody(multipart)).build(), maxResponseBytes)
+            return execute(request(origin, path, bearerToken).post(OneShotRequestBody(multipart)).build(), maxResponseBytes, uploadClient)
         } finally {
             owner.release()
         }
@@ -145,9 +145,21 @@ class AuthenticatedHttpClient(
         .header("Accept", "application/json").header("User-Agent", ProductIdentity.userAgent)
         .apply { token?.let { header("Authorization", "Bearer $it") } }
 
-    internal suspend fun execute(request: Request, maxResponseBytes: Long? = null): HttpResponse = withContext(Dispatchers.IO) {
+    /**
+     * The client for file uploads. A video can take minutes to send, so the total call timeout is off. The idle
+     * read and write timeouts still end a connection that stops moving data. It shares the pool and dispatcher.
+     */
+    private val uploadClient: OkHttpClient by lazy {
+        client.newBuilder()
+            .callTimeout(0, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(UPLOAD_IDLE_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(UPLOAD_IDLE_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+    }
+
+    internal suspend fun execute(request: Request, maxResponseBytes: Long? = null, using: OkHttpClient = client): HttpResponse = withContext(Dispatchers.IO) {
         suspendCancellableCoroutine { continuation ->
-            val call = client.newCall(request)
+            val call = using.newCall(request)
             continuation.invokeOnCancellation { call.cancel() }
             call.enqueue(object : okhttp3.Callback {
                 override fun onFailure(call: Call, error: IOException) { if (!continuation.isCancelled) continuation.resumeWithException(error) }
@@ -162,6 +174,11 @@ class AuthenticatedHttpClient(
                 }
             })
         }
+    }
+
+    private companion object {
+        /** A server may process an upload before it answers, so the read side waits longer than for an API call. */
+        const val UPLOAD_IDLE_SECONDS = 120L
     }
 
     private fun readBody(body: ResponseBody, limit: Long?): String {

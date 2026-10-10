@@ -53,7 +53,10 @@ data class Attachment(
     val previewHeight: Int? = null,
     val blurhash: String? = null,
     val remoteOriginalUrl: String? = null,
+    /** Length of a video or audio file when the server reports it. Mastodon does; Misskey does not. */
+    val durationMs: Long? = null,
 )
+
 /**
  * `emoji` is the opaque identity the server accepts for submission and must not be
  * rewritten for display; `emojiMetadata` carries optional presentation data.

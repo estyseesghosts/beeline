@@ -67,15 +67,29 @@ fun VideoTileControls(
     onToggleSound: () -> Unit,
     onTogglePause: () -> Unit,
     modifier: Modifier = Modifier,
+    durationMs: Long? = null,
+    failed: Boolean = false,
+    onRetry: () -> Unit = {},
 ) {
     Box(modifier.fillMaxSize()) {
-        if (!active) {
+        if (failed) {
+            VideoRetryPill(onRetry, Modifier.align(Alignment.Center))
+        } else if (!active) {
             val playDescription = videoPlayDescription(paused = true)
             ControlGlyph(
                 modifier = Modifier.align(Alignment.Center).size(48.dp)
                     .semantics { contentDescription = playDescription },
                 draw = { drawPlay() },
             )
+            if (durationMs != null && durationMs > 0L) {
+                Text(
+                    formatVideoTime(durationMs),
+                    modifier = Modifier.align(Alignment.BottomStart).padding(8.dp).testTag("video_duration")
+                        .background(Scrim, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
         } else {
             ControlButton(
                 description = videoPlayDescription(paused),
@@ -91,6 +105,24 @@ fun VideoTileControls(
             ) { drawSpeaker(unmuted) }
         }
     }
+}
+
+/** Shown on a tile whose video failed. It is a button, so a tap retries and does not open the viewer. */
+@Composable
+private fun VideoRetryPill(onRetry: () -> Unit, modifier: Modifier) {
+    val label = stringResource(R.string.video_retry)
+    Text(
+        label,
+        modifier = modifier
+            .testTag("video_retry")
+            .clip(RoundedCornerShape(20.dp))
+            .background(Scrim)
+            .semantics { role = Role.Button }
+            .clickable(onClick = onRetry)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        color = Color.White,
+        style = MaterialTheme.typography.labelLarge,
+    )
 }
 
 @Composable

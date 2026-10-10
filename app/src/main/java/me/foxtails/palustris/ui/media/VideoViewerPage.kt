@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -53,6 +54,7 @@ internal fun VideoViewerPage(
     zoomState: ZoomableMediaState,
     onReady: () -> Unit,
     onVideoSize: (Size) -> Unit,
+    contentPadding: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -89,7 +91,11 @@ internal fun VideoViewerPage(
     // The page counts as ready at once: it shows the same poster the open transition draws.
     LaunchedEffect(selected) { if (selected) onReady() }
     val videoSize = coordinator?.viewerVideoSize
-    LaunchedEffect(selected, videoSize) { if (selected && videoSize != null) onVideoSize(videoSize) }
+    // The open transition already sized itself from the attachment. A video of the same aspect ratio must not
+    // retarget it, because that moves the frame by a few pixels just as playback starts.
+    LaunchedEffect(selected, videoSize) {
+        if (selected && videoSize != null && !sameAspect(videoSize, attachment)) onVideoSize(videoSize)
+    }
 
     Box(modifier.fillMaxSize()) {
         val posterLayer: @Composable () -> Unit = {
@@ -100,6 +106,7 @@ internal fun VideoViewerPage(
         Box(
             Modifier
                 .fillMaxSize()
+                .padding(horizontal = contentPadding)
                 .zoomable(zoomState, tileKey, onTap = controls::toggle)
                 .semantics { this.contentDescription = contentDescription },
         ) {
@@ -138,6 +145,18 @@ internal fun VideoViewerPage(
         }
     }
 }
+
+/** True when the attachment reports a size with the same aspect ratio as [size], within one percent. */
+internal fun sameAspect(size: Size, attachment: Attachment): Boolean {
+    val width = attachment.width ?: return false
+    val height = attachment.height ?: return false
+    if (width <= 0 || height <= 0 || size.width <= 0f || size.height <= 0f) return false
+    val known = width.toFloat() / height
+    val actual = size.width / size.height
+    return kotlin.math.abs(known - actual) / actual <= ASPECT_TOLERANCE
+}
+
+private const val ASPECT_TOLERANCE = 0.01f
 
 /** Keeps the controls above the viewer's own bottom action row. */
 private val CONTROLS_BOTTOM_CLEARANCE = 72.dp

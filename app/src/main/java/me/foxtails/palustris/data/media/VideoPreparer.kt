@@ -76,6 +76,7 @@ class VideoPreparer(
         // The benchmark is expensive, so it only runs when WebM could actually be chosen.
         var format = VideoUploadPolicy.choose(uploadSource, support, deviceCanEncodeWebm = false)
         if (format != VideoUploadFormat.Original && VideoUploadPolicy.serverAcceptsWebm(support) &&
+            VideoUploadPolicy.webmSourceIsCheapToDecode(facts.width, facts.height) &&
             device.canEncodeWebm(source)
         ) {
             format = VideoUploadPolicy.choose(uploadSource, support, deviceCanEncodeWebm = true)
@@ -83,12 +84,54 @@ class VideoPreparer(
         if (format == VideoUploadFormat.Original) {
             return PreparedVideo(source, facts.containerMimeType, fileName, format, ownsFile = false)
         }
-        val bitrate = VideoUploadPolicy.bitrateForLimit(server.maxBytes, facts.durationMs)
-        if (format == VideoUploadFormat.Webm) {
-            val prepared = tryWebm(source, fileName, facts, bitrate, onProgress)
-            if (prepared != null) return fitToLimit(prepared, server)
+        if (format == VideoUploadFormat.H264Mp4 && keepsOriginal(source, facts, uploadSource, support, server)) {
+            return PreparedVideo(source, facts.containerMimeType, fileName, VideoUploadFormat.Original, ownsFile = false)
         }
-        return fitToLimit(encodeMp4(source, fileName, facts, bitrate, onProgress), server)
+        if (format == VideoUploadFormat.Webm) {
+            val prepared = tryWebm(source, fileName, facts, bitrateFor(source, facts, server, webm = true), onProgress)
+            if (prepared != null) return keepSmaller(prepared, source, fileName, facts, uploadSource, support, server)
+        }
+        val mp4Output = encodeMp4(source, fileName, facts, bitrateFor(source, facts, server, webm = false), onProgress)
+        return keepSmaller(mp4Output, source, fileName, facts, uploadSource, support, server)
+    }
+
+    /** A conversion to MP4 is skipped when the file is already efficient, the server takes its container, and it fits. */
+    private fun keepsOriginal(
+        source: File,
+        facts: VideoProbeResult,
+        uploadSource: VideoUploadSource,
+        support: VideoServerSupport,
+        server: VideoServerTarget,
+    ): Boolean = VideoUploadPolicy.alreadyEfficient(uploadSource, facts.width, facts.height, facts.durationMs) &&
+        VideoUploadPolicy.containerAccepted(uploadSource, support) &&
+        (server.maxBytes == null || source.length() <= server.maxBytes)
+
+    private fun bitrateFor(source: File, facts: VideoProbeResult, server: VideoServerTarget, webm: Boolean): Int {
+        val height = outputHeight(facts)
+        val scale = if (facts.height != null && facts.height > 0) height.toDouble() / facts.height else 1.0
+        val width = ((facts.width ?: (height * 16 / 9)) * minOf(1.0, scale)).toInt().coerceAtLeast(2)
+        return VideoUploadPolicy.targetBitrate(width, height, source.length(), facts.durationMs, server.maxBytes, webm)
+    }
+
+    /**
+     * A conversion that did not make the file smaller is dropped when the server takes the original, so a
+     * conversion never makes an upload bigger. Otherwise the converted file must fit the server limit.
+     */
+    private fun keepSmaller(
+        converted: PreparedVideo,
+        source: File,
+        fileName: String,
+        facts: VideoProbeResult,
+        uploadSource: VideoUploadSource,
+        support: VideoServerSupport,
+        server: VideoServerTarget,
+    ): PreparedVideo {
+        val fitsLimit = server.maxBytes == null || source.length() <= server.maxBytes
+        if (converted.file.length() >= source.length() && fitsLimit && VideoUploadPolicy.containerAccepted(uploadSource, support)) {
+            converted.release()
+            return PreparedVideo(source, facts.containerMimeType, fileName, VideoUploadFormat.Original, ownsFile = false)
+        }
+        return fitToLimit(converted, server)
     }
 
     private suspend fun tryWebm(

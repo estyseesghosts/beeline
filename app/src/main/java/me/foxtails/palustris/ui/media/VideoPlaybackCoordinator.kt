@@ -10,6 +10,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -61,7 +62,10 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
     )
 
     private val tiles = LinkedHashMap<String, Tile>()
-    private val failed = mutableSetOf<String>()
+    private val knownSizes = HashMap<String, Size>()
+
+    /** Tiles whose video failed to play. Observable, so a tile can offer a retry. */
+    private val failed = mutableStateSetOf<String>()
     private var environment = AutoplayEnvironment(
         settingEnabled = false,
         networkMetered = null,
@@ -112,6 +116,16 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
         scheduleEvaluate()
     }
 
+    /** The decoded size of the video at [url] once any player has seen it. The open transition uses it when the server sent none. */
+    fun knownVideoSize(url: String?): Size? = url?.let { knownSizes[it] }
+
+    fun isFailed(key: String): Boolean = key in failed
+
+    /** Clears a tile's failure so autoplay or a tap can try the video again. */
+    fun retry(key: String) {
+        if (failed.remove(key)) scheduleEvaluate()
+    }
+
     fun remove(key: String) {
         if (tiles.remove(key) != null) scheduleEvaluate()
     }
@@ -155,7 +169,10 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
         evaluate()
         val created = buildPlayer(
             onError = { viewerFailed = true },
-            onVideoSize = { size -> viewerVideoSize = size },
+            onVideoSize = { size ->
+                viewerVideoSize = size
+                knownSizes[url] = size
+            },
         )
         created.volume = if (handoff.unmuted) 1f else 0f
         created.setMediaItem(MediaItem.fromUri(url), handoff.startPositionMs)
@@ -242,6 +259,7 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
     }
 
     private fun createFeedPlayer(): ExoPlayer = buildPlayer(
+        onVideoSize = { size -> loadedKey?.let { tiles[it]?.url }?.let { knownSizes[it] = size } },
         onError = {
             loadedKey?.let { failed.add(it) }
             loadedKey = null

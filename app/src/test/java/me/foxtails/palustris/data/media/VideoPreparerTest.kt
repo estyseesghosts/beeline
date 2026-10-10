@@ -137,8 +137,9 @@ class VideoPreparerTest {
     @Test
     fun theBitrateFollowsTheServerLimit() = runBlocking {
         val mp4 = FakeTranscoder()
-        preparer(mp4 = mp4).prepare(source, "clip.mp4", misskey.copy(maxBytes = 10_000_000))
-        assertEquals(7_200_000, mp4.lastBitrate)
+        // Ten seconds under 1 MB leaves 90 percent of 8 Mbit for video: 720 kbit/s, below the quality target.
+        preparer(mp4 = mp4).prepare(source, "clip.mp4", misskey.copy(maxBytes = 1_000_000))
+        assertEquals(720_000, mp4.lastBitrate)
     }
 
     @Test
@@ -157,6 +158,80 @@ class VideoPreparerTest {
         val small = facts.copy(width = 640, height = 360)
         preparer(probe = small, mp4 = mp4).prepare(source, "clip.mp4", misskey)
         assertEquals(360, mp4.lastMaxHeight)
+    }
+
+    @Test
+    fun aSmallHevcClipIsKeptAsItIs() = runBlocking {
+        val small = File(directory, "small.mp4").also { it.writeBytes(ByteArray(1_500_000)) }
+        val mp4 = FakeTranscoder()
+        val hevc = facts.copy(videoCodecMime = "video/hevc")
+        val prepared = preparer(probe = hevc, mp4 = mp4).prepare(small, "small.mp4", mastodon)
+        assertEquals(VideoUploadFormat.Original, prepared.format)
+        assertEquals(0, mp4.calls)
+    }
+
+    @Test
+    fun everyConversionAsksForABitrateBelowTheSourceBitrate() = runBlocking {
+        val mp4 = FakeTranscoder()
+        preparer(mp4 = mp4).prepare(source, "clip.mov", misskey)
+        // The 5 MiB source over 10 seconds is about 4.2 Mbit/s, so 90 percent is about 3.8 Mbit/s.
+        val bitrate = mp4.lastBitrate!!
+        assertTrue("bitrate $bitrate", bitrate in 100_000..3_800_000)
+    }
+
+    @Test
+    fun aConversionThatGrowsTheFileIsDroppedForTheOriginal() = runBlocking {
+        val mp4 = FakeTranscoder(outputBytes = 6 * 1024 * 1024)
+        val prepared = preparer(mp4 = mp4).prepare(source, "clip.mov", mastodon.copy(acceptedTypes = setOf("video/mp4")))
+        assertEquals(VideoUploadFormat.Original, prepared.format)
+        assertEquals(source, prepared.file)
+        prepared.release()
+        assertTrue(source.exists())
+        assertEquals(0, File(directory, "out").listFiles().orEmpty().size)
+    }
+
+    @Test
+    fun aGrownConversionIsKeptWhenTheServerRefusesTheOriginalContainer() = runBlocking {
+        val mp4 = FakeTranscoder(outputBytes = 6 * 1024 * 1024)
+        val server = mastodon.copy(acceptedTypes = setOf("video/webm"))
+        val prepared = preparer(mp4 = mp4, probe = facts.copy(containerMimeType = "video/quicktime")).prepare(source, "clip.mov", server)
+        assertEquals(VideoUploadFormat.H264Mp4, prepared.format)
+    }
+
+    @Test
+    fun anAlreadyEfficientH264FileIsNotConvertedToMp4() = runBlocking {
+        val mp4 = FakeTranscoder()
+        val efficient = facts.copy(width = 640, height = 360, durationMs = 60_000)
+        val prepared = preparer(probe = efficient, mp4 = mp4).prepare(source, "clip.mp4", misskey)
+        assertEquals(VideoUploadFormat.Original, prepared.format)
+        assertEquals(source, prepared.file)
+        assertEquals(0, mp4.calls)
+    }
+
+    @Test
+    fun anEfficientFileStillBecomesWebmWhenWebmIsAvailable() = runBlocking {
+        val webm = FakeWebm(buildId = "ff-1", factor = 2.0)
+        val efficient = facts.copy(width = 640, height = 360, durationMs = 60_000)
+        val prepared = preparer(probe = efficient, webm = webm).prepare(source, "clip.mp4", misskey)
+        assertEquals(VideoUploadFormat.Webm, prepared.format)
+    }
+
+    @Test
+    fun anEfficientFileIsConvertedWhenTheServerRefusesItsContainer() = runBlocking {
+        val mp4 = FakeTranscoder()
+        val efficient = facts.copy(width = 640, height = 360, durationMs = 60_000, containerMimeType = "video/quicktime")
+        val server = mastodon.copy(acceptedTypes = setOf("video/mp4"))
+        val prepared = preparer(probe = efficient, mp4 = mp4).prepare(source, "clip.mov", server)
+        assertEquals(VideoUploadFormat.H264Mp4, prepared.format)
+    }
+
+    @Test
+    fun aFourKSourceSkipsTheWebmBenchmarkAndUsesMp4() = runBlocking {
+        val webm = FakeWebm(buildId = "ff-1", factor = 5.0)
+        val fourK = facts.copy(width = 3840, height = 2160)
+        val prepared = preparer(webm = webm, probe = fourK).prepare(source, "clip.mp4", misskey)
+        assertEquals(VideoUploadFormat.H264Mp4, prepared.format)
+        assertEquals(0, webm.benchmarks)
     }
 
     @Test

@@ -21,5 +21,5 @@ if(ANDROID_ABI STREQUAL "arm64-v8a")
     # The trailing number changes with the JNI encoder settings, so the benchmark cache starts fresh.
     target_compile_definitions(beeline_ffmpeg PRIVATE
         BEELINE_FFMPEG
-        BEELINE_FFMPEG_BUILD_ID="${FFMPEG_BUILD_ID}+jni1")
+        BEELINE_FFMPEG_BUILD_ID="${FFMPEG_BUILD_ID}+jni2")
 endif()

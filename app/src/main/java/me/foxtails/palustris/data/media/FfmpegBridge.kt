@@ -119,7 +119,18 @@ object JniNativeApi : FfmpegBridge.NativeApi {
         bitrate: Int,
         progress: FfmpegProgress,
         cancel: AtomicBoolean,
-    ): Boolean = FfmpegNative.transcodeWebm(input.path, output.path, maxHeight, bitrate, progress, cancel)
+    ): Boolean {
+        requireLoaded()
+        return FfmpegNative.transcodeWebm(input.path, output.path, maxHeight, bitrate, progress, cancel)
+    }
 
-    override fun benchmark(fixture: File, maxHeight: Int): Double = FfmpegNative.benchmarkVp9(fixture.path, maxHeight)
+    override fun benchmark(fixture: File, maxHeight: Int): Double {
+        requireLoaded()
+        return FfmpegNative.benchmarkVp9(fixture.path, maxHeight)
+    }
+
+    /** Loads the library on first use and reports a missing one as an ordinary failure, not a linkage error. */
+    private fun requireLoaded() {
+        if (!loaded) throw IllegalStateException("The FFmpeg library is not available")
+    }
 }

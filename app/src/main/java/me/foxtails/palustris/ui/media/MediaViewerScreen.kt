@@ -79,6 +79,7 @@ fun MediaViewerScreen(
     val closeDescription = stringResource(R.string.media_close_description)
     val density = LocalDensity.current
     val registry = LocalMediaTransitionRegistry.current
+    val videoCoordinator = LocalVideoPlaybackCoordinator.current
     val motionScheme = LocalPalustrisMotionScheme.current
     val pagerState = rememberPagerState(request.attachmentIndex.coerceIn(0, attachments.lastIndex)) { attachments.size }
     val revealedPages = remember {
@@ -131,7 +132,8 @@ fun MediaViewerScreen(
             viewport,
             initialAttachment,
             density,
-            fullDimensions[request.attachmentIndex.coerceIn(0, attachments.lastIndex)],
+            fullDimensions[request.attachmentIndex.coerceIn(0, attachments.lastIndex)]
+                ?: videoSizeFor(initialAttachment, videoCoordinator),
         )
         val transition = remember(request.transitionKey) {
             MediaViewerTransitionState(
@@ -142,7 +144,12 @@ fun MediaViewerScreen(
                 initialDestinationFrame = initialDestinationFrame,
             )
         }
-        val selectedDestinationFrame = destinationFrame(viewport, selectedAttachment, density, fullDimensions[selectedPage])
+        val selectedDestinationFrame = destinationFrame(
+            viewport,
+            selectedAttachment,
+            density,
+            fullDimensions[selectedPage] ?: videoSizeFor(selectedAttachment, videoCoordinator),
+        )
         val selectedSourceFrame = sourceFrame(selectedSource, Rect.Zero, selectedAttachment)
         val selectedRevealed = !selectedAttachment.sensitive || revealedPages[selectedPage] == true
         // The transition layer would paint the image over a sensitive cover that is still closed.
@@ -501,3 +508,7 @@ private fun me.foxtails.palustris.domain.Attachment.imageHeight(): Float =
 private fun Rect.isValid(): Boolean = width > 0f && height > 0f
 
 private fun Float.safeGestureVelocity(): Float = takeIf { isFinite() }?.coerceIn(-10_000f, 10_000f) ?: 0f
+
+/** A video's size from a player that already decoded it, used only when the attachment carries no dimensions. */
+private fun videoSizeFor(attachment: me.foxtails.palustris.domain.Attachment, coordinator: VideoPlaybackCoordinator?): Size? =
+    if (attachment.width == null || attachment.height == null) coordinator?.knownVideoSize(attachment.url) else null

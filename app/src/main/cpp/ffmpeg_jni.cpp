@@ -107,6 +107,8 @@ struct Pipeline {
     AVFrame *filtered = nullptr;
     AVPacket *encoded = nullptr;
     bool headerWritten = false;
+    // Wall time spent inside the video decoder. The benchmark subtracts it so it times scaling and VP9 encoding only.
+    double videoDecodeSeconds = 0;
 
     ~Pipeline() {
         av_packet_free(&packet);
@@ -326,13 +328,17 @@ double drainSink(Pipeline &p, AVFilterContext *sink, AVCodecContext *enc, AVStre
 /** Feeds one packet (or a flush when packet is null) through a decoder and on to its encoder. */
 double decodePacket(Pipeline &p, AVCodecContext *dec, AVFilterContext *src, AVFilterContext *sink,
                     AVCodecContext *enc, AVStream *out, bool video, const AVPacket *packet, double last) {
+    const auto sendStart = std::chrono::steady_clock::now();
     int code = avcodec_send_packet(dec, packet);
+    if (video) p.videoDecodeSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - sendStart).count();
     if (code < 0 && code != AVERROR_EOF) {
         // A damaged packet is skipped; a decoder that rejects everything fails at the end with no output.
         return last;
     }
     for (;;) {
+        const auto receiveStart = std::chrono::steady_clock::now();
         code = avcodec_receive_frame(dec, p.decoded);
+        if (video) p.videoDecodeSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - receiveStart).count();
         if (code == AVERROR(EAGAIN) || code == AVERROR_EOF) return last;
         check(code, "decode");
         p.decoded->pts = p.decoded->best_effort_timestamp;
@@ -345,6 +351,7 @@ double decodePacket(Pipeline &p, AVCodecContext *dec, AVFilterContext *src, AVFi
 struct RunResult {
     bool completed;
     double mediaSeconds;
+    double decodeSeconds;
 };
 
 /**
@@ -457,7 +464,7 @@ RunResult run(const JobCallbacks &job, const char *inputPath, const char *output
         check(av_write_trailer(p.output), "write trailer");
         job.report(1.0f);
     }
-    return {completed, lastVideo};
+    return {completed, lastVideo, p.videoDecodeSeconds};
 }
 
 #endif  // BEELINE_FFMPEG
@@ -535,7 +542,9 @@ JNIEXPORT jdouble JNICALL Java_me_foxtails_palustris_data_media_FfmpegNative_ben
         auto started = std::chrono::steady_clock::now();
         RunResult result = run(job, in, nullptr, maxHeight, 0, 3.0);
         double wall = std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
-        if (wall > 0) factor = result.mediaSeconds / wall;
+        // Decode time is not part of the VP9 speed: the policy keeps heavy sources out of the WebM path instead.
+        const double encodeWall = wall - result.decodeSeconds;
+        if (encodeWall > 0) factor = result.mediaSeconds / encodeWall;
     } catch (const std::exception &error) {
         throwJava(env, error.what());
     }
