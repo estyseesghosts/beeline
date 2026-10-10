@@ -22,7 +22,7 @@ Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 8 (limits, uploa
 - Slices 1 to 5 — commits 5f3135cf, 3a680d79, 5fddf6f9, 2c79fd50, feb26b2c.
 - Slice 6: draft and editor model for threads and media — commit 893ce8a3.
 - Slice 7: thread publication — commit a50298fa.
-- Slice 8: composer surface (`ComposerSurface.kt` new, `ComposerSheet.kt` deleted, card flag through the shell, `composer_publish_progress` string, wiki section).
+- Slice 8: composer surface (`ComposerSurface.kt` new, `ComposerSheet.kt` deleted, card flag through the shell, `composer_publish_progress` string, wiki section) — commit 3ac01ce5.
 
 # Current slice
 
@@ -47,4 +47,4 @@ None. Tablet hardware check, live-server publish, and pre-existing API 29 instru
 
 # Last safe commit
 
-a50298fa Publish threads in order with media upload and draft progress
+3ac01ce5 Show the composer full-screen or as a floating card
