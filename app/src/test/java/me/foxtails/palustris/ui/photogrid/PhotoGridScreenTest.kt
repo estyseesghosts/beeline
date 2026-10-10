@@ -73,6 +73,46 @@ class PhotoGridScreenTest {
     }
 
     @Test
+    fun mediaFilterAdmitsVideosOnlyWhenTheyHaveAPoster() {
+        fun video(id: String, poster: String?) = Attachment(
+            id = id,
+            url = "https://cdn.example/$id.mp4",
+            previewUrl = poster,
+            mimeType = "video/mp4",
+            kind = MediaKind.Video,
+        )
+        val withPoster = post("with-poster", listOf(video("clip", "https://cdn.example/clip.jpg")))
+        val withoutPoster = post("without-poster", listOf(video("bare", null)))
+
+        val items = photoGridItems(listOf(OwnedPost(account.id, withPoster), OwnedPost(account.id, withoutPoster)))
+
+        assertEquals(listOf("with-poster"), items.map { it.ownedPost.post.id.value })
+        assertEquals(MediaKind.Video, items.single().attachment.kind)
+    }
+
+    @Test
+    fun videoTileShowsAPlayBadgeAndStillOpensThePost() {
+        val clip = Attachment(
+            id = "clip",
+            url = "https://cdn.example/clip.mp4",
+            previewUrl = "https://cdn.example/clip.jpg",
+            mimeType = "video/mp4",
+            kind = MediaKind.Video,
+            width = 640,
+            height = 480,
+        )
+        var opened: String? = null
+        show(
+            PhotoGridFeedState(posts = listOf(OwnedPost(account.id, post("clip-post", listOf(clip))))),
+            onOpenPost = { opened = it.post.id.value },
+        )
+
+        compose.onNodeWithContentDescription("Play video").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Open post").performClick()
+        assertEquals("clip-post", opened)
+    }
+
+    @Test
     fun mediaFilterExcludesAnimatedImages() {
         val animatedThenStill = post(
             "animated-then-still",

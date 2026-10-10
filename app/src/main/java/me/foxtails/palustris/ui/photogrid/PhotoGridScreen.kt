@@ -124,8 +124,9 @@ internal fun photoGridItems(posts: List<OwnedPost>, rules: ContentWarningRules =
         }
 }
 
+/** Images, and videos that have a server poster. A video without a poster has nothing to show. */
 private fun Attachment.isPhotoGridDisplayable(): Boolean =
-    kind == MediaKind.Image &&
+    (kind == MediaKind.Image || kind == MediaKind.Video) &&
     MediaRequestPolicy.resolve(
         attachment = this,
         role = MediaRequestRole.Preview,

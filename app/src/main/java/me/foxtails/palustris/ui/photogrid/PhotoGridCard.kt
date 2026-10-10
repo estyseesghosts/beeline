@@ -56,6 +56,7 @@ import coil.compose.rememberAsyncImagePainter
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.media.MediaImageLoader
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.MediaRequestDecision
 import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.MediaRequestRole
@@ -66,6 +67,7 @@ import me.foxtails.palustris.ui.components.BeelineNestedSurfaceShape
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.media.SensitiveMediaTile
+import me.foxtails.palustris.ui.media.VideoTileContent
 import me.foxtails.palustris.ui.posts.favouriteIconFor
 
 @Composable
@@ -123,7 +125,9 @@ internal fun PhotoGridTile(
     var bounds by remember { mutableStateOf(Rect.Zero) }
     val haptics = LocalHapticFeedback.current
     val quickViewLabel = stringResource(R.string.photo_quick_view_open)
-    val openQuickView: ((PhotoQuickViewDrag?) -> Unit)? = onQuickView?.let { open ->
+    val isVideo = item.attachment.kind == MediaKind.Video
+    // Quick view is an image pager, so a video tile keeps tap-to-open only.
+    val openQuickView: ((PhotoQuickViewDrag?) -> Unit)? = onQuickView?.takeUnless { isVideo }?.let { open ->
         { drag ->
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             open(PhotoQuickViewTarget(item.ownedPost, item.attachmentIndex, bounds, drag))
@@ -180,6 +184,18 @@ internal fun PhotoGridTile(
             val painter = imageRequest?.let { rememberAsyncImagePainter(it, mediaImageLoader.imageLoader) }
             if (!revealed) {
                 SensitiveMediaTile(onReveal = { revealed = true })
+            } else if (isVideo) {
+                VideoTileContent(
+                    tileKey = tileKey,
+                    attachment = item.attachment,
+                    poster = painter,
+                    posterDescription = item.attachment.description.orEmpty(),
+                    contentVisible = revealed,
+                    decodeWidthPx = decodeWidthPx,
+                    order = { bounds.top.toInt() },
+                    modifier = Modifier.fillMaxSize(),
+                    placeholder = {},
+                )
             } else if (painter != null) {
                 Image(
                     painter = painter,

@@ -19,11 +19,12 @@ Implement `docs/video.md`: video autoplay in the feed and photo grid, a video vi
 
 - Slice 6, Media3 dependencies — see Git log "Add Media3 ExoPlayer and headless Compose state".
 - Slice 2, setting, network monitor, policy — see Git log "Add the autoplay setting, metered network monitor, and autoplay policy".
-- Slice 3, feed autoplay — see Git log "Autoplay muted videos in the feed".
+- Slice 3, feed autoplay, `8e635e18`.
+- Slice 4, photo grid — see Git log "Show and autoplay videos in the Photo Grid".
 
 # Current slice
 
-Slice 4, photo grid.
+Slice 5, viewer.
 
 # Files involved
 
@@ -35,11 +36,12 @@ Slice 4, photo grid.
 
 - `AutoplayPolicyTest` and `AppPreferencesRepositoryTest` pass; ktlint passes.
 - Slice 3: full CI-parity gate passed (architecture audit exit 1 is pre-existing). Emulator: video plays in a hashtag feed, frames advance, sound toggle flips, scrolling away stops it. Audio output itself not heard.
+- Slice 4: full gate passed. Emulator: Federated grid shows a poster with play badge and a playing muted tile with controls. Quick view is off for video tiles.
 - Not done in slice 3: duration badge (Attachment has no duration), retry control on a failed tile.
 
 # Next
 
-Slice 4: admit video tiles in `photoGridItems`, play badge, same policy.
+Slice 5: video viewer page (reveal, handoff position, controls, drag dismiss, zoom).
 
 # Blockers
 
@@ -47,4 +49,4 @@ Slice 4: admit video tiles in `photoGridItems`, play badge, same policy.
 
 # Last safe commit
 
-Slice 2 commit `6de35511`
+Slice 3 commit `8e635e18`

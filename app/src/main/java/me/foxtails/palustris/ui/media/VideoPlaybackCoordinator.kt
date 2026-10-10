@@ -152,7 +152,7 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
         current.volume = 0f
         if (loadedKey != next) {
             current.trackSelectionParameters = current.trackSelectionParameters.buildUpon()
-                .setMaxVideoSize(tile.maxWidthPx.coerceAtLeast(1), Int.MAX_VALUE)
+                .setMaxVideoSize((tile.maxWidthPx * 2).coerceAtLeast(1), Int.MAX_VALUE)
                 .build()
             current.repeatMode = Player.REPEAT_MODE_OFF
             current.setMediaItem(MediaItem.fromUri(tile.url))
