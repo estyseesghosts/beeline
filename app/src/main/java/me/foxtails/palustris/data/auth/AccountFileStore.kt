@@ -17,6 +17,8 @@ import me.foxtails.palustris.domain.NotificationCapabilities
 import me.foxtails.palustris.domain.NotificationReadSemantics
 import me.foxtails.palustris.domain.NotificationUnreadPrecision
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.PostLengthRule
+import me.foxtails.palustris.domain.PostingCapabilities
 import me.foxtails.palustris.domain.ProfileCapabilities
 import me.foxtails.palustris.domain.ModerationCapabilities
 import me.foxtails.palustris.domain.PrimaryFavouriteCapability
@@ -228,6 +230,7 @@ private fun ServerCapabilities.toJson(): JSONObject = JSONObject()
     .put("audiences", JSONArray(audiences.map { it.name }))
     .put("actions", JSONArray(actions.map { it.name }))
     .put("maxPostLength", maxPostLength)
+    .put("posting", posting.toJson())
     .put("canPublish", canPublish)
     .put("notifications", notifications.toJson())
     .put("profile", profile.toJson())
@@ -257,6 +260,7 @@ private fun JSONObject.toCapabilities(): ServerCapabilities = ServerCapabilities
     audiences = enumSet<Audience>("audiences"),
     actions = enumSet<PostAction>("actions"),
     maxPostLength = if (isNull("maxPostLength")) null else optInt("maxPostLength"),
+    posting = optJSONObject("posting")?.toPostingCapabilities() ?: PostingCapabilities(),
     canPublish = optBoolean("canPublish"),
     notifications = optJSONObject("notifications")?.toNotificationCapabilities() ?: NotificationCapabilities(),
     profile = optJSONObject("profile")?.toProfileCapabilities() ?: ProfileCapabilities(),
@@ -280,6 +284,37 @@ private fun JSONObject.toCapabilities(): ServerCapabilities = ServerCapabilities
      capabilitiesLastUpdated = optLong("capabilitiesLastUpdated"),
     capabilitySchemaVersion = optInt("capabilitySchemaVersion", 0),
 )
+
+private fun PostingCapabilities.toJson(): JSONObject = JSONObject()
+    .put("lengthRule", lengthRule.name)
+    .put("maxWarningLength", maxWarningLength)
+    .put("maxAttachments", maxAttachments)
+    .put("maxAltTextLength", maxAltTextLength)
+    .put("maxImageBytes", maxImageBytes)
+    .put("maxImagePixels", maxImagePixels)
+    .put("uploadTypes", uploadTypes?.let { JSONArray(it.toList()) })
+    .put("charactersReservedPerUrl", charactersReservedPerUrl)
+    .put("mediaUpload", mediaUpload.name)
+    .put("clientCompression", clientCompression)
+
+private fun JSONObject.toPostingCapabilities(): PostingCapabilities = PostingCapabilities(
+    lengthRule = enumOrDefault("lengthRule", PostLengthRule.Utf16TextOnly),
+    maxWarningLength = optIntOrNull("maxWarningLength"),
+    maxAttachments = optIntOrNull("maxAttachments"),
+    maxAltTextLength = optIntOrNull("maxAltTextLength"),
+    maxImageBytes = optLongOrNull("maxImageBytes"),
+    maxImagePixels = optLongOrNull("maxImagePixels"),
+    uploadTypes = optJSONArray("uploadTypes")?.let { array ->
+        (0 until array.length()).map { array.getString(it) }.toSet()
+    },
+    charactersReservedPerUrl = optInt("charactersReservedPerUrl", PostingCapabilities.DEFAULT_CHARACTERS_PER_URL),
+    mediaUpload = enumOrDefault("mediaUpload", CapabilityStatus.Unknown),
+    clientCompression = optBoolean("clientCompression"),
+)
+
+private fun JSONObject.optIntOrNull(name: String): Int? = if (isNull(name)) null else optInt(name)
+
+private fun JSONObject.optLongOrNull(name: String): Long? = if (isNull(name)) null else optLong(name)
 
 private fun ModerationCapabilities.toJson(): JSONObject = JSONObject()
     .put("read", read.name)

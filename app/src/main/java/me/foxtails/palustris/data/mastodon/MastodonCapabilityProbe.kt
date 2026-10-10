@@ -10,6 +10,8 @@ import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfileCapabilities
 import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.PostLengthRule
+import me.foxtails.palustris.domain.PostingCapabilities
 import me.foxtails.palustris.domain.PrimaryFavouriteCapability
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.ProfileCapabilities
@@ -98,7 +100,6 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
         return hasNodeInfoReactionFeature(document)
     }
 
-
     companion object {
         /** Bounds the instance metadata read. The document is small on supported servers. */
         private const val MAX_INSTANCE_BYTES = 512 * 1024L
@@ -180,6 +181,7 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 else -> CapabilityStatus.Unknown
             }
             val emoji = emojiCapabilities(instance, nodeInfoAdvertisesReactions)
+            val posting = postingLimits(instance)
             val actions = setOf(
                 PostAction.Reply,
                 PostAction.Reshare,
@@ -189,6 +191,8 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
             return ServerCapabilities(
                 audiences = setOf(Audience.Public, Audience.Unlisted, Audience.Followers, Audience.Direct),
                 actions = actions,
+                maxPostLength = posting.maxPostLength,
+                posting = posting.capabilities,
                 canPublish = true,
                 profile = ProfileCapabilities(editable = editable.copy(imageDeletion = imageDeletion)),
                 emoji = emoji,
@@ -216,6 +220,56 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 ),
             )
         }
+
+        private class PostingLimits(val maxPostLength: Int, val capabilities: PostingCapabilities)
+
+        /**
+         * Reads the posting and media limits from `configuration`. A server without the
+         * block (Mastodon before 4.0, or a v1 fallback) gets the documented defaults.
+         * `max_toot_chars` is the pre-configuration limit that Pleroma-family servers report.
+         */
+        private fun postingLimits(instance: JSONObject): PostingLimits {
+            val configuration = instance.optJSONObject("configuration")
+            val statuses = configuration?.optJSONObject("statuses")
+            val media = configuration?.optJSONObject("media_attachments")
+            val maxCharacters = statuses.positiveInt("max_characters")
+                ?: instance.positiveInt("max_toot_chars")
+                ?: DEFAULT_MAX_CHARACTERS
+            val types = media?.optJSONArray("supported_mime_types")?.let { array ->
+                (0 until array.length()).map { array.optString(it).lowercase() }.filter(String::isNotBlank).toSet()
+            }?.takeIf { it.isNotEmpty() } ?: DEFAULT_UPLOAD_TYPES
+            return PostingLimits(
+                maxPostLength = maxCharacters,
+                capabilities = PostingCapabilities(
+                    lengthRule = PostLengthRule.MastodonCombined,
+                    maxWarningLength = null,
+                    maxAttachments = statuses.positiveInt("max_media_attachments") ?: DEFAULT_MAX_ATTACHMENTS,
+                    maxAltTextLength = media.positiveInt("description_limit") ?: DEFAULT_ALT_TEXT_LENGTH,
+                    maxImageBytes = media.positiveLong("image_size_limit") ?: DEFAULT_IMAGE_BYTES,
+                    maxImagePixels = media.positiveLong("image_matrix_limit") ?: DEFAULT_IMAGE_PIXELS,
+                    uploadTypes = types,
+                    charactersReservedPerUrl = statuses.positiveInt("characters_reserved_per_url")
+                        ?: PostingCapabilities.DEFAULT_CHARACTERS_PER_URL,
+                    mediaUpload = CapabilityStatus.Supported,
+                    clientCompression = false,
+                ),
+            )
+        }
+
+        private fun JSONObject?.positiveInt(key: String): Int? =
+            positiveLong(key)?.takeIf { it <= Int.MAX_VALUE }?.toInt()
+
+        private fun JSONObject?.positiveLong(key: String): Long? {
+            val value = this?.opt(key) as? Number ?: return null
+            return value.toLong().takeIf { it > 0 }
+        }
+
+        private const val DEFAULT_MAX_CHARACTERS = 500
+        private const val DEFAULT_MAX_ATTACHMENTS = 4
+        private const val DEFAULT_ALT_TEXT_LENGTH = 1500
+        private const val DEFAULT_IMAGE_BYTES = 16L * 1024 * 1024
+        private const val DEFAULT_IMAGE_PIXELS = 33_177_600L
+        private val DEFAULT_UPLOAD_TYPES = setOf("image/jpeg", "image/png", "image/gif", "image/webp")
 
         private fun editableForMachineApi(api: Int): EditableProfileCapabilities = EditableProfileCapabilities(
             read = if (api >= 8) CapabilityStatus.Supported else CapabilityStatus.Unsupported,

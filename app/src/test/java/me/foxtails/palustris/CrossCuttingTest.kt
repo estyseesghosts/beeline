@@ -127,6 +127,19 @@ class CrossCuttingTest {
             ),
         )
         val capabilities = ServerCapabilities(
+            maxPostLength = 650,
+            posting = me.foxtails.palustris.domain.PostingCapabilities(
+                lengthRule = me.foxtails.palustris.domain.PostLengthRule.MastodonCombined,
+                maxWarningLength = 80,
+                maxAttachments = 6,
+                maxAltTextLength = 900,
+                maxImageBytes = 8_000_000L,
+                maxImagePixels = 12_000_000L,
+                uploadTypes = setOf("image/png", "image/webp"),
+                charactersReservedPerUrl = 30,
+                mediaUpload = CapabilityStatus.Supported,
+                clientCompression = true,
+            ),
             profile = ProfileCapabilities(
                 details = me.foxtails.palustris.domain.CapabilityStatus.Supported,
                 timelines = me.foxtails.palustris.domain.CapabilityStatus.Supported,
@@ -236,6 +249,7 @@ class CrossCuttingTest {
         assertEquals(CapabilityStatus.Unknown, restored.capabilities.emoji.reactionMutation)
         assertEquals(me.foxtails.palustris.domain.ReactionSelectionMode.Unknown, restored.capabilities.emoji.selectionMode)
         assertFalse(restored.capabilities.canPublish)
+        assertEquals(me.foxtails.palustris.domain.PostingCapabilities(), restored.capabilities.posting)
     }
 
     @Test
@@ -357,6 +371,7 @@ class CrossCuttingTest {
         assertEquals(null, cache.get(origin, setOf("read", "write", "push")))
         assertEquals("client", cache.get(origin, setOf("read", "write"))?.clientId)
     }
+
     @Test
     fun sameOriginAccountsReceiveIndependentCapabilities() = runBlocking {
         MockWebServer().use { server ->

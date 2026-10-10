@@ -700,6 +700,45 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         }
     }
 
+    @Test fun capabilityProbeUsesUpstreamPostingDefaults() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody(JSONObject().put("version", "2026.1.0").toString()))
+            val connection = Connection(server.url("/").toString().removeSuffix("/"), Protocol.MISSKEY)
+            val capabilities = MisskeyCapabilityProbe(MisskeyApi()).probeCapabilities(connection)
+            val posting = capabilities.posting
+
+            assertEquals(3000, capabilities.maxPostLength)
+            assertEquals(me.foxtails.palustris.domain.PostLengthRule.Utf16TextOnly, posting.lengthRule)
+            assertEquals(100, posting.maxWarningLength)
+            assertEquals(512, posting.maxAltTextLength)
+            assertEquals(16, posting.maxAttachments)
+            assertNull(posting.maxImageBytes)
+            assertNull(posting.uploadTypes)
+            assertTrue(posting.clientCompression)
+            assertEquals(CapabilityStatus.Denied, posting.mediaUpload)
+        }
+    }
+
+    @Test fun capabilityProbeReadsForkMetaAndRolePolicies() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody(JSONObject().put("version", "2026.1.0")
+                .put("maxNoteTextLength", 8000).put("maxCwLength", 250).put("maxAltTextLength", 1500)
+                .put("maxFileSize", 50L * 1024 * 1024).toString()))
+            server.enqueue(MockResponse().setBody(JSONObject().put("policies", JSONObject()
+                .put("maxFileSizeMb", 25)).toString()))
+            server.enqueue(MockResponse().setBody("[]"))
+            val connection = Connection(server.url("/").toString().removeSuffix("/"), Protocol.MISSKEY)
+            val capabilities = MisskeyCapabilityProbe(MisskeyApi(), "token").probeCapabilities(connection)
+            val posting = capabilities.posting
+
+            assertEquals(8000, capabilities.maxPostLength)
+            assertEquals(250, posting.maxWarningLength)
+            assertEquals(1500, posting.maxAltTextLength)
+            assertEquals(25L * 1024 * 1024, posting.maxImageBytes)
+            assertEquals(CapabilityStatus.Supported, posting.mediaUpload)
+        }
+    }
+
     @Test fun authenticatedCapabilityProbeSeparatesBubbleSupportAndPolicy() = runBlocking {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody(JSONObject().put("version", "2026.1.0").toString()))

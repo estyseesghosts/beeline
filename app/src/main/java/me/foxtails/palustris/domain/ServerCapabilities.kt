@@ -7,6 +7,7 @@ data class ServerCapabilities(
     val audiences: Set<Audience> = emptySet(),
     val actions: Set<PostAction> = emptySet(),
     val maxPostLength: Int? = null,
+    val posting: PostingCapabilities = PostingCapabilities(),
     val canPublish: Boolean = false,
     val notifications: NotificationCapabilities = NotificationCapabilities(),
     val profile: ProfileCapabilities = ProfileCapabilities(),
@@ -24,9 +25,43 @@ data class ServerCapabilities(
     companion object {
         /**
          * Bump when capability semantics change. Revision 5 invalidates snapshots that
-         * recorded reaction support from the removed sentinel mutation probe.
+         * recorded reaction support from the removed sentinel mutation probe. Revision 6
+         * invalidates snapshots that predate posting limits and upload capabilities.
          */
-        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 5
+        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 6
+    }
+}
+
+/** How a server counts a post against its length limit. See [PostLengthCounter]. */
+enum class PostLengthRule {
+    /** The content warning and text share one limit, counted in grapheme clusters. */
+    MastodonCombined,
+
+    /** Only the text counts, in UTF-16 code units. The content warning has its own limit. */
+    Utf16TextOnly,
+}
+
+/**
+ * Posting and media limits that the composer enforces before it contacts the server.
+ * A null limit means the server did not report one and the app does not enforce it.
+ */
+data class PostingCapabilities(
+    val lengthRule: PostLengthRule = PostLengthRule.Utf16TextOnly,
+    /** Null when the content warning shares the post limit. */
+    val maxWarningLength: Int? = null,
+    val maxAttachments: Int? = null,
+    val maxAltTextLength: Int? = null,
+    val maxImageBytes: Long? = null,
+    val maxImagePixels: Long? = null,
+    /** Accepted upload MIME types. Null lets the server decide. */
+    val uploadTypes: Set<String>? = null,
+    val charactersReservedPerUrl: Int = DEFAULT_CHARACTERS_PER_URL,
+    val mediaUpload: CapabilityStatus = CapabilityStatus.Unknown,
+    /** True when the server never shrinks an upload, so the app may compress it first. */
+    val clientCompression: Boolean = false,
+) {
+    companion object {
+        const val DEFAULT_CHARACTERS_PER_URL = 23
     }
 }
 

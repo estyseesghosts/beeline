@@ -11,3 +11,5 @@ In Git Bash, `adb shell cat /sdcard/...` rewrites the path. Use `adb exec-out ui
 The architecture audit exits 1 on regressions that predate 0.2.11. Do not edit the baseline to hide them. Do not push again unless asked.
 
 The Photo Grid redesign (`docs/photo-grid-redesign-plan.md`, slices 1 to 4) follows `29b7a484`: cards with caption and favorite, rail underlap, and press-and-hold quick-view. Read `docs/agents/tasks/photo-grid-redesign.md`. Slice 5 (drag and release) follows `56fec6fc`.
+
+The composer and media upload plan (`docs/composer-and-media-upload-plan.md`) is in progress. Read `docs/agents/tasks/composer-and-media.md`. Slice 1 follows `049cb765`; the next slice is listed there.

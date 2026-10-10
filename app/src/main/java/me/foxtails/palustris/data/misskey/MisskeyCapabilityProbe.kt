@@ -9,6 +9,8 @@ import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.NotificationCapabilities
 import me.foxtails.palustris.domain.ModerationCapabilities
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.PostLengthRule
+import me.foxtails.palustris.domain.PostingCapabilities
 import me.foxtails.palustris.domain.PrimaryFavouriteCapability
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.ProfileCapabilities
@@ -56,6 +58,8 @@ class MisskeyCapabilityProbe(
             timelineStatuses = statuses,
             audiences = setOf(Audience.Public, Audience.Unlisted, Audience.Followers, Audience.Direct),
             actions = setOf(PostAction.Reply, PostAction.Reshare, PostAction.Favorite, PostAction.React, PostAction.Bookmark),
+            maxPostLength = meta.positiveInt("maxNoteTextLength") ?: DEFAULT_MAX_NOTE_TEXT_LENGTH,
+            posting = postingCapabilities(meta, policies, hasToken = !token.isNullOrBlank()),
             quotes = CapabilityStatus.Supported,
             primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Reaction),
             savedPosts = SavedPostsCapability(CapabilityStatus.Supported, SavedPostsKind.Favourites),
@@ -90,6 +94,34 @@ class MisskeyCapabilityProbe(
         ).withTimelineStatuses(statuses)
     }
 
+    /**
+     * The content warning has its own limit on this family, and the server never shrinks an
+     * upload. The file size limit is the smaller of the instance limit and the role policy.
+     */
+    private fun postingCapabilities(meta: JSONObject, policies: JSONObject?, hasToken: Boolean): PostingCapabilities {
+        val policyBytes = policies.positiveLong("maxFileSizeMb")?.times(BYTES_PER_MEGABYTE)
+        val limits = listOfNotNull(meta.positiveLong("maxFileSize"), policyBytes)
+        return PostingCapabilities(
+            lengthRule = PostLengthRule.Utf16TextOnly,
+            maxWarningLength = meta.positiveInt("maxCwLength") ?: DEFAULT_MAX_CW_LENGTH,
+            maxAttachments = MAX_ATTACHMENTS,
+            maxAltTextLength = meta.positiveInt("maxAltTextLength") ?: DEFAULT_MAX_ALT_TEXT_LENGTH,
+            maxImageBytes = limits.minOrNull(),
+            maxImagePixels = null,
+            uploadTypes = null,
+            mediaUpload = if (hasToken) CapabilityStatus.Supported else CapabilityStatus.Denied,
+            clientCompression = true,
+        )
+    }
+
+    private fun JSONObject?.positiveInt(key: String): Int? =
+        positiveLong(key)?.takeIf { it <= Int.MAX_VALUE }?.toInt()
+
+    private fun JSONObject?.positiveLong(key: String): Long? {
+        val value = this?.opt(key) as? Number ?: return null
+        return value.toLong().takeIf { it > 0 }
+    }
+
     private suspend fun probeBubble(
         origin: String,
         token: String,
@@ -119,5 +151,13 @@ class MisskeyCapabilityProbe(
         if (policies.optBoolean(key)) CapabilityStatus.Supported else CapabilityStatus.Denied
     } else {
         fallback
+    }
+
+    private companion object {
+        const val DEFAULT_MAX_NOTE_TEXT_LENGTH = 3000
+        const val DEFAULT_MAX_CW_LENGTH = 100
+        const val DEFAULT_MAX_ALT_TEXT_LENGTH = 512
+        const val MAX_ATTACHMENTS = 16
+        const val BYTES_PER_MEGABYTE = 1024L * 1024
     }
 }
