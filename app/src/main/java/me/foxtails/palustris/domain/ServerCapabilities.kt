@@ -151,6 +151,10 @@ data class PushProviderInfo(
     val vapidPublicKey: String? = null,
 )
 
+/** Whether this account can upload media now: the server must support it and the token must allow it. */
+fun ServerCapabilities.effectiveMediaUpload(access: AccessGrant): CapabilityStatus =
+    effectiveCapabilityStatus(posting.mediaUpload, access.mediaUploadStatus(), implemented = true)
+
 /**
  * Resolves a feature's usable state without treating a failed request as proof of server absence.
  */

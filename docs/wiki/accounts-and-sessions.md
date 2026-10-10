@@ -2,7 +2,7 @@
 
 Status: current  
 Owner: Maintainers  
-Last reviewed: 2026-10-01  
+Last reviewed: 2026-10-09  
 Sources: `SessionLifecycle.kt`, `AccountManager.kt`, and session tests.
 
 ## Ownership
@@ -41,6 +41,15 @@ matches the store.
 Removal stops foreground delivery first. It disables push and removes notification state next. The
 lifecycle then invalidates capability and writer state before deleting account-scoped rows. It
 persists the new account index before activating the next account.
+
+## Media upload access
+
+`AccessScope.MediaUpload` records whether the token can upload media. A new Misskey sign-in requests
+`write:drive` and records it as `Granted`. A Mastodon sign-in records `Granted` for the `write` or
+`write:media` scope. `AccessGrant.mediaUploadStatus` reads a missing record as `Denied`, so every
+Misskey account saved before this scope must sign in again before it can attach media. A Mastodon
+session saved earlier that holds the `write` scope gains the record when it loads. `effectiveMediaUpload`
+combines this access with `posting.mediaUpload` from the server capabilities.
 
 ## Limits
 

@@ -181,6 +181,7 @@ class MastodonAuth(
               AccessScope.LikedPostsRead to if ("read" in scopes || "read:favourites" in scopes) AccessStatus.Granted else AccessStatus.Denied,
               AccessScope.ModerationRead to if ("read" in scopes) AccessStatus.Granted else AccessStatus.Denied,
               AccessScope.ModerationWrite to if ("write" in scopes) AccessStatus.Granted else AccessStatus.Denied,
+              AccessScope.MediaUpload to if ("write" in scopes || "write:media" in scopes) AccessStatus.Granted else AccessStatus.Denied,
         )
     }
 
@@ -230,6 +231,7 @@ class MastodonAuth(
               AccessScope.LikedPostsRead,
               AccessScope.ModerationRead,
               AccessScope.ModerationWrite,
+              AccessScope.MediaUpload,
          )
         const val REDIRECT_URI = "palustris://auth/mastodon"
     }

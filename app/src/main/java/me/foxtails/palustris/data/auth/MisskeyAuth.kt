@@ -97,7 +97,7 @@ class MisskeyAuth(
     }
 
     private companion object {
-        const val MISSKEY_PERMISSIONS = "read:account,write:account,write:notes,read:notifications,write:notifications,write:following,read:reactions,write:reactions,read:favorites,write:favorites,read:blocks,write:blocks,read:mutes,write:mutes"
+        const val MISSKEY_PERMISSIONS = "read:account,write:account,write:notes,read:notifications,write:notifications,write:following,read:reactions,write:reactions,read:favorites,write:favorites,read:blocks,write:blocks,read:mutes,write:mutes,write:drive"
         val REQUESTED_ACCESS = setOf(
             AccessScope.NotificationsRead,
             AccessScope.NotificationsWrite,
@@ -108,6 +108,7 @@ class MisskeyAuth(
             AccessScope.LikedPostsRead,
             AccessScope.ModerationRead,
             AccessScope.ModerationWrite,
+            AccessScope.MediaUpload,
         )
     }
 }

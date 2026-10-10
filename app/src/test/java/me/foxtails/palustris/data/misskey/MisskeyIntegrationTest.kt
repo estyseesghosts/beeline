@@ -161,7 +161,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                 requestedAccess = setOf(AccessScope.NotificationsRead, AccessScope.NotificationsWrite, AccessScope.FollowRequests),
             )
             val url = okhttp3.HttpUrl.Companion.run { auth.browserUrl(pending).toHttpUrl() }
-            assertEquals("read:account,write:account,write:notes,read:notifications,write:notifications,write:following,read:reactions,write:reactions,read:favorites,write:favorites,read:blocks,write:blocks,read:mutes,write:mutes", url.queryParameter("permission"))
+            assertEquals("read:account,write:account,write:notes,read:notifications,write:notifications,write:following,read:reactions,write:reactions,read:favorites,write:favorites,read:blocks,write:blocks,read:mutes,write:mutes,write:drive", url.queryParameter("permission"))
             assertEquals("palustris://auth/misskey", url.queryParameter("callback"))
             val result = auth.complete(pending)
             assertEquals("Alice", result.account.displayName)

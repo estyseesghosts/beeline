@@ -68,7 +68,8 @@ class AccountFileStore internal constructor(
             capabilities = json.optJSONObject("capabilities")?.toCapabilities()
                 ?.takeIf { it.capabilitySchemaVersion == ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION }
                 ?: ServerCapabilities(),
-            access = json.optJSONObject("access")?.toAccessGrant() ?: AccessGrant(),
+            access = (json.optJSONObject("access")?.toAccessGrant() ?: AccessGrant())
+                .withMastodonMediaUpload(storedConnection.protocol),
             pushInstanceName = json.optString("pushInstanceName").takeIf { it.isNotBlank() },
             sessionRevision = json.optLong("sessionRevision", 1L).coerceAtLeast(1L),
             pushState = json.optJSONObject("pushState")?.toPushSessionState() ?: PushSessionState(),
@@ -408,6 +409,19 @@ private fun AccessGrant.toJson(): JSONObject = JSONObject()
     .put("known", JSONArray(known.map { (scope, status) ->
         JSONObject().put("scope", scope.name).put("status", status.name)
     }))
+
+/**
+ * Mastodon sessions saved before [AccessScope.MediaUpload] existed already hold the `write` scope,
+ * which covers uploads. Misskey sessions saved earlier never asked for drive access, so they keep no record.
+ */
+private fun AccessGrant.withMastodonMediaUpload(protocol: Protocol): AccessGrant =
+    if (protocol == Protocol.MASTODON && AccessScope.MediaUpload !in known &&
+        status(AccessScope.NotificationsWrite) == AccessStatus.Granted
+    ) {
+        copy(known = known + (AccessScope.MediaUpload to AccessStatus.Granted))
+    } else {
+        this
+    }
 
 private fun JSONObject.toAccessGrant(): AccessGrant {
     val known = mutableMapOf<AccessScope, AccessStatus>()
