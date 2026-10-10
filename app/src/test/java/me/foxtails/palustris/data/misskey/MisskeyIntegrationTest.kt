@@ -719,6 +719,19 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         }
     }
 
+    @Test fun capabilityProbeMarksTokenSessionsAsAbleToPublish() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody(JSONObject().put("version", "2026.1.0").toString()))
+            server.enqueue(MockResponse().setBody(JSONObject().put("policies", JSONObject()).toString()))
+            server.enqueue(MockResponse().setBody("[]"))
+            server.enqueue(MockResponse().setBody(JSONObject().put("version", "2026.1.0").toString()))
+            val connection = Connection(server.url("/").toString().removeSuffix("/"), Protocol.MISSKEY)
+
+            assertTrue(MisskeyCapabilityProbe(MisskeyApi(), "token").probeCapabilities(connection).canPublish)
+            assertFalse(MisskeyCapabilityProbe(MisskeyApi()).probeCapabilities(connection).canPublish)
+        }
+    }
+
     @Test fun capabilityProbeReadsForkMetaAndRolePolicies() = runBlocking {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody(JSONObject().put("version", "2026.1.0")

@@ -60,6 +60,8 @@ class MisskeyCapabilityProbe(
             actions = setOf(PostAction.Reply, PostAction.Reshare, PostAction.Favorite, PostAction.React, PostAction.Bookmark),
             maxPostLength = meta.positiveInt("maxNoteTextLength") ?: DEFAULT_MAX_NOTE_TEXT_LENGTH,
             posting = postingCapabilities(meta, policies, hasToken = !token.isNullOrBlank()),
+            // A token session can post. Without this, a stored session that never recorded the flag stays unable to publish.
+            canPublish = !token.isNullOrBlank(),
             quotes = CapabilityStatus.Supported,
             primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Reaction),
             savedPosts = SavedPostsCapability(CapabilityStatus.Supported, SavedPostsKind.Favourites),
