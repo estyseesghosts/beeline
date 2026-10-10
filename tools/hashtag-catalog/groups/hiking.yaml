@@ -1,0 +1,68 @@
+id: hiking
+request: null
+members:
+  - tag: "hiking"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 203
+  - tag: "hike"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 29
+  - tag: "trail"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 34
+  - tag: "outdoors"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 127
+  - tag: "camping"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 27
+  - tag: "randonnée"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "randonnee"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "senderismo"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "wandern"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 84
+  - tag: "wandelen"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 20
+  - tag: "登山"
+    langs: [ja, zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "ハイキング"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "健行"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

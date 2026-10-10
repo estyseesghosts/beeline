@@ -1,0 +1,186 @@
+id: trains
+request: "trains"
+members:
+  - tag: "trains"
+    langs: [en, fr]
+    relation: head
+    status: seen
+    accounts7: 87
+  - tag: "train"
+    langs: [en, fr]
+    relation: syn
+    status: seen
+    accounts7: 66
+  - tag: "railway"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 33
+  - tag: "railways"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 19
+  - tag: "rail"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 11
+  - tag: "railroad"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "railfans"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "railfan"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "trainspotting"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 14
+    observed_other_lang: de
+  - tag: "trainphotography"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+    observed_other_lang: pl
+  - tag: "locomotive"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 2
+  - tag: "highspeedrail"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "modeltrains"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 3
+  - tag: "publictransit"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 10
+  - tag: "ferroviaire"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "chemindefer"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 2
+    observed_other_lang: cs
+  - tag: "tren"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "trenes"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "ferrocarril"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "eisenbahn"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 11
+  - tag: "zug"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "bahn"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 181
+  - tag: "züge"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "trein"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 14
+  - tag: "treinen"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "spoor"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "鉄道"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 16
+  - tag: "電車"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "新幹線"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "鉄道写真"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "鉄道模型"
+    langs: [ja]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "火車"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "鐵路"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "鐵道"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "高鐵"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "台鐵"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

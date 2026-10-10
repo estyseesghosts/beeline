@@ -1,0 +1,257 @@
+id: google
+request: "google"
+note: "chrome, gemini and pixel are generic words. They are related-only and ambiguous."
+members:
+  - tag: "google"
+    langs: [und]
+    relation: head
+    status: seen
+    accounts7: 421
+  - tag: "android"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 367
+  - tag: "androiddev"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 13
+  - tag: "androidapp"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "androidauto"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 13
+  - tag: "androidtv"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "wearos"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "googlechrome"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "chromeos"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "chromebook"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 22
+  - tag: "chromium"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "gsuite"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "googleworkspace"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "gmail"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "googledrive"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "googledocs"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "googlesheets"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "googleslides"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "googlemaps"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 31
+  - tag: "googlephotos"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "googlecalendar"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "googlemeet"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "googletranslate"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "googlesearch"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "googlecloud"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "gcp"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "firebase"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "flutter"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "googleplay"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "playstore"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "googlepixel"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 35
+  - tag: "pixel9"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "pixel10"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "googlegemini"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 23
+  - tag: "bard"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "chromecast"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "googlehome"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "googleanalytics"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "adsense"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "chrome"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 39
+    ambiguous: true
+  - tag: "gemini"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 175
+    ambiguous: true
+  - tag: "pixel"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 23
+    ambiguous: true
+  - tag: "deepmind"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 13
+  - tag: "youtube"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 328
+  - tag: "waze"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 1
+  - tag: "fitbit"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 19
+  - tag: "googleio"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "gsoc"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "グーグル"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "谷歌"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

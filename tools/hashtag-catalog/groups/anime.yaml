@@ -1,0 +1,43 @@
+id: anime
+request: null
+members:
+  - tag: "anime"
+    langs: [en, fr, es, de, nl]
+    relation: head
+    status: seen
+    accounts7: 155
+  - tag: "animeart"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "animeedit"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "manga"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 134
+  - tag: "animé"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 205
+  - tag: "アニメ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 122
+  - tag: "動畫"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "動漫"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 3

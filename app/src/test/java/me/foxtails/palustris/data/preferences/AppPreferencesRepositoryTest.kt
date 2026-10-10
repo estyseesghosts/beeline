@@ -99,6 +99,20 @@ class AppPreferencesRepositoryTest {
     }
 
     @Test
+    fun combineRelatedHashtagsDefaultsToTrueAndRoundTripsFalse() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertEquals(true, FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.combineRelatedHashtags)
+
+        file.writeText("""{"colorScheme":"Palette"}""")
+        val legacy = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(true, legacy.combineRelatedHashtags)
+
+        FileAppPreferencesRepository(context).update { it.copy(combineRelatedHashtags = false) }
+        val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(false, restored.combineRelatedHashtags)
+    }
+
+    @Test
     fun successfulUpdateClearsTheLoadError() = runBlocking {
         file.parentFile?.mkdirs()
         file.writeText("not json")

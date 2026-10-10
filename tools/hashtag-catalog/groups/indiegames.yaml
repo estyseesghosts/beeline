@@ -1,0 +1,204 @@
+id: indiegames
+request: "indiegames"
+note: "Child of indie. Overlaps with the gaming group (indiegames is narrower there)."
+members:
+  - tag: "indiegames"
+    langs: [und]
+    relation: head
+    status: seen
+    accounts7: 152
+  - tag: "indiegame"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 245
+  - tag: "indiegamedev"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 42
+  - tag: "indiegamedevelopment"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "indiegamedevs"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "indiedev"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 365
+  - tag: "solodev"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 26
+  - tag: "itchio"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "itchiogames"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "solodeveloper"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "gamedev"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 578
+  - tag: "gamedevelopment"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 33
+  - tag: "godot"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 84
+  - tag: "godotengine"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 50
+  - tag: "madewithgodot"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 4
+  - tag: "unity"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 42
+  - tag: "unrealengine"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 23
+  - tag: "steamnextfest"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 7
+  - tag: "wishlistonsteam"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "jeuxindépendants"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "jeuxindependants"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "jeuindépendant"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "jeuindependant"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "jeuxvidéoindépendants"
+    langs: [fr]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "juegosindie"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "juegosindependientes"
+    langs: [es]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "juegoindie"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "videojuegosindie"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "indiespiele"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "indiespiel"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "indiespellen"
+    langs: [nl]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "インディーゲーム"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "インディーゲーム開発"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "個人ゲーム開発"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "個人開発"
+    langs: [ja]
+    relation: rel
+    status: seen
+    accounts7: 7
+  - tag: "ゲーム開発"
+    langs: [ja]
+    relation: rel
+    status: seen
+    accounts7: 3
+  - tag: "獨立遊戲"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "獨立遊戲開發"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "獨立遊戲開發者"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "遊戲開發"
+    langs: [zh-TW]
+    relation: rel
+    status: seen
+    accounts7: 3

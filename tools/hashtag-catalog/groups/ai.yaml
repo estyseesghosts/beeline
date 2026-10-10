@@ -1,0 +1,222 @@
+id: ai
+request: "ai"
+excludes: [noai]
+note: "excludes noai group. aislop is placed in noai as related, not here."
+members:
+  - tag: "ai"
+    langs: [en, ja]
+    relation: head
+    status: seen
+    accounts7: 3879
+  - tag: "artificialintelligence"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 447
+  - tag: "llm"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 481
+  - tag: "llms"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 107
+  - tag: "machinelearning"
+    langs: [en, nl]
+    relation: nar
+    status: seen
+    accounts7: 199
+  - tag: "deeplearning"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "genai"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 135
+  - tag: "generativeai"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 106
+  - tag: "chatgpt"
+    langs: [en, ja]
+    relation: nar
+    status: seen
+    accounts7: 351
+  - tag: "openai"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 516
+  - tag: "aiart"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 132
+  - tag: "stablediffusion"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 20
+  - tag: "midjourney"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 20
+  - tag: "neuralnetworks"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "aitools"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 54
+  - tag: "agi"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 29
+  - tag: "anthropic"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 328
+  - tag: "claude"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 295
+  - tag: "ia"
+    langs: [fr, es]
+    relation: syn
+    status: seen
+    accounts7: 283
+    ambiguous: true
+  - tag: "intelligenceartificielle"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 36
+  - tag: "apprentissageautomatique"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "iagénérative"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "iagenerative"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "inteligenciaartificial"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 34
+  - tag: "aprendizajeautomático"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "aprendizajeautomatico"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "iagenerativa"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "ki"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 367
+    ambiguous: true
+  - tag: "künstlicheintelligenz"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 103
+  - tag: "kuenstlicheintelligenz"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "maschinelleslernen"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "kigenerativ"
+    langs: [de]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "kunstmatigeintelligentie"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "人工知能"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 16
+  - tag: "生成ai"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 19
+  - tag: "機械学習"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "ディープラーニング"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "人工智慧"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "人工智能"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "生成式ai"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "機器學習"
+    langs: [zh-TW]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "大型語言模型"
+    langs: [zh-TW]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "深度學習"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 2

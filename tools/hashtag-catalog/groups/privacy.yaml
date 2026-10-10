@@ -1,0 +1,63 @@
+id: privacy
+request: null
+members:
+  - tag: "privacy"
+    langs: [en, nl]
+    relation: head
+    status: seen
+    accounts7: 791
+  - tag: "dataprotection"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 31
+  - tag: "surveillance"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 177
+  - tag: "gdpr"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 48
+  - tag: "vieprivée"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 19
+  - tag: "vieprivee"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 19
+  - tag: "privacidad"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 22
+  - tag: "datenschutz"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 144
+  - tag: "プライバシー"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "隱私"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "privatsphäre"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 22
+  - tag: "隱私權"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 2

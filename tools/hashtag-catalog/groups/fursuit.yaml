@@ -1,0 +1,105 @@
+id: fursuit
+request: "fursuit"
+note: "Child of furry. Sub-niche tags are fursuit-specific."
+members:
+  - tag: "fursuit"
+    langs: [und]
+    relation: head
+    status: seen
+    accounts7: 100
+  - tag: "fursuits"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "fursuiter"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "fursuiters"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "fursuiting"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "fursuitfriday"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 77
+  - tag: "fursuitmaker"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "fursuitmakers"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "fursuitmaking"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "fursuitbuilder"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "fursuitbuild"
+    langs: [und]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "fursuitphotography"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "fursuitpartial"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "fursuitparade"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "fursuitwalk"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "costuming"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 1
+  - tag: "cosplay"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 77
+  - tag: "獸裝"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "獸裝製作"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "着ぐるみ"
+    langs: [ja]
+    relation: rel
+    status: seen
+    accounts7: 16
+    observed_other_lang: ko

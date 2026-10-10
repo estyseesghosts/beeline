@@ -1,0 +1,1089 @@
+# DSL: lang(s)|relation|tags (space separated, no '#')
+# relations: head, syn, nar, rel
+# @id, @request (user-listed tag), @excludes (group ids), @children (group ids), @note, @ambiguous (tags)
+
+@id technology
+@request technology
+@note tech is also a short form in many languages
+en|head|technology
+en|syn|tech technews techtalk
+en|nar|gadgets computers computing software hardware smartphones consumertech
+en|rel|innovation startups
+fr|syn|technologie technologies
+fr|nar|informatique ordinateurs logiciel
+es|syn|tecnologia tecnología tecnologías
+es|nar|informatica informática ordenadores
+de|syn|technik technologie
+de|nar|computer informatik
+nl|syn|technologie techniek
+nl|nar|computers informatica
+ja|syn|テクノロジー
+ja|nar|ガジェット パソコン
+ja,zh-TW|syn|技術
+zh-TW|syn|科技
+zh-TW|nar|電腦 手機 3C
+es|nar|computadora
+
+@id foss
+@request foss
+en|head|foss
+en|syn|floss opensource freesoftware oss opensourcesoftware libresoftware
+en|rel|linux selfhosting gnu opensourcehardware
+fr|syn|logiciellibre logicielslibres libre
+fr|rel|opensource
+es|syn|softwarelibre códigoabierto codigoabierto
+de|syn|freiesoftware quelloffen
+nl|syn|vrijesoftware
+ja|syn|オープンソース フリーソフトウェア 自由ソフトウェア
+zh-TW|syn|開源 自由軟體 開放原始碼 開源軟體
+
+@id infosec
+@request infosec
+@ambiguous security
+en|head|infosec
+en|syn|cybersecurity netsec informationsecurity cyber
+en|nar|malware ransomware phishing vulnerability cve zeroday threatintel databreach pentest bugbounty ctf hacking
+en|rel|privacy encryption opsec security
+fr|syn|cybersécurité cybersecurite sécuritéinformatique securiteinformatique
+fr|nar|rançongiciel ransomware
+es|syn|ciberseguridad seguridadinformática seguridadinformatica
+es|nar|ciberataque
+de|syn|itsicherheit cybersicherheit informationssicherheit
+de|nar|cyberangriff
+nl|syn|cybersecurity beveiliging informatiebeveiliging
+nl|nar|cyberaanval
+ja|syn|セキュリティ サイバーセキュリティ 情報セキュリティ
+ja|nar|ランサムウェア マルウェア 脆弱性
+zh-TW|syn|資安 資訊安全 網路安全
+zh-TW|nar|勒索軟體 駭客 漏洞
+fr|syn|sécuritédelinformation
+es|syn|seguridaddelainformación
+de|rel|datenschutz
+
+@id ai
+@request ai
+@excludes noai
+@note excludes noai group. aislop is placed in noai as related, not here.
+@ambiguous ia ki gemini copilot
+en|head|ai
+en|syn|artificialintelligence
+und|nar|llm llms
+en|nar|machinelearning deeplearning genai generativeai chatgpt openai aiart stablediffusion midjourney neuralnetworks aitools agi anthropic claude
+fr|syn|ia intelligenceartificielle
+fr|nar|apprentissageautomatique iagénérative iagenerative
+es|syn|ia inteligenciaartificial
+es|nar|aprendizajeautomático aprendizajeautomatico iagenerativa
+de|syn|ki künstlicheintelligenz kuenstlicheintelligenz
+de|nar|maschinelleslernen kigenerativ
+nl|syn|kunstmatigeintelligentie
+nl|nar|machinelearning
+ja|syn|人工知能 AI
+ja|nar|生成AI 機械学習 ディープラーニング ChatGPT
+zh-TW|syn|人工智慧 人工智能
+zh-TW|nar|生成式AI 機器學習 大型語言模型 深度學習
+
+@id noai
+@request noai
+@excludes ai
+@note must not overlap with ai group. Members here are opposition to generative AI and human-made markers.
+en|head|noai
+en|syn|noaiart noaiartist antiai stopai aifree noaitraining noaiscraping nogenai noaigenerated bangenai
+en|nar|noaiplease noaiscrape
+en|rel|humanmade madebyhuman createdbyhuman aislop aiwashing
+fr|syn|pasdia noia
+es|syn|noia sinia
+de|syn|keineki kifrei
+nl|syn|geenai
+ja|syn|AI学習禁止 無断学習禁止 AI学習反対 生成AI反対 AI反対 NoAI
+ja|rel|AI絵反対 学習禁止
+zh-TW|syn|反AI 拒絕AI 禁止AI學習
+zh-TW|rel|反生成式AI
+
+@id cats
+@request cats
+en|head|cats
+en|syn|cat kitty
+en|nar|kitten kittens caturday catsofmastodon catsoffediverse blackcat tuxedocat catsofthefediverse catphotography straycats
+fr|syn|chat chats
+fr|nar|chaton chatons chatsdumastodon
+es|syn|gato gatos
+es|nar|gatito gatitos
+de|syn|katze katzen
+de|nar|kater katzenfoto katzenbilder kätzchen
+nl|syn|kat katten poes
+nl|nar|kitten
+ja|syn|猫 ねこ ネコ
+ja|nar|保護猫 猫の日 ねこ部
+zh-TW|syn|貓 貓咪 喵
+zh-TW|nar|浪貓 黑貓
+de|syn|hauskatze
+nl|syn|huiskat
+es|syn|gatodoméstico
+zh-TW|nar|貓奴
+
+@id reptiles
+@request reptiles
+@ambiguous turtle gecko
+en|head|reptiles
+en|syn|reptile herpetology herps herpetoculture reptilesofmastodon
+en|nar|snake snakes lizard lizards gecko geckos turtle turtles tortoise tortoises chameleon crocodile alligator beardeddragon ballpython leopardgecko
+fr|syn|reptiles reptile
+fr|nar|serpents lézards tortues
+es|syn|reptiles reptil
+es|nar|serpientes lagartos tortugas
+de|syn|reptilien
+de|nar|schlangen echsen schildkröten
+nl|syn|reptielen
+nl|nar|slangen hagedissen schildpadden
+ja|syn|爬虫類
+ja|nar|ヘビ トカゲ ヤモリ カメ
+zh-TW|syn|爬蟲類 爬蟲
+zh-TW|nar|蛇 蜥蜴 守宮 烏龜
+zh-TW|syn|爬行動物
+
+@id dogs
+@request dogs
+en|head|dogs
+en|syn|dog doggo
+en|nar|puppy puppies dogsofmastodon dogsoffediverse dogphotography rescuedog
+fr|syn|chien chiens
+fr|nar|chiot chiots
+es|syn|perro perros
+es|nar|cachorro cachorros
+de|syn|hund hunde
+de|nar|welpe welpen
+nl|syn|hond honden
+nl|nar|puppy
+ja|syn|犬 いぬ イヌ
+ja|nar|柴犬 保護犬
+zh-TW|syn|狗 狗狗
+zh-TW|nar|柴犬 毛孩
+de|syn|haushund
+zh-TW|nar|汪星人
+
+@id birds
+@request birds
+@note birdsite means Twitter. Denylist.
+@ambiguous birdsite
+en|head|birds
+en|syn|bird
+en|nar|birding birdwatching birdsofmastodon ornithology owls parrots corvids crows ravens hummingbirds raptors waterfowl birdphotography
+fr|syn|oiseaux oiseau
+fr|nar|ornithologie
+es|syn|aves pájaros pajaros
+es|nar|ornitología observacióndeaves
+de|syn|vögel voegel vogel
+de|nar|vogelbeobachtung ornithologie
+nl|syn|vogels
+nl|nar|vogelen vogelspotten
+ja|syn|鳥 野鳥
+ja|nar|バードウォッチング 野鳥観察 小鳥
+zh-TW|syn|鳥 鳥類
+zh-TW|nar|賞鳥 野鳥
+
+@id art
+@request art
+@note die, gift, rot style homographs also apply. kunst is the German/Dutch word.
+@ambiguous art
+en|head|art
+en|syn|artwork
+en|nar|digitalart illustration drawing painting mastoart traditionalart sketch characterdesign fanart conceptart pixelart
+fr|syn|art
+fr|nar|dessin peinture artnumérique artnumerique
+es|syn|arte
+es|nar|dibujo ilustración ilustracion pintura arteDigital
+de|syn|kunst
+de|nar|zeichnung malerei digitalekunst
+nl|syn|kunst
+nl|nar|tekening illustratie schilderij
+ja|syn|アート
+ja|nar|絵 イラスト 絵画 デジタルアート
+zh-TW|syn|藝術
+zh-TW|nar|繪畫 插畫 插圖 繪圖 手繪 數位繪圖
+ja|syn|芸術
+
+@id artist
+@request artist
+en|head|artist
+en|syn|artists artistsofmastodon artistsonmastodon artistsoffediverse
+en|rel|commissionsopen commissions openforcommissions supportartists
+fr|syn|artiste artistes
+es|syn|artista artistas
+de|syn|künstler künstlerin künstlerinnen
+nl|syn|kunstenaar kunstenares
+ja|syn|絵描き イラストレーター クリエイター
+zh-TW|syn|藝術家 畫家 繪師 插畫家 創作者
+ja|syn|芸術家
+
+@id photography
+@request photography
+en|head|photography
+en|syn|photo photos photographer photographers
+en|nar|streetphotography landscapephotography portraitphotography macrophotography naturephotography wildlifephotography astrophotography blackandwhite monochrome mastophotography
+en|rel|camera cameras
+fr|syn|photographie photo photographe
+fr|nar|photoderue
+es|syn|fotografía fotografia foto fotos fotógrafo fotografo
+de|syn|fotografie foto fotos fotograf
+de|nar|straßenfotografie strassenfotografie
+nl|syn|fotografie foto fotograaf
+ja|syn|写真 フォト
+ja|nar|風景写真 ポートレート スナップ
+ja|rel|カメラ
+zh-TW|syn|攝影 照片 相片
+zh-TW|nar|街拍 風景攝影
+ja|syn|撮影
+
+@id music
+@request music
+en|head|music
+en|nar|nowplaying musician musicians newmusic album albums song songs band bands livemusic concert concerts playlist indiemusic
+en|rel|bandcamp vinyl
+fr|syn|musique
+fr|nar|chanson musicien concert
+es|syn|música musica
+es|nar|canciones músico
+de|syn|musik
+de|nar|lied musiker konzert
+nl|syn|muziek
+nl|nar|muzikant concert
+ja|syn|音楽
+ja|nar|作曲 バンド ライブ ナウプレイング
+zh-TW|syn|音樂
+zh-TW|nar|音樂人 歌曲 演唱會 樂團
+
+@id tv
+@request tv
+en|head|tv
+en|syn|television tvshows tvshow tvseries
+en|nar|series netflix hbo
+fr|syn|télévision television
+fr|nar|série séries sériestv seriestv
+es|syn|televisión television
+es|nar|series serie seriesdetv
+de|syn|fernsehen
+de|nar|serien serie tvserie tvserien
+nl|syn|televisie
+nl|nar|series
+ja|syn|テレビ
+ja|nar|ドラマ テレビ番組 海外ドラマ
+zh-TW|syn|電視
+zh-TW|nar|電視劇 影集 戲劇
+
+@id gaming
+@request gaming
+en|head|gaming
+en|syn|games videogames videogame gamer gamers
+en|nar|pcgaming consolegaming mobilegaming indiegames rpg fps
+en|rel|gamedev steam steamdeck nintendo playstation xbox
+fr|syn|jeuxvidéo jeuxvideo jeuvideo jeux
+es|syn|videojuegos videojuego juegos
+de|syn|videospiele videospiel spiele zocken
+nl|syn|videogames gamen
+ja|syn|ゲーム ゲーミング
+ja|nar|ゲーム実況
+zh-TW|syn|遊戲 電玩
+zh-TW|nar|手遊 手機遊戲
+fr|syn|jeuvidéo
+de|syn|computerspiel
+nl|syn|videospel
+ja|syn|コンピュータゲーム
+zh-TW|syn|電子遊戲
+
+@id retro
+@request retro
+@note retro alone also covers fashion and design. This group is tech and games.
+@ambiguous retro vintage
+und|head|retro
+en|syn|retrocomputing retrogaming retrogames vintagecomputing retrotech
+en|nar|atari commodore c64 amiga nes snes sega gameboy
+en|rel|vintage oldschool
+fr|syn|rétro retroinformatique rétrogaming
+es|syn|retrocomputación retrojuegos
+de|syn|retrocomputing
+de|nar|retrospiele
+nl|syn|retrocomputing
+ja|syn|レトロ レトロゲーム
+ja|nar|レトロPC 懐かしい
+zh-TW|syn|復古 懷舊
+zh-TW|nar|復古遊戲 老遊戲
+
+@id movies
+@request movies
+@ambiguous film
+en|head|movies
+en|syn|movie film films cinema
+en|nar|movienight moviereview filmreview horrormovies scifimovies
+en|rel|letterboxd filmmaking
+fr|syn|film films cinéma cinema
+es|syn|película peliculas películas cine
+de|syn|filme kino
+nl|syn|bioscoop
+ja|syn|映画
+ja|nar|映画鑑賞 シネマ
+zh-TW|syn|電影
+zh-TW|nar|影評 戲院
+
+@id politics
+@request politics
+@children
+en|head|politics
+en|nar|uspol uspolitics ukpol ukpolitics cdnpoli auspol eupolitics elections voting
+en|rel|democracy government worldnews
+fr|syn|politique
+fr|nar|politiquefrançaise politiquefrancaise élections
+es|syn|política politica
+es|nar|elecciones
+de|syn|politik
+de|nar|bundespolitik landespolitik wahlen
+nl|syn|politiek
+nl|nar|tweedekamer verkiezingen
+ja|syn|政治
+ja|nar|国会 選挙
+zh-TW|syn|政治
+zh-TW|nar|選舉 立法院 台灣政治
+
+@id climatechange
+@request climatechange
+en|head|climatechange
+en|syn|climate climatecrisis climateemergency globalwarming climateaction climatejustice climatescience climatebreakdown
+en|rel|environment sustainability renewableenergy netzero
+fr|syn|changementclimatique climat criseclimatique réchauffementclimatique rechauffementclimatique
+es|syn|cambioclimático cambioclimatico crisisclimática crisisclimatica calentamientoglobal
+de|syn|klimawandel klimakrise klima klimaschutz
+nl|syn|klimaatverandering klimaat klimaatcrisis
+ja|syn|気候変動 地球温暖化 気候危機
+zh-TW|syn|氣候變遷 全球暖化 氣候危機
+
+@id cars
+@request cars
+@ambiguous ev
+en|head|cars
+en|syn|car automotive
+en|nar|carsofmastodon carspotting electriccars electricvehicles evs ev classiccars carphotography jdm
+en|rel|motorsport f1
+fr|syn|voiture voitures automobile
+fr|nar|voituresélectriques
+es|syn|coche coches carros automóvil
+es|nar|cocheseléctricos
+de|syn|auto autos fahrzeug
+de|nar|elektroauto autoindustrie
+nl|syn|auto autos
+nl|nar|elektrischeauto
+ja|syn|車 クルマ 自動車
+ja|nar|電気自動車
+zh-TW|syn|汽車
+zh-TW|nar|電動車 愛車
+
+@id trains
+@request trains
+en|head|trains
+en|syn|train railway railways rail railroad railfans railfan trainspotting
+en|nar|trainphotography locomotive highspeedrail
+en|rel|modeltrains publictransit
+fr|syn|train trains ferroviaire
+fr|nar|chemindefer
+es|syn|tren trenes ferrocarril
+de|syn|eisenbahn zug bahn
+de|nar|züge
+nl|syn|trein treinen spoor
+ja|syn|鉄道 電車
+ja|nar|新幹線 鉄道写真
+ja|rel|鉄道模型
+zh-TW|syn|火車 鐵路 鐵道
+zh-TW|nar|高鐵 台鐵
+
+@id publictransit
+@request publictransit
+en|head|publictransit
+en|syn|publictransport transit
+en|nar|buses bus tram trams subway metro lightrail transitnerds brt
+en|rel|trains
+fr|syn|transportsencommun transportenommun
+fr|nar|tram métro
+es|syn|transportepúblico transportepublico
+es|nar|autobús tranvía
+de|syn|öpnv oepnv nahverkehr
+de|nar|ubahn sbahn
+nl|syn|openbaarvervoer ov
+ja|syn|公共交通
+ja|nar|バス 地下鉄 路面電車
+zh-TW|syn|大眾運輸 公共運輸
+zh-TW|nar|捷運 公車
+fr|syn|transportencommun
+de|syn|öffentlicherverkehr
+ja|syn|公共交通機関
+nl|syn|openbaarvervoer
+
+@id fediverse
+@request fediverse
+@ambiguous mastodon
+en|head|fediverse
+en|syn|fedi
+en|nar|mastodon misskey activitypub pixelfed peertube lemmy sharkey feditips
+fr|syn|fédiverse
+es|syn|fediverso
+ja|nar|マストドン ミスキー
+ja|syn|フェディバース
+zh-TW|syn|聯邦宇宙
+zh-TW|nar|長毛象
+fr|syn|fédivers fedivers
+de|syn|fediversum
+nl|syn|fediversum
+
+@id writing
+@request writing
+en|head|writing
+en|syn|amwriting writingcommunity writerscommunity writersofmastodon
+en|nar|writers author authors fiction poetry shortstory novel nanowrimo writingprompt fanfic
+en|rel|worldbuilding
+fr|syn|écriture ecriture
+fr|nar|écrivain ecrivains auteur
+es|syn|escritura
+es|nar|escritor escritores
+de|syn|schreiben
+de|nar|schriftsteller autoren
+nl|syn|schrijven
+nl|nar|schrijver schrijvers
+ja|syn|執筆
+ja|nar|小説
+zh-TW|syn|寫作
+zh-TW|nar|小說 作家
+
+@id blog
+@request blog
+en|head|blog
+en|syn|blogs blogging blogpost
+en|rel|indieweb smallweb rss
+fr|syn|blogs
+es|syn|bitácora
+de|syn|blogpost
+ja|syn|ブログ
+ja|nar|日記
+zh-TW|syn|部落格 網誌
+fr|syn|blogue
+nl|syn|weblog
+
+@id article
+@request article
+en|head|article
+en|syn|articles
+en|nar|longread longreads
+en|rel|readinglist mustread
+fr|syn|article articles
+es|syn|artículo articulo artículos
+de|syn|artikel
+nl|syn|artikel artikelen
+ja|syn|記事
+zh-TW|syn|文章
+
+@id newspaper
+@request newspaper
+en|head|newspaper
+en|syn|newspapers frontpages
+en|rel|news journalism press
+fr|syn|journal journaux presse
+es|syn|periódico periodico periódicos prensa
+de|syn|zeitung zeitungen
+nl|syn|krant kranten
+ja|syn|新聞
+zh-TW|syn|報紙
+
+@id academics
+@request academics
+en|head|academics
+en|syn|academia academic academicchatter academicmastodon scholar scholars
+en|nar|phd gradschool highered university openaccess peerreview scholarlypublishing
+en|rel|research science
+fr|syn|académie esr
+fr|nar|recherche universitaire enseignementsupérieur
+es|syn|academia
+es|nar|investigación universidad
+de|syn|hochschule uni
+de|nar|forschung universität studium
+nl|syn|academia
+nl|nar|onderzoek universiteit
+ja|syn|アカデミア
+ja|nar|大学 研究 研究者 院生 大学院
+zh-TW|syn|學術 學界
+zh-TW|nar|研究 大學 博士班 研究所
+
+@id sports
+@request sports
+@children basketball baseball football futbol tennis hockey cricket rugby golf motorsport cycling running olympics
+en|head|sports
+en|syn|sport
+fr|syn|sport sports
+es|syn|deporte deportes
+de|syn|sport
+nl|syn|sport
+ja|syn|スポーツ
+zh-TW|syn|運動 體育
+
+@id basketball
+@request basketball
+en|head|basketball
+en|syn|hoops bball
+en|nar|nba wnba ncaabasketball marchmadness
+fr|syn|basket
+es|syn|baloncesto básquet basquetbol
+de|syn|basketball
+nl|syn|basketbal
+ja|syn|バスケ バスケットボール
+ja|nar|Bリーグ
+zh-TW|syn|籃球
+zh-TW|nar|職籃
+
+@id baseball
+@request baseball
+en|head|baseball
+en|nar|mlb worldseries
+en|rel|softball
+fr|syn|baseball
+es|syn|béisbol beisbol
+de|syn|baseball
+nl|syn|honkbal
+ja|syn|野球
+ja|nar|プロ野球 npb
+zh-TW|syn|棒球
+zh-TW|nar|中職 cpbl 職棒
+
+@id football
+@request football
+@excludes futbol
+@note American football per request. football alone is ambiguous: UK, France and Spain-speaking users mean soccer. Group excludes everything in futbol.
+@ambiguous football
+en|head|football
+en|syn|americanfootball
+en|nar|nfl superbowl collegefootball cfb nflfootball gridiron nflplayoffs nfldraft
+fr|syn|footballaméricain footballamericain
+es|syn|fútbolamericano futbolamericano
+de|syn|americanfootball
+nl|syn|americanfootball
+ja|syn|アメフト アメリカンフットボール
+ja|nar|スーパーボウル
+zh-TW|syn|美式足球
+zh-TW|nar|超級盃
+
+@id futbol
+@request futbol
+@excludes football
+@note Soccer. French uses football for soccer. It is left out so the football group stays clean. See the report.
+@ambiguous football
+es|head|futbol
+en|syn|soccer
+en|nar|premierleague championsleague mls worldcup fifa
+es|syn|fútbol
+es|nar|laliga
+de|syn|fußball fussball
+de|nar|bundesliga
+nl|syn|voetbal
+nl|nar|eredivisie
+fr|syn|foot
+fr|nar|ligue1
+ja|syn|サッカー
+ja|nar|Jリーグ
+zh-TW|syn|足球
+zh-TW|nar|世界盃
+
+@id eurovision
+@request eurovision
+@ambiguous esc
+@note yearly tags like eurovision2026 follow a pattern. Consider a regex member in the app plan.
+en|head|eurovision
+en|syn|eurovisionsongcontest songcontest
+en|rel|junioreurovision
+fr|syn|concourseurovisiondelachanson
+es|syn|festivaldeeurovisión festivaldeeurovision eurovisión
+de|syn|esc
+nl|syn|songfestival eurovisiesongfestival
+ja|syn|ユーロビジョン
+zh-TW|syn|歐洲歌唱大賽
+
+# ---- expansion groups ----
+es|syn|festivaldelacanción
+ja|syn|ユーロビジョンソングコンテスト
+
+@id linux
+en|head|linux
+en|nar|ubuntu debian archlinux fedora linuxmint kde gnome opensuse nixos
+en|rel|foss
+fr|syn|linux
+es|syn|linux
+de|syn|linux
+ja|syn|Linux
+zh-TW|syn|Linux
+
+@id programming
+en|head|programming
+en|syn|coding softwaredevelopment
+en|nar|python rust javascript typescript java kotlin webdev
+und|nar|golang
+fr|syn|programmation développement
+es|syn|programación programacion desarrollo
+de|syn|programmierung softwareentwicklung
+nl|syn|programmeren
+ja|syn|プログラミング
+zh-TW|syn|程式設計 寫程式 程式
+
+@id selfhosting
+en|head|selfhosting
+en|syn|selfhosted selfhost homelab
+en|nar|docker proxmox raspberrypi
+fr|syn|autohébergement autohebergement
+es|syn|autoalojamiento
+de|syn|selfhosting
+ja|syn|セルフホスト
+zh-TW|syn|自架
+
+@id privacy
+en|head|privacy
+en|syn|dataprotection surveillance
+en|nar|gdpr
+fr|syn|vieprivée vieprivee
+es|syn|privacidad
+de|syn|datenschutz
+nl|syn|privacy
+ja|syn|プライバシー
+zh-TW|syn|隱私
+de|syn|privatsphäre
+zh-TW|syn|隱私權
+
+@id science
+en|head|science
+en|syn|sciencemastodon scicomm
+en|nar|physics chemistry biology
+fr|syn|science sciences
+es|syn|ciencia
+de|syn|wissenschaft
+nl|syn|wetenschap
+ja|syn|科学
+zh-TW|syn|科學
+ja|syn|サイエンス
+
+@id space
+en|head|space
+en|syn|astronomy
+en|nar|nasa esa spacex astrophotography moon mars jwst
+fr|syn|espace astronomie
+es|syn|espacio astronomía astronomia
+de|syn|weltraum astronomie raumfahrt
+nl|syn|ruimtevaart astronomie
+ja|syn|宇宙 天文
+zh-TW|syn|太空 天文
+
+@id news
+en|head|news
+en|syn|worldnews breakingnews headlines
+en|nar|journalism
+fr|syn|actualité actualites actu
+es|syn|noticias
+de|syn|nachrichten
+nl|syn|nieuws
+ja|syn|ニュース
+zh-TW|syn|新聞
+
+@id books
+en|head|books
+en|syn|reading bookstodon bookreview amreading
+en|nar|bookreviews fantasybooks scifibooks
+fr|syn|livres livre lecture
+es|syn|libros libro lectura
+de|syn|bücher buch lesen
+nl|syn|boeken boek lezen
+ja|syn|本 読書
+zh-TW|syn|書 閱讀 書籍
+
+@id history
+en|head|history
+en|nar|ancienthistory medievalhistory archaeology
+fr|syn|histoire
+es|syn|historia
+de|syn|geschichte
+nl|syn|geschiedenis
+ja|syn|歴史
+zh-TW|syn|歷史
+
+@id food
+en|head|food
+en|syn|foodie
+en|nar|baking recipes foodphotography
+fr|syn|cuisine nourriture
+es|syn|comida
+de|syn|essen
+nl|syn|eten
+ja|syn|食べ物 グルメ
+zh-TW|syn|美食
+es|syn|alimento
+de|syn|nahrung
+nl|syn|voedsel
+ja|syn|食物
+zh-TW|syn|食物
+
+@id cooking
+en|head|cooking
+en|syn|cook homecooking
+en|nar|recipe recipes baking vegan
+fr|syn|cuisine recette recettes
+es|syn|cocina receta recetas
+de|syn|kochen rezept rezepte
+nl|syn|koken recept recepten
+ja|syn|料理 レシピ
+zh-TW|syn|料理 食譜 煮飯
+zh-TW|syn|烹飪
+ja|syn|調理
+
+@id gardening
+en|head|gardening
+en|syn|garden plants
+en|nar|houseplants vegetablegarden permaculture
+fr|syn|jardinage jardin
+es|syn|jardinería jardineria jardín
+de|syn|gärtnern garten
+nl|syn|tuinieren tuin
+ja|syn|ガーデニング 園芸
+zh-TW|syn|園藝
+
+@id travel
+en|head|travel
+en|syn|traveling travelling
+en|nar|roadtrip hiking backpacking
+fr|syn|voyage voyages
+es|syn|viaje viajes
+de|syn|reisen urlaub
+nl|syn|reizen vakantie
+ja|syn|旅行 旅
+zh-TW|syn|旅遊 旅行
+
+@id nature
+en|head|nature
+en|nar|wildlife naturephotography wildflowers
+fr|syn|nature
+es|syn|naturaleza
+de|syn|natur
+nl|syn|natuur
+ja|syn|自然
+zh-TW|syn|自然
+
+@id anime
+en|head|anime
+en|nar|animeart animeedit
+en|rel|manga
+fr|syn|anime animé
+es|syn|anime
+de|syn|anime
+nl|syn|anime
+ja|syn|アニメ
+zh-TW|syn|動畫 動漫
+
+@id manga
+en|head|manga
+en|rel|anime
+fr|syn|manga
+es|syn|manga
+de|syn|manga
+ja|syn|マンガ 漫画
+zh-TW|syn|漫畫
+
+@id boardgames
+en|head|boardgames
+en|syn|boardgame tabletopgames
+en|nar|boardgamegeek
+fr|syn|jeuxdesociété jeuxdesociete
+es|syn|juegosdemesa
+de|syn|brettspiele brettspiel
+nl|syn|bordspellen
+ja|syn|ボードゲーム
+zh-TW|syn|桌遊
+nl|syn|bordspel
+zh-TW|syn|圖版遊戲
+
+@id ttrpg
+en|head|ttrpg
+en|syn|tabletoprpg rpgs
+en|nar|dnd dungeonsanddragons pathfinder
+fr|syn|jdr
+es|syn|juegosderol
+de|syn|rollenspiel pnp
+nl|syn|rollenspel
+ja|syn|TRPG
+zh-TW|syn|桌上角色扮演
+fr|syn|jeuderôle
+es|syn|juegoderol
+ja|syn|テーブルトークrpg
+zh-TW|syn|桌上角色扮演遊戲
+
+@id cycling
+en|head|cycling
+en|syn|bicycle bike bikes bikelife
+en|nar|bikecommute mtb gravel
+fr|syn|vélo velo cyclisme
+es|syn|ciclismo bicicleta
+de|syn|radfahren fahrrad
+nl|syn|fietsen fiets
+ja|syn|自転車 サイクリング
+zh-TW|syn|自行車 單車
+
+@id running
+en|head|running
+en|syn|run marathon
+fr|syn|course
+es|syn|correr
+de|syn|laufen
+nl|syn|hardlopen
+ja|syn|ランニング
+zh-TW|syn|跑步
+
+@id hiking
+en|head|hiking
+en|syn|hike trail
+en|nar|outdoors camping
+fr|syn|randonnée randonnee
+es|syn|senderismo
+de|syn|wandern
+nl|syn|wandelen
+ja|syn|登山 ハイキング
+zh-TW|syn|登山 健行
+
+@id tennis
+en|head|tennis
+fr|syn|tennis
+es|syn|tenis
+de|syn|tennis
+nl|syn|tennis
+ja|syn|テニス
+zh-TW|syn|網球
+
+@id hockey
+en|head|hockey
+en|nar|nhl icehockey
+fr|syn|hockey
+es|syn|hockey
+de|syn|eishockey
+nl|syn|ijshockey
+ja|syn|ホッケー アイスホッケー
+zh-TW|syn|冰球
+fr|syn|hockeysurglace
+es|syn|hockeysobrehielo
+
+@id cricket
+@ambiguous cricket
+en|head|cricket
+en|nar|ipl
+ja|syn|クリケット
+zh-TW|syn|板球
+es|syn|críquet
+
+@id rugby
+en|head|rugby
+fr|syn|rugby
+es|syn|rugby
+de|syn|rugby
+nl|syn|rugby
+ja|syn|ラグビー
+zh-TW|syn|橄欖球
+en|syn|rugbyunion
+en|nar|rugbyleague
+
+@id golf
+en|head|golf
+fr|syn|golf
+es|syn|golf
+de|syn|golf
+nl|syn|golf
+ja|syn|ゴルフ
+zh-TW|syn|高爾夫
+
+@id motorsport
+en|head|motorsport
+en|syn|motorsports racing
+en|nar|f1 formula1 motogp wrc nascar indycar
+fr|syn|sportautomobile
+es|syn|automovilismo
+de|syn|motorsport
+nl|syn|motorsport
+ja|syn|モータースポーツ
+ja|nar|F1
+zh-TW|syn|賽車
+
+@id olympics
+en|head|olympics
+en|syn|olympicgames paralympics
+fr|syn|jeuxolympiques
+es|syn|juegosolímpicos juegosolimpicos
+de|syn|olympia olympischespiele
+nl|syn|olympischespelen
+ja|syn|オリンピック
+zh-TW|syn|奧運
+
+# ---- batch 2: requested topics ----
+
+@id furry
+@request furry
+@children fursuit furryart
+@note Sub-niches fursuit and furryart are children. NSFW tags are deliberately not included.
+und|head|furry
+und|syn|furries
+und|nar|furryfandom furrycommunity fursuit furryart fursona fursonas anthro anthropomorphic furrycon furcon anthrocon furtherconfusion eurofurence midwestfurfest
+ja|syn|ケモノ
+ja|nar|ケモナー 獣人
+zh-TW|syn|獸圈
+zh-TW|nar|獸人 獸迷
+
+@id fursuit
+@request fursuit
+@note Child of furry. Sub-niche tags are fursuit-specific.
+und|head|fursuit
+und|syn|fursuits fursuiter fursuiters fursuiting
+und|nar|fursuitfriday fursuitmaker fursuitmakers fursuitmaking fursuitbuilder fursuitbuild fursuitphotography fursuitpartial fursuitparade fursuitwalk
+und|rel|costuming cosplay
+zh-TW|syn|獸裝
+zh-TW|nar|獸裝製作
+ja|rel|着ぐるみ
+
+@id furryart
+@request furryart
+@note Child of furry. Sub-niche tags are furry art specific.
+und|head|furryart
+und|syn|furryartist furryartwork furryillustration furrydrawing anthroart
+und|nar|fursonaart furrycomic furrycomics furryfanart furrypixelart refsheet furrycommissions
+und|rel|ych adoptables commissionsopen openforcommissions
+ja|syn|ケモノイラスト
+ja|nar|ケモノ絵 獣人イラスト
+zh-TW|syn|獸人插畫
+
+@id microsoft
+@request microsoft
+@note windows and other generic words are related-only and ambiguous. They never merge into a search.
+@ambiguous windows edge teams excel outlook copilot surface word
+und|head|microsoft
+und|nar|windows10 windows11 windows7 windows8 windowsxp windows95 windowsserver windowsupdate azure microsoft365 office365 m365 microsoftoffice msoffice powerpoint onedrive sharepoint microsoftedge microsoftteams microsoftcopilot bing powershell wsl vscode visualstudio activedirectory entra intune surfacepro
+und|rel|dotnet windows edge teams excel outlook copilot surface msft xbox github linkedin minecraft
+ja|nar|マイクロソフト
+zh-TW|nar|微軟
+
+@id apple
+@request apple
+@note The head apple is also a fruit. It is not flagged ambiguous because it is the requested head. mac, safari and swift are flagged and related-only.
+@ambiguous mac safari swift 蘋果
+und|head|apple
+und|nar|macos ios ipados watchos tvos visionos iphone ipad ipadpro ipadair ipadmini macbook macbookpro macbookair imac macmini macstudio macpro applesilicon applewatch airpods airpodspro appletv homepod visionpro applevisionpro siri icloud appstore testflight xcode swiftui wwdc applemusic appleintelligence applepay airtag magsafe macintosh classicmac ios26 ios27 iphone15 iphone16 iphone17 iphone18 macostahoe macos26
+und|rel|mac safari swift appleevent shotoniphone iphonephotography
+ja|nar|アップル
+zh-TW|rel|蘋果
+
+@id google
+@request google
+@note chrome, gemini and pixel are generic words. They are related-only and ambiguous.
+@ambiguous chrome gemini pixel
+und|head|google
+und|nar|android androiddev androidapp androidauto androidtv wearos googlechrome chromeos chromebook chromium gsuite googleworkspace gmail googledrive googledocs googlesheets googleslides googlemaps googlephotos googlecalendar googlemeet googletranslate googlesearch googlecloud gcp firebase flutter googleplay playstore googlepixel pixel9 pixel10 googlegemini bard chromecast googlehome googleanalytics adsense
+und|rel|chrome gemini pixel deepmind youtube waze fitbit googleio gsoc
+ja|nar|グーグル
+zh-TW|nar|谷歌
+
+@id digitalart
+@request digitalart
+@note Overlaps with the art group. art lists digitalart as narrower. Here it is a head.
+@ambiguous blender
+en|head|digitalart
+en|syn|digitalartwork digitalartist digitaldrawing digitalpainting digitalillustration digitalsketch
+und|nar|procreate procreateart ipadart krita kritaart clipstudiopaint clipstudio medibang ibispaint conceptart characterdesign
+en|nar|pixelart
+und|rel|photoshop wacom drawingtablet graphicstablet blender
+fr|syn|artnumérique artnumerique peinturenumérique peinturenumerique dessinnumérique dessinnumerique illustrationnumérique illustrationnumerique
+es|syn|artedigital ilustracióndigital ilustraciondigital pinturadigital dibujodigital
+de|syn|digitalekunst digitalmalerei digitalezeichnung digitaleillustration
+nl|syn|digitalekunst digitaletekening digitaleillustratie digitaalkunst
+ja|syn|デジタルアート デジタルイラスト デジ絵 デジタル絵
+ja|nar|アイビスペイント クリスタ
+ja|rel|液タブ
+zh-TW|syn|數位繪圖 數位藝術 數位插畫 電繪 數位繪畫
+
+@id animation
+@request animation
+@note Overlaps with the anime group (anime is related here). 動畫 is shared with anime.
+@ambiguous blender cgi
+en|head|animation
+en|syn|animations
+en|nar|animated animator animators animationart
+und|nar|2danimation 3danimation stopmotion motiongraphics motiondesign gifanimation animatedgif animatic handdrawnanimation traditionalanimation shortanimation animatedshort blenderanimation indieanimation
+und|rel|anime cartoon cartoons aftereffects toonboom storyboard blender cgi
+fr|syn|animation animations dessinanimé dessinsanimés
+fr|nar|animation3d animation2d
+es|syn|animación animacion animaciones dibujosanimados
+de|syn|trickfilm zeichentrick animationsfilm
+nl|syn|animatie tekenfilm animaties
+ja|syn|アニメーション
+ja|nar|3DCG コマ撮り モーショングラフィックス
+ja|rel|アニメ
+zh-TW|syn|動畫
+zh-TW|nar|動畫製作 定格動畫 動態圖形 3D動畫 2D動畫
+
+@id indie
+@request indie
+@children indiegames indiefilm indiemusic
+@note Parent of indiegames, indiefilm and indiemusic. bandcamp is listed here as requested.
+@ambiguous indieweb
+und|head|indie
+und|nar|indiecreator indiecreators indiecreative indiecreatives indiecommunity
+und|nar|indieproject indieprojects indierelease indiereleases indiedev indiedevs indieapp indieapps supportindie supportindies indiegames indiefilm indiemusic bandcamp
+und|rel|indieauthor indiepublishing selfpublishing indieweb
+ja|nar|インディー インディーズ
+ja|rel|同人
+zh-TW|nar|獨立創作 獨立製作
+
+@id indiegames
+@request indiegames
+@note Child of indie. Overlaps with the gaming group (indiegames is narrower there).
+und|head|indiegames
+und|syn|indiegame indiegamedev indiegamedevelopment indiegamedevs indiedev solodev
+und|nar|itchio itchiogames solodeveloper
+und|rel|gamedev gamedevelopment godot godotengine madewithgodot unity unrealengine steamnextfest wishlistonsteam
+fr|syn|jeuxindépendants jeuxindependants jeuindépendant jeuindependant jeuxvidéoindépendants
+es|syn|juegosindie juegosindependientes juegoindie videojuegosindie
+de|syn|indiespiele indiespiel
+nl|syn|indiespellen
+ja|syn|インディーゲーム
+ja|nar|インディーゲーム開発 個人ゲーム開発
+ja|rel|個人開発 ゲーム開発
+zh-TW|syn|獨立遊戲
+zh-TW|nar|獨立遊戲開發 獨立遊戲開發者
+zh-TW|rel|遊戲開發
+
+@id indiefilm
+@request indiefilm
+@note Child of indie.
+und|head|indiefilm
+und|syn|indiefilms independentfilm independentfilms independentcinema indiecinema indiefilmmaker indiefilmmakers indiefilmmaking
+und|nar|microbudget microbudgetfilm lowbudgetfilm indiefeature
+und|rel|shortfilm shortfilms filmmaking filmmaker filmfestival
+fr|syn|filmindépendant filmindependant cinémaindépendant cinemaindependant
+fr|rel|courtmétrage
+es|syn|cineindependiente cineindie
+es|rel|cortometraje
+de|rel|kurzfilm
+nl|syn|onafhankelijkefilm
+nl|rel|kortfilm
+ja|syn|インディペンデント映画 自主映画 自主制作映画
+ja|nar|自主制作
+ja|rel|短編映画
+zh-TW|syn|獨立電影
+zh-TW|nar|獨立製片 微電影
+zh-TW|rel|短片
+
+@id indiemusic
+@request indiemusic
+@note Child of indie. Overlaps with the music group (indiemusic is narrower there, bandcamp is related there). bandcamp is narrower here.
+und|head|indiemusic
+und|syn|indiemusician indiemusicians independentmusic
+und|nar|indieband indiebands indierock indiepop indiefolk indiealt bandcamp bandcampfriday bandcampfridays unsignedartists selfreleased selfrelease supportindiemusic supportindiebands newindiemusic
+und|rel|newmusicfriday diymusic homerecording bedroompop
+fr|syn|musiqueindépendante musiqueindependante musiqueindé
+es|syn|músicaindependiente musicaindependiente músicaindie musicaindie
+de|syn|indiemusik
+nl|syn|indiemuziek
+ja|syn|インディーズ インディーズ音楽
+ja|nar|インディーズバンド
+zh-TW|syn|獨立音樂
+zh-TW|nar|獨立樂團 獨立音樂人

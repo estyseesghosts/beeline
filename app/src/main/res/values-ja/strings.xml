@@ -107,4 +107,6 @@
     <string name="settings_moderation_remove">削除</string>
     <string name="audience_everyone">誰でも</string>
     <string name="audience_followers">フォロワーのみ</string>
+    <string name="settings_combine_related_hashtags">関連ハッシュタグをまとめる</string>
+    <string name="settings_combine_related_hashtags_summary">検索とフォトグリッドの結果に、他の表記や言語の似たハッシュタグを含めます。</string>
 </resources>

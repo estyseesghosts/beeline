@@ -1,0 +1,103 @@
+id: space
+request: null
+members:
+  - tag: "space"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 234
+  - tag: "astronomy"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 320
+  - tag: "nasa"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 156
+  - tag: "esa"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 59
+  - tag: "spacex"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 74
+  - tag: "astrophotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 104
+  - tag: "moon"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 120
+  - tag: "mars"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 59
+  - tag: "jwst"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "espace"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 45
+  - tag: "astronomie"
+    langs: [fr, de, nl]
+    relation: syn
+    status: seen
+    accounts7: 45
+  - tag: "espacio"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "astronomía"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 21
+  - tag: "astronomia"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 21
+  - tag: "weltraum"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "raumfahrt"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 18
+  - tag: "ruimtevaart"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "宇宙"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 9
+  - tag: "天文"
+    langs: [ja, zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "太空"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

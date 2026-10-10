@@ -1,0 +1,151 @@
+id: indie
+request: "indie"
+children: [indiegames, indiefilm, indiemusic]
+note: "Parent of indiegames, indiefilm and indiemusic. bandcamp is listed here as requested."
+members:
+  - tag: "indie"
+    langs: [und]
+    relation: head
+    status: seen
+    accounts7: 120
+  - tag: "indiecreator"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "indiecreators"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "indiecreative"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "indiecreatives"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "indiecommunity"
+    langs: [und]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "indieproject"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "indieprojects"
+    langs: [und]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "indierelease"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "indiereleases"
+    langs: [und]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "indiedev"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 365
+  - tag: "indiedevs"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "indieapp"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "indieapps"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "supportindie"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "supportindies"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "indiegames"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 152
+  - tag: "indiefilm"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "indiemusic"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 75
+  - tag: "bandcamp"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 50
+  - tag: "indieauthor"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 83
+  - tag: "indiepublishing"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 11
+  - tag: "selfpublishing"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 33
+  - tag: "indieweb"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 44
+    ambiguous: true
+  - tag: "インディー"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "インディーズ"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "同人"
+    langs: [ja]
+    relation: rel
+    status: seen
+    accounts7: 8
+  - tag: "獨立創作"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "獨立製作"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

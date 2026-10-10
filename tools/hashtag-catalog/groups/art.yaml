@@ -1,0 +1,220 @@
+id: art
+request: "art"
+note: "die, gift, rot style homographs also apply. kunst is the German/Dutch word."
+members:
+  - tag: "art"
+    langs: [en, fr]
+    relation: head
+    status: seen
+    accounts7: 1898
+    ambiguous: true
+  - tag: "artwork"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 136
+  - tag: "digitalart"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 392
+  - tag: "illustration"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 317
+  - tag: "drawing"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 489
+  - tag: "painting"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 341
+  - tag: "mastoart"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 860
+  - tag: "traditionalart"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 100
+  - tag: "sketch"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 174
+  - tag: "characterdesign"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "fanart"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 65
+  - tag: "conceptart"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 15
+  - tag: "pixelart"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 210
+  - tag: "dessin"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 68
+  - tag: "peinture"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 25
+  - tag: "artnumérique"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "artnumerique"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "arte"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 88
+  - tag: "dibujo"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "ilustración"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "ilustracion"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "pintura"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "artedigital"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "kunst"
+    langs: [de, nl]
+    relation: syn
+    status: seen
+    accounts7: 112
+  - tag: "zeichnung"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 22
+  - tag: "malerei"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "digitalekunst"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "tekening"
+    langs: [nl]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "illustratie"
+    langs: [nl]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "schilderij"
+    langs: [nl]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "アート"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 19
+  - tag: "絵"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "イラスト"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 222
+  - tag: "絵画"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "デジタルアート"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "藝術"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "繪畫"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "插畫"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "插圖"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "繪圖"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "手繪"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "數位繪圖"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "芸術"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 5

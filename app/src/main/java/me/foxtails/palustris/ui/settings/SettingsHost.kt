@@ -50,6 +50,7 @@ fun SettingsHost(
     onCompactWideNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
     onLanguage: (me.foxtails.palustris.domain.AppLanguage) -> Unit = {},
     onTrackingCleanup: (Boolean) -> Unit = {},
+    onCombineRelatedHashtags: (Boolean) -> Unit = {},
     onContentWarningRules: (me.foxtails.palustris.domain.ContentWarningRules) -> Unit = {},
     onHiddenContentPresentation: (me.foxtails.palustris.domain.HiddenContentPresentation) -> Unit = {},
     postPreferences: PostPreferences = PostPreferences(),
@@ -161,6 +162,7 @@ fun SettingsHost(
                     onTabletNavigationAnchor = onTabletNavigationAnchor,
                     compactWideNavigationAnchor = state.preferences.compactWideNavigationAnchor,
                     onCompactWideNavigationAnchor = onCompactWideNavigationAnchor,
+                    onCombineRelatedHashtags = onCombineRelatedHashtags,
                 )
                 SettingsRoute.Language -> LanguageSettingsScreen(state.preferences.language, onLanguage)
                 SettingsRoute.Notifications -> NotificationAccountsScreen(accounts, onNotificationAccount)

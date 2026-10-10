@@ -1,0 +1,69 @@
+id: motorsport
+request: null
+members:
+  - tag: "motorsport"
+    langs: [en, de, nl]
+    relation: head
+    status: seen
+    accounts7: 60
+  - tag: "motorsports"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 11
+  - tag: "racing"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 55
+  - tag: "f1"
+    langs: [en, ja]
+    relation: nar
+    status: seen
+    accounts7: 53
+  - tag: "formula1"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 57
+  - tag: "motogp"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 125
+  - tag: "wrc"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 8
+    observed_other_lang: fr
+  - tag: "nascar"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 48
+  - tag: "indycar"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "sportautomobile"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "automovilismo"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "モータースポーツ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "賽車"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

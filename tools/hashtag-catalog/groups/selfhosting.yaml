@@ -1,0 +1,64 @@
+id: selfhosting
+request: null
+members:
+  - tag: "selfhosting"
+    langs: [en, de]
+    relation: head
+    status: seen
+    accounts7: 142
+  - tag: "selfhosted"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 44
+  - tag: "selfhost"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 28
+  - tag: "homelab"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 71
+    observed_other_lang: de
+  - tag: "docker"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 112
+  - tag: "proxmox"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 30
+  - tag: "raspberrypi"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 86
+  - tag: "autohébergement"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "autohebergement"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "autoalojamiento"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "セルフホスト"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "自架"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

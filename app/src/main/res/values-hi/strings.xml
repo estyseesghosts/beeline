@@ -21,4 +21,6 @@
     <string name="profile_tab_media">मीडिया</string>
     <string name="profile_tab_reposts">रीपोस्ट</string>
     <string name="profile_tab_replies">जवाब</string>
+    <string name="settings_combine_related_hashtags">संबंधित हैशटैग मिलाएँ</string>
+    <string name="settings_combine_related_hashtags_summary">खोज और फ़ोटो ग्रिड के परिणामों में अन्य रूपों और भाषाओं के समान हैशटैग शामिल होते हैं।</string>
 </resources>

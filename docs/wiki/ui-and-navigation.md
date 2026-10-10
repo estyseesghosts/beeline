@@ -768,3 +768,10 @@ The target holds the post (with account and session revision), attachment index,
 Entries follow `actionsForPost`: Heart (or Star) plus React when both exist, otherwise one Favourite; Reply; Repost, confirmed inline before it runs; Share, which opens the existing share sheet. Every action closes the quick-view first. Unrevealed, content-warning, and hidden cards have no quick-view. Each card also offers a "More actions" accessibility action.
 Drag and release: the card keeps the pointer after the hold (`photoQuickViewGesture` observes in the initial pass and consumes the press, so the tap and grid scroll do not also act). It reports the finger to a `PhotoQuickViewDrag` carried by the target. The menu highlights the entry under the finger. Lifting over an entry runs it; lifting anywhere else leaves the quick-view open.
 Focus return to the card is not implemented.
+
+## Related hashtags setting
+
+Settings, Display holds a switch named "Combine related hashtags". It is on by default. The value lives in `AppPreferences.combineRelatedHashtags`. A stored file without the key reads on.
+The app bundles a catalog of 74 hashtag groups in `app/src/main/assets/hashtag-catalog.json`. The app never reads the catalog from the network. Nobody has reviewed the catalog yet.
+`HashtagExpander` decides which hashtags merge into a search. Slice 1 only adds the rules and the setting. Search, Photo Grid and the composer do not use them yet.
+Sources: `domain/hashtags/`, `data/hashtags/HashtagCatalogRepository.kt`, `DisplaySettingsScreen.kt`, `HashtagExpanderTest`. Device visuals are unverified.

@@ -1,0 +1,148 @@
+id: tv
+request: "tv"
+members:
+  - tag: "tv"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 254
+  - tag: "television"
+    langs: [en, fr, es]
+    relation: syn
+    status: seen
+    accounts7: 151
+  - tag: "tvshows"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 22
+  - tag: "tvshow"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 9
+  - tag: "tvseries"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 20
+  - tag: "series"
+    langs: [en, es, nl]
+    relation: nar
+    status: seen
+    accounts7: 64
+  - tag: "netflix"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 127
+  - tag: "hbo"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 33
+  - tag: "télévision"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 151
+  - tag: "série"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "séries"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 48
+  - tag: "sériestv"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "seriestv"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "televisión"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 142
+  - tag: "serie"
+    langs: [es, de]
+    relation: nar
+    status: seen
+    accounts7: 19
+  - tag: "seriesdetv"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "fernsehen"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 17
+  - tag: "serien"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "tvserie"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "tvserien"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "televisie"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "テレビ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 34
+  - tag: "ドラマ"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 36
+  - tag: "テレビ番組"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "海外ドラマ"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "電視"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "電視劇"
+    langs: [zh-TW]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "影集"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "戲劇"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1

@@ -161,4 +161,6 @@
     <string name="composer_compress_message">Les images plus petites se téléversent plus vite. Le brouillon garde les originaux.</string>
     <string name="composer_compress_yes">Compresser</string>
     <string name="composer_compress_no">Garder les originaux</string>
+    <string name="settings_combine_related_hashtags">Combiner les hashtags associés</string>
+    <string name="settings_combine_related_hashtags_summary">Les résultats de recherche et de la grille de photos incluent des hashtags similaires sous d’autres formes et dans d’autres langues.</string>
 </resources>

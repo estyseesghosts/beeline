@@ -1,0 +1,293 @@
+id: apple
+request: "apple"
+note: "The head apple is also a fruit. It is not flagged ambiguous because it is the requested head. mac, safari and swift are flagged and related-only."
+members:
+  - tag: "apple"
+    langs: [und]
+    relation: head
+    status: seen
+    accounts7: 315
+  - tag: "macos"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 276
+  - tag: "ios"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 303
+  - tag: "ipados"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 15
+  - tag: "watchos"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "tvos"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "visionos"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "iphone"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 215
+  - tag: "ipad"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 66
+  - tag: "ipadpro"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "ipadair"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "ipadmini"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 16
+  - tag: "macbook"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 20
+  - tag: "macbookpro"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 31
+  - tag: "macbookair"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "imac"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "macmini"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "macstudio"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "macpro"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "applesilicon"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 24
+  - tag: "applewatch"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 61
+  - tag: "airpods"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "airpodspro"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "appletv"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 62
+  - tag: "homepod"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "visionpro"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "applevisionpro"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "siri"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 28
+  - tag: "icloud"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 15
+  - tag: "appstore"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 25
+  - tag: "testflight"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 14
+  - tag: "xcode"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 25
+  - tag: "swiftui"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 33
+  - tag: "wwdc"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "applemusic"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "appleintelligence"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 36
+  - tag: "applepay"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "airtag"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "magsafe"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "macintosh"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "classicmac"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "ios26"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "ios27"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 66
+  - tag: "iphone15"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "iphone16"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "iphone17"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "iphone18"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "macostahoe"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "macos26"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "mac"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 127
+    ambiguous: true
+  - tag: "safari"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 30
+    ambiguous: true
+  - tag: "swift"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 58
+    ambiguous: true
+  - tag: "appleevent"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 16
+  - tag: "shotoniphone"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 73
+  - tag: "iphonephotography"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 14
+  - tag: "アップル"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 22
+  - tag: "蘋果"
+    langs: [zh-TW]
+    relation: rel
+    status: low
+    accounts7: 1
+    ambiguous: true

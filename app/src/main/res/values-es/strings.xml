@@ -21,4 +21,6 @@
     <string name="profile_tab_media">Multimedia</string>
     <string name="profile_tab_reposts">Reposts</string>
     <string name="profile_tab_replies">Respuestas</string>
+    <string name="settings_combine_related_hashtags">Combinar hashtags relacionados</string>
+    <string name="settings_combine_related_hashtags_summary">Los resultados de búsqueda y de la cuadrícula de fotos incluyen hashtags similares en otras formas e idiomas.</string>
 </resources>

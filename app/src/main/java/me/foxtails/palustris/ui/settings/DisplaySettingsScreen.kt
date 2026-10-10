@@ -59,6 +59,7 @@ fun DisplaySettingsScreen(
     onTabletNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
     compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
     onCompactWideNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
+    onCombineRelatedHashtags: (Boolean) -> Unit = {},
 ) {
     // The page sits below the composition root, where LocalLayoutDirection is the forced direction.
     // The device direction names what turning the switch on produces, so it is the base here.
@@ -125,6 +126,14 @@ fun DisplaySettingsScreen(
             headlineContent = { Text(stringResource(R.string.settings_request_60hz)) },
             supportingContent = { Text(stringResource(R.string.settings_request_60hz_summary)) },
             trailingContent = { Switch(checked = preferences.request60Hz, onCheckedChange = onRequest60Hz) },
+        )
+        ListItem(
+            modifier = Modifier.testTag("combine_related_hashtags"),
+            headlineContent = { Text(stringResource(R.string.settings_combine_related_hashtags)) },
+            supportingContent = { Text(stringResource(R.string.settings_combine_related_hashtags_summary)) },
+            trailingContent = {
+                Switch(checked = preferences.combineRelatedHashtags, onCheckedChange = onCombineRelatedHashtags)
+            },
         )
         ListItem(
             // The headline carries no supporting summary, because a summary needs a third string.

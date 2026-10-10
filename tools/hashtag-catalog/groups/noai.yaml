@@ -1,0 +1,180 @@
+id: noai
+request: "noai"
+excludes: [ai]
+note: "must not overlap with ai group. Members here are opposition to generative AI and human-made markers."
+members:
+  - tag: "noai"
+    langs: [en, ja]
+    relation: head
+    status: seen
+    accounts7: 449
+  - tag: "noaiart"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "noaiartist"
+    langs: [en]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "antiai"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 34
+  - tag: "stopai"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "aifree"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "noaitraining"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "noaiscraping"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "nogenai"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 17
+  - tag: "noaigenerated"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "bangenai"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "noaiplease"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "noaiscrape"
+    langs: [en]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "humanmade"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 21
+  - tag: "madebyhuman"
+    langs: [en]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "createdbyhuman"
+    langs: [en]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "aislop"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 146
+  - tag: "aiwashing"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 3
+  - tag: "pasdia"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "noia"
+    langs: [fr, es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "sinia"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "keineki"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "kifrei"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "geenai"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "ai学習禁止"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "無断学習禁止"
+    langs: [ja]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "ai学習反対"
+    langs: [ja]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "生成ai反対"
+    langs: [ja]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "ai反対"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "ai絵反対"
+    langs: [ja]
+    relation: rel
+    status: unseen
+    accounts7: 0
+  - tag: "学習禁止"
+    langs: [ja]
+    relation: rel
+    status: unseen
+    accounts7: 0
+  - tag: "反ai"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "拒絕ai"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "禁止ai學習"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "反生成式ai"
+    langs: [zh-TW]
+    relation: rel
+    status: unseen
+    accounts7: 0

@@ -1,0 +1,134 @@
+id: movies
+request: "movies"
+members:
+  - tag: "movies"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 400
+  - tag: "movie"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 108
+  - tag: "film"
+    langs: [en, fr]
+    relation: syn
+    status: seen
+    accounts7: 428
+    ambiguous: true
+  - tag: "films"
+    langs: [en, fr]
+    relation: syn
+    status: seen
+    accounts7: 52
+  - tag: "cinema"
+    langs: [en, fr]
+    relation: syn
+    status: seen
+    accounts7: 197
+  - tag: "movienight"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "moviereview"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 36
+  - tag: "filmreview"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 16
+  - tag: "horrormovies"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 31
+  - tag: "scifimovies"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "letterboxd"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 51
+  - tag: "filmmaking"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 33
+  - tag: "cinéma"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 197
+  - tag: "película"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "peliculas"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 30
+  - tag: "películas"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 30
+  - tag: "cine"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 115
+  - tag: "filme"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 28
+  - tag: "kino"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 62
+  - tag: "bioscoop"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 9
+  - tag: "映画"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 93
+  - tag: "映画鑑賞"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "シネマ"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "電影"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "影評"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "戲院"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0

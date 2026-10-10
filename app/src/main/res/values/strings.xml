@@ -768,4 +768,6 @@
     <string name="composer_compress_message">Smaller images upload faster. The draft keeps the originals.</string>
     <string name="composer_compress_yes">Compress</string>
     <string name="composer_compress_no">Keep originals</string>
+    <string name="settings_combine_related_hashtags">Combine related hashtags</string>
+    <string name="settings_combine_related_hashtags_summary">Search and photo grid results include similar hashtags in other forms and languages.</string>
 </resources>

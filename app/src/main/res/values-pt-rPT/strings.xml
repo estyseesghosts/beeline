@@ -166,4 +166,6 @@
     <string name="timeline_home">Início</string>
     <string name="timeline_local">Local</string>
     <string name="timeline_social">Social</string>
+    <string name="settings_combine_related_hashtags">Combinar hashtags relacionadas</string>
+    <string name="settings_combine_related_hashtags_summary">Os resultados da pesquisa e da grelha de fotografias incluem hashtags semelhantes noutras formas e idiomas.</string>
 </resources>

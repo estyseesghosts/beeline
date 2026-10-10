@@ -13,6 +13,7 @@ data class AppPreferences(
     val tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
     val compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
     val cleanTrackingParameters: Boolean = false,
+    val combineRelatedHashtags: Boolean = true,
     val contentWarningRules: ContentWarningRules = ContentWarningRules(),
     val hiddenContentPresentation: HiddenContentPresentation = HiddenContentPresentation.Placeholder,
 )

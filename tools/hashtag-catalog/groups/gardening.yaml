@@ -1,0 +1,94 @@
+id: gardening
+request: null
+members:
+  - tag: "gardening"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 226
+  - tag: "garden"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 131
+  - tag: "plants"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 140
+  - tag: "houseplants"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "vegetablegarden"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "permaculture"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 14
+  - tag: "jardinage"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "jardin"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "jardinería"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "jardineria"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "jardín"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+    observed_other_lang: fr
+  - tag: "gärtnern"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "garten"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 69
+  - tag: "tuinieren"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "tuin"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "ガーデニング"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "園芸"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "園藝"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

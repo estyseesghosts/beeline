@@ -137,6 +137,7 @@ fun SettingsOverlayHost(
         onCompactWideNavigationAnchor = settingsModel::setCompactWideNavigationAnchor,
         onLanguage = settingsModel::setLanguage,
         onTrackingCleanup = settingsModel::setTrackingCleanup,
+        onCombineRelatedHashtags = settingsModel::setCombineRelatedHashtags,
         onContentWarningRules = settingsModel::setContentWarningRules,
         onHiddenContentPresentation = settingsModel::setHiddenContentPresentation,
         postPreferences = postPreferences,

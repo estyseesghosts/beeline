@@ -1,0 +1,23 @@
+id: tennis
+request: null
+members:
+  - tag: "tennis"
+    langs: [en, fr, de, nl]
+    relation: head
+    status: seen
+    accounts7: 139
+  - tag: "tenis"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "テニス"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "網球"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

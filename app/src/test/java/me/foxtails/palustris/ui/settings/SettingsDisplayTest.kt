@@ -399,17 +399,17 @@ class SettingsDisplayTest {
         }
 
     /**
-     * The Display page has exactly two switches, and the layout direction item follows the refresh
-     * rate item. Radio buttons on the page are selectable, not toggleable, so this selects the
+     * The Display page has exactly three switches, and the layout direction item follows the refresh
+     * rate and related hashtags items. Radio buttons on the page are selectable, not toggleable, so this selects the
      * layout direction switch alone.
      */
     private fun layoutDirectionSwitch(): SemanticsNodeInteraction {
         val switches = compose.onAllNodes(isToggleable())
-        switches.assertCountEquals(2)
+        switches.assertCountEquals(3)
         // The item scrolls, so it can sit outside the viewport on a short screen. A click needs the
         // node on screen, so scroll to it first.
-        switches[1].performScrollTo()
-        return switches[1]
+        switches[2].performScrollTo()
+        return switches[2]
     }
 
     @Test

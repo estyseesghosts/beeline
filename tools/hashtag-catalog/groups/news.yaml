@@ -1,0 +1,68 @@
+id: news
+request: null
+members:
+  - tag: "news"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 1490
+  - tag: "worldnews"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 95
+  - tag: "breakingnews"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 387
+  - tag: "headlines"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 19
+  - tag: "journalism"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 139
+  - tag: "actualité"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 32
+  - tag: "actualites"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 20
+  - tag: "actu"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 41
+  - tag: "noticias"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 111
+  - tag: "nachrichten"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 46
+  - tag: "nieuws"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 75
+  - tag: "ニュース"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 181
+  - tag: "新聞"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 36

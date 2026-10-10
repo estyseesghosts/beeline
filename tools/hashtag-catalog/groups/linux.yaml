@@ -1,0 +1,58 @@
+id: linux
+request: null
+members:
+  - tag: "linux"
+    langs: [en, fr, es, de, ja, zh-TW]
+    relation: head
+    status: seen
+    accounts7: 1307
+  - tag: "ubuntu"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 138
+  - tag: "debian"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 141
+  - tag: "archlinux"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 28
+  - tag: "fedora"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 36
+  - tag: "linuxmint"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 19
+  - tag: "kde"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 61
+  - tag: "gnome"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 53
+  - tag: "opensuse"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 33
+  - tag: "nixos"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 36
+  - tag: "foss"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 344

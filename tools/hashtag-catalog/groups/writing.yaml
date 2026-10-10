@@ -1,0 +1,179 @@
+id: writing
+request: "writing"
+members:
+  - tag: "writing"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 708
+    observed_other_lang: es
+  - tag: "amwriting"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 156
+  - tag: "writingcommunity"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 241
+  - tag: "writerscommunity"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "writersofmastodon"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 72
+  - tag: "writers"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 81
+  - tag: "author"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 83
+  - tag: "authors"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "fiction"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 207
+  - tag: "poetry"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 433
+  - tag: "shortstory"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 111
+  - tag: "novel"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 46
+  - tag: "nanowrimo"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "writingprompt"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 31
+  - tag: "fanfic"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "worldbuilding"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 39
+  - tag: "écriture"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 16
+  - tag: "ecriture"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 16
+  - tag: "écrivain"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "ecrivains"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "auteur"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "escritura"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "escritor"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "escritores"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 13
+  - tag: "schreiben"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 43
+  - tag: "schriftsteller"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "autoren"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "schrijven"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "schrijver"
+    langs: [nl]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "schrijvers"
+    langs: [nl]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "執筆"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "小説"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 21
+  - tag: "寫作"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "小說"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "作家"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

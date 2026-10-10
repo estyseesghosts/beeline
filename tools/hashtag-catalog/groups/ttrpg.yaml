@@ -1,0 +1,88 @@
+id: ttrpg
+request: null
+members:
+  - tag: "ttrpg"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 268
+  - tag: "tabletoprpg"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "rpgs"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "dnd"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 124
+  - tag: "dungeonsanddragons"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 65
+  - tag: "pathfinder"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "jdr"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 54
+  - tag: "juegosderol"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "rollenspiel"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 25
+  - tag: "pnp"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 14
+  - tag: "rollenspel"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "trpg"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "桌上角色扮演"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "jeuderôle"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "juegoderol"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "テーブルトークrpg"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "桌上角色扮演遊戲"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

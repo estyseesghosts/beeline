@@ -1,0 +1,210 @@
+id: music
+request: "music"
+members:
+  - tag: "music"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 1846
+  - tag: "nowplaying"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 479
+  - tag: "musician"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 22
+  - tag: "musicians"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 46
+  - tag: "newmusic"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 98
+  - tag: "album"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 34
+    observed_other_lang: fa
+  - tag: "albums"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 19
+  - tag: "song"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 55
+  - tag: "songs"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 22
+  - tag: "band"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 10
+    observed_other_lang: ro
+  - tag: "bands"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "livemusic"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 114
+  - tag: "concert"
+    langs: [en, fr, nl]
+    relation: nar
+    status: seen
+    accounts7: 132
+  - tag: "concerts"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "playlist"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 22
+  - tag: "indiemusic"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 75
+  - tag: "bandcamp"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 50
+  - tag: "vinyl"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 160
+  - tag: "musique"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 112
+  - tag: "chanson"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 19
+  - tag: "musicien"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "música"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 190
+  - tag: "musica"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 190
+  - tag: "canciones"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "músico"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "musik"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 142
+  - tag: "lied"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "musiker"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "konzert"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 73
+  - tag: "muziek"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 23
+  - tag: "muzikant"
+    langs: [nl]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "音楽"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 75
+  - tag: "作曲"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "バンド"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "ライブ"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 21
+  - tag: "ナウプレイング"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "音樂"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "音樂人"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "歌曲"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "演唱會"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "樂團"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

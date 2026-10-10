@@ -1,0 +1,59 @@
+id: olympics
+request: null
+members:
+  - tag: "olympics"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 17
+  - tag: "olympicgames"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "paralympics"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 2
+    observed_other_lang: de
+  - tag: "jeuxolympiques"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "juegosolímpicos"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "juegosolimpicos"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "olympia"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 9
+  - tag: "olympischespiele"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "olympischespelen"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "オリンピック"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "奧運"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

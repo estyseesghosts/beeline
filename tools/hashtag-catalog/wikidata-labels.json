@@ -1,0 +1,2986 @@
+{
+ "technology": {
+  "group": "technology",
+  "qid": "Q11016",
+  "sitelinks": 244,
+  "desc": "making, modification, usage, and knowledge of tools, machines, techniques, crafts, systems, and methods of organization, or tools and techniques so created",
+  "labels": {
+   "en": "technology",
+   "fr": "technologie",
+   "es": "tecnología",
+   "de": "Technologie",
+   "nl": "technologie",
+   "ja": "テクノロジー",
+   "zh-tw": "技術",
+   "zh-hant": "技術"
+  },
+  "aliases": {
+   "en": [
+    "tech",
+    "technologies",
+    "technological science",
+    "technological sciences",
+    "technicology",
+    "technology sector"
+   ],
+   "fr": [],
+   "es": [
+    "tecnologia",
+    "tecnologías"
+   ],
+   "de": [
+    "Allgemeine Technologie",
+    "Technik",
+    "Tech"
+   ],
+   "nl": [],
+   "ja": [
+    "技術",
+    "科学技術",
+    "技術学",
+    "技学",
+    "テック",
+    "科技"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "ai": {
+  "group": "ai",
+  "qid": "Q11660",
+  "sitelinks": 214,
+  "desc": "field that develops and studies software enabling machines to exhibit intelligent behavior",
+  "labels": {
+   "en": "artificial intelligence",
+   "fr": "intelligence artificielle",
+   "es": "inteligencia artificial",
+   "de": "künstliche Intelligenz",
+   "nl": "kunstmatige intelligentie",
+   "ja": "人工知能",
+   "zh-tw": "人工智慧",
+   "zh-hant": "人工智能"
+  },
+  "aliases": {
+   "en": [
+    "AI software",
+    "machine intelligence",
+    "artificially intelligent",
+    "artificial Intelligence",
+    "machine understanding",
+    "simulated intelligence",
+    "computational rationality",
+    "intelligent machine",
+    "machine thought",
+    "artificially intelligent beings",
+    "machines that can think",
+    "artificial smartness",
+    "artificial stupidity",
+    "AI science"
+   ],
+   "fr": [
+    "IA"
+   ],
+   "es": [
+    "inteligencia de la máquina",
+    "IA",
+    "I.A.",
+    "inteligencias artificiales",
+    "inteligencia computacional",
+    "pensamiento artificial"
+   ],
+   "de": [
+    "artifizielle Intelligenz",
+    "KI",
+    "KI-Wissenschaft"
+   ],
+   "nl": [
+    "ki"
+   ],
+   "ja": [
+    "人工頭脳",
+    "人工知能（AI）"
+   ],
+   "zh-tw": [],
+   "zh-hant": [
+    "人工智慧",
+    "機器智能",
+    "機械智能",
+    "智械"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "cats": {
+  "group": "cats",
+  "qid": "Q146",
+  "sitelinks": 321,
+  "desc": "small domesticated carnivorous mammal",
+  "labels": {
+   "en": "cat",
+   "fr": "chat",
+   "es": "gato doméstico",
+   "de": "Hauskatze",
+   "nl": "huiskat",
+   "ja": "ネコ",
+   "zh-tw": "貓",
+   "zh-hant": "貓"
+  },
+  "aliases": {
+   "en": [
+    "house cat",
+    "domestic cat",
+    "housecat",
+    "puss",
+    "pet cat"
+   ],
+   "fr": [
+    "chaton",
+    "chatte",
+    "chat",
+    "matou",
+    "minou"
+   ],
+   "es": [
+    "gato",
+    "micho",
+    "michi",
+    "minino",
+    "micifuz",
+    "morrongo",
+    "morroño",
+    "gatuno"
+   ],
+   "de": [
+    "Katze"
+   ],
+   "nl": [
+    "Felis silvestris f. catus",
+    "Felis sylvestris catus",
+    "poezen",
+    "poes",
+    "de poes",
+    "dakhaas",
+    "kat",
+    "katten"
+   ],
+   "ja": [
+    "猫",
+    "イエネコ",
+    "ねこ"
+   ],
+   "zh-tw": [
+    "家貓"
+   ],
+   "zh-hant": [
+    "家貓",
+    "貓咪",
+    "貍奴"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": false,
+   "de": false,
+   "nl": false,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "reptiles": {
+  "group": "reptiles",
+  "qid": "Q10811",
+  "sitelinks": 181,
+  "desc": "class of vertebrate animals (Vertebrata)",
+  "labels": {
+   "en": "Reptilia",
+   "fr": "Reptiles",
+   "es": "reptil",
+   "de": "Reptilien",
+   "nl": "reptielen",
+   "ja": "爬虫類",
+   "zh-tw": "爬行動物",
+   "zh-hant": "爬行動物"
+  },
+  "aliases": {
+   "en": [
+    "reptiles",
+    "reptilians",
+    "reptile"
+   ],
+   "fr": [
+    "Reptilia"
+   ],
+   "es": [
+    "Reptilia",
+    "reptiles",
+    "reptile"
+   ],
+   "de": [
+    "Reptilia"
+   ],
+   "nl": [
+    "Reptilia"
+   ],
+   "ja": [
+    "爬虫綱"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": false,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "artist": {
+  "group": "artist",
+  "qid": "Q483501",
+  "sitelinks": 118,
+  "desc": "person who engages in any form of artistic creation or practice",
+  "labels": {
+   "en": "artist",
+   "fr": "artiste",
+   "es": "artista",
+   "de": "Künstler",
+   "nl": "kunstenaar",
+   "ja": "芸術家",
+   "zh-tw": "藝術家",
+   "zh-hant": "藝術家"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [
+    "artistes"
+   ],
+   "es": [
+    "artística",
+    "artístico",
+    "artistica",
+    "artistico"
+   ],
+   "de": [
+    "Künstlerin",
+    "Kunstschaffender",
+    "Kunstschaffende"
+   ],
+   "nl": [
+    "kunstenares",
+    "artiest"
+   ],
+   "ja": [
+    "美術家",
+    "アーティスト",
+    "アーチスト",
+    "🧑‍🎨"
+   ],
+   "zh-tw": [
+    "美術家"
+   ],
+   "zh-hant": [
+    "美術家"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": false,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "photography": {
+  "group": "photography",
+  "qid": "Q11633",
+  "sitelinks": 211,
+  "desc": "art, science, and practice of creating durable images by recording light or other electromagnetic radiation",
+  "labels": {
+   "en": "photography",
+   "fr": "photographie",
+   "es": "fotografía",
+   "de": "Fotografie",
+   "nl": "fotografie",
+   "ja": "撮影",
+   "zh-tw": "攝影",
+   "zh-hant": "攝影"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [
+    "photo"
+   ],
+   "es": [],
+   "de": [
+    "Photographie",
+    "Fotographie (Falschschreibung)",
+    "Photografie (Falschschreibung)"
+   ],
+   "nl": [],
+   "ja": [
+    "しゃしん",
+    "寫眞",
+    "フォト",
+    "写真撮影",
+    "写真術"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": false,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "music": {
+  "group": "music",
+  "qid": "Q14005",
+  "sitelinks": 59,
+  "desc": "online music metadata database",
+  "labels": {
+   "en": "MusicBrainz",
+   "zh-tw": "MusicBrainz",
+   "zh-hant": "MusicBrainz"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [],
+   "es": [
+    "Enciclopedia De Música Abierta"
+   ],
+   "de": [],
+   "nl": [],
+   "ja": [
+    "ミュージックブレインズ",
+    "ミュージック・ブレインズ"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": false,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "tv": {
+  "group": "tv",
+  "qid": "Q289",
+  "sitelinks": 269,
+  "desc": "telecommunication medium for transmitting and receiving moving images",
+  "labels": {
+   "en": "television",
+   "fr": "télévision",
+   "es": "televisión",
+   "de": "Fernsehen",
+   "nl": "televisie",
+   "ja": "テレビ",
+   "zh-tw": "電視",
+   "zh-hant": "電視"
+  },
+  "aliases": {
+   "en": [
+    "TV",
+    "televison"
+   ],
+   "fr": [
+    "télé",
+    "TV"
+   ],
+   "es": [
+    "TV",
+    "television"
+   ],
+   "de": [
+    "TV"
+   ],
+   "nl": [
+    "tv"
+   ],
+   "ja": [
+    "テレビジョン",
+    "TV",
+    "テレビジョン放送"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "gaming": {
+  "group": "gaming",
+  "qid": "Q7889",
+  "sitelinks": 170,
+  "desc": "electronic game with user interface and visual feedback",
+  "labels": {
+   "en": "video game",
+   "fr": "jeu vidéo",
+   "es": "videojuego",
+   "de": "Computerspiel",
+   "nl": "videospel",
+   "ja": "コンピュータゲーム",
+   "zh-tw": "電子遊戲",
+   "zh-hant": "電子遊戲"
+  },
+  "aliases": {
+   "en": [
+    "computer game",
+    "computer games",
+    "videogame",
+    "videogames",
+    "VG",
+    "VGs"
+   ],
+   "fr": [
+    "jeux vidéo",
+    "JV"
+   ],
+   "es": [
+    "juego de video",
+    "videojuegos",
+    "video juegos",
+    "video juego"
+   ],
+   "de": [
+    "Game",
+    "Konsolenspiel",
+    "Videospiel"
+   ],
+   "nl": [
+    "computerspel",
+    "videogame",
+    "computergame"
+   ],
+   "ja": [
+    "ビデオゲーム",
+    "インタラクティブエンターテイメント",
+    "視覚的ゲーム",
+    "コンピューターゲーム",
+    "ビデオ・ゲーム",
+    "コンピュータ・ゲーム",
+    "コンピュータゲーム作品",
+    "デジタルゲーム",
+    "ヴィデオ・ゲーム",
+    "ヴィデオゲーム"
+   ],
+   "zh-tw": [
+    "電玩遊戲",
+    "電動遊戲"
+   ],
+   "zh-hant": [
+    "視像遊戲",
+    "電玩"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": false,
+   "es": true,
+   "de": false,
+   "nl": false,
+   "ja": false,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "movies": {
+  "group": "movies",
+  "qid": "Q11424",
+  "sitelinks": 240,
+  "desc": "visual art work that simulates experiences and communicates ideas, stories, or emotions through moving images, generally synchronized with sound since the 1930s",
+  "labels": {
+   "en": "film",
+   "fr": "film",
+   "es": "película",
+   "de": "Film",
+   "nl": "film",
+   "ja": "映画",
+   "zh-tw": "電影",
+   "zh-hant": "電影"
+  },
+  "aliases": {
+   "en": [
+    "movie",
+    "motion picture",
+    "cinematic work",
+    "moving picture"
+   ],
+   "fr": [
+    "movies"
+   ],
+   "es": [
+    "film",
+    "filme",
+    "obra cinematográfica",
+    "realización de cine",
+    "pelicula",
+    "películas",
+    "peliculas",
+    "films",
+    "filmes",
+    "largometraje",
+    "largometrajes",
+    "obra cinematografica",
+    "realizacion de cine"
+   ],
+   "de": [
+    "Kinofilm"
+   ],
+   "nl": [
+    "film (cinematografie)"
+   ],
+   "ja": [
+    "ムービー",
+    "モーション・ピクチャー",
+    "活動写真",
+    "フォトプレイ",
+    "シネマ",
+    "キネマ"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "cars": {
+  "group": "cars",
+  "qid": "Q1420",
+  "sitelinks": 246,
+  "desc": "motorized road vehicle designed to carry one to eight people rather than primarily goods",
+  "labels": {
+   "en": "car",
+   "fr": "automobile",
+   "es": "automóvil",
+   "de": "Auto",
+   "nl": "auto",
+   "ja": "自動車",
+   "zh-tw": "汽車",
+   "zh-hant": "汽車"
+  },
+  "aliases": {
+   "en": [
+    "auto",
+    "autocar",
+    "automobile",
+    "motorcar",
+    "automobiles",
+    "motor cars",
+    "cars",
+    "motor car"
+   ],
+   "fr": [
+    "voiture",
+    "voiture automobile",
+    "auto",
+    "bagnole",
+    "caisse",
+    "tire",
+    "véhicule"
+   ],
+   "es": [
+    "coche",
+    "carro",
+    "auto",
+    "automovil"
+   ],
+   "de": [
+    "Kraftwagen",
+    "Kraftfahrzeug",
+    "Automobil",
+    "Wagen",
+    "Kiste",
+    "Schleuder"
+   ],
+   "nl": [
+    "automobiel",
+    "personenauto"
+   ],
+   "ja": [
+    "車"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "trains": {
+  "group": "trains",
+  "qid": "Q282531",
+  "sitelinks": 33,
+  "desc": "American rock band",
+  "labels": {
+   "en": "Train",
+   "fr": "Train",
+   "es": "Train",
+   "de": "Train",
+   "nl": "Train",
+   "ja": "Train",
+   "zh-hant": "火車樂隊"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [],
+   "es": [],
+   "de": [],
+   "nl": [
+    "Train (band)"
+   ],
+   "ja": [
+    "ロブ・ホチキス",
+    "スコット・アンダーウッド"
+   ],
+   "zh-tw": [],
+   "zh-hant": [
+    "Train (樂隊)",
+    "列車樂團"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-hant": false
+  }
+ },
+ "publictransit": {
+  "group": "publictransit",
+  "qid": "Q178512",
+  "sitelinks": 89,
+  "desc": "shared transportation service for use by the general public",
+  "labels": {
+   "en": "public transport",
+   "fr": "transport en commun",
+   "es": "transporte público",
+   "de": "öffentlicher Verkehr",
+   "nl": "openbaar vervoer",
+   "ja": "公共交通機関",
+   "zh-tw": "大眾運輸",
+   "zh-hant": "大眾運輸"
+  },
+  "aliases": {
+   "en": [
+    "public transportation",
+    "public transit",
+    "mass transit",
+    "Public Transport",
+    "collective transport",
+    "transit system",
+    "urban transit"
+   ],
+   "fr": [
+    "Transports publics",
+    "Transports collectifs",
+    "Transport de passagers",
+    "Transport de voyageurs",
+    "Transport collectif",
+    "Transports en commun",
+    "Transport en commun"
+   ],
+   "es": [
+    "Trafico colectivo",
+    "Transportes públicos",
+    "Transporte público de viajeros",
+    "Transporte publico",
+    "Tráfico colectivo",
+    "Transporte urbano",
+    "Transito",
+    "Transporte colectivo",
+    "Transportes publicos",
+    "Transporte publico de viajeros",
+    "transporte colectivo"
+   ],
+   "de": [
+    "Massenverkehrssystem",
+    "Massenverkehr",
+    "Öffis",
+    "öffentlicher Personenverkehr"
+   ],
+   "nl": [
+    "collectief vervoer",
+    "OV"
+   ],
+   "ja": [
+    "公共交通"
+   ],
+   "zh-tw": [],
+   "zh-hant": [
+    "公共運輸"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": false,
+   "es": true,
+   "de": false,
+   "nl": true,
+   "ja": false,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "writing": {
+  "group": "writing",
+  "qid": "Q37260",
+  "sitelinks": 176,
+  "desc": "persistent representation of language",
+  "labels": {
+   "en": "writing",
+   "fr": "écriture",
+   "es": "escritura",
+   "de": "Schreiben",
+   "nl": "schrijven",
+   "ja": "筆記",
+   "zh-hant": "寫作"
+  },
+  "aliases": {
+   "en": [
+    "write"
+   ],
+   "fr": [
+    "scriptural",
+    "style rédactionnel",
+    "ecriture",
+    "écrit",
+    "communication écrite"
+   ],
+   "es": [
+    "lengua escrita",
+    "escribir",
+    "palabra escrita",
+    "escrituras"
+   ],
+   "de": [],
+   "nl": [
+    "handgeschreven"
+   ],
+   "ja": [
+    "文筆",
+    "書くこと",
+    "書く",
+    "書き",
+    "書記"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": false,
+   "zh-hant": true
+  }
+ },
+ "newspaper": {
+  "group": "newspaper",
+  "qid": "Q11032",
+  "sitelinks": 204,
+  "desc": "scheduled publication containing news of events, articles, features, editorials, and advertising; online, in print, or (usually) both",
+  "labels": {
+   "en": "newspaper",
+   "fr": "journal",
+   "es": "periódico",
+   "de": "Zeitung",
+   "nl": "krant",
+   "ja": "新聞",
+   "zh-tw": "報紙",
+   "zh-hant": "報紙"
+  },
+  "aliases": {
+   "en": [
+    "newspapers",
+    "news paper",
+    "news papers"
+   ],
+   "fr": [],
+   "es": [
+    "periodico",
+    "periódicos",
+    "periodicos"
+   ],
+   "de": [
+    "Gazette",
+    "Blatt"
+   ],
+   "nl": [
+    "weekblad",
+    "nieuwsblad",
+    "stadskrant"
+   ],
+   "ja": [],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "academics": {
+  "group": "academics",
+  "qid": "Q337234",
+  "sitelinks": 36,
+  "desc": "pan-European academy",
+  "labels": {
+   "en": "Academia Europaea",
+   "fr": "Academia Europaea",
+   "es": "Academia Europæa",
+   "de": "Academia Europaea",
+   "nl": "Academia Europaea",
+   "ja": "欧州アカデミー",
+   "zh-hant": "歐洲科學院"
+  },
+  "aliases": {
+   "en": [
+    "The Academia Europaea",
+    "The Academy of Europe",
+    "Academy of Europe",
+    "ae-info.org"
+   ],
+   "fr": [
+    "Académie Européenne",
+    "Académie européenne",
+    "Academia europaea"
+   ],
+   "es": [],
+   "de": [
+    "Academia Europæa"
+   ],
+   "nl": [],
+   "ja": [
+    "欧州学術院",
+    "欧州学士院",
+    "ヨーロッパ・アカデミー"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": false,
+   "fr": false,
+   "es": false,
+   "de": false,
+   "nl": false,
+   "ja": false,
+   "zh-hant": false
+  }
+ },
+ "sports": {
+  "group": "sports",
+  "qid": "Q349",
+  "sitelinks": 270,
+  "desc": "form of event or activity involving competition; series of activities that provides challenges for an individual or team/s of participants",
+  "labels": {
+   "en": "sport",
+   "fr": "sport",
+   "es": "deporte",
+   "de": "Sport",
+   "nl": "sport",
+   "ja": "スポーツ",
+   "zh-tw": "體育",
+   "zh-hant": "體育"
+  },
+  "aliases": {
+   "en": [
+    "sports"
+   ],
+   "fr": [
+    "sports",
+    "activité sportive",
+    "pratique sportive",
+    "pratiques sportives"
+   ],
+   "es": [
+    "deportes"
+   ],
+   "de": [
+    "Sportaktivität"
+   ],
+   "nl": [],
+   "ja": [],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "basketball": {
+  "group": "basketball",
+  "qid": "Q5372",
+  "sitelinks": 217,
+  "desc": "team sport played on a court with baskets on either end",
+  "labels": {
+   "en": "basketball",
+   "fr": "basket-ball",
+   "es": "baloncesto",
+   "de": "Basketball",
+   "nl": "basketbal",
+   "ja": "バスケットボール",
+   "zh-tw": "籃球",
+   "zh-hant": "籃球"
+  },
+  "aliases": {
+   "en": [
+    "hoops",
+    "b-ball",
+    "basket ball",
+    "BB",
+    "Basketball",
+    "basket"
+   ],
+   "fr": [
+    "basketball"
+   ],
+   "es": [
+    "basket"
+   ],
+   "de": [],
+   "nl": [],
+   "ja": [
+    "籠球",
+    "篭球"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "football": {
+  "group": "football",
+  "qid": "Q41323",
+  "sitelinks": 110,
+  "desc": "form of team game played with an oval ball on a field marked out as a gridiron",
+  "labels": {
+   "en": "American football",
+   "fr": "football américain",
+   "es": "fútbol americano",
+   "de": "American Football",
+   "nl": "American football",
+   "ja": "アメリカンフットボール",
+   "zh-tw": "美式足球",
+   "zh-hant": "美式足球"
+  },
+  "aliases": {
+   "en": [
+    "gridiron football",
+    "football",
+    "American rules football"
+   ],
+   "fr": [
+    "foot US",
+    "foot américain"
+   ],
+   "es": [
+    "American football",
+    "FBA",
+    "futbol americano",
+    "rugby americano",
+    "football americano"
+   ],
+   "de": [],
+   "nl": [
+    "Amerikaans voetbal",
+    "Football",
+    "Gridiron"
+   ],
+   "ja": [
+    "鎧球",
+    "アメフット",
+    "アメフト",
+    "アメラグ",
+    "アメリカンラグビー",
+    "アメリカン・フットボール",
+    "米式蹴球"
+   ],
+   "zh-tw": [],
+   "zh-hant": [
+    "美式橄欖球"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "linux": {
+  "group": "linux",
+  "qid": "Q388",
+  "sitelinks": 201,
+  "desc": "family of Unix-like operating systems",
+  "labels": {
+   "en": "Linux"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [],
+   "es": [
+    "Sistema Operativo GNU/Linux",
+    "Sistema Operativo Linux"
+   ],
+   "de": [],
+   "nl": [
+    "Linux Operating System"
+   ],
+   "ja": [
+    "リナックス",
+    "ライナックス"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true
+  }
+ },
+ "programming": {
+  "group": "programming",
+  "qid": "Q9143",
+  "sitelinks": 164,
+  "desc": "language for communicating instructions to a machine",
+  "labels": {
+   "en": "programming language",
+   "fr": "langage de programmation",
+   "es": "lenguaje de programación",
+   "de": "Programmiersprache",
+   "nl": "programmeertaal",
+   "ja": "プログラミング言語",
+   "zh-tw": "程式語言",
+   "zh-hant": "程式語言"
+  },
+  "aliases": {
+   "en": [
+    "computer language",
+    "computer programming language",
+    "coding language",
+    "computer programming"
+   ],
+   "fr": [],
+   "es": [
+    "lenguaje de programacion"
+   ],
+   "de": [],
+   "nl": [],
+   "ja": [
+    "プログラム言語",
+    "プログラミング用言語"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": false,
+   "fr": false,
+   "es": false,
+   "de": false,
+   "nl": false,
+   "ja": false,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "selfhosting": {
+  "group": "selfhosting",
+  "qid": "Q65090673",
+  "sitelinks": 11,
+  "desc": "practice of running and maintaining an internet services using a private server",
+  "labels": {
+   "en": "self-hosting",
+   "fr": "auto-hébergement",
+   "es": "Autoalojamiento",
+   "nl": "Zelfhosting",
+   "ja": "セルフホスティング"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [],
+   "es": [],
+   "de": [],
+   "nl": [],
+   "ja": [],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "nl": false,
+   "ja": false
+  }
+ },
+ "privacy": {
+  "group": "privacy",
+  "qid": "Q188728",
+  "sitelinks": 85,
+  "desc": "ability or right of an individual or group to seclude themselves, or information about themselves",
+  "labels": {
+   "en": "privacy",
+   "fr": "vie privée",
+   "es": "privacidad",
+   "de": "Privatsphäre",
+   "nl": "privacy",
+   "ja": "プライバシー",
+   "zh-tw": "隱私權",
+   "zh-hant": "隱私"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [
+    "affaire privée",
+    "droit au respect de la vie privée et familiale",
+    "respect de la vie privée",
+    "sphère privée",
+    "informations personnelles",
+    "droit à la vie privée"
+   ],
+   "es": [
+    "privacía",
+    "vida privada",
+    "privacia"
+   ],
+   "de": [
+    "Privatheit"
+   ],
+   "nl": [
+    "privegegevens",
+    "privégegevens",
+    "eerbiediging persoonlijke levenssfeer",
+    "persoonlijke levenssfeer",
+    "privacyschending",
+    "privacybescherming"
+   ],
+   "ja": [
+    "プライバシーの権利",
+    "プライバシー権",
+    "プライヴァシー",
+    "私事権"
+   ],
+   "zh-tw": [],
+   "zh-hant": [
+    "私隱"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": false,
+   "nl": true,
+   "ja": true,
+   "zh-tw": false,
+   "zh-hant": true
+  }
+ },
+ "science": {
+  "group": "science",
+  "qid": "Q192864",
+  "sitelinks": 63,
+  "desc": "academic journal of the American Association for the Advancement of Science",
+  "labels": {
+   "en": "Science",
+   "fr": "Science",
+   "es": "Science",
+   "de": "Science",
+   "nl": "Science",
+   "ja": "サイエンス",
+   "zh-hant": "科學"
+  },
+  "aliases": {
+   "en": [
+    "Science Magazine",
+    "Sci. (N. Y., N. Y.)",
+    "science.org",
+    "sciencemag.org/"
+   ],
+   "fr": [
+    "Revue Science",
+    "Journal Science"
+   ],
+   "es": [
+    "Revista Science"
+   ],
+   "de": [],
+   "nl": [],
+   "ja": [
+    "Science"
+   ],
+   "zh-tw": [],
+   "zh-hant": [
+    "科學雜誌"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": false,
+   "zh-hant": true
+  }
+ },
+ "news": {
+  "group": "news",
+  "qid": "Q1193438",
+  "sitelinks": 20,
+  "desc": "arena where bullfighting is performed",
+  "labels": {
+   "en": "bullring",
+   "fr": "arène",
+   "es": "plaza de toros",
+   "de": "Stierkampfarena",
+   "nl": "stierenvechtarena",
+   "ja": "闘牛場",
+   "zh-hant": "鬥牛場"
+  },
+  "aliases": {
+   "en": [
+    "Bullfighting Stadium",
+    "bullfighting ground"
+   ],
+   "fr": [
+    "arènes",
+    "arene",
+    "arenes"
+   ],
+   "es": [
+    "coso",
+    "Coso (tauromaquia)",
+    "coso taurino",
+    "plazas de toros"
+   ],
+   "de": [
+    "Plaza de Toros"
+   ],
+   "nl": [
+    "stierenarena"
+   ],
+   "ja": [],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": false,
+   "fr": false,
+   "es": false,
+   "de": false,
+   "nl": false,
+   "ja": false,
+   "zh-hant": false
+  }
+ },
+ "history": {
+  "group": "history",
+  "qid": "Q309",
+  "sitelinks": 321,
+  "desc": "past events and their documentation, studied through historiography, archaeology, and related disciplines",
+  "labels": {
+   "en": "history",
+   "fr": "histoire",
+   "es": "historia",
+   "de": "Geschichte",
+   "nl": "geschiedenis",
+   "ja": "歴史",
+   "zh-tw": "歷史",
+   "zh-hant": "歷史"
+  },
+  "aliases": {
+   "en": [
+    "historical record",
+    "human history"
+   ],
+   "fr": [],
+   "es": [],
+   "de": [
+    "Historie"
+   ],
+   "nl": [
+    "historie"
+   ],
+   "ja": [
+    "ヒストリー"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "food": {
+  "group": "food",
+  "qid": "Q2095",
+  "sitelinks": 250,
+  "desc": "any substance consumed to provide nutritional support for the body; form of energy stored in chemical",
+  "labels": {
+   "en": "food",
+   "fr": "nourriture",
+   "es": "alimento",
+   "de": "Nahrung",
+   "nl": "voedsel",
+   "ja": "食物",
+   "zh-tw": "食物",
+   "zh-hant": "食物"
+  },
+  "aliases": {
+   "en": [
+    "foodstuff",
+    "edibles",
+    "feed",
+    "chow",
+    "foodstuffs",
+    "sustenance",
+    "food item",
+    "victuals",
+    "food material"
+   ],
+   "fr": [
+    "denrée alimentaire",
+    "alimentation",
+    "comestibles"
+   ],
+   "es": [
+    "alimentos",
+    "comida"
+   ],
+   "de": [
+    "Lebensmittel",
+    "Essen",
+    "Nahrungsmittel",
+    "Nahrungsmaterial",
+    "Essensmaterial"
+   ],
+   "nl": [
+    "voeding"
+   ],
+   "ja": [
+    "食べ物",
+    "食料",
+    "食糧",
+    "食料品",
+    "糧食",
+    "食品",
+    "フード",
+    "たべもの",
+    "しょくりょう"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": false,
+   "de": false,
+   "nl": false,
+   "ja": false,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "cooking": {
+  "group": "cooking",
+  "qid": "Q38695",
+  "sitelinks": 138,
+  "desc": "preparing food for consumption by the application of heat",
+  "labels": {
+   "en": "cooking",
+   "fr": "cuisson des aliments",
+   "es": "cocinar",
+   "de": "Kochen",
+   "nl": "koken",
+   "ja": "調理",
+   "zh-tw": "烹飪",
+   "zh-hant": "烹飪"
+  },
+  "aliases": {
+   "en": [
+    "cookery",
+    "home cooking"
+   ],
+   "fr": [
+    "cuisson alimentaire"
+   ],
+   "es": [
+    "guisar"
+   ],
+   "de": [
+    "Lebensmittelzubereitung"
+   ],
+   "nl": [],
+   "ja": [
+    "炊事",
+    "クッキング",
+    "料理",
+    "烹調",
+    "烹飪"
+   ],
+   "zh-tw": [
+    "做菜"
+   ],
+   "zh-hant": [
+    "烹調",
+    "烹煮",
+    "料理",
+    "炊煮",
+    "造飯",
+    "做菜",
+    "下廚"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": false,
+   "es": false,
+   "de": true,
+   "nl": true,
+   "ja": false,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "gardening": {
+  "group": "gardening",
+  "qid": "Q124946",
+  "sitelinks": 101,
+  "desc": "practice of growing and cultivating plants",
+  "labels": {
+   "en": "gardening",
+   "fr": "jardinage",
+   "es": "jardinería",
+   "de": "Gärtnern",
+   "nl": "tuinieren",
+   "ja": "ガーデニング",
+   "zh-tw": "園藝",
+   "zh-hant": "園藝"
+  },
+  "aliases": {
+   "en": [
+    "hobby gardening"
+   ],
+   "fr": [],
+   "es": [],
+   "de": [
+    "Gartenarbeit"
+   ],
+   "nl": [
+    "tuinier"
+   ],
+   "ja": [
+    "庭づくり"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "nature": {
+  "group": "nature",
+  "qid": "Q7860",
+  "sitelinks": 229,
+  "desc": "natural, physical, or material world and its phenomena",
+  "labels": {
+   "en": "nature",
+   "fr": "nature",
+   "es": "naturaleza",
+   "de": "Natur",
+   "nl": "natuur",
+   "ja": "自然",
+   "zh-tw": "自然",
+   "zh-hant": "自然"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [],
+   "es": [],
+   "de": [
+    "natürlich",
+    "natürliche Welt"
+   ],
+   "nl": [],
+   "ja": [],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "boardgames": {
+  "group": "boardgames",
+  "qid": "Q131436",
+  "sitelinks": 84,
+  "desc": "game that involves counters or pieces moved or placed on a pre-marked surface or \"board\", according to a set of rules",
+  "labels": {
+   "en": "board game",
+   "fr": "jeu de société",
+   "es": "Juego de mesa",
+   "de": "Brettspiel",
+   "nl": "bordspel",
+   "ja": "ボードゲーム",
+   "zh-tw": "圖版遊戲",
+   "zh-hant": "圖版遊戲"
+  },
+  "aliases": {
+   "en": [
+    "boardgame"
+   ],
+   "fr": [
+    "jeux de plateau",
+    "jeu de plateau",
+    "jeu de table",
+    "jeux de société",
+    "jeu de règle",
+    "jeu allemand",
+    "jeux de table",
+    "jeux de règle",
+    "jeux allemands"
+   ],
+   "es": [
+    "Juego de tablero",
+    "Juego de salón",
+    "Juego de salon"
+   ],
+   "de": [],
+   "nl": [
+    "speelbord",
+    "bordspellen"
+   ],
+   "ja": [
+    "盤上遊戯",
+    "盤ゲーム",
+    "盤上ゲーム"
+   ],
+   "zh-tw": [],
+   "zh-hant": [
+    "桌上遊戲",
+    "桌遊"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": false,
+   "es": false,
+   "de": true,
+   "nl": false,
+   "ja": true,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "ttrpg": {
+  "group": "ttrpg",
+  "qid": "Q1643932",
+  "sitelinks": 28,
+  "desc": "form of role-playing game for leisure",
+  "labels": {
+   "en": "tabletop role-playing game",
+   "fr": "jeu de rôle sur table",
+   "es": "juego de rol de mesa",
+   "de": "Pen-&-Paper-Rollenspiel",
+   "nl": "tabletop role-playing game",
+   "ja": "テーブルトークRPG",
+   "zh-tw": "桌上角色扮演遊戲",
+   "zh-hant": "桌上角色扮演遊戲"
+  },
+  "aliases": {
+   "en": [
+    "pen-and-paper role-playing game",
+    "TRPG",
+    "TTRPG"
+   ],
+   "fr": [
+    "JDR",
+    "jeux de rôle",
+    "jeu de rôle papier"
+   ],
+   "es": [],
+   "de": [
+    "Pencil-and-Paper-Rollenspiel",
+    "Fantasy-Rollenspiel",
+    "Pen-and-Paper-Rollenspiel",
+    "Papier-und-Bleistift-Rollenspiel",
+    "Erzähl-Spiel",
+    "Pen&Paper-Rollenspiel",
+    "P&P",
+    "Papier&Stift-Rollenspiel",
+    "Pen & paper",
+    "Pen&Paper",
+    "Tischrollenspiel",
+    "Charakterbogen"
+   ],
+   "nl": [],
+   "ja": [
+    "TRPG",
+    "テーブルトップRPG",
+    "TTRPG",
+    "テーブルトップ・ロールプレイング・ゲーム"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": false,
+   "fr": false,
+   "es": false,
+   "de": false,
+   "nl": false,
+   "ja": false,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "tennis": {
+  "group": "tennis",
+  "qid": "Q847",
+  "sitelinks": 212,
+  "desc": "racket sport played on a court bisected by a net",
+  "labels": {
+   "en": "tennis",
+   "fr": "tennis",
+   "es": "tenis",
+   "de": "Tennis",
+   "nl": "tennis",
+   "ja": "テニス",
+   "zh-tw": "網球",
+   "zh-hant": "網球"
+  },
+  "aliases": {
+   "en": [
+    "lawn tennis",
+    "lawntennis"
+   ],
+   "fr": [],
+   "es": [
+    "🎾"
+   ],
+   "de": [
+    "Tennissport"
+   ],
+   "nl": [],
+   "ja": [
+    "ローン・テニス",
+    "硬式テニス",
+    "庭球",
+    "ていきゅう"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "hockey": {
+  "group": "hockey",
+  "qid": "Q41466",
+  "sitelinks": 113,
+  "desc": "team sport played on ice using sticks, skates, and a puck",
+  "labels": {
+   "en": "ice hockey",
+   "fr": "hockey sur glace",
+   "es": "hockey sobre hielo",
+   "de": "Eishockey",
+   "nl": "ijshockey",
+   "ja": "アイスホッケー",
+   "zh-tw": "冰球",
+   "zh-hant": "冰球"
+  },
+  "aliases": {
+   "en": [
+    "hockey"
+   ],
+   "fr": [
+    "hockey"
+   ],
+   "es": [
+    "hockey hielo",
+    "ice hockey",
+    "jóquey sobre hielo",
+    "joquey sobre hielo"
+   ],
+   "de": [],
+   "nl": [],
+   "ja": [
+    "アイス・ホッケー",
+    "氷球",
+    "アイスホッケー競技日程"
+   ],
+   "zh-tw": [
+    "冰上曲棍球"
+   ],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": false,
+   "es": false,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "cricket": {
+  "group": "cricket",
+  "qid": "Q5375",
+  "sitelinks": 163,
+  "desc": "team sport played with a bat and ball",
+  "labels": {
+   "en": "cricket",
+   "fr": "cricket",
+   "es": "críquet",
+   "de": "Cricket",
+   "nl": "cricket",
+   "ja": "クリケット",
+   "zh-tw": "板球",
+   "zh-hant": "板球"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [],
+   "es": [
+    "criquet"
+   ],
+   "de": [
+    "Thorball",
+    "Kricket"
+   ],
+   "nl": [],
+   "ja": [
+    "板球",
+    "ばんきゅう"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": false,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "rugby": {
+  "group": "rugby",
+  "qid": "Q5849",
+  "sitelinks": 73,
+  "desc": "team sport, code of rugby football",
+  "labels": {
+   "en": "rugby union",
+   "fr": "rugby à XV",
+   "es": "rugby a 15",
+   "de": "Rugby Union",
+   "nl": "rugby union",
+   "ja": "ラグビーユニオン",
+   "zh-tw": "聯合式橄欖球",
+   "zh-hant": "聯合式橄欖球"
+  },
+  "aliases": {
+   "en": [
+    "rugby"
+   ],
+   "fr": [
+    "rugby à quinze",
+    "rugby à 15",
+    "rugby à xv"
+   ],
+   "es": [
+    "rugby union"
+   ],
+   "de": [
+    "Rugby"
+   ],
+   "nl": [],
+   "ja": [
+    "15人制ラグビー"
+   ],
+   "zh-tw": [
+    "欖球聯盟"
+   ],
+   "zh-hant": [
+    "英式橄欖球協會"
+   ]
+  },
+  "covered": {
+   "en": false,
+   "fr": false,
+   "es": false,
+   "de": false,
+   "nl": false,
+   "ja": false,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "infosec": {
+  "group": "infosec",
+  "qid": "Q189900",
+  "sitelinks": 57,
+  "desc": "practice of protecting information and systems by mitigating information risks",
+  "labels": {
+   "en": "information security",
+   "fr": "sécurité de l'information",
+   "es": "seguridad de la información",
+   "de": "Informationssicherheit",
+   "nl": "informatiebeveiliging",
+   "ja": "情報セキュリティ",
+   "zh-tw": "資訊安全",
+   "zh-hant": "資訊安全"
+  },
+  "aliases": {
+   "en": [
+    "InfoSec",
+    "info sec",
+    "information assurance",
+    "data security",
+    "information protection"
+   ],
+   "fr": [
+    "sécurité des informations",
+    "securite de l'information"
+   ],
+   "es": [
+    "InfoSec"
+   ],
+   "de": [
+    "EDV-Sicherheit",
+    "Sicherheit in der Informationstechnik",
+    "Technischer Datenschutz",
+    "Informationsschutz",
+    "IT-Sicherheit"
+   ],
+   "nl": [],
+   "ja": [
+    "情報セキュリティー"
+   ],
+   "zh-tw": [
+    "資通安全"
+   ],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": false,
+   "es": false,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "dogs": {
+  "group": "dogs",
+  "qid": "Q144",
+  "sitelinks": 333,
+  "desc": "domesticated mammal of the family Canidae",
+  "labels": {
+   "en": "dog",
+   "fr": "chien",
+   "es": "perro",
+   "de": "Haushund",
+   "nl": "hond",
+   "ja": "イヌ",
+   "zh-tw": "犬",
+   "zh-hant": "犬"
+  },
+  "aliases": {
+   "en": [
+    "domestic dog",
+    "domestic dogs",
+    "dogs"
+   ],
+   "fr": [
+    "canis canis",
+    "canis familiaris domesticus"
+   ],
+   "es": [
+    "perro doméstico",
+    "can",
+    "dogo",
+    "canino",
+    "perra"
+   ],
+   "de": [
+    "Hund"
+   ],
+   "nl": [
+    "huishond",
+    "huishonden"
+   ],
+   "ja": [
+    "犬",
+    "イエイヌ",
+    "いぬ"
+   ],
+   "zh-tw": [],
+   "zh-hant": [
+    "狗",
+    "狗狗",
+    "狗子"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": false,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "birds": {
+  "group": "birds",
+  "qid": "Q5113",
+  "sitelinks": 295,
+  "desc": "class of vertebrates characterized by wings, a feather-covered body and a beak",
+  "labels": {
+   "en": "bird",
+   "fr": "oiseau",
+   "es": "aves",
+   "de": "Vögel",
+   "nl": "vogels",
+   "ja": "鳥類",
+   "zh-tw": "鳥綱",
+   "zh-hant": "鳥綱"
+  },
+  "aliases": {
+   "en": [
+    "avian species",
+    "birds"
+   ],
+   "fr": [
+    "oisel",
+    "volatile",
+    "oiselle",
+    "avien",
+    "aviaire",
+    "avifaune"
+   ],
+   "es": [
+    "pájaros"
+   ],
+   "de": [
+    "Vogelähnlich",
+    "Vogel"
+   ],
+   "nl": [
+    "vogelsoort",
+    "gevogelte"
+   ],
+   "ja": [
+    "鳥鋼",
+    "現生鳥類",
+    "鳥種",
+    "囀",
+    "鳥綱",
+    "鳥",
+    "小鳥",
+    "鳥類相",
+    "新鳥類"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "art": {
+  "group": "art",
+  "qid": "Q735",
+  "sitelinks": 300,
+  "desc": "general concept that creates expressive work for its emotional power (use Q838948 for the resulting work, use Q2018526 for the group of creative disciplines)",
+  "labels": {
+   "en": "art",
+   "fr": "art",
+   "es": "arte",
+   "de": "Kunst",
+   "nl": "kunst",
+   "ja": "芸術",
+   "zh-tw": "藝術",
+   "zh-hant": "藝術"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [],
+   "es": [
+    "artes",
+    "Arte"
+   ],
+   "de": [
+    "bildende Kunst",
+    "BK"
+   ],
+   "nl": [],
+   "ja": [
+    "藝術",
+    "アート"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": false,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "climatechange": {
+  "group": "climatechange",
+  "qid": "Q125928",
+  "sitelinks": 136,
+  "desc": "ongoing human-caused changes to Earth's climate system, driven primarily by fossil fuel combustion since the Industrial Revolution; encompasses global warming, rising sea levels, and increased frequency of extreme weather events",
+  "labels": {
+   "en": "climate change",
+   "fr": "changement climatique",
+   "es": "cambio climático",
+   "de": "Klimawandel",
+   "nl": "klimaatverandering",
+   "ja": "気候変動",
+   "zh-tw": "氣候變遷",
+   "zh-hant": "氣候變化"
+  },
+  "aliases": {
+   "en": [
+    "climatic variation",
+    "climate variability",
+    "climatic change",
+    "anthropogenic climate change",
+    "global warming",
+    "climate instability"
+   ],
+   "fr": [
+    "variation climatique",
+    "changements climatiques industriels",
+    "refroidissement mondial",
+    "modifications climatiques",
+    "dérèglement climatique",
+    "changements climatiques naturels"
+   ],
+   "es": [
+    "CCG",
+    "cambio climático global",
+    "crisis climática",
+    "cambios climáticos"
+   ],
+   "de": [
+    "Klimaänderung",
+    "Klimawechsel",
+    "Klimaveränderung"
+   ],
+   "nl": [
+    "veranderde klimaat",
+    "klimaatprobleem",
+    "klimaatsverandering"
+   ],
+   "ja": [
+    "気候変化",
+    "気象変動",
+    "気候変動問題"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": false
+  }
+ },
+ "fediverse": {
+  "group": "fediverse",
+  "qid": "Q30325419",
+  "sitelinks": 42,
+  "desc": "ecosystem of open social media network using the ActivityPub protocol",
+  "labels": {
+   "en": "Fediverse",
+   "fr": "fédivers",
+   "es": "fediverso",
+   "de": "Fediversum",
+   "nl": "fediversum",
+   "ja": "Fediverse",
+   "zh-tw": "Fediverse",
+   "zh-hant": "聯邦宇宙"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [
+    "fediverse",
+    "fedivers",
+    "fédiverse"
+   ],
+   "es": [],
+   "de": [],
+   "nl": [
+    "fedi"
+   ],
+   "ja": [
+    "フェディバース"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": false,
+   "es": true,
+   "de": false,
+   "nl": false,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "blog": {
+  "group": "blog",
+  "qid": "Q30849",
+  "sitelinks": 134,
+  "desc": "discussion or informational website consisting of discrete, often informal diary-style text entries (posts)",
+  "labels": {
+   "en": "blog",
+   "fr": "blogue",
+   "es": "blog",
+   "de": "Blog",
+   "nl": "weblog",
+   "ja": "ブログ",
+   "zh-tw": "部落格",
+   "zh-hant": "部落格"
+  },
+  "aliases": {
+   "en": [
+    "web log",
+    "blogs",
+    "weblog"
+   ],
+   "fr": [
+    "webjournal",
+    "weblog",
+    "joueb",
+    "cybercarnet",
+    "blog"
+   ],
+   "es": [
+    "weblog",
+    "weblogs",
+    "bitácora web"
+   ],
+   "de": [
+    "Weblog",
+    "Web-Logbuch",
+    "Web-Log",
+    "Online-Tagebuch",
+    "Nanopublishing",
+    "MetaBlogging",
+    "Watchdog blog",
+    "Web log",
+    "Meta-Blogging",
+    "Blogging",
+    "Affiliate Blog",
+    "Blawg",
+    "Bloggen",
+    "Blogroll"
+   ],
+   "nl": [
+    "fotolog",
+    "weblogs",
+    "muzilog",
+    "weblogger",
+    "web-log",
+    "blogs",
+    "linklog",
+    "linkdumper",
+    "bloggen",
+    "blog",
+    "lifelog"
+   ],
+   "ja": [
+    "部録",
+    "Weblog",
+    "身辺雑記",
+    "インターネットブログ",
+    "ウェブログ",
+    "ブロッガー",
+    "BLOG",
+    "ネットブログ",
+    "Vlog",
+    "ヴログ"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": false,
+   "es": true,
+   "de": true,
+   "nl": false,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "article": {
+  "group": "article",
+  "qid": "Q191067",
+  "sitelinks": 63,
+  "desc": "written work forming an independent part of a publication such as a journal, newspaper, or magazine",
+  "labels": {
+   "en": "article",
+   "fr": "article",
+   "es": "artículo",
+   "de": "Artikel",
+   "nl": "artikel",
+   "ja": "記事",
+   "zh-tw": "文字作品",
+   "zh-hant": "文字作品"
+  },
+  "aliases": {
+   "en": [
+    "periodical article",
+    "journal article",
+    "serial article",
+    "magazine article"
+   ],
+   "fr": [
+    "article de périodique"
+   ],
+   "es": [
+    "artículos",
+    "articulo",
+    "articulos"
+   ],
+   "de": [
+    "Beitrag"
+   ],
+   "nl": [
+    "redactioneel artikel"
+   ],
+   "ja": [
+    "定期刊行物の記事",
+    "雑誌記事",
+    "連載記事"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "baseball": {
+  "group": "baseball",
+  "qid": "Q5369",
+  "sitelinks": 157,
+  "desc": "American-originated sport in which teams compete to score runs by hitting a thrown ball and advancing around bases",
+  "labels": {
+   "en": "baseball",
+   "fr": "baseball",
+   "es": "béisbol",
+   "de": "Baseball",
+   "nl": "honkbal",
+   "ja": "野球",
+   "zh-tw": "棒球",
+   "zh-hant": "棒球"
+  },
+  "aliases": {
+   "en": [
+    "America's pastime",
+    "⚾"
+   ],
+   "fr": [],
+   "es": [
+    "beisbol"
+   ],
+   "de": [],
+   "nl": [],
+   "ja": [
+    "ベースボール"
+   ],
+   "zh-tw": [
+    "野球"
+   ],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "futbol": {
+  "group": "futbol",
+  "qid": "Q2736",
+  "sitelinks": 296,
+  "desc": "sport that is practiced between two teams of eleven players",
+  "labels": {
+   "en": "association football",
+   "fr": "football",
+   "es": "fútbol",
+   "de": "Fußball",
+   "nl": "voetbal",
+   "ja": "サッカー",
+   "zh-tw": "足球",
+   "zh-hant": "足球"
+  },
+  "aliases": {
+   "en": [
+    "football",
+    "soccer",
+    "footie",
+    "footy",
+    "futbol",
+    "futebol",
+    "association soccer",
+    "foot ball"
+   ],
+   "fr": [
+    "soccer",
+    "foot",
+    "football association"
+   ],
+   "es": [
+    "balompié",
+    "futbol",
+    "balompie",
+    "pelota de pie"
+   ],
+   "de": [
+    "Fussball",
+    "Rasenballsport",
+    "Association Football",
+    "Assoziationsfussball",
+    "Assoziationsfußball"
+   ],
+   "nl": [],
+   "ja": [
+    "アソシエーション・フットボール",
+    "ア式蹴球",
+    "アソシエーションフットボール",
+    "フットボール",
+    "蹴球"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": false,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "eurovision": {
+  "group": "eurovision",
+  "qid": "Q276",
+  "sitelinks": 143,
+  "desc": "annual song competition held among the members of the European Broadcasting Union",
+  "labels": {
+   "en": "Eurovision Song Contest",
+   "fr": "Concours Eurovision de la chanson",
+   "es": "Festival de la Canción de Eurovisión",
+   "de": "Eurovision Song Contest",
+   "nl": "Eurovisiesongfestival",
+   "ja": "ユーロビジョン・ソング・コンテスト",
+   "zh-tw": "歐洲歌唱大賽",
+   "zh-hant": "歐洲歌唱大賽"
+  },
+  "aliases": {
+   "en": [
+    "ESC",
+    "Eurovision",
+    "Grand Prix Eurovision de la Chanson",
+    "Eurosong"
+   ],
+   "fr": [
+    "Grand Prix Eurovision de la Chanson",
+    "Eurovision Song Contest",
+    "Eurovision",
+    "ESC"
+   ],
+   "es": [
+    "Eurovisión",
+    "Festival de Eurovisión",
+    "Festival de la cancion de Eurovisión"
+   ],
+   "de": [
+    "Grand Prix Eurovision de la Chanson",
+    "Grand Prix Eurovision de la Chanson Européenne",
+    "Concours Eurovision de la Chanson",
+    "Schlagerwettbewerb der Eurovision",
+    "Grand Prix d’Eurovision de la Chanson",
+    "Grand Prix Eurovision",
+    "Grand Prix Eurovision de la Chanson Europeenne",
+    "Liederwettbewerb der Eurovision",
+    "Eurovisie Songfestival",
+    "Countdown Grand Prix",
+    "Europäischer Schlagerwettbewerb",
+    "Grand Prix d'Eurovision de la Chanson",
+    "ESC",
+    "EVSC"
+   ],
+   "nl": [
+    "ESF",
+    "Songfestival",
+    "Eurosong",
+    "Eurovisie Songfestival"
+   ],
+   "ja": [],
+   "zh-tw": [],
+   "zh-hant": [
+    "土豪五國制"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": false,
+   "de": true,
+   "nl": true,
+   "ja": false,
+   "zh-tw": true,
+   "zh-hant": true
+  }
+ },
+ "books": {
+  "group": "books",
+  "qid": "Q571",
+  "sitelinks": 282,
+  "desc": "medium for recording information (words or images) typically on bound pages or more abstractly in electronic or audio form",
+  "labels": {
+   "en": "book",
+   "fr": "livre",
+   "es": "libro",
+   "de": "Buch",
+   "nl": "boek",
+   "ja": "本",
+   "zh-tw": "圖書",
+   "zh-hant": "圖書"
+  },
+  "aliases": {
+   "en": [
+    "books"
+   ],
+   "fr": [
+    "ouvrage",
+    "livres"
+   ],
+   "es": [
+    "libros"
+   ],
+   "de": [],
+   "nl": [
+    "boek (document)",
+    "boeken"
+   ],
+   "ja": [
+    "書籍",
+    "書物",
+    "図書",
+    "典籍"
+   ],
+   "zh-tw": [
+    "書"
+   ],
+   "zh-hant": [
+    "書"
+   ]
+  },
+  "covered": {
+   "en": false,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "travel": {
+  "group": "travel",
+  "qid": "Q61509",
+  "sitelinks": 144,
+  "desc": "movement of people between geographical locations",
+  "labels": {
+   "en": "travel",
+   "fr": "voyage",
+   "es": "viaje",
+   "de": "Reise",
+   "nl": "reis",
+   "ja": "旅行",
+   "zh-hant": "旅行"
+  },
+  "aliases": {
+   "en": [
+    "journey",
+    "to travel",
+    "travelling",
+    "traveling",
+    "journey (travel)"
+   ],
+   "fr": [
+    "voyager"
+   ],
+   "es": [
+    "desplazamiento",
+    "movilidad"
+   ],
+   "de": [
+    "Fernreisen",
+    "Rundreise",
+    "Wegreise",
+    "Fernreise",
+    "Reisekette",
+    "Fahrt"
+   ],
+   "nl": [
+    "reizen"
+   ],
+   "ja": [
+    "旅",
+    "トラベル"
+   ],
+   "zh-tw": [],
+   "zh-hant": [
+    "旅遊"
+   ]
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": false,
+   "nl": false,
+   "ja": true,
+   "zh-hant": true
+  }
+ },
+ "anime": {
+  "group": "anime",
+  "qid": "Q1107",
+  "sitelinks": 154,
+  "desc": "Japanese style of animation",
+  "labels": {
+   "en": "anime",
+   "fr": "anime",
+   "es": "anime",
+   "de": "Anime",
+   "nl": "anime",
+   "ja": "日本のアニメ",
+   "zh-tw": "日本動畫",
+   "zh-hant": "日本動畫"
+  },
+  "aliases": {
+   "en": [
+    "animé",
+    "Japanimation",
+    "Japanese animation",
+    "Japanime"
+   ],
+   "fr": [
+    "japanime",
+    "Japanimation",
+    "animation japonaise",
+    "animé"
+   ],
+   "es": [
+    "animé"
+   ],
+   "de": [
+    "Japanimation"
+   ],
+   "nl": [],
+   "ja": [
+    "日本のアニメーション",
+    "ジャパニメーション",
+    "ジャパニメ",
+    "アニメ"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": false,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "manga": {
+  "group": "manga",
+  "qid": "Q37045846",
+  "sitelinks": 2,
+  "desc": "family name",
+  "labels": {
+   "en": "Manga",
+   "zh-tw": "曼加",
+   "zh-hant": "曼加"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [],
+   "es": [],
+   "de": [],
+   "nl": [],
+   "ja": [],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "running": {
+  "group": "running",
+  "qid": "Q912985",
+  "sitelinks": 25,
+  "desc": "position in American and Canadian football",
+  "labels": {
+   "en": "running back",
+   "fr": "running back",
+   "es": "running back",
+   "de": "Runningback",
+   "nl": "running back",
+   "ja": "ランニングバック",
+   "zh-hant": "跑鋒"
+  },
+  "aliases": {
+   "en": [
+    "RB",
+    "feature back"
+   ],
+   "fr": [
+    "porteur de ballon",
+    "demi à l'attaque",
+    "demi offensif",
+    "halfback",
+    "fullback",
+    "centre arrière"
+   ],
+   "es": [
+    "Corredor",
+    "RB"
+   ],
+   "de": [
+    "RB",
+    "Halfback",
+    "Tailback",
+    "Fullback"
+   ],
+   "nl": [
+    "halfback",
+    "tailback",
+    "wingback"
+   ],
+   "ja": [],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": false,
+   "fr": false,
+   "es": false,
+   "de": false,
+   "nl": false,
+   "ja": false,
+   "zh-hant": false
+  }
+ },
+ "hiking": {
+  "group": "hiking",
+  "qid": "Q12014035",
+  "sitelinks": 76,
+  "desc": "walking as a hobby, sport, or leisure activity",
+  "labels": {
+   "en": "hiking",
+   "fr": "randonnée pédestre",
+   "es": "senderismo",
+   "de": "Wandern",
+   "nl": "wandelen",
+   "ja": "ハイキング"
+  },
+  "aliases": {
+   "en": [
+    "recreational hiking",
+    "leisure hiking"
+   ],
+   "fr": [],
+   "es": [
+    "hiking"
+   ],
+   "de": [],
+   "nl": [
+    "wandelsport"
+   ],
+   "ja": [],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": false,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true
+  }
+ },
+ "golf": {
+  "group": "golf",
+  "qid": "Q5377",
+  "sitelinks": 158,
+  "desc": "club-and-ball sport",
+  "labels": {
+   "en": "golf",
+   "fr": "golf",
+   "es": "golf",
+   "de": "Golf",
+   "nl": "golf",
+   "ja": "ゴルフ",
+   "zh-tw": "高爾夫球",
+   "zh-hant": "高爾夫球"
+  },
+  "aliases": {
+   "en": [],
+   "fr": [],
+   "es": [],
+   "de": [
+    "Golfsport"
+   ],
+   "nl": [],
+   "ja": [],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": true,
+   "es": true,
+   "de": true,
+   "nl": true,
+   "ja": true,
+   "zh-tw": false,
+   "zh-hant": false
+  }
+ },
+ "motorsport": {
+  "group": "motorsport",
+  "qid": "Q5367",
+  "sitelinks": 55,
+  "desc": "sporting competition and recreation activities which primarily involve the use of motorised vehicles",
+  "labels": {
+   "en": "motorsport",
+   "fr": "sport mécanique",
+   "es": "deporte de motor",
+   "de": "Motorsport",
+   "nl": "gemotoriseerde sport",
+   "ja": "モータースポーツ",
+   "zh-hant": "動力運動"
+  },
+  "aliases": {
+   "en": [
+    "motorsports",
+    "motor sport",
+    "motor sports",
+    "motor racing"
+   ],
+   "fr": [],
+   "es": [
+    "deporte motor",
+    "deporte motorizado",
+    "deportes motorizados",
+    "deportes de motor"
+   ],
+   "de": [],
+   "nl": [],
+   "ja": [
+    "モーター・スポーツ"
+   ],
+   "zh-tw": [],
+   "zh-hant": []
+  },
+  "covered": {
+   "en": true,
+   "fr": false,
+   "es": false,
+   "de": true,
+   "nl": false,
+   "ja": true,
+   "zh-hant": false
+  }
+ }
+}

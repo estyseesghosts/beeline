@@ -120,4 +120,6 @@
     <string name="timeline_home">主页</string>
     <string name="timeline_local">本站时间线</string>
     <string name="timeline_social">社交</string>
+    <string name="settings_combine_related_hashtags">合并相关话题标签</string>
+    <string name="settings_combine_related_hashtags_summary">搜索和照片网格的结果会包含其他形式和语言的相似话题标签。</string>
 </resources>

@@ -1,0 +1,264 @@
+id: infosec
+request: "infosec"
+members:
+  - tag: "infosec"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 501
+  - tag: "cybersecurity"
+    langs: [en, nl]
+    relation: syn
+    status: seen
+    accounts7: 896
+  - tag: "netsec"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "informationsecurity"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "cyber"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 33
+  - tag: "malware"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 78
+  - tag: "ransomware"
+    langs: [en, fr]
+    relation: nar
+    status: seen
+    accounts7: 146
+  - tag: "phishing"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 113
+  - tag: "vulnerability"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 101
+  - tag: "cve"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 130
+  - tag: "zeroday"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 36
+  - tag: "threatintel"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 138
+  - tag: "databreach"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 180
+  - tag: "pentest"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "bugbounty"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 27
+  - tag: "ctf"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 14
+  - tag: "hacking"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 100
+  - tag: "privacy"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 791
+  - tag: "encryption"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 37
+  - tag: "opsec"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 26
+  - tag: "security"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 574
+    ambiguous: true
+  - tag: "cybersécurité"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 35
+  - tag: "cybersecurite"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 35
+  - tag: "sécuritéinformatique"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "securiteinformatique"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "rançongiciel"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "ciberseguridad"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 29
+  - tag: "seguridadinformática"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "seguridadinformatica"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "ciberataque"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "itsicherheit"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 15
+  - tag: "cybersicherheit"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 31
+  - tag: "informationssicherheit"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "cyberangriff"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 24
+  - tag: "beveiliging"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "informatiebeveiliging"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "cyberaanval"
+    langs: [nl]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "セキュリティ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 26
+  - tag: "サイバーセキュリティ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "情報セキュリティ"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "ランサムウェア"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "マルウェア"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "脆弱性"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "資安"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "資訊安全"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "網路安全"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "勒索軟體"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "駭客"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "漏洞"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "sécuritédelinformation"
+    langs: [fr]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "seguridaddelainformación"
+    langs: [es]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "datenschutz"
+    langs: [de]
+    relation: rel
+    status: seen
+    accounts7: 144

@@ -1,0 +1,128 @@
+id: cooking
+request: null
+members:
+  - tag: "cooking"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 164
+  - tag: "cook"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "homecooking"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 26
+  - tag: "recipe"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 60
+  - tag: "recipes"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 93
+  - tag: "baking"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 62
+  - tag: "vegan"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 247
+  - tag: "cuisine"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 30
+  - tag: "recette"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "recettes"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "cocina"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "receta"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "recetas"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 22
+  - tag: "kochen"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 22
+  - tag: "rezept"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "rezepte"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "koken"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "recept"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "recepten"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "料理"
+    langs: [ja, zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "レシピ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "食譜"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "煮飯"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "烹飪"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "調理"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 1

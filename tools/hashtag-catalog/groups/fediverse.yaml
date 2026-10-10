@@ -1,0 +1,106 @@
+id: fediverse
+request: "fediverse"
+members:
+  - tag: "fediverse"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 595
+  - tag: "fedi"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 20
+  - tag: "mastodon"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 535
+    ambiguous: true
+  - tag: "misskey"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "activitypub"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 63
+  - tag: "pixelfed"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 133
+  - tag: "peertube"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 119
+  - tag: "lemmy"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 27
+  - tag: "sharkey"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "feditips"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 19
+  - tag: "fédiverse"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 600
+  - tag: "fediverso"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 121
+  - tag: "マストドン"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "ミスキー"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "フェディバース"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "聯邦宇宙"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "長毛象"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "fédivers"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 8
+    observed_other_lang: ar
+  - tag: "fedivers"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 8
+    observed_other_lang: ar
+  - tag: "fediversum"
+    langs: [de, nl]
+    relation: syn
+    status: seen
+    accounts7: 8

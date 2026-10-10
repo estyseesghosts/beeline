@@ -87,6 +87,7 @@ Keep the
 - [OpenCode profiles](../../.opencode/README.md): configured roles and permission limits.
 
 - [Acceptance matrix](decomposition-01-02-acceptance-matrix.md)
+- [Related hashtags ownership](related-hashtags.md)
 - [App shell ownership](app-shell-ownership.md)
 - [Protocol and session ownership](protocol-and-session-ownership.md)
 - [Retention inventory](retention-inventory.md)

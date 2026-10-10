@@ -1,0 +1,221 @@
+id: photography
+request: "photography"
+members:
+  - tag: "photography"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 3839
+  - tag: "photo"
+    langs: [en, fr]
+    relation: syn
+    status: seen
+    accounts7: 628
+  - tag: "photos"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 99
+  - tag: "photographer"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 78
+  - tag: "photographers"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "streetphotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 445
+  - tag: "landscapephotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 273
+  - tag: "portraitphotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 26
+  - tag: "macrophotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 128
+  - tag: "naturephotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 629
+  - tag: "wildlifephotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 136
+  - tag: "astrophotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 104
+  - tag: "blackandwhite"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 536
+  - tag: "monochrome"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 337
+  - tag: "mastophotography"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "camera"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 30
+  - tag: "cameras"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 16
+  - tag: "photographie"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 181
+  - tag: "photographe"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "photoderue"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "fotografía"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 103
+  - tag: "fotografia"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 103
+  - tag: "foto"
+    langs: [es, de, nl]
+    relation: syn
+    status: seen
+    accounts7: 204
+  - tag: "fotos"
+    langs: [es, de]
+    relation: syn
+    status: seen
+    accounts7: 25
+    observed_other_lang: cs
+  - tag: "fotógrafo"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "fotografo"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "fotografie"
+    langs: [de, nl]
+    relation: syn
+    status: seen
+    accounts7: 535
+  - tag: "fotograf"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 3
+    observed_other_lang: sv
+  - tag: "straßenfotografie"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "strassenfotografie"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "fotograaf"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 17
+  - tag: "写真"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 68
+  - tag: "フォト"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "風景写真"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "ポートレート"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "スナップ"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 4
+    observed_other_lang: zh-TW?
+  - tag: "カメラ"
+    langs: [ja]
+    relation: rel
+    status: seen
+    accounts7: 5
+  - tag: "攝影"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "照片"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 1
+  - tag: "相片"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "街拍"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "風景攝影"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "撮影"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 4

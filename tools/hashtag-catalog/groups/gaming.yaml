@@ -1,0 +1,214 @@
+id: gaming
+request: "gaming"
+members:
+  - tag: "gaming"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 1073
+  - tag: "games"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 378
+  - tag: "videogames"
+    langs: [en, nl]
+    relation: syn
+    status: seen
+    accounts7: 267
+  - tag: "videogame"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 47
+  - tag: "gamer"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 28
+  - tag: "gamers"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "pcgaming"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 180
+  - tag: "consolegaming"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "mobilegaming"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "indiegames"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 152
+  - tag: "rpg"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 185
+  - tag: "fps"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "gamedev"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 578
+  - tag: "steam"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 187
+  - tag: "steamdeck"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 55
+  - tag: "nintendo"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 127
+  - tag: "playstation"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 30
+  - tag: "xbox"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 157
+  - tag: "jeuxvidéo"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 32
+  - tag: "jeuxvideo"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 32
+  - tag: "jeuvideo"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "jeux"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 14
+  - tag: "videojuegos"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 120
+  - tag: "videojuego"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "juegos"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 11
+  - tag: "videospiele"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "videospiel"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "spiele"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 15
+  - tag: "zocken"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "gamen"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "ゲーム"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 56
+  - tag: "ゲーミング"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 2
+  - tag: "ゲーム実況"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 45
+  - tag: "遊戲"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "電玩"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "手遊"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "手機遊戲"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "jeuvidéo"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "computerspiel"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "videospel"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 1
+    observed_other_lang: sv
+  - tag: "コンピュータゲーム"
+    langs: [ja]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "電子遊戲"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

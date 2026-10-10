@@ -120,6 +120,8 @@ class FileAppPreferencesRepository(
                 AppNavigationAnchor.Right,
             ),
             cleanTrackingParameters = json.optBoolean("cleanTrackingParameters", false),
+            // A missing key reads true, so existing users get the default behavior.
+            combineRelatedHashtags = json.optBoolean("combineRelatedHashtags", true),
             contentWarningRules = warning?.toContentWarningRules() ?: ContentWarningRules(),
             hiddenContentPresentation = enumOrDefault(json, "hiddenContentPresentation", HiddenContentPresentation.Placeholder),
         )
@@ -140,6 +142,7 @@ class FileAppPreferencesRepository(
             .put("tabletNavigationAnchor", preferences.tabletNavigationAnchor.name)
             .put("compactWideNavigationAnchor", preferences.compactWideNavigationAnchor.name)
             .put("cleanTrackingParameters", preferences.cleanTrackingParameters)
+            .put("combineRelatedHashtags", preferences.combineRelatedHashtags)
             .put("contentWarningRules", preferences.contentWarningRules.toJson())
             .put("hiddenContentPresentation", preferences.hiddenContentPresentation.name)
         val temporary = File("${file.path}.new")

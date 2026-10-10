@@ -1,0 +1,39 @@
+id: sports
+request: "sports"
+children: [basketball, baseball, football, futbol, tennis, hockey, cricket, rugby, golf, motorsport, cycling, running, olympics]
+members:
+  - tag: "sports"
+    langs: [en, fr]
+    relation: head
+    status: seen
+    accounts7: 277
+  - tag: "sport"
+    langs: [en, fr, de, nl]
+    relation: syn
+    status: seen
+    accounts7: 480
+  - tag: "deporte"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "deportes"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 27
+  - tag: "スポーツ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 65
+  - tag: "運動"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "體育"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

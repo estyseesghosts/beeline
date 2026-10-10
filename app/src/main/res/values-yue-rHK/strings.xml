@@ -92,4 +92,6 @@
     <string name="timeline_federated">跨站時間軸</string>
     <string name="timeline_local">本站時間軸</string>
     <string name="timeline_social">社交</string>
+    <string name="settings_combine_related_hashtags">合併相關主題標籤</string>
+    <string name="settings_combine_related_hashtags_summary">搜尋同相片格仔結果會包括其他寫法同語言嘅相似主題標籤。</string>
 </resources>

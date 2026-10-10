@@ -1,0 +1,74 @@
+id: blog
+request: "blog"
+members:
+  - tag: "blog"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 371
+  - tag: "blogs"
+    langs: [en, fr]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "blogging"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 110
+  - tag: "blogpost"
+    langs: [en, de]
+    relation: syn
+    status: seen
+    accounts7: 34
+  - tag: "indieweb"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 44
+  - tag: "smallweb"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 19
+  - tag: "rss"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 70
+  - tag: "bitácora"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "ブログ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "日記"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 16
+  - tag: "部落格"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "網誌"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "blogue"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 2
+    observed_other_lang: pt
+  - tag: "weblog"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 2

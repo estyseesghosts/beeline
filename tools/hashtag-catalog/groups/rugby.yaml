@@ -1,0 +1,28 @@
+id: rugby
+request: null
+members:
+  - tag: "rugby"
+    langs: [en, fr, es, de, nl]
+    relation: head
+    status: seen
+    accounts7: 90
+  - tag: "ラグビー"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "橄欖球"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "rugbyunion"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "rugbyleague"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 11

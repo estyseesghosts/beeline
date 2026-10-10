@@ -1,0 +1,194 @@
+id: indiemusic
+request: "indiemusic"
+note: "Child of indie. Overlaps with the music group (indiemusic is narrower there, bandcamp is related there). bandcamp is narrower here."
+members:
+  - tag: "indiemusic"
+    langs: [und]
+    relation: head
+    status: seen
+    accounts7: 75
+  - tag: "indiemusician"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "indiemusicians"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "independentmusic"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "indieband"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "indiebands"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "indierock"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 43
+  - tag: "indiepop"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 24
+  - tag: "indiefolk"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 15
+  - tag: "indiealt"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "bandcamp"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 50
+  - tag: "bandcampfriday"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "bandcampfridays"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "unsignedartists"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "selfreleased"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "selfrelease"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "supportindiemusic"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "supportindiebands"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "newindiemusic"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "newmusicfriday"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 19
+  - tag: "diymusic"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 5
+  - tag: "homerecording"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 4
+  - tag: "bedroompop"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 4
+  - tag: "musiqueindépendante"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "musiqueindependante"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "musiqueindé"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "músicaindependiente"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "musicaindependiente"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "músicaindie"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "musicaindie"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "indiemusik"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "indiemuziek"
+    langs: [nl]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "インディーズ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "インディーズ音楽"
+    langs: [ja]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "インディーズバンド"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "獨立音樂"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "獨立樂團"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "獨立音樂人"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0

@@ -214,4 +214,6 @@
     <string name="composer_compress_message">Las imágenes más pequeñas se suben más rápido. El borrador conserva los originales.</string>
     <string name="composer_compress_yes">Comprimir</string>
     <string name="composer_compress_no">Conservar originales</string>
+    <string name="settings_combine_related_hashtags">Combinar hashtags relacionados</string>
+    <string name="settings_combine_related_hashtags_summary">Los resultados de búsqueda y de la cuadrícula de fotos incluyen hashtags similares en otras formas e idiomas.</string>
 </resources>

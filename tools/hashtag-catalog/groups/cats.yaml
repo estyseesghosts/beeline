@@ -1,0 +1,233 @@
+id: cats
+request: "cats"
+members:
+  - tag: "cats"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 615
+  - tag: "cat"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 425
+  - tag: "kitty"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 17
+  - tag: "kitten"
+    langs: [en, nl]
+    relation: nar
+    status: seen
+    accounts7: 32
+  - tag: "kittens"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "caturday"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 259
+  - tag: "catsofmastodon"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 654
+  - tag: "catsoffediverse"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 79
+  - tag: "blackcat"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 30
+  - tag: "tuxedocat"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "catsofthefediverse"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 20
+  - tag: "catphotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "straycats"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "chat"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 60
+  - tag: "chats"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "chaton"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "chatons"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 13
+  - tag: "chatsdumastodon"
+    langs: [fr]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "gato"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "gatos"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 31
+  - tag: "gatito"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "gatitos"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "katze"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 35
+  - tag: "katzen"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 42
+  - tag: "kater"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "katzenfoto"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "katzenbilder"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "kätzchen"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "kat"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "katten"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "poes"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "猫"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 87
+  - tag: "ねこ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 40
+  - tag: "ネコ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 14
+  - tag: "保護猫"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 15
+  - tag: "猫の日"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "ねこ部"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "貓"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "貓咪"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "喵"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "浪貓"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "黑貓"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "hauskatze"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "huiskat"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "gatodoméstico"
+    langs: [es]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "貓奴"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

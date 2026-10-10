@@ -1,0 +1,88 @@
+id: food
+request: null
+members:
+  - tag: "food"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 682
+  - tag: "foodie"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 24
+  - tag: "baking"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 62
+  - tag: "recipes"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 93
+  - tag: "foodphotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "cuisine"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 30
+  - tag: "nourriture"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "comida"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 11
+  - tag: "essen"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 66
+  - tag: "eten"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "食べ物"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "グルメ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 74
+  - tag: "美食"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "alimento"
+    langs: [es]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "nahrung"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "voedsel"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "食物"
+    langs: [ja, zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

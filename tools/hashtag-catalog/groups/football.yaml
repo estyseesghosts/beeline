@@ -1,0 +1,102 @@
+id: football
+request: "football"
+excludes: [futbol]
+note: "American football per request. football alone is ambiguous: UK, France and Spain-speaking users mean soccer. Group excludes everything in futbol."
+members:
+  - tag: "football"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 316
+    ambiguous: true
+  - tag: "americanfootball"
+    langs: [en, de, nl]
+    relation: syn
+    status: seen
+    accounts7: 34
+  - tag: "nfl"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 353
+  - tag: "superbowl"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "collegefootball"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 30
+  - tag: "cfb"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 19
+  - tag: "nflfootball"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 8
+    observed_other_lang: es
+  - tag: "gridiron"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "nflplayoffs"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "nfldraft"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "footballaméricain"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "footballamericain"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "fútbolamericano"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "futbolamericano"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "アメフト"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "アメリカンフットボール"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "スーパーボウル"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "美式足球"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "超級盃"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0

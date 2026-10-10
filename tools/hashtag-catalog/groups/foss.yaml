@@ -1,0 +1,138 @@
+id: foss
+request: "foss"
+members:
+  - tag: "foss"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 344
+  - tag: "floss"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 59
+  - tag: "opensource"
+    langs: [en, fr]
+    relation: syn
+    status: seen
+    accounts7: 1408
+  - tag: "freesoftware"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 113
+  - tag: "oss"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 39
+  - tag: "opensourcesoftware"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 16
+  - tag: "libresoftware"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "linux"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 1307
+  - tag: "selfhosting"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 142
+  - tag: "gnu"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 34
+  - tag: "opensourcehardware"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 5
+  - tag: "logiciellibre"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 25
+  - tag: "logicielslibres"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 14
+  - tag: "libre"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 20
+  - tag: "softwarelibre"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 64
+  - tag: "códigoabierto"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "codigoabierto"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "freiesoftware"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "quelloffen"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "vrijesoftware"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "オープンソース"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "フリーソフトウェア"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "自由ソフトウェア"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "開源"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "自由軟體"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "開放原始碼"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "開源軟體"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 4

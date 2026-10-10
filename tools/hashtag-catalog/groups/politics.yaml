@@ -1,0 +1,168 @@
+id: politics
+request: "politics"
+members:
+  - tag: "politics"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 1001
+  - tag: "uspol"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 765
+  - tag: "uspolitics"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 236
+  - tag: "ukpol"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 119
+  - tag: "ukpolitics"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 75
+  - tag: "cdnpoli"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 175
+  - tag: "auspol"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 219
+  - tag: "eupolitics"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "elections"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 216
+  - tag: "voting"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 53
+  - tag: "democracy"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 265
+  - tag: "government"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 125
+  - tag: "worldnews"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 95
+  - tag: "politique"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 204
+  - tag: "politiquefrançaise"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "politiquefrancaise"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "élections"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 241
+  - tag: "política"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 182
+  - tag: "politica"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 182
+  - tag: "elecciones"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 76
+  - tag: "politik"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 248
+  - tag: "bundespolitik"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "landespolitik"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "wahlen"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "politiek"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 37
+  - tag: "tweedekamer"
+    langs: [nl]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "verkiezingen"
+    langs: [nl]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "政治"
+    langs: [ja, zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 53
+  - tag: "国会"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 14
+  - tag: "選挙"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "選舉"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "立法院"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "台灣政治"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

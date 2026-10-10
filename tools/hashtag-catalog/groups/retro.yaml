@@ -1,0 +1,156 @@
+id: retro
+request: "retro"
+note: "retro alone also covers fashion and design. This group is tech and games."
+members:
+  - tag: "retro"
+    langs: [und]
+    relation: head
+    status: seen
+    accounts7: 137
+    ambiguous: true
+  - tag: "retrocomputing"
+    langs: [en, de, nl]
+    relation: syn
+    status: seen
+    accounts7: 255
+  - tag: "retrogaming"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 271
+  - tag: "retrogames"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 99
+  - tag: "vintagecomputing"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 34
+  - tag: "retrotech"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 25
+  - tag: "atari"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 43
+  - tag: "commodore"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 45
+  - tag: "c64"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 87
+  - tag: "amiga"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 82
+  - tag: "nes"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "snes"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "sega"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 20
+  - tag: "gameboy"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 48
+  - tag: "vintage"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 87
+    ambiguous: true
+  - tag: "oldschool"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 11
+  - tag: "rétro"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 144
+  - tag: "retroinformatique"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "rétrogaming"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 293
+  - tag: "retrocomputación"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "retrojuegos"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "retrospiele"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "レトロ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "レトロゲーム"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "レトロpc"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "懐かしい"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "復古"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "懷舊"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "復古遊戲"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "老遊戲"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

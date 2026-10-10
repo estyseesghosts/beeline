@@ -156,4 +156,6 @@
     <string name="timeline_home">首頁</string>
     <string name="timeline_local">本站時間軸</string>
     <string name="timeline_social">社交</string>
+    <string name="settings_combine_related_hashtags">合併相關主題標籤</string>
+    <string name="settings_combine_related_hashtags_summary">搜尋和相片格線結果會包含其他形式與語言的相似主題標籤。</string>
 </resources>

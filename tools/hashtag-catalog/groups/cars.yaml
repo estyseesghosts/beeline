@@ -1,0 +1,184 @@
+id: cars
+request: "cars"
+members:
+  - tag: "cars"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 53
+  - tag: "car"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 52
+  - tag: "automotive"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 19
+  - tag: "carsofmastodon"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "carspotting"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "electriccars"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 13
+  - tag: "electricvehicles"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 62
+  - tag: "evs"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 28
+  - tag: "ev"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 109
+    ambiguous: true
+  - tag: "classiccars"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "carphotography"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "jdm"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "motorsport"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 60
+  - tag: "f1"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 53
+  - tag: "voiture"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 15
+  - tag: "voitures"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "automobile"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "voituresélectriques"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "coche"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "coches"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "carros"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "automóvil"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "cocheseléctricos"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "auto"
+    langs: [de, nl]
+    relation: syn
+    status: seen
+    accounts7: 92
+  - tag: "autos"
+    langs: [de, nl]
+    relation: syn
+    status: seen
+    accounts7: 21
+  - tag: "fahrzeug"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "elektroauto"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 56
+  - tag: "autoindustrie"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "elektrischeauto"
+    langs: [nl]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "車"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "クルマ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "自動車"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 14
+  - tag: "電気自動車"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "汽車"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "電動車"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "愛車"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0

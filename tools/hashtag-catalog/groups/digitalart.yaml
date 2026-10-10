@@ -1,0 +1,285 @@
+id: digitalart
+request: "digitalart"
+note: "Overlaps with the art group. art lists digitalart as narrower. Here it is a head."
+members:
+  - tag: "digitalart"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 392
+  - tag: "digitalartwork"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "digitalartist"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "digitaldrawing"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "digitalpainting"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "digitalillustration"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 9
+  - tag: "digitalsketch"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "procreate"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 55
+  - tag: "procreateart"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "ipadart"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "krita"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 90
+  - tag: "kritaart"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "clipstudiopaint"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 16
+  - tag: "clipstudio"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "medibang"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "ibispaint"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "conceptart"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 15
+  - tag: "characterdesign"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "pixelart"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 210
+  - tag: "photoshop"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 34
+  - tag: "wacom"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 5
+  - tag: "drawingtablet"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 1
+  - tag: "graphicstablet"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "blender"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 91
+    ambiguous: true
+  - tag: "artnumérique"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "artnumerique"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "peinturenumérique"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "peinturenumerique"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "dessinnumérique"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "dessinnumerique"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "illustrationnumérique"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "illustrationnumerique"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "artedigital"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "ilustracióndigital"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "ilustraciondigital"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "pinturadigital"
+    langs: [es]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "dibujodigital"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "digitalekunst"
+    langs: [de, nl]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "digitalmalerei"
+    langs: [de]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "digitalezeichnung"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "digitaleillustration"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "digitaletekening"
+    langs: [nl]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "digitaleillustratie"
+    langs: [nl]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "digitaalkunst"
+    langs: [nl]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "デジタルアート"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "デジタルイラスト"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "デジ絵"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "デジタル絵"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "アイビスペイント"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "クリスタ"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "液タブ"
+    langs: [ja]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "數位繪圖"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "數位藝術"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "數位插畫"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "電繪"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "數位繪畫"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

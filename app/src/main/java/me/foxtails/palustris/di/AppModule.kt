@@ -16,9 +16,11 @@ import kotlinx.coroutines.Dispatchers
 import me.foxtails.palustris.data.SocialSourceFactory
 import me.foxtails.palustris.data.AppMessages
 import me.foxtails.palustris.data.auth.AppRegistrationCache
+import me.foxtails.palustris.domain.hashtags.HashtagExpander
 import me.foxtails.palustris.data.auth.AuthGateway
 import me.foxtails.palustris.data.auth.DetectingAuthGateway
 import me.foxtails.palustris.data.auth.EncryptedSessionStore
+import me.foxtails.palustris.data.hashtags.HashtagCatalogRepository
 import me.foxtails.palustris.data.preferences.FileAppPreferencesRepository
 import me.foxtails.palustris.data.preferences.FilePostPreferencesRepository
 import me.foxtails.palustris.data.preferences.FileEmojiPickerPreferencesRepository
@@ -32,7 +34,6 @@ import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.data.misskey.CapabilityCache
 import me.foxtails.palustris.data.media.MediaImageLoader
-import me.foxtails.palustris.data.notifications.NotificationRepository
 import me.foxtails.palustris.data.notifications.NotificationStore
 import me.foxtails.palustris.data.notifications.NotificationSyncController
 import me.foxtails.palustris.data.notifications.NotificationSyncIntents
@@ -139,6 +140,15 @@ object StorageModule {
 
     @Provides
     @Singleton
+    fun provideHashtagCatalogRepository(@ApplicationContext context: Context): HashtagCatalogRepository =
+        HashtagCatalogRepository { context.assets.open("hashtag-catalog.json") }
+
+    @Provides
+    fun provideHashtagExpander(repository: HashtagCatalogRepository): HashtagExpander =
+        HashtagExpander(repository.catalog)
+
+    @Provides
+    @Singleton
     fun provideEmojiCatalogClock(): Clock = Clock.systemUTC()
 
     @Provides
@@ -198,9 +208,8 @@ object StorageModule {
 
     @Provides
     @Singleton
-    fun provideEmojiCacheDatabase(@ApplicationContext context: Context): EmojiCacheDatabase {
-        return EmojiCacheDatabase.get(context)
-    }
+    fun provideEmojiCacheDatabase(@ApplicationContext context: Context): EmojiCacheDatabase =
+        EmojiCacheDatabase.get(context)
 
     @Provides
     @Singleton

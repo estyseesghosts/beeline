@@ -123,6 +123,9 @@ class SettingsViewModel @Inject constructor(
     fun setTrackingCleanup(value: Boolean): Unit =
         updateApp(retry = { setTrackingCleanup(value) }) { it.copy(cleanTrackingParameters = value) }
 
+    fun setCombineRelatedHashtags(value: Boolean): Unit =
+        updateApp(retry = { setCombineRelatedHashtags(value) }) { it.copy(combineRelatedHashtags = value) }
+
     fun setContentWarningRules(value: ContentWarningRules): Unit =
         updateApp(retry = { setContentWarningRules(value) }) {
             it.copy(contentWarningRules = value.normalized())
