@@ -73,3 +73,20 @@ and `AuthenticatedHttpClientTest`.
   maps to `AccessDenied`.
 - Limits come from `ServerCapabilities.posting`. Live-server uploads remain
   unverified.
+
+### Upload image preparation
+
+Source: `data/media/UploadImagePreparer.kt`, `data/media/ImageFormatInspector.kt`,
+`UploadImagePreparerTest`, and `UploadImagePreparerInstrumentedTest`.
+
+- With compression on (Misskey default), JPEG, PNG, and WebP images are resized to at most 2000 px on
+  the long edge and encoded as WebP at quality 85. The EXIF orientation is applied to the pixels. The
+  original is kept when the result is not smaller.
+- GIF, APNG, and animated WebP are never re-encoded. They pass unchanged when they fit. They fail
+  with `ImageDoesNotFit` when they exceed a limit.
+- An image over `maxImageBytes` or `maxImagePixels`, or with a type outside `uploadTypes` (or a type
+  other than JPEG, PNG, and WebP, such as HEIC), is re-encoded as JPEG at quality 90 and scaled down
+  in up to six steps. When it still does not fit, `ImageDoesNotFit` stops the publish before any request.
+- Compression is not the same as fitting: with compression off, an image that fits is uploaded as it is,
+  with location data removed.
+

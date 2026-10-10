@@ -25,7 +25,7 @@ toward the domain.
 | Notifications | `data/notifications/` | Ingestion, storage, synchronization, and push. |
 | Direct messages | `data/directmessages/` | Direct-message storage. |
 | Preferences | `data/preferences/` | File-backed application preferences. |
-| Media | `data/media/` | Image loading and AVIF decoding. |
+| Media | `data/media/` | Image loading, AVIF decoding, and `UploadImagePreparer` (one call for each upload image). |
 | Emoji | `data/emoji/` | Emoji catalog cache and assets. |
 | Dependency injection | `di/` | Hilt providers. |
 | Presentation | `ui/` | Compose screens, ViewModels, and shell contracts. The shell adapters in `ui/shell/` are `ShellHomeDestination`, `ShellSearchDestination`, `AppNotificationsDestinationContent`, and `ShellProfileDestination`. They forward narrow contracts and own no feature state. `ProfileTimelinePresentation` in `ui/profile/` renders the Profile timeline. Home splits paging demand (`HomePagingDemand`, `HomePagingEffects`) from rendering (`HomeFeedContent`) inside `ui/feed/HomeFeed.kt`. |

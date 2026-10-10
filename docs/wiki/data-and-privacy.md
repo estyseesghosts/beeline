@@ -96,3 +96,13 @@ and `NotificationRetentionMeasurementTest`.
   with empty tombstones.
 - Heap bytes and database file bytes remain unmeasured.
   Unit counts do not prove device memory or disk behavior.
+
+## Upload image preparation
+
+`UploadImagePreparer` (`data/media/`) prepares one image for each call. It never edits the draft's own
+file. It writes a temporary copy in the cache directory only when the upload differs from the draft
+file, and the publisher deletes that copy after the upload. A copy made for an upload carries no
+location data: an unchanged JPEG, PNG, or WebP is copied and its GPS tags are removed, and a
+re-encoded image carries no metadata. An image that cannot be cleaned in place is re-encoded. GIF and
+other animated images pass unchanged and carry no change to their metadata.
+
