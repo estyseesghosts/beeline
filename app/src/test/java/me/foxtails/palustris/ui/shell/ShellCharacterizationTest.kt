@@ -18,6 +18,7 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.PalustrisApp
+import me.foxtails.palustris.ui.composer.COMPOSER_POST_TAG
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -110,7 +111,7 @@ class ShellCharacterizationTest {
         compose.onNodeWithContentDescription("Reply").performClick()
         compose.onNodeWithText("Replying to Fixture reply-owner").assertIsDisplayed()
         compose.onNodeWithContentDescription("Post text").performTextInput("A reply")
-        compose.onNodeWithText("Publish").performClick()
+        compose.onNodeWithTag(COMPOSER_POST_TAG).performClick()
         compose.waitUntil(timeoutMillis = 5_000) { request != null }
 
         assertEquals(original, request?.replyTo)

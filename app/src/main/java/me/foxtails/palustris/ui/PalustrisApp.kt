@@ -211,7 +211,7 @@ fun PalustrisApp(
                     navigationFit = navigationFit, anchorLeft = anchorLeft,
                 )
             }
-            ShellOverlayHost(navigator, overlay, emojiPresentation, account, onReact, ::handleReply, onReshare, composerOwner, composer, profile, notificationSettings, accountSwitcher, ::closeComposer, ::closeProfile, { navigator.closeOverlay() }, ::discardProfileEditor)
+            ShellOverlayHost(navigator, overlay, emojiPresentation, account, onReact, ::handleReply, onReshare, composerOwner, composer, profile, notificationSettings, accountSwitcher, ::closeComposer, ::closeProfile, { navigator.closeOverlay() }, ::discardProfileEditor, composerCard = presentationMode == LargeLayoutMode.Expanded)
         }
     }
 }

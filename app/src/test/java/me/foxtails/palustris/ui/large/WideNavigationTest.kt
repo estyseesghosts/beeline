@@ -345,7 +345,7 @@ class WideNavigationTest {
         }
         compose.onNodeWithContentDescription("Home").assertIsSelected()
         compose.onNodeWithContentDescription("Compose post").performClick()
-        compose.onNodeWithText("New post").assertIsDisplayed()
+        compose.onNodeWithText("Drafts").assertIsDisplayed()
     }
 
     private fun wideProfile() = Account(

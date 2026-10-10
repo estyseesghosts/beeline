@@ -1,6 +1,6 @@
 # Objective
 
-Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 7 (limits, upload transport, drive permission, image preparation, compression setting, draft and editor model, thread publication) are done. Slices 8 to 10 (composer surface, composer body, thread editing) are in progress. Slice 11 (media in the composer) is not requested yet.
+Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 8 (limits, upload transport, drive permission, image preparation, compression setting, draft and editor model, thread publication, composer surface) are done. Slices 9 to 10 (composer body, thread editing) are in progress. Slice 11 (media in the composer) is not requested yet.
 
 # Invariants
 
@@ -21,31 +21,30 @@ Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 7 (limits, uploa
 
 - Slices 1 to 5 — commits 5f3135cf, 3a680d79, 5fddf6f9, 2c79fd50, feb26b2c.
 - Slice 6: draft and editor model for threads and media — commit 893ce8a3.
-- Slice 7: thread publication — the commit that follows 893ce8a3.
+- Slice 7: thread publication — commit a50298fa.
+- Slice 8: composer surface (`ComposerSurface.kt` new, `ComposerSheet.kt` deleted, card flag through the shell, `composer_publish_progress` string, wiki section).
 
 # Current slice
 
-Slice 8: composer surface.
+Slice 9: composer body.
 
 # Files involved
 
-- `ui/composer/ComposerSheet.kt`, `ComposerScreen.kt` (in `ComposerScreen.kt`), `ComposerOverlayHost.kt`
-- `ui/shell/ShellBackPolicy` and `ComposerOwner.save` guarded-close rules
-- `docs/wiki/ui-and-navigation.md` composer section
-- Tests: `ReplyComposerTest`
+Slice 9 has not started; its owner records its files here.
 
 # Verification
 
 - Slice 7: ThreadPublisherTest 6/6, FeedViewModelThreadTest 3/3, ComposerOwnerTest 27/27, SessionViewModelTest 16/16; full unit suite 1927 tests, 0 failures; tools/tests 52 OK; audit with no new regressions; ktlintCheck, assembleDebug, assembleRelease pass; lintAnalyzeDebug passes while the unitTest/androidTest lint variants crash in the analyzer on untouched files (pre-existing); emulator-5554 launch smoke test passes with feed rendering (logs/slice7-launch2.png). See logs/20261010-120000.txt and the slice commit.
+- Slice 8: ReplyComposerTest 4/4, ExpandedComposerSurfaceTest 2/2, plus NavigationTest (8 composer flows incl. new back-press autosave), SignInScreenTest, ShellCharacterizationTest, WideNavigationTest, LocalizationResourceTest; full unit suite 1933 tests, 0 failures; tools/tests 52 OK; audit with no new regressions (9 pre-existing); ktlintCheck, lintDebug, assembleDebug, assembleRelease pass; emulator-5554 phone smoke (feed, composer keyboard closed/open) in logs/s8-composer.png and logs/s8-keyboard.png. Tablet card placement unverified on hardware (Robolectric w900dp covers it). See logs/20261010-133000.txt and the slice commit.
 
 # Next
 
-Slice 8 of the plan.
+Slice 9 of the plan (composer body).
 
 # Blockers
 
-None. Live-server publish and device checks beyond launch smoke are not yet done.
+None. Tablet hardware check, live-server publish, and pre-existing API 29 instrumentation gaps remain open.
 
 # Last safe commit
 
-893ce8a3 Publish threads in order with media upload and draft progress
+a50298fa Publish threads in order with media upload and draft progress

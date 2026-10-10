@@ -40,6 +40,7 @@ import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.ReactionSelectionMode
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.PalustrisTheme
+import me.foxtails.palustris.ui.composer.COMPOSER_POST_TAG
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.feed.HomeFeatureFixtures
 import me.foxtails.palustris.ui.session.SessionUi
@@ -144,7 +145,7 @@ class SignInScreenTest {
 
         compose.onNodeWithContentDescription("Compose post").performClick()
         compose.onNodeWithContentDescription("Post text").performTextInput("Keep this draft")
-        compose.onNodeWithText("Publish").performClick()
+        compose.onNodeWithTag(COMPOSER_POST_TAG).performClick()
         compose.onNodeWithContentDescription("Post text").assertTextContains("Keep this draft")
 
         compose.runOnIdle {
@@ -167,7 +168,7 @@ class SignInScreenTest {
 
         compose.onNodeWithContentDescription("Compose post").performClick()
         compose.onNodeWithText("Publishing is disabled for this account.").assertIsDisplayed()
-        compose.onNodeWithText("Publish").assertIsNotEnabled()
+        compose.onNodeWithTag(COMPOSER_POST_TAG).assertIsNotEnabled()
     }
 
     @Test fun feedActionsPreserveTheAccountThatFetchedThePost() {

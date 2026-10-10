@@ -52,6 +52,7 @@
     <string name="composer_content_warning">Inhaltswarnung</string>
     <string name="composer_entry_publish_failed">Beitrag %1$d von %2$d ist fehlgeschlagen: %3$s</string>
     <string name="composer_publish">Posten</string>
+    <string name="composer_publish_progress">%1$d/%2$d</string>
     <string name="draft_label">Entwurf</string>
     <string name="draft_delete_action">Entwurf löschen</string>
     <string name="draft_delete">Löschen</string>

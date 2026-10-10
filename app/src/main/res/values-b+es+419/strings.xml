@@ -18,6 +18,7 @@
     <string name="composer_entry_publish_failed">La publicación %1$d de %2$d falló: %3$s</string>
     <string name="composer_new_post">Nueva publicación</string>
     <string name="composer_publish">Publicar</string>
+    <string name="composer_publish_progress">%1$d/%2$d</string>
     <string name="composer_quoted_post">Publicación citada</string>
     <string name="composer_remove_quote">Quitar</string>
     <string name="composer_save_draft">Guardar borrador</string>

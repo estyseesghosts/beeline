@@ -53,6 +53,7 @@
     <string name="composer_placeholder">What\'s on your mind?</string>
     <string name="composer_post_text">Post text</string>
     <string name="composer_publish">Publish</string>
+    <string name="composer_publish_progress">%1$d/%2$d</string>
     <string name="composer_publish_disabled">Publishing is disabled for this account.</string>
     <string name="composer_publish_enabled">Posts will be published to your connected account.</string>
     <string name="composer_quoted_post">Quoted post</string>

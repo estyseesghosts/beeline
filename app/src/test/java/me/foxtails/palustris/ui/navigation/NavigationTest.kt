@@ -875,7 +875,7 @@ class NavigationTest {
         compose.onNodeWithContentDescription("Compose post").performClick()
         compose.onNodeWithContentDescription("Post text").performTextInput("A draft stored only on this device.")
         screenshot("compose")
-        compose.onNodeWithText("Save draft").performClick()
+        compose.onNodeWithContentDescription("Close composer").performClick()
         compose.waitUntil(timeoutMillis = 5_000) {
             runBlocking { drafts.store.list(account.id) }.isNotEmpty()
         }
@@ -908,6 +908,25 @@ class NavigationTest {
         compose.onNodeWithContentDescription("Profile").performClick()
         openProfileDrafts()
         compose.onNodeWithText("Unsaved").assertIsDisplayed()
+    }
+
+    @Test fun backPressAutosavesAndClosesTheComposer() {
+        val account = fixtureAccount("back-autosave-owner")
+        val drafts = activeDrafts(account)
+        compose.activity.runOnUiThread { compose.activity.setContent { AppShellFixtures.app(account = account, draftsContract = drafts.contract) } }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Compose post").performClick()
+        compose.onNodeWithContentDescription("Post text").performTextInput("Backed out")
+        compose.waitForIdle()
+        compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Post text").assertDoesNotExist()
+        compose.waitUntil(timeoutMillis = 5_000) {
+            runBlocking { drafts.store.list(account.id) }.isNotEmpty()
+        }
+        compose.onNodeWithContentDescription("Profile").performClick()
+        openProfileDrafts()
+        compose.onNodeWithText("Backed out").assertIsDisplayed()
     }
 
     @Test fun cleanComposerCloseCreatesNoDraft() {
@@ -977,7 +996,7 @@ class NavigationTest {
         compose.waitForIdle()
         compose.onNodeWithContentDescription("Compose post").performClick()
         compose.onNodeWithContentDescription("Post text").performTextInput("First account draft")
-        compose.onNodeWithText("Save draft").performClick()
+        compose.onNodeWithContentDescription("Close composer").performClick()
         compose.waitUntil(timeoutMillis = 5_000) {
             runBlocking { sharedStore.list(first.id) }.isNotEmpty()
         }

@@ -52,6 +52,7 @@
     <string name="composer_content_warning">Avertissement de contenu</string>
     <string name="composer_entry_publish_failed">La publication %1$d sur %2$d a échoué : %3$s</string>
     <string name="composer_publish">Poster</string>
+    <string name="composer_publish_progress">%1$d/%2$d</string>
     <string name="draft_label">Brouillon</string>
     <string name="draft_delete_action">Supprimer le brouillon</string>
     <string name="draft_delete">Supprimer</string>

@@ -30,6 +30,8 @@ internal object ComposerFeatureFixtures {
         home: HomeContract,
         postInteractions: PostInteractions,
         composer: ComposerContract = ComposerContract.Empty,
+        draftsContract: DraftsContract = DraftsContract.Empty,
+        card: Boolean = false,
     ) {
         var overlayOpen by remember { mutableStateOf(false) }
         val owner = rememberComposerOwner(
@@ -41,7 +43,7 @@ internal object ComposerFeatureFixtures {
                 composerOpen = overlayOpen,
                 overlayOpen = false,
             ),
-            draftsContract = DraftsContract.Empty,
+            draftsContract = draftsContract,
             sessionGeneration = 0L,
             sessionRevision = 0L,
         )
@@ -71,6 +73,7 @@ internal object ComposerFeatureFixtures {
                 onRequestEmoji = {},
                 pendingEmojiInsertion = null,
                 onEmojiInsertionApplied = {},
+                card = card,
             )
         }
     }

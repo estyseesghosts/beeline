@@ -183,6 +183,7 @@ internal fun ShellOverlayHost(
     onCloseProfile: () -> Unit,
     onCloseNotificationSettings: () -> Unit,
     onDiscardProfileEditor: () -> Unit,
+    composerCard: Boolean = false,
 ) {
     overlay.mediaRequest?.let { request ->
         MediaViewerScreen(
@@ -217,6 +218,7 @@ internal fun ShellOverlayHost(
         onRequestEmoji = { field -> overlay.emojiPickerTarget = EmojiPickerTarget.Composer(field) },
         pendingEmojiInsertion = overlay.pendingEmojiInsertion,
         onEmojiInsertionApplied = { overlay.pendingEmojiInsertion = null },
+        card = composerCard,
         triggerSource = overlay.composerTrigger,
     )
 

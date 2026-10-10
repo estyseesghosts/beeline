@@ -403,6 +403,31 @@ Search and the DM editor also receive separate fallback positioning clearance, i
 The folded emulator shows vertical navigation at 445 × 704 dp. A 900 × 900 dp tablet fixture passes Compose tests.
 Narrow-phone, hardware tablet, device RTL, and physical hinge acceptance remain separate verification limits.
 
+## Composer surface
+
+Compact windows show a full-screen composer. Compact-wide (phone landscape)
+also shows the full-screen surface. Expanded windows (tablet) show a floating
+card. The card is at most 600 dp wide and 85% of the window height. An outside
+tap runs the guarded close. Back runs the same guarded close.
+
+The top bar holds Close on the left. It holds Drafts and a filled Post button
+on the right. While publishing, the Post button shows a spinner with the posted
+entry count. The shell chooses placement. It passes a card flag to the composer
+overlay. The composer owns the surface assembly.
+
+Drafts opens the draft list inside the composer. Opening a draft saves the
+current editor first. Deleting a draft refreshes the list. The drafts top bar
+holds a back button. It returns to the editor.
+
+Closing a dirty composer saves the draft and closes the overlay. Back, an
+outside tap, and Close all run this rule. A clean close saves nothing. A failed
+save keeps the editor open and shows the error. The surface grows from the
+trigger that opened it. Focus returns to the trigger after close.
+
+Sources: `ui/composer/ComposerSurface.kt`, `ui/composer/ComposerOverlayHost.kt`,
+`ui/PalustrisApp.kt`, `ReplyComposerTest`, `ExpandedComposerSurfaceTest`,
+`NavigationTest`, `TriggerSurfaceTest`.
+
 ## Draft restoration
 
 Closing a dirty composer saves the draft and closes the overlay. The saved text
