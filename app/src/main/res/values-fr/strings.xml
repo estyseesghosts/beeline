@@ -165,6 +165,10 @@
     <string name="settings_combine_related_hashtags_summary">Les résultats de recherche et de la grille de photos incluent des hashtags similaires sous d’autres formes et dans d’autres langues.</string>
     <string name="settings_autoplay_videos">Lecture automatique des vidéos</string>
     <string name="settings_autoplay_videos_summary">Lit les vidéos sans le son dans le fil et la grille de photos. Aucune lecture sur les réseaux limités.</string>
+    <string name="video_mute">Couper le son de la vidéo</string>
+    <string name="video_unmute">Activer le son de la vidéo</string>
+    <string name="video_play">Lire la vidéo</string>
+    <string name="video_pause">Mettre la vidéo en pause</string>
     <string name="search_hashtag_includes">Inclut %1$s</string>
     <string name="search_hashtag_includes_more">Inclut %1$s et %2$d de plus</string>
     <string name="search_hashtag_show_only">Afficher seulement %1$s</string>

@@ -25,6 +25,10 @@
     <string name="settings_combine_related_hashtags_summary">검색 및 사진 그리드 결과에 다른 형태와 언어의 비슷한 해시태그를 포함합니다.</string>
     <string name="settings_autoplay_videos">동영상 자동 재생</string>
     <string name="settings_autoplay_videos_summary">피드와 사진 그리드에서 동영상을 음소거 상태로 재생합니다. 종량제 네트워크에서는 재생하지 않습니다.</string>
+    <string name="video_mute">동영상 음소거</string>
+    <string name="video_unmute">동영상 음소거 해제</string>
+    <string name="video_play">동영상 재생</string>
+    <string name="video_pause">동영상 일시정지</string>
     <string name="search_hashtag_includes">%1$s 포함</string>
     <string name="search_hashtag_includes_more">%1$s 외 %2$d개 포함</string>
     <string name="search_hashtag_show_only">%1$s만 보기</string>

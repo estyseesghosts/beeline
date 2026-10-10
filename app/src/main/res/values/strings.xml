@@ -772,6 +772,10 @@
     <string name="settings_combine_related_hashtags_summary">Search and photo grid results include similar hashtags in other forms and languages.</string>
     <string name="settings_autoplay_videos">Autoplay videos</string>
     <string name="settings_autoplay_videos_summary">Plays videos in the feed and photo grid, muted. Does not play on metered networks.</string>
+    <string name="video_mute">Mute video</string>
+    <string name="video_unmute">Unmute video</string>
+    <string name="video_play">Play video</string>
+    <string name="video_pause">Pause video</string>
     <string name="search_hashtag_includes">Includes %1$s</string>
     <string name="search_hashtag_includes_more">Includes %1$s and %2$d more</string>
     <string name="search_hashtag_show_only">Show only %1$s</string>

@@ -109,6 +109,24 @@ class MediaRequestPolicyTest {
     }
 
     @Test
+    fun videoPreviewRequestsOnlyThePosterAndNeverTheStream() {
+        val video = attachment.copy(
+            kind = MediaKind.Video,
+            mimeType = "video/mp4",
+            url = "https://cdn.example/clip.mp4",
+            previewUrl = "https://cdn.example/poster.jpg",
+        )
+        assertEquals(
+            MediaRequestDecision.Request("https://cdn.example/poster.jpg", MediaRequestRole.Preview, fullResourceAvailable = false),
+            MediaRequestPolicy.resolve(video, MediaRequestRole.Preview, revealed = true, explicitlyOpened = false),
+        )
+        assertEquals(
+            MediaRequestDecision.NoRequest(MediaRequestReason.UnsupportedKind),
+            MediaRequestPolicy.resolve(video, MediaRequestRole.Full, revealed = true, explicitlyOpened = true),
+        )
+    }
+
+    @Test
     fun invalidUrlsAreRejected() {
         assertEquals(null, MediaRequestPolicy.validWebUrl("not-a-url"))
         assertEquals(null, MediaRequestPolicy.validWebUrl("null"))

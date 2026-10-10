@@ -405,11 +405,12 @@ class SettingsDisplayTest {
      */
     private fun layoutDirectionSwitch(): SemanticsNodeInteraction {
         val switches = compose.onAllNodes(isToggleable())
-        switches.assertCountEquals(3)
+        // Request 60 Hz, combine related hashtags, autoplay videos, then layout direction.
+        switches.assertCountEquals(4)
         // The item scrolls, so it can sit outside the viewport on a short screen. A click needs the
         // node on screen, so scroll to it first.
-        switches[2].performScrollTo()
-        return switches[2]
+        switches[3].performScrollTo()
+        return switches[3]
     }
 
     @Test

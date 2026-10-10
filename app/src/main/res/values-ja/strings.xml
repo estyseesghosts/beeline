@@ -111,6 +111,10 @@
     <string name="settings_combine_related_hashtags_summary">検索とフォトグリッドの結果に、他の表記や言語の似たハッシュタグを含めます。</string>
     <string name="settings_autoplay_videos">動画を自動再生</string>
     <string name="settings_autoplay_videos_summary">フィードとフォトグリッドで動画をミュートで再生します。従量制ネットワークでは再生しません。</string>
+    <string name="video_mute">動画をミュート</string>
+    <string name="video_unmute">動画のミュートを解除</string>
+    <string name="video_play">動画を再生</string>
+    <string name="video_pause">動画を一時停止</string>
     <string name="search_hashtag_includes">%1$s を含む</string>
     <string name="search_hashtag_includes_more">%1$s ほか %2$d 件を含む</string>
     <string name="search_hashtag_show_only">%1$s のみ表示</string>

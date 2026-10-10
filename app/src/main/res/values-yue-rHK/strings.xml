@@ -96,6 +96,10 @@
     <string name="settings_combine_related_hashtags_summary">搜尋同相片格仔結果會包括其他寫法同語言嘅相似主題標籤。</string>
     <string name="settings_autoplay_videos">自動播放影片</string>
     <string name="settings_autoplay_videos_summary">喺動態同相片格仔入面靜音播放影片。用計量網絡時唔會播放。</string>
+    <string name="video_mute">將影片靜音</string>
+    <string name="video_unmute">取消影片靜音</string>
+    <string name="video_play">播放影片</string>
+    <string name="video_pause">暫停影片</string>
     <string name="search_hashtag_includes">包括 %1$s</string>
     <string name="search_hashtag_includes_more">包括 %1$s 同其他 %2$d 個</string>
     <string name="search_hashtag_show_only">只顯示 %1$s</string>

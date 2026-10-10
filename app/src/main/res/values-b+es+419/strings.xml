@@ -205,6 +205,10 @@
     <string name="settings_combine_related_hashtags_summary">Los resultados de búsqueda y de la cuadrícula de fotos incluyen hashtags similares en otras formas e idiomas.</string>
     <string name="settings_autoplay_videos">Reproducir videos automáticamente</string>
     <string name="settings_autoplay_videos_summary">Reproduce videos en silencio en el feed y la cuadrícula de fotos. No se reproducen en redes con datos limitados.</string>
+    <string name="video_mute">Silenciar video</string>
+    <string name="video_unmute">Activar sonido del video</string>
+    <string name="video_play">Reproducir video</string>
+    <string name="video_pause">Pausar video</string>
     <string name="search_hashtag_includes">Incluye %1$s</string>
     <string name="search_hashtag_includes_more">Incluye %1$s y %2$d más</string>
     <string name="search_hashtag_show_only">Mostrar solo %1$s</string>

@@ -22,6 +22,7 @@ import kotlinx.coroutines.sync.withLock
 import me.foxtails.palustris.data.AccountSourceRegistry
 import me.foxtails.palustris.data.auth.DraftStore
 import me.foxtails.palustris.data.auth.DraftWriteAuthority
+import me.foxtails.palustris.data.media.MeteredNetworkMonitor
 import me.foxtails.palustris.data.notifications.ForegroundNotificationStreamController
 import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.domain.AppLanguage
@@ -56,6 +57,8 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var photoGridPreferencesRepository: PhotoGridPreferencesRepository
 
     @Inject lateinit var hashtagExpander: HashtagExpander
+
+    @Inject lateinit var meteredNetworkMonitor: MeteredNetworkMonitor
     private lateinit var refreshRateController: RefreshRateController
     private var appliedLanguage = AppLanguage.SystemDefault
     private val localeOwner = AppLocaleOwner()
@@ -99,6 +102,7 @@ class MainActivity : ComponentActivity() {
                 postPreferencesRepository,
                 photoGridPreferencesRepository,
                 hashtagExpander,
+                meteredNetworkMonitor,
             )
         }
         lifecycleScope.launch {

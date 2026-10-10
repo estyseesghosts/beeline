@@ -19,24 +19,27 @@ Implement `docs/video.md`: video autoplay in the feed and photo grid, a video vi
 
 - Slice 6, Media3 dependencies — see Git log "Add Media3 ExoPlayer and headless Compose state".
 - Slice 2, setting, network monitor, policy — see Git log "Add the autoplay setting, metered network monitor, and autoplay policy".
+- Slice 3, feed autoplay — see Git log "Autoplay muted videos in the feed".
 
 # Current slice
 
-Slice 3, feed autoplay.
+Slice 4, photo grid.
 
 # Files involved
 
 - `domain/AutoplayPolicy.kt`, `data/media/MeteredNetworkMonitor.kt`, `data/media/ReducedMotion.kt`
-- `ui/media/PostMediaCarousel.kt`, `ui/feed/HomeFeed.kt`
+- `ui/media/VideoPlaybackCoordinator.kt` (single owner of the feed slot; suppresses `UnsafeOptInUsageError` because lint rejects Kotlin `@OptIn` for Media3), `ui/media/VideoTile.kt`, `ui/media/VideoControls.kt`
+- `ui/media/PostMediaCarousel.kt` (video branch), `domain/MediaRequestPolicy.kt` (video poster)
 
 # Verification
 
 - `AutoplayPolicyTest` and `AppPreferencesRepositoryTest` pass; ktlint passes.
-- Full CI-parity gate runs at slice 3 and at the end.
+- Slice 3: full CI-parity gate passed (architecture audit exit 1 is pre-existing). Emulator: video plays in a hashtag feed, frames advance, sound toggle flips, scrolling away stops it. Audio output itself not heard.
+- Not done in slice 3: duration badge (Attachment has no duration), retry control on a failed tile.
 
 # Next
 
-Slice 3: `VideoPlaybackCoordinator`, `VideoTile`, `VideoControls`, feed wiring.
+Slice 4: admit video tiles in `photoGridItems`, play badge, same policy.
 
 # Blockers
 
@@ -44,4 +47,4 @@ Slice 3: `VideoPlaybackCoordinator`, `VideoTile`, `VideoControls`, feed wiring.
 
 # Last safe commit
 
-`164621d6` Add Media3 ExoPlayer and headless Compose state for video playback (video slice 6)
+Slice 2 commit `6de35511`

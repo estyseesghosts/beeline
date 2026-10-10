@@ -284,6 +284,18 @@ private fun MediaPreviewTile(
                     SensitiveMediaTile(onReveal = { revealed = true })
                 } else {
                     when {
+                        attachment.kind == MediaKind.Video -> VideoTileContent(
+                            tileKey = transitionKey.toString(),
+                            attachment = attachment,
+                            poster = previewPainter,
+                            posterDescription = attachment.description
+                                ?: stringResource(R.string.media_attachment_fallback, index + 1),
+                            contentVisible = revealed,
+                            decodeWidthPx = decodeWidthPx,
+                            order = { tileLayout.coordinates?.fullBoundsInRoot()?.top?.toInt() ?: Int.MAX_VALUE },
+                            modifier = Modifier.fillMaxSize(),
+                            placeholder = { MissingPreviewTile(attachment.description) },
+                        )
                         attachment.kind !in setOf(MediaKind.Image, MediaKind.AnimatedImage) -> UnsupportedMediaTile(attachment)
                         visibleDecision is MediaRequestDecision.Request && previewPainter != null -> {
                             Image(

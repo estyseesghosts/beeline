@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.foxtails.palustris.data.AccountSourceRegistry
 import me.foxtails.palustris.data.auth.DraftStore
 import me.foxtails.palustris.data.auth.DraftWriteAuthority
+import me.foxtails.palustris.data.media.MeteredNetworkMonitor
 import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.data.notifications.NotificationStreamController
 import me.foxtails.palustris.domain.AppPreferencesRepository
@@ -48,6 +49,8 @@ import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.ui.layout.deviceLayoutDirection
 import me.foxtails.palustris.ui.layout.resolveAgainst
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
+import me.foxtails.palustris.ui.media.LocalVideoPlaybackCoordinator
+import me.foxtails.palustris.ui.media.rememberVideoPlaybackCoordinator
 import me.foxtails.palustris.ui.motion.palustrisMotionScheme
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.notifications.NotificationLaunchHost
@@ -76,6 +79,7 @@ fun ConnectedApp(
     postPreferencesRepository: PostPreferencesRepository,
     photoGridPreferencesRepository: PhotoGridPreferencesRepository,
     hashtagExpander: HashtagExpander = HashtagExpander(HashtagCatalog.Empty),
+    meteredNetworkMonitor: MeteredNetworkMonitor? = null,
 ) {
     val state by accountManager.session.collectAsStateWithLifecycle()
     val accountIndex by accountManager.accountIndex.collectAsStateWithLifecycle()
@@ -92,6 +96,10 @@ fun ConnectedApp(
             HashtagLanguagePolicy.forLanguage(appPreferences.preferences.language),
         )
     }
+    val videoCoordinator = rememberVideoPlaybackCoordinator(
+        autoplayEnabled = appPreferences.preferences.autoplayVideos,
+        monitor = meteredNetworkMonitor,
+    )
     val connectedContext by accountManager.connectedContext.collectAsStateWithLifecycle()
     val activeContext = connectedContext?.takeIf { it.accountId == state.account?.id }
     // The entry store is activity-scoped. It survives recreation and retires feature models only
@@ -151,6 +159,7 @@ fun ConnectedApp(
              LocalContentWarningRules provides appPreferences.preferences.contentWarningRules.merge(postPreferences.contentWarningRules),
              LocalMutedHashtags provides postPreferences.localMutedHashtags.toSet(),
              LocalHiddenContentPresentation provides appPreferences.preferences.hiddenContentPresentation,
+             LocalVideoPlaybackCoordinator provides videoCoordinator,
         ) {
         Box(Modifier.fillMaxSize()) {
         AnimatedContent(

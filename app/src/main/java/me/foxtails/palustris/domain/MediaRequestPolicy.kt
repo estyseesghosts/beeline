@@ -43,6 +43,12 @@ object MediaRequestPolicy {
         if (attachment.sensitive && !revealed) {
             return MediaRequestDecision.NoRequest(MediaRequestReason.HiddenSensitiveMedia)
         }
+        if (attachment.kind == MediaKind.Video && role == MediaRequestRole.Preview) {
+            // Video tiles show the server preview as a poster. The stream URL is never an image request.
+            val poster = validWebUrl(attachment.previewUrl)
+                ?: return MediaRequestDecision.NoRequest(MediaRequestReason.UnsupportedKind)
+            return MediaRequestDecision.Request(poster, role, fullResourceAvailable = false)
+        }
         if (attachment.kind !in setOf(MediaKind.Image, MediaKind.AnimatedImage)) {
             return MediaRequestDecision.NoRequest(MediaRequestReason.UnsupportedKind)
         }
