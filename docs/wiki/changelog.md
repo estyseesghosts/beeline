@@ -8,7 +8,7 @@ Stale when: A release ships without an entry here.
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
 
-## Unreleased
+## 0.2.12
 
 ### New
 
