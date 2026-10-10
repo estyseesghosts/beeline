@@ -55,6 +55,31 @@ class ZoomableMediaState {
 @Composable
 fun rememberZoomableMediaState(key: Any?): ZoomableMediaState = remember(key) { ZoomableMediaState() }
 
+/**
+ * Pinch zoom, pan while zoomed, and double-tap zoom through one [ZoomableMediaState]. Images and
+ * videos share it, so a transformed page behaves the same for both. [onTap] runs for a single tap.
+ */
+@Composable
+internal fun Modifier.zoomable(state: ZoomableMediaState, tapKey: Any?, onTap: (() -> Unit)? = null): Modifier {
+    val transformState = rememberTransformableState { zoomChange, panChange, _ ->
+        state.applyTransform(zoomChange, panChange)
+    }
+    return this
+        .transformable(transformState, canPan = { state.isZoomed })
+        .pointerInput(tapKey) {
+            detectTapGestures(
+                onTap = onTap?.let { tap -> { _: Offset -> tap() } },
+                onDoubleTap = { state.setDoubleTapZoom() },
+            )
+        }
+        .graphicsLayer {
+            scaleX = state.scale
+            scaleY = state.scale
+            translationX = state.offset.x.coerceIn(-size.width * (state.scale - 1f) / 2f, size.width * (state.scale - 1f) / 2f)
+            translationY = state.offset.y.coerceIn(-size.height * (state.scale - 1f) / 2f, size.height * (state.scale - 1f) / 2f)
+        }
+}
+
 @Composable
 internal fun ZoomableMediaImage(
     request: ImageRequest,
@@ -66,9 +91,6 @@ internal fun ZoomableMediaImage(
     onImageDimensionsReady: (Size) -> Unit = {},
     placeholderRequest: ImageRequest? = null,
 ) {
-    val transformState = rememberTransformableState { zoomChange, panChange, _ ->
-        state.applyTransform(zoomChange, panChange)
-    }
     val painter = rememberAsyncImagePainter(model = request, imageLoader = imageLoader)
     val placeholderPainter = placeholderRequest?.let { rememberAsyncImagePainter(model = it, imageLoader = imageLoader) }
     LaunchedEffect(painter.state) {
@@ -83,20 +105,7 @@ internal fun ZoomableMediaImage(
     Box(
         modifier
             .fillMaxSize()
-            .transformable(transformState, canPan = { state.isZoomed })
-            .pointerInput(request.data) {
-                detectTapGestures(
-                    onDoubleTap = {
-                        state.setDoubleTapZoom()
-                    },
-                )
-            }
-            .graphicsLayer {
-                scaleX = state.scale
-                scaleY = state.scale
-                translationX = state.offset.x.coerceIn(-size.width * (state.scale - 1f) / 2f, size.width * (state.scale - 1f) / 2f)
-                translationY = state.offset.y.coerceIn(-size.height * (state.scale - 1f) / 2f, size.height * (state.scale - 1f) / 2f)
-            }
+            .zoomable(state, request.data)
             .semantics { this.contentDescription = contentDescription },
     ) {
         // The preview stays beneath the full image, so a page never shows a blank frame while the

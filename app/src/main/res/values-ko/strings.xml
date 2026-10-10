@@ -29,6 +29,10 @@
     <string name="video_unmute">동영상 음소거 해제</string>
     <string name="video_play">동영상 재생</string>
     <string name="video_pause">동영상 일시정지</string>
+    <string name="video_failed">이 동영상을 재생할 수 없습니다.</string>
+    <string name="video_retry">다시 시도</string>
+    <string name="video_seek">탐색</string>
+    <string name="video_time">%1$s / %2$s</string>
     <string name="search_hashtag_includes">%1$s 포함</string>
     <string name="search_hashtag_includes_more">%1$s 외 %2$d개 포함</string>
     <string name="search_hashtag_show_only">%1$s만 보기</string>

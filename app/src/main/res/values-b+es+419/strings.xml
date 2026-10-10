@@ -209,6 +209,10 @@
     <string name="video_unmute">Activar sonido del video</string>
     <string name="video_play">Reproducir video</string>
     <string name="video_pause">Pausar video</string>
+    <string name="video_failed">No se puede reproducir este video.</string>
+    <string name="video_retry">Reintentar</string>
+    <string name="video_seek">Buscar en el video</string>
+    <string name="video_time">%1$s / %2$s</string>
     <string name="search_hashtag_includes">Incluye %1$s</string>
     <string name="search_hashtag_includes_more">Incluye %1$s y %2$d más</string>
     <string name="search_hashtag_show_only">Mostrar solo %1$s</string>

@@ -128,6 +128,10 @@
     <string name="video_unmute">取消视频静音</string>
     <string name="video_play">播放视频</string>
     <string name="video_pause">暂停视频</string>
+    <string name="video_failed">无法播放此视频。</string>
+    <string name="video_retry">重试</string>
+    <string name="video_seek">拖动进度</string>
+    <string name="video_time">%1$s / %2$s</string>
     <string name="search_hashtag_includes">包含 %1$s</string>
     <string name="search_hashtag_includes_more">包含 %1$s 等另外 %2$d 个</string>
     <string name="search_hashtag_show_only">仅显示 %1$s</string>

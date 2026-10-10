@@ -169,6 +169,10 @@
     <string name="video_unmute">Activer le son de la vidéo</string>
     <string name="video_play">Lire la vidéo</string>
     <string name="video_pause">Mettre la vidéo en pause</string>
+    <string name="video_failed">Cette vidéo ne peut pas être lue.</string>
+    <string name="video_retry">Réessayer</string>
+    <string name="video_seek">Se déplacer dans la vidéo</string>
+    <string name="video_time">%1$s / %2$s</string>
     <string name="search_hashtag_includes">Inclut %1$s</string>
     <string name="search_hashtag_includes_more">Inclut %1$s et %2$d de plus</string>
     <string name="search_hashtag_show_only">Afficher seulement %1$s</string>

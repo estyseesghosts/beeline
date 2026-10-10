@@ -776,6 +776,10 @@
     <string name="video_unmute">Unmute video</string>
     <string name="video_play">Play video</string>
     <string name="video_pause">Pause video</string>
+    <string name="video_failed">This video can\'t be played.</string>
+    <string name="video_retry">Retry</string>
+    <string name="video_seek">Seek</string>
+    <string name="video_time">%1$s / %2$s</string>
     <string name="search_hashtag_includes">Includes %1$s</string>
     <string name="search_hashtag_includes_more">Includes %1$s and %2$d more</string>
     <string name="search_hashtag_show_only">Show only %1$s</string>

@@ -100,6 +100,10 @@
     <string name="video_unmute">取消影片靜音</string>
     <string name="video_play">播放影片</string>
     <string name="video_pause">暫停影片</string>
+    <string name="video_failed">呢段影片播放唔到。</string>
+    <string name="video_retry">重試</string>
+    <string name="video_seek">跳到指定位置</string>
+    <string name="video_time">%1$s / %2$s</string>
     <string name="search_hashtag_includes">包括 %1$s</string>
     <string name="search_hashtag_includes_more">包括 %1$s 同其他 %2$d 個</string>
     <string name="search_hashtag_show_only">只顯示 %1$s</string>

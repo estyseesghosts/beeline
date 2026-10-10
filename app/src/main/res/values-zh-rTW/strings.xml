@@ -164,6 +164,10 @@
     <string name="video_unmute">取消影片靜音</string>
     <string name="video_play">播放影片</string>
     <string name="video_pause">暫停影片</string>
+    <string name="video_failed">無法播放此影片。</string>
+    <string name="video_retry">重試</string>
+    <string name="video_seek">拖曳進度</string>
+    <string name="video_time">%1$s / %2$s</string>
     <string name="search_hashtag_includes">包含 %1$s</string>
     <string name="search_hashtag_includes_more">包含 %1$s 與其他 %2$d 個</string>
     <string name="search_hashtag_show_only">僅顯示 %1$s</string>

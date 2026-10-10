@@ -20,11 +20,12 @@ Implement `docs/video.md`: video autoplay in the feed and photo grid, a video vi
 - Slice 6, Media3 dependencies — see Git log "Add Media3 ExoPlayer and headless Compose state".
 - Slice 2, setting, network monitor, policy — see Git log "Add the autoplay setting, metered network monitor, and autoplay policy".
 - Slice 3, feed autoplay, `8e635e18`.
-- Slice 4, photo grid — see Git log "Show and autoplay videos in the Photo Grid".
+- Slice 4, photo grid, `099ea871`.
+- Slice 5, viewer — see Git log "Play videos in the media viewer".
 
 # Current slice
 
-Slice 5, viewer.
+Slice 8, upload (H.264 MP4 path first).
 
 # Files involved
 
@@ -37,11 +38,13 @@ Slice 5, viewer.
 - `AutoplayPolicyTest` and `AppPreferencesRepositoryTest` pass; ktlint passes.
 - Slice 3: full CI-parity gate passed (architecture audit exit 1 is pre-existing). Emulator: video plays in a hashtag feed, frames advance, sound toggle flips, scrolling away stops it. Audio output itself not heard.
 - Slice 4: full gate passed. Emulator: Federated grid shows a poster with play badge and a playing muted tile with controls. Quick view is off for video tiles.
+- Slice 5: full Gradle gate passed. Emulator: viewer opens from a feed tile, plays, controls auto-hide after 3 s, tap shows them, pause/play, sound toggle, seek, drag-dismiss back to the feed. `MediaPage` still shows a pre-existing audit regression (function-complexity-growth); its early branches were extracted so it is smaller than before.
+- Unverified in slice 5: pinch zoom on video, the open and close reveal animation frame by frame, audio output, handoff of a non-zero start position from a live feed tile.
 - Not done in slice 3: duration badge (Attachment has no duration), retry control on a failed tile.
 
 # Next
 
-Slice 5: video viewer page (reveal, handoff position, controls, drag dismiss, zoom).
+Slice 8: `VideoPreparer`, H.264 MP4 through Media3 Transformer, then WebM after slice 7. Slice 7 (FFmpeg) needs an arm64 device and the NDK.
 
 # Blockers
 
@@ -49,4 +52,4 @@ Slice 5: video viewer page (reveal, handoff position, controls, drag dismiss, zo
 
 # Last safe commit
 
-Slice 3 commit `8e635e18`
+Slice 4 commit `099ea871`

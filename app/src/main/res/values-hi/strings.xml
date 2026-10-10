@@ -29,6 +29,10 @@
     <string name="video_unmute">वीडियो की आवाज़ चालू करें</string>
     <string name="video_play">वीडियो चलाएँ</string>
     <string name="video_pause">वीडियो रोकें</string>
+    <string name="video_failed">यह वीडियो नहीं चलाया जा सकता।</string>
+    <string name="video_retry">फिर कोशिश करें</string>
+    <string name="video_seek">वीडियो में आगे-पीछे जाएँ</string>
+    <string name="video_time">%1$s / %2$s</string>
     <string name="search_hashtag_includes">इसमें %1$s शामिल हैं</string>
     <string name="search_hashtag_includes_more">इसमें %1$s और %2$d अन्य शामिल हैं</string>
     <string name="search_hashtag_show_only">केवल %1$s दिखाएँ</string>

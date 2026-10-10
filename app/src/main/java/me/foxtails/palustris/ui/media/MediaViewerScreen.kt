@@ -344,6 +344,14 @@ fun MediaViewerScreen(
                     },
                     zoomState = zoomState,
                     modifier = pageModifier,
+                    videoKey = (
+                        request.sourceKeys.getOrNull(page)
+                            ?: if (page == request.attachmentIndex) {
+                                request.transitionKey
+                            } else {
+                                MediaTransitionKey.forAttachment(request.ownedPost, page)
+                            }
+                        ).toString(),
                 )
                 zoomStates[page] = zoomState
             }

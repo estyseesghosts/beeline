@@ -15,6 +15,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -25,6 +26,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.ContentFrame
@@ -86,6 +88,25 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
     var paused by mutableStateOf(false)
         private set
 
+    /** The tile key of the video open in the viewer, or null. While set, the feed slot stays stopped. */
+    var viewerKey by mutableStateOf<String?>(null)
+        private set
+
+    /** The viewer slot's player. Separate from the feed slot so the feed player can stay warm. */
+    var viewerPlayer by mutableStateOf<ExoPlayer?>(null)
+        private set
+
+    var viewerUnmuted by mutableStateOf(false)
+        private set
+
+    /** True after the viewer player failed. [retryViewer] clears it. */
+    var viewerFailed by mutableStateOf(false)
+        private set
+
+    /** Decoded size of the viewer video once known, so the open transition can land on the real frame. */
+    var viewerVideoSize by mutableStateOf<Size?>(null)
+        private set
+
     fun report(key: String, order: Int, fraction: Float, contentVisible: Boolean, url: String, maxWidthPx: Int) {
         tiles[key] = Tile(order, fraction, contentVisible, url, maxWidthPx)
         scheduleEvaluate()
@@ -114,11 +135,69 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
         current.playWhenReady = !paused
     }
 
+    /**
+     * Takes the viewer slot for [key]. The video starts where the feed tile was and keeps its sound
+     * state when it is the same video; any other video starts at zero and muted. The feed slot stops.
+     */
+    fun openViewer(key: String, url: String) {
+        val handoff = viewerHandoff(
+            loadedKey = loadedKey,
+            activeKey = activeKey,
+            feedPositionMs = player?.currentPosition ?: 0L,
+            unmutedKey = unmutedKey,
+            key = key,
+        )
+        closeViewerPlayer()
+        viewerKey = key
+        viewerUnmuted = handoff.unmuted
+        viewerFailed = false
+        viewerVideoSize = null
+        evaluate()
+        val created = buildPlayer(
+            onError = { viewerFailed = true },
+            onVideoSize = { size -> viewerVideoSize = size },
+        )
+        created.volume = if (handoff.unmuted) 1f else 0f
+        created.setMediaItem(MediaItem.fromUri(url), handoff.startPositionMs)
+        created.prepare()
+        created.playWhenReady = true
+        viewerPlayer = created
+    }
+
+    /** Releases the viewer slot if [key] holds it, then lets the feed pick a video again. */
+    fun closeViewer(key: String) {
+        if (viewerKey != key) return
+        closeViewerPlayer()
+        evaluate()
+    }
+
+    fun toggleViewerSound() {
+        viewerUnmuted = !viewerUnmuted
+        viewerPlayer?.volume = if (viewerUnmuted) 1f else 0f
+    }
+
+    fun retryViewer() {
+        val current = viewerPlayer ?: return
+        viewerFailed = false
+        current.prepare()
+        current.playWhenReady = true
+    }
+
     fun release() {
         evaluateJob?.cancel()
         releaseJob?.cancel()
+        closeViewerPlayer()
         releasePlayer()
         activeKey = null
+    }
+
+    private fun closeViewerPlayer() {
+        viewerPlayer?.release()
+        viewerPlayer = null
+        viewerKey = null
+        viewerUnmuted = false
+        viewerFailed = false
+        viewerVideoSize = null
     }
 
     private fun scheduleEvaluate() {
@@ -133,7 +212,7 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
         val candidates = tiles.filterKeys { it !in failed }.map { (key, tile) ->
             AutoplayCandidate(key, tile.order, tile.fraction, tile.contentVisible)
         }
-        activate(AutoplayPolicy.select(candidates, environment, activeKey))
+        activate(if (viewerKey != null) null else AutoplayPolicy.select(candidates, environment, activeKey))
     }
 
     private fun activate(next: String?) {
@@ -148,7 +227,7 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
             return
         }
         releaseJob?.cancel()
-        val current = player ?: createPlayer().also { player = it }
+        val current = player ?: createFeedPlayer().also { player = it }
         current.volume = 0f
         if (loadedKey != next) {
             current.trackSelectionParameters = current.trackSelectionParameters.buildUpon()
@@ -162,7 +241,19 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
         current.playWhenReady = true
     }
 
-    private fun createPlayer(): ExoPlayer {
+    private fun createFeedPlayer(): ExoPlayer = buildPlayer(
+        onError = {
+            loadedKey?.let { failed.add(it) }
+            loadedKey = null
+            player?.stop()
+            activeKey = null
+            evaluate()
+            scheduleRelease()
+        },
+    )
+
+    /** Builds a player with the shared buffering and loop rules. Clips under 30 s loop once the duration is known. */
+    private fun buildPlayer(onError: () -> Unit, onVideoSize: (Size) -> Unit = {}): ExoPlayer {
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(5_000, 15_000, BUFFER_FOR_PLAYBACK_MS, 3_000)
             .build()
@@ -176,13 +267,12 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
                             if (AutoplayPolicy.shouldLoop(duration)) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
                     }
 
-                    override fun onPlayerError(error: PlaybackException) {
-                        loadedKey?.let { failed.add(it) }
-                        loadedKey = null
-                        created.stop()
-                        activeKey = null
-                        evaluate()
-                        scheduleRelease()
+                    override fun onPlayerError(error: PlaybackException) = onError()
+
+                    override fun onVideoSizeChanged(videoSize: VideoSize) {
+                        if (videoSize.width > 0 && videoSize.height > 0) {
+                            onVideoSize(Size(videoSize.width * videoSize.pixelWidthHeightRatio, videoSize.height.toFloat()))
+                        }
                     }
                 },
             )
@@ -208,6 +298,27 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
         const val IDLE_RELEASE_MS = 10_000L
         const val BUFFER_FOR_PLAYBACK_MS = 1_500
     }
+}
+
+/** Where a viewer video starts and whether it has sound. */
+data class ViewerHandoff(val startPositionMs: Long, val unmuted: Boolean)
+
+/**
+ * The viewer continues the feed tile only when it is the same video that the feed slot holds.
+ * Sound carries over only for the selected video, so any other video starts at zero and muted.
+ */
+fun viewerHandoff(
+    loadedKey: String?,
+    activeKey: String?,
+    feedPositionMs: Long,
+    unmutedKey: String?,
+    key: String,
+): ViewerHandoff {
+    val sameVideo = loadedKey == key
+    return ViewerHandoff(
+        startPositionMs = if (sameVideo) feedPositionMs.coerceAtLeast(0L) else 0L,
+        unmuted = sameVideo && activeKey == key && unmutedKey == key,
+    )
 }
 
 /** Null where no host provides one, such as previews and isolated tests. Tiles then show posters only. */
@@ -243,13 +354,18 @@ fun rememberVideoPlaybackCoordinator(
 
 /** Renders [player] on a TextureView so clipping and transforms apply. [shutter] covers until the first frame. */
 @Composable
-fun VideoSurface(player: Player, shutter: @Composable () -> Unit, modifier: Modifier = Modifier) {
+fun VideoSurface(
+    player: Player,
+    shutter: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop,
+) {
     Box(modifier.fillMaxSize()) {
         ContentFrame(
             player = player,
             modifier = Modifier.fillMaxSize(),
             surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
-            contentScale = ContentScale.Crop,
+            contentScale = contentScale,
             shutter = shutter,
         )
     }

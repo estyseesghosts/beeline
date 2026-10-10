@@ -38,6 +38,22 @@ internal fun mediaPageContentBounds(viewport: androidx.compose.ui.geometry.Rect,
     )
 
 @Composable
+private fun SensitivePagePrompt(onReveal: () -> Unit) {
+    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text(stringResource(R.string.media_sensitive), color = MaterialTheme.colorScheme.onSurface)
+        TextButton(onClick = onReveal) { Text(stringResource(R.string.media_show)) }
+    }
+}
+
+@Composable
+private fun UnsupportedPage(attachment: Attachment) {
+    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text(stringResource(R.string.media_unavailable), color = MaterialTheme.colorScheme.onSurface)
+        Text(stringResource(R.string.media_playback_unavailable, attachment.kind.name), color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
 internal fun MediaPage(
     attachment: Attachment,
     index: Int,
@@ -52,19 +68,30 @@ internal fun MediaPage(
     zoomState: ZoomableMediaState = rememberZoomableMediaState(attachment.url),
     modifier: Modifier = Modifier,
     edgeToEdge: Boolean = false,
+    videoKey: String? = null,
 ) {
     if (attachment.sensitive && !revealed) {
-        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(stringResource(R.string.media_sensitive), color = MaterialTheme.colorScheme.onSurface)
-            TextButton(onClick = onReveal) { Text(stringResource(R.string.media_show)) }
-        }
+        SensitivePagePrompt(onReveal)
+        return
+    }
+    if (attachment.kind == MediaKind.Video && videoKey != null) {
+        VideoViewerPage(
+            attachment = attachment,
+            index = index,
+            tileKey = videoKey,
+            selected = selected,
+            accountIdentity = accountIdentity,
+            postIdentity = postIdentity,
+            contentDescription = attachment.description ?: stringResource(R.string.media_page_count, index + 1, 1),
+            zoomState = zoomState,
+            onReady = onImageReady,
+            onVideoSize = onImageDimensionsReady,
+            modifier = modifier,
+        )
         return
     }
     if (attachment.kind !in setOf(MediaKind.Image, MediaKind.AnimatedImage)) {
-        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(stringResource(R.string.media_unavailable), color = MaterialTheme.colorScheme.onSurface)
-            Text(stringResource(R.string.media_playback_unavailable, attachment.kind.name), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+        UnsupportedPage(attachment)
         return
     }
     val context = LocalContext.current
