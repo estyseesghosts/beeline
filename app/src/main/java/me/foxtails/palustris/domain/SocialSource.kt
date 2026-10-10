@@ -3,6 +3,8 @@ package me.foxtails.palustris.domain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import me.foxtails.palustris.domain.hashtags.HashtagQuery
+import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
+import me.foxtails.palustris.domain.hashtags.TrendingHashtag
 
 /** Transport-independent boundary implemented by individual server adapters. */
 interface SocialSource {
@@ -96,6 +98,15 @@ interface SocialSource {
     suspend fun searchHashtags(query: HashtagQuery, cursor: String? = null): Page<Post> =
         if (query.alsoMatching.isEmpty()) searchHashtag(query.primary, cursor) else unsupported("combined hashtag search")
     suspend fun searchAccounts(query: String): List<Account> = unsupported("account search")
+
+    /** Hashtags that the server reports as trending, at most [limit]. */
+    suspend fun trendingHashtags(limit: Int): List<TrendingHashtag> = unsupported("trending hashtags")
+
+    /** Hashtag names that start with [prefix], at most [limit]. Only the fragment is sent. */
+    suspend fun suggestHashtags(prefix: String, limit: Int): List<HashtagSuggestion> = unsupported("hashtag suggestions")
+
+    /** Accounts that the server recommends or lists as popular, at most [limit]. */
+    suspend fun popularAccounts(limit: Int): List<Account> = unsupported("popular accounts")
 
     /** Legacy page shape retained for source compatibility during the adapter migration. */
     suspend fun notifications(cursor: String? = null): Page<Notification> = unsupported("notifications")

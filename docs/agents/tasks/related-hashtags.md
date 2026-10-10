@@ -21,10 +21,11 @@ The catalog has 74 groups and 1,814 members, not the 62 groups and 1,370 members
 # Completed
 
 - Slice 1 (catalog, rules, setting) — commit 2b551c12.
+- Slice 2 (combined results) — commit c8771358.
 
 # Current slice
 
-Slice 2: combined hashtag results (implemented, gate pending).
+Slice 3: server discovery and the suggestion service (implemented, gate pending).
 
 # Files involved
 
@@ -36,7 +37,7 @@ Slice 1: focused tests, then the CI-parity gate. See the commit.
 
 # Next
 
-Slice 3: server discovery and the suggestion service.
+Slice 4: Hashtags tab (`SearchExploreController`, trending rows, typed suggestions, related chips).
 
 # Blockers
 

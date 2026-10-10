@@ -70,6 +70,8 @@ import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.hashtagBody
 import me.foxtails.palustris.domain.hashtags.HashtagQuery
+import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
+import me.foxtails.palustris.domain.hashtags.TrendingHashtag
 import me.foxtails.palustris.domain.normalizeFavouriteEmoji
 import me.foxtails.palustris.domain.unsupported
 import org.json.JSONArray
@@ -114,6 +116,7 @@ class MisskeySource(
     private val pushService = MisskeyPushService(origin, token, api, accountId, MISSKEY_MAX_RESPONSE_BYTES)
     private val streamService = MisskeyStreamService(origin, token, api, accountId)
     private val mediaService = MisskeyMediaService(origin, token, api)
+    private val discoveryService = MisskeyDiscoveryService(origin, token, api, accountId)
     private val timelineService = MisskeyTimelineService(origin, token, api, MISSKEY_MAX_RESPONSE_BYTES)
     private val threadService = MisskeyThreadService(
         origin = origin,
@@ -183,6 +186,15 @@ class MisskeySource(
     }
 
     override suspend fun pinnedPosts(id: AccountId): List<Post> = request("profile.pinned") { profileService.pinnedPosts(id) }
+
+    override suspend fun trendingHashtags(limit: Int): List<TrendingHashtag> =
+        request("trends.hashtags") { discoveryService.trendingHashtags(limit) }
+
+    override suspend fun suggestHashtags(prefix: String, limit: Int): List<HashtagSuggestion> =
+        request("search.hashtag.suggest") { discoveryService.suggestHashtags(prefix, limit) }
+
+    override suspend fun popularAccounts(limit: Int): List<Account> =
+        request("accounts.popular") { discoveryService.popularAccounts(limit) }
 
     override suspend fun searchAccounts(query: String): List<Account> = request("search.accounts") {
         val parts = query.trim().removePrefix("@").split('@')

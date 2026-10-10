@@ -19,10 +19,26 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.mediaKindForMimeType
+import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
+import me.foxtails.palustris.domain.hashtags.TrendingHashtag
+import me.foxtails.palustris.domain.isExactHashtag
 import org.json.JSONArray
 import org.json.JSONObject
 
 object MisskeyMapper {
+    /** An item from `hashtags/trend` (`usersCount`) or `hashtags/list` (`mentionedUsersCount`). */
+    fun trendingHashtag(json: JSONObject): TrendingHashtag? {
+        val name = json.optString("tag").takeIf(::isExactHashtag) ?: return null
+        val users = listOf("usersCount", "mentionedUsersCount")
+            .firstNotNullOfOrNull { key -> json.opt(key)?.toString()?.toLongOrNull() }
+            ?.coerceIn(0L, Int.MAX_VALUE.toLong())?.toInt()
+        return TrendingHashtag(name, accounts = users, uses = null)
+    }
+
+    /** `hashtags/search` returns bare names. Misskey gives no weight. */
+    fun hashtagSuggestion(name: String): HashtagSuggestion? =
+        name.takeIf(::isExactHashtag)?.let { HashtagSuggestion(it, weight = null) }
+
     fun account(json: JSONObject, origin: String, movedTo: Account? = null): Account {
         val username = json.getString("username")
         val host = json.nullableString("host") ?: java.net.URI(origin).host

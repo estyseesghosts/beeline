@@ -27,10 +27,49 @@ import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.ProfileField
 import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
+import me.foxtails.palustris.domain.hashtags.TrendingHashtag
+import me.foxtails.palustris.domain.isExactHashtag
 import org.json.JSONObject
 import java.time.Instant
 
 object MastodonMapper {
+    /** A tag from `trends/tags`. Counts add up the latest two history days. A malformed tag maps to null. */
+    fun trendingHashtag(json: JSONObject): TrendingHashtag? {
+        val name = json.optString("name").takeIf(::isExactHashtag) ?: return null
+        val days = historyDays(json).take(TRENDING_DAYS)
+        return TrendingHashtag(
+            name = name,
+            accounts = days.takeIf { it.isNotEmpty() }?.sumOf { it.accounts }?.toIntClamped(),
+            uses = days.takeIf { it.isNotEmpty() }?.sumOf { it.uses }?.toIntClamped(),
+        )
+    }
+
+    /** A tag from `v2/search`. The weight is `log2(1 + accounts)` over the whole history, like the catalog. */
+    fun hashtagSuggestion(json: JSONObject): HashtagSuggestion? {
+        val name = json.optString("name").takeIf(::isExactHashtag) ?: return null
+        val days = historyDays(json)
+        val weight = days.takeIf { it.isNotEmpty() }
+            ?.let { kotlin.math.ln(1.0 + it.sumOf { day -> day.accounts }) / kotlin.math.ln(2.0) }
+        return HashtagSuggestion(name, weight)
+    }
+
+    private fun Long.toIntClamped(): Int = coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+
+    private class HistoryDay(val accounts: Long, val uses: Long)
+
+    /** History values are strings. A day without a readable count is skipped. */
+    private fun historyDays(json: JSONObject): List<HistoryDay> {
+        val history = json.optJSONArray("history") ?: return emptyList()
+        return (0 until history.length()).mapNotNull { index ->
+            val day = history.optJSONObject(index) ?: return@mapNotNull null
+            val accounts = day.opt("accounts")?.toString()?.toLongOrNull() ?: return@mapNotNull null
+            HistoryDay(accounts.coerceAtLeast(0), day.opt("uses")?.toString()?.toLongOrNull()?.coerceAtLeast(0) ?: 0)
+        }
+    }
+
+    private const val TRENDING_DAYS = 2
+
     fun directConversation(json: JSONObject, origin: String): DirectConversation? {
         val id = json.nullableString("id") ?: return null
         val lastStatus = json.optJSONObject("last_status") ?: return null
@@ -348,7 +387,7 @@ private fun String.htmlToMarkdown(emoji: Map<String, CustomEmoji> = emptyMap()):
     val linked = preserveEmojiAlts(emoji).replace(htmlAnchor) { match ->
         val label = match.groupValues[2].htmlToText()
         if (label.trimStart().startsWith("@")) label
-        else "[${label}](${match.groupValues[1]})"
+        else "[$label](${match.groupValues[1]})"
     }
     return linked.htmlToText()
 }

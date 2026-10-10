@@ -72,6 +72,8 @@ import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.hashtagBody
 import me.foxtails.palustris.domain.hashtags.HashtagQuery
+import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
+import me.foxtails.palustris.domain.hashtags.TrendingHashtag
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONArray
 import org.json.JSONObject
@@ -112,6 +114,7 @@ class MastodonSource(
     private val streamService = MastodonStreamService(origin, token, api, accountId)
     private val threadService = MastodonThreadService(origin, token, api, accountId, sessionRevision)
     private val mediaService = MastodonMediaService(origin, token, api)
+    private val discoveryService = MastodonDiscoveryService(origin, token, api)
     private val pageClient = MastodonPageClient(origin, token, api, accountId.localId, sessionRevision, sourceInstance)
     private val timelineService = MastodonTimelineService(pageClient, origin)
     override val capabilities: ServerCapabilities get() = _capabilities.value
@@ -499,6 +502,15 @@ class MastodonSource(
             nextCursor = pageClient.nextCursor(response, route, currentUrl),
         )
     }
+
+    override suspend fun trendingHashtags(limit: Int): List<TrendingHashtag> =
+        request("trends.hashtags") { discoveryService.trendingHashtags(limit) }
+
+    override suspend fun suggestHashtags(prefix: String, limit: Int): List<HashtagSuggestion> =
+        request("search.hashtag.suggest") { discoveryService.suggestHashtags(prefix, limit) }
+
+    override suspend fun popularAccounts(limit: Int): List<Account> =
+        request("accounts.popular") { discoveryService.popularAccounts(limit) }
 
     override suspend fun searchAccounts(query: String): List<Account> = request("search.accounts") {
         val handle = query.trim().removePrefix("@").takeIf { it.isNotBlank() }

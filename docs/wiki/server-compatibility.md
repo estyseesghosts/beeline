@@ -51,6 +51,19 @@ Source: `data/mastodon/MastodonSource.kt`, `MastodonPageClient.kt`, `data/misske
 - Misskey-family servers use `notes/search-by-tag` with `query`: one inner array for each hashtag. A search without extras keeps `tag`. A check on dvd.chat with 10 inner arrays returned 30 notes.
 - Akkoma, other forks, and other Mastodon versions are unverified. A fork that ignores `any[]` shows the "Includes" line without merging.
 
+### Hashtag and account discovery
+
+Source: `data/mastodon/MastodonDiscoveryService.kt`, `data/misskey/MisskeyDiscoveryService.kt`, and `MastodonDiscoveryTest`, `MisskeyDiscoveryTest`.
+
+- No capability probe. Each call works on demand. A failure or an empty list hides the section.
+- Mastodon trending: `GET api/v1/trends/tags?limit=20` (at most 20). The count is the accounts of the latest two history days.
+- Mastodon suggestions: `GET api/v2/search?q=<prefix>&type=hashtags&limit=8`. The weight is `log2(1 + sum of accounts in the history)`.
+- Mastodon popular accounts: `GET api/v2/suggestions?limit=20`. It needs a token, so any failure falls back to `GET api/v1/directory?order=active&local=true&limit=20`.
+- Misskey-family trending: `POST hashtags/trend` with `{}`, top 10. An empty answer falls back to `hashtags/list` sorted by `+mentionedUsers`. The count is `usersCount`.
+- Misskey-family suggestions: `POST hashtags/search`. It returns bare names with no weight.
+- Misskey-family popular accounts: `POST pinned-users`, then `POST users` with `sort: "+follower"`, `state: "alive"`, `origin: "local"`. The result has no duplicates and omits the signed-in account. `users/recommendation` needs sign-in and is not used.
+- Unverified: `v2/suggestions` with a token, Akkoma and other forks, other Mastodon versions.
+
 <!-- Add the dated support matrix, capability states, protocol differences, and known unverified cases. -->
 
 ### Media upload and attachments
