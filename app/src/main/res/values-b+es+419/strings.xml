@@ -5,10 +5,10 @@
     <string name="action_submit">Enviar</string>
     <string name="app_back">Atrás</string>
     <string name="app_notification">Notificación</string>
-    <string name="audience_direct">Directo</string>
-    <string name="audience_everyone">Todos</string>
+    <string name="audience_direct">Solo mencionados</string>
+    <string name="audience_everyone">Público</string>
     <string name="audience_followers">Solo seguidores</string>
-    <string name="audience_unlisted">No listado</string>
+    <string name="audience_unlisted">Fuera de las cronologías</string>
     <string name="collection_bookmarks">Guardados</string>
     <string name="collection_favourites">Favoritos</string>
     <string name="collection_likes">Me gusta</string>
@@ -16,12 +16,10 @@
     <string name="composer_content_warning">Advertencia de contenido</string>
     <string name="composer_emoji">:)</string>
     <string name="composer_entry_publish_failed">La publicación %1$d de %2$d falló: %3$s</string>
-    <string name="composer_new_post">Nueva publicación</string>
     <string name="composer_publish">Publicar</string>
     <string name="composer_publish_progress">%1$d/%2$d</string>
     <string name="composer_quoted_post">Publicación citada</string>
     <string name="composer_remove_quote">Quitar</string>
-    <string name="composer_save_draft">Guardar borrador</string>
     <string name="content_warning">Advertencia de contenido</string>
     <string name="content_warning_hide">Ocultar contenido</string>
     <string name="content_warning_show">Mostrar contenido</string>
@@ -173,4 +171,14 @@
     <string name="settings_posting_compression_always">Comprimir siempre</string>
     <string name="settings_posting_compression_never">No comprimir nunca</string>
     <string name="settings_posting_compression_ask">Preguntar cada vez</string>
+    <string name="audience_everyone_description">Cualquiera puede verla. Aparece en las cronologías públicas.</string>
+    <string name="audience_unlisted_description">Cualquiera puede verla. No aparece en las cronologías públicas.</string>
+    <string name="audience_followers_description">Solo tus seguidores pueden verla.</string>
+    <string name="audience_direct_description">Solo las personas que menciones pueden verla.</string>
+    <string name="composer_audience_row">Audiencia: %1$s</string>
+    <string name="composer_add_photo">Agregar foto</string>
+    <string name="composer_content_warning_short">AC</string>
+    <string name="composer_characters_remaining">%1$d caracteres restantes</string>
+    <string name="composer_warning_remaining">%1$d restantes</string>
+    <string name="composer_entry_text">Texto de la publicación %1$d</string>
 </resources>

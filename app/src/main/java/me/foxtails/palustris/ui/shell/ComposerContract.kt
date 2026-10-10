@@ -1,6 +1,7 @@
 package me.foxtails.palustris.ui.shell
 
 import me.foxtails.palustris.domain.Audience
+import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.domain.ThreadPublishListener
@@ -21,6 +22,9 @@ data class ComposerContract(
     val publishTotal: Int = 0,
     val error: String?,
     val actions: Actions,
+    val limits: PostLimits = PostLimits(),
+    /** Prepares post text at publish time, for example by removing tracking parameters. */
+    val prepareText: (String) -> String = { it },
 ) {
     interface Actions {
         fun publish(publication: ThreadPublication, listener: ThreadPublishListener)

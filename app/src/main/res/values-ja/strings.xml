@@ -65,7 +65,6 @@
     <string name="app_back">戻る</string>
     <string name="account_add">アカウントを追加</string>
     <string name="account_sign_out">ログアウト</string>
-    <string name="composer_new_post">新規投稿</string>
     <string name="dialog_discard">破棄</string>
     <string name="dialog_cancel">キャンセル</string>
     <string name="media_viewer">メディアビューアー</string>
@@ -106,7 +105,6 @@
     <string name="settings_moderation_confirm">確認</string>
     <string name="settings_moderation_add">追加</string>
     <string name="settings_moderation_remove">削除</string>
-    <string name="composer_visibility">公開範囲</string>
     <string name="audience_everyone">誰でも</string>
     <string name="audience_followers">フォロワーのみ</string>
 </resources>

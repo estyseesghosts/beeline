@@ -15,10 +15,8 @@
     <string name="common_refresh">重新整理</string>
     <string name="composer_content_warning">內容警告</string>
     <string name="composer_emoji">:)</string>
-    <string name="composer_new_post">新的貼文</string>
     <string name="composer_publish">貼文</string>
     <string name="composer_remove_quote">移除</string>
-    <string name="composer_visibility">可見性</string>
     <string name="content_warning">內容警告</string>
     <string name="content_warning_hide">隱藏內容</string>
     <string name="dialog_add">新增</string>

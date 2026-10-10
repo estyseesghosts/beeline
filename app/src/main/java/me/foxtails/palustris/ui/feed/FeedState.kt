@@ -6,6 +6,7 @@ import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.domain.SavedPostsCapability
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.search.AccountSearchState
@@ -20,6 +21,7 @@ data class FeedState(
     val timelines: Set<Timeline> = setOf(Timeline.Home),
     val canPublish: Boolean = false,
     val audiences: Set<Audience> = emptySet(),
+    val limits: PostLimits = PostLimits(),
     val actions: Set<PostAction> = emptySet(),
     val quoteStatus: CapabilityStatus = CapabilityStatus.Unknown,
     val savedPosts: SavedPostsCapability? = null,

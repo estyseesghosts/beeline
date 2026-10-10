@@ -68,7 +68,7 @@ import me.foxtails.palustris.domain.ReactionSelectionMode
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.components.PillAction
 
-enum class ComposerField { Text, Warning }
+data class ComposerField(val kind: Kind, val entryId: String? = null) { enum class Kind { Text, Warning }; companion object { val Text = ComposerField(Kind.Text); val Warning = ComposerField(Kind.Warning) } } // Emoji target: one entry text or warning; a null entryId is the first entry.
 
 sealed interface EmojiPickerTarget {
     data class Reaction(val post: OwnedPost) : EmojiPickerTarget

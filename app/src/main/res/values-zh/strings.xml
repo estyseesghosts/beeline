@@ -15,9 +15,7 @@
     <string name="common_refresh">刷新</string>
     <string name="composer_content_warning">内容警告</string>
     <string name="composer_emoji">:)</string>
-    <string name="composer_new_post">新的帖子</string>
     <string name="composer_publish">发布</string>
-    <string name="composer_visibility">可见性</string>
     <string name="content_warning">内容警告</string>
     <string name="dialog_cancel">取消</string>
     <string name="dm_private_message">私信</string>

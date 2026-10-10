@@ -24,6 +24,7 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.SocialSource
@@ -136,6 +137,7 @@ class FeedViewModel @AssistedInject constructor(
                     timelines = source.capabilities.timelines,
                     canPublish = source.capabilities.canPublish,
                     audiences = source.capabilities.audiences,
+                    limits = PostLimits(source.capabilities.maxPostLength, source.capabilities.posting),
                     actions = effectiveActions(),
                     quoteStatus = source.capabilities.quotes,
                     savedPosts = source.capabilities.savedPosts,

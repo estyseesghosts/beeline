@@ -428,6 +428,55 @@ Sources: `ui/composer/ComposerSurface.kt`, `ui/composer/ComposerOverlayHost.kt`,
 `ui/PalustrisApp.kt`, `ReplyComposerTest`, `ExpandedComposerSurfaceTest`,
 `NavigationTest`, `TriggerSurfaceTest`.
 
+## Composer body
+
+Status: source verified and test verified. Device verified on a phone emulator only.
+
+Each entry of the thread has an avatar, an optional content warning field, and a text
+field. The composer opens with one entry. The toolbar sits at the bottom. It holds a
+photo button, an emoji button, a content warning toggle, and the characters remaining
+for the focused entry. The photo button stays disabled until the composer can attach
+images. The old Local draft header, the publishing enabled text, and the bottom Publish
+button are gone. The Post button in the top bar is the only way to publish.
+
+The audience row sits above the toolbar. It shows the current audience. A tap opens a
+menu with one line of description for each audience that the server offers. The row
+shows only while the first entry has focus, because the first entry decides the audience
+of the whole thread. The row hides when the server reports no audiences.
+
+| Audience | Label |
+|---|---|
+| Public | Public |
+| Unlisted (Mastodon) or Home (Misskey) | Not in feeds |
+| Followers | Followers only |
+| Direct (Mastodon) or Specified (Misskey) | Mentioned only |
+
+The settings screen uses the same labels.
+
+The counter shows `limit - count` for the focused entry. It uses the error color below
+zero. Post stays disabled while any entry is over a limit or has neither text nor
+images. The count rule comes from `PostLimits`, which wraps `PostLengthCounter` and the
+server posting capabilities. Mastodon counts the warning with the text, so the counter
+drops when a warning is added. Misskey counts the text alone. The Misskey warning field
+shows its own count. The counter hides when the server reports no limit.
+
+An emoji lands at the cursor of the field that the toolbar targeted. `ComposerField`
+carries the entry identity and the field kind. A null entry identity means the first
+entry. `ComposerEntryRow` keeps one `CursorField` for the text and one for the warning,
+so the cursor survives recomposition. An emoji for an entry that no longer exists is
+dropped.
+
+The composer has no Clean links button. `ComposerContract.prepareText` cleans the text of
+every entry when the thread publishes and the Clean tracking parameters privacy setting is
+on. The saved draft keeps the text as typed until then.
+
+Limits: the photo picker, thumbnails, and alt text arrive with media in the composer.
+Tablet hardware is not verified. The w900dp Robolectric class covers the card.
+
+Sources: `ui/composer/ComposerBody.kt`, `ComposerEntryRow.kt`, `ComposerAudienceRow.kt`,
+`ComposerEntryRules.kt`, `domain/PostLimits.kt`, `ui/emoji/EmojiPicker.kt`
+(`ComposerField`), `ComposerBodyTest`, `ComposerEntryRulesTest`, `ReplyComposerTest`.
+
 ## Draft restoration
 
 Closing a dirty composer saves the draft and closes the overlay. The saved text

@@ -115,7 +115,7 @@ class ReplyComposerTest {
         compose.onNodeWithContentDescription("Close composer").assertIsDisplayed()
         compose.onNodeWithText("Drafts").assertIsDisplayed()
         compose.onNodeWithTag(COMPOSER_POST_TAG).assertIsDisplayed()
-        compose.onAllNodesWithText("Publish").assertCountEquals(2)
+        compose.onAllNodesWithText("Publish").assertCountEquals(1)
     }
 
     @Test

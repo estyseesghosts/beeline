@@ -13,11 +13,8 @@
     <string name="collection_likes">Curtidas</string>
     <string name="common_refresh">Atualizar</string>
     <string name="composer_content_warning">Aviso de conteúdo</string>
-    <string name="composer_new_post">Novo post</string>
     <string name="composer_publish">Publicar</string>
     <string name="composer_remove_quote">Remover</string>
-    <string name="composer_save_draft">Salvar rascunho</string>
-    <string name="composer_visibility">Visibilidade</string>
     <string name="content_warning">Aviso de conteúdo</string>
     <string name="dialog_add">Adicionar</string>
     <string name="dialog_cancel">Cancelar</string>

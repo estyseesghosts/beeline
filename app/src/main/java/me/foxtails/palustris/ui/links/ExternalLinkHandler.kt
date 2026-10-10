@@ -14,6 +14,10 @@ object ExternalLinkHandler {
 
     fun prepare(url: String): String = TrackingParameterCleaner.clean(url, cleanTrackingParameters)
 
+    /** Cleans every link in post text when the privacy setting is on. */
+    fun prepareText(text: String): String =
+        if (cleanTrackingParameters) TrackingParameterCleaner.cleanText(text) else text
+
     /**
      * Opens one prepared web URL in an external browser. A null, blank, or non-HTTP(S) URL
      * without a host is a no-op. The Intent is created at most once, and a missing browser

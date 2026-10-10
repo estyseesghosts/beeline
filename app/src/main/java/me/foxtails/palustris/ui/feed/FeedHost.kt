@@ -13,6 +13,7 @@ import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.domain.ThreadPublishFailure
@@ -35,6 +36,7 @@ import me.foxtails.palustris.ui.shell.PostProjectionCoordinator
  */
 data class FeedComposerInputs(
     val availableAudiences: Set<Audience>,
+    val limits: PostLimits,
     val canPublish: Boolean,
     val publishing: Boolean,
     val publishPosted: Int,
@@ -130,7 +132,7 @@ fun FeedHost(
             coordinator.unregister(feedSink)
         }
     }
-    val composerInputs = remember(feed.audiences, feed.canPublish, feed.publishing, feed.publishPosted, feed.publishTotal, feed.error) {
+    val composerInputs = remember(feed.audiences, feed.limits, feed.canPublish, feed.publishing, feed.publishPosted, feed.publishTotal, feed.error) {
         feedComposerInputs(feed)
     }
     val publish = remember(feedModel, feedSink, coordinator) {
@@ -150,6 +152,7 @@ fun FeedHost(
 /** Builds the composer inputs for one feed snapshot. */
 private fun feedComposerInputs(feed: FeedState): FeedComposerInputs = FeedComposerInputs(
     availableAudiences = feed.audiences,
+    limits = feed.limits,
     canPublish = feed.canPublish,
     publishing = feed.publishing,
     publishPosted = feed.publishPosted,

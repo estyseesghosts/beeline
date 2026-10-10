@@ -49,7 +49,6 @@ import androidx.core.view.WindowCompat
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
-import me.foxtails.palustris.domain.TrackingParameterCleaner
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.motion.TriggerSurface
@@ -63,7 +62,7 @@ internal const val COMPOSER_SURFACE_TAG = "composer_surface"
 /** Test tag of the card scrim that runs the guarded close. */
 internal const val COMPOSER_SCRIM_TAG = "composer_scrim"
 
-/** Test tag of the top-bar Post button. The body keeps its own publish button. */
+/** Test tag of the top-bar Post button. */
 internal const val COMPOSER_POST_TAG = "composer_post"
 
 /** Width cap of the floating composer card on expanded windows. */
@@ -123,7 +122,7 @@ internal fun ComposerSurfaceHost(
                     onOpenDrafts = { draftsOpen = true },
                     draftsEnabled = !busy,
                     onPublish = ::publish,
-                    postEnabled = owner.canPublish && !busy && owner.editor.text.isNotBlank(),
+                    postEnabled = owner.canPublish && !busy && owner.editor.postable(contract.limits),
                     publishing = publishing,
                     posted = contract.publishPosted,
                     total = contract.publishTotal,
@@ -138,30 +137,13 @@ internal fun ComposerSurfaceHost(
                 onDelete = owner::deleteDraft,
             )
         } else {
-            ComposeScreen(
-                text = owner.editor.text,
-                onTextChange = owner::setText,
-                warning = owner.editor.warning,
-                onWarningChange = owner::setWarning,
-                warningEnabled = owner.editor.warningEnabled,
-                onWarningEnabled = owner::setWarningEnabled,
+            ComposerBody(
+                owner = owner,
+                contract = contract,
                 account = account,
-                audience = owner.editor.audience,
-                availableAudiences = contract.availableAudiences,
-                onAudienceChange = owner::setAudience,
-                canPublish = owner.canPublish,
-                publishing = publishing,
-                error = contract.error ?: owner.editor.error,
-                quoteTarget = owner.quoteTarget,
-                isReply = owner.isReply,
-                onRemoveQuote = owner::removeTargets,
                 onRequestEmoji = onRequestEmoji,
                 pendingEmojiInsertion = pendingEmojiInsertion,
                 onEmojiInsertionApplied = onEmojiInsertionApplied,
-                onCleanTrackingParameters = {
-                    owner.setText(TrackingParameterCleaner.cleanText(owner.editor.text))
-                },
-                onPublish = ::publish,
             )
         }
     }

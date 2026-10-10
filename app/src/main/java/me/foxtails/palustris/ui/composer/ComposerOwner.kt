@@ -344,7 +344,7 @@ class ComposerOwner internal constructor(
         }
         val submittedReply = replyTo?.takeIf { it.connection == account.id.connection.origin }
         val submittedQuote = quoteOf?.takeIf { it.connection == account.id.connection.origin }
-        val publication = editor.toThreadPublication(
+        val publication = editor.withPreparedText(context.contract.prepareText).toThreadPublication(
             draftId = editor.draftId ?: UUID.randomUUID().toString(),
             audience = submittedAudience,
             replyTo = submittedReply,

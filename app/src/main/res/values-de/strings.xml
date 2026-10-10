@@ -42,8 +42,6 @@
     <string name="app_back">Zurück</string>
     <string name="account_add">Konto hinzufügen</string>
     <string name="account_sign_out">Abmelden</string>
-    <string name="composer_new_post">Neuer Beitrag</string>
-    <string name="composer_save_draft">Entwurf speichern</string>
     <string name="dialog_cancel">Abbrechen</string>
     <string name="media_description">Beschreibung</string>
     <string name="media_show">Zum Anzeigen anklicken</string>
@@ -127,12 +125,23 @@
     <string name="settings_moderation_hashtag">Hashtag</string>
     <string name="settings_moderation_add">Hinzufügen</string>
     <string name="settings_moderation_remove">Entfernen</string>
-    <string name="composer_visibility">Sichtbarkeit</string>
-    <string name="audience_everyone">Jeder</string>
+    <string name="audience_everyone">Öffentlich</string>
     <string name="audience_followers">Nur Follower</string>
     <string name="settings_posting_compression">Bildkomprimierung</string>
     <string name="settings_posting_compression_summary">Fotos vor dem Hochladen auf diesem Gerät verkleinern.</string>
     <string name="settings_posting_compression_always">Immer komprimieren</string>
     <string name="settings_posting_compression_never">Nie komprimieren</string>
     <string name="settings_posting_compression_ask">Jedes Mal fragen</string>
+    <string name="audience_unlisted">Nicht in Feeds</string>
+    <string name="audience_direct">Nur Erwähnte</string>
+    <string name="audience_everyone_description">Jeder kann es sehen. Es erscheint in öffentlichen Feeds.</string>
+    <string name="audience_unlisted_description">Jeder kann es sehen. Es erscheint nicht in öffentlichen Feeds.</string>
+    <string name="audience_followers_description">Nur deine Follower können es sehen.</string>
+    <string name="audience_direct_description">Nur die Personen, die du erwähnst, können es sehen.</string>
+    <string name="composer_audience_row">Zielgruppe: %1$s</string>
+    <string name="composer_add_photo">Foto hinzufügen</string>
+    <string name="composer_content_warning_short">IW</string>
+    <string name="composer_characters_remaining">%1$d Zeichen übrig</string>
+    <string name="composer_warning_remaining">%1$d übrig</string>
+    <string name="composer_entry_text">Text von Beitrag %1$d</string>
 </resources>

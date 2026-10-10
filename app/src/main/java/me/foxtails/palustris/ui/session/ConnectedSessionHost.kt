@@ -29,6 +29,7 @@ import me.foxtails.palustris.ui.composer.asDraftsContract
 import me.foxtails.palustris.ui.directmessages.DirectMessagesHost
 import me.foxtails.palustris.ui.emoji.EmojiHost
 import me.foxtails.palustris.ui.feed.FeedHost
+import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.notifications.NotificationSettingsHost
 import me.foxtails.palustris.ui.notifications.NotificationsHost
@@ -251,6 +252,8 @@ fun ConnectedSessionHost(
         ComposerContract(
             postPreferences = postPreferences,
             availableAudiences = feed.composerInputs.availableAudiences,
+            limits = feed.composerInputs.limits,
+            prepareText = ExternalLinkHandler::prepareText,
             canPublish = feed.composerInputs.canPublish,
             publishing = feed.composerInputs.publishing,
             publishPosted = feed.composerInputs.publishPosted,
