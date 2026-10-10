@@ -199,3 +199,8 @@ and `FfmpegBridgeTest`. Live-server uploads are unverified.
 - Sharkey: `notes/schedule/create`, `list`, `delete`; there is no update. Role policy `scheduleNoteMax` (default 5). A server can refuse an account these routes with a permission error, as dvd.chat did for the test account.
 - Misskey: `notes/drafts/*` with `scheduledAt` and `isActuallyScheduled`; role policy `scheduledNoteLimit` (default 1). A limit of 0 turns scheduling off.
 - The route comes from `POST /api/endpoints`. A scheduled post never enters a timeline.
+
+## Video posters
+
+- Mastodon API servers always send `preview_url`. Misskey does not for videos that federated in: `thumbnailUrl` is empty and `properties` is empty, so a tile had no poster and the viewer had nothing to fling from, and fell back to a fade.
+- A video without a poster now shows its first frame, read with `MediaMetadataRetriever` (`VideoFrameFetcher`), which asks the server for only the byte ranges it needs. A server poster always wins. Feed tiles fetch the frame only while autoplay is on and the network is unmetered; otherwise they keep the placeholder. The viewer and the Photo Grid always fetch it.

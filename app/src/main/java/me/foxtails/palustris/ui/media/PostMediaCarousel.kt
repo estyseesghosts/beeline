@@ -157,11 +157,13 @@ private fun MediaPreviewTile(
     ) { mutableStateOf(!attachment.sensitive) }
     val transitionKey = sourceKeys.getOrNull(index) ?: MediaTransitionKey.forAttachment(ownedPost, index)
     val active = registry.isSourceHidden(transitionKey)
+    val videoFrameAllowed = LocalVideoPlaybackCoordinator.current?.firstFramesAllowed == true
     val visibleDecision = MediaRequestPolicy.resolve(
         attachment,
         MediaRequestRole.Preview,
         revealed = revealed,
         explicitlyOpened = false,
+        videoFrame = videoFrameAllowed,
     )
     val imageRequest = remember(
         visibleDecision,

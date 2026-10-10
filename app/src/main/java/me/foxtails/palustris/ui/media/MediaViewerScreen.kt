@@ -436,7 +436,7 @@ private fun mediaRequest(
     widthPx: Int,
     heightPx: Int,
 ): ImageRequest? {
-    val decision = MediaRequestPolicy.resolve(attachment, role, revealed = true, explicitlyOpened = role == MediaRequestRole.Full)
+    val decision = MediaRequestPolicy.resolve(attachment, role, revealed = true, explicitlyOpened = role == MediaRequestRole.Full, videoFrame = true)
     return (decision as? MediaRequestDecision.Request)?.let {
         mediaLoader.request(
             context = context,

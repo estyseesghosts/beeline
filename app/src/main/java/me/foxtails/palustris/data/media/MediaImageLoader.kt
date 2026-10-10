@@ -44,6 +44,7 @@ class MediaImageLoader private constructor(context: Context) {
         }
         .components {
             add(AvifDecoder.Factory())
+            add(VideoFrameFetcher.Factory())
         }
         .build()
 
@@ -70,7 +71,7 @@ class MediaImageLoader private constructor(context: Context) {
         decodeWidthPx: Int,
         decodeHeightPx: Int,
     ): ImageRequest = ImageRequest.Builder(context)
-        .data(decision.url)
+        .data(if (decision.videoFrame) VideoFrameRequest(decision.url) else decision.url)
         .memoryCacheKey(renderCacheKey(accountIdentity, postIdentity, attachment, attachmentIndex, decision.role, decodeWidthPx, decodeHeightPx))
         .diskCacheKey(sourceCacheKey(accountIdentity, decision.url))
         .size(decodeWidthPx.coerceAtLeast(1), decodeHeightPx.coerceAtLeast(1))

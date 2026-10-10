@@ -66,12 +66,20 @@ class VideoPlaybackCoordinator(private val context: Context, private val scope: 
 
     /** Tiles whose video failed to play. Observable, so a tile can offer a retry. */
     private val failed = mutableStateSetOf<String>()
-    private var environment = AutoplayEnvironment(
+    private var environment by mutableStateOf(AutoplayEnvironment(
         settingEnabled = false,
         networkMetered = null,
         reducedMotion = false,
         foreground = false,
-    )
+    ))
+
+    /**
+     * True while autoplay is on and the network is unmetered. A tile without a server poster may then fetch its
+     * video's first frame; otherwise it keeps the placeholder and downloads nothing.
+     */
+    val firstFramesAllowed: Boolean
+        get() = environment.settingEnabled && environment.networkMetered == false
+
     private var loadedKey: String? = null
     private var evaluateJob: Job? = null
     private var releaseJob: Job? = null

@@ -62,7 +62,7 @@ internal fun VideoViewerPage(
     val url = remember(attachment.url) { MediaRequestPolicy.validWebUrl(attachment.url) }
     val mediaLoader = remember(context) { MediaImageLoader.get(context) }
     val posterRequest = remember(attachment, index, accountIdentity, postIdentity) {
-        val decision = MediaRequestPolicy.resolve(attachment, MediaRequestRole.Preview, revealed = true, explicitlyOpened = false)
+        val decision = MediaRequestPolicy.resolve(attachment, MediaRequestRole.Preview, revealed = true, explicitlyOpened = false, videoFrame = true)
         (decision as? MediaRequestDecision.Request)?.let {
             mediaLoader.request(
                 context = context,

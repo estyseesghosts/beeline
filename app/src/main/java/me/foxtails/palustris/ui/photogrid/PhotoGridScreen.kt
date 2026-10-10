@@ -124,7 +124,7 @@ internal fun photoGridItems(posts: List<OwnedPost>, rules: ContentWarningRules =
         }
 }
 
-/** Images, and videos that have a server poster. A video without a poster has nothing to show. */
+/** Images and videos. A video without a server poster shows its first frame. */
 private fun Attachment.isPhotoGridDisplayable(): Boolean =
     (kind == MediaKind.Image || kind == MediaKind.Video) &&
     MediaRequestPolicy.resolve(
@@ -132,6 +132,7 @@ private fun Attachment.isPhotoGridDisplayable(): Boolean =
         role = MediaRequestRole.Preview,
         revealed = true,
         explicitlyOpened = false,
+        videoFrame = true,
     ) is MediaRequestDecision.Request
 
 /** How far a card in the outermost lane may extend under the floating rail. */

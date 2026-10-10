@@ -68,12 +68,12 @@ class PhotoGridScreenTest {
         )
 
         assertEquals(listOf("video-then-image", "two-images"), items.map { it.ownedPost.post.id.value })
-        assertEquals("second", items.first().attachment.id)
+        assertEquals("video", items.first().attachment.id)
         assertEquals("first", items.last().attachment.id)
     }
 
     @Test
-    fun mediaFilterAdmitsVideosOnlyWhenTheyHaveAPoster() {
+    fun mediaFilterAdmitsVideosWithOrWithoutAPoster() {
         fun video(id: String, poster: String?) = Attachment(
             id = id,
             url = "https://cdn.example/$id.mp4",
@@ -86,8 +86,9 @@ class PhotoGridScreenTest {
 
         val items = photoGridItems(listOf(OwnedPost(account.id, withPoster), OwnedPost(account.id, withoutPoster)))
 
-        assertEquals(listOf("with-poster"), items.map { it.ownedPost.post.id.value })
-        assertEquals(MediaKind.Video, items.single().attachment.kind)
+        // A video with no poster shows its first frame, so it belongs in the grid too.
+        assertEquals(listOf("with-poster", "without-poster"), items.map { it.ownedPost.post.id.value })
+        assertEquals(setOf(MediaKind.Video), items.map { it.attachment.kind }.toSet())
     }
 
     @Test

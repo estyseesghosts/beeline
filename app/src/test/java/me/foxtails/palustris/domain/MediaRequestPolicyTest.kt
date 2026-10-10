@@ -127,6 +127,26 @@ class MediaRequestPolicyTest {
     }
 
     @Test
+    fun aVideoWithoutAPosterUsesItsFirstFrameOnlyWhenAllowed() {
+        val video = attachment.copy(kind = MediaKind.Video, mimeType = "video/mp4", url = "https://cdn.example/clip.mp4", previewUrl = null)
+
+        assertEquals(
+            MediaRequestDecision.Request("https://cdn.example/clip.mp4", MediaRequestRole.Preview, fullResourceAvailable = false, videoFrame = true),
+            MediaRequestPolicy.resolve(video, MediaRequestRole.Preview, revealed = true, explicitlyOpened = false, videoFrame = true),
+        )
+        assertEquals(
+            MediaRequestDecision.NoRequest(MediaRequestReason.UnsupportedKind),
+            MediaRequestPolicy.resolve(video, MediaRequestRole.Preview, revealed = true, explicitlyOpened = false, videoFrame = false),
+        )
+        // A server poster always wins over the first frame.
+        val withPoster = video.copy(previewUrl = "https://cdn.example/poster.jpg")
+        assertEquals(
+            MediaRequestDecision.Request("https://cdn.example/poster.jpg", MediaRequestRole.Preview, fullResourceAvailable = false),
+            MediaRequestPolicy.resolve(withPoster, MediaRequestRole.Preview, revealed = true, explicitlyOpened = false, videoFrame = true),
+        )
+    }
+
+    @Test
     fun invalidUrlsAreRejected() {
         assertEquals(null, MediaRequestPolicy.validWebUrl("not-a-url"))
         assertEquals(null, MediaRequestPolicy.validWebUrl("null"))

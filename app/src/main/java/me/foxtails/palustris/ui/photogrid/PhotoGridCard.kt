@@ -114,6 +114,7 @@ internal fun PhotoGridTile(
             role = MediaRequestRole.Preview,
             revealed = revealed,
             explicitlyOpened = false,
+            videoFrame = true,
         )
     }
     val tileKey = photoGridItemKey(item)

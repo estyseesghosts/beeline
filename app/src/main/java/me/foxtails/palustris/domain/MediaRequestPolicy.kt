@@ -19,6 +19,8 @@ sealed interface MediaRequestDecision {
         val url: String,
         val role: MediaRequestRole,
         val fullResourceAvailable: Boolean,
+        /** True when [url] is a video stream whose first frame stands in for a missing poster. */
+        val videoFrame: Boolean = false,
     ) : MediaRequestDecision
 
     data class NoRequest(val reason: MediaRequestReason) : MediaRequestDecision
@@ -39,15 +41,23 @@ object MediaRequestPolicy {
         role: MediaRequestRole,
         revealed: Boolean,
         explicitlyOpened: Boolean,
+        videoFrame: Boolean = false,
     ): MediaRequestDecision {
         if (attachment.sensitive && !revealed) {
             return MediaRequestDecision.NoRequest(MediaRequestReason.HiddenSensitiveMedia)
         }
         if (attachment.kind == MediaKind.Video && role == MediaRequestRole.Preview) {
             // Video tiles show the server preview as a poster. The stream URL is never an image request.
-            val poster = validWebUrl(attachment.previewUrl)
-                ?: return MediaRequestDecision.NoRequest(MediaRequestReason.UnsupportedKind)
-            return MediaRequestDecision.Request(poster, role, fullResourceAvailable = false)
+            validWebUrl(attachment.previewUrl)?.let {
+                return MediaRequestDecision.Request(it, role, fullResourceAvailable = false)
+            }
+            // No server poster: the caller says whether the video's own first frame may be fetched instead.
+            val stream = validWebUrl(attachment.url)
+            return if (videoFrame && stream != null) {
+                MediaRequestDecision.Request(stream, role, fullResourceAvailable = false, videoFrame = true)
+            } else {
+                MediaRequestDecision.NoRequest(MediaRequestReason.UnsupportedKind)
+            }
         }
         if (attachment.kind !in setOf(MediaKind.Image, MediaKind.AnimatedImage)) {
             return MediaRequestDecision.NoRequest(MediaRequestReason.UnsupportedKind)

@@ -338,6 +338,7 @@ private fun PhotoQuickViewImage(target: PhotoQuickViewTarget, heightCap: android
             role = MediaRequestRole.Preview,
             revealed = true,
             explicitlyOpened = false,
+            videoFrame = true,
         )
     }
     val painter = (decision as? MediaRequestDecision.Request)?.let { request ->
