@@ -1,6 +1,6 @@
 # Objective
 
-Ship related hashtags as `docs/related-tags.md` describes: the setting, combined results, suggestions, trending hashtags, popular accounts, related chips, and composer autocomplete.
+Ship related hashtags as `docs/related-tags.md` describes: the setting, combined results, suggestions, trending hashtags, popular accounts, related chips, and composer autocomplete. All six slices are done.
 The catalog has 74 groups and 1,814 members, not the 62 groups and 1,370 members that the plan lists. All 74 ship.
 
 # Invariants
@@ -19,17 +19,20 @@ The catalog has 74 groups and 1,814 members, not the 62 groups and 1,370 members
 - D1 to D5 follow the recommended defaults.
 - Related chips show whenever `relatedTags` is not empty. The "Includes" line shows only when `combinedTags` is not empty.
 - A failed or empty discovery list keeps the old prompt and shows no error.
+- Composer chips treat `:shortcode:` emoji and Unicode emoji as hashtag boundaries, like posts do.
 
 # Completed
 
-- Slice 1 (catalog, rules, setting) — commit 2b551c12.
-- Slice 2 (combined results) — commit c8771358.
-- Slice 3 (server discovery, suggestion service) — commit 0829f3d4.
-- Slice 4 (Hashtags tab) — commit 3df65066.
+- Slice 1 (catalog, rules, setting): 2b551c12.
+- Slice 2 (combined results): c8771358.
+- Slice 3 (server discovery, suggestion service): 0829f3d4.
+- Slice 4 (Hashtags tab): 3df65066.
+- Slice 5 (Profiles tab): 3901c0f8.
+- Slice 6 (composer autocomplete): the commit "Suggest hashtags in the composer while the user types one".
 
 # Current slice
 
-Slice 5: Profiles tab (implemented; the commit that carries this record is the slice 5 commit).
+None. The task is complete.
 
 # Files involved
 
@@ -37,11 +40,12 @@ See `docs/agents/related-hashtags.md`.
 
 # Verification
 
-Slice 1: focused tests, then the CI-parity gate. See the commit.
+Each slice ran focused tests and the full local CI-parity gate. Slices 4 and 5 were checked on an emulator signed in to a Mastodon account: trending, suggestions, tap to search, and popular accounts.
+Not verified on a device: a Misskey account, related chips for a catalog hashtag, and the composer chips.
 
 # Next
 
-Slice 6: composer autocomplete.
+Release gate: the owner reviews the catalog before a release. Review at least the largest groups and every hashtag in `amb`. Until then treat a build as a test build.
 
 # Blockers
 
@@ -49,4 +53,4 @@ None.
 
 # Last safe commit
 
-`3df65066` Show trending hashtags, typed suggestions, and related chips in the Hashtags tab.
+The slice 6 commit.

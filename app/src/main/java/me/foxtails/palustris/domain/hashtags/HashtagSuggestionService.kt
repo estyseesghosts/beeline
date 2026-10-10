@@ -7,6 +7,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.withTimeoutOrNull
 import me.foxtails.palustris.domain.hashtagBody
 import me.foxtails.palustris.domain.hashtagIdentity
 import me.foxtails.palustris.domain.isExactHashtag
@@ -16,8 +17,9 @@ import me.foxtails.palustris.domain.isExactHashtag
  * session: it owns the in-memory cache and the debounce, and it is dropped with the session.
  *
  * Only the hashtag fragment reaches [fetchServer]. The draft and the full query text never do. A
- * failed server request returns the catalog matches without an error. The policy is read on each
- * call, so a language change applies to the next request, not to cached server answers.
+ * failed or slow server request returns the catalog matches without an error. The server gets
+ * [SERVER_DEADLINE_MILLIS] to answer. A late answer is dropped and never cached. The policy is
+ * read on each call, so a language change applies to the next request, not to cached server answers.
  */
 class HashtagSuggestionService(
     private val catalog: HashtagCatalog,
@@ -101,12 +103,12 @@ class HashtagSuggestionService(
             cache[key]?.takeIf { now - it.storedAt < CACHE_TTL_NANOS }?.let { return it.suggestions }
         }
         val fetched = try {
-            fetchServer(prefix, max(limit, SERVER_LIMIT))
+            withTimeoutOrNull(SERVER_DEADLINE_MILLIS) { fetchServer(prefix, max(limit, SERVER_LIMIT)) }
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
             return emptyList()
-        }
+        } ?: return emptyList()
         synchronized(cache) { cache[key] = CacheEntry(now, fetched) }
         return fetched
     }
@@ -115,6 +117,7 @@ class HashtagSuggestionService(
         const val DEBOUNCE_MILLIS = 250L
         const val SEARCH_LIMIT = 8
         const val COMPOSER_LIMIT = 5
+        const val SERVER_DEADLINE_MILLIS = 2_000L
         private const val SERVER_LIMIT = 8
         private const val CACHE_CAPACITY = 50
         private const val CACHE_TTL_NANOS = 5L * 60 * 1_000_000_000

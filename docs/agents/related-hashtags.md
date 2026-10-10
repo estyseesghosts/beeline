@@ -16,6 +16,7 @@ Authority: [plan](../related-tags.md), [task state](tasks/related-hashtags.md), 
 | Expansion, ranking, related hashtags | `domain/hashtags/HashtagExpander` | Stateless |
 | Display language to allowed codes and scripts | `domain/hashtags/HashtagLanguagePolicy` | Stateless |
 | The "Combine related hashtags" setting | `AppPreferences.combineRelatedHashtags` | Persisted, global |
+| Composer hashtag chips | `ui/composer/ComposerHashtags` (state), `HashtagToken.kt` (token rule) | One composer body |
 | Trending hashtags, popular accounts and typed suggestions for Search | `ui/search/SearchExploreController`, owned by `SearchOwner` | One `SearchOwner`; `release()` stops it and clears the suggestion cache |
 
 ## Invariants
@@ -32,7 +33,7 @@ Authority: [plan](../related-tags.md), [task state](tasks/related-hashtags.md), 
 ## Discovery
 
 `SocialSource` gains `trendingHashtags`, `suggestHashtags` and `popularAccounts`. They default to unsupported. `MastodonDiscoveryService` and `MisskeyDiscoveryService` hold the requests. `MastodonMapper` and `MisskeyMapper` map the JSON, and they skip a malformed item. There is no capability probe: a caller treats a failure or an empty list as "hide the section".
-`HashtagSuggestionService` (domain) merges catalog and server suggestions. It is built for one account session, holds a 50-entry, 5-minute in-memory cache keyed by account and prefix, and debounces 250 ms in `suggestions(prefixes, limit)`. It sends only the hashtag fragment. A server failure returns the catalog matches. The owner of the session must call `release()`. `SearchOwner` builds one for the account and releases it with the owner. The composer (slice 6) builds its own.
+`HashtagSuggestionService` (domain) merges catalog and server suggestions. It is built for one account session, holds a 50-entry, 5-minute in-memory cache keyed by account and prefix, and debounces 250 ms in `suggestions(prefixes, limit)`. It sends only the hashtag fragment. A server failure or a server that needs more than 2 seconds returns the catalog matches. A late answer is dropped and never cached. The owner of the session must call `release()`. `SearchOwner` builds one for the account and releases it with the owner. `ConnectedSessionHost` builds a second one for the composer through `rememberComposerHashtagSuggestions`, and releases it through `ConnectedEntryStore`.
 
 ## Search wiring
 
@@ -41,6 +42,10 @@ Authority: [plan](../related-tags.md), [task state](tasks/related-hashtags.md), 
 `HashtagExpansionInput` exposes the catalog and the language policy, so `SearchOwner` builds its suggestion service from the same input. It builds no second catalog.
 `SearchContract.explore` carries `SearchExploreState` (trending, popular accounts, suggestions) to `SearchScreen`. `SearchExploreActions` has `loadTrending`, `loadPopularAccounts` and `suggestHashtags`. Each default does nothing.
 
+## Composer
+
+`hashtagTokenAt` finds the token at the cursor with the boundary rules of `PostTextPresentation` (`isHashtagBoundary` and `HASHTAG_TOKEN` are internal for this). `ComposerEntryRow` reports it through `ComposerEntryActions.hashtags`. The body shows the chips from `ComposerContract.hashtagSuggestions`, and the row applies a tap with `CursorField.replace`. Only the fragment before the cursor goes to the server. The warning field reports no token.
+
 ## Search screen decisions
 
 - Related chips show whenever `relatedTags` is not empty. The "Includes" line shows only when `combinedTags` is not empty.
@@ -48,9 +53,13 @@ Authority: [plan](../related-tags.md), [task state](tasks/related-hashtags.md), 
 
 ## Tests
 
-`HashtagCatalogRepositoryTest`, `HashtagExpanderTest`, `AppPreferencesRepositoryTest`, `LocalizationResourceTest`, `SearchExploreControllerTest`, `SearchDiscoveryTest`, and `SearchClearanceTest`.
+`HashtagCatalogRepositoryTest`, `HashtagExpanderTest`, `AppPreferencesRepositoryTest`, `LocalizationResourceTest`, `SearchExploreControllerTest`, `SearchDiscoveryTest`, `SearchClearanceTest`, `HashtagTokenTest`, and `ComposerHashtagTest`.
 They read the real asset from the source tree.
 
 ## Limits
 
 The catalog data is unreviewed. Treat a build as a test build until the owner reviews it.
+
+## Release gate
+
+The owner must review the catalog before a release: at least the largest groups and every hashtag in `amb`. Wrong cross-language merges show up with the setting on by default.

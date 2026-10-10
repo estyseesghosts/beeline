@@ -798,3 +798,13 @@ Sources: `ui/search/SearchExploreController.kt`, `SearchDiscoveryLists.kt`, `Sea
 A blank query on the Profiles tab shows the list "Popular accounts". It uses the same row and clearance as the account search results. A tap opens the profile through `onAccountClick`. The list has no follow button.
 `SearchExploreController.loadPopularAccounts` loads it once through `source.popularAccounts(20)`. An empty or failed list keeps the old "Find an account" prompt and shows no error. Typing a query replaces the list with the search results. The Misskey adapter omits the signed-in account.
 Sources: `ui/search/SearchDiscoveryLists.kt` (`AccountList`), `SearchExploreController.kt`, `SearchDiscoveryTest`, `SearchClearanceTest`. Device visuals are unverified.
+
+
+## Composer hashtag suggestions
+
+While the cursor sits in a hashtag of a post text field, the composer shows up to five chips directly above the toolbar. A chip is a button with the description "Insert hashtag #tag". A tap replaces the whole hashtag with `#tag` and a space, and moves the cursor after the space.
+- `hashtagTokenAt` (`ui/composer/HashtagToken.kt`) finds the token. It uses the boundary rules of `PostTextPresentation` and needs one character after `#`. `:shortcode:` emoji and Unicode emoji count as boundaries.
+- `ComposerEntryRow` reports the token through `ComposerEntryActions.hashtags`. The body shows the chips. The row owns the cursor, so it applies the insertion, as it does for an emoji.
+- The focused entry receives the text. The content warning field shows no chips. No chips show when the cursor is outside a hashtag.
+- `ComposerContract.hashtagSuggestions` supplies the suggestions. `ConnectedSessionHost` builds the service per account session and releases it with the session.
+Sources: `ui/composer/ComposerHashtags.kt`, `HashtagToken.kt`, `ComposerHashtagTest`, `HashtagTokenTest`. Device visuals are unverified.

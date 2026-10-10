@@ -27,6 +27,7 @@ import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.ui.PalustrisApp
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.composer.asDraftsContract
+import me.foxtails.palustris.ui.composer.rememberComposerHashtagSuggestions
 import me.foxtails.palustris.ui.directmessages.DirectMessagesHost
 import me.foxtails.palustris.ui.emoji.EmojiHost
 import me.foxtails.palustris.ui.feed.FeedHost
@@ -254,7 +255,14 @@ fun ConnectedSessionHost(
             override fun signInAgain() = accountManager.upgradePermissions(accountId)
         }
     }
-    val composer = remember(postPreferences, feed.composerInputs, composerActions) {
+    val hashtagSuggestions = rememberComposerHashtagSuggestions(
+        "${accountId.connection.origin}/${accountId.localId}",
+        sessionGeneration,
+        sharedSource,
+        hashtagInput,
+        entryStore,
+    )
+    val composer = remember(postPreferences, feed.composerInputs, composerActions, hashtagSuggestions) {
         ComposerContract(
             postPreferences = postPreferences,
             availableAudiences = feed.composerInputs.availableAudiences,
@@ -267,6 +275,7 @@ fun ConnectedSessionHost(
             publishTotal = feed.composerInputs.publishTotal,
             error = feed.composerInputs.error,
             actions = composerActions,
+            hashtagSuggestions = hashtagSuggestions,
         )
     }
 

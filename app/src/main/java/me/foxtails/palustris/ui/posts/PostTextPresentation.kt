@@ -61,7 +61,7 @@ private data class RemovalRange(
     val detachedLine: Boolean,
 )
 
-private val HASHTAG_TOKEN = Regex("#[\\p{L}\\p{N}_](?:[\\p{L}\\p{N}\\p{M}_])*")
+internal val HASHTAG_TOKEN = Regex("#[\\p{L}\\p{N}_](?:[\\p{L}\\p{N}\\p{M}_])*")
 private val MARKDOWN_HASHTAG_LINK = Regex("""\[([^\]\r\n]*)\]\(\s*(?:<)?(https?://[^)\s>]+)(?:>)?\s*\)""")
 
 /** Removes only instance tag-search Markdown wrappers; ordinary links remain Markdown. */
@@ -151,7 +151,7 @@ private fun hashtagBoundaryIsValid(text: String, range: IntRange, emojiRanges: L
         (after == null || isHashtagBoundary(after) || afterInEmoji)
 }
 
-private fun isHashtagBoundary(codePoint: Int): Boolean =
+internal fun isHashtagBoundary(codePoint: Int): Boolean =
     isWhitespaceOrFormatting(codePoint) || isApprovedDecorativeSeparator(codePoint)
 
 private fun findTerminalHashtags(

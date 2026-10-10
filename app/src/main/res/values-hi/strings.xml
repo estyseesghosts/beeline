@@ -32,4 +32,5 @@
         <item quantity="other">%1$d लोग</item>
     </plurals>
     <string name="search_popular_accounts">लोकप्रिय खाते</string>
+    <string name="composer_insert_hashtag">हैशटैग %1$s डालें</string>
 </resources>

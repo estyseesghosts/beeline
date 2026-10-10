@@ -166,4 +166,5 @@
         <item quantity="other">%1$d 人</item>
     </plurals>
     <string name="search_popular_accounts">热门账号</string>
+    <string name="composer_insert_hashtag">插入话题标签 %1$s</string>
 </resources>

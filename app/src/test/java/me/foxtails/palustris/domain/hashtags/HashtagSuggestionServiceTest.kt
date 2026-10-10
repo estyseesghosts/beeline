@@ -113,6 +113,21 @@ class HashtagSuggestionServiceTest {
     }
 
     @Test
+    fun aSlowServerFallsBackToCatalogMatchesAndTheLateAnswerIsNotCached() = runTest {
+        val gate = CompletableDeferred<List<HashtagSuggestion>>()
+        var slow = true
+        val server = Server { if (slow) gate.await() else listOf(HashtagSuggestion("phoenix", 1.0)) }
+        val service = service(server)
+
+        val result = service.suggest("pho", 8)
+
+        assertEquals(listOf("photography", "photo", "photos"), result.map { it.name })
+        assertEquals(HashtagSuggestionService.SERVER_DEADLINE_MILLIS, testScheduler.currentTime)
+        slow = false
+        assertTrue(service.suggest("pho", 8).any { it.name == "phoenix" })
+    }
+
+    @Test
     fun aRepeatedPrefixInsideFiveMinutesMakesOneRequest() = runTest {
         var now = 0L
         val server = Server { listOf(HashtagSuggestion("phototype", null)) }

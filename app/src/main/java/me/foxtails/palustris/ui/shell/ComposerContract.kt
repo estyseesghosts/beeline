@@ -1,5 +1,7 @@
 package me.foxtails.palustris.ui.shell
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import me.foxtails.palustris.domain.AccessStatus
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityStatus
@@ -8,6 +10,7 @@ import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.domain.ThreadPublishListener
 import me.foxtails.palustris.domain.effectiveCapabilityStatus
+import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
 
 /**
  * Composer capabilities and publication for one connected account.
@@ -30,6 +33,11 @@ data class ComposerContract(
     val prepareText: (String) -> String = { it },
     /** What the token allows for uploads. The server capability alone cannot say. */
     val mediaAccess: AccessStatus = AccessStatus.Unknown,
+    /**
+     * Hashtag suggestions for the fragment typed after `#`. Only the fragment is sent to the
+     * account server. The default offers none.
+     */
+    val hashtagSuggestions: (Flow<String>) -> Flow<List<HashtagSuggestion>> = { emptyFlow() },
 ) {
     /** Whether this account can attach images now: the server must support it and the token must allow it. */
     val mediaUpload: CapabilityStatus

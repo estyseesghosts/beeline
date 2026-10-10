@@ -172,4 +172,5 @@
         <item quantity="other">%1$d personnes</item>
     </plurals>
     <string name="search_popular_accounts">Comptes populaires</string>
+    <string name="composer_insert_hashtag">Insérer le hashtag %1$s</string>
 </resources>

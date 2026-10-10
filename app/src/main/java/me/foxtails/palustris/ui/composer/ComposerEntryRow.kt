@@ -64,6 +64,12 @@ internal class CursorField(length: Int) {
     fun value(text: String): TextFieldValue =
         TextFieldValue(text, TextRange(selection.start.coerceIn(0, text.length), selection.end.coerceIn(0, text.length)))
 
+    /** Replaces [start] until [end] of [text] with [replacement], moves the cursor after it, and returns the new text. */
+    fun replace(text: String, start: Int, end: Int, replacement: String): String {
+        selection = TextRange(start + replacement.length)
+        return text.replaceRange(start, end, replacement)
+    }
+
     /** Replaces the selection of [text] with [insertion], moves the cursor after it, and returns the new text. */
     fun insert(text: String, insertion: String): String {
         val start = selection.min.coerceIn(0, text.length)
@@ -87,6 +93,7 @@ internal class ComposerEntryActions(
     val loadThumbnail: ThumbnailLoader,
     val onRemoveMedia: (mediaId: String) -> Unit,
     val onEditAlt: (mediaId: String) -> Unit,
+    val hashtags: ComposerHashtags = ComposerHashtags(),
 )
 
 /**
@@ -126,6 +133,18 @@ internal fun ComposerEntryRow(
         }
         actions.onEmojiInserted()
     }
+    var textFocused by remember { mutableStateOf(false) }
+    LaunchedEffect(entry.text, text.selection, textFocused) {
+        val token = hashtagTokenAt(entry.text, text.selection.start).takeIf { textFocused && text.selection.collapsed }
+        actions.hashtags.report(entry.id, token)
+    }
+    LaunchedEffect(actions.hashtags.pending) {
+        val insertion = actions.hashtags.pending?.takeIf { it.entryId == entry.id } ?: return@LaunchedEffect
+        hashtagTokenAt(entry.text, text.selection.start)?.let { token ->
+            actions.onTextChange(text.replace(entry.text, token.start, token.end, hashtagInsertionText(insertion.name)))
+        }
+        actions.hashtags.applied()
+    }
     val textDescription = if (first) stringResource(R.string.composer_post_text) else stringResource(R.string.composer_entry_text, index + 1)
     val warningRemaining = entry.warningRemaining(limits)
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(vertical = 8.dp)) {
@@ -162,7 +181,10 @@ internal fun ComposerEntryRow(
                         .heightIn(min = if (first) FIRST_ENTRY_MIN_HEIGHT else 48.dp)
                         .padding(vertical = 8.dp)
                         .focusRequester(focusRequester)
-                        .onFocusChanged { if (it.isFocused) actions.onFocus(ComposerField.Kind.Text) }
+                        .onFocusChanged {
+                            textFocused = it.isFocused
+                            if (it.isFocused) actions.onFocus(ComposerField.Kind.Text)
+                        }
                         .semantics { contentDescription = textDescription },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),

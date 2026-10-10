@@ -8,6 +8,16 @@ Stale when: A release ships without an entry here.
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
 
+## Unreleased
+
+### New
+
+- Search and Photo Grid hashtag feeds include related hashtags in other forms and languages. A new switch, Combine related hashtags, turns this off. The results show which hashtags they include and a Show only button.
+- The Hashtags tab lists trending hashtags from your server. It suggests hashtags as you type and shows related hashtags under the results.
+- The Profiles tab lists popular accounts from your server.
+- The composer suggests hashtags while you type one. The app sends the typed fragment after the hash sign to your server for this.
+- The bundled hashtag catalog has not been reviewed. Treat this build as a test build.
+
 ## 0.2.13
 
 ### Fixed

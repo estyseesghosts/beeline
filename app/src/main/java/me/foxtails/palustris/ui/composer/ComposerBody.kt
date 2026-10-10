@@ -63,6 +63,7 @@ internal fun ComposerBody(
 ) {
     val editor = owner.editor
     var focused by remember { mutableStateOf(ComposerField.Text) }
+    val hashtags = remember { ComposerHashtags() }
     // A removed entry cannot keep focus; the first entry takes it.
     val focusedEntry = focused.entryId?.let(editor::entry) ?: editor.first
     val warningFocused = focused.kind == ComposerField.Kind.Warning && focusedEntry.warningEnabled
@@ -125,6 +126,7 @@ internal fun ComposerBody(
                             loadThumbnail = media.loadThumbnail,
                             onRemoveMedia = { owner.removeMedia(entry.id, it) },
                             onEditAlt = { media.editAlt(entry.id, it) },
+                            hashtags = hashtags,
                         ),
                     )
                 }
@@ -146,6 +148,12 @@ internal fun ComposerBody(
             ComposerAudienceRow(editor.audience, audienceOptions, owner::setAudience)
         }
         HorizontalDivider()
+        // The chips follow the focused text field. The warning field never shows them.
+        ComposerHashtagChips(
+            fragment = hashtags.active?.takeIf { it.entryId == focusedEntry.id && !warningFocused }?.token?.fragment,
+            suggestions = contract.hashtagSuggestions,
+            onInsert = hashtags::insert,
+        )
         ComposerToolbar(
             entry = focusedEntry,
             limits = contract.limits,

@@ -134,3 +134,9 @@ The per-account `UploadCompression` preference (`Always`, `Never`, `Ask`; defaul
 unknown value, loads as `Always`. Posting settings show the choice only when the active server reports
 `clientCompression` (Misskey does, Mastodon does not).
 
+
+## Hashtag suggestions
+
+Typed text goes to the account server in one case. When you type a hashtag in Search or in the composer, the app sends the text after `#` to your account server to ask for suggestions. The app sends only that fragment. It never sends the draft, the rest of the query, or the content warning field.
+`HashtagSuggestionService` keeps up to 50 answers for 5 minutes in memory only. It drops them when the account session ends. A failed request, or one that takes more than 2 seconds, shows the matches from the bundled catalog and no error. The catalog never reads the network.
+Sources: `domain/hashtags/HashtagSuggestionService.kt`, `ui/composer/ComposerHashtags.kt`, `ComposerHashtagTest` ("onlyTheFragmentReachesTheServer").
