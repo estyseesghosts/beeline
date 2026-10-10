@@ -9,7 +9,9 @@ import me.foxtails.palustris.domain.DraftMedia
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.PollRequest
 import me.foxtails.palustris.domain.PostDraftQuotePreview
+import me.foxtails.palustris.domain.PostOptions
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.QuoteApprovalPolicy
 
 /**
  * Process-recreation snapshot of [ComposerEditorState]. A snapshot from before reply and quote
@@ -23,6 +25,7 @@ private const val TARGETS_SIZE = 23
 private const val ENTRIES_INDEX = 23
 private const val SAVED_ENTRIES_INDEX = 24
 private const val MEDIA_DRAFT_ID_INDEX = 25
+private const val OPTIONS_INDEX = 26
 
 /** Restores shell-surviving fields across process recreation. */
 internal val ComposerEditorStateSaver: Saver<ComposerEditorState, Any> = listSaver(
@@ -56,6 +59,9 @@ internal val ComposerEditorStateSaver: Saver<ComposerEditorState, Any> = listSav
             it.entries.map(::saveEntry),
             it.savedEntries.map(::saveContent),
             it.mediaDraftId,
+            it.options.localOnly,
+            it.options.quotePolicy?.name,
+            it.options.scheduledAtEpochMillis,
         )
     },
     restore = {
@@ -102,9 +108,15 @@ internal val ComposerEditorStateSaver: Saver<ComposerEditorState, Any> = listSav
         if (entries.isEmpty() || saved.isEmpty()) {
             withTargets
         } else {
-            withTargets.copy(entries = entries, savedEntries = saved, mediaDraftId = mediaDraftId)
+            withTargets.copy(entries = entries, savedEntries = saved, mediaDraftId = mediaDraftId, options = restoreOptions(it))
         }
     },
+)
+
+private fun restoreOptions(row: List<Any?>): PostOptions = PostOptions(
+    localOnly = row.getOrNull(OPTIONS_INDEX) as? Boolean ?: false,
+    quotePolicy = (row.getOrNull(OPTIONS_INDEX + 1) as? String)?.let { name -> QuoteApprovalPolicy.entries.firstOrNull { it.name == name } },
+    scheduledAtEpochMillis = (row.getOrNull(OPTIONS_INDEX + 2) as? Number)?.toLong(),
 )
 
 private fun saveEntry(entry: ComposerEntryState): List<Any?> =

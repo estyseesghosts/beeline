@@ -27,6 +27,7 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.PostEditSource
 import me.foxtails.palustris.domain.PostPreferences
+import me.foxtails.palustris.domain.ScheduledPost
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.domain.ThreadPublishListener
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
@@ -38,6 +39,8 @@ import me.foxtails.palustris.ui.directmessages.DirectMessagesHost
 import me.foxtails.palustris.ui.emoji.EmojiHost
 import me.foxtails.palustris.ui.feed.FeedHost
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
+import me.foxtails.palustris.ui.links.LocalPostLinkResolver
+import me.foxtails.palustris.ui.links.SessionPostLinkResolver
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.notifications.NotificationSettingsHost
 import me.foxtails.palustris.ui.notifications.NotificationsHost
@@ -264,6 +267,14 @@ fun ConnectedSessionHost(
             editOwner.retire()
         }
     }
+    val linkResolver = remember(accountId, sessionRevision, sharedSource) {
+        SessionPostLinkResolver(accountId, sessionRevision, sharedSource)
+    }
+    LaunchedEffect(entryStore, sessionGeneration, linkResolver) {
+        entryStore.register(sessionGeneration, "post-links-$accountId-$sessionGeneration") {
+            linkResolver.retire()
+        }
+    }
     val pollOwner = remember(accountId, sessionRevision, sharedSource) {
         PostPollOwner(accountId, sessionRevision, sharedSource, settingsScope, UiStrings.from(context))
     }
@@ -293,6 +304,41 @@ fun ConnectedSessionHost(
                 settingsScope.launch {
                     try {
                         onResult(sharedSource.editSource(id))
+                    } catch (error: Exception) {
+                        if (error is CancellationException) throw error
+                        onError(UiStrings.from(context).sourceError(error))
+                    }
+                }
+            }
+
+            override fun loadScheduled(onResult: (List<ScheduledPost>) -> Unit, onError: (String) -> Unit) {
+                settingsScope.launch {
+                    try {
+                        onResult(sharedSource.scheduledPosts())
+                    } catch (error: Exception) {
+                        if (error is CancellationException) throw error
+                        onError(UiStrings.from(context).sourceError(error))
+                    }
+                }
+            }
+
+            override fun cancelScheduled(id: String, onDone: () -> Unit, onError: (String) -> Unit) {
+                settingsScope.launch {
+                    try {
+                        sharedSource.cancelScheduled(id)
+                        onDone()
+                    } catch (error: Exception) {
+                        if (error is CancellationException) throw error
+                        onError(UiStrings.from(context).sourceError(error))
+                    }
+                }
+            }
+
+            override fun rescheduleScheduled(item: ScheduledPost, atEpochMillis: Long, onDone: () -> Unit, onError: (String) -> Unit) {
+                settingsScope.launch {
+                    try {
+                        sharedSource.reschedule(item, atEpochMillis)
+                        onDone()
                     } catch (error: Exception) {
                         if (error is CancellationException) throw error
                         onError(UiStrings.from(context).sourceError(error))
@@ -333,6 +379,7 @@ fun ConnectedSessionHost(
             publishPosted = feed.composerInputs.publishPosted,
             publishTotal = feed.composerInputs.publishTotal,
             publishMediaProgress = feed.composerInputs.publishMediaProgress,
+            quoteConfirmed = feed.composerInputs.quoteConfirmed,
             error = feed.composerInputs.error,
             actions = composerActions,
             hashtagSuggestions = hashtagSuggestions,
@@ -345,6 +392,7 @@ fun ConnectedSessionHost(
         LocalPostTranslations provides translationOwner,
         LocalPostPolls provides pollOwner,
         LocalPostEdits provides editOwner,
+        LocalPostLinkResolver provides linkResolver,
         LocalPostPendingLookup provides pendingLookup,
     ) {
         PalustrisApp(

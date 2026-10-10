@@ -55,6 +55,8 @@ sealed interface ThreadPublishResult {
     data class Success(
         val created: List<Post>,
         val requests: List<CreatePostRequest>,
+        /** Posts the server holds for later. A scheduled post is never in [created], so no timeline adds it. */
+        val scheduled: List<ScheduledPost> = emptyList(),
     ) : ThreadPublishResult
 
     data class Failed(
@@ -105,6 +107,7 @@ class ThreadPublisher(
         )
         val created = mutableListOf<Post>()
         val requests = mutableListOf<CreatePostRequest>()
+        val scheduled = mutableListOf<ScheduledPost>()
         var previousReply = publication.replyTo
         for (index in publication.entries.indices) {
             val entry = publication.entries[index]
@@ -132,15 +135,29 @@ class ThreadPublisher(
                 attachments = attachments,
                 poll = entry.poll,
                 quoteOf = if (index == 0) publication.quoteOf else null,
+                quoteApprovalPolicy = publication.options.quotePolicy,
+                localOnly = publication.options.localOnly,
+                scheduledAtEpochMillis = if (index == 0) publication.options.scheduledAtEpochMillis else null,
                 idempotencyKey = "${publication.draftId}-${entry.id}",
             )
+            val scheduling = request.scheduledAtEpochMillis != null
             val post = try {
-                source.create(request)
+                if (scheduling) {
+                    scheduled += source.schedule(request)
+                    null
+                } else {
+                    source.create(request)
+                }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
                 cleanup(uploaded)
                 return failed(publication, created, requests, index, error)
+            }
+            if (post == null) {
+                // A scheduled post exists only on the server, so nothing replies to it and no timeline shows it.
+                onEntryPosted(created.toList(), null)
+                continue
             }
             created += post
             requests += request
@@ -156,7 +173,7 @@ class ThreadPublisher(
             }
             onEntryPosted(created.toList(), remaining)
         }
-        return ThreadPublishResult.Success(created = created.toList(), requests = requests.toList())
+        return ThreadPublishResult.Success(created = created.toList(), requests = requests.toList(), scheduled = scheduled.toList())
     }
 
     /**

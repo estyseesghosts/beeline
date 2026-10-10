@@ -44,6 +44,7 @@ data class ThreadPublication(
     val quoteOf: EntityId? = null,
     val compress: Boolean = true,
     val accountId: AccountId? = null,
+    val options: PostOptions = PostOptions(),
 ) {
     init {
         require(entries.isNotEmpty()) { "A thread publication holds at least one entry." }
@@ -85,6 +86,7 @@ fun ThreadPublication.toPostDraft(accountId: AccountId?): PostDraft {
         contentWarning = first.contentWarning,
         replyTo = replyTo,
         quoteOf = quoteOf,
+        options = options,
         media = first.media.map(ThreadPublicationMedia::toDraftMedia),
         poll = first.poll,
         followUps = entries.drop(1).map {

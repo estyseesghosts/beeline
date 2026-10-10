@@ -1,5 +1,6 @@
 package me.foxtails.palustris.data.mastodon
 
+import java.time.Instant
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Attachment
@@ -12,28 +13,28 @@ import me.foxtails.palustris.domain.DirectConversation
 import me.foxtails.palustris.domain.EditableProfile
 import me.foxtails.palustris.domain.EditableProfileField
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActivity
 import me.foxtails.palustris.domain.NotificationDestination
 import me.foxtails.palustris.domain.NotificationGroup
-import me.foxtails.palustris.domain.NotificationGroupId
-import me.foxtails.palustris.domain.NotificationTarget
 import me.foxtails.palustris.domain.Poll
 import me.foxtails.palustris.domain.PollOption
 import me.foxtails.palustris.domain.Post
-import me.foxtails.palustris.domain.Translation
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostContentVisibility
 import me.foxtails.palustris.domain.PostInteractionCounts
-import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.ProfileField
 import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.QuoteApproval
+import me.foxtails.palustris.domain.QuoteUnavailable
+import me.foxtails.palustris.domain.ScheduledPost
+import me.foxtails.palustris.domain.Translation
 import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
 import me.foxtails.palustris.domain.hashtags.TrendingHashtag
 import me.foxtails.palustris.domain.isExactHashtag
 import org.json.JSONObject
-import java.time.Instant
 
 object MastodonMapper {
     /** A tag from `trends/tags`. Counts add up the latest two history days. A malformed tag maps to null. */
@@ -247,7 +248,7 @@ object MastodonMapper {
         }
 
         val poll = json.optJSONObject("poll")
-        val quotedStatus = quotedStatus(json)
+        val quoted = quoteReference(json)
         val statusSensitive = json.optBoolean("sensitive")
         val filtered = json.optJSONArray("filtered")?.length()?.let { it > 0 } == true
         val contentVisibility = if (filtered) PostContentVisibility.Filtered else PostContentVisibility.Visible
@@ -269,7 +270,7 @@ object MastodonMapper {
         return Post(
             id = id,
             author = account(json.getJSONObject("account"), origin),
-            text = if (filtered) "" else json.optString("content").htmlToMarkdown(emoji),
+            text = if (filtered) "" else quoted.contentWithoutFallback(json.optString("content")).htmlToMarkdown(emoji),
             publishedAtEpochMillis = parseInstant(json.optString("created_at")),
             audience = when (json.optString("visibility")) {
                 "unlisted" -> Audience.Unlisted
@@ -282,6 +283,7 @@ object MastodonMapper {
             }.orEmpty(),
             contentWarning = json.nullableString("spoiler_text").takeUnless { filtered },
             language = json.nullableString("language"),
+            localOnly = json.optBoolean("local_only") || (json.optString("visibility") == "local"),
             editedAtEpochMillis = json.nullableString("edited_at")?.let(::parseInstant),
             replyTo = json.nullableString("in_reply_to_id")?.let { EntityId(origin, it) },
             replyToAuthorId = json.nullableString("in_reply_to_account_id")
@@ -289,7 +291,12 @@ object MastodonMapper {
             availableActions = if (filtered) emptySet() else MASTODON_ACTIONS,
             url = json.nullableString("url") ?: json.nullableString("uri"),
             interactionCounts = interactionCounts,
-            quote = if (filtered) null else quotedStatus?.takeIf { depth < MAX_NESTING_DEPTH }?.let { post(it, origin, depth + 1) },
+            quote = if (filtered) null else quoted.status?.takeIf { depth < MAX_NESTING_DEPTH }?.let { post(it, origin, depth + 1) },
+            quoteUnavailable = if (filtered) null else quoted.unavailable
+                ?: QuoteUnavailable.Unloaded.takeIf { quoted.status != null && depth >= MAX_NESTING_DEPTH },
+            quoteId = if (filtered || quoted.status != null) null else quoted.id?.let { EntityId(origin, it) },
+            quoteUrl = if (filtered || quoted.status != null) null else quoted.url,
+            quoteApproval = quoteApproval(json),
             poll = poll?.let(::poll),
             reposted = json.optBoolean("reblogged"),
             favourited = json.optBoolean("favourited"),
@@ -325,12 +332,100 @@ object MastodonMapper {
         )
     }
 
-    private fun quotedStatus(json: JSONObject): JSONObject? {
-        json.optJSONObject("quote")?.let { quote ->
-            return if (quote.optString("state") == "accepted") quote.optJSONObject("quoted_status") else null
-        }
-        return json.optJSONObject("quoted_status")
+    /** Maps a `ScheduledStatus`: an ID, the time, and the parameters the post will be created with. */
+    fun scheduled(json: JSONObject): ScheduledPost {
+        val params = json.optJSONObject("params") ?: JSONObject()
+        val media = json.optJSONArray("media_attachments")
+        return ScheduledPost(
+            id = json.getString("id"),
+            scheduledAtEpochMillis = parseInstant(json.optString("scheduled_at")),
+            text = params.optString("text"),
+            audience = when (params.optString("visibility")) {
+                "unlisted" -> Audience.Unlisted
+                "private" -> Audience.Followers
+                "direct" -> Audience.Direct
+                else -> Audience.Public
+            },
+            contentWarning = params.nullableString("spoiler_text"),
+            attachmentCount = media?.length() ?: 0,
+            hasPoll = params.optJSONObject("poll") != null,
+        )
     }
+
+    /** What one status says about the post it quotes, in whichever of the known shapes it arrived. */
+    internal class QuoteReference(
+        val status: JSONObject? = null,
+        val unavailable: QuoteUnavailable? = null,
+        val id: String? = null,
+        val url: String? = null,
+        /** True when the server marked a quote at all, so its `RE:` fallback paragraph is redundant. */
+        val present: Boolean = false,
+    ) {
+        /** The status HTML without the `<p class="quote-inline">` paragraph that older clients show in place of a quote. */
+        fun contentWithoutFallback(content: String): String =
+            if (present) QUOTE_INLINE_PARAGRAPH.replace(content, "") else content
+    }
+
+    /**
+     * Reads the quote of a Mastodon-API status in this order: `quote` with a state and a status, `quote`
+     * with a state and an ID, `quote` as a plain status (Fedibird, older Akkoma), `pleroma.quote`, the
+     * legacy `quoted_status`, then a bare `quote_id`, `pleroma.quote_id`, `pleroma.quote_url` or a
+     * trailing `RE:` link. A state other than `accepted` is kept as a reason for a placeholder.
+     */
+    internal fun quoteReference(json: JSONObject): QuoteReference {
+        val pleroma = json.optJSONObject("pleroma")
+        val quote = json.optJSONObject("quote")
+        if (quote != null) {
+            val state = quote.nullableString("state")
+            val embedded = quote.optJSONObject("quoted_status") ?: quote.takeIf { it.has("content") && it.has("account") }
+            val shallowId = quote.nullableString("quoted_status_id")
+            return when {
+                state != null && state != "accepted" -> QuoteReference(unavailable = quoteState(state), present = true)
+                json.optBoolean("quote_muted") -> QuoteReference(unavailable = QuoteUnavailable.Hidden, present = true)
+                embedded != null -> QuoteReference(status = embedded, present = true)
+                shallowId != null -> QuoteReference(id = shallowId, present = true)
+                else -> QuoteReference(present = true)
+            }
+        }
+        pleroma?.optJSONObject("quote")?.let { plain ->
+            return if (pleroma.has("quote_visible") && !pleroma.optBoolean("quote_visible", true)) {
+                QuoteReference(unavailable = QuoteUnavailable.Hidden, present = true)
+            } else {
+                QuoteReference(status = plain, present = true)
+            }
+        }
+        json.optJSONObject("quoted_status")?.let { return QuoteReference(status = it, present = true) }
+        val id = json.nullableString("quote_id") ?: pleroma?.nullableString("quote_id")
+        val url = pleroma?.nullableString("quote_url") ?: QUOTE_INLINE_LINK.find(json.optString("content"))?.groupValues?.get(1)
+        if (json.optBoolean("quote_muted")) return QuoteReference(unavailable = QuoteUnavailable.Hidden, present = true)
+        if (pleroma != null && pleroma.has("quote_visible") && !pleroma.optBoolean("quote_visible", true) && (id != null || url != null)) {
+            return QuoteReference(unavailable = QuoteUnavailable.Hidden, present = true)
+        }
+        return QuoteReference(id = id, url = url, present = id != null || url != null)
+    }
+
+    private fun quoteState(state: String): QuoteUnavailable = when (state) {
+        "pending" -> QuoteUnavailable.Pending
+        "rejected" -> QuoteUnavailable.Rejected
+        "revoked" -> QuoteUnavailable.Revoked
+        "deleted" -> QuoteUnavailable.Deleted
+        "unauthorized" -> QuoteUnavailable.Unauthorized
+        "blocked_account" -> QuoteUnavailable.BlockedAccount
+        "blocked_domain" -> QuoteUnavailable.BlockedDomain
+        "muted_account" -> QuoteUnavailable.MutedAccount
+        else -> QuoteUnavailable.Hidden
+    }
+
+    private fun quoteApproval(json: JSONObject): QuoteApproval =
+        when (json.optJSONObject("quote_approval")?.nullableString("current_user")) {
+            "automatic" -> QuoteApproval.Automatic
+            "manual" -> QuoteApproval.Manual
+            "denied" -> QuoteApproval.Denied
+            else -> QuoteApproval.Unknown
+        }
+
+    private val QUOTE_INLINE_PARAGRAPH = Regex("<p\\s+class=\"quote-inline\">.*?</p>", setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE))
+    private val QUOTE_INLINE_LINK = Regex("<p\\s+class=\"quote-inline\">\\s*RE:\\s*<a\\s[^>]*href=\"([^\"]+)\"", setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE))
 
     private fun parseInstant(value: String): Long =
         runCatching { Instant.parse(value).toEpochMilli() }.getOrDefault(0L)

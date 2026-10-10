@@ -4,39 +4,6 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.AtomicFile
-import me.foxtails.palustris.domain.AccountId
-import me.foxtails.palustris.domain.AccessGrant
-import me.foxtails.palustris.domain.AccessScope
-import me.foxtails.palustris.domain.AccessStatus
-import me.foxtails.palustris.domain.Audience
-import me.foxtails.palustris.domain.CapabilityStatus
-import me.foxtails.palustris.domain.Connection
-import me.foxtails.palustris.domain.EditableProfileCapabilities
-import me.foxtails.palustris.domain.EmojiCapabilities
-import me.foxtails.palustris.domain.NotificationCapabilities
-import me.foxtails.palustris.domain.OwnPostCapabilities
-import me.foxtails.palustris.domain.NotificationReadSemantics
-import me.foxtails.palustris.domain.NotificationUnreadPrecision
-import me.foxtails.palustris.domain.PollLimits
-import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.domain.PostLengthRule
-import me.foxtails.palustris.domain.PostingCapabilities
-import me.foxtails.palustris.domain.ProfileCapabilities
-import me.foxtails.palustris.domain.ModerationCapabilities
-import me.foxtails.palustris.domain.PrimaryFavouriteCapability
-import me.foxtails.palustris.domain.PrimaryFavouriteMode
-import me.foxtails.palustris.domain.PushSessionState
-import me.foxtails.palustris.domain.ReactionSelectionMode
-import me.foxtails.palustris.domain.SavedPostsCapability
-import me.foxtails.palustris.domain.SavedPostsKind
-import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.domain.ServerCapabilities
-import me.foxtails.palustris.domain.Session
-import me.foxtails.palustris.domain.ValidatedUrl
-import me.foxtails.palustris.domain.Timeline
-import me.foxtails.palustris.domain.TranslationCapability
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.security.KeyStore
@@ -45,6 +12,42 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import me.foxtails.palustris.domain.AccessGrant
+import me.foxtails.palustris.domain.AccessScope
+import me.foxtails.palustris.domain.AccessStatus
+import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.Audience
+import me.foxtails.palustris.domain.CapabilityStatus
+import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.EditableProfileCapabilities
+import me.foxtails.palustris.domain.EmojiCapabilities
+import me.foxtails.palustris.domain.LocalOnlyRoute
+import me.foxtails.palustris.domain.ModerationCapabilities
+import me.foxtails.palustris.domain.NotificationCapabilities
+import me.foxtails.palustris.domain.NotificationReadSemantics
+import me.foxtails.palustris.domain.NotificationUnreadPrecision
+import me.foxtails.palustris.domain.OwnPostCapabilities
+import me.foxtails.palustris.domain.PollLimits
+import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.PostLengthRule
+import me.foxtails.palustris.domain.PostingCapabilities
+import me.foxtails.palustris.domain.PrimaryFavouriteCapability
+import me.foxtails.palustris.domain.PrimaryFavouriteMode
+import me.foxtails.palustris.domain.ProfileCapabilities
+import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.PushSessionState
+import me.foxtails.palustris.domain.ReactionSelectionMode
+import me.foxtails.palustris.domain.SavedPostsCapability
+import me.foxtails.palustris.domain.SavedPostsKind
+import me.foxtails.palustris.domain.ScheduleRoute
+import me.foxtails.palustris.domain.SchedulingCapability
+import me.foxtails.palustris.domain.ServerCapabilities
+import me.foxtails.palustris.domain.Session
+import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.domain.TranslationCapability
+import me.foxtails.palustris.domain.ValidatedUrl
+import org.json.JSONArray
+import org.json.JSONObject
 
 /** Stores one encrypted session file for each account. */
 class AccountFileStore internal constructor(
@@ -320,6 +323,11 @@ private fun PostingCapabilities.toJson(): JSONObject = JSONObject()
     .put("mediaUpload", mediaUpload.name)
     .put("clientCompression", clientCompression)
     .put("quoteWithMedia", quoteWithMedia)
+    .put("quoteApprovalPolicy", quoteApprovalPolicy)
+    .put("localOnly", localOnly.name)
+    .put("scheduling", scheduling?.let {
+        JSONObject().put("route", it.route.name).put("minLeadSeconds", it.minLeadSeconds).put("limit", it.limit)
+    })
     .put("poll", poll?.let {
         JSONObject()
             .put("maxOptions", it.maxOptions)
@@ -344,6 +352,17 @@ private fun JSONObject.toPostingCapabilities(): PostingCapabilities = PostingCap
     mediaUpload = enumOrDefault("mediaUpload", CapabilityStatus.Unknown),
     clientCompression = optBoolean("clientCompression"),
     quoteWithMedia = optBoolean("quoteWithMedia", true),
+    quoteApprovalPolicy = optBoolean("quoteApprovalPolicy"),
+    localOnly = enumOrDefault("localOnly", LocalOnlyRoute.None),
+    scheduling = optJSONObject("scheduling")?.let { json ->
+        runCatching {
+            SchedulingCapability(
+                route = ScheduleRoute.valueOf(json.getString("route")),
+                minLeadSeconds = json.optLong("minLeadSeconds"),
+                limit = json.optIntOrNull("limit"),
+            )
+        }.getOrNull()
+    },
     poll = optJSONObject("poll")?.let {
         PollLimits(
             maxOptions = it.optInt("maxOptions", 4),

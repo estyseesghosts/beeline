@@ -39,6 +39,12 @@ data class CreatePostRequest(
     val attachments: List<Attachment> = emptyList(),
     val poll: PollRequest? = null,
     val quoteOf: EntityId? = null,
+    /** Who may quote this post (Mastodon 4.5 and later). Null leaves the account's default. */
+    val quoteApprovalPolicy: QuoteApprovalPolicy? = null,
+    /** True keeps the post on the author's server. Adapters send it only where the server takes it. */
+    val localOnly: Boolean = false,
+    /** When the server should publish the post, in epoch milliseconds. Null publishes now. */
+    val scheduledAtEpochMillis: Long? = null,
     /** Lets a server drop a duplicate of the same publish. Only servers that support it use it. */
     val idempotencyKey: String? = null,
 )

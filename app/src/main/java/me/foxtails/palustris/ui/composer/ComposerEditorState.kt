@@ -8,6 +8,7 @@ import me.foxtails.palustris.domain.DraftMedia
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.PollRequest
 import me.foxtails.palustris.domain.PostDraftQuotePreview
+import me.foxtails.palustris.domain.PostOptions
 
 /**
  * One post of the composer thread. Images are draft media records; the bytes live in the draft
@@ -90,6 +91,9 @@ data class ComposerEditorState(
     val mediaDraftId: String? = null,
     /** Set while the editor changes a published post instead of writing a new one. */
     val editing: ComposerEdit? = null,
+    /** Thread-level choices: local-only, who may quote, and the scheduled time. */
+    val options: PostOptions = PostOptions(),
+    val savedOptions: PostOptions = PostOptions(),
 ) {
     init {
         require(entries.isNotEmpty()) { "The composer always holds at least one entry." }

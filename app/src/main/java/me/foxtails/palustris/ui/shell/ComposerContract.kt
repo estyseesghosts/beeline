@@ -11,6 +11,7 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostEditSource
 import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.domain.PostPreferences
+import me.foxtails.palustris.domain.ScheduledPost
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.domain.ThreadPublishListener
 import me.foxtails.palustris.domain.effectiveCapabilityStatus
@@ -44,6 +45,8 @@ data class ComposerContract(
     val hashtagSuggestions: (Flow<String>) -> Flow<List<HashtagSuggestion>> = { emptyFlow() },
     /** Video conversion progress from 0 to 1 while [publishing] converts a video, otherwise null. */
     val publishMediaProgress: Float? = null,
+    /** False when the server has not confirmed that it takes quotes. The composer says so on a quote. */
+    val quoteConfirmed: Boolean = true,
 ) {
     /** Whether this account can attach images now: the server must support it and the token must allow it. */
     val mediaUpload: CapabilityStatus
@@ -57,6 +60,13 @@ data class ComposerContract(
 
         /** Loads the raw text and warning of an own post for editing. The default fails at once. */
         fun loadEditSource(id: EntityId, onResult: (PostEditSource) -> Unit, onError: (String) -> Unit) = onError("")
+
+        /** Loads the posts the server holds for later. The default reports a failure at once. */
+        fun loadScheduled(onResult: (List<ScheduledPost>) -> Unit, onError: (String) -> Unit) = onError("")
+
+        fun cancelScheduled(id: String, onDone: () -> Unit, onError: (String) -> Unit) = onError("")
+
+        fun rescheduleScheduled(item: ScheduledPost, atEpochMillis: Long, onDone: () -> Unit, onError: (String) -> Unit) = onError("")
 
         /** Sends an edit of an own post and reports the post as the server now holds it. */
         fun editPost(id: EntityId, request: EditPostRequest, onResult: (OwnedPost) -> Unit, onError: (String) -> Unit) = onError("")

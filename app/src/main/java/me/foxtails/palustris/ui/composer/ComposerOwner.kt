@@ -18,14 +18,26 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PollRequest
 import me.foxtails.palustris.domain.PostDraft
 import me.foxtails.palustris.domain.PostingVisibilityPolicy
+import me.foxtails.palustris.domain.QuoteApprovalPolicy
+import me.foxtails.palustris.domain.ScheduledPost
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.ThreadPublishFailure
 import me.foxtails.palustris.domain.ThreadPublishListener
+import me.foxtails.palustris.domain.carriesQuote
 import me.foxtails.palustris.domain.toPollRequest
 import me.foxtails.palustris.domain.toPostDraft
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.shell.ComposerContract
 import me.foxtails.palustris.ui.shell.DraftsContract
+
+/** Something the user should hear after a publish that went through but not as asked. */
+enum class PublishNotice {
+    /** The server holds the post and will publish it at the chosen time. */
+    Scheduled,
+
+    /** The server posted without the quote, so it does not seem to take quotes. */
+    QuoteDropped,
+}
 
 /** A composer transition that the shell applies by placing the composer overlay. */
 sealed interface ComposerNavigation {
@@ -70,6 +82,15 @@ class ComposerOwner internal constructor(
         private set
     var navigation by mutableStateOf<ComposerNavigation?>(null)
         private set
+
+    /** The posts the server holds for later, as of the last load. */
+    var scheduled by mutableStateOf<List<ScheduledPost>>(emptyList())
+        private set
+    var scheduledError by mutableStateOf<String?>(null)
+        private set
+    var scheduledLoading by mutableStateOf(false)
+        private set
+    private var scheduledEpoch = 0L
     var closing by mutableStateOf(false)
         private set
 
@@ -102,7 +123,8 @@ class ComposerOwner internal constructor(
         get() = editor.entriesChanged || editor.editing?.attachmentsChanged == true ||
             editor.quoteOf?.value != editor.savedQuoteOf ||
             editor.replyTo?.value != editor.savedReplyTo ||
-            editor.audience != editor.savedAudience
+            editor.audience != editor.savedAudience ||
+            editor.options != editor.savedOptions
 
     val canPublish: Boolean
         get() = context.contract.canPublish &&
@@ -120,6 +142,14 @@ class ComposerOwner internal constructor(
     fun setWarning(text: String) { setEntryWarning(firstEntryId, text) }
     fun setWarningEnabled(enabled: Boolean) { setEntryWarningEnabled(firstEntryId, enabled) }
     fun setAudience(audience: Audience) { mutateEditor { it.copy(audience = audience) } }
+    fun setLocalOnly(localOnly: Boolean) { mutateEditor { it.copy(options = it.options.copy(localOnly = localOnly)) } }
+    fun setQuotePolicy(policy: QuoteApprovalPolicy?) { mutateEditor { it.copy(options = it.options.copy(quotePolicy = policy)) } }
+
+    /** Sets the time to publish, or null to publish now. A thread cannot be scheduled, because its later posts reply to a post that does not exist yet. */
+    fun setScheduledAt(epochMillis: Long?) {
+        if (epochMillis != null && editor.entries.size > 1) return
+        mutateEditor { it.copy(options = it.options.copy(scheduledAtEpochMillis = epochMillis)) }
+    }
 
     fun setEntryText(entryId: String, text: String) = editEntry(entryId) { it.copy(text = text) }
     fun setEntryWarning(entryId: String, text: String) = editEntry(entryId) { it.copy(warning = text) }
@@ -168,6 +198,46 @@ class ComposerOwner internal constructor(
         draftsContract.actions.load(
             onResult = { result -> if (epoch == draftLoadEpoch) drafts = result },
             onError = { message -> if (epoch == draftLoadEpoch) editorState.value = editor.copy(error = message) },
+        )
+    }
+
+    /** Reloads the scheduled posts. A stale answer cannot replace a newer one. */
+    fun refreshScheduled() {
+        val epoch = ++scheduledEpoch
+        scheduledLoading = true
+        context.contract.actions.loadScheduled(
+            onResult = { items ->
+                if (epoch == scheduledEpoch) {
+                    scheduled = items
+                    scheduledError = null
+                    scheduledLoading = false
+                }
+            },
+            onError = { message ->
+                if (epoch == scheduledEpoch) {
+                    scheduledError = message.ifBlank { uiStrings.scheduledLoadFailed() }
+                    scheduledLoading = false
+                }
+            },
+        )
+    }
+
+    fun cancelScheduled(item: ScheduledPost) {
+        scheduled = scheduled.filterNot { it.id == item.id }
+        context.contract.actions.cancelScheduled(
+            item.id,
+            onDone = { refreshScheduled() },
+            // The list is reloaded either way, so it shows what the server really holds.
+            onError = { message -> scheduledError = message.ifBlank { uiStrings.scheduledActionFailed() }; refreshScheduled() },
+        )
+    }
+
+    fun reschedule(item: ScheduledPost, atEpochMillis: Long) {
+        context.contract.actions.rescheduleScheduled(
+            item,
+            atEpochMillis,
+            onDone = { refreshScheduled() },
+            onError = { message -> scheduledError = message.ifBlank { uiStrings.scheduledActionFailed() }; refreshScheduled() },
         )
     }
 
@@ -410,6 +480,8 @@ class ComposerOwner internal constructor(
             savedEntries = entries.map(ComposerEntryState::content),
             audience = item.audience,
             savedAudience = item.audience,
+            options = item.options,
+            savedOptions = item.options,
             quoteOf = quote,
             replyTo = reply,
             savedQuoteOf = quote?.value,
@@ -446,6 +518,7 @@ class ComposerOwner internal constructor(
                         draftId = item.id,
                         savedEntries = submittedContents,
                         savedAudience = item.audience,
+                        savedOptions = item.options,
                         savedQuoteOf = item.quoteOf?.value,
                         savedReplyTo = item.replyTo?.value,
                         error = null,
@@ -467,7 +540,7 @@ class ComposerOwner internal constructor(
      * before the asynchronous save starts. An obsolete save callback cannot publish. Success
      * clears and deletes only the submitted version. Failure keeps the entries that remain.
      */
-    fun publish(onSent: (replySent: Boolean, quoteSent: Boolean) -> Unit) {
+    fun publish(onNotice: (PublishNotice) -> Unit = {}, onSent: (replySent: Boolean, quoteSent: Boolean) -> Unit) {
         val account = context.account ?: return
         if (editor.editing != null) {
             publishEdit { onSent(false, false) }
@@ -488,6 +561,7 @@ class ComposerOwner internal constructor(
             quoteOf = submittedQuote,
             compress = resolveCompress(),
             accountId = account.id,
+            options = editor.options,
         )
         val reserved = ComposerSubmission(
             revision = editorRevision,
@@ -515,7 +589,7 @@ class ComposerOwner internal constructor(
                 )
                 context.contract.actions.publish(
                     publication.copy(draftId = saved.id),
-                    publishListener(saved.id, current, submittedReply, submittedQuote, onSent),
+                    publishListener(saved.id, current, submittedReply, submittedQuote, onSent, onNotice),
                 )
             },
             onError = {
@@ -541,14 +615,20 @@ class ComposerOwner internal constructor(
         submittedReply: EntityId?,
         submittedQuote: EntityId?,
         onSent: (Boolean, Boolean) -> Unit,
+        onNotice: (PublishNotice) -> Unit,
     ): ThreadPublishListener = object : ThreadPublishListener {
+        override fun onScheduled(items: List<ScheduledPost>) = onNotice(PublishNotice.Scheduled)
+
         override fun onAccepted(created: List<OwnedPost>, requests: List<CreatePostRequest>) {
             draftsContract.actions.delete(
                 draftId = savedId,
                 onDone = { refreshDrafts() },
                 onError = { message -> editorState.value = editor.copy(error = message) },
             )
-            onSent(submittedReply != null, submittedQuote != null)
+            // A server that took the post and dropped its quote gives no error, so the answer is checked here.
+            val quoteKept = submittedQuote == null || created.firstOrNull()?.post?.carriesQuote() != false
+            if (!quoteKept) onNotice(PublishNotice.QuoteDropped)
+            onSent(submittedReply != null, submittedQuote != null && quoteKept)
             clearAfterPublish(submitted)
         }
 
@@ -600,6 +680,7 @@ class ComposerOwner internal constructor(
             media = editor.first.media,
             poll = editor.first.poll,
             followUps = editor.toFollowUps(),
+            options = editor.options,
         )
     }
 

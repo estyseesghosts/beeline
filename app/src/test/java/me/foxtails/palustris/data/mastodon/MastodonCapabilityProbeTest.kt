@@ -96,7 +96,7 @@ class MastodonCapabilityProbeTest {
 
         assertEquals(CapabilityStatus.Unsupported, capabilities.profile.editable.advancedSettings)
         assertEquals(CapabilityStatus.Unsupported, capabilities.profile.editable.imageDeletion)
-        assertEquals(CapabilityStatus.Unsupported, capabilities.quotes)
+        assertEquals(CapabilityStatus.Unknown, capabilities.quotes)
     }
 
     @Test
@@ -105,7 +105,7 @@ class MastodonCapabilityProbeTest {
 
         assertEquals(CapabilityStatus.Unsupported, capabilities.profile.editable.read)
         assertEquals(CapabilityStatus.Supported, capabilities.profile.editable.imageDeletion)
-        assertEquals(CapabilityStatus.Unsupported, capabilities.quotes)
+        assertEquals(CapabilityStatus.Unknown, capabilities.quotes)
     }
 
     @Test

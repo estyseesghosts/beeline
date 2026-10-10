@@ -34,6 +34,7 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Event
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.LocalOnlyRoute
 import me.foxtails.palustris.domain.MediaUploadRequest
 import me.foxtails.palustris.domain.ModerationAccount
 import me.foxtails.palustris.domain.ModerationCursor
@@ -64,6 +65,7 @@ import me.foxtails.palustris.domain.PushProviderInfo
 import me.foxtails.palustris.domain.PushSubscription
 import me.foxtails.palustris.domain.PushSubscriptionSpec
 import me.foxtails.palustris.domain.ReportRequest
+import me.foxtails.palustris.domain.ScheduledPost
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
@@ -74,6 +76,7 @@ import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.Translation
 import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.domain.capabilityStatus
+import me.foxtails.palustris.domain.carriesQuote
 import me.foxtails.palustris.domain.hashtagBody
 import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
@@ -207,38 +210,89 @@ class MastodonSource(
     override suspend fun pinnedPosts(id: AccountId): List<Post> = request("profile.pinned") { profileService.pinnedPosts(id) }
 
     override suspend fun create(post: CreatePostRequest): Post = request("create") {
+        val fields = statusFields(post)
+        val headers = post.idempotencyKey?.let { mapOf("Idempotency-Key" to it) }.orEmpty()
+        val created = MastodonMapper.post(
+            api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES, headers).body.toJson(),
+            origin,
+        )
+        if (post.quoteOf != null && !created.carriesQuote()) {
+            // The post went out without its quote. Keep it, and stop offering quotes for the rest of the session.
+            _capabilities.value = capabilities.copy(quotes = CapabilityStatus.Unsupported)
+        }
+        created
+    }
+
+    /** Checks a request against what the server takes, and builds its form. [create] and [schedule] share it. */
+    private fun statusFields(post: CreatePostRequest): List<Pair<String, String>> {
         if (post.replyTo != null && post.quoteOf != null) throw SourceError.Unsupported("create.reply.quote")
         post.replyTo?.let { validatePostId(it, "create.reply-origin") }
         post.quoteOf?.let { validatePostId(it, "create.quote-origin") }
-        if (post.quoteOf != null && capabilities.quotes != CapabilityStatus.Supported) {
-            throw SourceError.Unsupported("quote")
-        }
-        if (post.quoteOf != null && (post.attachments.isNotEmpty() || post.poll != null)) {
-            throw SourceError.Unsupported("quote.attachments-or-poll")
+        // A quote is always attempted: the answer is checked after, because a server that drops the
+        // quote fields gives no other sign. A poll cannot be combined with a quote or media.
+        if (post.quoteOf != null && post.poll != null) throw SourceError.Unsupported("quote.poll")
+        if (post.quoteOf != null && post.attachments.isNotEmpty() && !capabilities.posting.quoteWithMedia) {
+            throw SourceError.Unsupported("quote.attachments")
         }
         if (post.poll != null && post.attachments.isNotEmpty()) throw SourceError.Unsupported("create.poll-with-media")
         val mediaIds = post.attachments.map { it.id ?: throw SourceError.Unsupported("create.attachment-id") }
-        val fields = buildList {
+        val localRoute = capabilities.posting.localOnly.takeIf { post.localOnly }
+        return buildList {
             // The server accepts an empty status when media is attached.
             add("status" to post.text)
             mediaIds.forEach { add("media_ids[]" to it) }
-            add("visibility" to post.audience.toMastodonVisibility())
+            // Pleroma and Akkoma keep a post on the server through the `local` visibility, which stands for a public post.
+            val localVisibility = localRoute == LocalOnlyRoute.PleromaVisibility && post.audience == Audience.Public
+            add("visibility" to if (localVisibility) "local" else post.audience.toMastodonVisibility())
+            if (localRoute == LocalOnlyRoute.MastodonFlag) add("local_only" to "true")
             post.contentWarning?.let { add("spoiler_text" to it) }
             post.replyTo?.let { add("in_reply_to_id" to it.value) }
-            post.quoteOf?.let { add("quoted_status_id" to it.value) }
+            // Both field names go out: Fedibird reads only quote_id, and servers that do not know one drop it.
+            post.quoteOf?.let {
+                add("quoted_status_id" to it.value)
+                add("quote_id" to it.value)
+            }
+            // The policy says who may quote the post being written, so it does not depend on this post quoting.
+            post.quoteApprovalPolicy?.takeIf { capabilities.posting.quoteApprovalPolicy }?.let { policy ->
+                add("quote_approval_policy" to policy.wire)
+            }
             post.poll?.let { poll ->
-                poll.choices.forEach { add("poll[options][]" to it) }
+                poll.cleaned().choices.forEach { add("poll[options][]" to it) }
                 // The server requires an expiry whenever options are sent.
                 add("poll[expires_in]" to (poll.expiresInSeconds ?: DEFAULT_POLL_SECONDS).toString())
                 if (poll.multiple) add("poll[multiple]" to "true")
                 if (poll.hideTotals) add("poll[hide_totals]" to "true")
             }
         }
-        val headers = post.idempotencyKey?.let { mapOf("Idempotency-Key" to it) }.orEmpty()
-        MastodonMapper.post(
-            api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES, headers).body.toJson(),
-            origin,
+    }
+
+    override suspend fun schedule(request: CreatePostRequest): ScheduledPost = this.request("schedule") {
+        val at = request.scheduledAtEpochMillis ?: throw SourceError.Unsupported("schedule.time")
+        val fields = statusFields(request) + ("scheduled_at" to java.time.Instant.ofEpochMilli(at).toString())
+        MastodonMapper.scheduled(api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES).body.toJson())
+    }
+
+    override suspend fun scheduledPosts(): List<ScheduledPost> = request("schedule.list") {
+        val items = JSONArray(api.get(origin, "api/v1/scheduled_statuses?limit=40", token, MASTODON_MAX_RESPONSE_BYTES).body)
+        (0 until items.length()).map { MastodonMapper.scheduled(items.getJSONObject(it)) }.sortedBy(ScheduledPost::scheduledAtEpochMillis)
+    }
+
+    override suspend fun cancelScheduled(id: String): Unit = request("schedule.cancel") {
+        api.delete(origin, "api/v1/scheduled_statuses/${URLEncoder.encode(id, Charsets.UTF_8.name())}", token, MASTODON_MAX_RESPONSE_BYTES)
+        Unit
+    }
+
+    override suspend fun reschedule(item: ScheduledPost, atEpochMillis: Long): ScheduledPost = request("schedule.update") {
+        val fields = listOf("scheduled_at" to java.time.Instant.ofEpochMilli(atEpochMillis).toString())
+        MastodonMapper.scheduled(
+            api.putForm(origin, "api/v1/scheduled_statuses/${URLEncoder.encode(item.id, Charsets.UTF_8.name())}", fields, token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(),
         )
+    }
+
+    override suspend fun resolvePostUrl(url: String): Post? = request("resolve") {
+        val encoded = URLEncoder.encode(url, Charsets.UTF_8.name())
+        val json = api.get(origin, "api/v2/search?q=$encoded&resolve=true&type=statuses&limit=1", token, MASTODON_MAX_RESPONSE_BYTES).body.toJson()
+        json.optJSONArray("statuses")?.optJSONObject(0)?.let { MastodonMapper.post(it, origin) }
     }
 
     override suspend fun editSource(id: EntityId): PostEditSource = request("edit.source") {

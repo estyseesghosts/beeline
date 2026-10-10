@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -79,5 +80,48 @@ internal fun QuotePreviewCard(
             }
             Text(stringResource(labelResource), Modifier.padding(top = 12.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         }
+    }
+}
+
+/**
+ * A short card for a quote that arrived without its post. It says why, or offers to fetch the post when
+ * the server sent only a reference. [onOpen] is null when nothing more can be done.
+ */
+@Composable
+internal fun QuotePlaceholderCard(
+    unavailable: me.foxtails.palustris.domain.QuoteUnavailable?,
+    onOpen: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val reason = when (unavailable) {
+        me.foxtails.palustris.domain.QuoteUnavailable.Pending -> R.string.quote_unavailable_pending
+        me.foxtails.palustris.domain.QuoteUnavailable.Rejected -> R.string.quote_unavailable_rejected
+        me.foxtails.palustris.domain.QuoteUnavailable.Revoked -> R.string.quote_unavailable_revoked
+        me.foxtails.palustris.domain.QuoteUnavailable.Deleted -> R.string.quote_unavailable_deleted
+        me.foxtails.palustris.domain.QuoteUnavailable.Unauthorized -> R.string.quote_unavailable_unauthorized
+        me.foxtails.palustris.domain.QuoteUnavailable.BlockedAccount -> R.string.quote_unavailable_blocked_account
+        me.foxtails.palustris.domain.QuoteUnavailable.BlockedDomain -> R.string.quote_unavailable_blocked_domain
+        me.foxtails.palustris.domain.QuoteUnavailable.MutedAccount -> R.string.quote_unavailable_muted_account
+        me.foxtails.palustris.domain.QuoteUnavailable.Hidden -> R.string.quote_unavailable_hidden
+        me.foxtails.palustris.domain.QuoteUnavailable.Unloaded, null -> R.string.quote_unavailable_reference
+    }
+    val body: @Composable () -> Unit = {
+        Column(Modifier.padding(16.dp)) {
+            Text(stringResource(reason), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (onOpen != null) {
+                Text(
+                    stringResource(R.string.quote_placeholder_open),
+                    Modifier.padding(top = 12.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+    }
+    val cardModifier = modifier.fillMaxWidth().padding(16.dp).testTag("quote_placeholder")
+    if (onOpen != null) {
+        OutlinedCard(modifier = cardModifier, onClick = onOpen) { body() }
+    } else {
+        OutlinedCard(modifier = cardModifier) { body() }
     }
 }

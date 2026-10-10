@@ -14,6 +14,7 @@ import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostLimits
+import me.foxtails.palustris.domain.ScheduledPost
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.domain.ThreadPublishFailure
@@ -43,6 +44,8 @@ data class FeedComposerInputs(
     val publishTotal: Int,
     val error: String?,
     val publishMediaProgress: Float? = null,
+    /** False when the server has not confirmed that it takes quotes. */
+    val quoteConfirmed: Boolean = true,
 )
 
 data class Feed(
@@ -109,7 +112,8 @@ fun FeedHost(
     val postInteractions = remember(feed.actions, feed.quoteStatus, postInteractionsActions) {
         PostInteractions(
             availableActions = feed.actions,
-            quoteEnabled = feed.quoteStatus == CapabilityStatus.Supported,
+            quoteEnabled = feed.quoteStatus != CapabilityStatus.Unsupported &&
+                feed.quoteStatus != CapabilityStatus.Denied,
             actions = postInteractionsActions,
         )
     }
@@ -134,7 +138,7 @@ fun FeedHost(
             coordinator.unregister(feedSink)
         }
     }
-    val composerInputs = remember(feed.audiences, feed.limits, feed.canPublish, feed.publishing, feed.publishPosted, feed.publishTotal, feed.publishMediaProgress, feed.error) {
+    val composerInputs = remember(feed.audiences, feed.limits, feed.canPublish, feed.publishing, feed.publishPosted, feed.publishTotal, feed.publishMediaProgress, feed.error, feed.quoteStatus) {
         feedComposerInputs(feed)
     }
     val publish = remember(feedModel, feedSink, coordinator) {
@@ -161,6 +165,7 @@ private fun feedComposerInputs(feed: FeedState): FeedComposerInputs = FeedCompos
     publishTotal = feed.publishTotal,
     error = feed.error,
     publishMediaProgress = feed.publishMediaProgress,
+    quoteConfirmed = feed.quoteStatus == CapabilityStatus.Supported,
 )
 
 /** Publishes threads through the feed model and fans accepted posts out to the other surfaces. */
@@ -190,4 +195,6 @@ private class ThreadPublishForwarder(
     override fun onProgress(posted: Int, total: Int) = listener.onProgress(posted, total)
 
     override fun onError(failure: ThreadPublishFailure) = listener.onError(failure)
+
+    override fun onScheduled(items: List<ScheduledPost>) = listener.onScheduled(items)
 }

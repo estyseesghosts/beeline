@@ -163,6 +163,14 @@ data class Post(
     val url: String? = null,
     val interactionCounts: PostInteractionCounts = PostInteractionCounts(),
     val quote: Post? = null,
+    /** Set when the post quotes something that [quote] does not hold. The row shows a placeholder for it. */
+    val quoteUnavailable: QuoteUnavailable? = null,
+    /** The quoted post's ID when the server sent only that. The viewer may fetch it on tap. */
+    val quoteId: EntityId? = null,
+    /** The quoted post's address when the server sent only that. A resolver may turn it into a post. */
+    val quoteUrl: String? = null,
+    /** What this account may do about quoting this post. [QuoteApproval.Unknown] when the server does not say. */
+    val quoteApproval: QuoteApproval = QuoteApproval.Unknown,
     val poll: Poll? = null,
     val reposted: Boolean = false,
     val favourited: Boolean = false,
@@ -181,6 +189,8 @@ data class Post(
     val language: String? = null,
     /** When the author last edited the post, or null when it was never edited. */
     val editedAtEpochMillis: Long? = null,
+    /** True when the author kept the post on their own server. */
+    val localOnly: Boolean = false,
 )
 
 data class PostActionResult(

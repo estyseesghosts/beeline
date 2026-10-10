@@ -1,6 +1,6 @@
 # Objective
 
-Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5, M1 (polls) and M3 (delete and edit) are done. M2, M4 and M6 to M8 are not started.
+Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5, M1 (polls), M3 (delete and edit), M2 (quote interop) and M4 (local-only and scheduled posts) are done. M6 to M8 are not started.
 
 # Invariants
 
@@ -42,7 +42,19 @@ Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5, M1 (polls) and 
 - The saved post is kept in the session-scoped `PostEditOwner` (`LocalPostEdits`) and applied by `PostRow` and `SinglePostScreen`. Rows in quote cards, notifications and the Photo Grid detail keep the old text until they reload.
 - `Post.editedAtEpochMillis` comes from `edited_at` or `updatedAt`. Rows show an Edited label. Edit history is not built.
 
+# Decisions (M2 quotes, M4 local-only and scheduling)
+
+- Quote parsing is lenient across the Mastodon-API family: Mastodon 4.5 `quote{state,quoted_status}`, a shallow `quoted_status_id`, Fedibird `quote`/`quote_id`/`quote_muted`, Akkoma state plus copy, Pleroma `pleroma.quote*`, the legacy `quoted_status`, and a trailing `RE:` link or `p.quote-inline`. A non-accepted state becomes `Post.quoteUnavailable` and shows a placeholder card with the reason. A reference without a body (`quoteId`, `quoteUrl`) shows a placeholder whose tap loads it.
+- Quote support without evidence is `Unknown`, not `Unsupported`: the composer still offers Quote, with a note that the server may drop it. A create whose answer holds no quote marks quotes `Unsupported` for the session only, keeps the post, and tells the user (`PublishNotice.QuoteDropped`).
+- `quote_approval.current_user = denied` disables Quote on that post. `quote_approval_policy` (public, followers, nobody) is sent on create only where the server shows Mastodon 4.5 evidence.
+- Links and quote cards open in the app through `SessionPostLinkResolver` (`LocalPostLinkResolver`) and `LocalPostOpener`, both provided per session. Only post-shaped URLs are tried, with a 3 second limit; real answers are cached; anything else goes to the browser. This replaced threading `onOpenPost` through every row.
+- `PostOptions(localOnly, quotePolicy, scheduledAtEpochMillis)` rides on the draft, the thread publication and the request. Local-only routes: Misskey `localOnly`; glitch-soc (`api_versions.glitch`) and Hometown (`+hometown-`) `local_only`; Pleroma and Akkoma `visibility=local` for public posts. Vanilla Mastodon shows no Local only chip.
+- Scheduling is a separate `SocialSource` call (`schedule`, `scheduledPosts`, `cancelScheduled`, `reschedule`), not a result type on `create`. Routes: Mastodon `scheduled_at` with `scheduled_statuses` (5 minute lead); Sharkey `notes/schedule/*` (no update, so reschedule is cancel and recreate); Misskey `notes/drafts/*`. The capability comes from `POST /api/endpoints` and the role policy limit (`scheduleNoteMax`, `scheduledNoteLimit`; 0 turns it off). A thread of several posts cannot be scheduled. The Scheduled tab lives in the composer's drafts browser only.
+- Capability schema version is 11 (quote approval policy, local-only route, scheduling).
+
 # Completed
+
+- M2 and M4 share one commit because the composer owner, capability model, session host and strings changed together. Live on `emulator-5554`: quote created on mstdn.ca, rendered as a card, and the card opened the quoted post in the app; local-only post on mstdn.ca (its server reports `local_only`, shown as a Local only label); a scheduled post on mstdn.ca created, listed in the Scheduled tab and cancelled; the dvd.chat composer shows Local only and Schedule and no quote policy. Not live: dvd.chat (Sharkey) refused `notes/schedule/create` and `notes/schedule/list` for the test account with a permission error, so Sharkey scheduling is fixture-tested only; vanilla Misskey draft scheduling, Pleroma and Akkoma local-only, Fedibird quotes, and Mastodon 4.5 quote policy are fixture-tested only.
 
 - M0 and M5 share one commit because the share sheet, capability schema and adapters changed together.
 - M3: delete and edit. Live on `emulator-5554`: Sharkey edit on dvd.chat (text changed, Edited label, poll and votes kept) and Mastodon edit on mstdn.ca (text changed, Edited label). Not live: alt text and image removal, a followers-only local-only Sharkey note (covered by a contract test), the server web UI.
@@ -50,7 +62,7 @@ Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5, M1 (polls) and 
 
 # Current slice
 
-Finished. The next unit of work is M1 (polls) or M3 (edit), at the owner's choice.
+Finished. The next unit of work is M6, at the owner's choice.
 
 # Files involved
 
@@ -68,7 +80,7 @@ Finished. The next unit of work is M1 (polls) or M3 (edit), at the owner's choic
 
 # Next
 
-Run the dvd.chat checks above, then start M1 or M3.
+Start M6. Check Sharkey scheduling with an account whose role allows it.
 
 # Blockers
 

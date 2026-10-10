@@ -70,6 +70,7 @@ import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostInteractionCounts
+import me.foxtails.palustris.domain.QuoteApproval
 import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.emoji.CustomEmojiImage
@@ -294,7 +295,8 @@ internal fun InteractionRow(
     if (pendingRepost?.fetchedBy == ownedPost.fetchedBy && pendingRepost.postId == ownedPost.post.id) {
         RepostChoice(
             pending = pendingRepost,
-            quoteEnabled = quoteEnabled,
+            // The author's policy for this account can rule a quote out even where the server takes quotes.
+            quoteEnabled = quoteEnabled && ownedPost.post.quoteApproval != QuoteApproval.Denied,
             onDismiss = onRepostConfirmationDismiss,
             onRepost = { onRepostConfirmationConfirm(ownedPost) },
             onQuote = { onRepostQuote(ownedPost) },

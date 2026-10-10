@@ -23,6 +23,7 @@ import me.foxtails.palustris.ui.composer.rememberComposerOwner
 import me.foxtails.palustris.ui.large.LargeLayoutMode
 import me.foxtails.palustris.ui.large.largeLayoutMode
 import me.foxtails.palustris.ui.large.rememberNavigationFit
+import me.foxtails.palustris.ui.links.LocalPostOpener
 import me.foxtails.palustris.ui.media.LocalMediaTransitionRegistry
 import me.foxtails.palustris.ui.media.MediaTransitionRegistry
 import me.foxtails.palustris.ui.navigation.AppRoute
@@ -197,7 +198,7 @@ fun PalustrisApp(
             }
             BackHandler(enabled = topSurfaceForBack(backState()) != null, onBack = ::dismissTopSurface)
             Box(Modifier.fillMaxSize().edgeSwipeDismiss(navigationMode == NavigationMode.NonGesture && topSurfaceForBack(backState()) != null, ::dismissTopSurface)) {
-                CompositionLocalProvider(LocalPostEditRequest provides ::handleEdit) {
+                CompositionLocalProvider(LocalPostEditRequest provides ::handleEdit, LocalPostOpener provides { post: OwnedPost -> openSinglePost(post) }) {
                 ShellContent(
                     navigator = navigator, overlay = overlay, account = account, sessionRevision = sessionRevision,
                     home = home, photoGrid = photoGrid, profile = profile, accountSwitcher = accountSwitcher, search = search,

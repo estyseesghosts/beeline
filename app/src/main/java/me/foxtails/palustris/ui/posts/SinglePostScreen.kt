@@ -281,6 +281,7 @@ internal fun SinglePostScreen(
                   )
               }
              if (post.editedAtEpochMillis != null) PostEditedLabel()
+             if (post.localOnly) PostLocalOnlyLabel()
              InteractionSummaryRow(post.interactionCounts)
              PostPollOptions(ownedPost)
              PostQuoteSection(ownedPost, contentWarningRules, R.string.single_post_view_quote)

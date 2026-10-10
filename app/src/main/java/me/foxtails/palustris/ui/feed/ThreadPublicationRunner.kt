@@ -65,6 +65,7 @@ class ThreadPublicationRunner(
                     runCatching { draftStore.delete(accountId, publication.draftId) }
                     val owned = result.created.map { OwnedPost(accountId, it, sessionRevision) }
                     events.onSuccess(owned, result.requests)
+                    if (result.scheduled.isNotEmpty()) listener.onScheduled(result.scheduled)
                     listener.onAccepted(owned, result.requests)
                     events.onRefresh()
                 }

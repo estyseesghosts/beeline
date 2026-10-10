@@ -1,5 +1,6 @@
 package me.foxtails.palustris.data.mastodon
 
+import java.net.URI
 import kotlinx.coroutines.CancellationException
 import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.data.transport.HttpStatusFailure
@@ -9,6 +10,8 @@ import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfileCapabilities
 import me.foxtails.palustris.domain.EmojiCapabilities
+import me.foxtails.palustris.domain.LocalOnlyRoute
+import me.foxtails.palustris.domain.ModerationCapabilities
 import me.foxtails.palustris.domain.OwnPostCapabilities
 import me.foxtails.palustris.domain.PollLimits
 import me.foxtails.palustris.domain.PostAction
@@ -17,16 +20,16 @@ import me.foxtails.palustris.domain.PostingCapabilities
 import me.foxtails.palustris.domain.PrimaryFavouriteCapability
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.ProfileCapabilities
-import me.foxtails.palustris.domain.ModerationCapabilities
 import me.foxtails.palustris.domain.ReactionSelectionMode
 import me.foxtails.palustris.domain.SavedPostsCapability
 import me.foxtails.palustris.domain.SavedPostsKind
+import me.foxtails.palustris.domain.ScheduleRoute
+import me.foxtails.palustris.domain.SchedulingCapability
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.TranslationCapability
 import me.foxtails.palustris.domain.withTimelineStatuses
 import org.json.JSONObject
-import java.net.URI
 
 /**
  * Probes Mastodon instance metadata without making protocol details visible to the UI.
@@ -170,21 +173,18 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 }
                 else -> CapabilityStatus.Unknown
             }
+            val quoteEvidence = quoteEvidence(instance)
             val quotes = when {
-                machineVersion != null -> if (machineVersion >= 7) {
-                    CapabilityStatus.Supported
-                } else {
-                    CapabilityStatus.Unsupported
-                }
-                releaseVersion != null -> if (releaseVersion.atLeast(4, 5, 0)) {
-                    CapabilityStatus.Supported
-                } else {
-                    CapabilityStatus.Unsupported
-                }
+                quoteEvidence -> CapabilityStatus.Supported
+                machineVersion != null && machineVersion >= 7 -> CapabilityStatus.Supported
+                releaseVersion != null && releaseVersion.atLeast(4, 5, 0) -> CapabilityStatus.Supported
+                // An older version number proves nothing for a fork, so the choice stays open and the first
+                // quote is checked. Only a failed check marks quotes unsupported.
                 else -> CapabilityStatus.Unknown
             }
             val emoji = emojiCapabilities(instance, nodeInfoAdvertisesReactions)
-            val posting = postingLimits(instance)
+            val posting = postingLimits(instance, quotes, quotePolicy = (machineVersion != null && machineVersion >= 7) ||
+                (machineVersion == null && releaseVersion != null && releaseVersion.atLeast(4, 5, 0)))
             val actions = setOf(
                 PostAction.Reply,
                 PostAction.Reshare,
@@ -274,7 +274,31 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
          * block (Mastodon before 4.0, or a v1 fallback) gets the documented defaults.
          * `max_toot_chars` is the pre-configuration limit that Pleroma-family servers report.
          */
-        private fun postingLimits(instance: JSONObject): PostingLimits {
+        /**
+         * Positive evidence that a server takes quotes: `quote_posting` in the Pleroma-family feature list, or
+         * `feature_quote` in a Fedibird instance document. Absence proves nothing, so it never lowers the status.
+         */
+        private fun quoteEvidence(instance: JSONObject): Boolean {
+            if (instance.optBoolean("feature_quote")) return true
+            val features = instance.optJSONObject("pleroma")?.optJSONObject("metadata")?.optJSONArray("features") ?: return false
+            return (0 until features.length()).any { features.optString(it) == QUOTE_POSTING_FEATURE }
+        }
+
+        private const val QUOTE_POSTING_FEATURE = "quote_posting"
+        private const val MASTODON_SCHEDULE_LEAD_SECONDS = 300L
+
+        /**
+         * Local-only needs a fork that offers it. glitch-soc reports `api_versions.glitch`, Hometown puts
+         * `+hometown-` in its version, and Pleroma-family servers take `visibility=local`. Vanilla Mastodon has none.
+         */
+        fun localOnlyRoute(instance: JSONObject): LocalOnlyRoute = when {
+            instance.optJSONObject("api_versions")?.has("glitch") == true -> LocalOnlyRoute.MastodonFlag
+            instance.optString("version").contains("+hometown-") -> LocalOnlyRoute.MastodonFlag
+            instance.optJSONObject("pleroma") != null -> LocalOnlyRoute.PleromaVisibility
+            else -> LocalOnlyRoute.None
+        }
+
+        private fun postingLimits(instance: JSONObject, quotes: CapabilityStatus, quotePolicy: Boolean): PostingLimits {
             val configuration = instance.optJSONObject("configuration")
             val statuses = configuration?.optJSONObject("statuses")
             val media = configuration?.optJSONObject("media_attachments")
@@ -299,7 +323,12 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                         ?: PostingCapabilities.DEFAULT_CHARACTERS_PER_URL,
                     mediaUpload = CapabilityStatus.Supported,
                     clientCompression = false,
-                    quoteWithMedia = false,
+                    // Mastodon limits a poll with media, not a quote with media.
+                    quoteWithMedia = quotes == CapabilityStatus.Supported,
+                    quoteApprovalPolicy = quotePolicy,
+                    localOnly = localOnlyRoute(instance),
+                    // Every Mastodon-API server takes `scheduled_at`, and holds a post at least five minutes ahead.
+                    scheduling = SchedulingCapability(ScheduleRoute.Mastodon, MASTODON_SCHEDULE_LEAD_SECONDS),
                     poll = pollLimits(instance, configuration),
                 ),
             )

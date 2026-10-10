@@ -4,6 +4,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.DraftMedia
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.PostOptions
 import me.foxtails.palustris.domain.PostingVisibilityPolicy
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.ThreadPublication
@@ -24,6 +25,7 @@ internal fun ComposerEditorState.toThreadPublication(
     quoteOf: EntityId?,
     compress: Boolean,
     accountId: AccountId?,
+    options: PostOptions = PostOptions(),
 ): ThreadPublication = ThreadPublication(
     draftId = draftId,
     entries = entries.map { entry ->
@@ -51,6 +53,7 @@ internal fun ComposerEditorState.toThreadPublication(
     quoteOf = quoteOf,
     compress = compress,
     accountId = accountId,
+    options = options,
 )
 
 private fun threadFileName(media: DraftMedia): String {
@@ -110,6 +113,8 @@ internal fun ComposerOwner.retainStates(failure: ThreadPublishFailure): Composer
         savedReplyTo = failure.remaining.replyTo?.value,
         quoteOf = failure.remaining.quoteOf,
         savedQuoteOf = failure.remaining.quoteOf?.value,
+        options = failure.remaining.options,
+        savedOptions = failure.remaining.options,
         error = uiStrings.composerEntryPublishFailed(failure.failedIndex + 1, failure.totalEntries, failure.detail(uiStrings)),
     )
 }

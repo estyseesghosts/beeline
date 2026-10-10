@@ -26,6 +26,8 @@ interface UiStrings {
     fun composerAudienceUnavailable(): String
     fun composerQuotedPost(): String
     fun composerEditLoadFailed(): String
+    fun scheduledLoadFailed(): String
+    fun scheduledActionFailed(): String
     fun composerEditSaveFailed(): String
     fun sessionRestoreFailed(): String
     fun sessionAccountUnavailable(): String
@@ -57,6 +59,8 @@ interface UiStrings {
             override fun composerAudienceUnavailable(): String = ""
             override fun composerQuotedPost(): String = ""
             override fun composerEditLoadFailed(): String = ""
+            override fun scheduledLoadFailed(): String = ""
+            override fun scheduledActionFailed(): String = ""
             override fun composerEditSaveFailed(): String = ""
             override fun sessionRestoreFailed(): String = ""
             override fun sessionAccountUnavailable(): String = ""
@@ -90,6 +94,8 @@ private class AndroidUiStrings(private val context: Context) : UiStrings {
     override fun composerAudienceUnavailable(): String = context.getString(R.string.composer_audience_unavailable)
     override fun composerQuotedPost(): String = context.getString(R.string.composer_quoted_post)
     override fun composerEditLoadFailed(): String = context.getString(R.string.composer_edit_load_failed)
+    override fun scheduledLoadFailed(): String = context.getString(R.string.scheduled_load_failed)
+    override fun scheduledActionFailed(): String = context.getString(R.string.scheduled_action_failed)
     override fun composerEditSaveFailed(): String = context.getString(R.string.composer_edit_save_failed)
     override fun sessionRestoreFailed(): String = context.getString(R.string.session_restore_failed)
     override fun sessionAccountUnavailable(): String = context.getString(R.string.settings_account_unavailable)

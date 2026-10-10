@@ -87,6 +87,17 @@ private fun translatedFromLabel(entry: TranslationEntry.Ready): String {
     }
 }
 
+/** A small note under a post's body that its author kept it on their own server. */
+@Composable
+internal fun PostLocalOnlyLabel(modifier: Modifier = Modifier) {
+    Text(
+        stringResource(R.string.local_only_badge),
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 2.dp).testTag("post_local_only"),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
 /** A small note under a post's body that its author changed it after posting. */
 @Composable
 internal fun PostEditedLabel(modifier: Modifier = Modifier) {

@@ -164,7 +164,8 @@ class MastodonMediaServiceTest {
 
         assertThrows(SourceError.Unsupported::class.java) {
             runBlocking {
-                source().create(CreatePostRequest("hi", quoteOf = quote, attachments = listOf(Attachment(id = "m1"))))
+                source(me.foxtails.palustris.domain.PostingCapabilities(quoteWithMedia = false))
+                    .create(CreatePostRequest("hi", quoteOf = quote, attachments = listOf(Attachment(id = "m1"))))
             }
         }
         assertEquals(0, server.requestCount)
@@ -172,11 +173,16 @@ class MastodonMediaServiceTest {
 
     private fun service() = MastodonMediaService(origin, "token", mastodonTestClient()) { pauses += it }
 
-    private fun source() = MastodonSource(
+    private fun source(posting: me.foxtails.palustris.domain.PostingCapabilities = me.foxtails.palustris.domain.PostingCapabilities()) = MastodonSource(
         origin = origin,
         token = "token",
         api = mastodonTestClient(),
         accountId = AccountId(Connection(origin, Protocol.MASTODON), "local-user"),
+        initialCapabilities = me.foxtails.palustris.domain.ServerCapabilities(
+            timelines = setOf(me.foxtails.palustris.domain.Timeline.Home),
+            canPublish = true,
+            posting = posting,
+        ),
     )
 
     private fun request(description: String? = null) = MediaUploadRequest(

@@ -96,6 +96,23 @@ interface SocialSource {
      */
     suspend fun deleteUpload(attachmentId: String): Unit = Unit
 
+    /**
+     * The post that [url] addresses, found through the account's own server, or null when the server does not
+     * know it. The default knows nothing. Callers bound the wait.
+     */
+    suspend fun resolvePostUrl(url: String): Post? = null
+
+    /** Hands a post to the server to publish at [CreatePostRequest.scheduledAtEpochMillis]. */
+    suspend fun schedule(request: CreatePostRequest): ScheduledPost = unsupported("schedule")
+
+    /** The posts the server holds for later, soonest first. */
+    suspend fun scheduledPosts(): List<ScheduledPost> = unsupported("schedule")
+
+    suspend fun cancelScheduled(id: String): Unit = unsupported("schedule")
+
+    /** Moves [item] to [atEpochMillis]. A server without a route for it cancels the post and schedules it again. */
+    suspend fun reschedule(item: ScheduledPost, atEpochMillis: Long): ScheduledPost = unsupported("schedule")
+
     suspend fun search(query: String): List<Post> = unsupported("search")
     suspend fun searchHashtag(tag: String, cursor: String? = null): Page<Post> = unsupported("hashtag search")
 

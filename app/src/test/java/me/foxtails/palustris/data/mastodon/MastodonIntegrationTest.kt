@@ -1533,7 +1533,6 @@ class MastodonIntegrationTest {
     fun sourceRejectsUnsupportedCreateFieldsBeforeNetworkRequests() = runBlocking {
         val requestOrigin = server.url("/").toString().removeSuffix("/")
         val unsupported = listOf(
-            CreatePostRequest("text", quoteOf = EntityId(requestOrigin, "quoted")),
             CreatePostRequest("text", attachments = listOf(me.foxtails.palustris.domain.Attachment("https://example.org/photo.jpg", "image/jpeg", null))),
             CreatePostRequest(
                 "text",

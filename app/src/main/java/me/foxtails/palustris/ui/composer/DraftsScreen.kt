@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
@@ -30,8 +31,38 @@ import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.springPress
 
+/**
+ * The saved drafts. When [scheduled] is given the screen has a second tab, Scheduled, that lists the posts the
+ * server holds for later with a reschedule and a cancel for each. It holds only which tab is open.
+ */
 @Composable
 fun DraftsScreen(
+    drafts: List<me.foxtails.palustris.domain.PostDraft>,
+    onEdit: (me.foxtails.palustris.domain.PostDraft) -> Unit,
+    onDelete: (me.foxtails.palustris.domain.PostDraft) -> Unit,
+    scheduled: ScheduledTab? = null,
+) {
+    var tab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
+    if (scheduled == null) {
+        DraftsList(drafts, onEdit, onDelete)
+        return
+    }
+    Column(Modifier.fillMaxSize()) {
+        androidx.compose.material3.TabRow(selectedTabIndex = tab) {
+            androidx.compose.material3.Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(androidx.compose.ui.res.stringResource(R.string.drafts_page_title)) })
+            androidx.compose.material3.Tab(
+                selected = tab == 1,
+                onClick = { tab = 1; scheduled.onRefresh() },
+                text = { Text(androidx.compose.ui.res.stringResource(R.string.scheduled_tab_title)) },
+                modifier = Modifier.testTag("drafts_tab_scheduled"),
+            )
+        }
+        if (tab == 0) DraftsList(drafts, onEdit, onDelete) else ScheduledList(scheduled)
+    }
+}
+
+@Composable
+private fun DraftsList(
     drafts: List<me.foxtails.palustris.domain.PostDraft>,
     onEdit: (me.foxtails.palustris.domain.PostDraft) -> Unit,
     onDelete: (me.foxtails.palustris.domain.PostDraft) -> Unit,

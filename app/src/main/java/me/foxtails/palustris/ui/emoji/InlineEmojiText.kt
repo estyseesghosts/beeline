@@ -37,18 +37,18 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.rememberTextMeasurer
 import coil.compose.AsyncImage
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.media.MediaImageLoader
@@ -57,7 +57,7 @@ import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.ui.AppIcons
-import me.foxtails.palustris.ui.links.ExternalLinkHandler
+import me.foxtails.palustris.ui.links.rememberLinkOpener
 import me.foxtails.palustris.ui.motion.springClickable
 
 /**
@@ -91,7 +91,8 @@ fun InlineEmojiText(
     val bubbleTextStyle = MaterialTheme.typography.labelMedium
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    val inlineContent = remember(model, style.fontSize, enableInlineEntities, onOpenUrl, onOpenUsername, onSearchHashtag, context) {
+    val linkOpener = rememberLinkOpener()
+    val inlineContent = remember(model, style.fontSize, enableInlineEntities, onOpenUrl, onOpenUsername, onSearchHashtag, context, linkOpener) {
         buildInlineContent(
             model = model,
             emSize = style.fontSize,
@@ -100,7 +101,7 @@ fun InlineEmojiText(
             density = density,
             bubbleTextStyle = bubbleTextStyle,
             context = context,
-            onOpenUrl = { url -> onOpenUrl?.invoke(url) ?: ExternalLinkHandler.open(context, url) },
+            onOpenUrl = { url -> onOpenUrl?.invoke(url) ?: linkOpener(url) },
             onOpenUsername = onOpenUsername,
             onSearchHashtag = onSearchHashtag,
         )
@@ -159,7 +160,7 @@ fun InlineEmojiText(
                 val position = layoutResult?.getOffsetForPosition(offset) ?: return@detectTapGestures
                 annotated.getStringAnnotations(URL_ANNOTATION, position, position)
                     .firstOrNull()?.let { annotation ->
-                        onOpenUrl?.invoke(annotation.item) ?: ExternalLinkHandler.open(context, annotation.item)
+                        onOpenUrl?.invoke(annotation.item) ?: linkOpener(annotation.item)
                         return@detectTapGestures
                     }
                 if (enableInlineEntities) {

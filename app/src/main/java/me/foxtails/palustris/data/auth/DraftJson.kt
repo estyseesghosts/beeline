@@ -10,6 +10,8 @@ import me.foxtails.palustris.domain.PollRequest
 import me.foxtails.palustris.domain.PostDraft
 import me.foxtails.palustris.domain.PostDraftEntry
 import me.foxtails.palustris.domain.PostDraftQuotePreview
+import me.foxtails.palustris.domain.PostOptions
+import me.foxtails.palustris.domain.QuoteApprovalPolicy
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -49,6 +51,9 @@ internal fun PostDraft.toJson() = JSONObject()
         JSONObject().put("id", entry.id).put("text", entry.text).put("contentWarning", entry.contentWarning).put("media", mediaJson(entry.media)).put("poll", entry.poll?.let(::pollJson))
     }))
     .put("poll", poll?.let(::pollJson))
+    .put("localOnly", options.localOnly)
+    .put("quotePolicy", options.quotePolicy?.name)
+    .put("scheduledAt", options.scheduledAtEpochMillis)
 
 internal fun JSONObject.toDraft(): PostDraft {
     val origin = optString("origin").takeIf { it.isNotBlank() }
@@ -88,8 +93,14 @@ internal fun JSONObject.toDraft(): PostDraft {
             postEmoji = decodeEmojiMap(it.optJSONObject("postEmoji")),
         )
     }?.takeIf { it.authorDisplayName.isNotBlank() || it.authorHandle.isNotBlank() || it.text.isNotBlank() }
-    return PostDraft(getString("id"), accountId, optString("text"), Audience.valueOf(optString("audience", Audience.Public.name)), optString("contentWarning").takeIf(String::isNotBlank), optString("replyTo").takeIf(String::isNotBlank)?.let { EntityId(origin.orEmpty(), it) }, optString("quoteOf").takeIf(String::isNotBlank)?.let { EntityId(origin.orEmpty(), it) }, attachments, poll, optLong("updatedAt"), quotePreview, media = optJSONArray("media").toDraftMedia(), followUps = optJSONArray("followUps").toFollowUps())
+    return PostDraft(getString("id"), accountId, optString("text"), Audience.valueOf(optString("audience", Audience.Public.name)), optString("contentWarning").takeIf(String::isNotBlank), optString("replyTo").takeIf(String::isNotBlank)?.let { EntityId(origin.orEmpty(), it) }, optString("quoteOf").takeIf(String::isNotBlank)?.let { EntityId(origin.orEmpty(), it) }, attachments, poll, optLong("updatedAt"), quotePreview, media = optJSONArray("media").toDraftMedia(), followUps = optJSONArray("followUps").toFollowUps(), options = toPostOptions())
 }
+
+private fun JSONObject.toPostOptions(): PostOptions = PostOptions(
+    localOnly = optBoolean("localOnly"),
+    quotePolicy = nullableString("quotePolicy")?.let { name -> QuoteApprovalPolicy.entries.firstOrNull { it.name == name } },
+    scheduledAtEpochMillis = if (isNull("scheduledAt")) null else optLong("scheduledAt").takeIf { it > 0 },
+)
 
 private fun JSONObject.nullableString(key: String): String? =
     if (isNull(key)) null else optString(key).takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }

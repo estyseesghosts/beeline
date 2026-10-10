@@ -164,6 +164,7 @@ private fun PostRowContent(
             )
             PostTranslationFooter(translationEntry, translationId, translations)
             if (post.editedAtEpochMillis != null) PostEditedLabel()
+            if (post.localOnly) PostLocalOnlyLabel()
             PostMediaCarousel(ownedPost = ownedPost, onOpenMedia = onOpenMedia)
             PostPollOptions(ownedPost)
             PostQuoteSection(ownedPost, contentWarningRules, R.string.post_view_quoted)

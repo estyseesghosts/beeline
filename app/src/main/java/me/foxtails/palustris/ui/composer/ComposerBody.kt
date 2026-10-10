@@ -41,6 +41,7 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostLimits
+import me.foxtails.palustris.domain.QuoteApproval
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
@@ -108,6 +109,22 @@ internal fun ComposerBody(
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             owner.quoteTarget?.let { target ->
                 ComposerTargetCard(target, owner.isReply, owner::removeTargets)
+                if (!owner.isReply && !contract.quoteConfirmed) {
+                    Text(
+                        stringResource(R.string.quote_unconfirmed_notice),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp).testTag("composer_quote_unconfirmed"),
+                    )
+                }
+                if (!owner.isReply && target.post.quoteApproval == QuoteApproval.Manual) {
+                    Text(
+                        stringResource(R.string.quote_manual_notice),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp).testTag("composer_quote_manual"),
+                    )
+                }
                 Spacer(Modifier.height(12.dp))
             }
             editor.entries.forEachIndexed { index, entry ->
@@ -175,6 +192,17 @@ internal fun ComposerBody(
         if (editing == null && focusedEntry.id == editor.first.id && audienceOptions.isNotEmpty()) {
             HorizontalDivider()
             ComposerAudienceRow(editor.audience, audienceOptions, owner::setAudience)
+        }
+        if (editing == null) {
+            ComposerOptionsRow(
+                options = editor.options,
+                audience = editor.audience,
+                posting = contract.limits.posting,
+                entryCount = editor.entries.size,
+                onLocalOnly = owner::setLocalOnly,
+                onQuotePolicy = owner::setQuotePolicy,
+                onScheduledAt = owner::setScheduledAt,
+            )
         }
         HorizontalDivider()
         // The chips follow the focused text field. The warning field never shows them.

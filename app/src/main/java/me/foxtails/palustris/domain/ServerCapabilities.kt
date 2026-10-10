@@ -34,7 +34,7 @@ data class ServerCapabilities(
          * invalidates snapshots that predate the quote-with-media rule. Revision 9
          * invalidates snapshots that predate own-post actions and translation.
          */
-        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 10
+        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 11
     }
 }
 
@@ -103,6 +103,11 @@ data class PostingCapabilities(
     val clientCompression: Boolean = false,
     /** False when the server rejects a post that quotes another post and also carries images. */
     val quoteWithMedia: Boolean = true,
+    /** True when the server takes `quote_approval_policy` at creation (Mastodon 4.5 and later). */
+    val quoteApprovalPolicy: Boolean = false,
+    val localOnly: LocalOnlyRoute = LocalOnlyRoute.None,
+    /** Null when the server cannot hold a post for later, or the account may hold none. */
+    val scheduling: SchedulingCapability? = null,
     /** Null when the server takes no poll at creation. */
     val poll: PollLimits? = null,
 ) {

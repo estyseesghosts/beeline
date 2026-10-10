@@ -51,6 +51,7 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.composer.PublishNotice
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.motion.TriggerSurface
 import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
@@ -96,6 +97,8 @@ internal fun ComposerSurfaceHost(
     val context = LocalContext.current
     val replySentMessage = stringResource(R.string.reply_sent)
     val quoteSentMessage = stringResource(R.string.quote_sent)
+    val scheduledMessage = stringResource(R.string.composer_scheduled_notice)
+    val quoteDroppedMessage = stringResource(R.string.quote_dropped_notice)
     var draftsOpen by rememberSaveable { mutableStateOf(false) }
     val publishing = contract.publishing || owner.submitting
     val busy = publishing || owner.closing
@@ -103,7 +106,13 @@ internal fun ComposerSurfaceHost(
     fun startPublish(compress: Boolean? = null) {
         // The answer reaches the publication that this call builds, then the owner follows the setting again.
         owner.compressChoice = compress
-        owner.publish { replySent, quoteSent ->
+        owner.publish(onNotice = { notice ->
+            val message = when (notice) {
+                PublishNotice.Scheduled -> scheduledMessage
+                PublishNotice.QuoteDropped -> quoteDroppedMessage
+            }
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }) { replySent, quoteSent ->
             val message = when {
                 replySent -> replySentMessage
                 quoteSent -> quoteSentMessage
@@ -147,6 +156,7 @@ internal fun ComposerSurfaceHost(
                     onOpenDrafts = { draftsOpen = true },
                     draftsEnabled = !busy,
                     editing = owner.editor.editing != null,
+                    scheduling = owner.editor.options.scheduledAtEpochMillis != null,
                     onPublish = ::publish,
                     postEnabled = owner.canPublish && !busy && owner.editor.postable(contract.limits) &&
                         (owner.editor.editing?.let { !it.loading && owner.hasChanges } ?: true),
@@ -163,6 +173,17 @@ internal fun ComposerSurfaceHost(
                 drafts = owner.drafts,
                 onEdit = { draft -> owner.save { owner.requestDraft(draft); draftsOpen = false } },
                 onDelete = owner::deleteDraft,
+                scheduled = contract.limits.posting.scheduling?.let { scheduling ->
+                    ScheduledTab(
+                        items = owner.scheduled,
+                        loading = owner.scheduledLoading,
+                        error = owner.scheduledError,
+                        minLeadSeconds = scheduling.minLeadSeconds,
+                        onRefresh = owner::refreshScheduled,
+                        onCancel = owner::cancelScheduled,
+                        onReschedule = owner::reschedule,
+                    )
+                },
             )
         } else {
             ComposerBody(
@@ -291,6 +312,7 @@ internal fun ComposerTopBar(
     total: Int,
     mediaProgress: Float? = null,
     editing: Boolean = false,
+    scheduling: Boolean = false,
 ) {
     Row(
         Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
@@ -315,7 +337,7 @@ internal fun ComposerTopBar(
                     Text(stringResource(R.string.composer_publish_progress, posted, total))
                 }
             } else {
-                Text(stringResource(if (editing) R.string.composer_save else R.string.composer_publish))
+                Text(stringResource(if (editing) R.string.composer_save else if (scheduling) R.string.composer_schedule_action else R.string.composer_publish))
             }
         }
     }

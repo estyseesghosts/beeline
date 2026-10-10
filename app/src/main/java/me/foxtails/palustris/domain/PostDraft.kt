@@ -53,6 +53,7 @@ data class PostDraft(
     val quotePreview: PostDraftQuotePreview? = null,
     val media: List<DraftMedia> = emptyList(),
     val followUps: List<PostDraftEntry> = emptyList(),
+    val options: PostOptions = PostOptions(),
 ) {
     /** Every image the draft keeps, first post first. */
     /** Every poll the draft keeps, first post first. */

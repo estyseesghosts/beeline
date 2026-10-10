@@ -64,6 +64,8 @@ import me.foxtails.palustris.domain.PushProviderInfo
 import me.foxtails.palustris.domain.PushSubscription
 import me.foxtails.palustris.domain.PushSubscriptionSpec
 import me.foxtails.palustris.domain.ReportRequest
+import me.foxtails.palustris.domain.ScheduleRoute
+import me.foxtails.palustris.domain.ScheduledPost
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
@@ -121,6 +123,7 @@ class MisskeySource(
     private val pushService = MisskeyPushService(origin, token, api, accountId, MISSKEY_MAX_RESPONSE_BYTES)
     private val streamService = MisskeyStreamService(origin, token, api, accountId)
     private val mediaService = MisskeyMediaService(origin, token, api)
+    private val scheduleService = MisskeyScheduleService(origin, token, api)
     private val discoveryService = MisskeyDiscoveryService(origin, token, api, accountId)
     private val timelineService = MisskeyTimelineService(origin, token, api, MISSKEY_MAX_RESPONSE_BYTES)
     private val threadService = MisskeyThreadService(
@@ -253,6 +256,12 @@ class MisskeySource(
     }
 
     override suspend fun create(post: CreatePostRequest): Post = request("create") {
+        val response = JSONObject(api.post(origin, "notes/create", noteBody(post), MISSKEY_MAX_RESPONSE_BYTES).body)
+        MisskeyMapper.post(response.getJSONObject("createdNote"), origin)
+    }
+
+    /** The fields every note-creating route takes: `notes/create`, the schedule routes and the draft routes. */
+    private fun noteBody(post: CreatePostRequest): JSONObject {
         post.replyTo?.let { validatePostId(it, "create.reply-origin") }
         val fileIds = post.attachments.map { it.id ?: throw SourceError.Unsupported("create.attachment-id") }
         val body = JSONObject()
@@ -263,6 +272,7 @@ class MisskeySource(
         if (fileIds.isNotEmpty()) body.put("fileIds", JSONArray(fileIds))
         post.contentWarning?.let { body.put("cw", it) }
         post.replyTo?.let { body.put("replyId", it.value) }
+        if (post.localOnly) body.put("localOnly", true)
         post.quoteOf?.let {
             // The shared validator rejects a foreign origin and a blank value together.
             validatePostId(it, "create.quote-origin")
@@ -270,12 +280,37 @@ class MisskeySource(
         }
         post.poll?.let { poll ->
             body.put("poll", JSONObject()
-                .put("choices", JSONArray(poll.choices))
+                .put("choices", JSONArray(poll.cleaned().choices))
                 .put("multiple", poll.multiple)
                 .apply { poll.expiresInSeconds?.let { put("expiredAfter", it * 1000L) } })
         }
-        val response = JSONObject(api.post(origin, "notes/create", body, MISSKEY_MAX_RESPONSE_BYTES).body)
-        MisskeyMapper.post(response.getJSONObject("createdNote"), origin)
+        return body
+    }
+
+    private fun scheduleRoute(): ScheduleRoute =
+        capabilities.posting.scheduling?.route?.takeIf { it != ScheduleRoute.Mastodon } ?: throw SourceError.Unsupported("schedule")
+
+    override suspend fun schedule(request: CreatePostRequest): ScheduledPost = this.request("schedule") {
+        scheduleService.create(scheduleRoute(), noteBody(request), request)
+    }
+
+    override suspend fun scheduledPosts(): List<ScheduledPost> = request("schedule.list") { scheduleService.list(scheduleRoute()) }
+
+    override suspend fun cancelScheduled(id: String): Unit = request("schedule.cancel") { scheduleService.cancel(scheduleRoute(), id) }
+
+    override suspend fun reschedule(item: ScheduledPost, atEpochMillis: Long): ScheduledPost = request("schedule.update") {
+        scheduleService.reschedule(scheduleRoute(), item, atEpochMillis, ::noteBody)
+    }
+
+    override suspend fun resolvePostUrl(url: String): Post? = request("resolve") {
+        // A note of this very server needs no federation lookup.
+        Regex("^" + Regex.escape(origin) + "/notes/([A-Za-z0-9]+)/?$").find(url)?.let { match ->
+            return@request post(EntityId(origin, match.groupValues[1]))
+        }
+        val json = JSONObject(api.post(origin, "ap/show", JSONObject().put("i", token).put("uri", url), MISSKEY_MAX_RESPONSE_BYTES).body)
+        // ap/show also resolves users. Only a note is a post.
+        if (json.optString("type") != "Note") return@request null
+        json.optJSONObject("object")?.let { MisskeyMapper.post(it, origin) }
     }
 
     override suspend fun editSource(id: EntityId): PostEditSource = request("edit.source") {

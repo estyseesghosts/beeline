@@ -182,3 +182,20 @@ and `FfmpegBridgeTest`. Live-server uploads are unverified.
 - Mastodon API: version 3.5 or later, or `editing` in `pleroma.metadata.features`. A server with a `pleroma` block is judged by that list only, because its version string names the Mastodon API level. `GET /api/v1/statuses/:id/source` gives the raw text and warning. `PUT /api/v1/statuses/:id` sends `status` always and the warning, `media_ids[]`, `media_attributes[]` and poll only when they changed.
 - Misskey family: `notes/edit` in `POST /api/endpoints` means Sharkey. Vanilla Misskey has no edit route and never shows Edit. The adapter reads the note with `notes/show`, then sends `notes/edit` with the note's own visibility, `localOnly`, reaction acceptance, reply, quote and channel, because a missing field resets to its default. Alt text lives on the drive file, so a changed description is `drive/files/update`.
 - The edit shows in rows through a session overlay and survives until a copy of the post with a later edit time arrives. An edit that touches a poll resets its votes on the server.
+
+## Quotes
+
+- Reading: Mastodon 4.5 `quote{state,quoted_status}`; a shallow `quoted_status_id` (the card loads by ID); Fedibird `quote`, `quote_id`, `quote_muted`; Akkoma state plus a copy; Pleroma `pleroma.quote`, `quote_id`, `quote_url`, `quote_visible`; legacy `quoted_status`; and a trailing `RE:` link or `p.quote-inline` paragraph, which is hidden from the body once it is read as a reference.
+- Writing: `quoted_status_id` and `quote_id` are both sent. Quote support is `Supported` with version 4.5, `feature_quote`, the Akkoma `quote_posting` feature or a Fedibird flag, and `Unknown` otherwise. `Unknown` still offers Quote; a create that comes back without a quote marks quotes `Unsupported` for the session. A quote cannot carry a poll, and carries media only where the server shows quote-with-media evidence.
+- `quote_approval.current_user` of `denied` disables Quote on that post. `quote_approval_policy` is sent on servers with Mastodon 4.5 evidence.
+
+## Local-only posts
+
+- Misskey family: the `localOnly` note field. Mastodon API: `local_only` on glitch-soc and Hometown; `visibility=local` on Pleroma and Akkoma, for public posts only. Vanilla Mastodon has no route and shows no chip.
+
+## Scheduled posts
+
+- Mastodon API: `scheduled_at` on create (at least 5 minutes ahead), `GET/PUT/DELETE /api/v1/scheduled_statuses`.
+- Sharkey: `notes/schedule/create`, `list`, `delete`; there is no update. Role policy `scheduleNoteMax` (default 5). A server can refuse an account these routes with a permission error, as dvd.chat did for the test account.
+- Misskey: `notes/drafts/*` with `scheduledAt` and `isActuallyScheduled`; role policy `scheduledNoteLimit` (default 1). A limit of 0 turns scheduling off.
+- The route comes from `POST /api/endpoints`. A scheduled post never enters a timeline.

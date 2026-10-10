@@ -7,15 +7,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.QuoteUnavailable
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
-import me.foxtails.palustris.ui.links.ExternalLinkHandler
+import me.foxtails.palustris.ui.links.rememberQuoteOpener
 
 /**
  * The one decision for whether post body, media, poll, and quote show. The row and every detail presentation call it.
@@ -56,7 +56,7 @@ internal fun PostQuoteSection(
     @StringRes labelResource: Int,
 ) {
     val post = ownedPost.post
-    val context = LocalContext.current
+    val openQuote = rememberQuoteOpener()
     post.quote?.let { quote ->
         QuotePreviewCard(
             quote,
@@ -66,7 +66,21 @@ internal fun PostQuoteSection(
             ownedPost.fetchedBy.toString(),
             labelResource,
         ) {
-            ExternalLinkHandler.open(context, quote.url)
+            // A loaded quote opens in the app. Without a shell the quote's own address opens in the browser.
+            openQuote(OwnedPost(ownedPost.fetchedBy, quote, ownedPost.sessionRevision), null, null, quote.url)
         }
+        return
+    }
+    val unavailable = post.quoteUnavailable
+    if (unavailable != null || post.quoteId != null || post.quoteUrl != null) {
+        // The server named a quote without handing it over. Say why, and let a tap try to fetch it.
+        QuotePlaceholderCard(
+            unavailable = unavailable,
+            onOpen = if (unavailable == null || unavailable == QuoteUnavailable.Unloaded) {
+                { openQuote(null, post.quoteId, post.quoteUrl, post.quoteUrl) }
+            } else {
+                null
+            },
+        )
     }
 }
