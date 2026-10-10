@@ -26,7 +26,7 @@ Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 8 (limits, uploa
 - Slice 10: thread editing (plus button, CW-reuse dialog, remove button, thread line, `ComposerIcons.kt`) â€” resolve the commit from Git (follows 4d86a8f1).
 - Slice 8: composer surface (`ComposerSurface.kt` new, `ComposerSheet.kt` deleted, card flag through the shell, `composer_publish_progress` string, wiki section) â€” commit 3ac01ce5.
 
-- Slice 11: media in the composer (photo picker, `DraftMediaImporter`, thumbnail strip, alt text dialog, per-entry limits, Ask compression dialog, `quoteWithMedia` capability, schema 7) — commit recorded in the follow-up.
+- Slice 11: media in the composer (photo picker, `DraftMediaImporter`, thumbnail strip, alt text dialog, per-entry limits, Ask compression dialog, `quoteWithMedia` capability, schema 7) — commit e6f66a74.
 
 # Current slice
 
@@ -57,4 +57,4 @@ None. Tablet hardware check, live-server publish, and pre-existing API 29 instru
 
 # Last safe commit
 
-1d802ae1 Edit threads in the composer with add, remove, and a thread line
+e6f66a74 Attach images in the composer with picker, thumbnails, and alt text
