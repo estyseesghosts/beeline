@@ -38,6 +38,27 @@ data class ComposerEntryContent(
     val poll: PollRequest? = null,
 )
 
+/** An image that stays on a post being edited. The bytes live on the server; only its address and alt text are known here. */
+data class EditAttachmentState(val id: String, val previewUrl: String?, val description: String?)
+
+/**
+ * The post an editor is changing. The editor's first entry holds the text, warning, and poll as they
+ * are now. [sourceText], [sourceWarning], [originalAttachments], and [originalPoll] hold them as the
+ * server gave them, so the request can send only what changed. [loading] is true until the source
+ * text arrives. An edit editor never becomes a draft and is not restored after the process dies.
+ */
+data class ComposerEdit(
+    val target: EntityId,
+    val sourceText: String = "",
+    val sourceWarning: String = "",
+    val originalAttachments: List<EditAttachmentState> = emptyList(),
+    val attachments: List<EditAttachmentState> = emptyList(),
+    val originalPoll: PollRequest? = null,
+    val loading: Boolean = true,
+) {
+    val attachmentsChanged: Boolean get() = attachments != originalAttachments
+}
+
 /**
  * Saveable composer editor fields for one connected account.
  *
@@ -67,6 +88,8 @@ data class ComposerEditorState(
     val boundRevision: Long = 0L,
     /** Names the draft media files of an editor that has no saved draft yet. See [effectiveDraftId]. */
     val mediaDraftId: String? = null,
+    /** Set while the editor changes a published post instead of writing a new one. */
+    val editing: ComposerEdit? = null,
 ) {
     init {
         require(entries.isNotEmpty()) { "The composer always holds at least one entry." }

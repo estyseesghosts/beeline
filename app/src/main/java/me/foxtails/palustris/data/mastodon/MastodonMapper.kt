@@ -282,6 +282,7 @@ object MastodonMapper {
             }.orEmpty(),
             contentWarning = json.nullableString("spoiler_text").takeUnless { filtered },
             language = json.nullableString("language"),
+            editedAtEpochMillis = json.nullableString("edited_at")?.let(::parseInstant),
             replyTo = json.nullableString("in_reply_to_id")?.let { EntityId(origin, it) },
             replyToAuthorId = json.nullableString("in_reply_to_account_id")
                 ?.let { AccountId(Connection(origin, Protocol.MASTODON), it) },

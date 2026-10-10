@@ -101,6 +101,8 @@ internal fun SinglePostScreen(
     rightObstructionClearance: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
+    @Suppress("NAME_SHADOWING")
+    val ownedPost = LocalPostEdits.current?.applied(ownedPost) ?: ownedPost
     val post = ownedPost.post
     val context = LocalContext.current
     val postActionOwner = LocalPostPopupOwner.current
@@ -278,6 +280,7 @@ internal fun SinglePostScreen(
                       modifier = Modifier.padding(top = 12.dp),
                   )
               }
+             if (post.editedAtEpochMillis != null) PostEditedLabel()
              InteractionSummaryRow(post.interactionCounts)
              PostPollOptions(ownedPost)
              PostQuoteSection(ownedPost, contentWarningRules, R.string.single_post_view_quote)

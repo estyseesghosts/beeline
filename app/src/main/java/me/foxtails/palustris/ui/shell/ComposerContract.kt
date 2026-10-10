@@ -5,6 +5,10 @@ import kotlinx.coroutines.flow.emptyFlow
 import me.foxtails.palustris.domain.AccessStatus
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityStatus
+import me.foxtails.palustris.domain.EditPostRequest
+import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.PostEditSource
 import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.ThreadPublication
@@ -50,6 +54,12 @@ data class ComposerContract(
 
         /** Starts the sign-in-again flow that asks for the permissions this session lacks. */
         fun signInAgain() = Unit
+
+        /** Loads the raw text and warning of an own post for editing. The default fails at once. */
+        fun loadEditSource(id: EntityId, onResult: (PostEditSource) -> Unit, onError: (String) -> Unit) = onError("")
+
+        /** Sends an edit of an own post and reports the post as the server now holds it. */
+        fun editPost(id: EntityId, request: EditPostRequest, onResult: (OwnedPost) -> Unit, onError: (String) -> Unit) = onError("")
     }
 
     companion object {

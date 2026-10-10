@@ -777,6 +777,15 @@
     <string name="composer_entry_text">Post %1$d text</string>
     <string name="composer_publish_disabled">Publishing is disabled for this account.</string>
     <string name="composer_add_post">Add post</string>
+    <string name="composer_save">Save</string>
+    <string name="composer_edit_loading">Loading the post…</string>
+    <string name="composer_edit_load_failed">The post could not be loaded for editing.</string>
+    <string name="composer_edit_save_failed">The edit was not saved.</string>
+    <string name="composer_edit_poll_warning">Changing the poll resets its votes.</string>
+    <string name="composer_edit_image_alt">Alt text for image %1$d</string>
+    <string name="composer_edit_image_remove">Remove image %1$d</string>
+    <string name="composer_edit_image_no_alt">Add alt text</string>
+    <string name="post_edited">Edited</string>
     <string name="composer_poll">Poll</string>
     <string name="composer_poll_short">Poll</string>
     <string name="composer_poll_choice">Choice %1$d</string>

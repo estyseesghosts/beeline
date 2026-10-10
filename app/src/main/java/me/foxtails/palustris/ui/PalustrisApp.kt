@@ -33,6 +33,7 @@ import me.foxtails.palustris.ui.navigation.ShellTopSurface
 import me.foxtails.palustris.ui.navigation.edgeSwipeDismiss
 import me.foxtails.palustris.ui.navigation.rememberShellNavigator
 import me.foxtails.palustris.ui.navigation.topSurfaceForBack
+import me.foxtails.palustris.ui.posts.LocalPostEditRequest
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
 import me.foxtails.palustris.ui.posts.LocalPostRepostConfirmationState
 import me.foxtails.palustris.ui.posts.PostRepostConfirmationState
@@ -148,6 +149,7 @@ fun PalustrisApp(
             }
         }
         fun handleReply(target: OwnedPost) { overlay.clearPostActionBubble(); composerOwner.requestReply(target) }
+        fun handleEdit(target: OwnedPost) { overlay.clearPostActionBubble(); composerOwner.requestEdit(target) }
         fun handleQuote(target: OwnedPost) { overlay.clearPostActionBubble(); composerOwner.requestQuote(target) }
         fun openNotificationTarget(route: AppRoute) {
             if (route !is AppRoute.Profile) { navigator.notificationRoute = null; return }
@@ -195,6 +197,7 @@ fun PalustrisApp(
             }
             BackHandler(enabled = topSurfaceForBack(backState()) != null, onBack = ::dismissTopSurface)
             Box(Modifier.fillMaxSize().edgeSwipeDismiss(navigationMode == NavigationMode.NonGesture && topSurfaceForBack(backState()) != null, ::dismissTopSurface)) {
+                CompositionLocalProvider(LocalPostEditRequest provides ::handleEdit) {
                 ShellContent(
                     navigator = navigator, overlay = overlay, account = account, sessionRevision = sessionRevision,
                     home = home, photoGrid = photoGrid, profile = profile, accountSwitcher = accountSwitcher, search = search,
@@ -210,6 +213,7 @@ fun PalustrisApp(
                     onCompose = ::openComposer, postActionOwner = postActionOwner, presentationMode = presentationMode, windowWidth = windowWidth,
                     navigationFit = navigationFit, anchorLeft = anchorLeft,
                 )
+                }
             }
             ShellOverlayHost(navigator, overlay, emojiPresentation, account, onReact, ::handleReply, onReshare, composerOwner, composer, profile, notificationSettings, accountSwitcher, ::closeComposer, ::closeProfile, { navigator.closeOverlay() }, ::discardProfileEditor, composerCard = presentationMode == LargeLayoutMode.Expanded)
         }

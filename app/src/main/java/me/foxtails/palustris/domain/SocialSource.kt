@@ -46,7 +46,10 @@ interface SocialSource {
     suspend fun updateEditableProfile(patch: EditableProfilePatch): EditableProfile = unsupported("profile.editable.update")
     suspend fun customEmojis(): List<CustomEmoji> = emptyList()
     suspend fun delete(id: EntityId) = unsupported<Unit>("delete")
-    suspend fun edit(id: EntityId, text: String): Post = unsupported("edit")
+
+    /** The raw text and warning of one of the account's own posts, for the edit composer. */
+    suspend fun editSource(id: EntityId): PostEditSource = unsupported("edit")
+    suspend fun edit(id: EntityId, request: EditPostRequest): Post = unsupported("edit")
 
     /** Translates a post on the server into [targetLanguage], an ISO 639-1 code. */
     suspend fun translate(id: EntityId, targetLanguage: String): Translation = unsupported("translate")

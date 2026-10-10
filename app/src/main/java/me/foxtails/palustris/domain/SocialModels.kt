@@ -179,6 +179,8 @@ data class Post(
     val contentVisibility: PostContentVisibility = PostContentVisibility.Visible,
     /** ISO 639-1 language the server tagged the post with. Null when untagged. */
     val language: String? = null,
+    /** When the author last edited the post, or null when it was never edited. */
+    val editedAtEpochMillis: Long? = null,
 )
 
 data class PostActionResult(

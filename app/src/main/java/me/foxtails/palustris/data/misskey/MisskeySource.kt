@@ -24,6 +24,8 @@ import me.foxtails.palustris.domain.DirectMessageRequest
 import me.foxtails.palustris.domain.DirectMessageSource
 import me.foxtails.palustris.domain.DirectThreadRequest
 import me.foxtails.palustris.domain.DirectThreadResult
+import me.foxtails.palustris.domain.EditAttachment
+import me.foxtails.palustris.domain.EditPostRequest
 import me.foxtails.palustris.domain.EditableProfile
 import me.foxtails.palustris.domain.EditableProfilePatch
 import me.foxtails.palustris.domain.EmojiChoice
@@ -50,6 +52,7 @@ import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Poll
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostActionResult
+import me.foxtails.palustris.domain.PostEditSource
 import me.foxtails.palustris.domain.ProfileCapabilities
 import me.foxtails.palustris.domain.ProfileCapability
 import me.foxtails.palustris.domain.ProfileCapabilityQuery
@@ -273,6 +276,77 @@ class MisskeySource(
         }
         val response = JSONObject(api.post(origin, "notes/create", body, MISSKEY_MAX_RESPONSE_BYTES).body)
         MisskeyMapper.post(response.getJSONObject("createdNote"), origin)
+    }
+
+    override suspend fun editSource(id: EntityId): PostEditSource = request("edit.source") {
+        validatePostId(id, "edit.source")
+        requireEditSupport()
+        val note = showNote(id)
+        PostEditSource(text = note.nullableString("text").orEmpty(), contentWarning = note.nullableString("cw"))
+    }
+
+    /**
+     * Sharkey's `notes/edit` replaces the whole note: a missing `visibility` falls back to public and a
+     * missing `localOnly` to false. So the body starts from the note as the server holds it now and
+     * only the edited parts change.
+     */
+    override suspend fun edit(id: EntityId, request: EditPostRequest): Post = this.request("edit") {
+        validatePostId(id, "edit")
+        requireEditSupport()
+        val note = showNote(id)
+        val body = JSONObject()
+            .put("i", token)
+            .put("editId", id.value)
+            .put("visibility", note.optString("visibility", "public"))
+            .put("localOnly", note.optBoolean("localOnly"))
+        if (request.text.isNotBlank() || note.optJSONArray("files")?.length() == 0) body.put("text", request.text)
+        val warning = request.contentWarning ?: note.nullableString("cw")
+        if (warning != null) body.put("cw", warning)
+        note.optJSONArray("visibleUserIds")?.takeIf { it.length() > 0 }?.let { body.put("visibleUserIds", it) }
+        note.nullableString("reactionAcceptance")?.let { body.put("reactionAcceptance", it) }
+        note.nullableString("replyId")?.let { body.put("replyId", it) }
+        note.nullableString("renoteId")?.let { body.put("renoteId", it) }
+        note.nullableString("channelId")?.let { body.put("channelId", it) }
+        val files = note.optJSONArray("files")
+        val keptIds = request.attachments?.map(EditAttachment::id)
+            ?: (0 until (files?.length() ?: 0)).mapNotNull { files?.optJSONObject(it)?.nullableString("id") }
+        if (keptIds.isNotEmpty()) body.put("fileIds", JSONArray(keptIds))
+        val poll = request.poll?.let { poll ->
+            JSONObject()
+                .put("choices", JSONArray(poll.cleaned().choices))
+                .put("multiple", poll.multiple)
+                .apply { poll.expiresInSeconds?.let { put("expiredAfter", it * 1000L) } }
+        } ?: note.optJSONObject("poll")?.let(::pollFromNote)
+        poll?.let { body.put("poll", it) }
+        // A drive file keeps its alt text on the file, so a changed description is a separate call.
+        request.attachments?.forEach { kept ->
+            val before = (0 until (files?.length() ?: 0)).mapNotNull { files?.optJSONObject(it) }
+                .firstOrNull { it.optString("id") == kept.id }?.nullableString("comment")
+            val after = kept.description?.takeIf(String::isNotBlank)
+            if (before != after) {
+                api.post(origin, "drive/files/update", JSONObject().put("i", token).put("fileId", kept.id).put("comment", after ?: JSONObject.NULL), MISSKEY_MAX_RESPONSE_BYTES)
+            }
+        }
+        api.post(origin, "notes/edit", body, MISSKEY_MAX_RESPONSE_BYTES)
+        MisskeyMapper.post(showNote(id), origin)
+    }
+
+    private suspend fun showNote(id: EntityId): JSONObject =
+        JSONObject(api.post(origin, "notes/show", JSONObject().put("i", token).put("noteId", id.value), MISSKEY_MAX_RESPONSE_BYTES).body)
+
+    /** The poll of a shown note in the shape `notes/edit` takes: the same choices, and the end time as epoch milliseconds. */
+    private fun pollFromNote(poll: JSONObject): JSONObject {
+        val choices = poll.optJSONArray("choices")
+        val texts = JSONArray((0 until (choices?.length() ?: 0)).map { choices!!.getJSONObject(it).optString("text") })
+        return JSONObject().put("choices", texts).put("multiple", poll.optBoolean("multiple")).apply {
+            poll.nullableString("expiresAt")?.let { text ->
+                runCatching { java.time.Instant.parse(text).toEpochMilli() }.getOrNull()?.let { put("expiresAt", it) }
+            }
+        }
+    }
+
+    private fun requireEditSupport() {
+        if (capabilities.ownPosts.edit != CapabilityStatus.Supported) throw SourceError.Unsupported("edit")
     }
 
     override suspend fun votePoll(postId: EntityId, pollId: String, choices: List<Int>): Poll = request("poll.vote") {

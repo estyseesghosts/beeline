@@ -94,6 +94,8 @@ internal class ComposerEntryActions(
     val onRemoveMedia: (mediaId: String) -> Unit,
     val onEditAlt: (mediaId: String) -> Unit,
     val onPollChange: (me.foxtails.palustris.domain.PollRequest?) -> Unit = {},
+    /** False while editing a post: an edit can change a poll but cannot take it away. */
+    val pollRemovable: Boolean = true,
     val hashtags: ComposerHashtags = ComposerHashtags(),
 )
 
@@ -209,6 +211,7 @@ internal fun ComposerEntryRow(
                         limits = pollLimits,
                         onChange = { actions.onPollChange(it) },
                         onRemove = { actions.onPollChange(null) },
+                        removable = actions.pollRemovable,
                     )
                 }
             }

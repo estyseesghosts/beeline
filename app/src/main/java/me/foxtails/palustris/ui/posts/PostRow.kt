@@ -45,8 +45,20 @@ import me.foxtails.palustris.ui.posts.LocalPostRepostConfirmationState
 private val PostMetadataVerticalPadding = 2.dp * 1.06f
 private val PostChromeHeight = 44.dp + (PostMetadataVerticalPadding * 2f)
 
+/** One post. An edit made in this session shows through [LocalPostEdits] before the row draws. */
 @Composable
 internal fun PostRow(
+    ownedPost: OwnedPost,
+    presentation: PostRowPresentation,
+    events: PostRowEvents,
+    modifier: Modifier = Modifier,
+) {
+    val shown = LocalPostEdits.current?.applied(ownedPost) ?: ownedPost
+    PostRowContent(shown, presentation, events, modifier)
+}
+
+@Composable
+private fun PostRowContent(
     ownedPost: OwnedPost,
     presentation: PostRowPresentation,
     events: PostRowEvents,
@@ -151,6 +163,7 @@ internal fun PostRow(
                 onSearchHashtag = onSearchHashtag,
             )
             PostTranslationFooter(translationEntry, translationId, translations)
+            if (post.editedAtEpochMillis != null) PostEditedLabel()
             PostMediaCarousel(ownedPost = ownedPost, onOpenMedia = onOpenMedia)
             PostPollOptions(ownedPost)
             PostQuoteSection(ownedPost, contentWarningRules, R.string.post_view_quoted)

@@ -23,7 +23,11 @@ internal fun ComposerEntryState.exceedsLimit(limits: PostLimits): Boolean = limi
 
 /** True when every entry has content and none is over a limit. Empty entries block Post. */
 internal fun ComposerEditorState.postable(limits: PostLimits): Boolean =
-    entries.all { it.hasPostableContent() && !it.exceedsLimit(limits) && it.pollProblem(limits) == null }
+    entries.all { entry ->
+        // An edit that leaves its poll alone never sends it, so the poll's remaining length cannot block the save.
+        val pollSound = (editing != null && entry.poll == editing.originalPoll) || entry.pollProblem(limits) == null
+        (entry.hasPostableContent() || editing?.attachments?.isNotEmpty() == true) && !entry.exceedsLimit(limits) && pollSound
+    }
 
 /** Why this entry's poll cannot be sent, or null when it has none or it is sound. */
 internal fun ComposerEntryState.pollProblem(limits: PostLimits): me.foxtails.palustris.domain.PollProblem? =

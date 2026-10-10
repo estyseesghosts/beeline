@@ -176,3 +176,9 @@ and `FfmpegBridgeTest`. Live-server uploads are unverified.
 - Vote: Mastodon `POST /api/v1/polls/:id/votes` with `choices[]` returns the poll. Misskey `notes/polls/vote` takes one choice per call, so a multiple-choice vote is several calls and one `notes/show`.
 - Access: Misskey needs the `write:votes` permission. Sessions signed in before it was requested get the server's policy error on a vote until the account signs in again. Mastodon `write` covers voting.
 - Misskey notes carry no expired flag; the end time decides it. Mastodon may hide totals (`votes_count` null), which reads as zero.
+
+## Edit
+
+- Mastodon API: version 3.5 or later, or `editing` in `pleroma.metadata.features`. A server with a `pleroma` block is judged by that list only, because its version string names the Mastodon API level. `GET /api/v1/statuses/:id/source` gives the raw text and warning. `PUT /api/v1/statuses/:id` sends `status` always and the warning, `media_ids[]`, `media_attributes[]` and poll only when they changed.
+- Misskey family: `notes/edit` in `POST /api/endpoints` means Sharkey. Vanilla Misskey has no edit route and never shows Edit. The adapter reads the note with `notes/show`, then sends `notes/edit` with the note's own visibility, `localOnly`, reaction acceptance, reply, quote and channel, because a missing field resets to its default. Alt text lives on the drive file, so a changed description is `drive/files/update`.
+- The edit shows in rows through a session overlay and survives until a copy of the post with a later edit time arrives. An edit that touches a poll resets its votes on the server.

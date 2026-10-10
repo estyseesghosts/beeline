@@ -1,6 +1,6 @@
 # Objective
 
-Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5 and M1 (polls) are done. M3 (delete and edit) is next. M2, M4 and M6 to M8 are not started.
+Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5, M1 (polls) and M3 (delete and edit) are done. M2, M4 and M6 to M8 are not started.
 
 # Invariants
 
@@ -31,9 +31,21 @@ Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5 and M1 (polls) a
 - Drafts keep a poll on any entry (`PostDraftEntry.poll`). The notification cache keeps its frozen `pollOptions` array and adds `poll` beside it when the poll has an ID.
 - Capability schema version is 10 (adds poll limits and the edit status).
 
+# Decisions (M3, edit)
+
+- `SocialSource.edit(id, EditPostRequest)` and `editSource(id)` replace `edit(id, text)`. A null field in the request means unchanged: the composer sends the text always, the warning only when it changed, the image list only when it changed, and the poll only when it changed.
+- Capability: Mastodon API from version 3.5 or `editing` in `pleroma.metadata.features` (a server with a `pleroma` block is judged by that list alone). Misskey family from `notes/edit` in `POST /api/endpoints`. The endpoint probe adds one request to the Misskey probe for token sessions.
+- Mastodon: `GET statuses/:id/source` for the raw text, `PUT statuses/:id` with `status`, `spoiler_text`, `media_ids[]`, `media_attributes[i][id|description]` and poll fields.
+- Sharkey: the adapter reads the note again with `notes/show` and builds `notes/edit` from it, so visibility, local-only, reaction acceptance, reply, quote and channel survive. This is more current than the plan's cached post, and needs no new Post fields. A changed alt text is a separate `drive/files/update`.
+- The composer opens at once on `ComposerNavigation.Edit` and fills when the source arrives. Edit mode hides the audience row, drafts, thread button, photo and poll toggle, and reads Save. Closing an edit drops it and never makes a draft. An edit editor is not restored after the process dies. A poll can be changed but not removed (an edit cannot take a poll away). New images cannot be added in an edit.
+- An unchanged poll is never validated or sent. An ended poll's remaining length is below the server minimum, and that must not block a save.
+- The saved post is kept in the session-scoped `PostEditOwner` (`LocalPostEdits`) and applied by `PostRow` and `SinglePostScreen`. Rows in quote cards, notifications and the Photo Grid detail keep the old text until they reload.
+- `Post.editedAtEpochMillis` comes from `edited_at` or `updatedAt`. Rows show an Edited label. Edit history is not built.
+
 # Completed
 
 - M0 and M5 share one commit because the share sheet, capability schema and adapters changed together.
+- M3: delete and edit. Live on `emulator-5554`: Sharkey edit on dvd.chat (text changed, Edited label, poll and votes kept) and Mastodon edit on mstdn.ca (text changed, Edited label). Not live: alt text and image removal, a followers-only local-only Sharkey note (covered by a contract test), the server web UI.
 - M1: poll model, adapters, composer editor, drafts and voting. Live on `emulator-5554`: created a single-choice poll on mstdn.ca and a multiple-choice poll on dvd.chat, voted on the dvd.chat poll (both choices, results bars and checks showed). Mastodon voting is covered by unit tests only.
 
 # Current slice

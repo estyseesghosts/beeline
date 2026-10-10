@@ -11,6 +11,8 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.DraftMedia
+import me.foxtails.palustris.domain.EditAttachment
+import me.foxtails.palustris.domain.EditPostRequest
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PollRequest
@@ -19,6 +21,7 @@ import me.foxtails.palustris.domain.PostingVisibilityPolicy
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.ThreadPublishFailure
 import me.foxtails.palustris.domain.ThreadPublishListener
+import me.foxtails.palustris.domain.toPollRequest
 import me.foxtails.palustris.domain.toPostDraft
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.shell.ComposerContract
@@ -30,6 +33,9 @@ sealed interface ComposerNavigation {
     data class Reply(val target: OwnedPost) : ComposerNavigation
     data class Quote(val target: OwnedPost) : ComposerNavigation
     data class Draft(val draftId: String) : ComposerNavigation
+
+    /** Opens the editor on one of the account's own posts. */
+    data class Edit(val target: OwnedPost) : ComposerNavigation
 }
 
 /** Inputs the composer owner reads from the connected shell on each recomposition. */
@@ -83,14 +89,17 @@ class ComposerOwner internal constructor(
     internal var sessionRevision = 0L
     private var submission: ComposerSubmission? = null
 
-    val submitting: Boolean get() = submission != null
+    /** True while an edit is on its way to the server. */
+    private var editSaving by mutableStateOf(false)
+
+    val submitting: Boolean get() = submission != null || editSaving
 
     val editor: ComposerEditorState get() = editorState.value
     val quoteTarget: OwnedPost? get() = target ?: previewTarget(context.account, editor.quoteOf ?: editor.replyTo, editor.targetPreview, uiStrings.composerQuotedPost())
     val isReply: Boolean get() = replyTo != null
 
     val hasChanges: Boolean
-        get() = editor.entriesChanged ||
+        get() = editor.entriesChanged || editor.editing?.attachmentsChanged == true ||
             editor.quoteOf?.value != editor.savedQuoteOf ||
             editor.replyTo?.value != editor.savedReplyTo ||
             editor.audience != editor.savedAudience
@@ -219,6 +228,8 @@ class ComposerOwner internal constructor(
 
     fun requestNew() {
         if (context.composerOpen) return
+        // A closed edit editor never becomes the next post.
+        if (editor.editing != null) mutateEditor { ComposerEditorState() }
         val first = drafts.firstOrNull()
         if (!editor.hasContent && editor.savedText.isBlank() && first != null) {
             requestDraft(first)
@@ -241,6 +252,112 @@ class ComposerOwner internal constructor(
         if (post.fetchedBy != account.id || !context.canQuote || context.anyOverlayOpen || hasChanges) return
         bindTarget(post, account.id, reply = null, quote = post.post.id)
         navigation = ComposerNavigation.Quote(post)
+    }
+
+    /**
+     * Opens the editor on [post], which must be the connected account's own post. The editor opens at
+     * once and fills in when the raw text arrives, so the surface is not held back by the request.
+     */
+    fun requestEdit(post: OwnedPost) {
+        val account = context.account ?: return
+        if (post.fetchedBy != account.id || post.post.author.id != account.id || context.anyOverlayOpen || hasChanges) return
+        val target = post.post.actionTargetId ?: post.post.id
+        resetForTarget()
+        val shown = post.post
+        val poll = shown.poll?.toPollRequest()
+        val attachments = shown.attachments.mapNotNull { attachment ->
+            attachment.id?.let { EditAttachmentState(it, attachment.previewUrl ?: attachment.url, attachment.description) }
+        }
+        mutateEditor {
+            ComposerEditorState(
+                audience = shown.audience,
+                savedAudience = shown.audience,
+                boundAccount = account.id,
+                boundRevision = sessionRevision,
+                editing = ComposerEdit(
+                    target = target,
+                    originalAttachments = attachments,
+                    attachments = attachments,
+                    originalPoll = poll,
+                ),
+            )
+        }
+        val epoch = editorRevision
+        context.contract.actions.loadEditSource(
+            target,
+            onResult = { source ->
+                if (editorRevision != epoch || editor.editing?.target != target) return@loadEditSource
+                val entry = ComposerEntryState(
+                    id = editor.first.id,
+                    text = source.text,
+                    warning = source.contentWarning.orEmpty(),
+                    warningEnabled = !source.contentWarning.isNullOrBlank(),
+                    poll = poll,
+                )
+                editorState.value = editor.copy(
+                    entries = listOf(entry),
+                    savedEntries = listOf(entry.content),
+                    editing = editor.editing?.copy(
+                        sourceText = source.text,
+                        sourceWarning = source.contentWarning.orEmpty(),
+                        loading = false,
+                    ),
+                )
+            },
+            onError = { message ->
+                if (editor.editing?.target == target) {
+                    editorState.value = editor.copy(error = message.ifBlank { uiStrings.composerEditLoadFailed() })
+                }
+            },
+        )
+        navigation = ComposerNavigation.Edit(post)
+    }
+
+    /** Changes the alt text of an image that stays on the post being edited. */
+    fun setEditAlt(attachmentId: String, text: String?) {
+        val current = editor.editing ?: return
+        mutateEditor {
+            it.copy(editing = current.copy(attachments = current.attachments.map { a ->
+                if (a.id == attachmentId) a.copy(description = text?.takeIf(String::isNotBlank)) else a
+            }))
+        }
+    }
+
+    /** Takes an image off the post being edited. */
+    fun removeEditAttachment(attachmentId: String) {
+        val current = editor.editing ?: return
+        mutateEditor { it.copy(editing = current.copy(attachments = current.attachments.filterNot { a -> a.id == attachmentId })) }
+    }
+
+    /** Sends the edit and calls [onSent] once the server has accepted it. */
+    private fun publishEdit(onSent: () -> Unit) {
+        val current = editor
+        val edit = current.editing ?: return
+        if (edit.loading || editSaving) return
+        val entry = current.first
+        val text = context.contract.prepareText(entry.text)
+        val warning = entry.effectiveWarning
+        val request = EditPostRequest(
+            text = text,
+            contentWarning = warning.takeIf { it != edit.sourceWarning },
+            attachments = edit.attachments.takeIf { edit.attachmentsChanged }?.map { EditAttachment(it.id, it.description) },
+            poll = entry.poll?.takeIf { it != edit.originalPoll }?.cleaned(),
+        )
+        val epoch = editorRevision
+        editSaving = true
+        context.contract.actions.editPost(
+            edit.target,
+            request,
+            onResult = {
+                editSaving = false
+                if (editorRevision == epoch) mutateEditor { ComposerEditorState() }
+                onSent()
+            },
+            onError = { message ->
+                editSaving = false
+                editorState.value = editor.copy(error = message.ifBlank { uiStrings.composerEditSaveFailed() })
+            },
+        )
     }
 
     fun requestDraft(item: PostDraft) {
@@ -305,6 +422,12 @@ class ComposerOwner internal constructor(
 
     /** Saves the current editor as a draft. Clears the dirty baseline only after success. */
     fun save(onSaved: () -> Unit = {}) {
+        // An edit never becomes a draft. Closing it drops the unsaved changes.
+        if (editor.editing != null) {
+            mutateEditor { ComposerEditorState() }
+            onSaved()
+            return
+        }
         val current = editor
         if (!current.hasContent && current.quoteOf == null && current.replyTo == null) {
             onSaved()
@@ -346,6 +469,10 @@ class ComposerOwner internal constructor(
      */
     fun publish(onSent: (replySent: Boolean, quoteSent: Boolean) -> Unit) {
         val account = context.account ?: return
+        if (editor.editing != null) {
+            publishEdit { onSent(false, false) }
+            return
+        }
         if (submission != null) return
         val submittedAudience = editor.validatedAudience(context.contract.availableAudiences)
         if (submittedAudience == null) {

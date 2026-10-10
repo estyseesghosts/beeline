@@ -26,7 +26,9 @@ private const val MEDIA_DRAFT_ID_INDEX = 25
 
 /** Restores shell-surviving fields across process recreation. */
 internal val ComposerEditorStateSaver: Saver<ComposerEditorState, Any> = listSaver(
-    save = {
+    save = { state ->
+        // An edit editor is not restored: its text would turn into a new post.
+        val it = if (state.editing != null) ComposerEditorState() else state
         listOf(
             it.draftId,
             it.text,

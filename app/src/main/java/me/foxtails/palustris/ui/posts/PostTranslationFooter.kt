@@ -86,3 +86,14 @@ private fun translatedFromLabel(entry: TranslationEntry.Ready): String {
         else -> stringResource(R.string.post_translate_done)
     }
 }
+
+/** A small note under a post's body that its author changed it after posting. */
+@Composable
+internal fun PostEditedLabel(modifier: Modifier = Modifier) {
+    Text(
+        stringResource(R.string.post_edited),
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 2.dp).testTag("post_edited"),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}

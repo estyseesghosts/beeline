@@ -69,6 +69,7 @@ internal fun ComposerPollEditor(
     onChange: (PollRequest) -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
+    removable: Boolean = true,
 ) {
     OutlinedCard(modifier.fillMaxWidth().padding(vertical = 8.dp).testTag("composer_poll"), shape = MaterialTheme.shapes.large) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -137,8 +138,10 @@ internal fun ComposerPollEditor(
                     modifier = Modifier.testTag("composer_poll_problem"),
                 )
             }
-            TextButton(onClick = onRemove, modifier = Modifier.testTag("composer_poll_remove")) {
-                Text(stringResource(R.string.composer_poll_remove))
+            if (removable) {
+                TextButton(onClick = onRemove, modifier = Modifier.testTag("composer_poll_remove")) {
+                    Text(stringResource(R.string.composer_poll_remove))
+                }
             }
         }
     }

@@ -26,6 +26,7 @@ import me.foxtails.palustris.domain.DirectMessageRequest
 import me.foxtails.palustris.domain.DirectMessageSource
 import me.foxtails.palustris.domain.DirectThreadRequest
 import me.foxtails.palustris.domain.DirectThreadResult
+import me.foxtails.palustris.domain.EditPostRequest
 import me.foxtails.palustris.domain.EditableProfile
 import me.foxtails.palustris.domain.EditableProfilePatch
 import me.foxtails.palustris.domain.EmojiCapabilities
@@ -51,6 +52,7 @@ import me.foxtails.palustris.domain.Poll
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostActionResult
+import me.foxtails.palustris.domain.PostEditSource
 import me.foxtails.palustris.domain.ProfileCapabilities
 import me.foxtails.palustris.domain.ProfileCapability
 import me.foxtails.palustris.domain.ProfileCapabilityQuery
@@ -237,6 +239,44 @@ class MastodonSource(
             api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES, headers).body.toJson(),
             origin,
         )
+    }
+
+    override suspend fun editSource(id: EntityId): PostEditSource = request("edit.source") {
+        validatePostId(id, "edit.source")
+        requireEditSupport()
+        val json = api.get(origin, "api/v1/statuses/${URLEncoder.encode(id.value, Charsets.UTF_8.name())}/source", token, MASTODON_MAX_RESPONSE_BYTES).body.toJson()
+        PostEditSource(text = json.optString("text"), contentWarning = json.optString("spoiler_text").takeIf { it.isNotEmpty() })
+    }
+
+    override suspend fun edit(id: EntityId, request: EditPostRequest): Post = this.request("edit") {
+        validatePostId(id, "edit")
+        requireEditSupport()
+        val fields = buildList {
+            add("status" to request.text)
+            request.contentWarning?.let { add("spoiler_text" to it) }
+            request.attachments?.let { kept ->
+                kept.forEach { add("media_ids[]" to it.id) }
+                // Alt text changes ride along with the attachment list.
+                kept.forEachIndexed { index, attachment ->
+                    add("media_attributes[$index][id]" to attachment.id)
+                    add("media_attributes[$index][description]" to attachment.description.orEmpty())
+                }
+            }
+            request.poll?.let { poll ->
+                poll.cleaned().choices.forEach { add("poll[options][]" to it) }
+                add("poll[expires_in]" to (poll.expiresInSeconds ?: DEFAULT_POLL_SECONDS).toString())
+                if (poll.multiple) add("poll[multiple]" to "true")
+                if (poll.hideTotals) add("poll[hide_totals]" to "true")
+            }
+        }
+        MastodonMapper.post(
+            api.putForm(origin, "api/v1/statuses/${URLEncoder.encode(id.value, Charsets.UTF_8.name())}", fields, token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(),
+            origin,
+        )
+    }
+
+    private fun requireEditSupport() {
+        if (capabilities.ownPosts.edit != CapabilityStatus.Supported) throw SourceError.Unsupported("edit")
     }
 
     override suspend fun votePoll(postId: EntityId, pollId: String, choices: List<Int>): Poll = request("poll.vote") {

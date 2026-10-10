@@ -131,6 +131,7 @@ object MisskeyMapper {
             audience = when (json.optString("visibility")) { "home" -> Audience.Unlisted; "followers" -> Audience.Followers; "specified" -> Audience.Direct; else -> Audience.Public },
             attachments = if (hidden) emptyList() else (0 until files.length()).mapNotNull { i -> attachment(files.optJSONObject(i)) },
             contentWarning = if (hidden || json.isNull("cw")) null else json.optString("cw"),
+            editedAtEpochMillis = json.nullableString("updatedAt")?.let { runCatching { Instant.parse(it).toEpochMilli() }.getOrNull() },
             replyTo = json.nullableString("replyId")?.let { EntityId(origin, it) },
             replyToAuthorId = replyToAuthorId?.let { AccountId(Connection(origin, Protocol.MISSKEY), it) },
             reactions = if (hidden || reactionJson == null) emptyList() else reactionJson.keys().asSequence().map { emoji ->

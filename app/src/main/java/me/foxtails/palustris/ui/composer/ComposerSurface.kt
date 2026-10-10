@@ -146,8 +146,10 @@ internal fun ComposerSurfaceHost(
                     onClose = requestClose,
                     onOpenDrafts = { draftsOpen = true },
                     draftsEnabled = !busy,
+                    editing = owner.editor.editing != null,
                     onPublish = ::publish,
-                    postEnabled = owner.canPublish && !busy && owner.editor.postable(contract.limits),
+                    postEnabled = owner.canPublish && !busy && owner.editor.postable(contract.limits) &&
+                        (owner.editor.editing?.let { !it.loading && owner.hasChanges } ?: true),
                     publishing = publishing,
                     posted = contract.publishPosted,
                     total = contract.publishTotal,
@@ -288,6 +290,7 @@ internal fun ComposerTopBar(
     posted: Int,
     total: Int,
     mediaProgress: Float? = null,
+    editing: Boolean = false,
 ) {
     Row(
         Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
@@ -295,10 +298,12 @@ internal fun ComposerTopBar(
     ) {
         IconButton(onClick = onClose) { Icon(AppIcons.Close, stringResource(R.string.composer_close)) }
         Spacer(Modifier.weight(1f))
-        TextButton(enabled = draftsEnabled, onClick = onOpenDrafts) {
-            Text(stringResource(R.string.drafts_page_title))
+        if (!editing) {
+            TextButton(enabled = draftsEnabled, onClick = onOpenDrafts) {
+                Text(stringResource(R.string.drafts_page_title))
+            }
+            Spacer(Modifier.width(8.dp))
         }
-        Spacer(Modifier.width(8.dp))
         Button(onClick = onPublish, enabled = postEnabled, modifier = Modifier.testTag(COMPOSER_POST_TAG)) {
             if (publishing) {
                 CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
@@ -310,7 +315,7 @@ internal fun ComposerTopBar(
                     Text(stringResource(R.string.composer_publish_progress, posted, total))
                 }
             } else {
-                Text(stringResource(R.string.composer_publish))
+                Text(stringResource(if (editing) R.string.composer_save else R.string.composer_publish))
             }
         }
     }

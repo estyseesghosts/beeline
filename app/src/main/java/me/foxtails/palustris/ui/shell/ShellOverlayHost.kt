@@ -25,6 +25,7 @@ import me.foxtails.palustris.ui.media.MediaViewerScreen
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.notifications.NotificationSettingsSheet
 import me.foxtails.palustris.ui.photogrid.PhotoQuickView
+import me.foxtails.palustris.ui.posts.LocalPostEditRequest
 import me.foxtails.palustris.ui.posts.LocalPostTranslations
 import me.foxtails.palustris.ui.posts.PostActionBubbleHost
 import me.foxtails.palustris.ui.posts.PostPopupPresentation
@@ -138,6 +139,7 @@ internal fun ShellBubbleHost(
         hashtagBottomClearance = hashtagBottomClearance,
     )
     val translations = LocalPostTranslations.current
+    val editRequest = LocalPostEditRequest.current
     val targetLanguage = LocalConfiguration.current.locales[0].language
     postActionOwner?.target?.let { target ->
         PostShareSheet(
@@ -146,6 +148,10 @@ internal fun ShellBubbleHost(
             report = postActionOwner.report,
             rows = postShareRows(target.post, target.ownerAccountId, postActionOwner.capabilities, targetLanguage),
             ownPost = postActionOwner.ownPost,
+            onEdit = {
+                postActionOwner.dismiss()
+                editRequest?.invoke(target.ownedPost)
+            },
             onDelete = postActionOwner::deleteOwnPost,
             onTranslate = {
                 translations?.translate(target.ownedPost, targetLanguage)

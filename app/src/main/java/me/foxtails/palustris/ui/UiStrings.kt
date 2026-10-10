@@ -25,6 +25,8 @@ interface UiStrings {
     fun composerEntryPublishFailed(position: Int, total: Int, detail: String): String
     fun composerAudienceUnavailable(): String
     fun composerQuotedPost(): String
+    fun composerEditLoadFailed(): String
+    fun composerEditSaveFailed(): String
     fun sessionRestoreFailed(): String
     fun sessionAccountUnavailable(): String
     fun sessionNoBrowser(): String
@@ -54,6 +56,8 @@ interface UiStrings {
                 "Entry $position of $total: $detail"
             override fun composerAudienceUnavailable(): String = ""
             override fun composerQuotedPost(): String = ""
+            override fun composerEditLoadFailed(): String = ""
+            override fun composerEditSaveFailed(): String = ""
             override fun sessionRestoreFailed(): String = ""
             override fun sessionAccountUnavailable(): String = ""
             override fun sessionNoBrowser(): String = ""
@@ -85,6 +89,8 @@ private class AndroidUiStrings(private val context: Context) : UiStrings {
         context.getString(R.string.composer_entry_publish_failed, position, total, detail)
     override fun composerAudienceUnavailable(): String = context.getString(R.string.composer_audience_unavailable)
     override fun composerQuotedPost(): String = context.getString(R.string.composer_quoted_post)
+    override fun composerEditLoadFailed(): String = context.getString(R.string.composer_edit_load_failed)
+    override fun composerEditSaveFailed(): String = context.getString(R.string.composer_edit_save_failed)
     override fun sessionRestoreFailed(): String = context.getString(R.string.session_restore_failed)
     override fun sessionAccountUnavailable(): String = context.getString(R.string.settings_account_unavailable)
     override fun sessionNoBrowser(): String = context.getString(R.string.session_no_browser)

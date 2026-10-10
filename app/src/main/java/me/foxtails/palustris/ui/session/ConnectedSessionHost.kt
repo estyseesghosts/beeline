@@ -12,6 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import me.foxtails.palustris.data.auth.AccountIndex
 import me.foxtails.palustris.data.auth.DraftActions
 import me.foxtails.palustris.data.auth.DraftStore
@@ -19,7 +21,11 @@ import me.foxtails.palustris.data.auth.DraftWriteAuthority
 import me.foxtails.palustris.data.notifications.NotificationStreamController
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppNavigationAnchor
+import me.foxtails.palustris.domain.EditPostRequest
+import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
+import me.foxtails.palustris.domain.PostEditSource
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.domain.ThreadPublishListener
@@ -36,10 +42,12 @@ import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.notifications.NotificationSettingsHost
 import me.foxtails.palustris.ui.notifications.NotificationsHost
 import me.foxtails.palustris.ui.photogrid.PhotoGridHost
+import me.foxtails.palustris.ui.posts.LocalPostEdits
 import me.foxtails.palustris.ui.posts.LocalPostPendingLookup
 import me.foxtails.palustris.ui.posts.LocalPostPolls
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
 import me.foxtails.palustris.ui.posts.LocalPostTranslations
+import me.foxtails.palustris.ui.posts.PostEditOwner
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.posts.PostPollOwner
 import me.foxtails.palustris.ui.posts.PostPopupOwner
@@ -250,6 +258,12 @@ fun ConnectedSessionHost(
     val translationOwner = remember(accountId, sessionRevision, sharedSource) {
         PostTranslationOwner(accountId, sessionRevision, sharedSource, settingsScope, UiStrings.from(context))
     }
+    val editOwner = remember(accountId, sessionRevision) { PostEditOwner(accountId, sessionRevision) }
+    LaunchedEffect(entryStore, sessionGeneration, editOwner) {
+        entryStore.register(sessionGeneration, "post-edits-$accountId-$sessionGeneration") {
+            editOwner.retire()
+        }
+    }
     val pollOwner = remember(accountId, sessionRevision, sharedSource) {
         PostPollOwner(accountId, sessionRevision, sharedSource, settingsScope, UiStrings.from(context))
     }
@@ -274,6 +288,30 @@ fun ConnectedSessionHost(
                 feed.publish(publication, listener)
 
             override fun signInAgain() = accountManager.upgradePermissions(accountId)
+
+            override fun loadEditSource(id: EntityId, onResult: (PostEditSource) -> Unit, onError: (String) -> Unit) {
+                settingsScope.launch {
+                    try {
+                        onResult(sharedSource.editSource(id))
+                    } catch (error: Exception) {
+                        if (error is CancellationException) throw error
+                        onError(UiStrings.from(context).sourceError(error))
+                    }
+                }
+            }
+
+            override fun editPost(id: EntityId, request: EditPostRequest, onResult: (OwnedPost) -> Unit, onError: (String) -> Unit) {
+                settingsScope.launch {
+                    try {
+                        val edited = sharedSource.edit(id, request)
+                        editOwner.record(id, edited)
+                        onResult(OwnedPost(accountId, edited, sessionRevision))
+                    } catch (error: Exception) {
+                        if (error is CancellationException) throw error
+                        onError(UiStrings.from(context).sourceError(error))
+                    }
+                }
+            }
         }
     }
     val hashtagSuggestions = rememberComposerHashtagSuggestions(
@@ -306,6 +344,7 @@ fun ConnectedSessionHost(
         LocalPostPopupOwner provides postActionOwner,
         LocalPostTranslations provides translationOwner,
         LocalPostPolls provides pollOwner,
+        LocalPostEdits provides editOwner,
         LocalPostPendingLookup provides pendingLookup,
     ) {
         PalustrisApp(

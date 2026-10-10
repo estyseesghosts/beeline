@@ -63,6 +63,7 @@ internal fun ComposerBody(
     onEmojiInsertionApplied: () -> Unit,
 ) {
     val editor = owner.editor
+    val editing = editor.editing
     var focused by remember { mutableStateOf(ComposerField.Text) }
     val hashtags = remember { ComposerHashtags() }
     // A removed entry cannot keep focus; the first entry takes it.
@@ -128,8 +129,34 @@ internal fun ComposerBody(
                             onRemoveMedia = { owner.removeMedia(entry.id, it) },
                             onEditAlt = { media.editAlt(entry.id, it) },
                             onPollChange = { owner.setPoll(entry.id, it) },
+                            pollRemovable = editing == null,
                             hashtags = hashtags,
                         ),
+                    )
+                }
+            }
+            if (editing != null) {
+                if (editing.loading && editor.error == null) {
+                    Text(
+                        stringResource(R.string.composer_edit_loading),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (editing.attachments.isNotEmpty()) {
+                    ComposerEditAttachments(
+                        attachments = editing.attachments,
+                        maxAltLength = contract.limits.posting.maxAltTextLength,
+                        onAlt = owner::setEditAlt,
+                        onRemove = owner::removeEditAttachment,
+                    )
+                }
+                if (editor.first.poll != null && editor.first.poll != editing.originalPoll) {
+                    Text(
+                        stringResource(R.string.composer_edit_poll_warning),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.testTag("composer_edit_poll_warning"),
                     )
                 }
             }
@@ -145,7 +172,7 @@ internal fun ComposerBody(
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
             }
         }
-        if (focusedEntry.id == editor.first.id && audienceOptions.isNotEmpty()) {
+        if (editing == null && focusedEntry.id == editor.first.id && audienceOptions.isNotEmpty()) {
             HorizontalDivider()
             ComposerAudienceRow(editor.audience, audienceOptions, owner::setAudience)
         }
@@ -159,6 +186,7 @@ internal fun ComposerBody(
         ComposerToolbar(
             entry = focusedEntry,
             limits = contract.limits,
+            editing = editing != null,
             photo = media.photoState(focusedEntry),
             onPhoto = { media.onPhoto(focusedEntry) },
             pollEnabled = contract.limits.posting.poll != null && focusedEntry.media.isEmpty() && !contract.publishing && !owner.submitting,
@@ -218,6 +246,7 @@ internal fun ComposerToolbar(
     entry: ComposerEntryState,
     limits: PostLimits,
     photo: PhotoButtonState,
+    editing: Boolean = false,
     onPhoto: () -> Unit,
     pollEnabled: Boolean,
     onPoll: () -> Unit,
@@ -235,10 +264,12 @@ internal fun ComposerToolbar(
         modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onPhoto, enabled = photo != PhotoButtonState.Disabled) {
-            Icon(AppIcons.Image, stringResource(R.string.composer_add_photo))
+        if (!editing) {
+            IconButton(onClick = onPhoto, enabled = photo != PhotoButtonState.Disabled) {
+                Icon(AppIcons.Image, stringResource(R.string.composer_add_photo))
+            }
         }
-        if (limits.posting.poll != null) {
+        if (limits.posting.poll != null && !editing) {
             TextButton(
                 onClick = onPoll,
                 enabled = pollEnabled || entry.poll != null,
@@ -272,6 +303,8 @@ internal fun ComposerToolbar(
                 modifier = Modifier.padding(horizontal = 8.dp).semantics { contentDescription = description },
             )
         }
-        IconButton(onClick = onAddEntry, enabled = addEnabled) { Icon(ComposerIcons.Add, stringResource(R.string.composer_add_post)) }
+        if (!editing) {
+            IconButton(onClick = onAddEntry, enabled = addEnabled) { Icon(ComposerIcons.Add, stringResource(R.string.composer_add_post)) }
+        }
     }
 }
