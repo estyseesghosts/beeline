@@ -30,4 +30,5 @@
     <plurals name="search_trending_people">
         <item quantity="other">%1$d명</item>
     </plurals>
+    <string name="search_popular_accounts">인기 계정</string>
 </resources>

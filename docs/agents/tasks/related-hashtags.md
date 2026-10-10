@@ -25,10 +25,11 @@ The catalog has 74 groups and 1,814 members, not the 62 groups and 1,370 members
 - Slice 1 (catalog, rules, setting) — commit 2b551c12.
 - Slice 2 (combined results) — commit c8771358.
 - Slice 3 (server discovery, suggestion service) — commit 0829f3d4.
+- Slice 4 (Hashtags tab) — commit 3df65066.
 
 # Current slice
 
-Slice 4: Hashtags tab (implemented; the commit that carries this record is the slice 4 commit).
+Slice 5: Profiles tab (implemented; the commit that carries this record is the slice 5 commit).
 
 # Files involved
 
@@ -40,7 +41,7 @@ Slice 1: focused tests, then the CI-parity gate. See the commit.
 
 # Next
 
-Slice 5: Profiles tab (popular accounts in the blank state of `AccountSearchResults`). Slice 6: composer autocomplete.
+Slice 6: composer autocomplete.
 
 # Blockers
 
@@ -48,4 +49,4 @@ None.
 
 # Last safe commit
 
-`0829f3d4` Add server discovery reads and the hashtag suggestion service.
+`3df65066` Show trending hashtags, typed suggestions, and related chips in the Hashtags tab.

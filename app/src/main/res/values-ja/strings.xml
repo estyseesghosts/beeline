@@ -116,4 +116,5 @@
     <plurals name="search_trending_people">
         <item quantity="other">%1$d人</item>
     </plurals>
+    <string name="search_popular_accounts">人気のアカウント</string>
 </resources>

@@ -792,3 +792,9 @@ Sources: `ui/search/CombinedHashtagHeader.kt`, `SearchController.kt`, `ui/photog
 - Related chips sit under the results header. They show whenever `AccountSearchState.relatedTags` is not empty, so `#caturday`, which merges nothing, still suggests `#cats`. The "Includes" line shows only when `combinedTags` is not empty. A chip tap runs that search.
 - The rows use the same physical clearance as the account rows (`SearchListClearance`). The chips wrap and sit inside the left and right clearance.
 Sources: `ui/search/SearchExploreController.kt`, `SearchDiscoveryLists.kt`, `SearchExploreControllerTest`, `SearchDiscoveryTest`, `SearchClearanceTest`. Device visuals are unverified.
+
+## Profiles tab discovery
+
+A blank query on the Profiles tab shows the list "Popular accounts". It uses the same row and clearance as the account search results. A tap opens the profile through `onAccountClick`. The list has no follow button.
+`SearchExploreController.loadPopularAccounts` loads it once through `source.popularAccounts(20)`. An empty or failed list keeps the old "Find an account" prompt and shows no error. Typing a query replaces the list with the search results. The Misskey adapter omits the signed-in account.
+Sources: `ui/search/SearchDiscoveryLists.kt` (`AccountList`), `SearchExploreController.kt`, `SearchDiscoveryTest`, `SearchClearanceTest`. Device visuals are unverified.

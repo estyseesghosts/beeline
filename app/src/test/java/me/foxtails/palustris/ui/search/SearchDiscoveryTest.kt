@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
 import me.foxtails.palustris.domain.hashtags.TrendingHashtag
 import me.foxtails.palustris.ui.PalustrisTheme
@@ -32,9 +33,12 @@ class SearchDiscoveryTest {
     private val searched = mutableListOf<String>()
     private val typed = mutableListOf<String>()
     private var trendingLoads = 0
+    private var popularLoads = 0
+    private val opened = mutableListOf<Account>()
 
     private val actions = object : SearchExploreActions {
         override fun loadTrending() { trendingLoads++ }
+        override fun loadPopularAccounts() { popularLoads++ }
         override fun suggestHashtags(text: String) { typed += text }
     }
 
@@ -54,6 +58,7 @@ class SearchDiscoveryTest {
                         sharedQuery = query,
                         sharedTab = tab,
                         onSearchHashtag = { searched += it },
+                        onAccountClick = { opened += it },
                         mediaOwner = author.id,
                     )
                 }
@@ -160,6 +165,41 @@ class SearchDiscoveryTest {
         compose.runOnIdle { tab.value = 1 }
         compose.waitForIdle()
         assertEquals(1, trendingLoads)
+    }
+
+    @Test
+    fun blankProfilesTabListsPopularAccountsAndATapOpensTheProfile() {
+        val popular = AppShellFixtures.account("popular")
+        show("", 0, explore = SearchExploreState(popularAccounts = listOf(popular)))
+
+        compose.onNodeWithText(text(R.string.search_popular_accounts)).assertIsDisplayed()
+        compose.onNodeWithTag("search_account_row_popular", useUnmergedTree = true).performClick()
+
+        assertEquals(listOf(popular.id), opened.map { it.id })
+        assertEquals(1, popularLoads)
+        assertEquals(0, trendingLoads)
+    }
+
+    @Test
+    fun anEmptyPopularListKeepsTheOldPrompt() {
+        show("", 0)
+
+        compose.onNodeWithText(text(R.string.search_find_account)).assertIsDisplayed()
+        assertTrue(compose.onAllTagged("search_popular_accounts").isEmpty())
+    }
+
+    @Test
+    fun typingAnAccountQueryReplacesThePopularList() {
+        val popular = AppShellFixtures.account("popular")
+        val matched = AppShellFixtures.account("matched")
+        show(
+            "fixture owner", 0,
+            accountSearch = AccountSearchState(query = "fixture owner", accounts = listOf(matched)),
+            explore = SearchExploreState(popularAccounts = listOf(popular)),
+        )
+
+        assertTrue(compose.onAllTagged("search_popular_accounts").isEmpty())
+        compose.onNodeWithTag("search_account_row_matched", useUnmergedTree = true).assertIsDisplayed()
     }
 
     private fun androidx.compose.ui.test.junit4.AndroidComposeTestRule<*, *>.onAllTagged(tag: String) =

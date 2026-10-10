@@ -276,7 +276,9 @@ class SearchClearanceTest {
             query = "#fixture", tagQuery = "fixture", relatedTags = listOf("cats", "kitten", "caturday"),
             posts = listOf(AppShellFixtures.post("related", author, "Search related fixture")),
         )
+        val popular = SearchExploreState(popularAccounts = listOf(matched))
         val cases = listOf(
+            Triple("search_popular_accounts", "", Pair(0, AccountSearchState())),
             Triple("search_trending_results", "", Pair(1, AccountSearchState())),
             Triple("search_suggestion_results", "#pho", Pair(1, AccountSearchState())),
             Triple("search_hashtag_results", "#fixture", Pair(1, related)),
@@ -285,7 +287,7 @@ class SearchClearanceTest {
             for ((listTag, query, tabAndState) in cases) {
                 show(direction) {
                     SearchScreen(
-                        accountSearch = tabAndState.second, explore = explore,
+                        accountSearch = tabAndState.second, explore = if (tabAndState.first == 0) popular else explore,
                         compactLayout = false, largeLayout = true,
                         sharedQuery = query, sharedTab = tabAndState.first,
                         leftObstructionClearance = right, rightObstructionClearance = right,

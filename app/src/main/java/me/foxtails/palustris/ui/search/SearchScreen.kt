@@ -169,7 +169,11 @@ fun SearchScreen(
     val typedHashtag = query.takeIf { hashtagSearchRequested && accountSearch.query != it.trim() }.orEmpty()
     LaunchedEffect(typedHashtag) { exploreActions.suggestHashtags(typedHashtag) }
     LaunchedEffect(tab, query.isBlank()) {
-        if (tab == 1 && query.isBlank()) exploreActions.loadTrending()
+        if (!query.isBlank()) return@LaunchedEffect
+        when (tab) {
+            0 -> exploreActions.loadPopularAccounts()
+            1 -> exploreActions.loadTrending()
+        }
     }
     val sections = listOf(
         stringResource(R.string.search_category_profiles),
@@ -409,7 +413,7 @@ private fun SearchContent(
                     onOpenPost = onOpenPost,
                     onOpenUrl = onOpenUrl,
                     onOpenUsername = onOpenUsername,
-                ) else AccountSearchResults(query, accountSearch, onAccountClick, clearance, listState)
+                ) else AccountSearchResults(query, accountSearch, explore.popularAccounts, onAccountClick, clearance, listState)
             } else if (tab == 1 && query.isBlank() && explore.trending.isNotEmpty()) {
                 TrendingHashtagList(explore.trending, onSearchHashtag, clearance, listState)
             } else {
@@ -614,12 +618,21 @@ private fun HashtagSearchResults(
 private fun AccountSearchResults(
     query: String,
     state: AccountSearchState,
+    popularAccounts: List<Account>,
     onAccountClick: (Account) -> Unit,
     clearance: SearchListClearance,
     listState: LazyListState?,
 ) {
     val endClearance = clearance.end
     when {
+        query.isBlank() && popularAccounts.isNotEmpty() -> AccountList(
+            popularAccounts,
+            stringResource(R.string.search_popular_accounts),
+            onAccountClick,
+            clearance,
+            listState,
+            "search_popular_accounts",
+        )
         state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         state.error != null -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_account_failed), state.error, bottomClearance = endClearance)
         // Both physical edges belong to the scroll content, so account rows and their

@@ -7,9 +7,13 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import me.foxtails.palustris.domain.Account
+import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppLanguage
+import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.Timeline
@@ -29,11 +33,17 @@ class SearchExploreControllerTest {
         var trendingCalls = 0
         var trending: suspend () -> List<TrendingHashtag> = { emptyList() }
         val prefixes = mutableListOf<String>()
+        var popularCalls = 0
+        var popular: suspend () -> List<Account> = { emptyList() }
 
         override suspend fun timeline(timeline: Timeline, cursor: String?) = Page<Post>(emptyList())
         override suspend fun trendingHashtags(limit: Int): List<TrendingHashtag> {
             trendingCalls++
             return trending()
+        }
+        override suspend fun popularAccounts(limit: Int): List<Account> {
+            popularCalls++
+            return popular()
         }
         override suspend fun suggestHashtags(prefix: String, limit: Int): List<HashtagSuggestion> {
             prefixes += prefix
@@ -86,6 +96,57 @@ class SearchExploreControllerTest {
         assertEquals(2, source.trendingCalls)
         assertEquals(listOf("cats"), explore.state.value.trending.map { it.name })
         explore.stop()
+    }
+
+    private fun account(id: String) =
+        Account(AccountId(Connection("https://x.example", Protocol.MISSKEY), id), id, "@$id@x.example")
+
+    @Test
+    fun popularAccountsLoadOnceAndDropDuplicates() = runTest {
+        val source = Source().apply { popular = { listOf(account("a"), account("a"), account("b")) } }
+        val explore = controller(this, source)
+
+        explore.loadPopularAccounts()
+        advanceUntilIdle()
+        explore.loadPopularAccounts()
+        advanceUntilIdle()
+
+        assertEquals(listOf("a", "b"), explore.state.value.popularAccounts.map { it.id.localId })
+        assertEquals(1, source.popularCalls)
+        explore.stop()
+    }
+
+    @Test
+    fun aFailedPopularRequestLeavesTheListEmptyAndTheNextCallRetries() = runTest {
+        val source = Source().apply { popular = { error("down") } }
+        val explore = controller(this, source)
+
+        explore.loadPopularAccounts()
+        advanceUntilIdle()
+        assertTrue(explore.state.value.popularAccounts.isEmpty())
+
+        source.popular = { listOf(account("a")) }
+        explore.loadPopularAccounts()
+        advanceUntilIdle()
+
+        assertEquals(2, source.popularCalls)
+        assertEquals(1, explore.state.value.popularAccounts.size)
+        explore.stop()
+    }
+
+    @Test
+    fun stoppingRejectsALatePopularResult() = runTest {
+        val gate = CompletableDeferred<List<Account>>()
+        val source = Source().apply { popular = { gate.await() } }
+        val explore = controller(this, source)
+        explore.loadPopularAccounts()
+        runCurrent()
+
+        explore.stop()
+        gate.complete(listOf(account("late")))
+        advanceUntilIdle()
+
+        assertTrue(explore.state.value.popularAccounts.isEmpty())
     }
 
     @Test

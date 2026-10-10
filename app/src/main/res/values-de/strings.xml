@@ -174,4 +174,5 @@
         <item quantity="one">%1$d Person</item>
         <item quantity="other">%1$d Personen</item>
     </plurals>
+    <string name="search_popular_accounts">Beliebte Konten</string>
 </resources>

@@ -51,6 +51,8 @@ internal class SearchOwner(
 
     fun loadTrending() = explore.loadTrending()
 
+    fun loadPopularAccounts() = explore.loadPopularAccounts()
+
     fun suggestHashtags(text: String) = explore.suggest(text)
 
     fun applyExternalPost(updated: OwnedPost) {

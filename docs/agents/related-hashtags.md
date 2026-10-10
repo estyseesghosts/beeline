@@ -16,7 +16,7 @@ Authority: [plan](../related-tags.md), [task state](tasks/related-hashtags.md), 
 | Expansion, ranking, related hashtags | `domain/hashtags/HashtagExpander` | Stateless |
 | Display language to allowed codes and scripts | `domain/hashtags/HashtagLanguagePolicy` | Stateless |
 | The "Combine related hashtags" setting | `AppPreferences.combineRelatedHashtags` | Persisted, global |
-| Trending hashtags and typed suggestions for Search | `ui/search/SearchExploreController`, owned by `SearchOwner` | One `SearchOwner`; `release()` stops it and clears the suggestion cache |
+| Trending hashtags, popular accounts and typed suggestions for Search | `ui/search/SearchExploreController`, owned by `SearchOwner` | One `SearchOwner`; `release()` stops it and clears the suggestion cache |
 
 ## Invariants
 
@@ -39,7 +39,7 @@ Authority: [plan](../related-tags.md), [task state](tasks/related-hashtags.md), 
 `MainActivity` injects `HashtagExpander`. `ConnectedApp` builds one `HashtagExpansionInput` from the setting and the display language. It passes the input through `ConnectedSessionHost` to `SearchHost` and `PhotoGridHost`. The hosts hand the owners a provider of the latest input. Each controller reads it only when a search or feed starts.
 
 `HashtagExpansionInput` exposes the catalog and the language policy, so `SearchOwner` builds its suggestion service from the same input. It builds no second catalog.
-`SearchContract.explore` carries `SearchExploreState` (trending, suggestions) to `SearchScreen`. `SearchExploreActions` has `loadTrending` and `suggestHashtags`. Each default does nothing.
+`SearchContract.explore` carries `SearchExploreState` (trending, popular accounts, suggestions) to `SearchScreen`. `SearchExploreActions` has `loadTrending`, `loadPopularAccounts` and `suggestHashtags`. Each default does nothing.
 
 ## Search screen decisions
 

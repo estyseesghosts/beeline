@@ -211,4 +211,5 @@
         <item quantity="one">%1$d persona</item>
         <item quantity="other">%1$d personas</item>
     </plurals>
+    <string name="search_popular_accounts">Cuentas populares</string>
 </resources>

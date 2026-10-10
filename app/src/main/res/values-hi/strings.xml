@@ -31,4 +31,5 @@
         <item quantity="one">%1$d व्यक्ति</item>
         <item quantity="other">%1$d लोग</item>
     </plurals>
+    <string name="search_popular_accounts">लोकप्रिय खाते</string>
 </resources>

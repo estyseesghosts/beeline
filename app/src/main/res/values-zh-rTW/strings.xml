@@ -165,4 +165,5 @@
     <plurals name="search_trending_people">
         <item quantity="other">%1$d 人</item>
     </plurals>
+    <string name="search_popular_accounts">熱門帳號</string>
 </resources>

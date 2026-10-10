@@ -72,6 +72,7 @@ fun SearchHost(
             override fun searchWithoutRelated(query: String) = owner.searchWithoutRelated(query)
             override fun loadMore() = owner.loadMore()
             override fun loadTrending() = owner.loadTrending()
+            override fun loadPopularAccounts() = owner.loadPopularAccounts()
             override fun suggestHashtags(text: String) = owner.suggestHashtags(text)
         }
     }

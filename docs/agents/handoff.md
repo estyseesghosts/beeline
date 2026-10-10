@@ -1,6 +1,6 @@
 # Handoff
 
-Related hashtags (`docs/related-tags.md`) is in progress. Read `docs/agents/tasks/related-hashtags.md` and `docs/agents/related-hashtags.md`. Slice 1 is `2b551c12` on top of `b8fc99c6`. Slice 2 is `c8771358`. Slice 3 (server discovery and the suggestion service) is `0829f3d4`. Slice 4 (the Hashtags tab) follows it. Next is slice 5, the Profiles tab. Slice 6 follows.
+Related hashtags (`docs/related-tags.md`) is in progress. Read `docs/agents/tasks/related-hashtags.md` and `docs/agents/related-hashtags.md`. Slice 1 is `2b551c12` on top of `b8fc99c6`. Slice 2 is `c8771358`. Slice 3 (server discovery and the suggestion service) is `0829f3d4`. Slice 4 (the Hashtags tab) is `3df65066`. Slice 5 (the Profiles tab) follows it. Next is slice 6, composer autocomplete.
 
 Release 0.2.13 is tagged `v0.2.13` and pushed with its changelog in `docs/wiki/changelog.md`. Its release commit follows `416dd72e`. The 0.2.12 tag failed its release build on a ktlint violation, fixed in `4a50bb14`. Phase 3B and Phases 5 through 8 are pushed. Phase 8 comprises 8A ("Extract one emoji tile with pending state and failed-write handling (8A)"), 8B ("Scope picker transient state to one owner and share recents across sizes (8B)"), and 8C ("Present the compact pop-out and full picker as one contract with a sheet fallback (8C)"). The last safe commit before Phase 8 is `cfbd6ff3`. Next is Phase 9 in `docs/beeline_0.4.0.md`: 9A notifications, 9B Direct Messages, 9C profile and settings utility surfaces, then 9D loading, offline, retry, and sensitive placeholders.
 
