@@ -15,6 +15,7 @@ import me.foxtails.palustris.domain.ProfileTimelineQuery
 import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
+import me.foxtails.palustris.domain.afterOwnedDeletion
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.requiresSignIn
 
@@ -90,6 +91,10 @@ internal class ProfileTimelinePager(
 
     fun updatePosts(transform: (OwnedPost) -> OwnedPost) {
         publish(pages.mapValues { (_, page) -> page.copy(posts = page.posts.map(transform)) })
+    }
+
+    fun removeDeleted(deleted: OwnedPost) {
+        publish(pages.mapValues { (_, page) -> page.copy(posts = page.posts.afterOwnedDeletion(deleted)) })
     }
 
     fun cancel() {

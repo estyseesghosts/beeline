@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.Account
@@ -24,10 +25,12 @@ import me.foxtails.palustris.ui.media.MediaViewerScreen
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.notifications.NotificationSettingsSheet
 import me.foxtails.palustris.ui.photogrid.PhotoQuickView
+import me.foxtails.palustris.ui.posts.LocalPostTranslations
 import me.foxtails.palustris.ui.posts.PostActionBubbleHost
 import me.foxtails.palustris.ui.posts.PostPopupPresentation
 import me.foxtails.palustris.ui.posts.PostShareSheet
 import me.foxtails.palustris.ui.posts.copyPostShareContent
+import me.foxtails.palustris.ui.posts.postShareRows
 import me.foxtails.palustris.ui.posts.sharePost
 import me.foxtails.palustris.ui.profile.EditProfileSheet
 import me.foxtails.palustris.ui.shell.AppDialogs
@@ -134,11 +137,20 @@ internal fun ShellBubbleHost(
         onReactionModeChanged = { expanded -> overlay.postActionBubbleTarget = expanded },
         hashtagBottomClearance = hashtagBottomClearance,
     )
+    val translations = LocalPostTranslations.current
+    val targetLanguage = LocalConfiguration.current.locales[0].language
     postActionOwner?.target?.let { target ->
         PostShareSheet(
             target = target,
             relationship = postActionOwner.relationship,
             report = postActionOwner.report,
+            rows = postShareRows(target.post, target.ownerAccountId, postActionOwner.capabilities, targetLanguage),
+            ownPost = postActionOwner.ownPost,
+            onDelete = postActionOwner::deleteOwnPost,
+            onTranslate = {
+                translations?.translate(target.ownedPost, targetLanguage)
+                postActionOwner.dismiss()
+            },
             onDismiss = postActionOwner::dismiss,
             onRelationshipAction = postActionOwner::mutate,
             onSubmitReport = postActionOwner::submitReport,

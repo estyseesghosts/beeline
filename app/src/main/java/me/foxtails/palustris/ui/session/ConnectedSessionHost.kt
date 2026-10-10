@@ -38,8 +38,10 @@ import me.foxtails.palustris.ui.notifications.NotificationsHost
 import me.foxtails.palustris.ui.photogrid.PhotoGridHost
 import me.foxtails.palustris.ui.posts.LocalPostPendingLookup
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
+import me.foxtails.palustris.ui.posts.LocalPostTranslations
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.posts.PostPopupOwner
+import me.foxtails.palustris.ui.posts.PostTranslationOwner
 import me.foxtails.palustris.ui.posts.pendingLookup
 import me.foxtails.palustris.ui.profile.ProfileHost
 import me.foxtails.palustris.ui.saved.SavedCollectionsHost
@@ -239,8 +241,17 @@ fun ConnectedSessionHost(
             source = sharedSource,
             scope = settingsScope,
             onRelationshipChanged = { latestProfileActions.refresh() },
+            onPostDeleted = projectionCoordinator::forwardDeletedPost,
             uiStrings = UiStrings.from(context),
         )
+    }
+    val translationOwner = remember(accountId, sessionRevision, sharedSource) {
+        PostTranslationOwner(accountId, sessionRevision, sharedSource, settingsScope, UiStrings.from(context))
+    }
+    LaunchedEffect(entryStore, sessionGeneration, translationOwner) {
+        entryStore.register(sessionGeneration, "post-translations-$accountId-$sessionGeneration") {
+            translationOwner.retire()
+        }
     }
     LaunchedEffect(entryStore, sessionGeneration, postActionOwner) {
         entryStore.register(sessionGeneration, "post-actions-$accountId-$sessionGeneration") {
@@ -283,6 +294,7 @@ fun ConnectedSessionHost(
     val pendingLookup = remember(postInteractionAuthority) { postInteractionAuthority.pendingLookup() }
     CompositionLocalProvider(
         LocalPostPopupOwner provides postActionOwner,
+        LocalPostTranslations provides translationOwner,
         LocalPostPendingLookup provides pendingLookup,
     ) {
         PalustrisApp(

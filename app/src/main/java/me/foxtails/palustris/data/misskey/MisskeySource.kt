@@ -66,6 +66,7 @@ import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.ThreadContext
 import me.foxtails.palustris.domain.ThreadContinuation
 import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.domain.Translation
 import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.hashtagBody
@@ -439,6 +440,18 @@ class MisskeySource(
         validatePostId(id, "delete")
         api.post(origin, "notes/delete", JSONObject().put("i", token).put("noteId", id.value), MISSKEY_MAX_RESPONSE_BYTES)
         Unit
+    }
+
+    override suspend fun translate(id: EntityId, targetLanguage: String): Translation = request("translate") {
+        validatePostId(id, "translate")
+        val body = JSONObject().put("i", token).put("noteId", id.value).put("targetLang", targetLanguage)
+        try {
+            MisskeyMapper.translation(JSONObject(api.post(origin, "notes/translate", body, MISSKEY_MAX_RESPONSE_BYTES).body))
+        } catch (e: ApiFailure) {
+            // The server answers UNAVAILABLE when no translator is configured or the call failed.
+            if (e.code.equals("UNAVAILABLE", ignoreCase = true)) throw SourceError.Unsupported("translate")
+            throw e
+        }
     }
 
     override fun streamEvents(): Flow<Event> = streamService.events()

@@ -2,6 +2,7 @@ package me.foxtails.palustris.ui
 
 import android.content.Context
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.SourceError
 
 /**
  * Localized text for view models and non-composable owners.
@@ -18,6 +19,7 @@ interface UiStrings {
     fun accountSessionUnavailable(): String
     fun moderationLoadFailed(): String
     fun relationshipUnavailable(): String
+    fun translationError(error: Exception): String
     fun composerDraftSaveFailed(): String
     fun composerDraftSaveFailedOpen(): String
     fun composerEntryPublishFailed(position: Int, total: Int, detail: String): String
@@ -45,6 +47,7 @@ interface UiStrings {
             override fun accountSessionUnavailable(): String = ""
             override fun moderationLoadFailed(): String = ""
             override fun relationshipUnavailable(): String = ""
+            override fun translationError(error: Exception): String = error.message.orEmpty()
             override fun composerDraftSaveFailed(): String = ""
             override fun composerDraftSaveFailedOpen(): String = ""
             override fun composerEntryPublishFailed(position: Int, total: Int, detail: String): String =
@@ -71,6 +74,11 @@ private class AndroidUiStrings(private val context: Context) : UiStrings {
     override fun accountSessionUnavailable(): String = context.getString(R.string.moderation_session_unavailable)
     override fun moderationLoadFailed(): String = context.getString(R.string.moderation_load_failed)
     override fun relationshipUnavailable(): String = context.getString(R.string.post_relationship_unavailable)
+    override fun translationError(error: Exception): String = when {
+        error is SourceError.Unsupported -> context.getString(R.string.post_translate_unavailable)
+        error is SourceError.ResourceLimit -> context.getString(R.string.post_translate_busy)
+        else -> sourceErrorMessage(context, error)
+    }
     override fun composerDraftSaveFailed(): String = context.getString(R.string.composer_draft_save_failed)
     override fun composerDraftSaveFailedOpen(): String = context.getString(R.string.composer_draft_save_failed_open)
     override fun composerEntryPublishFailed(position: Int, total: Int, detail: String): String =

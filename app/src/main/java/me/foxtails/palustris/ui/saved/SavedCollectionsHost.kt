@@ -57,6 +57,7 @@ fun SavedCollectionsHost(
     val savedSink = remember(savedPostsModel) {
         object : PostProjectionCoordinator.Sink {
             override fun applyExternalPost(updated: OwnedPost) { savedPostsModel.applyExternalPost(updated) }
+            override fun applyDeletedPost(deleted: OwnedPost) { savedPostsModel.applyDeletedPost(deleted) }
             override fun applyPublishedPost(request: CreatePostRequest) { savedPostsModel.applyPublishedPost(request) }
         }
     }

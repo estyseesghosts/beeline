@@ -68,6 +68,7 @@ import me.foxtails.palustris.domain.ThreadContext
 import me.foxtails.palustris.domain.ThreadContinuation
 import me.foxtails.palustris.domain.ThreadSessionKey
 import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.domain.Translation
 import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.hashtagBody
@@ -225,6 +226,27 @@ class MastodonSource(
             api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES, headers).body.toJson(),
             origin,
         )
+    }
+
+    override suspend fun delete(id: EntityId) = request("delete") {
+        validatePostId(id, "delete")
+        api.delete(origin, "api/v1/statuses/${id.value}", token, MASTODON_MAX_RESPONSE_BYTES)
+        Unit
+    }
+
+    override suspend fun translate(id: EntityId, targetLanguage: String): Translation = request("translate") {
+        validatePostId(id, "translate")
+        val response = try {
+            api.postForm(origin, "api/v1/statuses/${id.value}/translate", listOf("lang" to targetLanguage), token, MASTODON_MAX_RESPONSE_BYTES)
+        } catch (e: HttpStatusFailure) {
+            // 404 means translation is not configured. 503 means the quota or the provider is busy.
+            when (e.status) {
+                404 -> throw SourceError.Unsupported("translate")
+                503 -> throw SourceError.ResourceLimit("translate.busy")
+                else -> throw e
+            }
+        }
+        MastodonMapper.translation(response.body.toJson())
     }
 
     override suspend fun conversations(cursor: String?): Page<DirectConversation> = request("direct.conversations") { directMessageService.conversations(cursor) }

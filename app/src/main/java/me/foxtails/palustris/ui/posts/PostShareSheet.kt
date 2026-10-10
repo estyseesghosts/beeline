@@ -62,18 +62,28 @@ internal fun PostShareSheet(
     target: PostActionTarget,
     relationship: PostRelationshipState,
     report: PostReportState = PostReportState(),
+    rows: PostShareRows = PostShareRows(own = false, edit = false, delete = false, translate = false),
+    ownPost: OwnPostActionState = OwnPostActionState(),
     onDismiss: () -> Unit,
     onRelationshipAction: (RelationshipMutation) -> Unit,
     onSubmitReport: (String) -> Unit,
     onOpenDirectMessage: () -> Unit,
     onCopyLink: () -> Unit,
     onShare: () -> Unit,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    onTranslate: () -> Unit = {},
 ) {
     ShareSurface(target.anchorBounds, onDismiss) {
         ShareActionCard(
             target = target,
             relationship = relationship,
             report = report,
+            rows = rows,
+            ownPost = ownPost,
+            onEdit = onEdit,
+            onDelete = onDelete,
+            onTranslate = onTranslate,
             onDismiss = onDismiss,
             onRelationshipAction = onRelationshipAction,
             onSubmitReport = onSubmitReport,
@@ -141,6 +151,11 @@ private fun ShareActionCard(
     target: PostActionTarget,
     relationship: PostRelationshipState,
     report: PostReportState,
+    rows: PostShareRows,
+    ownPost: OwnPostActionState,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onTranslate: () -> Unit,
     onDismiss: () -> Unit,
     onRelationshipAction: (RelationshipMutation) -> Unit,
     onSubmitReport: (String) -> Unit,
@@ -183,7 +198,16 @@ private fun ShareActionCard(
                 .widthIn(max = 344.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            if (reportOpen) {
+            if (rows.own) {
+                OwnPostActions(
+                    rows = rows,
+                    ownPost = ownPost,
+                    resetKey = "${target.post.id.value}:${target.ownerAccountId}:${target.sessionRevision}",
+                    onEdit = onEdit,
+                    onDelete = onDelete,
+                    onTranslate = onTranslate,
+                )
+            } else if (reportOpen) {
                 ReportForm(
                     handle = handle,
                     comment = comment,
@@ -303,6 +327,15 @@ private fun ShareActionCard(
                             onClick = onOpenDirectMessage,
                         )
                     }
+                    if (rows.translate) {
+                        RelationshipAction(
+                            tag = "post_share_translate",
+                            label = stringResource(R.string.post_share_translate),
+                            handle = handle,
+                            enabled = true,
+                            onClick = onTranslate,
+                        )
+                    }
                 }
             }
             if (!reportOpen) {
@@ -320,6 +353,7 @@ private fun ShareActionCard(
                         if (privateNotice == null) action else ({ pendingExternal = action })
                     BottomShareActions(
                         hasLink = target.post.url?.isNotBlank() == true,
+                        showMessage = !rows.own,
                         enabled = true,
                         onOpenDirectMessage = onOpenDirectMessage,
                         onCopyLink = external(onCopyLink),
@@ -333,6 +367,68 @@ private fun ShareActionCard(
         }
     }
 }
+}
+
+/**
+ * Actions on the account's own post, in place of the relationship rows. Delete always asks twice.
+ * A row appears only when [rows] says its capability is supported.
+ */
+@Composable
+private fun OwnPostActions(
+    rows: PostShareRows,
+    ownPost: OwnPostActionState,
+    resetKey: String,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onTranslate: () -> Unit,
+) {
+    var deleteConfirmation by remember(resetKey) { mutableStateOf(false) }
+    if (rows.edit || rows.delete) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (rows.edit) {
+                RelationshipAction(
+                    tag = "post_share_edit",
+                    label = stringResource(R.string.post_share_edit),
+                    handle = "",
+                    modifier = Modifier.weight(1f),
+                    enabled = !ownPost.deleting,
+                    onClick = onEdit,
+                )
+            }
+            if (rows.delete) {
+                RelationshipAction(
+                    tag = "post_share_delete",
+                    label = stringResource(
+                        if (deleteConfirmation) R.string.post_share_confirm_delete else R.string.post_share_delete,
+                    ),
+                    handle = "",
+                    modifier = Modifier.weight(1f),
+                    enabled = !ownPost.deleting,
+                    loading = ownPost.deleting,
+                    onClick = {
+                        if (deleteConfirmation) {
+                            deleteConfirmation = false
+                            onDelete()
+                        } else {
+                            deleteConfirmation = true
+                        }
+                    },
+                )
+            }
+        }
+    }
+    if (rows.translate) {
+        RelationshipAction(
+            tag = "post_share_translate",
+            label = stringResource(R.string.post_share_translate),
+            handle = "",
+            enabled = !ownPost.deleting,
+            onClick = onTranslate,
+        )
+    }
+    ownPost.error?.let {
+        Text(it, modifier = Modifier.testTag("post_share_own_error"), color = MaterialTheme.colorScheme.error)
+    }
 }
 
 @Composable
@@ -397,6 +493,7 @@ private fun PrivateShareConfirmation(message: String, onConfirm: () -> Unit, onC
 @Composable
 private fun BottomShareActions(
     hasLink: Boolean,
+    showMessage: Boolean,
     enabled: Boolean,
     onOpenDirectMessage: () -> Unit,
     onCopyLink: () -> Unit,
@@ -416,7 +513,9 @@ private fun BottomShareActions(
                 style = MaterialTheme.typography.labelLarge,
             )
             Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                ShareCell(AppIcons.DirectMessage, stringResource(R.string.post_share_pm), enabled, onOpenDirectMessage, Modifier.weight(1f).testTag("post_share_pm"))
+                if (showMessage) {
+                    ShareCell(AppIcons.DirectMessage, stringResource(R.string.post_share_pm), enabled, onOpenDirectMessage, Modifier.weight(1f).testTag("post_share_pm"))
+                }
                 ShareCell(AppIcons.LinkBeeline, stringResource(R.string.post_share_copy_link), enabled && hasLink, onCopyLink, Modifier.weight(1f).testTag("post_share_copy"))
                 ShareCell(AppIcons.ShareBeeline, stringResource(R.string.post_share_system), enabled, onShare, Modifier.weight(1f).testTag("post_share_system"))
             }

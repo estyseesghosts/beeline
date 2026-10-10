@@ -14,6 +14,7 @@ import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfileCapabilities
 import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.NotificationCapabilities
+import me.foxtails.palustris.domain.OwnPostCapabilities
 import me.foxtails.palustris.domain.NotificationReadSemantics
 import me.foxtails.palustris.domain.NotificationUnreadPrecision
 import me.foxtails.palustris.domain.PostAction
@@ -32,6 +33,7 @@ import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Session
 import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.domain.TranslationCapability
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -249,6 +251,8 @@ private fun ServerCapabilities.toJson(): JSONObject = JSONObject()
     .put("likedPosts", likedPosts.name)
     .put("threads", threads.name)
     .put("moderation", moderation.toJson())
+    .put("ownPosts", JSONObject().put("delete", ownPosts.delete.name).put("edit", ownPosts.edit.name))
+    .put("translation", JSONObject().put("status", translation.status.name).put("publicOnly", translation.publicOnly))
     .put("capabilitiesLastUpdated", capabilitiesLastUpdated)
     .put("capabilitySchemaVersion", capabilitySchemaVersion)
 
@@ -285,6 +289,18 @@ private fun JSONObject.toCapabilities(): ServerCapabilities = ServerCapabilities
      likedPosts = enumOrDefault("likedPosts", CapabilityStatus.Unknown),
      threads = enumOrDefault("threads", CapabilityStatus.Unknown),
      moderation = optJSONObject("moderation")?.toModerationCapabilities() ?: ModerationCapabilities(),
+     ownPosts = optJSONObject("ownPosts")?.let {
+         OwnPostCapabilities(
+             delete = it.enumOrDefault("delete", CapabilityStatus.Unknown),
+             edit = it.enumOrDefault("edit", CapabilityStatus.Unknown),
+         )
+     } ?: OwnPostCapabilities(),
+     translation = optJSONObject("translation")?.let {
+         TranslationCapability(
+             status = it.enumOrDefault("status", CapabilityStatus.Unknown),
+             publicOnly = it.optBoolean("publicOnly"),
+         )
+     } ?: TranslationCapability(),
      capabilitiesLastUpdated = optLong("capabilitiesLastUpdated"),
     capabilitySchemaVersion = optInt("capabilitySchemaVersion", 0),
 )

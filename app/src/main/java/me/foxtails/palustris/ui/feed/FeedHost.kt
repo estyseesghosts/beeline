@@ -120,6 +120,7 @@ fun FeedHost(
         object : PostProjectionCoordinator.Sink {
             override fun applyExternalPost(updated: OwnedPost) { feedModel.applyExternalPost(updated) }
             override fun applyPublishedPost(request: CreatePostRequest) { feedModel.applyPublishedPost(request) }
+            override fun applyDeletedPost(deleted: OwnedPost) { feedModel.applyDeletedPost(deleted) }
         }
     }
     DisposableEffect(coordinator, feedSink, feedModel) {

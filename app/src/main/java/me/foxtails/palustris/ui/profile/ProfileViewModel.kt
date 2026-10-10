@@ -28,6 +28,7 @@ import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.adjustedBy
+import me.foxtails.palustris.domain.afterOwnedDeletion
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.mergeExternalActionFields
 import me.foxtails.palustris.domain.mergeInto
@@ -253,6 +254,17 @@ class ProfileViewModel @AssistedInject constructor(
         if (stopped || updated.fetchedBy != accountId || updated.sessionRevision != sessionRevision) return
         val target = updated.effectiveTargetId()
         updateOwnedPost(target) { existing -> existing.mergeExternalActionFields(updated.post) }
+    }
+
+    fun applyDeletedPost(deleted: OwnedPost) {
+        if (stopped || deleted.fetchedBy != accountId || deleted.sessionRevision != sessionRevision) return
+        _state.value = _state.value.copy(
+            pinnedPosts = _state.value.pinnedPosts.afterOwnedDeletion(deleted),
+            pages = _state.value.pages.mapValues { (_, page) ->
+                page.copy(posts = page.posts.afterOwnedDeletion(deleted))
+            },
+        )
+        timelinePager.removeDeleted(deleted)
     }
 
     fun applyPublishedPost(request: me.foxtails.palustris.domain.CreatePostRequest) {

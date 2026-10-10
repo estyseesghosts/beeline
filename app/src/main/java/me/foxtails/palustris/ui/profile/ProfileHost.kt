@@ -48,6 +48,7 @@ fun ProfileHost(
     val sink = remember(model) {
         object : PostProjectionCoordinator.Sink {
             override fun applyExternalPost(updated: OwnedPost) { model.applyExternalPost(updated) }
+            override fun applyDeletedPost(deleted: OwnedPost) { model.applyDeletedPost(deleted) }
             override fun applyPublishedPost(request: CreatePostRequest) { model.applyPublishedPost(request) }
         }
     }

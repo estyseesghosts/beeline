@@ -29,6 +29,8 @@ data class PostThreadUiState(
     val refreshHint: ThreadRefreshHint? = null,
     val error: SourceError? = null,
     val pendingActions: Set<String> = emptySet(),
+    /** True once the focal post was deleted, so its screen can close. */
+    val focalDeleted: Boolean = false,
 ) {
     val loading: Boolean get() = phase == PostThreadPhase.InitialLoading
     val refreshing: Boolean get() = phase == PostThreadPhase.Refreshing

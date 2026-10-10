@@ -71,6 +71,12 @@ class PostProjectionCoordinator(
         }
     }
 
+    /** Forwards one confirmed deletion to every sink, including the one that asked for it. */
+    fun forwardDeletedPost(deleted: OwnedPost) {
+        if (retired || !accepts(deleted)) return
+        dispatch(null) { it.applyDeletedPost(deleted) }
+    }
+
     private companion object {
         const val MAX_DELIVERED_PUBLICATIONS = 32
     }
@@ -80,7 +86,7 @@ class PostProjectionCoordinator(
         return updated.fetchedBy == boundAccountId && updated.sessionRevision == boundRevision
     }
 
-    private fun dispatch(origin: Sink, action: (Sink) -> Unit) {
+    private fun dispatch(origin: Sink?, action: (Sink) -> Unit) {
         if (forwarding) return
         forwarding = true
         try {
@@ -93,6 +99,7 @@ class PostProjectionCoordinator(
     /** One receiving owner. Stable identity lets the coordinator exclude the origin. */
     interface Sink {
         fun applyExternalPost(updated: OwnedPost)
+        fun applyDeletedPost(deleted: OwnedPost) = Unit
         fun applyPublishedPost(request: CreatePostRequest) = Unit
         fun acceptPublishedReply(created: OwnedPost) = Unit
         fun acceptPublishedQuote(target: EntityId?) = Unit

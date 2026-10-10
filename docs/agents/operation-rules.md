@@ -67,6 +67,8 @@ For documentation-only work, use document and configuration checks instead of An
 ## ADB and diagnostic scripts
 
 The orchestrator owns device operations. Do not dispatch a device specialist agent.
+Live testing uses the emulator `emulator-5554`, never the physical Samsung device. Its browser is already signed in to two test accounts: mstdn.ca (Mastodon) and dvd.chat (Misskey family). They exist only for live testing and are not personal accounts. To sign in to Beeline, type the instance name and authorize in the browser; no password is needed.
+The emulator has two displays. Pass `-d <display id>` (from `dumpsys SurfaceFlinger --display-id`) to `screencap`, or the output starts with a text warning instead of a PNG. The app renders on the second display; the first captures black. Its screenshot coordinates match `uiautomator dump` bounds one to one, so `input tap` can use them directly.
 Confirm the intended device or emulator before commands. Select the device explicitly when more than one can exist.
 ADB is not on PATH in this environment. Use `C:\Users\julie\Documents\platform-tools\adb.exe` for raw commands.
 Prefer these companion entry points when they exist under tools/scripts/:

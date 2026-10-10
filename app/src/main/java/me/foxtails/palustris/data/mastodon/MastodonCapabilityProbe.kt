@@ -9,6 +9,7 @@ import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfileCapabilities
 import me.foxtails.palustris.domain.EmojiCapabilities
+import me.foxtails.palustris.domain.OwnPostCapabilities
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostLengthRule
 import me.foxtails.palustris.domain.PostingCapabilities
@@ -21,6 +22,7 @@ import me.foxtails.palustris.domain.SavedPostsCapability
 import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.domain.TranslationCapability
 import me.foxtails.palustris.domain.withTimelineStatuses
 import org.json.JSONObject
 import java.net.URI
@@ -197,6 +199,8 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 profile = ProfileCapabilities(editable = editable.copy(imageDeletion = imageDeletion)),
                 emoji = emoji,
                 quotes = quotes,
+                ownPosts = OwnPostCapabilities(delete = CapabilityStatus.Supported),
+                translation = translationCapability(instance),
                 primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Native),
                 savedPosts = SavedPostsCapability(CapabilityStatus.Supported, SavedPostsKind.Bookmarks),
                 likedPosts = CapabilityStatus.Supported,
@@ -220,6 +224,27 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 ),
             )
         }
+
+        /**
+         * Mastodon and Pleroma report `configuration.translation.enabled`. Akkoma lists
+         * `akkoma:machine_translation` in its feature list. A document with neither is a server that
+         * offers no translation, so the row stays hidden.
+         */
+        fun translationCapability(instance: JSONObject): TranslationCapability {
+            val enabled = instance.optJSONObject("configuration")?.optJSONObject("translation")
+                ?.optBoolean("enabled", false) == true
+            val akkoma = instance.optJSONObject("pleroma")?.optJSONObject("metadata")?.optJSONArray("features")
+                ?.let { features -> (0 until features.length()).any { features.optString(it) == AKKOMA_TRANSLATION_FEATURE } }
+                ?: false
+            // The Mastodon route answers public and unlisted posts only.
+            return if (enabled || akkoma) {
+                TranslationCapability(CapabilityStatus.Supported, publicOnly = true)
+            } else {
+                TranslationCapability(CapabilityStatus.Unsupported)
+            }
+        }
+
+        private const val AKKOMA_TRANSLATION_FEATURE = "akkoma:machine_translation"
 
         private class PostingLimits(val maxPostLength: Int, val capabilities: PostingCapabilities)
 

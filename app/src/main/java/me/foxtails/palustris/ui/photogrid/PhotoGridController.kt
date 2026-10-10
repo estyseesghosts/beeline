@@ -15,6 +15,7 @@ import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.domain.afterOwnedDeletion
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.hashtagIdentity
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
@@ -189,6 +190,10 @@ internal class PhotoGridController(
                 } else owned
             },
         )
+    }
+
+    fun removeDeletedPost(deleted: OwnedPost) {
+        _state.value = _state.value.copy(posts = _state.value.posts.afterOwnedDeletion(deleted))
     }
 
     fun updatePosts(transform: (Post) -> Post) {

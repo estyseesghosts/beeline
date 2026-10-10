@@ -20,6 +20,7 @@ import me.foxtails.palustris.domain.NotificationGroupId
 import me.foxtails.palustris.domain.NotificationTarget
 import me.foxtails.palustris.domain.PollOption
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.Translation
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostContentVisibility
 import me.foxtails.palustris.domain.PostInteractionCounts
@@ -193,6 +194,23 @@ object MastodonMapper {
         blocking = json.optBoolean("blocking"),
     )
 
+    /** Maps a `POST /statuses/:id/translate` body. The content is HTML and renders as the post does. */
+    fun translation(json: JSONObject, emoji: Map<String, CustomEmoji> = emptyMap()): Translation = Translation(
+        text = json.optString("content").htmlToMarkdown(emoji),
+        contentWarning = json.nullableString("spoiler_text"),
+        sourceLanguage = json.nullableString("detected_source_language"),
+        provider = json.nullableString("provider"),
+        pollOptions = json.optJSONObject("poll")?.optJSONArray("options")?.let { options ->
+            (0 until options.length()).map { options.getJSONObject(it).optString("title") }
+        }.orEmpty(),
+        attachmentDescriptions = json.optJSONArray("media_attachments")?.let { media ->
+            (0 until media.length()).mapNotNull { index ->
+                val item = media.getJSONObject(index)
+                item.nullableString("description")?.let { item.optString("id") to it }
+            }.toMap()
+        }.orEmpty(),
+    )
+
     fun post(json: JSONObject, origin: String, depth: Int = 0): Post {
         val id = EntityId(origin, json.getString("id"))
         val reblog = json.optJSONObject("reblog")
@@ -244,6 +262,7 @@ object MastodonMapper {
                 (0 until media.length()).map { attachment(media.getJSONObject(it), statusSensitive) }
             }.orEmpty(),
             contentWarning = json.nullableString("spoiler_text").takeUnless { filtered },
+            language = json.nullableString("language"),
             replyTo = json.nullableString("in_reply_to_id")?.let { EntityId(origin, it) },
             replyToAuthorId = json.nullableString("in_reply_to_account_id")
                 ?.let { AccountId(Connection(origin, Protocol.MASTODON), it) },

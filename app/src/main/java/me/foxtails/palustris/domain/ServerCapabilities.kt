@@ -19,6 +19,10 @@ data class ServerCapabilities(
     val likedPosts: CapabilityStatus = CapabilityStatus.Unknown,
     val threads: CapabilityStatus = CapabilityStatus.Unknown,
     val moderation: ModerationCapabilities = ModerationCapabilities(),
+    /** Actions on the signed-in account's own posts. A row shows only when its status is Supported. */
+    val ownPosts: OwnPostCapabilities = OwnPostCapabilities(),
+    /** Server-side translation of a post. Never an on-device fallback. */
+    val translation: TranslationCapability = TranslationCapability(),
     /** Bumps when capability shapes change; older snapshots force a fresh probe. */
     val capabilitySchemaVersion: Int = CURRENT_CAPABILITY_SCHEMA_VERSION,
 ) {
@@ -27,11 +31,27 @@ data class ServerCapabilities(
          * Bump when capability semantics change. Revision 5 invalidates snapshots that
          * recorded reaction support from the removed sentinel mutation probe. Revision 6
          * invalidates snapshots that predate posting limits and upload capabilities. Revision 7
-         * invalidates snapshots that predate the quote-with-media rule.
+         * invalidates snapshots that predate the quote-with-media rule. Revision 9
+         * invalidates snapshots that predate own-post actions and translation.
          */
-        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 8
+        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 9
     }
 }
+
+/** Delete and edit support for the account's own posts. */
+data class OwnPostCapabilities(
+    val delete: CapabilityStatus = CapabilityStatus.Unknown,
+    val edit: CapabilityStatus = CapabilityStatus.Unknown,
+)
+
+/**
+ * Whether the server translates posts. [publicOnly] is true when it refuses private and direct
+ * posts, so the row stays hidden on those.
+ */
+data class TranslationCapability(
+    val status: CapabilityStatus = CapabilityStatus.Unknown,
+    val publicOnly: Boolean = false,
+)
 
 /** How a server counts a post against its length limit. See [PostLengthCounter]. */
 enum class PostLengthRule {

@@ -10,6 +10,7 @@ import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.PollOption
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.Translation
 import me.foxtails.palustris.domain.PostInteractionCounts
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostContentVisibility
@@ -26,6 +27,12 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 object MisskeyMapper {
+    /** Maps a `notes/translate` body. Misskey names no provider. */
+    fun translation(json: JSONObject): Translation = Translation(
+        text = json.optString("text"),
+        sourceLanguage = json.nullableString("sourceLang"),
+    )
+
     /** An item from `hashtags/trend` (`usersCount`) or `hashtags/list` (`mentionedUsersCount`). */
     fun trendingHashtag(json: JSONObject): TrendingHashtag? {
         val name = json.optString("tag").takeIf(::isExactHashtag) ?: return null

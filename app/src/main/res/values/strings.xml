@@ -406,6 +406,21 @@
         <item quantity="other">%1$d reactions</item>
     </plurals>
     <string name="post_relationship_unavailable">Relationship actions are unavailable.</string>
+    <string name="post_share_edit">Edit</string>
+    <string name="post_share_delete">Delete</string>
+    <string name="post_share_confirm_delete">Tap again to delete</string>
+    <string name="post_share_deleting">Deleting</string>
+    <string name="post_share_translate">Translate</string>
+    <string name="post_translate_loading">Translating…</string>
+    <string name="post_translate_from_by">Translated from %1$s by %2$s</string>
+    <string name="post_translate_from">Translated from %1$s</string>
+    <string name="post_translate_by">Translated by %1$s</string>
+    <string name="post_translate_done">Translated</string>
+    <string name="post_translate_show_original">Show original</string>
+    <string name="post_translate_show_translation">Show translation</string>
+    <string name="post_translate_dismiss">Dismiss</string>
+    <string name="post_translate_unavailable">This server cannot translate this post.</string>
+    <string name="post_translate_busy">Translation is busy. Try again later.</string>
     <string name="post_reply">Reply</string>
     <plurals name="post_reply_count">
         <item quantity="one">%1$d reply</item>

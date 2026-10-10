@@ -93,6 +93,21 @@ internal fun Int?.adjustedBy(delta: Int): Int? = this?.let {
 }
 
 data class PollOption(val text: String, val votes: Int)
+
+/**
+ * A server-side translation of one post. [text] is in the same form as [Post.text], so it
+ * renders through the same path as the original. [provider] is null when the server names none.
+ */
+data class Translation(
+    val text: String,
+    val contentWarning: String? = null,
+    /** ISO 639-1 code the server detected, or null when it reports none. */
+    val sourceLanguage: String? = null,
+    val provider: String? = null,
+    val pollOptions: List<String> = emptyList(),
+    /** Translated alt text by attachment ID. Mastodon only. */
+    val attachmentDescriptions: Map<String, String> = emptyMap(),
+)
 data class Post(
     val id: EntityId,
     val author: Account,
@@ -123,6 +138,8 @@ data class Post(
     val actionTargetId: EntityId? = null,
     /** Server moderation/filtering state. Hidden and filtered bodies must not be rendered. */
     val contentVisibility: PostContentVisibility = PostContentVisibility.Visible,
+    /** ISO 639-1 language the server tagged the post with. Null when untagged. */
+    val language: String? = null,
 )
 
 data class PostActionResult(

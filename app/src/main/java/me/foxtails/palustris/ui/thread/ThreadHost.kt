@@ -47,6 +47,7 @@ fun ThreadHost(
     val sink = remember(model) {
         object : PostProjectionCoordinator.Sink {
             override fun applyExternalPost(updated: OwnedPost) { model.applyExternalPost(updated) }
+            override fun applyDeletedPost(deleted: OwnedPost) { model.applyDeletedPost(deleted) }
             override fun acceptPublishedReply(created: OwnedPost) { model.acceptPublishedReply(created) }
             override fun acceptPublishedQuote(target: EntityId?) { model.acceptPublishedQuote(target) }
         }

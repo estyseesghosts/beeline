@@ -65,6 +65,10 @@ internal class PhotoGridOwner(
         delegate.updateExternalPost(updated.effectiveTargetId(), updated.post)
     }
 
+    fun applyDeletedPost(deleted: OwnedPost) {
+        if (accepts(deleted)) delegate.removeDeletedPost(deleted)
+    }
+
     fun applyPublishedPost(request: CreatePostRequest) {
         if (released) return
         request.replyTo?.let { target ->

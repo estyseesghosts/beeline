@@ -13,7 +13,10 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.ReportRequest
+import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.effectiveTargetId
+import me.foxtails.palustris.domain.isOwnedBy
 import me.foxtails.palustris.ui.UiStrings
 
 data class PostActionTarget(
@@ -36,6 +39,12 @@ data class PostRelationshipState(
     val error: String? = null,
 )
 
+/** Progress of an action on the account's own post. */
+data class OwnPostActionState(
+    val deleting: Boolean = false,
+    val error: String? = null,
+)
+
 data class PostReportState(
     val submitting: Boolean = false,
     val error: String? = null,
@@ -53,10 +62,17 @@ interface PostPopupPresentation {
     val target: PostActionTarget?
     val relationship: PostRelationshipState
     val report: PostReportState
+    val ownPost: OwnPostActionState
+
+    /** Capabilities of the source behind the popup, read when a row is built. */
+    val capabilities: ServerCapabilities
     fun open(ownedPost: OwnedPost, anchorBounds: Rect)
     fun dismiss()
     fun mutate(mutation: RelationshipMutation)
     fun submitReport(comment: String)
+
+    /** Deletes the open post. Only the author's own post is accepted. */
+    fun deleteOwnPost()
 }
 
 internal val LocalPostPopupOwner = staticCompositionLocalOf<PostPopupPresentation?> { null }
@@ -74,6 +90,7 @@ class PostPopupOwner(
     private val source: SocialSource?,
     private val scope: CoroutineScope,
     private val onRelationshipChanged: () -> Unit = {},
+    private val onPostDeleted: (OwnedPost) -> Unit = {},
     private val uiStrings: UiStrings,
 ) : PostPopupPresentation {
     override var target by mutableStateOf<PostActionTarget?>(null)
@@ -82,6 +99,10 @@ class PostPopupOwner(
         private set
     override var report by mutableStateOf(PostReportState())
         private set
+
+    override var ownPost by mutableStateOf(OwnPostActionState())
+        private set
+    override val capabilities: ServerCapabilities get() = source?.capabilities ?: ServerCapabilities()
 
     private var requestGeneration = 0L
     private var requestJob: Job? = null
@@ -106,6 +127,7 @@ class PostPopupOwner(
         target = PostActionTarget(ownedPost, anchorBounds, accountId, sessionRevision)
         relationship = PostRelationshipState(target = ownedPost.post.author.id, loading = true)
         report = PostReportState()
+        ownPost = OwnPostActionState()
         val relationshipSource = source ?: run {
             relationship = relationship.copy(loading = false, error = uiStrings.relationshipUnavailable())
             return
@@ -147,6 +169,29 @@ class PostPopupOwner(
         target = null
         relationship = PostRelationshipState()
         report = PostReportState()
+        ownPost = OwnPostActionState()
+    }
+
+    override fun deleteOwnPost() {
+        if (retired) return
+        val currentTarget = target ?: return
+        val deleteSource = source ?: return
+        if (ownPost.deleting || !currentTarget.post.isOwnedBy(accountId)) return
+        val generation = requestGeneration
+        val deleted = currentTarget.ownedPost
+        ownPost = OwnPostActionState(deleting = true)
+        scope.launch {
+            try {
+                deleteSource.delete(deleted.effectiveTargetId())
+                if (retired) return@launch
+                if (generation == requestGeneration) dismiss()
+                onPostDeleted(deleted)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                if (generation == requestGeneration) ownPost = OwnPostActionState(error = uiStrings.sourceError(error))
+            }
+        }
     }
 
     override fun mutate(mutation: RelationshipMutation) {

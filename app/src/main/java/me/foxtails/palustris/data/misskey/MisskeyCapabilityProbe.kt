@@ -7,6 +7,7 @@ import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfileCapabilities
 import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.NotificationCapabilities
+import me.foxtails.palustris.domain.OwnPostCapabilities
 import me.foxtails.palustris.domain.ModerationCapabilities
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostLengthRule
@@ -19,6 +20,7 @@ import me.foxtails.palustris.domain.SavedPostsCapability
 import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.domain.TranslationCapability
 import me.foxtails.palustris.domain.withTimelineStatuses
 import org.json.JSONObject
 
@@ -63,6 +65,10 @@ class MisskeyCapabilityProbe(
             // A token session can post. Without this, a stored session that never recorded the flag stays unable to publish.
             canPublish = !token.isNullOrBlank(),
             quotes = CapabilityStatus.Supported,
+            ownPosts = OwnPostCapabilities(
+                delete = if (token.isNullOrBlank()) CapabilityStatus.Denied else CapabilityStatus.Supported,
+            ),
+            translation = TranslationCapability(translationStatus(meta, policies)),
             primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Reaction),
             savedPosts = SavedPostsCapability(CapabilityStatus.Supported, SavedPostsKind.Favourites),
             likedPosts = CapabilityStatus.Supported,
@@ -94,6 +100,14 @@ class MisskeyCapabilityProbe(
             capabilitiesLastUpdated = System.currentTimeMillis(),
             capabilitySchemaVersion = ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION,
         ).withTimelineStatuses(statuses)
+    }
+
+    /** The server needs a configured translator, and the account's role must allow it (default true). */
+    private fun translationStatus(meta: JSONObject, policies: JSONObject?): CapabilityStatus = when {
+        !meta.optBoolean("translatorAvailable", false) -> CapabilityStatus.Unsupported
+        policies == null -> CapabilityStatus.Denied
+        policies.optBoolean("canUseTranslator", true) -> CapabilityStatus.Supported
+        else -> CapabilityStatus.Denied
     }
 
     /**

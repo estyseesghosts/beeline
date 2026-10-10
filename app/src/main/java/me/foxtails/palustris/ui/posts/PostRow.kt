@@ -34,6 +34,7 @@ import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.media.PostMediaCarousel
@@ -76,10 +77,20 @@ internal fun PostRow(
     val context = LocalContext.current
     val repostConfirmationOwner = LocalPostRepostConfirmationState.current
     var expanded by rememberSaveable(post.id.connection, post.id.value) { mutableStateOf(false) }
-    val displayPresentation = remember(post.text, post.emoji) { parseHashtagBlocks(post.text, post.emoji) }
-    val hashtags = remember(post.text, post.emoji) { postHashtags(post.text, post.emoji) }
-    val warningDecision = remember(post.contentWarning, hashtags, contentWarningRules) {
-        ContentWarningPolicy.decide(post.contentWarning, hashtags, contentWarningRules, bodyText = post.text)
+    // A shown translation replaces the body and warning in place, through the same rendering path.
+    val translations = LocalPostTranslations.current
+    val translationId = ownedPost.effectiveTargetId()
+    val translationEntry = translations?.entry(translationId)
+    val shownPost = (translationEntry as? TranslationEntry.Ready)?.takeUnless { it.showOriginal }?.let { ready ->
+        post.copy(
+            text = ready.translation.text,
+            contentWarning = ready.translation.contentWarning?.takeIf { post.contentWarning != null } ?: post.contentWarning,
+        )
+    } ?: post
+    val displayPresentation = remember(shownPost.text, post.emoji) { parseHashtagBlocks(shownPost.text, post.emoji) }
+    val hashtags = remember(shownPost.text, post.emoji) { postHashtags(shownPost.text, post.emoji) }
+    val warningDecision = remember(shownPost.contentWarning, hashtags, contentWarningRules, shownPost.text) {
+        ContentWarningPolicy.decide(shownPost.contentWarning, hashtags, contentWarningRules, bodyText = shownPost.text)
     }
     val postActionOwner = LocalPostPopupOwner.current
     LaunchedEffect(ownedPost.fetchedBy, post.id, ownedPost.sessionRevision, post.reposted) {
@@ -87,7 +98,7 @@ internal fun PostRow(
     }
     val contentVisible = isPostContentVisible(warningDecision, post.contentWarning != null, expanded)
     if (warningDecision == ContentWarningDecision.Hidden && LocalHiddenContentPresentation.current == me.foxtails.palustris.domain.HiddenContentPresentation.Remove) return
-    val bodyTruncated = isPostBodyTruncated(post, displayPresentation, truncateBody)
+    val bodyTruncated = isPostBodyTruncated(shownPost, displayPresentation, truncateBody)
     Column(modifier.fillMaxWidth().testTag("post_row_${post.id.value}")) {
         post.resharedBy?.let {
             Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 2.dp)) {
@@ -128,10 +139,10 @@ internal fun PostRow(
             return@Column
         }
         if (post.replyTo != null) Text(stringResource(R.string.post_reply), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        PostContentWarningToggle(ownedPost, expanded) { expanded = !expanded }
+        PostContentWarningToggle(ownedPost.copy(post = shownPost), expanded) { expanded = !expanded }
         ExpandableContent(visible = contentVisible, modifier = Modifier.fillMaxWidth()) {
             PostBodyContent(
-                post = post,
+                post = shownPost,
                 presentation = displayPresentation,
                 truncateBody = truncateBody,
                 onOpenPost = onOpenPost?.let { callback -> { callback(ownedPost) } },
@@ -139,6 +150,7 @@ internal fun PostRow(
                 onOpenUsername = onOpenUsername,
                 onSearchHashtag = onSearchHashtag,
             )
+            PostTranslationFooter(translationEntry, translationId, translations)
             PostMediaCarousel(ownedPost = ownedPost, onOpenMedia = onOpenMedia)
             PostPollOptions(ownedPost)
             PostQuoteSection(ownedPost, contentWarningRules, R.string.post_view_quoted)

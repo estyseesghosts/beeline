@@ -21,6 +21,7 @@ import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.adjustedBy
+import me.foxtails.palustris.domain.afterOwnedDeletion
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.mergeExternalActionFields
 import me.foxtails.palustris.ui.UiStrings
@@ -143,6 +144,11 @@ class SavedPostsViewModel @AssistedInject constructor(
                 } else owned
             },
         )
+    }
+
+    fun applyDeletedPost(deleted: OwnedPost) {
+        if (stopped || deleted.fetchedBy != accountId || deleted.sessionRevision != sessionRevision) return
+        _state.value = _state.value.copy(posts = _state.value.posts.afterOwnedDeletion(deleted))
     }
 
     fun applyPublishedPost(request: me.foxtails.palustris.domain.CreatePostRequest) {

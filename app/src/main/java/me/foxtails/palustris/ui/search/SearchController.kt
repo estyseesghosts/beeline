@@ -11,6 +11,7 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.adjustedBy
+import me.foxtails.palustris.domain.afterDeletion
 import me.foxtails.palustris.domain.hashtags.HashtagExpansion
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.domain.hashtags.HashtagQuery
@@ -106,6 +107,10 @@ internal class SearchController(
                 if (post.id == target || post.actionTargetId == target) mergeExternalActionFields(post, incoming) else post
             },
         ))
+    }
+
+    fun removeDeletedPost(deleted: Post) {
+        publish(_state.value.copy(posts = _state.value.posts.afterDeletion(deleted)))
     }
 
     fun updatePosts(transform: (Post) -> Post) {

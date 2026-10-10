@@ -34,6 +34,8 @@ import me.foxtails.palustris.domain.ThreadPublishFailure
 import me.foxtails.palustris.domain.ThreadPublishListener
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.adjustedBy
+import me.foxtails.palustris.domain.afterDeletion
+import me.foxtails.palustris.domain.afterOwnedDeletion
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.mergeExternalActionFields
 import me.foxtails.palustris.ui.UiStrings
@@ -306,6 +308,15 @@ class FeedViewModel @AssistedInject constructor(
         if (stopped || updated.fetchedBy != accountId || updated.sessionRevision != sessionRevision) return
         val target = updated.effectiveTargetId()
         updateExternalPost(target, updated.post)
+    }
+
+    /** Drops a confirmed deletion from every loaded collection. */
+    fun applyDeletedPost(deleted: OwnedPost) {
+        if (stopped || deleted.fetchedBy != accountId || deleted.sessionRevision != sessionRevision) return
+        _feed.value = _feed.value.copy(
+            posts = _feed.value.posts.afterDeletion(deleted.post),
+            ownedPosts = _feed.value.ownedPosts.afterOwnedDeletion(deleted),
+        )
     }
 
     fun addPostProjectionListener(listener: (OwnedPost) -> Unit) {

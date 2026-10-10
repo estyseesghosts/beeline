@@ -60,6 +60,11 @@ internal class SearchOwner(
         controller.updateExternalPost(updated.effectiveTargetId(), updated.post)
     }
 
+    fun applyDeletedPost(deleted: OwnedPost) {
+        if (deleted.fetchedBy != accountId || deleted.sessionRevision != sessionRevision) return
+        controller.removeDeletedPost(deleted.post)
+    }
+
     fun applyPublishedPost(request: CreatePostRequest) = controller.applyPublishedPost(request)
 
     fun updateFavouritePreference(transform: (Post) -> Post) = controller.updatePosts(transform)

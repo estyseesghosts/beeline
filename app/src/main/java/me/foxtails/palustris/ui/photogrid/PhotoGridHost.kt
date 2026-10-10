@@ -56,6 +56,7 @@ fun PhotoGridHost(
     val sink = remember(owner) {
         object : PostProjectionCoordinator.Sink {
             override fun applyExternalPost(updated: OwnedPost) { owner.applyExternalPost(updated) }
+            override fun applyDeletedPost(deleted: OwnedPost) { owner.applyDeletedPost(deleted) }
             override fun applyPublishedPost(request: CreatePostRequest) { owner.applyPublishedPost(request) }
         }
     }

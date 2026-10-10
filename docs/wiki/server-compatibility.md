@@ -163,3 +163,8 @@ and `FfmpegBridgeTest`. Live-server uploads are unverified.
 - The WebM output carries no source metadata, so it has no location data.
 - A Mastodon server refuses a post that mixes a video with images. The composer does not prevent the mix.
 - Not verified: whether live Mastodon servers list `video/webm`, and live Misskey behavior on `UNALLOWED_FILE_TYPE`.
+
+## Own-post actions and translation
+
+- Delete: supported on the Mastodon API and the Misskey API. Edit stays hidden until its capability is reported as supported.
+- Translation: the Mastodon API reads `configuration.translation.enabled`, or `akkoma:machine_translation` in the feature list, and offers it for public and unlisted posts only. The Misskey API needs `translatorAvailable` in `meta` and the role policy `canUseTranslator`. A server that offers neither never shows the Translate row.

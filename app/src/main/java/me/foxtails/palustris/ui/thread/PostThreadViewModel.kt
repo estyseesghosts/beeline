@@ -1,5 +1,7 @@
 package me.foxtails.palustris.ui.thread
 
+import me.foxtails.palustris.domain.afterReplyDeleted
+import me.foxtails.palustris.domain.isRemovedBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -103,6 +105,19 @@ class PostThreadViewModel @AssistedInject constructor(
         // excludes the origin during propagation, but the thread must not rely
         // on that re-entrancy guard. Local mutations keep emitting below.
         updateMatching(target, emit = false) { existing -> existing.mergeExternalActionFields(updated.post) }
+    }
+
+    /** Removes a deleted reply or ancestor. A deleted focal post marks the thread so its screen can close. */
+    fun applyDeletedPost(deleted: OwnedPost) {
+        if (stopped || deleted.fetchedBy != accountId || deleted.sessionRevision != sessionRevision) return
+        val target = deleted.effectiveTargetId()
+        if (_state.value.focal?.let { it.post.id == target || it.effectiveTargetId() == target } == true) {
+            _state.value = _state.value.copy(focalDeleted = true)
+            return
+        }
+        posts.entries.removeAll { (_, owned) -> owned.post.isRemovedBy(deleted.post) }
+        posts.entries.toList().forEach { (id, owned) -> posts[id] = owned.copy(post = owned.post.afterReplyDeleted(deleted.post)) }
+        rebuildState()
     }
 
     fun activate(ownedPost: OwnedPost?, supportsComments: Boolean) {

@@ -47,6 +47,9 @@ interface SocialSource {
     suspend fun customEmojis(): List<CustomEmoji> = emptyList()
     suspend fun delete(id: EntityId) = unsupported<Unit>("delete")
     suspend fun edit(id: EntityId, text: String): Post = unsupported("edit")
+
+    /** Translates a post on the server into [targetLanguage], an ISO 639-1 code. */
+    suspend fun translate(id: EntityId, targetLanguage: String): Translation = unsupported("translate")
     suspend fun react(id: EntityId, emoji: String) = unsupported<Unit>("react")
     suspend fun react(id: EntityId, choice: EmojiChoice) { react(id, choice.submissionValue) }
     suspend fun favorite(id: EntityId) = unsupported<Unit>("favorite")
