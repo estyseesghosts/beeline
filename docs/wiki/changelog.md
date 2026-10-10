@@ -8,6 +8,12 @@ Stale when: A release ships without an entry here.
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
 
+## 0.2.13
+
+### Fixed
+
+- Misskey sessions saved without the publish flag can publish again.
+
 ## 0.2.12
 
 ### New
