@@ -124,4 +124,9 @@
     <string name="settings_moderation_remove">Supprimer</string>
     <string name="composer_visibility">Visibilité</string>
     <string name="audience_followers">Abonné·e·s seulement</string>
+    <string name="settings_posting_compression">Compression des images</string>
+    <string name="settings_posting_compression_summary">Réduire les photos sur cet appareil avant l’envoi.</string>
+    <string name="settings_posting_compression_always">Toujours compresser</string>
+    <string name="settings_posting_compression_never">Ne jamais compresser</string>
+    <string name="settings_posting_compression_ask">Demander à chaque fois</string>
 </resources>

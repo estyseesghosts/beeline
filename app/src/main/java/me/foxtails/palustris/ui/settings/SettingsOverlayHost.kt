@@ -10,6 +10,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.AccountSourceRegistry
 import me.foxtails.palustris.data.auth.AccountRef
@@ -111,6 +113,10 @@ fun SettingsOverlayHost(
     else remember { mutableStateOf(NotificationSettingsUiState()) }
     val moderationState by if (moderationModel != null) moderationModel.state.collectAsStateWithLifecycle()
     else remember { mutableStateOf(ModerationUiState()) }
+    val activeSource = activeAccountId?.let { sourceRegistry.sourceFor(it) }
+    val clientCompression by remember(activeSource) {
+        activeSource?.observeCapabilities()?.map { it.posting.clientCompression } ?: flowOf(false)
+    }.collectAsStateWithLifecycle(initialValue = activeSource?.capabilities?.posting?.clientCompression ?: false)
     val accountLabel = accounts.firstOrNull { it.accountId == activeAccountId }?.handle
         ?: activeAccountId?.localId
         ?: stringResource(R.string.settings_content_warning_current_account)
@@ -137,6 +143,8 @@ fun SettingsOverlayHost(
         postPreferencesAccountLabel = accountLabel,
         onPostDefaultAudience = { value -> activeAccountId?.let { settingsModel.setPostDefaultAudience(it, value) } },
         onPostRepliesUnlisted = { value -> activeAccountId?.let { settingsModel.setPostRepliesUnlisted(it, value) } },
+        showUploadCompression = clientCompression,
+        onPostUploadCompression = { value -> activeAccountId?.let { settingsModel.setPostUploadCompression(it, value) } },
         onPostContentWarningRules = { value ->
             activeAccountId?.let { settingsModel.setPostContentWarningRules(it, value) }
         },

@@ -166,4 +166,9 @@
     <string name="timeline_home">Inicio</string>
     <string name="timeline_local">Local</string>
     <string name="timeline_social">Social</string>
+    <string name="settings_posting_compression">Compresión de imágenes</string>
+    <string name="settings_posting_compression_summary">Reduce las fotos en este dispositivo antes de subirlas.</string>
+    <string name="settings_posting_compression_always">Comprimir siempre</string>
+    <string name="settings_posting_compression_never">No comprimir nunca</string>
+    <string name="settings_posting_compression_ask">Preguntar cada vez</string>
 </resources>

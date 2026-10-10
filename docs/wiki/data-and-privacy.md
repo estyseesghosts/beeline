@@ -106,3 +106,8 @@ location data: an unchanged JPEG, PNG, or WebP is copied and its GPS tags are re
 re-encoded image carries no metadata. An image that cannot be cleaned in place is re-encoded. GIF and
 other animated images pass unchanged and carry no change to their metadata.
 
+The per-account `UploadCompression` preference (`Always`, `Never`, `Ask`; default `Always`) lives in
+`PostPreferences` and the no-backup `post-preferences.json`. A file without the key, or with an
+unknown value, loads as `Always`. Posting settings show the choice only when the active server reports
+`clientCompression` (Misskey does, Mastodon does not).
+

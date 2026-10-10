@@ -5,12 +5,16 @@ import kotlinx.coroutines.flow.Flow
 const val DEFAULT_FAVOURITE_EMOJI = "❤️"
 const val MAX_FAVOURITE_EMOJI_LENGTH = 64
 
+/** Whether images are shrunk on this device before upload. */
+enum class UploadCompression { Always, Never, Ask }
+
 data class PostPreferences(
     val favouriteEmoji: String = DEFAULT_FAVOURITE_EMOJI,
     val defaultAudience: Audience = Audience.Public,
     val repliesUnlisted: Boolean = false,
     val contentWarningRules: ContentWarningRules = ContentWarningRules(),
     val localMutedHashtags: List<String> = emptyList(),
+    val uploadCompression: UploadCompression = UploadCompression.Always,
 )
 
 fun normalizeFavouriteEmoji(value: String?): String = value

@@ -18,11 +18,12 @@ Implement `docs/composer-and-media-upload-plan.md` slices 1 to 5: posting limits
 - Slice 1: posting limits in capabilities — commit 5f3135cf
 - Slice 2: upload transport and adapter uploads — commit 3a680d79
 - Slice 3: Misskey drive permission — commit 5fddf6f9
-- Slice 4: image preparation — the commit that follows 5fddf6f9
+- Slice 4: image preparation — commit 2c79fd50
+- Slice 5: compression setting — the commit that follows 2c79fd50
 
 # Current slice
 
-Slice 5: compression setting.
+All five slices are complete.
 
 # Files involved
 
@@ -39,10 +40,11 @@ Slice 5: compression setting.
 - Slice 2: full gate passes. Debug build installs and launches on emulator-5554 (signed-in Mastodon account) without a crash. Live-server uploads are unverified.
 - Slice 3: full gate passes. Upgrade install on emulator-5554 restores the Mastodon session. The MiAuth permission screen (drive access listed) is unverified: it needs a live Misskey sign-in.
 - Slice 4: full gate passes; 4 instrumented preparer tests pass on emulator-5554.
+- Slice 5: full gate passes (lint rerun alone after the known lint-analysis crash). Install and launch on emulator-5554 shows no app crash. The compression row on a live Misskey account is unverified.
 
 # Next
 
-Slice 5.
+Slices 6 onward of the plan (not requested yet).
 
 # Blockers
 
@@ -50,4 +52,4 @@ None. Live-server and device checks are not yet done.
 
 # Last safe commit
 
-5fddf6f9 Request Misskey drive access and record media upload permission
+2c79fd50 Prepare upload images with compression, fitting, and location removal

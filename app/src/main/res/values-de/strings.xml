@@ -128,4 +128,9 @@
     <string name="composer_visibility">Sichtbarkeit</string>
     <string name="audience_everyone">Jeder</string>
     <string name="audience_followers">Nur Follower</string>
+    <string name="settings_posting_compression">Bildkomprimierung</string>
+    <string name="settings_posting_compression_summary">Fotos vor dem Hochladen auf diesem Gerät verkleinern.</string>
+    <string name="settings_posting_compression_always">Immer komprimieren</string>
+    <string name="settings_posting_compression_never">Nie komprimieren</string>
+    <string name="settings_posting_compression_ask">Jedes Mal fragen</string>
 </resources>

@@ -28,6 +28,7 @@ import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostPreferencesRepository
+import me.foxtails.palustris.domain.UploadCompression
 
 /** Why a settings command failed. The shell resolves the user-visible message. */
 sealed interface SettingsCommandError {
@@ -140,6 +141,11 @@ class SettingsViewModel @Inject constructor(
     fun setPostRepliesUnlisted(accountId: AccountId, value: Boolean): Unit =
         updatePost(accountId, retry = { setPostRepliesUnlisted(accountId, value) }) {
             it.copy(repliesUnlisted = value)
+        }
+
+    fun setPostUploadCompression(accountId: AccountId, value: UploadCompression): Unit =
+        updatePost(accountId, retry = { setPostUploadCompression(accountId, value) }) {
+            it.copy(uploadCompression = value)
         }
 
     fun setPostContentWarningRules(accountId: AccountId, value: ContentWarningRules): Unit =

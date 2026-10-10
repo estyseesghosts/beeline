@@ -56,6 +56,8 @@ fun SettingsHost(
     postPreferencesAccountLabel: String? = null,
     onPostDefaultAudience: (Audience) -> Unit = {},
     onPostRepliesUnlisted: (Boolean) -> Unit = {},
+    showUploadCompression: Boolean = false,
+    onPostUploadCompression: (me.foxtails.palustris.domain.UploadCompression) -> Unit = {},
     onPostContentWarningRules: (ContentWarningRules) -> Unit = {},
     error: String? = null,
     canRetryError: Boolean = false,
@@ -198,6 +200,8 @@ fun SettingsHost(
                     preferences = postPreferences,
                     onDefaultAudience = onPostDefaultAudience,
                     onRepliesUnlisted = onPostRepliesUnlisted,
+                    showUploadCompression = showUploadCompression,
+                    onUploadCompression = onPostUploadCompression,
                 )
                 SettingsRoute.PrivacyAccounts -> PrivacyAccountsScreen(accounts) { accountId, kind ->
                     onModeration(accountId, kind)

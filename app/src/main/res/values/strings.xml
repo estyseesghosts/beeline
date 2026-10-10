@@ -742,4 +742,9 @@
     <string name="timeline_home">Home</string>
     <string name="timeline_local">Local</string>
     <string name="timeline_social">Social</string>
+    <string name="settings_posting_compression">Image compression</string>
+    <string name="settings_posting_compression_summary">Shrink photos on this device before upload.</string>
+    <string name="settings_posting_compression_always">Always compress</string>
+    <string name="settings_posting_compression_never">Never compress</string>
+    <string name="settings_posting_compression_ask">Ask each time</string>
 </resources>

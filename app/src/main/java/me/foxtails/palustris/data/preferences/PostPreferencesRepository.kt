@@ -25,6 +25,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostPreferencesRepository
+import me.foxtails.palustris.domain.UploadCompression
 import me.foxtails.palustris.domain.normalizeFavouriteEmoji
 import me.foxtails.palustris.domain.normalizeLocalMutedHashtags
 import org.json.JSONObject
@@ -89,6 +90,7 @@ class FilePostPreferencesRepository(
                  localMutedHashtags = value.optJSONArray("localMutedHashtags")?.let { hashtags ->
                      (0 until hashtags.length()).mapNotNull { hashtags.optString(it).takeIf(String::isNotBlank) }
                  }.orEmpty().let(::normalizeLocalMutedHashtags),
+                uploadCompression = enumOrDefault(value, "uploadCompression", UploadCompression.Always),
             )
         }.toMap()
     }.getOrDefault(emptyMap())
@@ -102,7 +104,8 @@ class FilePostPreferencesRepository(
                 .put("defaultAudience", preference.defaultAudience.name)
                  .put("repliesUnlisted", preference.repliesUnlisted)
                  .put("contentWarningRules", preference.contentWarningRules.toJson())
-                 .put("localMutedHashtags", org.json.JSONArray(preference.localMutedHashtags)))
+                 .put("localMutedHashtags", org.json.JSONArray(preference.localMutedHashtags))
+                .put("uploadCompression", preference.uploadCompression.name))
         }
         val root = JSONObject().put("version", 1).put("accounts", accounts)
         val temporary = File("${file.path}.new")

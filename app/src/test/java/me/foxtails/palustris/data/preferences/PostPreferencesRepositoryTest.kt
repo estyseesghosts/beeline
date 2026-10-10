@@ -13,6 +13,8 @@ import me.foxtails.palustris.domain.DEFAULT_FAVOURITE_EMOJI
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.UploadCompression
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -90,5 +92,55 @@ class PostPreferencesRepositoryTest {
         memoryRepository.update(first) { input }
 
         assertEquals(memoryRepository.observe(first).first(), fileRepository.observe(first).first())
+    }
+
+    @Test
+    fun uploadCompressionDefaultsToAlways() = runBlocking {
+        val repository = FilePostPreferencesRepository(ApplicationProvider.getApplicationContext())
+
+        assertEquals(UploadCompression.Always, repository.observe(first).first().uploadCompression)
+    }
+
+    @Test
+    fun uploadCompressionRoundTripsThroughTheFile() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        FilePostPreferencesRepository(context).update(first) { it.copy(uploadCompression = UploadCompression.Ask) }
+        FilePostPreferencesRepository(context).update(second) { it.copy(uploadCompression = UploadCompression.Never) }
+
+        val reloaded = FilePostPreferencesRepository(context)
+        assertEquals(UploadCompression.Ask, reloaded.observe(first).first().uploadCompression)
+        assertEquals(UploadCompression.Never, reloaded.observe(second).first().uploadCompression)
+    }
+
+    @Test
+    fun aFileWrittenBeforeTheSettingExistedLoadsWithTheDefault() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        FilePostPreferencesRepository(context).update(first) { it.copy(repliesUnlisted = true) }
+        val old = JSONObject(file.readText())
+        old.getJSONObject("accounts").keys().forEach { key ->
+            old.getJSONObject("accounts").getJSONObject(key).remove("uploadCompression")
+        }
+        file.writeText(old.toString())
+
+        val reloaded = FilePostPreferencesRepository(context).observe(first).first()
+
+        assertTrue(reloaded.repliesUnlisted)
+        assertEquals(UploadCompression.Always, reloaded.uploadCompression)
+    }
+
+    @Test
+    fun anUnknownStoredValueFallsBackToTheDefault() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        FilePostPreferencesRepository(context).update(first) { it }
+        val stored = JSONObject(file.readText())
+        stored.getJSONObject("accounts").keys().forEach { key ->
+            stored.getJSONObject("accounts").getJSONObject(key).put("uploadCompression", "Sometimes")
+        }
+        file.writeText(stored.toString())
+
+        assertEquals(
+            UploadCompression.Always,
+            FilePostPreferencesRepository(context).observe(first).first().uploadCompression,
+        )
     }
 }
