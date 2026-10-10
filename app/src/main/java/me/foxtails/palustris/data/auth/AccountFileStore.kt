@@ -189,6 +189,9 @@ class AccountFileStore internal constructor(
         return File(accountsDirectory, "$filename.enc")
     }
 
+    /** The key that protects session files. Draft media uses it so one key covers account-scoped private data. */
+    internal fun secretKey(): SecretKey = key()
+
     private fun key(): SecretKey {
         suppliedKey?.let { return it }
         val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }

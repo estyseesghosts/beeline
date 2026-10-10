@@ -9,13 +9,11 @@ import java.util.UUID
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
-import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.CreatePostRequest
+import me.foxtails.palustris.domain.DraftMedia
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostDraft
-import me.foxtails.palustris.domain.PostDraftQuotePreview
 import me.foxtails.palustris.domain.PostingVisibilityPolicy
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.ui.UiStrings
@@ -84,12 +82,11 @@ class ComposerOwner internal constructor(
     val submitting: Boolean get() = submission != null
 
     val editor: ComposerEditorState get() = editorState.value
-    val quoteTarget: OwnedPost? get() = target ?: previewTarget(editor.quoteOf ?: editor.replyTo, editor.targetPreview)
+    val quoteTarget: OwnedPost? get() = target ?: previewTarget(context.account, editor.quoteOf ?: editor.replyTo, editor.targetPreview, uiStrings.composerQuotedPost())
     val isReply: Boolean get() = replyTo != null
 
     val hasChanges: Boolean
-        get() = editor.text != editor.savedText ||
-            (if (editor.warningEnabled) editor.warning else "") != editor.savedWarning ||
+        get() = editor.entriesChanged ||
             editor.quoteOf?.value != editor.savedQuoteOf ||
             editor.replyTo?.value != editor.savedReplyTo ||
             editor.audience != editor.savedAudience
@@ -98,10 +95,41 @@ class ComposerOwner internal constructor(
         get() = context.contract.canPublish &&
             (editor.draftId == null || drafts.firstOrNull { it.id == editor.draftId }?.accountId == context.account?.id)
 
-    fun setText(text: String) { mutateEditor { it.copy(text = text) } }
-    fun setWarning(text: String) { mutateEditor { it.copy(warning = text) } }
-    fun setWarningEnabled(enabled: Boolean) { mutateEditor { it.copy(warningEnabled = enabled) } }
+    /** The id of the first entry. Single-post callers address it by default. */
+    val firstEntryId: String get() = editor.first.id
+
+    fun setText(text: String) { setEntryText(firstEntryId, text) }
+    fun setWarning(text: String) { setEntryWarning(firstEntryId, text) }
+    fun setWarningEnabled(enabled: Boolean) { setEntryWarningEnabled(firstEntryId, enabled) }
     fun setAudience(audience: Audience) { mutateEditor { it.copy(audience = audience) } }
+
+    fun setEntryText(entryId: String, text: String) = editEntry(entryId) { it.copy(text = text) }
+    fun setEntryWarning(entryId: String, text: String) = editEntry(entryId) { it.copy(warning = text) }
+    fun setEntryWarningEnabled(entryId: String, enabled: Boolean) = editEntry(entryId) { it.copy(warningEnabled = enabled) }
+    fun addMedia(entryId: String, media: DraftMedia) = editEntry(entryId) { it.copy(media = it.media + media) }
+    fun removeMedia(entryId: String, mediaId: String) = editEntry(entryId) { it.withoutMedia(mediaId) }
+    fun setAltText(entryId: String, mediaId: String, altText: String?) = editEntry(entryId) { it.withAltText(mediaId, altText) }
+
+    /**
+     * Inserts an empty entry after [entryId] and returns its id, or null when [entryId] is unknown.
+     * The thread audience, reply target, and quote target stay with the first entry.
+     */
+    fun addEntryAfter(entryId: String): String? {
+        if (editor.entry(entryId) == null) return null
+        val added = ComposerEntryState()
+        mutateEditor { it.withEntryAfter(entryId, added) }
+        return added.id
+    }
+
+    /** Removes [entryId] with its media. The first entry stays because it carries the thread's targets. */
+    fun removeEntry(entryId: String) {
+        if (entryId != firstEntryId) mutateEditor { it.withoutEntry(entryId) }
+    }
+
+    private fun editEntry(entryId: String, transform: (ComposerEntryState) -> ComposerEntryState) {
+        if (editor.entry(entryId) != null) mutateEditor { it.withEntry(entryId, transform) }
+    }
+
     fun removeTargets() {
         target = null
         mutateEditor { it.copy(quoteOf = null, replyTo = null, targetPreview = null) }
@@ -178,7 +206,7 @@ class ComposerOwner internal constructor(
     fun requestNew() {
         if (context.composerOpen) return
         val first = drafts.firstOrNull()
-        if (editor.text.isBlank() && editor.savedText.isBlank() && first != null) {
+        if (!editor.hasContent && editor.savedText.isBlank() && first != null) {
             requestDraft(first)
             return
         }
@@ -219,7 +247,7 @@ class ComposerOwner internal constructor(
                 error = null,
                 replyTo = reply,
                 quoteOf = quote,
-                targetPreview = previewOf(post),
+                targetPreview = post.toQuotePreview(),
                 boundAccount = accountId,
                 boundRevision = sessionRevision,
             )
@@ -244,13 +272,11 @@ class ComposerOwner internal constructor(
         val account = context.account?.id
         val quote = item.quoteOf?.takeIf { it.connection == account?.connection?.origin }
         val reply = item.replyTo?.takeIf { it.connection == account?.connection?.origin }
+        val entries = item.toEditorEntries()
         return ComposerEditorState(
             draftId = item.id,
-            text = item.text,
-            savedText = item.text,
-            warning = item.contentWarning.orEmpty(),
-            savedWarning = item.contentWarning.orEmpty(),
-            warningEnabled = !item.contentWarning.isNullOrBlank(),
+            entries = entries,
+            savedEntries = entries.map(ComposerEntryState::content),
             audience = item.audience,
             savedAudience = item.audience,
             quoteOf = quote,
@@ -266,11 +292,12 @@ class ComposerOwner internal constructor(
     /** Saves the current editor as a draft. Clears the dirty baseline only after success. */
     fun save(onSaved: () -> Unit = {}) {
         val current = editor
-        if (current.text.isBlank() && current.warning.isBlank() && current.quoteOf == null && current.replyTo == null) {
+        if (!current.hasContent && current.quoteOf == null && current.replyTo == null) {
             onSaved()
             return
         }
         val submittedRevision = editorRevision
+        val submittedContents = current.entries.map(ComposerEntryState::content)
         val submittedAccountId = context.account?.id
         closing = true
         draftsContract.actions.save(
@@ -280,8 +307,7 @@ class ComposerOwner internal constructor(
                 if (editorRevision == submittedRevision && context.account?.id == submittedAccountId) {
                     editorState.value = editor.copy(
                         draftId = item.id,
-                        savedText = item.text,
-                        savedWarning = item.contentWarning.orEmpty(),
+                        savedEntries = submittedContents,
                         savedAudience = item.audience,
                         savedQuoteOf = item.quoteOf?.value,
                         savedReplyTo = item.replyTo?.value,
@@ -340,6 +366,7 @@ class ComposerOwner internal constructor(
             sessionRevision = sessionRevision,
         )
         submission = reserved
+        val submittedContents = editor.entries.map(ComposerEntryState::content)
         draftsContract.actions.save(
             draftValue(),
             onResult = { saved ->
@@ -354,8 +381,7 @@ class ComposerOwner internal constructor(
                 }
                 editorState.value = editor.copy(
                     draftId = saved.id,
-                    savedText = saved.text,
-                    savedWarning = saved.contentWarning.orEmpty(),
+                    savedEntries = submittedContents,
                 )
                 context.contract.actions.publish(request) {
                     draftsContract.actions.delete(
@@ -409,47 +435,17 @@ class ComposerOwner internal constructor(
             accountId = account?.id,
             text = editor.text,
             audience = editor.audience,
-            contentWarning = editor.warning.takeIf { editor.warningEnabled && it.isNotBlank() },
+            contentWarning = editor.first.effectiveWarning.takeIf(String::isNotBlank),
             quoteOf = quoteOf?.takeIf { it.connection == account?.id?.connection?.origin },
             replyTo = replyTo?.takeIf { it.connection == account?.id?.connection?.origin },
-            quotePreview = target?.let(::previewOf) ?: editor.targetPreview,
+            quotePreview = target?.toQuotePreview() ?: editor.targetPreview,
+            media = editor.first.media,
+            followUps = editor.toFollowUps(),
         )
     }
 
-    private fun previewOf(target: OwnedPost) = PostDraftQuotePreview(
-        authorDisplayName = target.post.author.displayName,
-        authorHandle = target.post.author.handle,
-        text = target.post.text,
-        url = target.post.url,
-    )
-
-    private fun draftTarget(item: PostDraft): OwnedPost? {
-        val owner = context.account ?: return null
-        if (item.accountId != owner.id) return null
-        return previewTarget(item.quoteOf, item.quotePreview)
-    }
-
-    /** Rebuilds a plain-text target post from a saved preview for the connected account. */
-    private fun previewTarget(targetId: EntityId?, preview: PostDraftQuotePreview?): OwnedPost? {
-        val owner = context.account ?: return null
-        if (targetId == null || preview == null || targetId.connection != owner.id.connection.origin) return null
-        val author = Account(
-            id = AccountId(Connection(targetId.connection, owner.id.connection.protocol), "draft-quote-author"),
-                displayName = preview.authorDisplayName.ifBlank { preview.authorHandle.ifBlank { uiStrings.composerQuotedPost() } },
-                handle = preview.authorHandle.ifBlank { uiStrings.composerQuotedPost() },
-        )
-        return OwnedPost(
-            owner.id,
-            Post(
-                id = targetId,
-                author = author,
-                text = preview.text,
-                publishedAtEpochMillis = 0L,
-                audience = Audience.Public,
-                url = preview.url,
-            ),
-        )
-    }
+    private fun draftTarget(item: PostDraft): OwnedPost? =
+        item.takeIf { it.accountId == context.account?.id }?.let { previewTarget(context.account, it.quoteOf, it.quotePreview, uiStrings.composerQuotedPost()) }
 }
 
 /** The editor identity reserved for one publish. A newer submission supersedes it. */

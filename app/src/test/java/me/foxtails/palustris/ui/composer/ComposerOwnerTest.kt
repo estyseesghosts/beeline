@@ -6,10 +6,12 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.CreatePostRequest
+import me.foxtails.palustris.domain.DraftMedia
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostDraft
+import me.foxtails.palustris.domain.PostDraftEntry
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.UiStrings
@@ -398,5 +400,96 @@ class ComposerOwnerTest {
 
         assertEquals("body", restored.text)
         assertFalse(restored.hasTargets)
+    }
+
+    private fun media(id: String, alt: String? = null) = DraftMedia(id = id, mimeType = "image/png", width = 4, height = 3, byteSize = 9L, altText = alt)
+
+    private fun threadOwner(drafts: DraftsContract.Actions = RecordingDrafts()): Pair<ComposerOwner, List<String>> {
+        val owner = owner(drafts = drafts)
+        owner.setText("one")
+        val second = owner.addEntryAfter(owner.firstEntryId)!!
+        owner.setEntryText(second, "two")
+        val third = owner.addEntryAfter(second)!!
+        owner.setEntryText(third, "three")
+        owner.addMedia(third, media("m3"))
+        return owner to listOf(owner.firstEntryId, second, third)
+    }
+
+    @Test
+    fun threeEntriesSurviveSaveAndRestore() {
+        val (owner, ids) = threadOwner()
+        owner.setAltText(ids[2], "m3", "a cat")
+        val restored = restoredOwner(roundTrip(owner.editor))
+
+        assertEquals(ids, restored.editor.entries.map { it.id })
+        assertEquals(listOf("one", "two", "three"), restored.editor.entries.map { it.text })
+        assertEquals("a cat", restored.editor.entries[2].media.single().altText)
+        assertEquals(owner.hasChanges, restored.hasChanges)
+    }
+
+    @Test
+    fun dirtyCheckSeesAChangeInTheSecondEntry() {
+        val drafts = RecordingDrafts()
+        val (owner, ids) = threadOwner(drafts)
+        owner.save()
+        assertFalse(owner.hasChanges)
+
+        owner.setEntryText(ids[1], "two, edited")
+        assertTrue(owner.hasChanges)
+        owner.setEntryText(ids[1], "two")
+        assertFalse(owner.hasChanges)
+        owner.removeEntry(ids[2])
+        assertTrue(owner.hasChanges)
+    }
+
+    @Test
+    fun savedDraftSplitsTheFirstEntryFromFollowUps() {
+        val drafts = RecordingDrafts()
+        val (owner, ids) = threadOwner(drafts)
+        owner.save()
+
+        val saved = drafts.saved.single()
+        assertEquals("one", saved.text)
+        assertEquals(listOf(ids[1], ids[2]), saved.followUps.map { it.id })
+        assertEquals(listOf("m3"), saved.allMedia.map { it.id })
+    }
+
+    @Test
+    fun replyTargetStaysOnTheFirstEntry() {
+        val owner = owner()
+        owner.requestReply(OwnedPost(accountId, post("a")))
+        val second = owner.addEntryAfter(owner.firstEntryId)!!
+        owner.setEntryText(second, "follow-up")
+        owner.removeEntry(owner.firstEntryId)
+
+        assertEquals(2, owner.editor.entries.size)
+        assertTrue(owner.isReply)
+        assertEquals("a", owner.editor.replyTo?.value)
+    }
+
+    @Test
+    fun aDraftLoadsAsEntriesWithMedia() {
+        val owner = owner()
+        val draft = PostDraft(
+            id = "d1",
+            accountId = accountId,
+            text = "first",
+            media = listOf(media("m1")),
+            followUps = listOf(PostDraftEntry("e2", "second", "cw", listOf(media("m2")))),
+        )
+        owner.requestDraft(draft)
+
+        assertEquals(listOf("first", "second"), owner.editor.entries.map { it.text })
+        assertTrue(owner.editor.entries[1].warningEnabled)
+        assertEquals(listOf("m2"), owner.editor.entries[1].media.map { it.id })
+        assertFalse(owner.hasChanges)
+    }
+
+    @Test
+    fun unknownEntryIdsChangeNothing() {
+        val owner = owner()
+        assertNull(owner.addEntryAfter("missing"))
+        owner.removeEntry(owner.firstEntryId)
+        assertEquals(1, owner.editor.entries.size)
     }
 }

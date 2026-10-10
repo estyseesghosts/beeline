@@ -1,50 +1,44 @@
 # Objective
 
-Implement `docs/composer-and-media-upload-plan.md` slices 1 to 5: posting limits, upload transport, the Misskey drive permission, image preparation, and the compression setting.
+Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 5 (limits, upload transport, drive permission, image preparation, compression setting) are done. Slices 6 to 10 (draft and editor model, thread publication, composer surface, composer body, thread editing) are in progress. Slice 11 (media in the composer) is not requested yet.
 
 # Invariants
 
 - Shared domain stays protocol-neutral. Protocol behavior stays in adapters and probes.
 - Capability schema version moves forward (now 6).
-- Old stored sessions and settings load with safe defaults.
+- Old stored sessions, settings, and drafts load with safe defaults. A v0.2.11 draft loads as one entry.
+- The ktlint baseline is keyed by line number. Do not shift lines in files that have baseline entries (for example `di/AppModule.kt`).
+- The architecture audit measures a bodiless interface function up to the end of the next class. Do not grow `ComposerOwner.kt` past 483 lines or add a parameter to an existing owner function. Put pure logic in extension files.
 
 # Decisions
 
-- Blocking questions use the plan's recommended option: Q1 labels, Q7 encrypt draft media, Q8 strip GPS, Q9 sensitive on CW.
-- `PostLengthRule` names the length rule enum; `PostingCapabilities` lives in `domain/ServerCapabilities.kt`.
+- Blocking questions use the plan's recommended option (the user has not answered them): Q1 plan labels ("Public", "Not in feeds", "Followers only", "Mentioned only"), Q2 (a) audience row shows while the first entry has focus, Q3 "Post replies as unlisted" applies to entry 1 only, Q4 "Drafts" replaces "Save draft", Q5 (a) no Clean links button and links are cleaned on publish, Q6 compact-wide is full screen, Q7 encrypt draft media, Q8 strip GPS, Q9 Misskey entry with a CW uploads files as sensitive, Q10 keep D08.
+- `DraftMediaStore` is stateless, so `EncryptedDraftStore` builds its own instance and Hilt injects another. Both address the same directory.
+- Entry operations that take an entry id have distinct names (`setEntryText`) so the single-post callers keep their signatures.
 
 # Completed
 
-- Slice 1: posting limits in capabilities — commit 5f3135cf
-- Slice 2: upload transport and adapter uploads — commit 3a680d79
-- Slice 3: Misskey drive permission — commit 5fddf6f9
-- Slice 4: image preparation — commit 2c79fd50
-- Slice 5: compression setting — the commit that follows 2c79fd50
+- Slices 1 to 5 — commits 5f3135cf, 3a680d79, 5fddf6f9, 2c79fd50, feb26b2c.
+- Slice 6: draft and editor model for threads and media — the commit that follows feb26b2c.
 
 # Current slice
 
-All five slices are complete.
+Slice 7: thread publication.
 
 # Files involved
 
-- `domain/ServerCapabilities.kt`, `domain/PostLengthCounter.kt`
-- `data/mastodon/MastodonCapabilityProbe.kt`, `data/misskey/MisskeyCapabilityProbe.kt`
-- `data/auth/AccountFileStore.kt`
-- `domain/Access.kt`, `data/auth/MisskeyAuth.kt`, `data/auth/MastodonAuth.kt`
-- `data/mastodon/MastodonMediaService.kt`, `data/misskey/MisskeyMediaService.kt`, `domain/MediaUploadRequest.kt`
-- `data/media/ImageFormatInspector.kt`, `data/media/UploadImagePreparer.kt`
+- `domain/PostDraft.kt` (`DraftMedia`, `PostDraftEntry`, `PostDraft.media`, `PostDraft.followUps`)
+- `data/auth/DraftStore.kt`, `EncryptedDraftStore.kt`, `DraftJson.kt`, `DraftMediaStore.kt`
+- `ui/composer/ComposerEditorState.kt`, `ComposerEditorStateSaver.kt`, `ComposerEntryEdits.kt`, `ComposerTargetPreview.kt`, `ComposerOwner.kt`
+- Tests: `DraftMediaStoreTest`, `ComposerOwnerTest`
 
 # Verification
 
-- Slice 1: focused tests and the full local gate pass. `lintAnalyzeDebugAndroidTest` crashed once inside the Kotlin analysis in a combined run; `lintDebug` passes when run alone. Architecture audit exits 1 on regressions that predate this task; slice 2 adds none.
-- Slice 2: full gate passes. Debug build installs and launches on emulator-5554 (signed-in Mastodon account) without a crash. Live-server uploads are unverified.
-- Slice 3: full gate passes. Upgrade install on emulator-5554 restores the Mastodon session. The MiAuth permission screen (drive access listed) is unverified: it needs a live Misskey sign-in.
-- Slice 4: full gate passes; 4 instrumented preparer tests pass on emulator-5554.
-- Slice 5: full gate passes (lint rerun alone after the known lint-analysis crash). Install and launch on emulator-5554 shows no app crash. The compression row on a live Misskey account is unverified.
+- Slice 6: focused tests and the full local gate; see the slice commit.
 
 # Next
 
-Slices 6 onward of the plan (not requested yet).
+Slice 7 of the plan.
 
 # Blockers
 
@@ -52,4 +46,4 @@ None. Live-server and device checks are not yet done.
 
 # Last safe commit
 
-2c79fd50 Prepare upload images with compression, fitting, and location removal
+feb26b2c Add an upload compression setting shown only where the server supports it

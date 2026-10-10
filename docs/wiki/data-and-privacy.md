@@ -28,6 +28,29 @@ and `DraftActionsTest`.
 - Test fixtures activate a real authority for the test account and pass that
   generation to the action owner. The fixture scope ends with the test.
 
+### Draft entries and media
+
+Source: `domain/PostDraft.kt`, `data/auth/DraftStore.kt`, `data/auth/DraftMediaStore.kt`,
+`DraftMediaStoreTest`.
+
+- A draft holds a thread. The top-level text, warning, and `media` belong to the first post.
+  `followUps` hold posts 2 and later in publish order. A draft file saved before threads existed has
+  no `media` or `followUps` key and loads as one post without images.
+- `DraftMedia` records `id`, `mimeType`, size, dimensions, and alt text. The bytes are not in the
+  draft file.
+- `DraftMediaStore` keeps the bytes under `noBackupFilesDir/draft-media/<account>/<draft>/<media>`.
+  Each file is encrypted with AES-GCM and the same Keystore key as draft text. An opened file that was
+  changed on disk fails to read instead of returning bytes.
+- `EncryptedDraftStore` is the only caller that releases draft media:
+  - `save` deletes files that the saved draft no longer lists.
+  - `delete` (also used after a publish) deletes the draft's directory.
+  - `deleteAll` (account removal) deletes the account's directory.
+  - `list` deletes directories whose draft file is gone. A directory younger than 24 hours stays,
+    because an image is copied in before its draft is first saved.
+- Media ids and draft ids must be plain file names (letters, digits, `_`, `-`). Other values are rejected.
+- The editor saver stores media records only. After process recreation an entry shows the same images
+  because the files live in the store.
+
 ### Emoji assets
 
 Source: `data/emoji/EmojiAssetStore.kt`, `data/emoji/EmojiAssetLease.kt`,
