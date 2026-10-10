@@ -26,4 +26,8 @@
     <string name="search_hashtag_includes">%1$s 포함</string>
     <string name="search_hashtag_includes_more">%1$s 외 %2$d개 포함</string>
     <string name="search_hashtag_show_only">%1$s만 보기</string>
+    <string name="search_trending_hashtags">인기 해시태그</string>
+    <plurals name="search_trending_people">
+        <item quantity="other">%1$d명</item>
+    </plurals>
 </resources>

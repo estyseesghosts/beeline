@@ -97,4 +97,8 @@
     <string name="search_hashtag_includes">包括 %1$s</string>
     <string name="search_hashtag_includes_more">包括 %1$s 同其他 %2$d 個</string>
     <string name="search_hashtag_show_only">只顯示 %1$s</string>
+    <string name="search_trending_hashtags">熱門主題標籤</string>
+    <plurals name="search_trending_people">
+        <item quantity="other">%1$d 人</item>
+    </plurals>
 </resources>

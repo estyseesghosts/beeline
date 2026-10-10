@@ -65,14 +65,17 @@ fun SearchHost(
         onDispose { coordinator.unregister(sink) }
     }
     val state by owner.state.collectAsStateWithLifecycle()
+    val explore by owner.exploreState.collectAsStateWithLifecycle()
     val actions = remember(owner) {
         object : SearchContract.Actions {
             override fun search(query: String) = owner.search(query)
             override fun searchWithoutRelated(query: String) = owner.searchWithoutRelated(query)
             override fun loadMore() = owner.loadMore()
+            override fun loadTrending() = owner.loadTrending()
+            override fun suggestHashtags(text: String) = owner.suggestHashtags(text)
         }
     }
-    return remember(state, actions) { SearchContract(state, actions) }
+    return remember(state, explore, actions) { SearchContract(state, actions, explore) }
 }
 
 private fun applyFavouritePreference(

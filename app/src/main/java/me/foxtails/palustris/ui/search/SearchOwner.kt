@@ -9,6 +9,7 @@ import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
+import me.foxtails.palustris.domain.hashtags.HashtagSuggestionService
 
 /** Owns Search state and requests for one connected account and session revision. */
 internal class SearchOwner(
@@ -27,13 +28,30 @@ internal class SearchOwner(
         hashtagInput = hashtagInput,
     )
 
+    private val explore = SearchExploreController(
+        source = source,
+        scope = scope,
+        suggestionService = HashtagSuggestionService(
+            catalog = hashtagInput().catalog,
+            accountKey = "${accountId.connection.origin}/${accountId.localId}",
+            policy = { hashtagInput().policy },
+            fetchServer = source::suggestHashtags,
+        ),
+    )
+
     val state: StateFlow<AccountSearchState> = controller.state
+
+    val exploreState: StateFlow<SearchExploreState> = explore.state
 
     fun search(query: String) = controller.search(query)
 
     fun searchWithoutRelated(query: String) = controller.searchWithoutRelated(query)
 
     fun loadMore() = controller.loadMore()
+
+    fun loadTrending() = explore.loadTrending()
+
+    fun suggestHashtags(text: String) = explore.suggest(text)
 
     fun applyExternalPost(updated: OwnedPost) {
         if (updated.fetchedBy != accountId || updated.sessionRevision != sessionRevision) return
@@ -44,5 +62,8 @@ internal class SearchOwner(
 
     fun updateFavouritePreference(transform: (Post) -> Post) = controller.updatePosts(transform)
 
-    fun release() = controller.stop()
+    fun release() {
+        controller.stop()
+        explore.stop()
+    }
 }

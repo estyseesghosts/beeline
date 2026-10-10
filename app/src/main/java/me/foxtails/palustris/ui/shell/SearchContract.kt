@@ -1,6 +1,8 @@
 package me.foxtails.palustris.ui.shell
 
 import me.foxtails.palustris.ui.search.AccountSearchState
+import me.foxtails.palustris.ui.search.SearchExploreActions
+import me.foxtails.palustris.ui.search.SearchExploreState
 
 /**
  * Account-search presentation.
@@ -12,8 +14,9 @@ import me.foxtails.palustris.ui.search.AccountSearchState
 data class SearchContract(
     val state: AccountSearchState,
     val actions: Actions,
+    val explore: SearchExploreState = SearchExploreState(),
 ) {
-    interface Actions {
+    interface Actions : SearchExploreActions {
         fun search(query: String)
 
         /** Searches the hashtag alone, even when the Combine related hashtags setting is on. */

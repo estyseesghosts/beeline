@@ -112,4 +112,8 @@
     <string name="search_hashtag_includes">%1$s を含む</string>
     <string name="search_hashtag_includes_more">%1$s ほか %2$d 件を含む</string>
     <string name="search_hashtag_show_only">%1$s のみ表示</string>
+    <string name="search_trending_hashtags">トレンドのハッシュタグ</string>
+    <plurals name="search_trending_people">
+        <item quantity="other">%1$d人</item>
+    </plurals>
 </resources>

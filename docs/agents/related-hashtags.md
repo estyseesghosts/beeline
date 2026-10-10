@@ -16,6 +16,7 @@ Authority: [plan](../related-tags.md), [task state](tasks/related-hashtags.md), 
 | Expansion, ranking, related hashtags | `domain/hashtags/HashtagExpander` | Stateless |
 | Display language to allowed codes and scripts | `domain/hashtags/HashtagLanguagePolicy` | Stateless |
 | The "Combine related hashtags" setting | `AppPreferences.combineRelatedHashtags` | Persisted, global |
+| Trending hashtags and typed suggestions for Search | `ui/search/SearchExploreController`, owned by `SearchOwner` | One `SearchOwner`; `release()` stops it and clears the suggestion cache |
 
 ## Invariants
 
@@ -31,15 +32,23 @@ Authority: [plan](../related-tags.md), [task state](tasks/related-hashtags.md), 
 ## Discovery
 
 `SocialSource` gains `trendingHashtags`, `suggestHashtags` and `popularAccounts`. They default to unsupported. `MastodonDiscoveryService` and `MisskeyDiscoveryService` hold the requests. `MastodonMapper` and `MisskeyMapper` map the JSON, and they skip a malformed item. There is no capability probe: a caller treats a failure or an empty list as "hide the section".
-`HashtagSuggestionService` (domain) merges catalog and server suggestions. It is built for one account session, holds a 50-entry, 5-minute in-memory cache keyed by account and prefix, and debounces 250 ms in `suggestions(prefixes, limit)`. It sends only the hashtag fragment. A server failure returns the catalog matches. The owner of the session must call `release()`. No screen uses it yet (slice 4 and 6 do).
+`HashtagSuggestionService` (domain) merges catalog and server suggestions. It is built for one account session, holds a 50-entry, 5-minute in-memory cache keyed by account and prefix, and debounces 250 ms in `suggestions(prefixes, limit)`. It sends only the hashtag fragment. A server failure returns the catalog matches. The owner of the session must call `release()`. `SearchOwner` builds one for the account and releases it with the owner. The composer (slice 6) builds its own.
 
 ## Search wiring
 
 `MainActivity` injects `HashtagExpander`. `ConnectedApp` builds one `HashtagExpansionInput` from the setting and the display language. It passes the input through `ConnectedSessionHost` to `SearchHost` and `PhotoGridHost`. The hosts hand the owners a provider of the latest input. Each controller reads it only when a search or feed starts.
 
+`HashtagExpansionInput` exposes the catalog and the language policy, so `SearchOwner` builds its suggestion service from the same input. It builds no second catalog.
+`SearchContract.explore` carries `SearchExploreState` (trending, suggestions) to `SearchScreen`. `SearchExploreActions` has `loadTrending` and `suggestHashtags`. Each default does nothing.
+
+## Search screen decisions
+
+- Related chips show whenever `relatedTags` is not empty. The "Includes" line shows only when `combinedTags` is not empty.
+- A failed or empty discovery list keeps the old prompt and shows no error.
+
 ## Tests
 
-`HashtagCatalogRepositoryTest`, `HashtagExpanderTest`, `AppPreferencesRepositoryTest`, and `LocalizationResourceTest`.
+`HashtagCatalogRepositoryTest`, `HashtagExpanderTest`, `AppPreferencesRepositoryTest`, `LocalizationResourceTest`, `SearchExploreControllerTest`, `SearchDiscoveryTest`, and `SearchClearanceTest`.
 They read the real asset from the source tree.
 
 ## Limits

@@ -49,6 +49,8 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.Reaction
+import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
+import me.foxtails.palustris.domain.hashtags.TrendingHashtag
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.components.restingChipEdge
 import me.foxtails.palustris.ui.feed.FeedState
@@ -262,6 +264,49 @@ class SearchClearanceTest {
             assertClicksClearRight(safeRight)
             compose.onNodeWithTag("search_account_row_matched", useUnmergedTree = true).performClick()
             assertEquals(matched.id, opened?.id)
+        }
+    }
+
+    @Test fun wideDiscoveryRowsAndRelatedChipsClearBothPhysicalEdges() {
+        val explore = SearchExploreState(
+            trending = listOf(TrendingHashtag("cats", 40, 90), TrendingHashtag("art", 12, 30)),
+            suggestions = listOf(HashtagSuggestion("photography", 9.0), HashtagSuggestion("phone", null)),
+        )
+        val related = AccountSearchState(
+            query = "#fixture", tagQuery = "fixture", relatedTags = listOf("cats", "kitten", "caturday"),
+            posts = listOf(AppShellFixtures.post("related", author, "Search related fixture")),
+        )
+        val cases = listOf(
+            Triple("search_trending_results", "", Pair(1, AccountSearchState())),
+            Triple("search_suggestion_results", "#pho", Pair(1, AccountSearchState())),
+            Triple("search_hashtag_results", "#fixture", Pair(1, related)),
+        )
+        for (direction in LayoutDirection.entries) {
+            for ((listTag, query, tabAndState) in cases) {
+                show(direction) {
+                    SearchScreen(
+                        accountSearch = tabAndState.second, explore = explore,
+                        compactLayout = false, largeLayout = true,
+                        sharedQuery = query, sharedTab = tabAndState.first,
+                        leftObstructionClearance = right, rightObstructionClearance = right,
+                        mediaOwner = author.id,
+                    )
+                }
+                val viewport = bounds("search_test_viewport")
+                assertEquals("$listTag keeps the full viewport", viewport, bounds(listTag))
+                val safeLeft = viewport.left + right.value * density
+                val safeRight = viewport.right - right.value * density
+                val targets = compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
+                    .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 && !it.isChipRowEntry() }
+                    .filter { it.boundsInRoot.top < bounds("search_dock").top }
+                assertTrue("$listTag must expose interactions", targets.isNotEmpty())
+                targets.forEach {
+                    assertTrue("$listTag target crosses physical left in $direction: ${it.boundsInRoot}",
+                        it.boundsInRoot.left >= safeLeft - 1f)
+                    assertTrue("$listTag target crosses physical right in $direction: ${it.boundsInRoot}",
+                        it.boundsInRoot.right <= safeRight + 1f)
+                }
+            }
         }
     }
 

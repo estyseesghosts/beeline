@@ -773,4 +773,9 @@
     <string name="search_hashtag_includes">Includes %1$s</string>
     <string name="search_hashtag_includes_more">Includes %1$s and %2$d more</string>
     <string name="search_hashtag_show_only">Show only %1$s</string>
+    <string name="search_trending_hashtags">Trending hashtags</string>
+    <plurals name="search_trending_people">
+        <item quantity="one">%1$d person</item>
+        <item quantity="other">%1$d people</item>
+    </plurals>
 </resources>

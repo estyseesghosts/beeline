@@ -125,4 +125,8 @@
     <string name="search_hashtag_includes">包含 %1$s</string>
     <string name="search_hashtag_includes_more">包含 %1$s 等另外 %2$d 个</string>
     <string name="search_hashtag_show_only">仅显示 %1$s</string>
+    <string name="search_trending_hashtags">热门话题标签</string>
+    <plurals name="search_trending_people">
+        <item quantity="other">%1$d 人</item>
+    </plurals>
 </resources>

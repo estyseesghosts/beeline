@@ -26,4 +26,9 @@
     <string name="search_hashtag_includes">इसमें %1$s शामिल हैं</string>
     <string name="search_hashtag_includes_more">इसमें %1$s और %2$d अन्य शामिल हैं</string>
     <string name="search_hashtag_show_only">केवल %1$s दिखाएँ</string>
+    <string name="search_trending_hashtags">ट्रेंडिंग हैशटैग</string>
+    <plurals name="search_trending_people">
+        <item quantity="one">%1$d व्यक्ति</item>
+        <item quantity="other">%1$d लोग</item>
+    </plurals>
 </resources>

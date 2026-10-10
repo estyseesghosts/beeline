@@ -34,8 +34,11 @@ data class HashtagQuery(val primary: String, val alsoMatching: List<String> = em
 class HashtagExpansionInput(
     private val expander: HashtagExpander,
     val enabled: Boolean,
-    private val policy: HashtagLanguagePolicy,
+    val policy: HashtagLanguagePolicy,
 ) {
+    /** The immutable catalog behind the rules. Suggestions read it. */
+    val catalog: HashtagCatalog get() = expander.catalog
+
     /** Expands [tag] for a source that accepts [limit] extras. [combine] overrides the setting. */
     fun expand(tag: String, limit: Int, combine: Boolean = enabled): HashtagExpansion =
         expander.expand(tag, combine, policy, limit)

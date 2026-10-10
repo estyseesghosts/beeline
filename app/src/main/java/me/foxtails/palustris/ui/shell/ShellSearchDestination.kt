@@ -72,6 +72,8 @@ internal fun ShellSearchDestination(
                 onShowOnlyHashtag = search.actions::searchWithoutRelated,
                 onOpenHashtagBubble = overlay::openHashtagBubble,
                 onLoadMoreSearch = search.actions::loadMore,
+                explore = search.explore,
+                exploreActions = search.actions,
                 initialQuery = navigator.searchPrefill,
                 sharedQuery = navigator.searchQuery,
                 sharedTab = navigator.searchCategory,

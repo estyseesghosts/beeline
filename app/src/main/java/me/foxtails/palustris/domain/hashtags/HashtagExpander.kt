@@ -19,7 +19,7 @@ data class HashtagExpansion(
  * Pure expansion, ranking and related-hashtag rules over an immutable [HashtagCatalog]. The
  * expander owns no mutable state, so one instance serves every account and screen.
  */
-class HashtagExpander(private val catalog: HashtagCatalog) {
+class HashtagExpander(val catalog: HashtagCatalog) {
     /**
      * Expands [tag] when [enabled]. [limit] is how many extras the source accepts. [policy] filters
      * the related hashtags. It never filters [HashtagExpansion.applied].

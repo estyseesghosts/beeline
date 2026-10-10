@@ -10,9 +10,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -73,7 +70,6 @@ import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
@@ -90,7 +86,6 @@ import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInset
 import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
-import me.foxtails.palustris.ui.motion.springPress
 import me.foxtails.palustris.ui.posts.PostInteractionPresentation
 import me.foxtails.palustris.ui.posts.PostRow
 import me.foxtails.palustris.ui.posts.PostRowEvents
@@ -124,6 +119,8 @@ fun SearchScreen(
     onShowOnlyHashtag: (String) -> Unit = {},
     onOpenHashtagBubble: ((OwnedPost, List<String>, Rect) -> Unit)? = null,
     onLoadMoreSearch: () -> Unit = {},
+    explore: SearchExploreState = SearchExploreState(),
+    exploreActions: SearchExploreActions = SearchExploreActions.None,
     initialQuery: String = "",
     compactLayout: Boolean = true,
     compactNavigationVisible: Boolean = false,
@@ -168,6 +165,12 @@ fun SearchScreen(
         if (sharedQuery == null && initialQuery.isNotBlank()) updateQuery(initialQuery)
     }
     val hashtagSearchRequested = isExactHashtag(query)
+    // A typed hashtag that no search has answered yet asks for suggestions. Anything else clears them.
+    val typedHashtag = query.takeIf { hashtagSearchRequested && accountSearch.query != it.trim() }.orEmpty()
+    LaunchedEffect(typedHashtag) { exploreActions.suggestHashtags(typedHashtag) }
+    LaunchedEffect(tab, query.isBlank()) {
+        if (tab == 1 && query.isBlank()) exploreActions.loadTrending()
+    }
     val sections = listOf(
         stringResource(R.string.search_category_profiles),
         stringResource(R.string.search_category_hashtags),
@@ -243,6 +246,7 @@ fun SearchScreen(
             quoteEnabled = quoteEnabled,
             onQuote = onQuote,
             onLoadMoreSearch = onLoadMoreSearch,
+            explore = explore,
             endClearance = if (largeLayout) largeDockClearance + maxOf(wideBottomClearance, wideImeLift) else searchEndClearance,
             rightClearance = wideRightClearance,
             leftClearance = wideLeftClearance,
@@ -343,6 +347,7 @@ private fun SearchContent(
     quoteEnabled: Boolean,
     onQuote: (OwnedPost) -> Unit,
     onLoadMoreSearch: () -> Unit,
+    explore: SearchExploreState,
     endClearance: Dp,
     rightClearance: Dp,
     leftClearance: Dp,
@@ -358,6 +363,7 @@ private fun SearchContent(
     listState: LazyListState?,
     largeLayout: Boolean,
 ) {
+    val clearance = SearchListClearance(endClearance, rightClearance, leftClearance)
     Box(modifier.testTag("search_content")) {
         val queryKind = when {
             hashtagSearchRequested -> "hashtag"
@@ -372,7 +378,9 @@ private fun SearchContent(
         }
         AnimatedStatePane(stateKey = "$tab:$queryKind:$resultKind", modifier = Modifier.fillMaxSize()) {
             if (tab == 0 || hashtagSearchRequested) {
-                if (hashtagSearchRequested) HashtagSearchResults(
+                if (hashtagSearchRequested && explore.suggestions.isNotEmpty() && accountSearch.query != query.trim()) {
+                    HashtagSuggestionList(explore.suggestions, onSearchHashtag, clearance, listState)
+                } else if (hashtagSearchRequested) HashtagSearchResults(
                     state = accountSearch,
                     query = query,
                     onLoadMore = onLoadMoreSearch,
@@ -401,7 +409,9 @@ private fun SearchContent(
                     onOpenPost = onOpenPost,
                     onOpenUrl = onOpenUrl,
                     onOpenUsername = onOpenUsername,
-                ) else AccountSearchResults(query, accountSearch, onAccountClick, endClearance, rightClearance, leftClearance, listState)
+                ) else AccountSearchResults(query, accountSearch, onAccountClick, clearance, listState)
+            } else if (tab == 1 && query.isBlank() && explore.trending.isNotEmpty()) {
+                TrendingHashtagList(explore.trending, onSearchHashtag, clearance, listState)
             } else {
                 EmptyState(
                     AppIcons.Hashtag,
@@ -542,16 +552,7 @@ private fun HashtagSearchResults(
             modifier = Modifier.fillMaxSize().testTag("search_hashtag_results"),
             contentPadding = PaddingValues(bottom = 24.dp + endClearance),
         ) {
-            if (state.combinedTags.isNotEmpty()) {
-                item(key = "combined-hashtags") {
-                    CombinedHashtagHeader(
-                        primaryTag = state.tagQuery.orEmpty(),
-                        combinedTags = state.combinedTags,
-                        onShowOnly = { onShowOnlyHashtag(query) },
-                        modifier = Modifier.absolutePadding(left = leftClearance, right = rightClearance),
-                    )
-                }
-            }
+            hashtagResultsHeader(state, Modifier.absolutePadding(left = leftClearance, right = rightClearance), onShowOnlyHashtag, onSearchHashtag)
             items(state.posts, key = { "${it.id.connection}/${it.id.value}" }) { post ->
                 Column(
                     Modifier.animateItem(
@@ -614,40 +615,16 @@ private fun AccountSearchResults(
     query: String,
     state: AccountSearchState,
     onAccountClick: (Account) -> Unit,
-    endClearance: Dp,
-    rightClearance: Dp,
-    leftClearance: Dp,
+    clearance: SearchListClearance,
     listState: LazyListState?,
 ) {
-    val scheme = LocalPalustrisMotionScheme.current
+    val endClearance = clearance.end
     when {
         state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         state.error != null -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_account_failed), state.error, bottomClearance = endClearance)
-        state.accounts.isNotEmpty() -> LazyColumn(
-            state = listState ?: rememberLazyListState(),
-            modifier = Modifier.fillMaxSize().testTag("search_account_results"),
-            // Both physical edges belong to the scroll content, so account rows and their
-            // click bounds keep clear of floating chrome. The list viewport keeps its width.
-            contentPadding = PaddingValues.Absolute(left = 8.dp + leftClearance, right = 8.dp + rightClearance, bottom = endClearance),
-        ) {
-            items(state.accounts, key = { "${it.id.connection.origin}/${it.id.localId}" }) { account ->
-                val interactionSource = remember(account.id) { MutableInteractionSource() }
-                androidx.compose.material3.ListItem(
-                    modifier = Modifier
-                        .springPress(interactionSource)
-                        .clickable(interactionSource = interactionSource, indication = LocalIndication.current) { onAccountClick(account) }
-                        .animateItem(
-                            fadeInSpec = scheme.fastFadeIn,
-                            fadeOutSpec = scheme.fastFadeOut,
-                            placementSpec = scheme.gentleOffset,
-                        )
-                        .testTag("search_account_row_${account.id.localId}"),
-                    headlineContent = { me.foxtails.palustris.ui.emoji.AccountDisplayName(account, style = MaterialTheme.typography.titleMedium) },
-                    supportingContent = { Text(account.handle) },
-                    leadingContent = { AccountAvatar(account, Modifier.size(48.dp)) },
-                )
-            }
-        }
+        // Both physical edges belong to the scroll content, so account rows and their
+        // click bounds keep clear of floating chrome. The list viewport keeps its width.
+        state.accounts.isNotEmpty() -> AccountList(state.accounts, null, onAccountClick, clearance, listState, "search_account_results")
         query.isBlank() -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_find_account), stringResource(R.string.search_account_prompt), bottomClearance = endClearance)
         state.query == query.trim() -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_no_account), stringResource(R.string.search_no_account_prompt), bottomClearance = endClearance)
         else -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_ready), stringResource(R.string.search_ready_prompt), bottomClearance = endClearance)

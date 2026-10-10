@@ -773,7 +773,7 @@ Focus return to the card is not implemented.
 
 Settings, Display holds a switch named "Combine related hashtags". It is on by default. The value lives in `AppPreferences.combineRelatedHashtags`. A stored file without the key reads on.
 The app bundles a catalog of 74 hashtag groups in `app/src/main/assets/hashtag-catalog.json`. The app never reads the catalog from the network. Nobody has reviewed the catalog yet.
-`HashtagExpander` decides which hashtags merge into a search. Slice 1 only adds the rules and the setting. Search, Photo Grid and the composer do not use them yet.
+`HashtagExpander` decides which hashtags merge into a search. Search and Photo Grid use it (see below).
 Sources: `domain/hashtags/`, `data/hashtags/HashtagCatalogRepository.kt`, `DisplaySettingsScreen.kt`, `HashtagExpanderTest`. Device visuals are unverified.
 
 ## Combined hashtag results
@@ -782,3 +782,13 @@ When the setting is on, a hashtag search in Search and a hashtag feed in Photo G
 The results header ("Includes #a, #b and 2 more") appears above the posts when the search applied extras. "Show only #tag" runs the plain search through `SearchContract.Actions.searchWithoutRelated`.
 Photo Grid has no header and no chips. Merging works there without a notice.
 Sources: `ui/search/CombinedHashtagHeader.kt`, `SearchController.kt`, `ui/photogrid/PhotoGridController.kt`, `SearchCombinedHashtagsTest`, `PhotoGridCombinedHashtagsTest`. Device visuals are unverified.
+
+## Hashtags tab discovery
+
+`SearchOwner` owns one `SearchExploreController`. It loads the trending hashtags (`source.trendingHashtags(20)`) and holds the suggestions for the typed hashtag. `SearchOwner.release()` stops it and calls `HashtagSuggestionService.release()`.
+- A blank query on the Hashtags tab shows the list "Trending hashtags". Each row shows `#tag` and "N people". A tap runs the existing hashtag search through `navigator::openHashtagSearch`.
+- A failed or empty trending list keeps the old prompt. The screen shows no error. A later visit to the blank tab retries.
+- A typed hashtag that no search has answered yet shows the suggestion list in place of the "ready" state. The service debounces 250 ms. A tap runs the search. A submit replaces the list with the results.
+- Related chips sit under the results header. They show whenever `AccountSearchState.relatedTags` is not empty, so `#caturday`, which merges nothing, still suggests `#cats`. The "Includes" line shows only when `combinedTags` is not empty. A chip tap runs that search.
+- The rows use the same physical clearance as the account rows (`SearchListClearance`). The chips wrap and sit inside the left and right clearance.
+Sources: `ui/search/SearchExploreController.kt`, `SearchDiscoveryLists.kt`, `SearchExploreControllerTest`, `SearchDiscoveryTest`, `SearchClearanceTest`. Device visuals are unverified.

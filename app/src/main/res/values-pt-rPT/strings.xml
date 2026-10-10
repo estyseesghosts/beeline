@@ -171,4 +171,9 @@
     <string name="search_hashtag_includes">Inclui %1$s</string>
     <string name="search_hashtag_includes_more">Inclui %1$s e mais %2$d</string>
     <string name="search_hashtag_show_only">Mostrar apenas %1$s</string>
+    <string name="search_trending_hashtags">Hashtags em alta</string>
+    <plurals name="search_trending_people">
+        <item quantity="one">%1$d pessoa</item>
+        <item quantity="other">%1$d pessoas</item>
+    </plurals>
 </resources>

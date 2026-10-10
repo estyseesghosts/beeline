@@ -17,15 +17,18 @@ The catalog has 74 groups and 1,814 members, not the 62 groups and 1,370 members
 - Code lives in `domain/hashtags/` and `data/hashtags/`.
 - The head ranks first in `HashtagExpander`. Its first language counts as covered.
 - D1 to D5 follow the recommended defaults.
+- Related chips show whenever `relatedTags` is not empty. The "Includes" line shows only when `combinedTags` is not empty.
+- A failed or empty discovery list keeps the old prompt and shows no error.
 
 # Completed
 
 - Slice 1 (catalog, rules, setting) — commit 2b551c12.
 - Slice 2 (combined results) — commit c8771358.
+- Slice 3 (server discovery, suggestion service) — commit 0829f3d4.
 
 # Current slice
 
-Slice 3: server discovery and the suggestion service (implemented, gate pending).
+Slice 4: Hashtags tab (implemented; the commit that carries this record is the slice 4 commit).
 
 # Files involved
 
@@ -37,7 +40,7 @@ Slice 1: focused tests, then the CI-parity gate. See the commit.
 
 # Next
 
-Slice 4: Hashtags tab (`SearchExploreController`, trending rows, typed suggestions, related chips).
+Slice 5: Profiles tab (popular accounts in the blank state of `AccountSearchResults`). Slice 6: composer autocomplete.
 
 # Blockers
 
@@ -45,4 +48,4 @@ None.
 
 # Last safe commit
 
-`b8fc99c6` Release 0.2.13: set version and changelog.
+`0829f3d4` Add server discovery reads and the hashtag suggestion service.

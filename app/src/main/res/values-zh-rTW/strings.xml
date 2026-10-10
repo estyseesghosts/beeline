@@ -161,4 +161,8 @@
     <string name="search_hashtag_includes">包含 %1$s</string>
     <string name="search_hashtag_includes_more">包含 %1$s 與其他 %2$d 個</string>
     <string name="search_hashtag_show_only">僅顯示 %1$s</string>
+    <string name="search_trending_hashtags">熱門主題標籤</string>
+    <plurals name="search_trending_people">
+        <item quantity="other">%1$d 人</item>
+    </plurals>
 </resources>
