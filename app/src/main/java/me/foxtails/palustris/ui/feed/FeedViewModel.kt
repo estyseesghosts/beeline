@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import me.foxtails.palustris.data.auth.DraftStore
+import me.foxtails.palustris.data.auth.InMemoryDraftStore
 import me.foxtails.palustris.data.notifications.NotificationSyncOrchestrator
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
@@ -25,6 +27,10 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.ThreadImagePreparer
+import me.foxtails.palustris.domain.ThreadPublication
+import me.foxtails.palustris.domain.ThreadPublishFailure
+import me.foxtails.palustris.domain.ThreadPublishListener
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.domain.effectiveTargetId
@@ -42,6 +48,8 @@ class FeedViewModel @AssistedInject constructor(
     private val postPreferencesRepository: PostPreferencesRepository,
     @Assisted private val sessionRevision: Long,
     @Assisted private val executionAuthority: PostInteractionExecutionAuthority,
+    private val draftStore: DraftStore = InMemoryDraftStore(),
+    private val threadPreparer: ThreadImagePreparer? = null,
     private val uiStrings: UiStrings = UiStrings.Default,
 ) : ViewModel() {
     val favouriteArtworkStyle = source.favouriteArtworkStyle
@@ -133,6 +141,8 @@ class FeedViewModel @AssistedInject constructor(
                     savedPosts = source.capabilities.savedPosts,
                     favouriteEmoji = favouriteEmoji,
                     publishing = _feed.value.publishing,
+                    publishPosted = _feed.value.publishPosted,
+                    publishTotal = _feed.value.publishTotal,
                     nextCursor = page.nextCursor,
                     requestEpoch = epoch,
                 )
@@ -150,6 +160,8 @@ class FeedViewModel @AssistedInject constructor(
                         error = error,
                         needsSignIn = needsSignIn,
                         publishing = _feed.value.publishing,
+                        publishPosted = _feed.value.publishPosted,
+                        publishTotal = _feed.value.publishTotal,
                         requestEpoch = epoch,
                     )
                 } else {
@@ -216,24 +228,44 @@ class FeedViewModel @AssistedInject constructor(
         return merged
     }
 
-    fun create(request: CreatePostRequest, onSuccess: (OwnedPost) -> Unit = {}) {
+    /**
+     * Publishes a thread in order with draft progress writes. It reserves the single publish
+     * slot synchronously; the runner owns the job. A timeline refresh does not cancel a valid
+     * publish. A stopped feed posts nothing more.
+     */
+    fun create(publication: ThreadPublication, listener: ThreadPublishListener = ThreadPublishListener.Empty) {
         if (stopped || _feed.value.publishing) return
         publishJob?.cancel()
-        // Reserve the publish slot synchronously. A timeline refresh does not cancel a valid publish.
-        _feed.value = _feed.value.copy(publishing = true, error = null)
+        _feed.value = _feed.value.copy(publishing = true, publishPosted = 0, publishTotal = publication.entries.size, error = null)
         publishJob = viewModelScope.launch {
-            try {
-                val created = source.create(request)
-                if (stopped) return@launch
-                _feed.value = _feed.value.copy(publishing = false, error = null)
-                onSuccess(OwnedPost(accountId, created, sessionRevision))
-                refresh()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                if (stopped) return@launch
-                _feed.value = _feed.value.copy(publishing = false)
-                feedFailure(e)
-            }
+            ThreadPublicationRunner(source, threadPreparer ?: EmptyThreadPreparer, draftStore, uiStrings)
+                .run(publication, accountId, sessionRevision, listener, RunnerEvents())
+        }
+    }
+
+    /** Writes publish progress and results to the feed state. */
+    private inner class RunnerEvents : ThreadPublicationRunner.Events {
+        override val isStopped: Boolean get() = stopped
+
+        override fun onProgress(posted: Int, total: Int) {
+            if (!stopped) _feed.value = _feed.value.copy(publishPosted = posted, publishTotal = total)
+        }
+
+        override fun onSuccess(owned: List<OwnedPost>, requests: List<CreatePostRequest>) {
+            _feed.value = _feed.value.copy(publishing = false, publishPosted = 0, publishTotal = 0, error = null)
+        }
+
+        override fun onFailure(failure: ThreadPublishFailure, message: String) {
+            _feed.value = _feed.value.copy(publishing = false, error = message)
+        }
+
+        override fun onUnexpected(error: Exception) {
+            _feed.value = _feed.value.copy(publishing = false, publishPosted = 0, publishTotal = 0)
+            feedFailure(error)
+        }
+
+        override fun onRefresh() {
+            refresh()
         }
     }
 

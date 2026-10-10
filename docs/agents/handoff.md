@@ -12,4 +12,4 @@ The architecture audit exits 1 on regressions that predate 0.2.11. Do not edit t
 
 The Photo Grid redesign (`docs/photo-grid-redesign-plan.md`, slices 1 to 4) follows `29b7a484`: cards with caption and favorite, rail underlap, and press-and-hold quick-view. Read `docs/agents/tasks/photo-grid-redesign.md`. Slice 5 (drag and release) follows `56fec6fc`.
 
-The composer and media upload plan (`docs/composer-and-media-upload-plan.md`) is in progress. Read `docs/agents/tasks/composer-and-media.md`. Slices 1 to 6 are committed after `049cb765` (slice 6 is the draft and editor model). Slices 7 to 10 follow in order; slice 11 is not requested yet. The last safe commit before slice 6 is `feb26b2c`.
+The composer and media upload plan (`docs/composer-and-media-upload-plan.md`) is in progress. Read `docs/agents/tasks/composer-and-media.md`. Slices 1 to 7 are committed after `049cb765` (slice 7 is thread publication; previous safe commit `893ce8a3`, subject "Publish threads in order with media upload and draft progress"). Slices 8 to 10 follow in order; slice 11 is not requested yet. The last safe commit before slice 6 is `feb26b2c`.

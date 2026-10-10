@@ -14,6 +14,9 @@ import me.foxtails.palustris.domain.PostDraft
 import me.foxtails.palustris.domain.PostDraftEntry
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.ThreadPublication
+import me.foxtails.palustris.domain.ThreadPublishFailure
+import me.foxtails.palustris.domain.ThreadPublishListener
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.composer.ComposerEditorState
 import me.foxtails.palustris.ui.composer.ComposerNavigation
@@ -85,11 +88,19 @@ class ComposerOwnerTest {
     }
 
     private class RecordingComposer : ComposerContract.Actions {
-        val published = mutableListOf<CreatePostRequest>()
-        var acceptedPost: OwnedPost? = null
-        override fun publish(request: CreatePostRequest, onAccepted: (OwnedPost) -> Unit) {
-            published += request
-            acceptedPost?.let(onAccepted)
+        val published = mutableListOf<ThreadPublication>()
+        val progress = mutableListOf<Pair<Int, Int>>()
+        var acceptedPosts: List<OwnedPost>? = null
+        var acceptedRequests: List<CreatePostRequest> = emptyList()
+        var failure: ThreadPublishFailure? = null
+        override fun publish(publication: ThreadPublication, listener: ThreadPublishListener) {
+            published += publication
+            val error = failure
+            if (error != null) {
+                listener.onError(error)
+            } else {
+                acceptedPosts?.let { listener.onAccepted(it, acceptedRequests) }
+            }
         }
     }
 
@@ -232,7 +243,7 @@ class ComposerOwnerTest {
 
     @Test
     fun publishSavesThenPublishesAndClearsOnAcceptance() {
-        val composer = RecordingComposer().apply { acceptedPost = OwnedPost(accountId, post("sent")) }
+        val composer = RecordingComposer().apply { acceptedPosts = listOf(OwnedPost(accountId, post("sent"))) }
         val drafts = RecordingDrafts()
         val owner = owner(composer = composer, drafts = drafts)
         owner.setText("hello world")
@@ -244,7 +255,7 @@ class ComposerOwnerTest {
         }
 
         assertEquals(1, composer.published.size)
-        assertEquals("hello world", composer.published.single().text)
+        assertEquals("hello world", composer.published.single().entries.single().text)
         assertFalse(sentReply)
         assertFalse(sentQuote)
         assertEquals("", owner.editor.text)
@@ -281,7 +292,7 @@ class ComposerOwnerTest {
     @Test
     fun obsoleteSaveCallbackCannotPublishAfterSessionReplacement() {
         val drafts = DeferredDrafts()
-        val composer = RecordingComposer().apply { acceptedPost = OwnedPost(accountId, post("sent")) }
+        val composer = RecordingComposer().apply { acceptedPosts = listOf(OwnedPost(accountId, post("sent"))) }
         val owner = owner(composer = composer, drafts = drafts)
         owner.setText("body")
         owner.publish { _, _ -> }
@@ -295,14 +306,14 @@ class ComposerOwnerTest {
     @Test
     fun newerEditsDuringPublishSurviveAcceptance() {
         val drafts = DeferredDrafts()
-        val composer = RecordingComposer().apply { acceptedPost = OwnedPost(accountId, post("sent")) }
+        val composer = RecordingComposer().apply { acceptedPosts = listOf(OwnedPost(accountId, post("sent"))) }
         val owner = owner(composer = composer, drafts = drafts)
         owner.setText("first")
         owner.publish { _, _ -> }
         owner.setText("first and second")
         drafts.pendingSave?.invoke()
 
-        assertEquals("first", composer.published.single().text)
+        assertEquals("first", composer.published.single().entries.single().text)
         assertEquals("first and second", owner.editor.text)
         assertFalse(owner.submitting)
     }
@@ -491,5 +502,66 @@ class ComposerOwnerTest {
         assertNull(owner.addEntryAfter("missing"))
         owner.removeEntry(owner.firstEntryId)
         assertEquals(1, owner.editor.entries.size)
+    }
+
+    @Test
+    fun threadPublishSendsEveryEntryWithTheFirstAudienceAndQuote() {
+        val composer = RecordingComposer().apply {
+            acceptedPosts = listOf(OwnedPost(accountId, post("c1")), OwnedPost(accountId, post("c2")))
+        }
+        val owner = owner(composer = composer)
+        owner.requestReply(OwnedPost(accountId, post("target")))
+        owner.setText("one")
+        owner.setAudience(Audience.Followers)
+        val second = owner.addEntryAfter(owner.firstEntryId)!!
+        owner.setEntryText(second, "two")
+
+        owner.publish { _, _ -> }
+
+        val publication = composer.published.single()
+        assertEquals(listOf("one", "two"), publication.entries.map { it.text })
+        assertEquals(Audience.Followers, publication.audience)
+        assertEquals("target", publication.replyTo?.value)
+        assertNull(publication.quoteOf)
+        assertEquals(accountId, publication.accountId)
+    }
+
+    @Test
+    fun publishFailureKeepsTheRemainingEntriesAndNamesTheFailedOne() {
+        val owner = owner()
+        owner.setText("one")
+        val second = owner.addEntryAfter(owner.firstEntryId)!!
+        owner.setEntryText(second, "two")
+        val third = owner.addEntryAfter(second)!!
+        owner.setEntryText(third, "three")
+        var published: ThreadPublication? = null
+        val recording = object : ComposerContract.Actions {
+            override fun publish(publication: ThreadPublication, listener: ThreadPublishListener) {
+                published = publication
+                listener.onError(
+                    ThreadPublishFailure(
+                        failedEntryId = publication.entries[1].id,
+                        failedIndex = 1,
+                        totalEntries = 3,
+                        error = java.io.IOException("network down"),
+                        remaining = publication.copy(
+                            entries = publication.entries.drop(1),
+                            replyTo = EntityId(connection.origin, "created-1"),
+                        ),
+                    ),
+                )
+            }
+        }
+        owner.context = owner.context.copy(contract = contract(RecordingComposer()).copy(actions = recording))
+        owner.publish { _, _ -> }
+
+        val sent = requireNotNull(published)
+        assertEquals(listOf("two", "three"), owner.editor.entries.map { it.text })
+        assertEquals(sent.entries.drop(1).map { it.id }, owner.editor.entries.map { it.id })
+        assertEquals("created-1", owner.editor.replyTo?.value)
+        assertNull(owner.editor.quoteOf)
+        val error = owner.editor.error.orEmpty()
+        assertTrue(error.contains("2") && error.contains("3"))
+        assertFalse(owner.submitting)
     }
 }

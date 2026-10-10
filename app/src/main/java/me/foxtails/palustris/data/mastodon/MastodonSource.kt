@@ -453,6 +453,10 @@ class MastodonSource(
         mediaService.upload(request)
     }
 
+    override suspend fun deleteUpload(attachmentId: String): Unit = this.request("media.delete") {
+        mediaService.delete(attachmentId)
+    }
+
     override suspend fun search(query: String): List<Post> = request("search") {
         val encodedQuery = URLEncoder.encode(query, Charsets.UTF_8.name())
         val statuses = JSONObject(api.get(origin, "api/v2/search?q=$encodedQuery", token, MASTODON_MAX_RESPONSE_BYTES).body)

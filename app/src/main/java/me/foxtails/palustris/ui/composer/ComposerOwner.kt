@@ -16,6 +16,10 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostDraft
 import me.foxtails.palustris.domain.PostingVisibilityPolicy
 import me.foxtails.palustris.domain.ServerCapabilities
+import me.foxtails.palustris.domain.ThreadPublishFailure
+import me.foxtails.palustris.domain.ThreadPublishListener
+import me.foxtails.palustris.domain.UploadCompression
+import me.foxtails.palustris.domain.toPostDraft
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.shell.ComposerContract
 import me.foxtails.palustris.ui.shell.DraftsContract
@@ -51,7 +55,7 @@ data class ComposerOwnerContext(
 @Stable
 class ComposerOwner internal constructor(
     private val editorState: MutableState<ComposerEditorState>,
-    private val uiStrings: UiStrings = UiStrings.Default,
+    internal val uiStrings: UiStrings = UiStrings.Default,
 ) {
     internal var context: ComposerOwnerContext = ComposerOwnerContext()
     internal var draftsContract: DraftsContract = DraftsContract.Empty
@@ -326,38 +330,27 @@ class ComposerOwner internal constructor(
     }
 
     /**
-     * Saves the submitted draft, then publishes it. A submission reserves its identity before the
-     * asynchronous save starts. An obsolete save callback cannot publish. Success clears and
-     * deletes only the submitted version.
+     * Saves the submitted draft, then publishes its thread. A submission reserves its identity
+     * before the asynchronous save starts. An obsolete save callback cannot publish. Success
+     * clears and deletes only the submitted version. Failure keeps the entries that remain.
      */
     fun publish(onSent: (replySent: Boolean, quoteSent: Boolean) -> Unit) {
         val account = context.account ?: return
         if (submission != null) return
-        val submittedText = editor.text
-        val submittedWarning = editor.warning.takeIf { editor.warningEnabled && it.isNotBlank() }
-        val submittedQuote = quoteOf?.takeIf { it.connection == account.id.connection.origin }
-        val submittedReply = replyTo?.takeIf { it.connection == account.id.connection.origin }
-        val knownAudiences = context.contract.availableAudiences
-        val submittedAudience = if (knownAudiences.isEmpty()) {
-            editor.audience
-        } else {
-            runCatching {
-                PostingVisibilityPolicy.validateExplicit(
-                    editor.audience,
-                    ServerCapabilities(audiences = knownAudiences),
-                )
-            }.getOrNull()
-        }
+        val submittedAudience = editor.validatedAudience(context.contract.availableAudiences)
         if (submittedAudience == null) {
             editorState.value = editor.copy(error = uiStrings.composerAudienceUnavailable())
             return
         }
-        val request = CreatePostRequest(
-            submittedText,
+        val submittedReply = replyTo?.takeIf { it.connection == account.id.connection.origin }
+        val submittedQuote = quoteOf?.takeIf { it.connection == account.id.connection.origin }
+        val publication = editor.toThreadPublication(
+            draftId = editor.draftId ?: UUID.randomUUID().toString(),
             audience = submittedAudience,
-            contentWarning = submittedWarning,
             replyTo = submittedReply,
             quoteOf = submittedQuote,
+            compress = context.contract.postPreferences.uploadCompression != UploadCompression.Never,
+            accountId = account.id,
         )
         val reserved = ComposerSubmission(
             revision = editorRevision,
@@ -368,7 +361,7 @@ class ComposerOwner internal constructor(
         submission = reserved
         val submittedContents = editor.entries.map(ComposerEntryState::content)
         draftsContract.actions.save(
-            draftValue(),
+            publication.toPostDraft(account.id).copy(quotePreview = target?.toQuotePreview() ?: editor.targetPreview),
             onResult = { saved ->
                 val current = submission
                 // Reject an obsolete save callback before it triggers publication.
@@ -383,21 +376,49 @@ class ComposerOwner internal constructor(
                     draftId = saved.id,
                     savedEntries = submittedContents,
                 )
-                context.contract.actions.publish(request) {
-                    draftsContract.actions.delete(
-                        draftId = saved.id,
-                        onDone = { refreshDrafts() },
-                        onError = { message -> editorState.value = editor.copy(error = message) },
-                    )
-                    onSent(submittedReply != null, submittedQuote != null)
-                    clearAfterPublish(current)
-                }
+                context.contract.actions.publish(
+                    publication.copy(draftId = saved.id),
+                    publishListener(saved.id, current, submittedReply, submittedQuote, onSent),
+                )
             },
             onError = {
                 submission = null
                 editorState.value = editor.copy(error = uiStrings.composerDraftSaveFailedOpen())
             },
         )
+    }
+
+    /**
+     * Keeps the entries a failed publish did not post and names the failed entry. The reply and
+     * quote targets follow the remaining publication: after posted entries they point at the last
+     * created post with no quote, so a retry threads only what remains.
+     */
+    internal fun retainRemaining(failure: ThreadPublishFailure) {
+        editorRevision += 1
+        editorState.value = retainStates(failure)
+    }
+
+    private fun publishListener(
+        savedId: String,
+        submitted: ComposerSubmission,
+        submittedReply: EntityId?,
+        submittedQuote: EntityId?,
+        onSent: (Boolean, Boolean) -> Unit,
+    ): ThreadPublishListener = object : ThreadPublishListener {
+        override fun onAccepted(created: List<OwnedPost>, requests: List<CreatePostRequest>) {
+            draftsContract.actions.delete(
+                draftId = savedId,
+                onDone = { refreshDrafts() },
+                onError = { message -> editorState.value = editor.copy(error = message) },
+            )
+            onSent(submittedReply != null, submittedQuote != null)
+            clearAfterPublish(submitted)
+        }
+
+        override fun onError(failure: ThreadPublishFailure) {
+            submission = null
+            retainRemaining(failure)
+        }
     }
 
     private fun mutateEditor(transform: (ComposerEditorState) -> ComposerEditorState) {

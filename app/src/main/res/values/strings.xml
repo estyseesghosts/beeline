@@ -44,6 +44,7 @@
     <string name="composer_content_warning">Content warning</string>
     <string name="composer_draft_save_failed">Draft could not be saved. Keep editing and try again.</string>
     <string name="composer_draft_save_failed_open">Draft could not be saved. Keep the composer open and try again.</string>
+    <string name="composer_entry_publish_failed">Entry %1$d of %2$d failed: %3$s</string>
     <string name="composer_emoji">:)</string>
     <string name="composer_local_draft">Local draft</string>
     <string name="composer_new_post">New post</string>

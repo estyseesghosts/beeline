@@ -75,6 +75,13 @@ interface SocialSource {
     suspend fun quote(id: EntityId, text: String) = unsupported<Unit>("quote")
     suspend fun votePoll(id: EntityId, optionIndex: Int) = unsupported<Unit>("votePoll")
     suspend fun uploadMedia(request: MediaUploadRequest): Attachment = unsupported("uploadMedia")
+
+    /**
+     * Deletes an uploaded file that no post uses. Best effort: a server without a delete route
+     * reports unsupported and the caller ignores it. The default keeps nothing to delete.
+     */
+    suspend fun deleteUpload(attachmentId: String): Unit = Unit
+
     suspend fun search(query: String): List<Post> = unsupported("search")
     suspend fun searchHashtag(tag: String, cursor: String? = null): Page<Post> = unsupported("hashtag search")
     suspend fun searchAccounts(query: String): List<Account> = unsupported("account search")

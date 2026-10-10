@@ -33,6 +33,9 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Session
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.ThreadPublication
+import me.foxtails.palustris.domain.ThreadPublicationEntry
+import me.foxtails.palustris.domain.ThreadPublishListener
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.data.notifications.NotificationSyncOrchestrator
@@ -114,6 +117,11 @@ class SessionViewModelTest {
             return Post(EntityId("example", "created"), account, post.text, 0, Audience.Public)
         }
     }
+
+    private fun threadDraft(text: String) = ThreadPublication(
+        draftId = "draft-1",
+        entries = listOf(ThreadPublicationEntry(id = "e1", text = text)),
+    )
 
     private class AccountFeedSource(
         private val author: Account,
@@ -381,14 +389,19 @@ class SessionViewModelTest {
 
             source.createError = IOException()
             var completed = false
-            model.create(CreatePostRequest("Draft text")) { completed = true }
+            val listener = object : ThreadPublishListener {
+                override fun onAccepted(created: List<OwnedPost>, requests: List<CreatePostRequest>) {
+                    completed = true
+                }
+            }
+            model.create(threadDraft("Draft text"), listener)
             advanceUntilIdle()
             assertFalse(completed)
             assertFalse(model.feed.value.publishing)
             assertNotNull(model.feed.value.error)
 
             source.createError = null
-            model.create(CreatePostRequest("Draft text")) { completed = true }
+            model.create(threadDraft("Draft text"), listener)
             advanceUntilIdle()
             assertTrue(completed)
             assertFalse(model.feed.value.publishing)
@@ -415,7 +428,7 @@ class SessionViewModelTest {
             assertEquals(setOf(PostAction.Favorite, PostAction.Reply), model.feed.value.actions)
 
             source.createGate = CompletableDeferred()
-            model.create(CreatePostRequest("In-flight draft"))
+            model.create(threadDraft("In-flight draft"))
             runCurrent()
             assertTrue(model.feed.value.publishing)
 
@@ -618,7 +631,7 @@ class SessionViewModelTest {
             advanceUntilIdle()
             assertEquals(listOf(Timeline.Local to null, Timeline.Local to "2"), source.timelineCalls)
 
-            model.create(CreatePostRequest("Local post"))
+            model.create(threadDraft("Local post"))
             advanceUntilIdle()
             assertEquals(Timeline.Local, source.timelineCalls.last().first)
             assertEquals(Timeline.Local, model.feed.value.timeline)

@@ -35,4 +35,10 @@ internal class MisskeyMediaService(
         ).body
         return MisskeyMapper.driveFile(JSONObject(body))
     }
+
+    /** Deletes a drive file that no note uses. Best effort: the publisher ignores a failure. */
+    suspend fun delete(fileId: String) {
+        api.post(origin, "drive/files/delete", JSONObject().put("i", token).put("fileId", fileId), MISSKEY_MAX_RESPONSE_BYTES)
+        Unit
+    }
 }

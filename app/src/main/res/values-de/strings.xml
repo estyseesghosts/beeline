@@ -50,6 +50,7 @@
     <string name="dm_title">Nachrichten</string>
     <string name="common_refresh">Aktualisieren</string>
     <string name="composer_content_warning">Inhaltswarnung</string>
+    <string name="composer_entry_publish_failed">Beitrag %1$d von %2$d ist fehlgeschlagen: %3$s</string>
     <string name="composer_publish">Posten</string>
     <string name="draft_label">Entwurf</string>
     <string name="draft_delete_action">Entwurf löschen</string>

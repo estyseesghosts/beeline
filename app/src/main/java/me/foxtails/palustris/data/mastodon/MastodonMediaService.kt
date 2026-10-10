@@ -69,6 +69,15 @@ internal class MastodonMediaService(
 
     private fun parse(body: String): Attachment = MastodonMapper.attachment(JSONObject(body))
 
+    /**
+     * Deletes unattached media. Servers before 4.4 have no route and answer 404, which the
+     * publisher treats as best-effort cleanup and ignores.
+     */
+    suspend fun delete(id: String) {
+        api.delete(origin, "api/v1/media/${id.encodeMastodonPathSegment()}", token, MASTODON_MAX_RESPONSE_BYTES)
+        Unit
+    }
+
     private companion object {
         const val STATUS_ACCEPTED = 202
         const val STATUS_PARTIAL = 206

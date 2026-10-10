@@ -12,10 +12,10 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.CapabilityStatus
-import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.PalustrisApp
 import kotlinx.coroutines.runBlocking
@@ -85,7 +85,7 @@ class ShellCharacterizationTest {
         val account = AppShellFixtures.account("reply-owner")
         val original = EntityId(AppShellFixtures.connection.origin, "original")
         val post = AppShellFixtures.post("wrapper", account, actionTargetId = original)
-        var request: CreatePostRequest? = null
+        var request: ThreadPublication? = null
         val feed = FeedState(
             posts = listOf(post),
             ownedPosts = listOf(AppShellFixtures.owned(account, post)),

@@ -27,6 +27,9 @@ data class FeedState(
     val loading: Boolean = false,
     val loadingMore: Boolean = false,
     val publishing: Boolean = false,
+    /** Thread progress while publishing: posted entries of total entries. */
+    val publishPosted: Int = 0,
+    val publishTotal: Int = 0,
     val nextCursor: String? = null,
     val error: String? = null,
     val needsSignIn: Boolean = false,

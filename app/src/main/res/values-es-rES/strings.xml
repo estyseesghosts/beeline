@@ -16,6 +16,7 @@
     <string name="common_refresh">Actualizar</string>
     <string name="composer_content_warning">Advertencia de contenido</string>
     <string name="composer_emoji">:)</string>
+    <string name="composer_entry_publish_failed">La publicación %1$d de %2$d falló: %3$s</string>
     <string name="composer_new_post">Nueva publicación</string>
     <string name="composer_publish">Publicar</string>
     <string name="composer_quoted_post">Publicación citada</string>

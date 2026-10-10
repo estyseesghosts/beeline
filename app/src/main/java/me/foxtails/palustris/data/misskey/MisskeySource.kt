@@ -212,6 +212,10 @@ class MisskeySource(
         mediaService.upload(request)
     }
 
+    override suspend fun deleteUpload(attachmentId: String): Unit = this.request("media.delete") {
+        mediaService.delete(attachmentId)
+    }
+
     override suspend fun create(post: CreatePostRequest): Post = request("create") {
         post.replyTo?.let { validatePostId(it, "create.reply-origin") }
         val fileIds = post.attachments.map { it.id ?: throw SourceError.Unsupported("create.attachment-id") }

@@ -1,6 +1,6 @@
 # Objective
 
-Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 5 (limits, upload transport, drive permission, image preparation, compression setting) are done. Slices 6 to 10 (draft and editor model, thread publication, composer surface, composer body, thread editing) are in progress. Slice 11 (media in the composer) is not requested yet.
+Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 7 (limits, upload transport, drive permission, image preparation, compression setting, draft and editor model, thread publication) are done. Slices 8 to 10 (composer surface, composer body, thread editing) are in progress. Slice 11 (media in the composer) is not requested yet.
 
 # Invariants
 
@@ -15,35 +15,37 @@ Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 5 (limits, uploa
 - Blocking questions use the plan's recommended option (the user has not answered them): Q1 plan labels ("Public", "Not in feeds", "Followers only", "Mentioned only"), Q2 (a) audience row shows while the first entry has focus, Q3 "Post replies as unlisted" applies to entry 1 only, Q4 "Drafts" replaces "Save draft", Q5 (a) no Clean links button and links are cleaned on publish, Q6 compact-wide is full screen, Q7 encrypt draft media, Q8 strip GPS, Q9 Misskey entry with a CW uploads files as sensitive, Q10 keep D08.
 - `DraftMediaStore` is stateless, so `EncryptedDraftStore` builds its own instance and Hilt injects another. Both address the same directory.
 - Entry operations that take an entry id have distinct names (`setEntryText`) so the single-post callers keep their signatures.
+- Slice 7: `ComposerContract.Actions.publish(ThreadPublication, ThreadPublishListener)` keeps two parameters so the audit records no params-growth regression. `FeedViewModel.create` is a thin slot reservation; `ThreadPublicationRunner` owns the job. Ask compression maps to `compress=true` until slice 11 adds its dialog; effective compression also requires `posting.clientCompression`.
 
 # Completed
 
 - Slices 1 to 5 — commits 5f3135cf, 3a680d79, 5fddf6f9, 2c79fd50, feb26b2c.
-- Slice 6: draft and editor model for threads and media — the commit that follows feb26b2c.
+- Slice 6: draft and editor model for threads and media — commit 893ce8a3.
+- Slice 7: thread publication — the commit that follows 893ce8a3.
 
 # Current slice
 
-Slice 7: thread publication.
+Slice 8: composer surface.
 
 # Files involved
 
-- `domain/PostDraft.kt` (`DraftMedia`, `PostDraftEntry`, `PostDraft.media`, `PostDraft.followUps`)
-- `data/auth/DraftStore.kt`, `EncryptedDraftStore.kt`, `DraftJson.kt`, `DraftMediaStore.kt`
-- `ui/composer/ComposerEditorState.kt`, `ComposerEditorStateSaver.kt`, `ComposerEntryEdits.kt`, `ComposerTargetPreview.kt`, `ComposerOwner.kt`
-- Tests: `DraftMediaStoreTest`, `ComposerOwnerTest`
+- `ui/composer/ComposerSheet.kt`, `ComposerScreen.kt` (in `ComposerScreen.kt`), `ComposerOverlayHost.kt`
+- `ui/shell/ShellBackPolicy` and `ComposerOwner.save` guarded-close rules
+- `docs/wiki/ui-and-navigation.md` composer section
+- Tests: `ReplyComposerTest`
 
 # Verification
 
-- Slice 6: focused tests and the full local gate; see the slice commit.
+- Slice 7: ThreadPublisherTest 6/6, FeedViewModelThreadTest 3/3, ComposerOwnerTest 27/27, SessionViewModelTest 16/16; full unit suite 1927 tests, 0 failures; tools/tests 52 OK; audit with no new regressions; ktlintCheck, assembleDebug, assembleRelease pass; lintAnalyzeDebug passes while the unitTest/androidTest lint variants crash in the analyzer on untouched files (pre-existing); emulator-5554 launch smoke test passes with feed rendering (logs/slice7-launch2.png). See logs/20261010-120000.txt and the slice commit.
 
 # Next
 
-Slice 7 of the plan.
+Slice 8 of the plan.
 
 # Blockers
 
-None. Live-server and device checks are not yet done.
+None. Live-server publish and device checks beyond launch smoke are not yet done.
 
 # Last safe commit
 
-feb26b2c Add an upload compression setting shown only where the server supports it
+893ce8a3 Publish threads in order with media upload and draft progress

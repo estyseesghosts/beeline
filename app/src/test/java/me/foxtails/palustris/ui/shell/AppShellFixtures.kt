@@ -227,16 +227,23 @@ internal object AppShellFixtures {
     fun composer(
         feed: FeedState,
         postPreferences: me.foxtails.palustris.domain.PostPreferences = me.foxtails.palustris.domain.PostPreferences(),
-        onPublish: (me.foxtails.palustris.domain.CreatePostRequest, (OwnedPost) -> Unit) -> Unit = { _, _ -> },
+        onPublish: (
+            me.foxtails.palustris.domain.ThreadPublication,
+            me.foxtails.palustris.domain.ThreadPublishListener,
+        ) -> Unit = { _, _ -> },
     ): ComposerContract = ComposerContract(
         postPreferences = postPreferences,
         availableAudiences = feed.audiences,
         canPublish = feed.canPublish,
         publishing = feed.publishing,
+        publishPosted = feed.publishPosted,
+        publishTotal = feed.publishTotal,
         error = feed.error,
         actions = object : ComposerContract.Actions {
-            override fun publish(request: me.foxtails.palustris.domain.CreatePostRequest, onAccepted: (OwnedPost) -> Unit) =
-                onPublish(request, onAccepted)
+            override fun publish(
+                publication: me.foxtails.palustris.domain.ThreadPublication,
+                listener: me.foxtails.palustris.domain.ThreadPublishListener,
+            ) = onPublish(publication, listener)
         },
     )
 

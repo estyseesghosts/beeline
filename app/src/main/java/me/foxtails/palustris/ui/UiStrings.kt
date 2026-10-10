@@ -20,6 +20,7 @@ interface UiStrings {
     fun relationshipUnavailable(): String
     fun composerDraftSaveFailed(): String
     fun composerDraftSaveFailedOpen(): String
+    fun composerEntryPublishFailed(position: Int, total: Int, detail: String): String
     fun composerAudienceUnavailable(): String
     fun composerQuotedPost(): String
     fun sessionRestoreFailed(): String
@@ -46,6 +47,8 @@ interface UiStrings {
             override fun relationshipUnavailable(): String = ""
             override fun composerDraftSaveFailed(): String = ""
             override fun composerDraftSaveFailedOpen(): String = ""
+            override fun composerEntryPublishFailed(position: Int, total: Int, detail: String): String =
+                "Entry $position of $total: $detail"
             override fun composerAudienceUnavailable(): String = ""
             override fun composerQuotedPost(): String = ""
             override fun sessionRestoreFailed(): String = ""
@@ -70,6 +73,8 @@ private class AndroidUiStrings(private val context: Context) : UiStrings {
     override fun relationshipUnavailable(): String = context.getString(R.string.post_relationship_unavailable)
     override fun composerDraftSaveFailed(): String = context.getString(R.string.composer_draft_save_failed)
     override fun composerDraftSaveFailedOpen(): String = context.getString(R.string.composer_draft_save_failed_open)
+    override fun composerEntryPublishFailed(position: Int, total: Int, detail: String): String =
+        context.getString(R.string.composer_entry_publish_failed, position, total, detail)
     override fun composerAudienceUnavailable(): String = context.getString(R.string.composer_audience_unavailable)
     override fun composerQuotedPost(): String = context.getString(R.string.composer_quoted_post)
     override fun sessionRestoreFailed(): String = context.getString(R.string.session_restore_failed)

@@ -19,10 +19,10 @@ import me.foxtails.palustris.data.auth.DraftWriteAuthority
 import me.foxtails.palustris.data.notifications.NotificationStreamController
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppNavigationAnchor
-import me.foxtails.palustris.domain.CreatePostRequest
-import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferences
+import me.foxtails.palustris.domain.ThreadPublication
+import me.foxtails.palustris.domain.ThreadPublishListener
 import me.foxtails.palustris.ui.PalustrisApp
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.composer.asDraftsContract
@@ -243,9 +243,8 @@ fun ConnectedSessionHost(
     }
     val composerActions = remember(feed.publish) {
         object : ComposerContract.Actions {
-            override fun publish(request: CreatePostRequest, onAccepted: (OwnedPost) -> Unit) {
-                feed.publish(request, onAccepted)
-            }
+            override fun publish(publication: ThreadPublication, listener: ThreadPublishListener) =
+                feed.publish(publication, listener)
         }
     }
     val composer = remember(postPreferences, feed.composerInputs, composerActions) {
@@ -254,6 +253,8 @@ fun ConnectedSessionHost(
             availableAudiences = feed.composerInputs.availableAudiences,
             canPublish = feed.composerInputs.canPublish,
             publishing = feed.composerInputs.publishing,
+            publishPosted = feed.composerInputs.publishPosted,
+            publishTotal = feed.composerInputs.publishTotal,
             error = feed.composerInputs.error,
             actions = composerActions,
         )

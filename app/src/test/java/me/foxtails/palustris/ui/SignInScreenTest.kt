@@ -127,7 +127,7 @@ class SignInScreenTest {
 
     @Test fun publishingKeepsDraftUntilSuccessCallback() {
         val account = Account(AccountId(Connection("https://example.org", Protocol.MISSKEY), "owner"), "Owner", "@owner@example.org")
-        var complete: ((OwnedPost) -> Unit)? = null
+        var listener: me.foxtails.palustris.domain.ThreadPublishListener? = null
         val drafts = runBlocking { AppShellFixtures.ShellDrafts.forAccount(account.id) }
             .also { shellDraftSessions += it }
         compose.activity.runOnUiThread { compose.activity.setContent {
@@ -137,7 +137,7 @@ class SignInScreenTest {
                 draftsContract = drafts.contract,
                 composer = AppShellFixtures.composer(
                     FeedState(canPublish = true),
-                    onPublish = { _, onSuccess -> complete = onSuccess },
+                    onPublish = { _, publishListener -> listener = publishListener },
                 ),
             )
         } }
@@ -148,12 +148,13 @@ class SignInScreenTest {
         compose.onNodeWithContentDescription("Post text").assertTextContains("Keep this draft")
 
         compose.runOnIdle {
-            complete?.invoke(
+            val created = listOf(
                 OwnedPost(
                     account.id,
                     Post(EntityId(account.id.connection.origin, "created"), account, "", 0L, Audience.Public),
                 ),
             )
+            listener?.onAccepted(created, listOf(me.foxtails.palustris.domain.CreatePostRequest("")))
         }
         compose.onNodeWithContentDescription("Post text").assertDoesNotExist()
     }
