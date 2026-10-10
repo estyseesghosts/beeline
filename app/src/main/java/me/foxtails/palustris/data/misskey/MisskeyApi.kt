@@ -60,8 +60,8 @@ class MisskeyApi(
     suspend fun delete(origin: String, endpoint: String, bearerToken: String? = null, maxResponseBytes: Long? = null): HttpResponse =
         execute { transport.delete(origin, endpoint, bearerToken, maxResponseBytes) }
 
-    suspend fun postMultipart(origin: String, endpoint: String, file: InputStream, mimeType: String, fileName: String = "upload", bearerToken: String? = null, maxResponseBytes: Long? = null): HttpResponse =
-        execute { transport.postMultipart(origin, endpoint, file, mimeType, fileName, bearerToken, maxResponseBytes) }
+    suspend fun postMultipart(origin: String, endpoint: String, file: InputStream, mimeType: String, fileName: String = "upload", bearerToken: String? = null, maxResponseBytes: Long? = null, fields: List<Pair<String, String>> = emptyList()): HttpResponse =
+        execute { transport.postMultipart(origin, "api/$endpoint", file, mimeType, fileName, bearerToken, maxResponseBytes, fields) }
 
     suspend fun patchMultipart(origin: String, endpoint: String, fields: List<Pair<String, String>> = emptyList(), files: List<MultipartFileBody> = emptyList(), bearerToken: String? = null): HttpResponse =
         execute { transport.patchMultipart(origin, endpoint, fields, files, bearerToken) }

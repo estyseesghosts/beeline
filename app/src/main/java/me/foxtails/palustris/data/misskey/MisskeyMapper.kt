@@ -147,6 +147,9 @@ object MisskeyMapper {
             )
         }
 
+    /** Maps the drive file that `drive/files/create` returns. */
+    fun driveFile(json: JSONObject): Attachment = requireNotNull(attachment(json))
+
     private fun attachment(json: JSONObject?): Attachment? {
         if (json == null) return null
         val mimeType = json.nullableString("type") ?: "application/octet-stream"

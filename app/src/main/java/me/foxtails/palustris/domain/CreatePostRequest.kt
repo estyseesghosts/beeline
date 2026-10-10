@@ -16,4 +16,6 @@ data class CreatePostRequest(
     val attachments: List<Attachment> = emptyList(),
     val poll: PollRequest? = null,
     val quoteOf: EntityId? = null,
+    /** Lets a server drop a duplicate of the same publish. Only servers that support it use it. */
+    val idempotencyKey: String? = null,
 )

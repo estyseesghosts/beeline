@@ -11,6 +11,7 @@ import me.foxtails.palustris.data.AppMessages
 import me.foxtails.palustris.data.transport.ResponseLimitExceeded
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
@@ -29,6 +30,7 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Event
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.MediaUploadRequest
 import me.foxtails.palustris.domain.ModerationAccount
 import me.foxtails.palustris.domain.ModerationCursor
 import me.foxtails.palustris.domain.ModerationPage
@@ -107,6 +109,7 @@ class MisskeySource(
     private val moderationService = accountId?.let { MisskeyModerationService(origin, token, api, it, MISSKEY_MAX_RESPONSE_BYTES) }
     private val pushService = MisskeyPushService(origin, token, api, accountId, MISSKEY_MAX_RESPONSE_BYTES)
     private val streamService = MisskeyStreamService(origin, token, api, accountId)
+    private val mediaService = MisskeyMediaService(origin, token, api)
     private val timelineService = MisskeyTimelineService(origin, token, api, MISSKEY_MAX_RESPONSE_BYTES)
     private val threadService = MisskeyThreadService(
         origin = origin,
@@ -205,13 +208,19 @@ class MisskeySource(
         threadService.threadContext(focalId, continuation)
     }
 
+    override suspend fun uploadMedia(request: MediaUploadRequest): Attachment = this.request("media.upload") {
+        mediaService.upload(request)
+    }
+
     override suspend fun create(post: CreatePostRequest): Post = request("create") {
-        if (post.attachments.isNotEmpty()) throw SourceError.Unsupported("create.attachments")
         post.replyTo?.let { validatePostId(it, "create.reply-origin") }
+        val fileIds = post.attachments.map { it.id ?: throw SourceError.Unsupported("create.attachment-id") }
         val body = JSONObject()
             .put("i", token)
-            .put("text", post.text)
             .put("visibility", post.audience.toMisskeyVisibility())
+        // A note with files may have no text. A blank text field is rejected, so leave it out.
+        if (post.text.isNotBlank() || fileIds.isEmpty()) body.put("text", post.text)
+        if (fileIds.isNotEmpty()) body.put("fileIds", JSONArray(fileIds))
         post.contentWarning?.let { body.put("cw", it) }
         post.replyTo?.let { body.put("replyId", it.value) }
         post.quoteOf?.let {

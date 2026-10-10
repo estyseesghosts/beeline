@@ -2,7 +2,7 @@
 
 Status: planned  
 Owner: Protocol maintainers  
-Last reviewed: 2026-09-13  
+Last reviewed: 2026-10-09  
 Stale when: A supported server family, capability, endpoint, or verification result changes.
 
 Sources: `AGENTS.md`, `domain/`, `data/misskey/`, `data/mastodon/`, adapter tests, and capability code.
@@ -43,16 +43,33 @@ Source: `data/mastodon/MastodonModerationService.kt` and `ModerationServiceTest`
 
 <!-- Add the dated support matrix, capability states, protocol differences, and known unverified cases. -->
 
-### Mastodon media upload
+### Media upload and attachments
 
-Source: `data/mastodon/MastodonSource.kt`, `data/mastodon/MastodonMapper.kt`,
-and `MastodonIntegrationTest`.
+Source: `data/mastodon/MastodonMediaService.kt`, `data/misskey/MisskeyMediaService.kt`,
+`domain/MediaUploadRequest.kt`, `MastodonMediaServiceTest`, `MisskeyMediaTest`,
+and `AuthenticatedHttpClientTest`.
 
-- `uploadMedia` posts the caller stream to `/api/v1/media` as multipart
-  name `file` with default filename `upload` and the caller MIME type. The
-  transport streams the input without buffering the whole file and closes it
-  exactly once on success, failure, and cancellation.
-- A consumed input cannot be replayed. A manual retry opens a new stream.
-- Network failure and cancellation yield no attachment. Server-side media
-  processing behavior is unchanged. Live-server media upload remains
+- `SocialSource.uploadMedia(MediaUploadRequest)` takes an `open` function, not a
+  stream. Each attempt opens a new stream, because a consumed stream cannot be
+  replayed. The transport streams the file without buffering it and closes the
+  stream once on success, failure, and cancellation.
+- Mastodon uploads to `POST /api/v2/media` with `file` and `description`. A 202
+  answer means background processing. The adapter polls `GET /api/v1/media/:id`
+  after 1 s, then 2 s, then every 5 s. A 206 answer continues, a 200 answer ends,
+  and a 422 answer fails with the server error. Polling stops after 60 s. A 404
+  from the v2 route falls back to the deprecated `POST /api/v1/media`. A 413
+  answer maps to `ResourceLimit`.
+- Mastodon `create` sends `media_ids[]` and accepts an empty `status` when media
+  is attached. `CreatePostRequest.idempotencyKey` becomes the `Idempotency-Key`
+  header, which the server keeps for one hour. A quote with media is still
+  rejected before any request.
+- Misskey uploads to `POST /api/drive/files/create` with the token as the form
+  field `i`, plus `name`, `comment` (alt text), `isSensitive`, and `force`.
+  The endpoint needs the `write:drive` permission. `create` sends `fileIds` and
+  leaves out `text` when it is blank and files are present.
+- Misskey drive errors: `NO_FREE_SPACE` and `MAX_FILE_SIZE_EXCEEDED` (and HTTP
+  413) map to `ResourceLimit`. `UNALLOWED_FILE_TYPE`, `INAPPROPRIATE`, and
+  `commentTooLong` map to `Unsupported` with separate keys. `PERMISSION_DENIED`
+  maps to `AccessDenied`.
+- Limits come from `ServerCapabilities.posting`. Live-server uploads remain
   unverified.

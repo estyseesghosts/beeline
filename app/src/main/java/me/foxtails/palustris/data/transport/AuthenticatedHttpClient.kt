@@ -37,8 +37,8 @@ class AuthenticatedHttpClient(
     suspend fun post(origin: String, path: String, body: String = "{}", bearerToken: String? = null, maxResponseBytes: Long? = null): HttpResponse =
         execute(request(origin, path, bearerToken).post(body.toRequestBody("application/json; charset=utf-8".toMediaType())).build(), maxResponseBytes)
 
-    suspend fun postForm(origin: String, path: String, fields: List<Pair<String, String>>, bearerToken: String? = null, maxResponseBytes: Long? = null): HttpResponse =
-        execute(request(origin, path, bearerToken).post(FormBody.Builder().apply { fields.forEach { (key, value) -> add(key, value) } }.build()).build(), maxResponseBytes)
+    suspend fun postForm(origin: String, path: String, fields: List<Pair<String, String>>, bearerToken: String? = null, maxResponseBytes: Long? = null, headers: Map<String, String> = emptyMap()): HttpResponse =
+        execute(request(origin, path, bearerToken).apply { headers.forEach { (name, value) -> header(name, value) } }.post(FormBody.Builder().apply { fields.forEach { (key, value) -> add(key, value) } }.build()).build(), maxResponseBytes)
 
     suspend fun postForm(origin: String, path: String, fields: Map<String, String>, bearerToken: String? = null, maxResponseBytes: Long? = null): HttpResponse =
         postForm(origin, path, fields.entries.map { it.key to it.value }, bearerToken, maxResponseBytes)
@@ -94,13 +94,12 @@ class AuthenticatedHttpClient(
      * consumed stream cannot be replayed. Cancellation closes the input while OkHttp
      * cancels the call, so a read that unblocks on close ends as CancellationException.
      * Field name, filename, MIME type, bearer, path, User-Agent, and response cap
-     * match the previous buffered behavior.
+     * match the previous buffered behavior. Text [fields] precede the file part.
      */
-    suspend fun postMultipart(origin: String, path: String, file: InputStream, mimeType: String, fileName: String = "upload", bearerToken: String? = null, maxResponseBytes: Long? = null): HttpResponse {
+    suspend fun postMultipart(origin: String, path: String, file: InputStream, mimeType: String, fileName: String = "upload", bearerToken: String? = null, maxResponseBytes: Long? = null, fields: List<Pair<String, String>> = emptyList()): HttpResponse {
         val owner = UploadStreamOwner(file)
         try {
-            val multipart = MultipartBody.Builder().setType(MultipartBody.FORM)
-                .addFormDataPart("file", fileName, owner.body(mimeType)).build()
+            val multipart = uploadForm(fields, fileName, owner.body(mimeType))
             return execute(request(origin, path, bearerToken).post(OneShotRequestBody(multipart)).build(), maxResponseBytes)
         } finally {
             owner.release()
@@ -129,6 +128,12 @@ class AuthenticatedHttpClient(
         }
     }
 
+    private fun uploadForm(fields: List<Pair<String, String>>, fileName: String, file: RequestBody): MultipartBody =
+        MultipartBody.Builder().setType(MultipartBody.FORM).apply {
+            fields.forEach { (name, value) -> addFormDataPart(name, value) }
+            addFormDataPart("file", fileName, file)
+        }.build()
+
     private fun request(origin: String, path: String, token: String?): Request.Builder {
         val base = origin.toHttpUrlOrNull() ?: throw IllegalArgumentException("Invalid origin")
         val target = base.resolve(if (path.startsWith("/")) path else "/$path")
@@ -151,7 +156,7 @@ class AuthenticatedHttpClient(
                         try {
                             val text = it.body?.let { body -> readBody(body, maxResponseBytes) }.orEmpty()
                              if (!it.isSuccessful) throw HttpStatusFailure(it.code, text)
-                            continuation.resume(HttpResponse(text, it.headers))
+                            continuation.resume(HttpResponse(text, it.headers, it.code))
                         } catch (error: Exception) { if (!continuation.isCancelled) continuation.resumeWithException(error) }
                     }
                 }

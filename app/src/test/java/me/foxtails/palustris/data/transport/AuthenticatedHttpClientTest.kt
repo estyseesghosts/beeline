@@ -228,6 +228,42 @@ class AuthenticatedHttpClientTest {
     }
 
     @Test
+    fun multipartFieldsAndFileShareOneBodyAndTheStreamCloses() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setResponseCode(202).setBody("ok"))
+            val stream = GeneratedUploadStream(2048)
+            val origin = server.url("/").toString().removeSuffix("/")
+
+            val response = AuthenticatedHttpClient(OkHttpClient()).postMultipart(
+                origin, "upload", stream, "image/png", "photo.png",
+                fields = listOf("description" to "Alt text", "force" to "true"),
+            )
+
+            val sent = String(requireNotNull(server.takeRequest(5, TimeUnit.SECONDS)).body.readByteArray(), Charsets.ISO_8859_1)
+            assertTrue(sent.contains("name=\"description\""))
+            assertTrue(sent.contains("Alt text"))
+            assertTrue(sent.contains("name=\"force\""))
+            assertTrue(sent.indexOf("name=\"description\"") < sent.indexOf("name=\"file\""))
+            assertEquals(202, response.status)
+            assertEquals(1, stream.closes)
+        }
+    }
+
+    @Test
+    fun postFormSendsExtraHeaders() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("ok"))
+            val origin = server.url("/").toString().removeSuffix("/")
+
+            AuthenticatedHttpClient(OkHttpClient()).postForm(
+                origin, "post", listOf("a" to "b"), headers = mapOf("Idempotency-Key" to "key-1"),
+            )
+
+            assertEquals("key-1", server.takeRequest().getHeader("Idempotency-Key"))
+        }
+    }
+
+    @Test
     fun streamBodyLengthIsUnknownWithoutConsumingInput() {
         val stream = GeneratedUploadStream(16)
         val part = MultipartFileBody("file", "file.txt", "text/plain", stream).body()

@@ -214,7 +214,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         }
     }
 
-    @Test fun misskeyCreateRejectsAttachmentsUntilMediaIdsAreSupported() = runBlocking {
+    @Test fun misskeyCreateRejectsAttachmentsWithoutAServerId() = runBlocking {
         MockWebServer().use { server ->
             val origin = server.url("/").toString().removeSuffix("/")
             val attachment = Attachment("https://example.org/photo.jpg", "image/jpeg", null)

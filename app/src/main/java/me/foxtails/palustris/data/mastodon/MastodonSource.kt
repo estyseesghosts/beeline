@@ -1,6 +1,5 @@
 package me.foxtails.palustris.data.mastodon
 
-import java.io.InputStream
 import java.net.URLEncoder
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
@@ -13,6 +12,7 @@ import me.foxtails.palustris.data.transport.HttpStatusFailure
 import me.foxtails.palustris.data.transport.ResponseLimitExceeded
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
@@ -32,6 +32,7 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Event
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.MediaUploadRequest
 import me.foxtails.palustris.domain.ModerationAccount
 import me.foxtails.palustris.domain.ModerationCursor
 import me.foxtails.palustris.domain.ModerationPage
@@ -105,6 +106,7 @@ class MastodonSource(
     private val pushService = MastodonPushService(origin, token, api, accountId)
     private val streamService = MastodonStreamService(origin, token, api, accountId)
     private val threadService = MastodonThreadService(origin, token, api, accountId, sessionRevision)
+    private val mediaService = MastodonMediaService(origin, token, api)
     private val pageClient = MastodonPageClient(origin, token, api, accountId.localId, sessionRevision, sourceInstance)
     private val timelineService = MastodonTimelineService(pageClient, origin)
     override val capabilities: ServerCapabilities get() = _capabilities.value
@@ -199,16 +201,22 @@ class MastodonSource(
         if (post.quoteOf != null && (post.attachments.isNotEmpty() || post.poll != null)) {
             throw SourceError.Unsupported("quote.attachments-or-poll")
         }
-        if (post.attachments.isNotEmpty()) throw SourceError.Unsupported("create.attachments")
         if (post.poll != null) throw SourceError.Unsupported("create.poll")
+        val mediaIds = post.attachments.map { it.id ?: throw SourceError.Unsupported("create.attachment-id") }
         val fields = buildList {
+            // The server accepts an empty status when media is attached.
             add("status" to post.text)
+            mediaIds.forEach { add("media_ids[]" to it) }
             add("visibility" to post.audience.toMastodonVisibility())
             post.contentWarning?.let { add("spoiler_text" to it) }
             post.replyTo?.let { add("in_reply_to_id" to it.value) }
             post.quoteOf?.let { add("quoted_status_id" to it.value) }
         }
-        MastodonMapper.post(api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(), origin)
+        val headers = post.idempotencyKey?.let { mapOf("Idempotency-Key" to it) }.orEmpty()
+        MastodonMapper.post(
+            api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES, headers).body.toJson(),
+            origin,
+        )
     }
 
     override suspend fun conversations(cursor: String?): Page<DirectConversation> = request("direct.conversations") { directMessageService.conversations(cursor) }
@@ -441,8 +449,8 @@ class MastodonSource(
 
     override fun streamEvents(): Flow<Event> = streamService.events()
 
-    override suspend fun uploadMedia(file: InputStream, mimeType: String) = request("media.upload") {
-        MastodonMapper.attachment(api.postMultipart(origin, "api/v1/media", file, mimeType, bearerToken = token, maxResponseBytes = MASTODON_MAX_RESPONSE_BYTES).body.toJson())
+    override suspend fun uploadMedia(request: MediaUploadRequest): Attachment = this.request("media.upload") {
+        mediaService.upload(request)
     }
 
     override suspend fun search(query: String): List<Post> = request("search") {

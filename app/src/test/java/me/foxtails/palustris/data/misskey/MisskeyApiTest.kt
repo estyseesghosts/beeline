@@ -161,17 +161,20 @@ class MisskeyApiTest {
             val payload = ByteArray(1024) { index -> (index % 251).toByte() }
             val stream = ClosingInputStream(payload)
 
-            api.postMultipart(origin, "drive/files/create", stream, "image/png", "photo.png", "token")
+            api.postMultipart(origin, "drive/files/create", stream, "image/png", "photo.png", "token", fields = listOf("i" to "secret", "comment" to "Alt text"))
 
             val request = server.takeRequest(10, TimeUnit.SECONDS)
             assertNotNull(request)
             assertEquals("POST", request!!.method)
-            assertEquals("/drive/files/create", request.path)
+            assertEquals("/api/drive/files/create", request.path)
             assertEquals("Bearer token", request.getHeader("Authorization"))
             assertTrue(request.getHeader("Content-Type")!!.startsWith("multipart/form-data"))
             val sent = request.body.readByteArray()
             assertTrue(String(sent, Charsets.UTF_8).contains("filename=\"photo.png\""))
             assertTrue(String(sent, Charsets.UTF_8).contains("Content-Type: image/png"))
+            assertTrue(String(sent, Charsets.UTF_8).contains("name=\"i\""))
+            assertTrue(String(sent, Charsets.UTF_8).contains("name=\"comment\""))
+            assertTrue(String(sent, Charsets.UTF_8).contains("Alt text"))
             assertTrue(containsSequence(sent, payload))
             assertTrue(stream.closed)
         }

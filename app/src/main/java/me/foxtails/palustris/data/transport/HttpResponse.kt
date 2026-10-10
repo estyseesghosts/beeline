@@ -3,7 +3,7 @@ package me.foxtails.palustris.data.transport
 import okhttp3.Headers
 
 /** The adapter-facing HTTP result; pagination metadata stays inside the adapter boundary. */
-data class HttpResponse(val body: String, val headers: Headers) {
+data class HttpResponse(val body: String, val headers: Headers, val status: Int = 200) {
     fun linkHeader(): String? = headers["Link"]
 
     /** Returns the URL advertised for the next page by a Mastodon-style Link header. */

@@ -74,7 +74,7 @@ interface SocialSource {
     }
     suspend fun quote(id: EntityId, text: String) = unsupported<Unit>("quote")
     suspend fun votePoll(id: EntityId, optionIndex: Int) = unsupported<Unit>("votePoll")
-    suspend fun uploadMedia(file: java.io.InputStream, mimeType: String): Attachment = unsupported("uploadMedia")
+    suspend fun uploadMedia(request: MediaUploadRequest): Attachment = unsupported("uploadMedia")
     suspend fun search(query: String): List<Post> = unsupported("search")
     suspend fun searchHashtag(tag: String, cursor: String? = null): Page<Post> = unsupported("hashtag search")
     suspend fun searchAccounts(query: String): List<Account> = unsupported("account search")

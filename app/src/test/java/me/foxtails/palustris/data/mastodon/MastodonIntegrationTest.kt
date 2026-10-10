@@ -761,7 +761,7 @@ class MastodonIntegrationTest {
         source.favorite(EntityId(origin, "favorite-1"))
         source.renote(EntityId(origin, "renote-1"))
         val notifications = source.notifications(NotificationQuery())
-        val attachment = source.uploadMedia(ByteArrayInputStream("bytes".toByteArray()), "image/jpeg")
+        val attachment = source.uploadMedia(uploadRequest(ByteArrayInputStream("bytes".toByteArray())))
         val search = source.search("hello world")
 
         assertEquals("created", created.id.value)
@@ -783,7 +783,7 @@ class MastodonIntegrationTest {
         assertEquals("found", search.single().id.value)
         assertEquals("/api/v1/notifications", server.takeRequest().path)
         val uploadRequest = server.takeRequest()
-        assertEquals("/api/v1/media", uploadRequest.path)
+        assertEquals("/api/v2/media", uploadRequest.path)
         assertEquals("Bearer token", uploadRequest.getHeader("Authorization"))
         assertTrue(uploadRequest.body.readUtf8().contains("bytes"))
         assertEquals("/api/v2/search?q=hello+world", server.takeRequest().path)
@@ -799,12 +799,12 @@ class MastodonIntegrationTest {
             .toString()))
         val stream = AdapterUploadStream(8192)
 
-        val attachment = source().uploadMedia(stream, "image/jpeg")
+        val attachment = source().uploadMedia(uploadRequest(stream))
         val request = server.takeRequest(5, TimeUnit.SECONDS)
 
         assertNotNull(request)
         assertEquals("POST", request!!.method)
-        assertEquals("/api/v1/media", request.path)
+        assertEquals("/api/v2/media", request.path)
         assertEquals("Bearer token", request.getHeader("Authorization"))
         val body = request.body.readByteArray()
         val multipart = body.toString(Charsets.ISO_8859_1)
@@ -827,7 +827,7 @@ class MastodonIntegrationTest {
         var attachment: Any? = null
 
         val error = assertThrows(SourceError.ServerError::class.java) {
-            runBlocking { attachment = source().uploadMedia(stream, "image/jpeg") }
+            runBlocking { attachment = source().uploadMedia(uploadRequest(stream)) }
         }
 
         assertEquals("invalid media", error.detail)
@@ -850,7 +850,7 @@ class MastodonIntegrationTest {
                 accountId = AccountId(Connection(faultOrigin, me.foxtails.palustris.domain.Protocol.MASTODON), "local-user"),
             )
             assertThrows(SourceError.NetworkUnavailable::class.java) {
-                runBlocking { attachment = faultSource.uploadMedia(disconnectedStream, "image/jpeg") }
+                runBlocking { attachment = faultSource.uploadMedia(uploadRequest(disconnectedStream)) }
             }
             assertNull(attachment)
             assertEquals(1, disconnectedStream.closes)
@@ -863,7 +863,7 @@ class MastodonIntegrationTest {
             .put("preview_url", "https://example.org/uploaded-small.jpg")
             .toString()))
         val retryStream = AdapterUploadStream(2048)
-        val retryAttachment = source().uploadMedia(retryStream, "image/jpeg")
+        val retryAttachment = source().uploadMedia(uploadRequest(retryStream))
 
         assertEquals("media-1", retryAttachment.id)
         assertEquals("https://example.org/uploaded.jpg", retryAttachment.url)
@@ -875,7 +875,7 @@ class MastodonIntegrationTest {
     fun uploadMediaCancellationClosesInputWithoutAttachment() = runBlocking {
         val stream = AdapterUploadStream(8, blockReadsUntilClosed = true)
         var attachment: Any? = null
-        val upload = async(Dispatchers.IO) { attachment = source().uploadMedia(stream, "image/jpeg") }
+        val upload = async(Dispatchers.IO) { attachment = source().uploadMedia(uploadRequest(stream)) }
 
         try {
             withTimeout(5_000) { while (stream.readEntered.count != 0L) delay(10) }
@@ -1601,6 +1601,9 @@ class MastodonIntegrationTest {
         assertEquals("moderation.cursor", error.feature)
         assertEquals(0, server.requestCount)
     }
+
+    private fun uploadRequest(stream: java.io.InputStream, description: String? = null) =
+        me.foxtails.palustris.domain.MediaUploadRequest({ stream }, "image/jpeg", "upload", description, false)
 
     private fun source() = MastodonSource(
         origin = origin,
