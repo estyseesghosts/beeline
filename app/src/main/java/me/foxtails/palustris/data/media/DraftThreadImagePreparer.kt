@@ -63,7 +63,7 @@ class DraftThreadImagePreparer @Inject constructor(
         }
     }
 
-    private fun workDirectory(): File = File(context.cacheDir, "thread-prep")
+    private fun workDirectory(): File = File(context.cacheDir, "thread-prep").apply { mkdirs() }
 
     private class FilePreparedThreadImage(
         private val file: File,

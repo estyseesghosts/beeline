@@ -54,7 +54,14 @@ class FeedViewModel @AssistedInject constructor(
     private val uiStrings: UiStrings = UiStrings.Default,
 ) : ViewModel() {
     val favouriteArtworkStyle = source.favouriteArtworkStyle
-    private val _feed = MutableStateFlow(FeedState())
+    // Publishing inputs come from the source up front so the composer works before the first timeline load.
+    private val _feed = MutableStateFlow(
+        FeedState(
+            canPublish = source.capabilities.canPublish,
+            audiences = source.capabilities.audiences,
+            limits = PostLimits(source.capabilities.maxPostLength, source.capabilities.posting),
+        ),
+    )
     val feed = _feed.asStateFlow()
     val sync = syncCoordinator.observeAccount(accountId)
     private var feedJob: Job? = null
