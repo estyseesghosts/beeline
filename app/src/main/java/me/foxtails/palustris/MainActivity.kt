@@ -28,6 +28,7 @@ import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferencesRepository
+import me.foxtails.palustris.domain.hashtags.HashtagExpander
 import me.foxtails.palustris.ui.ConnectedApp
 import me.foxtails.palustris.ui.display.RefreshRateController
 import me.foxtails.palustris.ui.localization.AppLocaleController
@@ -53,6 +54,8 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var postPreferencesRepository: PostPreferencesRepository
 
     @Inject lateinit var photoGridPreferencesRepository: PhotoGridPreferencesRepository
+
+    @Inject lateinit var hashtagExpander: HashtagExpander
     private lateinit var refreshRateController: RefreshRateController
     private var appliedLanguage = AppLanguage.SystemDefault
     private val localeOwner = AppLocaleOwner()
@@ -95,6 +98,7 @@ class MainActivity : ComponentActivity() {
                 appPreferencesRepository,
                 postPreferencesRepository,
                 photoGridPreferencesRepository,
+                hashtagExpander,
             )
         }
         lifecycleScope.launch {

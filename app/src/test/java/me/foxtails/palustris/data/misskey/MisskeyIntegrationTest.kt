@@ -1,6 +1,7 @@
 package me.foxtails.palustris.data.misskey
 
 import kotlinx.coroutines.runBlocking
+import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import me.foxtails.palustris.MisskeySourceContractTest
 import me.foxtails.palustris.data.auth.AuthCallback
 import me.foxtails.palustris.data.auth.AppRegistrationCache
@@ -534,6 +535,41 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             val secondBody = JSONObject(server.takeRequest().body.readUtf8())
             assertEquals("cats", firstBody.getString("tag"))
             assertEquals("tag-newest", secondBody.getString("untilId"))
+        }
+    }
+
+    @Test fun misskeyCombinedHashtagSearchSendsOneInnerArrayForEachHashtag() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("[${note("tag-newest")}]"))
+            server.enqueue(MockResponse().setBody("[${note("tag-older")}]"))
+            val origin = server.url("/").toString().removeSuffix("/")
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
+            val query = HashtagQuery("#foto", listOf("fotografia", "写真", "FOTO"))
+
+            val first = source.searchHashtags(query)
+            source.searchHashtags(query, first.nextCursor)
+
+            val firstBody = JSONObject(server.takeRequest().body.readUtf8())
+            val secondBody = JSONObject(server.takeRequest().body.readUtf8())
+            assertEquals("[[\"foto\"],[\"fotografia\"],[\"写真\"]]", firstBody.getJSONArray("query").toString())
+            assertEquals(false, firstBody.has("tag"))
+            assertEquals(firstBody.getJSONArray("query").toString(), secondBody.getJSONArray("query").toString())
+            assertEquals("tag-newest", secondBody.getString("untilId"))
+            assertEquals(10, source.maxCombinedHashtags)
+        }
+    }
+
+    @Test fun misskeyHashtagSearchWithoutExtrasStillSendsTag() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("[]"))
+            val origin = server.url("/").toString().removeSuffix("/")
+            val source = MisskeySource(origin, "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
+
+            source.searchHashtags(HashtagQuery("cats", listOf("Cats")))
+
+            val body = JSONObject(server.takeRequest().body.readUtf8())
+            assertEquals("cats", body.getString("tag"))
+            assertEquals(false, body.has("query"))
         }
     }
 

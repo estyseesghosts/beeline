@@ -23,6 +23,7 @@ import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.domain.ThreadPublishListener
+import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.ui.PalustrisApp
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.composer.asDraftsContract
@@ -66,6 +67,7 @@ fun ConnectedSessionHost(
     accountIndex: AccountIndex,
     postPreferences: PostPreferences,
     photoGridPreferences: PhotoGridPreferencesRepository,
+    hashtagInput: HashtagExpansionInput,
     initialNotificationRoute: AppRoute?,
     onOpenSettings: () -> Unit,
     tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
@@ -131,6 +133,7 @@ fun ConnectedSessionHost(
         postPreferences = postPreferences,
         coordinator = projectionCoordinator,
         entryStore = entryStore,
+        hashtagInput = hashtagInput,
     )
     val photoGrid = PhotoGridHost(
         accountId = accountId,
@@ -141,6 +144,7 @@ fun ConnectedSessionHost(
         preferencesRepository = photoGridPreferences,
         coordinator = projectionCoordinator,
         entryStore = entryStore,
+        hashtagInput = hashtagInput,
     )
     val feed = FeedHost(
         accountId = accountId,

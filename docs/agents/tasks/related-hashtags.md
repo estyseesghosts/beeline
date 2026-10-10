@@ -20,11 +20,11 @@ The catalog has 74 groups and 1,814 members, not the 62 groups and 1,370 members
 
 # Completed
 
-- Slice 1 (catalog, rules, setting) — commit named in `docs/agents/handoff.md`.
+- Slice 1 (catalog, rules, setting) — commit 2b551c12.
 
 # Current slice
 
-Slice 2: combined hashtag results.
+Slice 2: combined hashtag results (implemented, gate pending).
 
 # Files involved
 
@@ -36,7 +36,7 @@ Slice 1: focused tests, then the CI-parity gate. See the commit.
 
 # Next
 
-Slice 2: `HashtagQuery`, `maxCombinedHashtags`, `searchHashtags`, both adapters, controllers, results header.
+Slice 3: server discovery and the suggestion service.
 
 # Blockers
 

@@ -69,6 +69,7 @@ internal fun ShellSearchDestination(
                 quoteEnabled = postCallbacks.quoteEnabled,
                 onQuote = postCallbacks.onQuote,
                 onSearchHashtag = navigator::openHashtagSearch,
+                onShowOnlyHashtag = search.actions::searchWithoutRelated,
                 onOpenHashtagBubble = overlay::openHashtagBubble,
                 onLoadMoreSearch = search.actions::loadMore,
                 initialQuery = navigator.searchPrefill,

@@ -23,4 +23,7 @@
     <string name="profile_tab_replies">답글</string>
     <string name="settings_combine_related_hashtags">관련 해시태그 함께 보기</string>
     <string name="settings_combine_related_hashtags_summary">검색 및 사진 그리드 결과에 다른 형태와 언어의 비슷한 해시태그를 포함합니다.</string>
+    <string name="search_hashtag_includes">%1$s 포함</string>
+    <string name="search_hashtag_includes_more">%1$s 외 %2$d개 포함</string>
+    <string name="search_hashtag_show_only">%1$s만 보기</string>
 </resources>

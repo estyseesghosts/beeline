@@ -13,6 +13,8 @@ data class PhotoGridFeedState(
     val availableTimelines: List<Timeline> = listOf(Timeline.Home),
     val savedHashtags: List<String> = emptyList(),
     val posts: List<OwnedPost> = emptyList(),
+    /** Extra hashtags the selected hashtag feed applied, best first. Paging reuses them. Never saved. */
+    val combinedTags: List<String> = emptyList(),
     val initialLoadComplete: Boolean = false,
     val loading: Boolean = false,
     val loadingMore: Boolean = false,

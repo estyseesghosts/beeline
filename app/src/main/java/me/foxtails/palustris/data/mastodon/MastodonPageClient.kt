@@ -28,27 +28,51 @@ internal class MastodonPageClient(
     fun nextCursor(response: HttpResponse, route: MastodonPageRoute, currentUrl: String): String? {
         val link = response.linkHeaderCursor() ?: return null
         val url = try {
-            validateUrl(route, link, currentUrl)
+            // A server may drop the extra hashtags or keep them. Either way the client owns them.
+            validateUrl(route, withoutExtras(link, route), currentUrl)
         } catch (_: Exception) {
             throw SourceError.Unsupported("pagination.link")
         }
-        return MastodonPageCursor.encode(identity(route), url.toString())
+        return MastodonPageCursor.encode(identity(route), withExtras(url, route).toString())
     }
 
     fun currentUrl(route: MastodonPageRoute, cursor: String?): String = if (cursor == null) {
         origin.toHttpUrl().resolve("/api/${route.endpoint}")?.toString()
             ?: throw SourceError.Unsupported("pagination.cursor")
     } else {
-        decodeAndValidate(route, cursor).toString()
+        withoutExtras(decodeAndValidate(route, cursor).toString(), route)
     }
 
     private fun decodeAndValidate(route: MastodonPageRoute, cursor: String): HttpUrl {
         val url = MastodonPageCursor.decode(cursor, identity(route))
         return try {
-            validateUrl(route, url, origin.toHttpUrl().resolve("/api/${route.endpoint}")?.toString())
+            requireStoredExtras(route, url)
+            val base = origin.toHttpUrl().resolve("/api/${route.endpoint}")?.toString()
+            withExtras(validateUrl(route, withoutExtras(url, route), base), route)
         } catch (_: Exception) {
             throw SourceError.Unsupported("pagination.cursor")
         }
+    }
+
+    /** The stored URL must carry exactly this route's extras. The rest is validated as usual. */
+    private fun requireStoredExtras(route: MastodonPageRoute, url: String) {
+        if (route.extraHashtags.isEmpty()) return
+        val stored = url.toHttpUrl().queryParameterValues(EXTRA_HASHTAG).filterNotNull()
+        if (stored != route.extraHashtags) throw SourceError.Unsupported("pagination.cursor")
+    }
+
+    /** Removes every `any[]` parameter. A route without extras keeps its URL, so stray ones still fail validation. */
+    private fun withoutExtras(url: String, route: MastodonPageRoute): String {
+        if (route.extraHashtags.isEmpty()) return url
+        val parsed = url.toHttpUrlOrNull() ?: return url
+        return parsed.newBuilder().removeAllQueryParameters(EXTRA_HASHTAG).build().toString()
+    }
+
+    private fun withExtras(url: HttpUrl, route: MastodonPageRoute): HttpUrl {
+        if (route.extraHashtags.isEmpty()) return url
+        val builder = url.newBuilder()
+        route.extraHashtags.forEach { builder.addQueryParameter(EXTRA_HASHTAG, it) }
+        return builder.build()
     }
 
     private fun validateUrl(route: MastodonPageRoute, cursor: String, currentUrl: String?): HttpUrl {
@@ -77,6 +101,10 @@ internal class MastodonPageClient(
             }
         ) throw SourceError.Unsupported("pagination.cursor")
         return page
+    }
+
+    private companion object {
+        const val EXTRA_HASHTAG = "any[]"
     }
 
     private fun identity(route: MastodonPageRoute) = MastodonPageCursor.Identity(

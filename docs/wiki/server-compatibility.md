@@ -41,6 +41,16 @@ Source: `data/mastodon/MastodonModerationService.kt` and `ModerationServiceTest`
   fields. Reserved characters stay form-encoded. Live-server report delivery
   remains unverified.
 
+### Combined hashtag search
+
+Source: `data/mastodon/MastodonSource.kt`, `MastodonPageClient.kt`, `data/misskey/MisskeySource.kt`, and the integration tests.
+
+- `SocialSource.maxCombinedHashtags` reports how many extra hashtags one search accepts. The default is 0.
+- Mastodon uses `v1/timelines/tag/<primary>` with one `any[]` for each extra. The server applies 3 extras and ignores the rest. The documentation says 4. A check on mastodon.social (4.8.0-nightly) on 2026-10-10 showed 3.
+- The `Link: next` header of an `any[]` request drops `any[]`. The adapter adds every extra back to each next page. The sorted extras are part of the cursor identity, so a cursor from another extra set fails with `pagination.cursor`.
+- Misskey-family servers use `notes/search-by-tag` with `query`: one inner array for each hashtag. A search without extras keeps `tag`. A check on dvd.chat with 10 inner arrays returned 30 notes.
+- Akkoma, other forks, and other Mastodon versions are unverified. A fork that ignores `any[]` shows the "Includes" line without merging.
+
 <!-- Add the dated support matrix, capability states, protocol differences, and known unverified cases. -->
 
 ### Media upload and attachments

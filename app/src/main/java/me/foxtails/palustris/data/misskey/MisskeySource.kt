@@ -69,12 +69,16 @@ import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.hashtagBody
+import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import me.foxtails.palustris.domain.normalizeFavouriteEmoji
 import me.foxtails.palustris.domain.unsupported
 import org.json.JSONArray
 import org.json.JSONObject
 
 internal const val MISSKEY_MAX_RESPONSE_BYTES = 4L * 1024 * 1024
+
+/** Extra inner arrays that one `notes/search-by-tag` request carries. */
+private const val MAX_COMBINED_HASHTAGS = 10
 
 class MisskeySource(
     private val origin: String,
@@ -189,9 +193,24 @@ class MisskeySource(
         listOf(MisskeyMapper.account(JSONObject(api.post(origin, "users/show", body, MISSKEY_MAX_RESPONSE_BYTES).body), origin))
     }
 
-    override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> = request("search.hashtag") {
-        val normalized = hashtagBody(tag)
-        val body = JSONObject().put("i", token).put("tag", normalized).put("limit", 30)
+    override val maxCombinedHashtags: Int get() = MAX_COMBINED_HASHTAGS
+
+    override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> =
+        searchHashtags(HashtagQuery(tag), cursor)
+
+    /**
+     * Without extras the request keeps `tag`. With extras it sends `query`, one inner array for each
+     * hashtag: the outer array is OR, so each hashtag matches alone.
+     */
+    override suspend fun searchHashtags(query: HashtagQuery, cursor: String?): Page<Post> = request("search.hashtag") {
+        val normalized = hashtagBody(query.primary)
+        val extras = query.extras(MAX_COMBINED_HASHTAGS)
+        val body = JSONObject().put("i", token).put("limit", 30)
+        if (extras.isEmpty()) {
+            body.put("tag", normalized)
+        } else {
+            body.put("query", JSONArray((listOf(normalized) + extras).map { JSONArray().put(it) }))
+        }
         cursor?.let { body.put("untilId", it) }
         val notes = JSONArray(api.post(origin, "notes/search-by-tag", body, MISSKEY_MAX_RESPONSE_BYTES).body)
         Page(

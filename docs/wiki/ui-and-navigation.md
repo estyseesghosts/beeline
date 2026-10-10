@@ -775,3 +775,10 @@ Settings, Display holds a switch named "Combine related hashtags". It is on by d
 The app bundles a catalog of 74 hashtag groups in `app/src/main/assets/hashtag-catalog.json`. The app never reads the catalog from the network. Nobody has reviewed the catalog yet.
 `HashtagExpander` decides which hashtags merge into a search. Slice 1 only adds the rules and the setting. Search, Photo Grid and the composer do not use them yet.
 Sources: `domain/hashtags/`, `data/hashtags/HashtagCatalogRepository.kt`, `DisplaySettingsScreen.kt`, `HashtagExpanderTest`. Device visuals are unverified.
+
+## Combined hashtag results
+
+When the setting is on, a hashtag search in Search and a hashtag feed in Photo Grid also match related hashtags from the catalog. `SearchController` and `PhotoGridController` resolve the expansion once when the search or feed starts. They store the applied extras (`combinedTags`) and reuse them for paging. A change of the setting does not rewrite an open result.
+The results header ("Includes #a, #b and 2 more") appears above the posts when the search applied extras. "Show only #tag" runs the plain search through `SearchContract.Actions.searchWithoutRelated`.
+Photo Grid has no header and no chips. Merging works there without a notice.
+Sources: `ui/search/CombinedHashtagHeader.kt`, `SearchController.kt`, `ui/photogrid/PhotoGridController.kt`, `SearchCombinedHashtagsTest`, `PhotoGridCombinedHashtagsTest`. Device visuals are unverified.

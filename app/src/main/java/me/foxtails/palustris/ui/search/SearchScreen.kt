@@ -121,6 +121,7 @@ fun SearchScreen(
     quoteEnabled: Boolean = false,
     onQuote: (OwnedPost) -> Unit = {},
     onSearchHashtag: (String) -> Unit = {},
+    onShowOnlyHashtag: (String) -> Unit = {},
     onOpenHashtagBubble: ((OwnedPost, List<String>, Rect) -> Unit)? = null,
     onLoadMoreSearch: () -> Unit = {},
     initialQuery: String = "",
@@ -252,6 +253,7 @@ fun SearchScreen(
             onOpenUrl = onOpenUrl,
             onOpenUsername = onOpenUsername,
             onSearchHashtag = onSearchHashtag,
+            onShowOnlyHashtag = onShowOnlyHashtag,
             onOpenHashtagBubble = onOpenHashtagBubble,
             listState = listState,
             largeLayout = largeLayout,
@@ -351,6 +353,7 @@ private fun SearchContent(
     onOpenUrl: ((String) -> Unit)?,
     onOpenUsername: ((String) -> Unit)?,
     onSearchHashtag: (String) -> Unit,
+    onShowOnlyHashtag: (String) -> Unit,
     onOpenHashtagBubble: ((OwnedPost, List<String>, Rect) -> Unit)?,
     listState: LazyListState?,
     largeLayout: Boolean,
@@ -391,6 +394,7 @@ private fun SearchContent(
                     sessionRevision = sessionRevision,
                     onOpenMedia = onOpenMedia,
                     onSearchHashtag = onSearchHashtag,
+                    onShowOnlyHashtag = onShowOnlyHashtag,
                     onOpenHashtagBubble = onOpenHashtagBubble,
                     listState = listState,
                     largeLayout = largeLayout,
@@ -521,6 +525,7 @@ private fun HashtagSearchResults(
     sessionRevision: Long,
     onOpenMedia: (me.foxtails.palustris.ui.media.MediaOpenRequest) -> Unit,
     onSearchHashtag: (String) -> Unit,
+    onShowOnlyHashtag: (String) -> Unit,
     onOpenHashtagBubble: ((OwnedPost, List<String>, Rect) -> Unit)?,
     onOpenPost: (OwnedPost) -> Unit,
     onOpenUrl: ((String) -> Unit)?,
@@ -537,6 +542,16 @@ private fun HashtagSearchResults(
             modifier = Modifier.fillMaxSize().testTag("search_hashtag_results"),
             contentPadding = PaddingValues(bottom = 24.dp + endClearance),
         ) {
+            if (state.combinedTags.isNotEmpty()) {
+                item(key = "combined-hashtags") {
+                    CombinedHashtagHeader(
+                        primaryTag = state.tagQuery.orEmpty(),
+                        combinedTags = state.combinedTags,
+                        onShowOnly = { onShowOnlyHashtag(query) },
+                        modifier = Modifier.absolutePadding(left = leftClearance, right = rightClearance),
+                    )
+                }
+            }
             items(state.posts, key = { "${it.id.connection}/${it.id.value}" }) { post ->
                 Column(
                     Modifier.animateItem(

@@ -10,6 +10,8 @@ internal data class MastodonPageRoute(
     val encodedPath: String,
     val query: String,
     val queryIdentityKey: String,
+    /** Extra `any[]` hashtags. The server drops them from the next link, so the client adds them back. */
+    val extraHashtags: List<String> = emptyList(),
 )
 
 internal object MastodonPageCursor {

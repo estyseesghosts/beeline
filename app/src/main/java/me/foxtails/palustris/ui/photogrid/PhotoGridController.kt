@@ -17,6 +17,8 @@ import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.hashtagIdentity
+import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
+import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import me.foxtails.palustris.domain.mergeExternalActionFields
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.domain.timelineStatus
@@ -32,6 +34,7 @@ internal class PhotoGridController(
     private val preferencesRepository: PhotoGridPreferencesRepository,
     private val applyFavouritePreference: (Post) -> Post,
     private val uiStrings: UiStrings = UiStrings.Default,
+    private val hashtagInput: () -> HashtagExpansionInput = { HashtagExpansionInput.Disabled },
 ) {
     private var preferencesJob: Job? = null
     private var loadingJob: Job? = null
@@ -224,16 +227,23 @@ internal class PhotoGridController(
     private fun startRequest(feed: PhotoGridFeed, requestGeneration: Long, cursor: String?) {
         loadingJob = scope.launch {
             if (stopped || requestGeneration != generation || _state.value.selectedFeed != feed) return@launch
+            // The extras are fixed when a feed starts. Paging reuses them, so the cursor stays valid.
+            val combinedTags = when {
+                feed !is PhotoGridFeed.Hashtag -> emptyList()
+                cursor == null -> hashtagInput().expand(feed.tag, source.maxCombinedHashtags).applied
+                else -> _state.value.combinedTags
+            }
             _state.value = _state.value.copy(
                 loading = cursor == null,
                 loadingMore = cursor != null,
+                combinedTags = combinedTags,
                 error = null,
                 needsSignIn = false,
             )
             try {
                 val page = when (feed) {
                     is PhotoGridFeed.TimelineFeed -> source.timeline(feed.timeline, cursor)
-                    is PhotoGridFeed.Hashtag -> source.searchHashtag(feed.tag, cursor)
+                    is PhotoGridFeed.Hashtag -> source.searchHashtags(HashtagQuery(feed.tag, combinedTags), cursor)
                 }
                 if (stopped || requestGeneration != generation || _state.value.selectedFeed != feed) return@launch
                 val fetched = page.items.distinctBy { it.id }.map {

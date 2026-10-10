@@ -770,4 +770,7 @@
     <string name="composer_compress_no">Keep originals</string>
     <string name="settings_combine_related_hashtags">Combine related hashtags</string>
     <string name="settings_combine_related_hashtags_summary">Search and photo grid results include similar hashtags in other forms and languages.</string>
+    <string name="search_hashtag_includes">Includes %1$s</string>
+    <string name="search_hashtag_includes_more">Includes %1$s and %2$d more</string>
+    <string name="search_hashtag_show_only">Show only %1$s</string>
 </resources>

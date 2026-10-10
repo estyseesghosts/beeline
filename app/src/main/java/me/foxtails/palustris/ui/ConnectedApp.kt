@@ -54,6 +54,10 @@ import me.foxtails.palustris.ui.notifications.NotificationLaunchHost
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
+import me.foxtails.palustris.domain.hashtags.HashtagCatalog
+import me.foxtails.palustris.domain.hashtags.HashtagExpander
+import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
+import me.foxtails.palustris.domain.hashtags.HashtagLanguagePolicy
 import me.foxtails.palustris.ui.session.AccountManager
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.session.ConnectedSessionHost
@@ -71,11 +75,23 @@ fun ConnectedApp(
     appPreferencesRepository: AppPreferencesRepository,
     postPreferencesRepository: PostPreferencesRepository,
     photoGridPreferencesRepository: PhotoGridPreferencesRepository,
+    hashtagExpander: HashtagExpander = HashtagExpander(HashtagCatalog.Empty),
 ) {
     val state by accountManager.session.collectAsStateWithLifecycle()
     val accountIndex by accountManager.accountIndex.collectAsStateWithLifecycle()
     val appPreferences by appPreferencesRepository.observe().collectAsStateWithLifecycle(AppPreferencesState())
     ExternalLinkHandler.cleanTrackingParameters = appPreferences.preferences.cleanTrackingParameters
+    val hashtagInput = remember(
+        hashtagExpander,
+        appPreferences.preferences.combineRelatedHashtags,
+        appPreferences.preferences.language,
+    ) {
+        HashtagExpansionInput(
+            hashtagExpander,
+            appPreferences.preferences.combineRelatedHashtags,
+            HashtagLanguagePolicy.forLanguage(appPreferences.preferences.language),
+        )
+    }
     val connectedContext by accountManager.connectedContext.collectAsStateWithLifecycle()
     val activeContext = connectedContext?.takeIf { it.accountId == state.account?.id }
     // The entry store is activity-scoped. It survives recreation and retires feature models only
@@ -188,6 +204,7 @@ fun ConnectedApp(
                     accountIndex = accountIndex,
                     postPreferences = postPreferences,
                     photoGridPreferences = photoGridPreferencesRepository,
+                    hashtagInput = hashtagInput,
                     tabletNavigationAnchor = appPreferences.preferences.tabletNavigationAnchor,
                     compactWideNavigationAnchor = appPreferences.preferences.compactWideNavigationAnchor,
                     initialNotificationRoute = initialNotificationRoute,

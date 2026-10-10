@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CreatePostRequest
@@ -15,6 +16,7 @@ import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.shell.PhotoGridContract
 import me.foxtails.palustris.ui.shell.PostProjectionCoordinator
@@ -30,8 +32,11 @@ fun PhotoGridHost(
     preferencesRepository: PhotoGridPreferencesRepository,
     coordinator: PostProjectionCoordinator,
     entryStore: ConnectedEntryStore,
+    hashtagInput: HashtagExpansionInput = HashtagExpansionInput.Disabled,
 ): PhotoGridContract {
     val scope = rememberCoroutineScope()
+    // A hashtag feed reads the latest setting when it starts.
+    val latestHashtagInput by rememberUpdatedState(hashtagInput)
     val owner = remember(accountId, sessionRevision, source) {
         PhotoGridOwner(
             accountId = accountId,
@@ -40,6 +45,7 @@ fun PhotoGridHost(
             scope = scope,
             preferencesRepository = preferencesRepository,
             applyFavouritePreference = { post -> applyFavouritePreference(source, postPreferences, post) },
+            hashtagInput = { latestHashtagInput },
         )
     }
     LaunchedEffect(owner, postPreferences.favouriteEmoji) {

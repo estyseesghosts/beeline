@@ -9,6 +9,7 @@ import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.domain.effectiveTargetId
+import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 
 /** Owns Photo Grid state and requests for one connected account and session revision. */
 internal class PhotoGridOwner(
@@ -24,6 +25,7 @@ internal class PhotoGridOwner(
         sessionRevision: Long,
         scope: CoroutineScope,
         preferencesRepository: me.foxtails.palustris.domain.PhotoGridPreferencesRepository,
+        hashtagInput: () -> HashtagExpansionInput = { HashtagExpansionInput.Disabled },
         applyFavouritePreference: (Post) -> Post,
     ) : this(
         accountId,
@@ -37,6 +39,7 @@ internal class PhotoGridOwner(
             scope = scope,
             preferencesRepository = preferencesRepository,
             applyFavouritePreference = applyFavouritePreference,
+            hashtagInput = hashtagInput,
         ),
     )
 

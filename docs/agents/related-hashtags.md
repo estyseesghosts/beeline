@@ -28,6 +28,10 @@ Authority: [plan](../related-tags.md), [task state](tasks/related-hashtags.md), 
 - A missing `combineRelatedHashtags` key reads `true`.
 - The head ranks first. Heads cover their first language, so the best synonym of each other language follows.
 
+## Search wiring
+
+`MainActivity` injects `HashtagExpander`. `ConnectedApp` builds one `HashtagExpansionInput` from the setting and the display language. It passes the input through `ConnectedSessionHost` to `SearchHost` and `PhotoGridHost`. The hosts hand the owners a provider of the latest input. Each controller reads it only when a search or feed starts.
+
 ## Tests
 
 `HashtagCatalogRepositoryTest`, `HashtagExpanderTest`, `AppPreferencesRepositoryTest`, and `LocalizationResourceTest`.

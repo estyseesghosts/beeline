@@ -168,4 +168,7 @@
     <string name="timeline_social">Social</string>
     <string name="settings_combine_related_hashtags">Combinar hashtags relacionadas</string>
     <string name="settings_combine_related_hashtags_summary">Os resultados da pesquisa e da grelha de fotografias incluem hashtags semelhantes noutras formas e idiomas.</string>
+    <string name="search_hashtag_includes">Inclui %1$s</string>
+    <string name="search_hashtag_includes_more">Inclui %1$s e mais %2$d</string>
+    <string name="search_hashtag_show_only">Mostrar apenas %1$s</string>
 </resources>

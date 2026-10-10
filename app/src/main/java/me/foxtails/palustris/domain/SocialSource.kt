@@ -2,6 +2,7 @@ package me.foxtails.palustris.domain
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import me.foxtails.palustris.domain.hashtags.HashtagQuery
 
 /** Transport-independent boundary implemented by individual server adapters. */
 interface SocialSource {
@@ -84,6 +85,16 @@ interface SocialSource {
 
     suspend fun search(query: String): List<Post> = unsupported("search")
     suspend fun searchHashtag(tag: String, cursor: String? = null): Page<Post> = unsupported("hashtag search")
+
+    /** How many extra hashtags one hashtag search accepts. Zero means the source cannot combine. */
+    val maxCombinedHashtags: Int get() = 0
+
+    /**
+     * Searches the primary hashtag together with [HashtagQuery.alsoMatching]. A query without extras
+     * is the plain hashtag search. A source that cannot combine rejects extras.
+     */
+    suspend fun searchHashtags(query: HashtagQuery, cursor: String? = null): Page<Post> =
+        if (query.alsoMatching.isEmpty()) searchHashtag(query.primary, cursor) else unsupported("combined hashtag search")
     suspend fun searchAccounts(query: String): List<Account> = unsupported("account search")
 
     /** Legacy page shape retained for source compatibility during the adapter migration. */

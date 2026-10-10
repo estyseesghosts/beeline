@@ -1,6 +1,7 @@
 package me.foxtails.palustris.data.mastodon
 
 import java.net.URLEncoder
+import java.util.Locale
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -70,11 +71,15 @@ import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.hashtagBody
+import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONArray
 import org.json.JSONObject
 
 internal const val MASTODON_MAX_RESPONSE_BYTES = 4L * 1024 * 1024
+
+/** Mastodon applies the primary hashtag and three `any[]` extras. The documentation says four. */
+private const val MAX_COMBINED_HASHTAGS = 3
 
 class MastodonSource(
     private val origin: String,
@@ -464,11 +469,27 @@ class MastodonSource(
         (0 until statuses.length()).map { MastodonMapper.post(statuses.getJSONObject(it), origin) }
     }
 
-    override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> = request("search.hashtag") {
-        val normalized = hashtagBody(tag)
+    override val maxCombinedHashtags: Int get() = MAX_COMBINED_HASHTAGS
+
+    override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> =
+        searchHashtags(HashtagQuery(tag), cursor)
+
+    /**
+     * The server applies the primary hashtag and three `any[]` extras and ignores the rest. The
+     * sorted extras are part of the cursor identity, so a cursor from another extra set fails.
+     */
+    override suspend fun searchHashtags(query: HashtagQuery, cursor: String?): Page<Post> = request("search.hashtag") {
+        val normalized = hashtagBody(query.primary)
+        val extras = query.extras(MAX_COMBINED_HASHTAGS).sortedBy { it.lowercase(Locale.ROOT) }
         val encodedTag = URLEncoder.encode(normalized, Charsets.UTF_8.name())
+        val anyOf = extras.joinToString("") { "&any%5B%5D=${URLEncoder.encode(it, Charsets.UTF_8.name())}" }
         val route = MastodonPageRoute(
-            "hashtag", "v1/timelines/tag/$encodedTag?limit=40", "/api/v1/timelines/tag/$encodedTag", normalized, "tag",
+            "hashtag",
+            "v1/timelines/tag/$encodedTag?limit=40$anyOf",
+            "/api/v1/timelines/tag/$encodedTag",
+            if (extras.isEmpty()) normalized else "$normalized|any=${extras.joinToString(",")}",
+            "tag",
+            extras,
         )
         val currentUrl = pageClient.currentUrl(route, cursor)
         val response = pageClient.getPage(route, cursor)

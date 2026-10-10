@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
@@ -564,6 +565,75 @@ class MastodonIntegrationTest {
         assertEquals("/api/v1/timelines/tag/cats?limit=40&max_id=tag-newest", secondRequest.path)
         assertEquals("Bearer token", firstRequest.getHeader("Authorization"))
         assertEquals("Bearer token", secondRequest.getHeader("Authorization"))
+    }
+
+    @Test
+    fun combinedHashtagSearchSendsEveryExtraAndRestoresThemOnNextPage() = runBlocking {
+        server.enqueue(MockResponse().setBody("[${status("tag-newest")}]").addHeader(
+            "Link", "<$origin/api/v1/timelines/tag/foto?limit=40&max_id=tag-newest>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody("[${status("tag-older")}]"))
+        val source = source()
+        // The fourth extra is beyond the limit of three and never reaches the server.
+        val query = HashtagQuery("foto", listOf("photography", "fotografia", "写真", "foto4"))
+
+        val first = source.searchHashtags(query)
+        val second = source.searchHashtags(query, first.nextCursor)
+
+        assertEquals("tag-older", second.items.single().id.value)
+        val expected = listOf("fotografia", "photography", "写真")
+        val firstRequest = server.takeRequest()
+        val secondRequest = server.takeRequest()
+        assertEquals(expected, firstRequest.requestUrl!!.queryParameterValues("any[]"))
+        assertEquals("40", firstRequest.requestUrl!!.queryParameter("limit"))
+        assertEquals(null, firstRequest.requestUrl!!.queryParameter("max_id"))
+        assertEquals("tag-newest", secondRequest.requestUrl!!.queryParameter("max_id"))
+        assertEquals(expected, secondRequest.requestUrl!!.queryParameterValues("any[]"))
+        assertEquals("/api/v1/timelines/tag/foto", secondRequest.requestUrl!!.encodedPath)
+    }
+
+    @Test
+    fun combinedHashtagNextLinkThatKeepsTheExtrasDoesNotRepeatThem() = runBlocking {
+        server.enqueue(MockResponse().setBody("[${status("a")}]").addHeader(
+            "Link",
+            "<$origin/api/v1/timelines/tag/foto?limit=40&max_id=a&any%5B%5D=fotografia&any%5B%5D=fotografia>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody("[]"))
+        val source = source()
+        val query = HashtagQuery("foto", listOf("fotografia"))
+
+        val first = source.searchHashtags(query)
+        source.searchHashtags(query, first.nextCursor)
+
+        server.takeRequest()
+        assertEquals(listOf("fotografia"), server.takeRequest().requestUrl!!.queryParameterValues("any[]"))
+    }
+
+    @Test
+    fun combinedHashtagCursorFromAnotherExtraSetFailsWithoutARequest() = runBlocking {
+        server.enqueue(MockResponse().setBody("[${status("a")}]").addHeader(
+            "Link", "<$origin/api/v1/timelines/tag/foto?limit=40&max_id=a>; rel=\"next\"",
+        ))
+        val source = source()
+        val cursor = source.searchHashtags(HashtagQuery("foto", listOf("fotografia"))).nextCursor!!
+        val count = server.requestCount
+
+        listOf(HashtagQuery("foto", listOf("photography")), HashtagQuery("foto")).forEach { other ->
+            val error = assertThrows(SourceError.Unsupported::class.java) {
+                runBlocking { source.searchHashtags(other, cursor) }
+            }
+            assertEquals("pagination.cursor", error.feature)
+        }
+        assertEquals(count, server.requestCount)
+    }
+
+    @Test
+    fun hashtagSearchWithoutExtrasSendsNoAnyParameter() = runBlocking {
+        server.enqueue(MockResponse().setBody("[]"))
+
+        source().searchHashtags(HashtagQuery("cats", listOf("Cats", "not valid", "")))
+
+        assertEquals("/api/v1/timelines/tag/cats?limit=40", server.takeRequest().path)
     }
 
     @Test

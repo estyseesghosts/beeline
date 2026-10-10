@@ -15,6 +15,9 @@ data class SearchContract(
 ) {
     interface Actions {
         fun search(query: String)
+
+        /** Searches the hashtag alone, even when the Combine related hashtags setting is on. */
+        fun searchWithoutRelated(query: String)
         fun loadMore()
     }
 
@@ -25,5 +28,6 @@ data class SearchContract(
 
 private object SearchEmptyActions : SearchContract.Actions {
     override fun search(query: String) = Unit
+    override fun searchWithoutRelated(query: String) = Unit
     override fun loadMore() = Unit
 }

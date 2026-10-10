@@ -8,6 +8,7 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.effectiveTargetId
+import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 
 /** Owns Search state and requests for one connected account and session revision. */
 internal class SearchOwner(
@@ -16,17 +17,21 @@ internal class SearchOwner(
     val sessionRevision: Long,
     scope: CoroutineScope,
     applyFavouritePreference: (Post) -> Post,
+    hashtagInput: () -> HashtagExpansionInput = { HashtagExpansionInput.Disabled },
 ) {
     private val controller = SearchController(
         source = source,
         scope = scope,
         applyFavouritePreference = applyFavouritePreference,
         onStateChanged = {},
+        hashtagInput = hashtagInput,
     )
 
     val state: StateFlow<AccountSearchState> = controller.state
 
     fun search(query: String) = controller.search(query)
+
+    fun searchWithoutRelated(query: String) = controller.searchWithoutRelated(query)
 
     fun loadMore() = controller.loadMore()
 

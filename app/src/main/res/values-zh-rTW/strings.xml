@@ -158,4 +158,7 @@
     <string name="timeline_social">社交</string>
     <string name="settings_combine_related_hashtags">合併相關主題標籤</string>
     <string name="settings_combine_related_hashtags_summary">搜尋和相片格線結果會包含其他形式與語言的相似主題標籤。</string>
+    <string name="search_hashtag_includes">包含 %1$s</string>
+    <string name="search_hashtag_includes_more">包含 %1$s 與其他 %2$d 個</string>
+    <string name="search_hashtag_show_only">僅顯示 %1$s</string>
 </resources>

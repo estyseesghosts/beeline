@@ -201,6 +201,7 @@ internal object AppShellFixtures {
         state = feed.accountSearch,
         actions = object : SearchContract.Actions {
             override fun search(query: String) = onSearch(query)
+            override fun searchWithoutRelated(query: String) = onSearch(query)
             override fun loadMore() = onLoadMore()
         },
     )
