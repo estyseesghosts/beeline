@@ -273,6 +273,7 @@ fun ConnectedSessionHost(
             publishing = feed.composerInputs.publishing,
             publishPosted = feed.composerInputs.publishPosted,
             publishTotal = feed.composerInputs.publishTotal,
+            publishMediaProgress = feed.composerInputs.publishMediaProgress,
             error = feed.composerInputs.error,
             actions = composerActions,
             hashtagSuggestions = hashtagSuggestions,

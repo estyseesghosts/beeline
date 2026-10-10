@@ -71,6 +71,7 @@ class FeedViewModelThreadTest {
             media: me.foxtails.palustris.domain.ThreadPublicationMedia,
             compress: Boolean,
             limits: ThreadImageLimits,
+            onProgress: (Float) -> Unit,
         ): PreparedThreadImage = object : PreparedThreadImage {
             override val fileName = media.fileName
             override val mimeType = media.mimeType

@@ -136,8 +136,10 @@ class VideoPreparer(
     }
 
     /** The cap applies only when the source is taller, so a small video is never scaled up. */
-    private fun outputHeight(facts: VideoProbeResult): Int =
-        minOf(facts.height ?: VideoUploadPolicy.DEFAULT_MAX_HEIGHT, VideoUploadPolicy.DEFAULT_MAX_HEIGHT)
+    private fun outputHeight(facts: VideoProbeResult): Int {
+        val cap = VideoUploadPolicy.heightCap(facts.width, facts.height)
+        return minOf(facts.height ?: cap, cap)
+    }
 
     private fun newOutput(fileName: String, extension: String): File {
         workDirectory.mkdirs()

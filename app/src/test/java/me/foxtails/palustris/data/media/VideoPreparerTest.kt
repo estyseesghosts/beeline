@@ -68,7 +68,7 @@ class VideoPreparerTest {
         assertEquals(VideoUploadFormat.H264Mp4, prepared.format)
         assertEquals("video/mp4", prepared.mimeType)
         assertEquals("clip.mp4", prepared.fileName)
-        assertEquals(720, mp4.lastMaxHeight)
+        assertEquals(900, mp4.lastMaxHeight)
         assertTrue(prepared.file.exists())
         prepared.release()
         assertFalse(prepared.file.exists())
@@ -157,6 +157,23 @@ class VideoPreparerTest {
         val small = facts.copy(width = 640, height = 360)
         preparer(probe = small, mp4 = mp4).prepare(source, "clip.mp4", misskey)
         assertEquals(360, mp4.lastMaxHeight)
+    }
+
+    @Test
+    fun aPortraitSourceKeepsNineHundredPixelsOnItsShortEdge() = runBlocking {
+        val mp4 = FakeTranscoder()
+        val portrait = facts.copy(width = 1080, height = 1920)
+        preparer(probe = portrait, mp4 = mp4).prepare(source, "clip.mp4", misskey)
+        // 900 wide at the source aspect ratio is 1600 tall, not 900 tall.
+        assertEquals(1600, mp4.lastMaxHeight)
+    }
+
+    @Test
+    fun aPortraitSourceShorterThanItsCapIsNotScaledUp() = runBlocking {
+        val mp4 = FakeTranscoder()
+        val portrait = facts.copy(width = 540, height = 960)
+        preparer(probe = portrait, mp4 = mp4).prepare(source, "clip.mp4", misskey)
+        assertEquals(960, mp4.lastMaxHeight)
     }
 }
 

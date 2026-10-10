@@ -153,6 +153,7 @@ class FeedViewModel @AssistedInject constructor(
                     publishing = _feed.value.publishing,
                     publishPosted = _feed.value.publishPosted,
                     publishTotal = _feed.value.publishTotal,
+                    publishMediaProgress = _feed.value.publishMediaProgress,
                     nextCursor = page.nextCursor,
                     requestEpoch = epoch,
                 )
@@ -172,6 +173,7 @@ class FeedViewModel @AssistedInject constructor(
                         publishing = _feed.value.publishing,
                         publishPosted = _feed.value.publishPosted,
                         publishTotal = _feed.value.publishTotal,
+                    publishMediaProgress = _feed.value.publishMediaProgress,
                         requestEpoch = epoch,
                     )
                 } else {
@@ -261,16 +263,20 @@ class FeedViewModel @AssistedInject constructor(
             if (!stopped) _feed.value = _feed.value.copy(publishPosted = posted, publishTotal = total)
         }
 
+        override fun onMediaProgress(fraction: Float?) {
+            if (!stopped) _feed.value = _feed.value.copy(publishMediaProgress = fraction)
+        }
+
         override fun onSuccess(owned: List<OwnedPost>, requests: List<CreatePostRequest>) {
-            _feed.value = _feed.value.copy(publishing = false, publishPosted = 0, publishTotal = 0, error = null)
+            _feed.value = _feed.value.copy(publishing = false, publishPosted = 0, publishTotal = 0, publishMediaProgress = null, error = null)
         }
 
         override fun onFailure(failure: ThreadPublishFailure, message: String) {
-            _feed.value = _feed.value.copy(publishing = false, error = message)
+            _feed.value = _feed.value.copy(publishing = false, publishMediaProgress = null, error = message)
         }
 
         override fun onUnexpected(error: Exception) {
-            _feed.value = _feed.value.copy(publishing = false, publishPosted = 0, publishTotal = 0)
+            _feed.value = _feed.value.copy(publishing = false, publishPosted = 0, publishTotal = 0, publishMediaProgress = null)
             feedFailure(error)
         }
 

@@ -67,7 +67,8 @@ class VideoTranscodeInstrumentedTest {
         assertEquals(1f, last, 0f)
         val converted = probe.probe(output)!!
         assertEquals("video/avc", converted.videoCodecMime)
-        assertEquals(120, converted.height)
+        // Hardware encoders align the frame to 16 pixels, so 120 may come back as 128.
+        assertTrue("height ${converted.height}", converted.height in 120..128)
     }
 
     @Test

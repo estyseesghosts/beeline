@@ -10,6 +10,8 @@ data class ThreadImageLimits(
     val maxBytes: Long? = null,
     val maxPixels: Long? = null,
     val acceptedTypes: Set<String>? = null,
+    /** Largest accepted video file. */
+    val maxVideoBytes: Long? = null,
 )
 
 /** One image ready to upload. The publisher releases it after the upload. */
@@ -20,11 +22,15 @@ interface PreparedThreadImage {
     fun release()
 }
 
+/** True for a draft attachment that is a video, which takes the video preparation path. */
+fun ThreadPublicationMedia.isVideo(): Boolean = mimeType.startsWith("video/")
+
 /**
  * Prepares a draft image for upload.
  *
  * Responsibility: decrypt the draft copy, compress it when asked, and fit it to the server
- * limits. Lifetime: one call for each image. It keeps no state between calls.
+ * limits. A video is converted instead, and [onProgress] receives that conversion's progress from
+ * 0 to 1. Lifetime: one call for each attachment. It keeps no state between calls.
  */
 interface ThreadImagePreparer {
     suspend fun prepare(
@@ -33,7 +39,15 @@ interface ThreadImagePreparer {
         media: ThreadPublicationMedia,
         compress: Boolean,
         limits: ThreadImageLimits,
+        onProgress: (Float) -> Unit = {},
     ): PreparedThreadImage
+
+    /**
+     * Called when the server refused [prepared]. Returns true when preparing the same attachment again
+     * would produce a different file, so the publisher should retry once. A WebM that a server
+     * refuses is recorded here and the next preparation uses MP4.
+     */
+    fun uploadRejected(accountId: AccountId?, prepared: PreparedThreadImage, error: Exception): Boolean = false
 }
 
 /** The outcome of one thread publish job. */
@@ -78,6 +92,7 @@ class ThreadPublisher(
 ) {
     suspend fun publish(
         publication: ThreadPublication,
+        onMediaProgress: (Float?) -> Unit = {},
         onEntryPosted: suspend (posted: List<Post>, remaining: ThreadPublication?) -> Unit = { _, _ -> },
     ): ThreadPublishResult {
         val total = publication.entries.size
@@ -86,6 +101,7 @@ class ThreadPublisher(
             maxBytes = posting.maxImageBytes,
             maxPixels = posting.maxImagePixels,
             acceptedTypes = posting.uploadTypes,
+            maxVideoBytes = posting.maxVideoBytes,
         )
         val created = mutableListOf<Post>()
         val requests = mutableListOf<CreatePostRequest>()
@@ -98,28 +114,9 @@ class ThreadPublisher(
             try {
                 for (image in entry.media) {
                     currentCoroutineContext().ensureActive()
-                    val prepared = preparer.prepare(
-                        publication.accountId ?: accountId,
-                        publication.draftId,
-                        image,
-                        effectiveCompress,
-                        limits,
-                    )
-                    try {
-                        val attachment = source.uploadMedia(
-                            MediaUploadRequest(
-                                open = prepared::open,
-                                mimeType = prepared.mimeType,
-                                fileName = prepared.fileName,
-                                description = image.description,
-                                sensitive = image.sensitive,
-                            ),
-                        )
-                        attachments += attachment
-                        uploaded += attachment
-                    } finally {
-                        prepared.release()
-                    }
+                    val attachment = uploadOne(publication, image, effectiveCompress, limits, onMediaProgress)
+                    attachments += attachment
+                    uploaded += attachment
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -159,6 +156,46 @@ class ThreadPublisher(
             onEntryPosted(created.toList(), remaining)
         }
         return ThreadPublishResult.Success(created = created.toList(), requests = requests.toList())
+    }
+
+    /**
+     * Prepares and uploads one attachment. When the preparer says the server's refusal changes the
+     * outcome (a WebM that the server does not accept), it prepares again and uploads once more.
+     */
+    private suspend fun uploadOne(
+        publication: ThreadPublication,
+        media: ThreadPublicationMedia,
+        compress: Boolean,
+        limits: ThreadImageLimits,
+        onMediaProgress: (Float?) -> Unit,
+    ): Attachment {
+        val owner = publication.accountId ?: accountId
+        var retried = false
+        while (true) {
+            val prepared = try {
+                preparer.prepare(owner, publication.draftId, media, compress, limits) { onMediaProgress(it) }
+            } finally {
+                onMediaProgress(null)
+            }
+            try {
+                return source.uploadMedia(
+                    MediaUploadRequest(
+                        open = prepared::open,
+                        mimeType = prepared.mimeType,
+                        fileName = prepared.fileName,
+                        description = media.description,
+                        sensitive = media.sensitive,
+                    ),
+                )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                if (retried || !preparer.uploadRejected(owner, prepared, error)) throw error
+                retried = true
+            } finally {
+                prepared.release()
+            }
+        }
     }
 
     private fun failed(

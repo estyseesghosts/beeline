@@ -2,7 +2,7 @@
 
 Status: current, partial coverage
 Owner: UI maintainers
-Last reviewed: 2026-10-05
+Last reviewed: 2026-10-10
 Stale when: A destination, layout policy, restoration rule, or accessibility requirement changes.
 
 Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
@@ -808,3 +808,36 @@ While the cursor sits in a hashtag of a post text field, the composer shows up t
 - The focused entry receives the text. The content warning field shows no chips. No chips show when the cursor is outside a hashtag.
 - `ComposerContract.hashtagSuggestions` supplies the suggestions. `ConnectedSessionHost` builds the service per account session and releases it with the session.
 Sources: `ui/composer/ComposerHashtags.kt`, `HashtagToken.kt`, `ComposerHashtagTest`, `HashtagTokenTest`. Device visuals are unverified.
+
+## Video playback
+
+Videos play in the feed, in Photo Grid tiles, and in the media viewer. A tile always shows the server preview image
+first. A video without a preview shows a neutral placeholder.
+
+- Autoplay is on by default. Settings, Display, Autoplay videos turns it off. Videos start muted.
+- A video autoplays only when all of these hold: the setting is on, the post content is visible, the network is not
+  metered, reduced motion is off, and the app is in the foreground. An unknown network counts as metered.
+- One video plays at a time. A tile starts at 60 percent visible and keeps playing down to 40 percent. The tile with the
+  highest visible fraction wins. The earlier item wins a tie.
+- The sound toggle unmutes the selected video only. Selecting another video mutes it. Sound state is not stored.
+- A clip under 30 seconds loops. A longer video plays once.
+- A tap on a video opens the viewer. The viewer starts at the tile position and keeps the sound state. Controls hide
+  after 3 seconds and return on a tap. Drag dismiss and the open reveal work as for photos.
+- `VideoPlaybackCoordinator` owns at most two players: one for the feed or grid and one for the viewer. It releases an
+  idle player after 10 seconds. Tiles and the viewer use a `TextureView`.
+- Quick view does not apply to video tiles.
+- Sources: `ui/media/VideoPlaybackCoordinator.kt`, `VideoTile.kt`, `VideoControls.kt`, `VideoViewerPage.kt`, and the
+  autoplay policy and network monitor with their tests.
+- Device debt: the duration badge, the retry control on a failed tile, pinch zoom on video, the reveal animation frame
+  by frame, audio output, and a non-zero start position from a feed tile are not verified.
+
+## Composer video attachments
+
+The photo button opens the system picker for photos and videos when the server accepts video. A video draft shows its
+first frame with a play badge. A tap opens the description editor, as for an image.
+
+- The composer copies the video into the encrypted draft store. It converts the video only at publish time.
+- While the publisher converts a video, the Post button shows "Converting video N%". Then it shows the post count again.
+- Cancelling the publish stops the conversion and deletes the partial file.
+- Sources: `ui/composer/ComposerMediaControls.kt`, `ComposerMediaStrip.kt`, `ComposerSurface.kt`,
+  `ui/feed/ThreadPublicationRunner.kt`, and `data/media/DraftMediaImporter.kt`. Device visuals are unverified.

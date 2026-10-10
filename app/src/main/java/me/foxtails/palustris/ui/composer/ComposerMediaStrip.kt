@@ -1,7 +1,9 @@
 package me.foxtails.palustris.ui.composer
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +40,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -77,6 +81,22 @@ internal fun ComposerMediaStrip(
     }
 }
 
+/** A play glyph on a draft video's poster. It does not take touches, so the thumbnail still opens the alt editor. */
+@Composable
+private fun VideoThumbnailBadge(modifier: Modifier) {
+    Box(modifier.size(32.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.size(16.dp)) {
+            val triangle = Path().apply {
+                moveTo(size.width * 0.25f, size.height * 0.1f)
+                lineTo(size.width * 0.9f, size.height * 0.5f)
+                lineTo(size.width * 0.25f, size.height * 0.9f)
+                close()
+            }
+            drawPath(triangle, Color.White)
+        }
+    }
+}
+
 @Composable
 private fun ComposerThumbnail(
     media: DraftMedia,
@@ -86,7 +106,9 @@ private fun ComposerThumbnail(
 ) {
     val picture by rememberThumbnail(media, loadThumbnail, THUMBNAIL_EDGE_PX)
     val described = !media.altText.isNullOrBlank()
-    val description = media.altText?.takeIf(String::isNotBlank) ?: stringResource(R.string.composer_image_without_description)
+    val isVideo = media.mimeType.startsWith("video/")
+    val description = media.altText?.takeIf(String::isNotBlank)
+        ?: stringResource(if (isVideo) R.string.composer_video_without_description else R.string.composer_image_without_description)
     val editLabel = stringResource(R.string.composer_alt_title)
     Box(Modifier.size(THUMBNAIL_SIZE).clip(RoundedCornerShape(12.dp))) {
         Surface(
@@ -98,6 +120,7 @@ private fun ComposerThumbnail(
                 Image(it, contentDescription = description, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().height(THUMBNAIL_SIZE))
             }
         }
+        if (isVideo) VideoThumbnailBadge(Modifier.align(Alignment.Center))
         Surface(
             modifier = Modifier.align(Alignment.BottomStart).padding(4.dp),
             shape = RoundedCornerShape(6.dp),

@@ -7,6 +7,24 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class VideoUploadPolicyTest {
+    @Test
+    fun landscapeHeightCapIsTheTier() {
+        assertEquals(900, VideoUploadPolicy.heightCap(1920, 1080))
+        assertEquals(900, VideoUploadPolicy.heightCap(1080, 1080))
+    }
+
+    @Test
+    fun portraitHeightCapKeepsTheShortEdgeAtTheTier() {
+        assertEquals(1600, VideoUploadPolicy.heightCap(1080, 1920))
+        assertEquals(1200, VideoUploadPolicy.heightCap(900, 1200))
+    }
+
+    @Test
+    fun unknownSizeGetsTheLandscapeCap() {
+        assertEquals(900, VideoUploadPolicy.heightCap(null, null))
+        assertEquals(900, VideoUploadPolicy.heightCap(0, 100))
+    }
+
     private val mp4 = "video/mp4"
     private val avc = "video/avc"
     private val misskey = VideoServerSupport(acceptedTypes = null)

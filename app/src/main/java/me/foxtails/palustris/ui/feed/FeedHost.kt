@@ -42,6 +42,7 @@ data class FeedComposerInputs(
     val publishPosted: Int,
     val publishTotal: Int,
     val error: String?,
+    val publishMediaProgress: Float? = null,
 )
 
 data class Feed(
@@ -132,7 +133,7 @@ fun FeedHost(
             coordinator.unregister(feedSink)
         }
     }
-    val composerInputs = remember(feed.audiences, feed.limits, feed.canPublish, feed.publishing, feed.publishPosted, feed.publishTotal, feed.error) {
+    val composerInputs = remember(feed.audiences, feed.limits, feed.canPublish, feed.publishing, feed.publishPosted, feed.publishTotal, feed.publishMediaProgress, feed.error) {
         feedComposerInputs(feed)
     }
     val publish = remember(feedModel, feedSink, coordinator) {
@@ -158,6 +159,7 @@ private fun feedComposerInputs(feed: FeedState): FeedComposerInputs = FeedCompos
     publishPosted = feed.publishPosted,
     publishTotal = feed.publishTotal,
     error = feed.error,
+    publishMediaProgress = feed.publishMediaProgress,
 )
 
 /** Publishes threads through the feed model and fans accepted posts out to the other surfaces. */

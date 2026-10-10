@@ -103,13 +103,13 @@ Source: `data/media/DraftMediaImporter.kt`, `domain/DraftMediaImport.kt`,
 `domain/ServerCapabilities.kt`, `data/mastodon/MastodonCapabilityProbe.kt`,
 `data/auth/AccountFileStore.kt`, `DraftMediaImporterTest`, and `ComposerMediaRulesTest`.
 
-- The composer copies each picked image into the encrypted draft store before the picker grant ends.
-  It sniffs the type with a bounds decode and rejects non-images, empty files, files over 100 MiB, and
-  unreadable files. The server limits apply at publish time.
+- The composer copies each picked image or video into the encrypted draft store before the picker grant ends.
+  It sniffs an image with a bounds decode and a video with `MediaMetadataRetriever`. It rejects other files,
+  empty files, images over 100 MiB, videos over 256 MiB, and unreadable files. The server limits apply at publish time.
 - `PostingCapabilities.quoteWithMedia` is true by default and false on Mastodon-compatible servers,
   which reject a quote that carries media. The composer disables the photo button for a quote there
   instead of failing at publish. Capability schema version 7 stores the flag; older stored snapshots
-  read as true.
+  read as true. Version 8 adds `maxVideoBytes`; the app probes the server again when it reads an older snapshot.
 - The photo button follows `mediaUpload`: Unsupported disables it, Denied starts the sign-in-again
   flow, and Unknown and Supported allow the pick. `ConnectedSessionContext.mediaAccess` carries the
   token access.
@@ -131,3 +131,32 @@ Source: `data/media/UploadImagePreparer.kt`, `data/media/ImageFormatInspector.kt
 - Compression is not the same as fitting: with compression off, an image that fits is uploaded as it is,
   with location data removed.
 
+### Video upload
+
+Source: `domain/VideoUploadPolicy.kt`, `data/media/VideoPreparer.kt`, `data/media/DeviceVideoCapabilities.kt`,
+`data/media/FfmpegBridge.kt`, `data/media/DraftThreadImagePreparer.kt`, `domain/ThreadPublisher.kt`,
+`VideoUploadPolicyTest`, `VideoPreparerTest`, `DeviceVideoCapabilitiesTest`, `ThreadPublisherVideoTest`,
+and `FfmpegBridgeTest`. Live-server uploads are unverified.
+
+- The picker offers videos when `PostingCapabilities.acceptsVideo` is true. That holds when the server lists no
+  types or lists at least one `video/` type. Mastodon without a type list reports images only, so it offers none.
+- The publisher prepares each video in this order. The first rule that applies wins.
+  1. Original. A file under 2 MiB (exclusive) is sent unchanged when the server accepts its container and codec.
+  2. WebM. VP9 video and Opus audio, when the server accepts WebM and the device passes the benchmark.
+  3. H.264 MP4. H.264 video and AAC audio through Media3 Transformer and the device codecs.
+- The upload tier is 900p. It limits the shorter edge. A 1920x1080 clip becomes 1600x900. A 1080x1920 clip becomes
+  900x1600. A smaller clip is never scaled up. The WebM path caps the frame rate at 30.
+- Mastodon gate: `video/webm` must appear in `media_attachments.supported_mime_types`. Otherwise the upload uses MP4.
+- Misskey gate: the server has no type list, so the client tries WebM. A refusal maps to `Unsupported("media.file-type")`.
+  The preparer records the origin in `WebmRejections`, and the publisher uploads the video again as MP4. The record lives
+  until the process ends.
+- Device gate: the process must run on arm64-v8a and the FFmpeg library must load. The benchmark encodes 3 seconds at a
+  900 pixel short edge and must reach 1.5 times realtime. The result is cached under the device model, the SDK level, and
+  the FFmpeg build id. A failed benchmark counts as too slow.
+- Size limit: `maxVideoBytes` is the Mastodon `video_size_limit` (default 99 MiB) or the Misskey file size limit.
+  A result over the limit stops the publish with `ResourceLimit`.
+- Mastodon answers a large upload with 202. The existing `MastodonMediaService` polling handles it, so video uses
+  the same `uploadMedia` call as images.
+- The WebM output carries no source metadata, so it has no location data.
+- A Mastodon server refuses a post that mixes a video with images. The composer does not prevent the mix.
+- Not verified: whether live Mastodon servers list `video/webm`, and live Misskey behavior on `UNALLOWED_FILE_TYPE`.

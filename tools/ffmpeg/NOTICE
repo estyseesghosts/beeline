@@ -1,0 +1,24 @@
+Beeline bundles FFmpeg to encode videos as WebM (VP9 video, Opus audio) before upload.
+
+FFmpeg 7.1.2 (libavcodec, libavformat, libavfilter, libavutil, libswresample, libswscale)
+  License: GNU Lesser General Public License, version 2.1 or later.
+  Built without GPL and without nonfree components (--disable-gpl --disable-nonfree).
+  Not built: libx264, libx265, or any other GPL library.
+  Source: https://ffmpeg.org/releases/ffmpeg-7.1.2.tar.xz
+  Text: tools/ffmpeg/licenses/FFmpeg-COPYING.LGPLv2.1
+
+libvpx 1.15.0 (VP9 encoder, linked into libavcodec.so)
+  License: BSD 3-clause, with the WebM patent grant.
+  Source: https://github.com/webmproject/libvpx/archive/refs/tags/v1.15.0.tar.gz
+  Text: tools/ffmpeg/licenses/libvpx-LICENSE and libvpx-PATENTS
+
+Opus 1.5.2 (libopus, linked into libavcodec.so)
+  License: BSD 3-clause.
+  Source: https://downloads.xiph.org/releases/opus/opus-1.5.2.tar.gz
+  Text: tools/ffmpeg/licenses/opus-COPYING
+
+The FFmpeg libraries ship as separate shared libraries (libavcodec.so, libavformat.so, libavutil.so,
+libavfilter.so, libswresample.so, libswscale.so) inside the app, unmodified from the pinned source.
+You can rebuild them with tools/ffmpeg/build.sh and replace them in the application package.
+build.sh holds the exact versions, source URLs, SHA-256 checksums, and configure flags.
+Beeline's own code is under the GNU General Public License, version 3 (see license.md).

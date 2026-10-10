@@ -29,7 +29,7 @@ data class ServerCapabilities(
          * invalidates snapshots that predate posting limits and upload capabilities. Revision 7
          * invalidates snapshots that predate the quote-with-media rule.
          */
-        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 7
+        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 8
     }
 }
 
@@ -54,6 +54,8 @@ data class PostingCapabilities(
     val maxAltTextLength: Int? = null,
     val maxImageBytes: Long? = null,
     val maxImagePixels: Long? = null,
+    /** Largest accepted video file. Null when the server reported no video limit. */
+    val maxVideoBytes: Long? = null,
     /** Accepted upload MIME types. Null lets the server decide. */
     val uploadTypes: Set<String>? = null,
     val charactersReservedPerUrl: Int = DEFAULT_CHARACTERS_PER_URL,
@@ -63,6 +65,9 @@ data class PostingCapabilities(
     /** False when the server rejects a post that quotes another post and also carries images. */
     val quoteWithMedia: Boolean = true,
 ) {
+    /** True when the server may take a video: it lists no types, or lists at least one video type. */
+    val acceptsVideo: Boolean get() = uploadTypes == null || uploadTypes.any { it.startsWith("video/") }
+
     companion object {
         const val DEFAULT_CHARACTERS_PER_URL = 23
     }

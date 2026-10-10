@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
 import java.io.File
@@ -17,18 +18,21 @@ import me.foxtails.palustris.domain.DraftMediaImportError
 import me.foxtails.palustris.domain.DraftMediaImportException
 
 /**
- * Copies a picked image into draft media storage and decodes thumbnails from it.
+ * Copies a picked image or video into draft media storage and decodes thumbnails from it.
  *
  * Responsibility: check one picked file and hand its bytes to [DraftMediaStore]. Lifetime: stateless;
  * each call owns one temporary copy in the cache directory and deletes it before it returns. Access to
  * a picked URI ends with the process, so the draft keeps its own encrypted copy. The checks reject
- * a file that is not a decodable image, a file over [maxBytes], and a file that cannot be read.
- * The server limits apply later, when the publisher prepares the image.
+ * a file that is neither a decodable image nor a readable video, an image over [maxBytes], a video over
+ * [maxVideoBytes], and a file that cannot be read. The server limits apply later, when the publisher
+ * prepares the file.
  */
 class DraftMediaImporter(
     private val context: Context,
     private val store: DraftMediaStore,
     private val maxBytes: Long = MAX_IMPORT_BYTES,
+    private val maxVideoBytes: Long = MAX_IMPORT_VIDEO_BYTES,
+    private val videoProbe: VideoProbe = MediaMetadataVideoProbe(),
 ) {
     suspend fun import(accountId: AccountId, draftId: String, source: Uri): DraftMedia = withContext(Dispatchers.IO) {
         val workDirectory = File(context.cacheDir, "draft-import").apply { mkdirs() }
@@ -37,14 +41,21 @@ class DraftMediaImporter(
         workDirectory.listFiles()?.filter { it.lastModified() < stale }?.forEach { it.delete() }
         val copy = File.createTempFile("import-", ".img", workDirectory)
         try {
-            val size = copyBounded(source, copy)
+            val size = copyBounded(source, copy, maxOf(maxBytes, maxVideoBytes))
             if (size == 0L) throw DraftMediaImportException(DraftMediaImportError.NotAnImage)
-            val mimeType = sniffMimeType(copy) ?: throw DraftMediaImportException(DraftMediaImportError.NotAnImage)
-            val info = ImageFormatInspector.inspect(copy, mimeType)
-                ?: throw DraftMediaImportException(DraftMediaImportError.NotAnImage)
+            val imageType = sniffMimeType(copy)
+            val imageInfo = imageType?.let { ImageFormatInspector.inspect(copy, it) }
+            val facts = if (imageInfo != null) {
+                if (size > maxBytes) throw DraftMediaImportException(DraftMediaImportError.TooLarge)
+                MediaFacts(requireNotNull(imageType), imageInfo.width, imageInfo.height)
+            } else {
+                val video = videoProbe.probe(copy) ?: throw DraftMediaImportException(DraftMediaImportError.NotAnImage)
+                if (size > maxVideoBytes) throw DraftMediaImportException(DraftMediaImportError.TooLarge)
+                MediaFacts(video.containerMimeType.lowercase(), video.width ?: 0, video.height ?: 0)
+            }
             val mediaId = UUID.randomUUID().toString()
             copy.inputStream().use { store.write(accountId, draftId, mediaId, it) }
-            DraftMedia(id = mediaId, mimeType = mimeType, width = info.width, height = info.height, byteSize = size)
+            DraftMedia(id = mediaId, mimeType = facts.mimeType, width = facts.width, height = facts.height, byteSize = size)
         } finally {
             copy.delete()
         }
@@ -59,7 +70,10 @@ class DraftMediaImporter(
             runCatching {
                 val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                 store.open(accountId, draftId, mediaId).use { BitmapFactory.decodeStream(it, null, bounds) }
-                if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@runCatching null
+                if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+                    // Not an image: a draft video gets the first frame as its poster.
+                    return@runCatching videoPoster(accountId, draftId, mediaId, maxEdge)
+                }
                 var sample = 1
                 while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxEdge) sample *= 2
                 val decoded = store.open(accountId, draftId, mediaId).use {
@@ -72,8 +86,36 @@ class DraftMediaImporter(
             }.getOrNull()
         }
 
-    /** Copies [source] into [target] and stops with [DraftMediaImportError.TooLarge] past the limit. */
-    private fun copyBounded(source: Uri, target: File): Long {
+    /**
+     * Decodes the first frame of a draft video no larger than [maxEdge]. The video is decrypted to a
+     * temporary file because the retriever needs a seekable source, and that file is deleted here.
+     */
+    private suspend fun videoPoster(accountId: AccountId, draftId: String, mediaId: String, maxEdge: Int): Bitmap? {
+        val workDirectory = File(context.cacheDir, "draft-import").apply { mkdirs() }
+        val plain = File.createTempFile("poster-", ".vid", workDirectory)
+        val retriever = MediaMetadataRetriever()
+        try {
+            store.open(accountId, draftId, mediaId).use { input -> plain.outputStream().use { input.copyTo(it) } }
+            retriever.setDataSource(plain.path)
+            val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: return null
+            val height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: return null
+            val scale = minOf(1f, maxEdge.toFloat() / maxOf(width, height))
+            return retriever.getScaledFrameAtTime(
+                0L,
+                MediaMetadataRetriever.OPTION_CLOSEST_SYNC,
+                maxOf(1, (width * scale).toInt()),
+                maxOf(1, (height * scale).toInt()),
+            )
+        } finally {
+            retriever.release()
+            plain.delete()
+        }
+    }
+
+    private class MediaFacts(val mimeType: String, val width: Int, val height: Int)
+
+    /** Copies [source] into [target] and stops with [DraftMediaImportError.TooLarge] past [limit]. */
+    private fun copyBounded(source: Uri, target: File, limit: Long): Long {
         val input = try {
             context.contentResolver.openInputStream(source)
         } catch (error: Exception) {
@@ -88,7 +130,7 @@ class DraftMediaImporter(
                         val read = stream.read(buffer)
                         if (read < 0) break
                         total += read
-                        if (total > maxBytes) throw DraftMediaImportException(DraftMediaImportError.TooLarge)
+                        if (total > limit) throw DraftMediaImportException(DraftMediaImportError.TooLarge)
                         output.write(buffer, 0, read)
                     }
                 }
@@ -124,6 +166,12 @@ class DraftMediaImporter(
     companion object {
         /** A guard for storage, far above any server limit. The preparer fits the image to the server later. */
         const val MAX_IMPORT_BYTES = 100L * 1024 * 1024
+
+        /**
+         * The largest video kept in a draft. Storage encrypts the whole file, so this bounds the copy that
+         * the publisher decrypts again. The preparer shrinks it to the server limit later.
+         */
+        const val MAX_IMPORT_VIDEO_BYTES = 256L * 1024 * 1024
         private const val BUFFER_BYTES = 16 * 1024
         private const val STALE_COPY_MILLIS = 60L * 60 * 1000
     }

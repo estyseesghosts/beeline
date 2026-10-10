@@ -103,8 +103,16 @@ internal fun rememberComposerMedia(owner: ComposerOwner, contract: ComposerContr
     val multiple = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
         controls.picked(uris, context)
     }
-    val request = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-    controls.launchPicker = { onlyOne -> if (onlyOne) single.launch(request) else multiple.launch(request) }
+    controls.launchPicker = { onlyOne ->
+        // Videos are offered only when the server lists a video type or lists none at all.
+        val kind = if (controls.contract.limits.posting.acceptsVideo) {
+            ActivityResultContracts.PickVisualMedia.ImageAndVideo
+        } else {
+            ActivityResultContracts.PickVisualMedia.ImageOnly
+        }
+        val request = PickVisualMediaRequest(kind)
+        if (onlyOne) single.launch(request) else multiple.launch(request)
+    }
     return controls
 }
 

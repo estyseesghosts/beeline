@@ -38,6 +38,8 @@ data class ComposerContract(
      * account server. The default offers none.
      */
     val hashtagSuggestions: (Flow<String>) -> Flow<List<HashtagSuggestion>> = { emptyFlow() },
+    /** Video conversion progress from 0 to 1 while [publishing] converts a video, otherwise null. */
+    val publishMediaProgress: Float? = null,
 ) {
     /** Whether this account can attach images now: the server must support it and the token must allow it. */
     val mediaUpload: CapabilityStatus

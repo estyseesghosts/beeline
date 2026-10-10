@@ -17,6 +17,9 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 - The Profiles tab lists popular accounts from your server.
 - The composer suggests hashtags while you type one. The app sends the typed fragment after the hash sign to your server for this.
 - The bundled hashtag catalog has not been reviewed. Treat this build as a test build.
+- Videos play in the feed, in Photo Grid tiles, and in a new video viewer. Videos start muted and loop when short. A new switch, Autoplay videos, turns autoplay off. Autoplay never runs on a metered network.
+- The composer attaches videos. Beeline converts a video to WebM when your server and phone allow it, and to H.264 MP4 otherwise. Small files are sent as they are. The output is limited to 900p on the shorter edge.
+- Beeline bundles FFmpeg (LGPL) for WebM on arm64 phones. See tools/ffmpeg/NOTICE.
 
 ## 0.2.13
 

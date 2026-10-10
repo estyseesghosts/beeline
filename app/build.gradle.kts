@@ -37,6 +37,14 @@ android {
         buildConfigField("String", "PRODUCT_VERSION", "\"$configuredVersionName\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    // The FFmpeg bridge for WebM upload. See tools/ffmpeg/README.md.
+    ndkVersion = "28.2.13676358"
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
     buildFeatures {
         compose = true
         buildConfig = true

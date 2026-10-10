@@ -135,6 +135,7 @@ class CrossCuttingTest {
                 maxAltTextLength = 900,
                 maxImageBytes = 8_000_000L,
                 maxImagePixels = 12_000_000L,
+                maxVideoBytes = 90_000_000L,
                 uploadTypes = setOf("image/png", "image/webp"),
                 charactersReservedPerUrl = 30,
                 mediaUpload = CapabilityStatus.Supported,

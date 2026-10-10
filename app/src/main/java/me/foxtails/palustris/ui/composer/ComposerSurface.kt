@@ -151,6 +151,7 @@ internal fun ComposerSurfaceHost(
                     publishing = publishing,
                     posted = contract.publishPosted,
                     total = contract.publishTotal,
+                    mediaProgress = contract.publishMediaProgress,
                 )
             }
         },
@@ -286,6 +287,7 @@ internal fun ComposerTopBar(
     publishing: Boolean,
     posted: Int,
     total: Int,
+    mediaProgress: Float? = null,
 ) {
     Row(
         Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
@@ -300,7 +302,10 @@ internal fun ComposerTopBar(
         Button(onClick = onPublish, enabled = postEnabled, modifier = Modifier.testTag(COMPOSER_POST_TAG)) {
             if (publishing) {
                 CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                if (total > 0) {
+                if (mediaProgress != null) {
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.composer_video_converting, (mediaProgress * 100).toInt()))
+                } else if (total > 0) {
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.composer_publish_progress, posted, total))
                 }

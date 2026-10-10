@@ -1,4 +1,4 @@
-Video (`docs/video.md`) is in progress. Read `docs/agents/tasks/video.md`. Slice 6 is `164621d6`, slice 2 `6de35511`; slice 3 (feed autoplay) `8e635e18`, slice 4 (photo grid) `099ea871`, slice 5 (viewer) follows. Slice 8 (upload) is next; slice 7 (FFmpeg) needs an arm64 device. The emulator is x86_64, so FFmpeg and WebM need an arm64 device.
+Video (`docs/video.md`) is in progress. Read `docs/agents/tasks/video.md`. Slices 6, 2, 3, 4, 5, and 8 (H.264 upload, `ed49c4cc`) are committed. Slice 7 (FFmpeg arm64 build, JNI bridge), the WebM and composer half of slice 8, and slice 9 documents are written and pass the host gate, but are uncommitted until they run on the SM-G986W over wireless ADB. The upload tier is 900p on the shorter edge. The emulator is x86_64, so FFmpeg and WebM cannot run there.
 
 Related hashtags (`docs/related-tags.md`) is complete: slices 1 to 6 are committed. Read `docs/agents/tasks/related-hashtags.md` and `docs/agents/related-hashtags.md`. Slice 1 is `2b551c12`, slice 2 `c8771358`, slice 3 `0829f3d4`, slice 4 `3df65066`, slice 5 `3901c0f8`. Slice 6 (composer autocomplete) is the next commit on top of them.
 

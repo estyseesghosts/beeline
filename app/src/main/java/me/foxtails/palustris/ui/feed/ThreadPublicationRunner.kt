@@ -35,6 +35,9 @@ class ThreadPublicationRunner(
     interface Events {
         val isStopped: Boolean
         fun onProgress(posted: Int, total: Int)
+
+        /** Video conversion progress from 0 to 1, or null when no video is being converted. */
+        fun onMediaProgress(fraction: Float?) = Unit
         fun onSuccess(owned: List<OwnedPost>, requests: List<CreatePostRequest>)
         fun onFailure(failure: ThreadPublishFailure, message: String)
         fun onUnexpected(error: Exception)
@@ -51,7 +54,8 @@ class ThreadPublicationRunner(
         val total = publication.entries.size
         try {
             val publisher = ThreadPublisher(source, preparer, source.capabilities.posting, accountId)
-            when (val result = publisher.publish(publication) { posted, remaining ->
+            val onMedia = { fraction: Float? -> if (!events.isStopped) events.onMediaProgress(fraction) }
+            when (val result = publisher.publish(publication, onMedia) { posted, remaining ->
                 if (remaining != null) saveRemaining(remaining, accountId)
                 events.onProgress(posted.size, total)
                 listener.onProgress(posted.size, total)
@@ -102,5 +106,6 @@ internal object EmptyThreadPreparer : ThreadImagePreparer {
         media: ThreadPublicationMedia,
         compress: Boolean,
         limits: ThreadImageLimits,
+        onProgress: (Float) -> Unit,
     ): PreparedThreadImage = throw UnsupportedOperationException("No thread image preparer")
 }

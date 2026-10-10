@@ -38,6 +38,7 @@ Beeline is one Android module in `:app`. Beeline uses Kotlin, Jetpack Compose, a
 | Notifications | Available | [`NotificationRepository.kt`](../../app/src/main/java/me/foxtails/palustris/data/notifications/NotificationRepository.kt) |
 | Direct messages | Available. Federated direct posts, not encrypted. | [`DirectMessageViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/directmessages/DirectMessageViewModel.kt) |
 | Bookmarks and likes | Available | [`SavedPostsViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/saved/SavedPostsViewModel.kt) |
+| Video | Available. Autoplay in the feed and Photo Grid, a viewer, and upload as WebM or H.264 MP4. Device behavior is partly unverified. | [`VideoPlaybackCoordinator.kt`](../../app/src/main/java/me/foxtails/palustris/ui/media/VideoPlaybackCoordinator.kt), [`VideoPreparer.kt`](../../app/src/main/java/me/foxtails/palustris/data/media/VideoPreparer.kt) |
 | Photo Grid | Available. It belongs to the Search destination and keeps independent state. | [`PhotoGridScreen.kt`](../../app/src/main/java/me/foxtails/palustris/ui/photogrid/PhotoGridScreen.kt) |
 | Emoji catalog and reactions | Available | [`EmojiCatalogViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/emoji/EmojiCatalogViewModel.kt) |
 | Moderation lists | Available. Blocked accounts, muted accounts, and muted hashtags. | [`ModerationViewModel.kt`](../../app/src/main/java/me/foxtails/palustris/ui/settings/ModerationViewModel.kt) |
@@ -54,7 +55,9 @@ The `README.md` TODO claims are stale for block, mute, and report. Current sourc
 
 ## Known Limits
 
-- Media attachment upload is not available in the composer. Beeline displays attachments. Source: no attachment picker exists in `ui/`.
+- Image and video upload from the composer is implemented. Live-server uploads are not verified. Source: `ui/composer/ComposerMediaControls.kt`.
+- WebM upload needs an arm64 phone. Other devices upload H.264 MP4.
+- Beeline bundles FFmpeg under the LGPL for WebM. See `tools/ffmpeg/NOTICE`. The app also ships libheif and x265 through the `avif-coder` dependency.
 - Native Misskey chat is not implemented. Beeline uses the direct-message model for both protocols.
 - Misskey antennas, followed hashtags, and Mastodon lists are not supported. Source: no matching domain type exists.
 - Content warning handling uses local rules and post flags. Treat the behavior as partial.

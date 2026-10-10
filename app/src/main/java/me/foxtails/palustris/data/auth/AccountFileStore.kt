@@ -296,6 +296,7 @@ private fun PostingCapabilities.toJson(): JSONObject = JSONObject()
     .put("maxAltTextLength", maxAltTextLength)
     .put("maxImageBytes", maxImageBytes)
     .put("maxImagePixels", maxImagePixels)
+    .put("maxVideoBytes", maxVideoBytes)
     .put("uploadTypes", uploadTypes?.let { JSONArray(it.toList()) })
     .put("charactersReservedPerUrl", charactersReservedPerUrl)
     .put("mediaUpload", mediaUpload.name)
@@ -309,6 +310,7 @@ private fun JSONObject.toPostingCapabilities(): PostingCapabilities = PostingCap
     maxAltTextLength = optIntOrNull("maxAltTextLength"),
     maxImageBytes = optLongOrNull("maxImageBytes"),
     maxImagePixels = optLongOrNull("maxImagePixels"),
+    maxVideoBytes = optLongOrNull("maxVideoBytes"),
     uploadTypes = optJSONArray("uploadTypes")?.let { array ->
         (0 until array.length()).map { array.getString(it) }.toSet()
     },

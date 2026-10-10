@@ -109,6 +109,7 @@ class MisskeyCapabilityProbe(
             maxAttachments = MAX_ATTACHMENTS,
             maxAltTextLength = meta.positiveInt("maxAltTextLength") ?: DEFAULT_MAX_ALT_TEXT_LENGTH,
             maxImageBytes = limits.minOrNull(),
+            maxVideoBytes = limits.minOrNull(),
             maxImagePixels = null,
             uploadTypes = null,
             mediaUpload = if (hasToken) CapabilityStatus.Supported else CapabilityStatus.Denied,

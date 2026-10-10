@@ -87,6 +87,7 @@ class ThreadPublisherTest {
             media: ThreadPublicationMedia,
             compress: Boolean,
             limits: ThreadImageLimits,
+            onProgress: (Float) -> Unit,
         ): PreparedThreadImage {
             calls += 1
             seenCompress += compress

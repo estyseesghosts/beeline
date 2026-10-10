@@ -11,14 +11,14 @@ import java.io.File
 import javax.inject.Singleton
 import me.foxtails.palustris.data.media.DeviceVideoCapabilities
 import me.foxtails.palustris.data.media.DeviceVideoIdentity
+import me.foxtails.palustris.data.media.FfmpegBridge
 import me.foxtails.palustris.data.media.Media3Mp4Transcoder
 import me.foxtails.palustris.data.media.MediaMetadataVideoProbe
 import me.foxtails.palustris.data.media.PreferencesVideoBenchmarkStore
-import me.foxtails.palustris.data.media.UnavailableWebmEncoder
 import me.foxtails.palustris.data.media.VideoPreparer
 import me.foxtails.palustris.data.media.WebmRejections
 
-/** Wires video upload preparation. Slice 7 replaces the WebM encoder with the FFmpeg bridge. */
+/** Wires video upload preparation. WebM goes through the FFmpeg bridge, which is unavailable off arm64. */
 @Module
 @InstallIn(SingletonComponent::class)
 object VideoModule {
@@ -29,7 +29,7 @@ object VideoModule {
     @Provides
     @Singleton
     fun provideVideoPreparer(@ApplicationContext context: Context, rejections: WebmRejections): VideoPreparer {
-        val encoder = UnavailableWebmEncoder
+        val encoder = FfmpegBridge()
         val device = DeviceVideoCapabilities(
             identity = DeviceVideoIdentity(Build.MODEL, Build.VERSION.SDK_INT, Build.SUPPORTED_ABIS.firstOrNull()),
             encoder = encoder,

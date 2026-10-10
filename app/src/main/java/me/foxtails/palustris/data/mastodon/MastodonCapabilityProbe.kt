@@ -247,6 +247,7 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                     maxAltTextLength = media.positiveInt("description_limit") ?: DEFAULT_ALT_TEXT_LENGTH,
                     maxImageBytes = media.positiveLong("image_size_limit") ?: DEFAULT_IMAGE_BYTES,
                     maxImagePixels = media.positiveLong("image_matrix_limit") ?: DEFAULT_IMAGE_PIXELS,
+                    maxVideoBytes = media.positiveLong("video_size_limit") ?: DEFAULT_VIDEO_BYTES,
                     uploadTypes = types,
                     charactersReservedPerUrl = statuses.positiveInt("characters_reserved_per_url")
                         ?: PostingCapabilities.DEFAULT_CHARACTERS_PER_URL,
@@ -270,6 +271,7 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
         private const val DEFAULT_ALT_TEXT_LENGTH = 1500
         private const val DEFAULT_IMAGE_BYTES = 16L * 1024 * 1024
         private const val DEFAULT_IMAGE_PIXELS = 33_177_600L
+        private const val DEFAULT_VIDEO_BYTES = 99L * 1024 * 1024
         private val DEFAULT_UPLOAD_TYPES = setOf("image/jpeg", "image/png", "image/gif", "image/webp")
 
         private fun editableForMachineApi(api: Int): EditableProfileCapabilities = EditableProfileCapabilities(

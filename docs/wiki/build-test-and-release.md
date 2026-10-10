@@ -23,6 +23,16 @@ Focused runs overwrite that directory, so R00 preserves sanitized attribution in
 R00 verified this procedure for grouped, isolated, and full-gate runs.
 Device, live-server, and signing checks remain separate and unverified here.
 
+## Native build and FFmpeg
+
+The `:app` module compiles a small JNI library from `app/src/main/cpp` with CMake 3.22.1 and NDK 28.2.13676358.
+Android Gradle Plugin installs both when the SDK licenses are accepted.
+The library links the FFmpeg shared libraries in `tools/ffmpeg/prebuilt`, which the repository commits.
+Only arm64-v8a links FFmpeg. The other ABIs build a stub, so WebM is unavailable there.
+Rebuild the FFmpeg libraries with `tools/ffmpeg/build.sh`. [tools/ffmpeg/README.md](../../tools/ffmpeg/README.md) lists the versions, flags, sizes, and Windows notes.
+The x86_64 emulator cannot run FFmpeg. Run `FfmpegBridgeInstrumentedTest` on an arm64 device.
+The CI runner needs the NDK and CMake. This is not verified on CI.
+
 ## Detailed command inventory
 
 ### Focused verification

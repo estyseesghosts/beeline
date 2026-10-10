@@ -20,7 +20,7 @@ data class DeviceVideoIdentity(
  * Decides whether this device encodes WebM fast enough.
  *
  * Responsibility: the device gate for the WebM path. The process must run on arm64-v8a, the encoder
- * must be present, and a benchmark of a 3 second clip at [VideoUploadPolicy.DEFAULT_MAX_HEIGHT] must
+ * must be present, and a benchmark of a 3 second clip at [VideoUploadPolicy.MAX_SHORT_SIDE] must
  * reach [VideoUploadPolicy.MIN_REALTIME_FACTOR] times realtime. The result is cached under the
  * device model, the SDK level, and the encoder build, so a new OS or encoder build runs it again.
  * Lifetime: one per app. It holds no in-memory state; the store is the cache.
@@ -44,7 +44,7 @@ class DeviceVideoCapabilities(
     }
 
     private suspend fun runBenchmark(fixture: File): Double = try {
-        encoder.benchmark(fixture, VideoUploadPolicy.DEFAULT_MAX_HEIGHT)
+        encoder.benchmark(fixture, VideoUploadPolicy.MAX_SHORT_SIDE)
     } catch (error: VideoTranscodeException) {
         0.0
     }

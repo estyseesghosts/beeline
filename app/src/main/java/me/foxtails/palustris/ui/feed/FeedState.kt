@@ -32,6 +32,8 @@ data class FeedState(
     /** Thread progress while publishing: posted entries of total entries. */
     val publishPosted: Int = 0,
     val publishTotal: Int = 0,
+    /** Video conversion progress from 0 to 1 while the publisher converts a video, otherwise null. */
+    val publishMediaProgress: Float? = null,
     val nextCursor: String? = null,
     val error: String? = null,
     val needsSignIn: Boolean = false,

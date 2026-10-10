@@ -26,8 +26,18 @@ object VideoUploadPolicy {
 
     const val WEBM_MIME = "video/webm"
 
-    /** Default top resolution for transcodes and for the device benchmark. */
-    const val DEFAULT_MAX_HEIGHT = 720
+    /** The upload tier is 900p: the shorter edge of a transcode never exceeds this many pixels. */
+    const val MAX_SHORT_SIDE = 900
+
+    /**
+     * The output height cap that keeps the shorter edge within [MAX_SHORT_SIDE]. A landscape video is capped
+     * at 900 pixels tall. A portrait video gets a taller cap, so a 1080x1920 clip becomes 900x1600 and not
+     * 506x900. An unknown size gets the landscape cap.
+     */
+    fun heightCap(width: Int?, height: Int?): Int {
+        if (width == null || height == null || width <= 0 || height <= width) return MAX_SHORT_SIDE
+        return (MAX_SHORT_SIDE.toLong() * height / width).toInt()
+    }
 
     /** The device must encode at least this many times faster than realtime before WebM is chosen. */
     const val MIN_REALTIME_FACTOR = 1.5
