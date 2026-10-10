@@ -15,6 +15,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import me.foxtails.palustris.domain.COMPRESSIBLE_IMAGE_TYPES
 
 /** What a server accepts for one image. A null limit means the server did not report one. */
 data class UploadImageLimits(
@@ -265,7 +266,7 @@ class UploadImagePreparer(
     private companion object {
         const val JPEG_TYPE = "image/jpeg"
         const val WEBP_TYPE = "image/webp"
-        val COMPRESSIBLE_TYPES = setOf(JPEG_TYPE, "image/png", WEBP_TYPE)
+        val COMPRESSIBLE_TYPES = COMPRESSIBLE_IMAGE_TYPES
 
         /** Misskey web level 1: the long edge is at most 2000 px, WebP at quality 85. */
         const val COMPRESS_LONG_EDGE = 2000

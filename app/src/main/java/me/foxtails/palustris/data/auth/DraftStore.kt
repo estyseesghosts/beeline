@@ -1,7 +1,12 @@
 package me.foxtails.palustris.data.auth
 
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.net.Uri
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.DraftMedia
+import me.foxtails.palustris.domain.DraftMediaImportError
+import me.foxtails.palustris.domain.DraftMediaImportException
 import me.foxtails.palustris.domain.PostDraft
 
 interface DraftStore {
@@ -10,6 +15,13 @@ interface DraftStore {
     suspend fun delete(accountId: AccountId?, draftId: String)
     suspend fun deleteAll(accountId: AccountId?)
     suspend fun migrateLegacy(accountId: AccountId?, preferences: SharedPreferences)
+
+    /** Copies a picked image into the draft's media. Stores without image storage reject it. */
+    suspend fun importImage(accountId: AccountId?, draftId: String, source: Uri): DraftMedia =
+        throw DraftMediaImportException(DraftMediaImportError.Unreadable)
+
+    /** Decodes a thumbnail of a draft image, or null when the store has none. */
+    suspend fun loadThumbnail(accountId: AccountId?, draftId: String, mediaId: String, maxEdge: Int): Bitmap? = null
 }
 
 /** Keeps compose-only previews and unit tests deterministic without touching Android Keystore. */

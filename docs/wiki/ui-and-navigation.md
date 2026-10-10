@@ -494,6 +494,39 @@ Sources: `ui/composer/ComposerBody.kt`, `ComposerEntryRow.kt`, `ComposerAudience
 `ComposerEntryRules.kt`, `domain/PostLimits.kt`, `ui/emoji/EmojiPicker.kt`
 (`ComposerField`), `ComposerBodyTest`, `ComposerEntryRulesTest`, `ReplyComposerTest`.
 
+### Media in the composer
+
+The toolbar photo button opens the system photo picker (one image when one slot is free, several
+otherwise). The manifest declares the Google Play services photo picker backport, so Android 10 and
+later share one picker. Each picked file is copied into `DraftMediaStore` (encrypted, under the
+draft's media directory) before the picker's access ends. A file that is not a decodable image, is
+over 100 MiB, or cannot be read is rejected with a message; the other files of the pick still import.
+The server limits apply later, when the publisher prepares each image.
+
+The image count follows the server limit (`maxAttachments`). A pick past the free slots drops the extra
+images and says so. The button is disabled when the entry is full, when the server cannot upload, while a
+publish runs, and on Mastodon-compatible servers when the post quotes another post
+(`PostingCapabilities.quoteWithMedia` is false there). A token that cannot upload shows the button as
+available; tapping it saves the editor and starts the sign-in-again flow.
+
+Each entry shows a thumbnail strip. A thumbnail has a remove button and an ALT badge, filled once the
+image has a description. Tapping a thumbnail opens the description dialog with the image, the text
+field, and the characters remaining against `maxAltTextLength`. Save stays disabled past the limit,
+and a blank description clears it. While the keyboard is up the dialog hides the image so Save stays
+in view. An entry with only images can be posted.
+
+An unsaved editor takes a draft id for its media on the first pick (`ComposerOwner.mediaDraftId`). The
+publication and later saves reuse it, so the files do not move.
+
+The Upload compression setting Ask asks once at Post: "Compress images?" with Compress and Keep
+originals. The dialog appears only when an image is JPEG, PNG, or WebP and the server leaves compression to
+the client. The answer applies to that publication only (`ComposerOwner.compressChoice`) and reaches
+`ThreadPublication.compress`. Always and Never never ask.
+
+Sources: `ui/composer/ComposerMediaControls.kt`, `ComposerMediaImport.kt`, `ComposerMediaStrip.kt`,
+`ComposerSurface.kt`, `ComposerEntryRules.kt`, `data/media/DraftMediaImporter.kt`,
+`domain/DraftMediaImport.kt`, `ComposerMediaUiTest`, `ComposerMediaRulesTest`, `DraftMediaImporterTest`.
+
 ## Draft restoration
 
 Closing a dirty composer saves the draft and closes the overlay. The saved text

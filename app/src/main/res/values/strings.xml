@@ -754,4 +754,18 @@
     <string name="composer_reuse_warning_yes">Yes</string>
     <string name="composer_reuse_warning_no">No</string>
     <string name="composer_thread_placeholder">Add to the thread</string>
+    <string name="composer_remove_image">Remove image</string>
+    <string name="composer_alt_badge">ALT</string>
+    <string name="composer_image_without_description">Image without a description</string>
+    <string name="composer_alt_title">Describe the image</string>
+    <string name="composer_alt_hint">Description for people who cannot see the image</string>
+    <string name="composer_alt_save">Save</string>
+    <string name="composer_media_limit">Only %1$d images fit in one post.</string>
+    <string name="composer_media_not_image">That file is not an image.</string>
+    <string name="composer_media_too_large">That image is too large.</string>
+    <string name="composer_media_unreadable">Beeline could not read that image.</string>
+    <string name="composer_compress_title">Compress images?</string>
+    <string name="composer_compress_message">Smaller images upload faster. The draft keeps the originals.</string>
+    <string name="composer_compress_yes">Compress</string>
+    <string name="composer_compress_no">Keep originals</string>
 </resources>

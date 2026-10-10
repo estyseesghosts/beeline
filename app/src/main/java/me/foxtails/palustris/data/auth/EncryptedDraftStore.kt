@@ -2,12 +2,18 @@ package me.foxtails.palustris.data.auth
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.net.Uri
 import android.util.AtomicFile
 import java.io.File
 import java.util.Base64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import me.foxtails.palustris.data.media.DraftMediaImporter
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.DraftMedia
+import me.foxtails.palustris.domain.DraftMediaImportError
+import me.foxtails.palustris.domain.DraftMediaImportException
 import me.foxtails.palustris.domain.PostDraft
 
 /**
@@ -24,6 +30,15 @@ class EncryptedDraftStore internal constructor(
     constructor(context: Context) : this(context, AccountFileStore(context), DraftMediaStore(context))
 
     private val directory = File(context.noBackupFilesDir, "drafts")
+    private val importer = DraftMediaImporter(context, media)
+
+    override suspend fun importImage(accountId: AccountId?, draftId: String, source: Uri): DraftMedia {
+        val owner = accountId ?: throw DraftMediaImportException(DraftMediaImportError.Unreadable)
+        return importer.import(owner, draftId, source)
+    }
+
+    override suspend fun loadThumbnail(accountId: AccountId?, draftId: String, mediaId: String, maxEdge: Int): Bitmap? =
+        accountId?.let { importer.thumbnail(it, draftId, mediaId, maxEdge) }
 
     override suspend fun list(accountId: AccountId?): List<PostDraft> = withContext(Dispatchers.IO) {
         val drafts = directory.listFiles().orEmpty().mapNotNull { file ->

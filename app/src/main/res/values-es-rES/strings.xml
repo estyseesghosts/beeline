@@ -200,4 +200,18 @@
     <string name="composer_reuse_warning_yes">Sí</string>
     <string name="composer_reuse_warning_no">No</string>
     <string name="composer_thread_placeholder">Añadir al hilo</string>
+    <string name="composer_remove_image">Quitar imagen</string>
+    <string name="composer_alt_badge">ALT</string>
+    <string name="composer_image_without_description">Imagen sin descripción</string>
+    <string name="composer_alt_title">Describir la imagen</string>
+    <string name="composer_alt_hint">Descripción para quienes no pueden ver la imagen</string>
+    <string name="composer_alt_save">Guardar</string>
+    <string name="composer_media_limit">Solo caben %1$d imágenes en una publicación.</string>
+    <string name="composer_media_not_image">Ese archivo no es una imagen.</string>
+    <string name="composer_media_too_large">Esa imagen es demasiado grande.</string>
+    <string name="composer_media_unreadable">Beeline no ha podido leer esa imagen.</string>
+    <string name="composer_compress_title">¿Comprimir las imágenes?</string>
+    <string name="composer_compress_message">Las imágenes más pequeñas se suben más rápido. El borrador conserva los originales.</string>
+    <string name="composer_compress_yes">Comprimir</string>
+    <string name="composer_compress_no">Conservar originales</string>
 </resources>

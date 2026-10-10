@@ -150,4 +150,18 @@
     <string name="composer_reuse_warning_yes">Ja</string>
     <string name="composer_reuse_warning_no">Nein</string>
     <string name="composer_thread_placeholder">Zum Thread hinzufügen</string>
+    <string name="composer_remove_image">Bild entfernen</string>
+    <string name="composer_alt_badge">ALT</string>
+    <string name="composer_image_without_description">Bild ohne Beschreibung</string>
+    <string name="composer_alt_title">Bild beschreiben</string>
+    <string name="composer_alt_hint">Beschreibung für Menschen, die das Bild nicht sehen können</string>
+    <string name="composer_alt_save">Speichern</string>
+    <string name="composer_media_limit">In einen Beitrag passen nur %1$d Bilder.</string>
+    <string name="composer_media_not_image">Diese Datei ist kein Bild.</string>
+    <string name="composer_media_too_large">Dieses Bild ist zu groß.</string>
+    <string name="composer_media_unreadable">Beeline konnte dieses Bild nicht lesen.</string>
+    <string name="composer_compress_title">Bilder komprimieren?</string>
+    <string name="composer_compress_message">Kleinere Bilder laden schneller hoch. Der Entwurf behält die Originale.</string>
+    <string name="composer_compress_yes">Komprimieren</string>
+    <string name="composer_compress_no">Originale behalten</string>
 </resources>

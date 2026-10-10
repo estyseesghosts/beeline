@@ -74,6 +74,24 @@ and `AuthenticatedHttpClientTest`.
 - Limits come from `ServerCapabilities.posting`. Live-server uploads remain
   unverified.
 
+### Media in the composer
+
+Source: `data/media/DraftMediaImporter.kt`, `domain/DraftMediaImport.kt`,
+`domain/ServerCapabilities.kt`, `data/mastodon/MastodonCapabilityProbe.kt`,
+`data/auth/AccountFileStore.kt`, `DraftMediaImporterTest`, and `ComposerMediaRulesTest`.
+
+- The composer copies each picked image into the encrypted draft store before the picker grant ends.
+  It sniffs the type with a bounds decode and rejects non-images, empty files, files over 100 MiB, and
+  unreadable files. The server limits apply at publish time.
+- `PostingCapabilities.quoteWithMedia` is true by default and false on Mastodon-compatible servers,
+  which reject a quote that carries media. The composer disables the photo button for a quote there
+  instead of failing at publish. Capability schema version 7 stores the flag; older stored snapshots
+  read as true.
+- The photo button follows `mediaUpload`: Unsupported disables it, Denied starts the sign-in-again
+  flow, and Unknown and Supported allow the pick. `ConnectedSessionContext.mediaAccess` carries the
+  token access.
+- Live-server image publishing from the composer (dvd.chat and Mastodon) remains unverified.
+
 ### Upload image preparation
 
 Source: `data/media/UploadImagePreparer.kt`, `data/media/ImageFormatInspector.kt`,

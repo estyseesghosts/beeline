@@ -147,4 +147,18 @@
     <string name="composer_reuse_warning_yes">Oui</string>
     <string name="composer_reuse_warning_no">Non</string>
     <string name="composer_thread_placeholder">Ajouter au fil</string>
+    <string name="composer_remove_image">Retirer l’image</string>
+    <string name="composer_alt_badge">ALT</string>
+    <string name="composer_image_without_description">Image sans description</string>
+    <string name="composer_alt_title">Décrire l’image</string>
+    <string name="composer_alt_hint">Description pour les personnes qui ne peuvent pas voir l’image</string>
+    <string name="composer_alt_save">Enregistrer</string>
+    <string name="composer_media_limit">Un message ne peut contenir que %1$d images.</string>
+    <string name="composer_media_not_image">Ce fichier n’est pas une image.</string>
+    <string name="composer_media_too_large">Cette image est trop grande.</string>
+    <string name="composer_media_unreadable">Beeline n’a pas pu lire cette image.</string>
+    <string name="composer_compress_title">Compresser les images ?</string>
+    <string name="composer_compress_message">Les images plus petites se téléversent plus vite. Le brouillon garde les originaux.</string>
+    <string name="composer_compress_yes">Compresser</string>
+    <string name="composer_compress_no">Garder les originaux</string>
 </resources>

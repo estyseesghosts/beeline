@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -98,7 +99,10 @@ internal fun ComposerSurfaceHost(
     var draftsOpen by rememberSaveable { mutableStateOf(false) }
     val publishing = contract.publishing || owner.submitting
     val busy = publishing || owner.closing
-    fun publish() {
+    var askCompression by rememberSaveable { mutableStateOf(false) }
+    fun startPublish(compress: Boolean? = null) {
+        // The answer reaches the publication that this call builds, then the owner follows the setting again.
+        owner.compressChoice = compress
         owner.publish { replySent, quoteSent ->
             val message = when {
                 replySent -> replySentMessage
@@ -108,6 +112,27 @@ internal fun ComposerSurfaceHost(
             message?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
             onClose()
         }
+        owner.compressChoice = null
+    }
+    fun publish() {
+        if (owner.mustAskCompression()) askCompression = true else startPublish()
+    }
+    if (askCompression) {
+        AlertDialog(
+            onDismissRequest = { askCompression = false },
+            title = { Text(stringResource(R.string.composer_compress_title)) },
+            text = { Text(stringResource(R.string.composer_compress_message)) },
+            confirmButton = {
+                TextButton(onClick = { askCompression = false; startPublish(compress = true) }) {
+                    Text(stringResource(R.string.composer_compress_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { askCompression = false; startPublish(compress = false) }) {
+                    Text(stringResource(R.string.composer_compress_no))
+                }
+            },
+        )
     }
     ComposerSurface(
         card = card,

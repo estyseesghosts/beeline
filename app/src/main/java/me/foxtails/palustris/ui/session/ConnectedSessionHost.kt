@@ -246,6 +246,8 @@ fun ConnectedSessionHost(
         object : ComposerContract.Actions {
             override fun publish(publication: ThreadPublication, listener: ThreadPublishListener) =
                 feed.publish(publication, listener)
+
+            override fun signInAgain() = accountManager.upgradePermissions(accountId)
         }
     }
     val composer = remember(postPreferences, feed.composerInputs, composerActions) {
@@ -254,6 +256,7 @@ fun ConnectedSessionHost(
             availableAudiences = feed.composerInputs.availableAudiences,
             limits = feed.composerInputs.limits,
             prepareText = ExternalLinkHandler::prepareText,
+            mediaAccess = connectedContext.mediaAccess,
             canPublish = feed.composerInputs.canPublish,
             publishing = feed.composerInputs.publishing,
             publishPosted = feed.composerInputs.publishPosted,

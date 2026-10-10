@@ -1,6 +1,10 @@
 package me.foxtails.palustris.ui.composer
 
+import android.graphics.Bitmap
+import android.net.Uri
 import me.foxtails.palustris.data.auth.DraftActions
+import me.foxtails.palustris.domain.DraftMedia
+import me.foxtails.palustris.domain.DraftMediaImportError
 import me.foxtails.palustris.domain.PostDraft
 import me.foxtails.palustris.ui.shell.DraftsContract
 
@@ -15,5 +19,15 @@ fun DraftActions.asDraftsContract(): DraftsContract = DraftsContract(
 
         override fun delete(draftId: String, onDone: () -> Unit, onError: (String) -> Unit) =
             this@asDraftsContract.delete(draftId, onDone, onError)
+
+        override fun importMedia(
+            draftId: String,
+            source: Uri,
+            onResult: (DraftMedia) -> Unit,
+            onError: (DraftMediaImportError) -> Unit,
+        ) = this@asDraftsContract.importMedia(draftId, source, onResult, onError)
+
+        override fun thumbnail(draftId: String, mediaId: String, maxEdge: Int, onResult: (Bitmap?) -> Unit) =
+            this@asDraftsContract.thumbnail(draftId, mediaId, maxEdge, onResult)
     },
 )

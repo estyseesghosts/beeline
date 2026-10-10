@@ -2,11 +2,16 @@ package me.foxtails.palustris.data.auth
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.net.Uri
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import me.foxtails.palustris.data.AppMessages
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.DraftMedia
+import me.foxtails.palustris.domain.DraftMediaImportError
+import me.foxtails.palustris.domain.DraftMediaImportException
 import me.foxtails.palustris.domain.PostDraft
 
 /**
@@ -66,6 +71,44 @@ class DraftActions(
                 // The list refreshes from storage, so a failed delete still reports completion.
                 onError(appMessages.draftDeleteFailed())
                 onDone()
+            }
+        }
+    }
+
+    /**
+     * Copies a picked image into the draft's media storage. A revoked writer copies nothing and
+     * reports nothing. A rejected file reports its reason.
+     */
+    fun importMedia(
+        draftId: String,
+        source: Uri,
+        onResult: (DraftMedia) -> Unit,
+        onError: (DraftMediaImportError) -> Unit,
+    ) {
+        scope.launch {
+            try {
+                var imported: DraftMedia? = null
+                val accepted = writeIfCurrent { imported = store.importImage(accountId, draftId, source) }
+                if (accepted) imported?.let(onResult)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (rejected: DraftMediaImportException) {
+                onError(rejected.reason)
+            } catch (_: Exception) {
+                onError(DraftMediaImportError.Unreadable)
+            }
+        }
+    }
+
+    /** Decodes a thumbnail of a draft image. A failure reports null. */
+    fun thumbnail(draftId: String, mediaId: String, maxEdge: Int, onResult: (Bitmap?) -> Unit) {
+        scope.launch {
+            try {
+                onResult(store.loadThumbnail(accountId, draftId, mediaId, maxEdge))
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                onResult(null)
             }
         }
     }

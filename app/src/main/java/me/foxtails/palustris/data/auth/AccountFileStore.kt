@@ -300,6 +300,7 @@ private fun PostingCapabilities.toJson(): JSONObject = JSONObject()
     .put("charactersReservedPerUrl", charactersReservedPerUrl)
     .put("mediaUpload", mediaUpload.name)
     .put("clientCompression", clientCompression)
+    .put("quoteWithMedia", quoteWithMedia)
 
 private fun JSONObject.toPostingCapabilities(): PostingCapabilities = PostingCapabilities(
     lengthRule = enumOrDefault("lengthRule", PostLengthRule.Utf16TextOnly),
@@ -314,6 +315,7 @@ private fun JSONObject.toPostingCapabilities(): PostingCapabilities = PostingCap
     charactersReservedPerUrl = optInt("charactersReservedPerUrl", PostingCapabilities.DEFAULT_CHARACTERS_PER_URL),
     mediaUpload = enumOrDefault("mediaUpload", CapabilityStatus.Unknown),
     clientCompression = optBoolean("clientCompression"),
+    quoteWithMedia = optBoolean("quoteWithMedia", true),
 )
 
 private fun JSONObject.optIntOrNull(name: String): Int? = if (isNull(name)) null else optInt(name)

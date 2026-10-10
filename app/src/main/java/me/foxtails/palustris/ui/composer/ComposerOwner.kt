@@ -18,7 +18,6 @@ import me.foxtails.palustris.domain.PostingVisibilityPolicy
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.ThreadPublishFailure
 import me.foxtails.palustris.domain.ThreadPublishListener
-import me.foxtails.palustris.domain.UploadCompression
 import me.foxtails.palustris.domain.toPostDraft
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.shell.ComposerContract
@@ -101,6 +100,11 @@ class ComposerOwner internal constructor(
 
     /** The id of the first entry. Single-post callers address it by default. */
     val firstEntryId: String get() = editor.first.id
+
+    internal var compressChoice: Boolean? = null // The answer to the compression question; null follows the setting.
+
+    /** The id that names this draft's media files. A new editor takes one before its first save. */
+    fun mediaDraftId(): String = editor.effectiveDraftId ?: UUID.randomUUID().toString().also { id -> mutateEditor { it.copy(mediaDraftId = id) } }
 
     fun setText(text: String) { setEntryText(firstEntryId, text) }
     fun setWarning(text: String) { setEntryWarning(firstEntryId, text) }
@@ -345,11 +349,11 @@ class ComposerOwner internal constructor(
         val submittedReply = replyTo?.takeIf { it.connection == account.id.connection.origin }
         val submittedQuote = quoteOf?.takeIf { it.connection == account.id.connection.origin }
         val publication = editor.withPreparedText(context.contract.prepareText).toThreadPublication(
-            draftId = editor.draftId ?: UUID.randomUUID().toString(),
+            draftId = editor.effectiveDraftId ?: UUID.randomUUID().toString(),
             audience = submittedAudience,
             replyTo = submittedReply,
             quoteOf = submittedQuote,
-            compress = context.contract.postPreferences.uploadCompression != UploadCompression.Never,
+            compress = resolveCompress(),
             accountId = account.id,
         )
         val reserved = ComposerSubmission(
@@ -452,7 +456,7 @@ class ComposerOwner internal constructor(
     private fun draftValue(): PostDraft {
         val account = context.account
         return PostDraft(
-            id = editor.draftId ?: UUID.randomUUID().toString(),
+            id = editor.effectiveDraftId ?: UUID.randomUUID().toString(),
             accountId = account?.id,
             text = editor.text,
             audience = editor.audience,

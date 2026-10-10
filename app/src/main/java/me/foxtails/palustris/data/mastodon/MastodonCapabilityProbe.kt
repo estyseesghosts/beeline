@@ -252,6 +252,7 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                         ?: PostingCapabilities.DEFAULT_CHARACTERS_PER_URL,
                     mediaUpload = CapabilityStatus.Supported,
                     clientCompression = false,
+                    quoteWithMedia = false,
                 ),
             )
         }

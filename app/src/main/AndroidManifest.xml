@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
@@ -48,5 +49,18 @@
         <receiver
             android:name=".data.notifications.AndroidNotificationDismissReceiver"
             android:exported="false" />
+        <!-- Installs the Google Play services photo picker backport on Android 10 and later. The class lives in Play services, not in this app. -->
+        <service
+            android:name="com.google.android.gms.metadata.ModuleDependencies"
+            tools:ignore="MissingClass"
+            android:enabled="false"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+            </intent-filter>
+            <meta-data
+                android:name="photopicker_activity:0:required"
+                android:value="" />
+        </service>
     </application>
 </manifest>

@@ -61,10 +61,15 @@ data class ComposerEditorState(
     val targetPreview: PostDraftQuotePreview? = null,
     val boundAccount: AccountId? = null,
     val boundRevision: Long = 0L,
+    /** Names the draft media files of an editor that has no saved draft yet. See [effectiveDraftId]. */
+    val mediaDraftId: String? = null,
 ) {
     init {
         require(entries.isNotEmpty()) { "The composer always holds at least one entry." }
     }
+
+    /** The saved draft id, or the id that already names this editor's picked image files. */
+    val effectiveDraftId: String? get() = draftId ?: mediaDraftId
 
     val first: ComposerEntryState get() = entries.first()
     val text: String get() = first.text

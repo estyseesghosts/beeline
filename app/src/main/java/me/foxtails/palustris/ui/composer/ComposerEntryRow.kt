@@ -84,6 +84,9 @@ internal class ComposerEntryActions(
     val onEmojiInserted: () -> Unit,
     val onFocusRequestHandled: () -> Unit,
     val onRemove: () -> Unit,
+    val loadThumbnail: ThumbnailLoader,
+    val onRemoveMedia: (mediaId: String) -> Unit,
+    val onEditAlt: (mediaId: String) -> Unit,
 )
 
 /**
@@ -173,6 +176,9 @@ internal fun ComposerEntryRow(
                         }
                     },
                 )
+                if (entry.media.isNotEmpty()) {
+                    ComposerMediaStrip(entry.media, actions.loadThumbnail, actions.onRemoveMedia, actions.onEditAlt)
+                }
             }
             if (!first) {
                 IconButton(onClick = actions.onRemove, modifier = Modifier.align(Alignment.TopEnd)) {

@@ -1,5 +1,6 @@
 package me.foxtails.palustris.ui.session
 
+import me.foxtails.palustris.domain.AccessStatus
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.NotificationSyncToken
@@ -24,6 +25,8 @@ class ConnectedSessionContext internal constructor(
     internal val registryToken: NotificationSyncToken,
     internal val directMessageGeneration: Long,
     internal val draftGeneration: Long,
+    /** Whether the token may upload media. Read from the session grant when the context is built. */
+    internal val mediaAccess: AccessStatus = AccessStatus.Unknown,
 ) {
     val accountId: AccountId get() = account.id
 

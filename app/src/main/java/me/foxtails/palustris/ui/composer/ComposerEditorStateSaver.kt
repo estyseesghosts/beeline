@@ -21,6 +21,7 @@ private const val LEGACY_SIZE = 9
 private const val TARGETS_SIZE = 23
 private const val ENTRIES_INDEX = 23
 private const val SAVED_ENTRIES_INDEX = 24
+private const val MEDIA_DRAFT_ID_INDEX = 25
 
 /** Restores shell-surviving fields across process recreation. */
 internal val ComposerEditorStateSaver: Saver<ComposerEditorState, Any> = listSaver(
@@ -51,6 +52,7 @@ internal val ComposerEditorStateSaver: Saver<ComposerEditorState, Any> = listSav
             it.boundRevision,
             it.entries.map(::saveEntry),
             it.savedEntries.map(::saveContent),
+            it.mediaDraftId,
         )
     },
     restore = {
@@ -93,7 +95,12 @@ internal val ComposerEditorStateSaver: Saver<ComposerEditorState, Any> = listSav
         if (it.size <= TARGETS_SIZE) return@listSaver withTargets
         val entries = restoreEntries(it[ENTRIES_INDEX])
         val saved = restoreContents(it[SAVED_ENTRIES_INDEX])
-        if (entries.isEmpty() || saved.isEmpty()) withTargets else withTargets.copy(entries = entries, savedEntries = saved)
+        val mediaDraftId = it.getOrNull(MEDIA_DRAFT_ID_INDEX) as? String
+        if (entries.isEmpty() || saved.isEmpty()) {
+            withTargets
+        } else {
+            withTargets.copy(entries = entries, savedEntries = saved, mediaDraftId = mediaDraftId)
+        }
     },
 )
 

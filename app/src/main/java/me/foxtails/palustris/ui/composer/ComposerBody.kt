@@ -71,6 +71,8 @@ internal fun ComposerBody(
         if (target != null && editor.entry(target) == null) onEmojiInsertionApplied()
     }
     val audienceOptions = contract.availableAudiences.sortedBy { it.ordinal }
+    val media = rememberComposerMedia(owner, contract)
+    media.AltTextDialog()
     var focusRequest by remember { mutableStateOf<String?>(null) }
     // The entry whose warning the user may copy into a new entry. Null when no question is open.
     var warningPrompt by remember { mutableStateOf<String?>(null) }
@@ -120,6 +122,9 @@ internal fun ComposerBody(
                             onEmojiInserted = onEmojiInsertionApplied,
                             onFocusRequestHandled = { focusRequest = null },
                             onRemove = { owner.removeEntry(entry.id) },
+                            loadThumbnail = media.loadThumbnail,
+                            onRemoveMedia = { owner.removeMedia(entry.id, it) },
+                            onEditAlt = { media.editAlt(entry.id, it) },
                         ),
                     )
                 }
@@ -144,6 +149,8 @@ internal fun ComposerBody(
         ComposerToolbar(
             entry = focusedEntry,
             limits = contract.limits,
+            photo = media.photoState(focusedEntry),
+            onPhoto = { media.onPhoto(focusedEntry) },
             onEmoji = {
                 val kind = if (warningFocused) ComposerField.Kind.Warning else ComposerField.Kind.Text
                 onRequestEmoji(ComposerField(kind, focusedEntry.id))
@@ -189,12 +196,14 @@ private fun ComposerTargetCard(target: OwnedPost, isReply: Boolean, onRemove: ()
 
 /**
  * Photo, emoji, and content warning on the left. The characters remaining for the focused entry
- * on the right. The photo button stays disabled until the composer can attach images.
+ * on the right. The photo button follows [PhotoButtonState].
  */
 @Composable
 internal fun ComposerToolbar(
     entry: ComposerEntryState,
     limits: PostLimits,
+    photo: PhotoButtonState,
+    onPhoto: () -> Unit,
     onEmoji: () -> Unit,
     onToggleWarning: () -> Unit,
     addEnabled: Boolean,
@@ -208,7 +217,9 @@ internal fun ComposerToolbar(
         modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = {}, enabled = false) { Icon(AppIcons.Image, stringResource(R.string.composer_add_photo)) }
+        IconButton(onClick = onPhoto, enabled = photo != PhotoButtonState.Disabled) {
+            Icon(AppIcons.Image, stringResource(R.string.composer_add_photo))
+        }
         TextButton(onClick = onEmoji, modifier = Modifier.semantics { contentDescription = emojiDescription }) {
             Text(stringResource(R.string.composer_emoji))
         }

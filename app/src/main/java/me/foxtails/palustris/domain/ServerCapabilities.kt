@@ -26,9 +26,10 @@ data class ServerCapabilities(
         /**
          * Bump when capability semantics change. Revision 5 invalidates snapshots that
          * recorded reaction support from the removed sentinel mutation probe. Revision 6
-         * invalidates snapshots that predate posting limits and upload capabilities.
+         * invalidates snapshots that predate posting limits and upload capabilities. Revision 7
+         * invalidates snapshots that predate the quote-with-media rule.
          */
-        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 6
+        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 7
     }
 }
 
@@ -59,6 +60,8 @@ data class PostingCapabilities(
     val mediaUpload: CapabilityStatus = CapabilityStatus.Unknown,
     /** True when the server never shrinks an upload, so the app may compress it first. */
     val clientCompression: Boolean = false,
+    /** False when the server rejects a post that quotes another post and also carries images. */
+    val quoteWithMedia: Boolean = true,
 ) {
     companion object {
         const val DEFAULT_CHARACTERS_PER_URL = 23

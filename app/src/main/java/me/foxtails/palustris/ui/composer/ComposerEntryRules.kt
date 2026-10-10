@@ -1,6 +1,8 @@
 package me.foxtails.palustris.ui.composer
 
+import me.foxtails.palustris.domain.COMPRESSIBLE_IMAGE_TYPES
 import me.foxtails.palustris.domain.PostLimits
+import me.foxtails.palustris.domain.UploadCompression
 
 /**
  * Pure posting rules for the composer thread. [ComposerOwner] holds the editor; these rules decide
@@ -22,6 +24,20 @@ internal fun ComposerEntryState.exceedsLimit(limits: PostLimits): Boolean = limi
 /** True when every entry has content and none is over a limit. Empty entries block Post. */
 internal fun ComposerEditorState.postable(limits: PostLimits): Boolean =
     entries.all { it.hasPostableContent() && !it.exceedsLimit(limits) }
+
+/** True when an entry holds an image the app may re-encode. A GIF never counts. */
+internal fun ComposerEditorState.hasCompressibleImage(): Boolean =
+    entries.any { entry -> entry.media.any { it.mimeType.lowercase() in COMPRESSIBLE_IMAGE_TYPES } }
+
+/** The compression choice that reaches the thread publication: the answer to the question, else the setting. */
+internal fun ComposerOwner.resolveCompress(): Boolean =
+    compressChoice ?: (context.contract.postPreferences.uploadCompression != UploadCompression.Never)
+
+/** True when Post must ask first: the setting is Ask, the server leaves compression to the client, and an image qualifies. */
+internal fun ComposerOwner.mustAskCompression(): Boolean =
+    context.contract.postPreferences.uploadCompression == UploadCompression.Ask &&
+        context.contract.limits.posting.clientCompression &&
+        editor.hasCompressibleImage()
 
 /** The editor with [prepare] applied to the text of every entry, for example to clean links. */
 internal fun ComposerEditorState.withPreparedText(prepare: (String) -> String): ComposerEditorState =

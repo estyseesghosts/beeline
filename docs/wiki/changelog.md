@@ -8,6 +8,15 @@ Stale when: A release ships without an entry here.
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
 
+## Unreleased
+
+### New
+
+- The composer attaches images from the photo picker, with a thumbnail strip, a remove button, and a description dialog for each image.
+- A post can be only images. Each entry in a thread has its own images.
+- The Upload compression setting Ask now asks once when you post, and the answer applies to that post.
+- On Mastodon-compatible servers, the photo button is off while you quote a post, because those servers reject a quote with images.
+
 ## 0.2.11
 
 ### New

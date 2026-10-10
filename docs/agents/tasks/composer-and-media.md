@@ -26,13 +26,15 @@ Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 8 (limits, uploa
 - Slice 10: thread editing (plus button, CW-reuse dialog, remove button, thread line, `ComposerIcons.kt`) — resolve the commit from Git (follows 4d86a8f1).
 - Slice 8: composer surface (`ComposerSurface.kt` new, `ComposerSheet.kt` deleted, card flag through the shell, `composer_publish_progress` string, wiki section) — commit 3ac01ce5.
 
+- Slice 11: media in the composer (photo picker, `DraftMediaImporter`, thumbnail strip, alt text dialog, per-entry limits, Ask compression dialog, `quoteWithMedia` capability, schema 7) � commit recorded in the follow-up.
+
 # Current slice
 
-Slice 11: media in the composer.
+None. Slices 9 to 11 are done; the plan stops at slice 11.
 
 # Files involved
 
-Slice 11 has not started; its owner records its files here.
+Slice 11: `domain/DraftMediaImport.kt`, `data/media/DraftMediaImporter.kt`, `data/auth/DraftStore.kt`, `EncryptedDraftStore.kt`, `DraftActions.kt`, `ui/shell/DraftsContract.kt`, `ComposerContract.kt`, `ui/composer/ComposerMediaControls.kt`, `ComposerMediaImport.kt`, `ComposerMediaStrip.kt`, `ComposerSurface.kt`, `ComposerEntryRules.kt`, `ComposerOwner.kt` (483 lines, +2 members), manifest photo picker service, `PostingCapabilities.quoteWithMedia`, strings in five folders, wiki and changelog.
 
 # Verification
 
@@ -43,9 +45,11 @@ Slice 11 has not started; its owner records its files here.
 
 - Slice 10: ComposerBodyTest (+6: plus disabled/enabled, CW dialog yes/no, remove keeps media, three-entry publish order); full unit suite 1960 tests, 0 failures; tools/tests 52 OK; audit zero new regressions; ktlintCheck, lintDebug, assembleDebug, assembleRelease pass; emulator-5554 phone smoke logs/s10-d.png. See logs/20261010-160000.txt.
 
+- Slice 11: ComposerMediaUiTest, ComposerMediaRulesTest, DraftMediaImporterTest, plus the composer, drafts, capability probe, localization, navigation and sign-in suites; full unit suite 0 failures; tools/tests 52 OK; audit zero new regressions against logs/slice10-audit-post.out (two new warnings: ComposerMediaStrip AppIcons import, ComposerSurfaceHost size); ktlintCheck, lintDebug, assembleDebug, assembleRelease pass; emulator-5554 phone smoke logs/s11-*.png (photo picker, import, thumbnail, alt dialog with keyboard, ALT badge). Unverified: tablet hardware, live-server image publishing on dvd.chat and Mastodon, the Ask dialog on device, API 29 instrumentation, and the picker backport on a device without Play services. See logs/20261010-170000.txt.
+
 # Next
 
-Slice 11 of the plan (media in the composer).
+Nothing inside this plan. Stop at slice 11 and report.
 
 # Blockers
 
@@ -53,4 +57,4 @@ None. Tablet hardware check, live-server publish, and pre-existing API 29 instru
 
 # Last safe commit
 
-4d86a8f1 Add the composer body with entries, audience row, and toolbar
+1d802ae1 Edit threads in the composer with add, remove, and a thread line

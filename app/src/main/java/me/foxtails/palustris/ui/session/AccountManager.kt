@@ -276,6 +276,7 @@ class AccountManager @Inject constructor(
                             registryToken = current.registryToken,
                             directMessageGeneration = current.directMessageGeneration,
                             draftGeneration = current.draftGeneration,
+                            mediaAccess = current.mediaAccess,
                         )
                     }
             } catch (e: Exception) {
@@ -299,6 +300,7 @@ class AccountManager @Inject constructor(
             registryToken = activation.registryToken,
             directMessageGeneration = activation.directMessageGeneration,
             draftGeneration = activation.draftGeneration,
+            mediaAccess = value.access.mediaUploadStatus(),
         )
         _session.value = SessionUi(
             starting = false,
