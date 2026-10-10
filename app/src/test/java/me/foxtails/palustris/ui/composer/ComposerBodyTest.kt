@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -15,14 +17,19 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.DraftMedia
 import me.foxtails.palustris.domain.EmojiChoice
+import me.foxtails.palustris.domain.PostDraft
 import me.foxtails.palustris.domain.PostLengthRule
 import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostingCapabilities
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.ThreadPublication
+import me.foxtails.palustris.domain.ThreadPublishListener
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.shell.ComposerContract
+import me.foxtails.palustris.ui.shell.DraftsContract
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
@@ -47,13 +54,14 @@ class ComposerBodyTest {
     private fun contract(
         limits: PostLimits = PostLimits(),
         audiences: Set<Audience> = emptySet(),
+        actions: ComposerContract.Actions = ComposerContract.Empty.actions,
     ) = ComposerContract(
         postPreferences = PostPreferences(),
         availableAudiences = audiences,
         canPublish = true,
         publishing = false,
         error = null,
-        actions = ComposerContract.Empty.actions,
+        actions = actions,
         limits = limits,
     )
 
@@ -164,6 +172,111 @@ class ComposerBodyTest {
         assertEquals("first", owner.editor.first.text)
         assertEquals(1, applied)
         assertNull(pending)
+    }
+
+    private class Publications : ComposerContract.Actions {
+        val published = mutableListOf<ThreadPublication>()
+        override fun publish(publication: ThreadPublication, listener: ThreadPublishListener) {
+            published += publication
+        }
+    }
+
+    private class SavingDrafts : DraftsContract.Actions {
+        override fun load(onResult: (List<PostDraft>) -> Unit, onError: (String) -> Unit) = onResult(emptyList())
+        override fun save(draft: PostDraft, onResult: (PostDraft) -> Unit, onError: () -> Unit) = onResult(draft)
+        override fun delete(draftId: String, onDone: () -> Unit, onError: (String) -> Unit) = onDone()
+    }
+
+    @Test
+    fun addPostIsDisabledOnAnEmptyEntryAndEnabledWithText() {
+        show(owner(), contract())
+        compose.onNodeWithContentDescription("Add post").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("Post text").performTextInput("hello")
+        compose.onNodeWithContentDescription("Add post").assertIsEnabled()
+    }
+
+    @Test
+    fun addPostWithoutAWarningInsertsAnEntryWithoutAsking() {
+        val owner = owner()
+        show(owner, contract())
+        compose.onNodeWithContentDescription("Post text").performTextInput("one")
+        compose.onNodeWithContentDescription("Add post").performClick()
+        compose.waitForIdle()
+        assertEquals(2, owner.editor.entries.size)
+        compose.onNodeWithText("Use the same content warning?").assertDoesNotExist()
+    }
+
+    @Test
+    fun addPostWithAWarningAsksAndYesCopiesIt() {
+        val owner = owner()
+        show(owner, contract())
+        compose.onNodeWithContentDescription("Post text").performTextInput("one")
+        compose.runOnIdle {
+            owner.setWarningEnabled(true)
+            owner.setWarning("spoilers")
+        }
+        compose.onNodeWithContentDescription("Add post").performClick()
+        compose.onNodeWithText("Use the same content warning?").assertIsDisplayed()
+        compose.onNodeWithText("Yes").performClick()
+        compose.waitForIdle()
+        assertEquals(2, owner.editor.entries.size)
+        assertEquals("spoilers", owner.editor.entries[1].warning)
+        assertEquals(true, owner.editor.entries[1].warningEnabled)
+        compose.onNodeWithText("Use the same content warning?").assertDoesNotExist()
+    }
+
+    @Test
+    fun addPostWithAWarningAndNoLeavesTheNewEntryWithoutOne() {
+        val owner = owner()
+        show(owner, contract())
+        compose.onNodeWithContentDescription("Post text").performTextInput("one")
+        compose.runOnIdle {
+            owner.setWarningEnabled(true)
+            owner.setWarning("spoilers")
+        }
+        compose.onNodeWithContentDescription("Add post").performClick()
+        compose.onNodeWithText("No").performClick()
+        compose.waitForIdle()
+        assertEquals(2, owner.editor.entries.size)
+        assertEquals("", owner.editor.entries[1].warning)
+        assertEquals(false, owner.editor.entries[1].warningEnabled)
+    }
+
+    @Test
+    fun removingAnEntryKeepsTheOthersAndTheirMedia() {
+        val owner = owner()
+        val second = owner.addEntryAfter(owner.firstEntryId)!!
+        val third = owner.addEntryAfter(second)!!
+        owner.setText("one")
+        owner.setEntryText(second, "two")
+        owner.setEntryText(third, "three")
+        owner.addMedia(third, DraftMedia(id = "m3", mimeType = "image/png", width = 1, height = 1, byteSize = 1L))
+        show(owner, contract())
+        compose.onNodeWithContentDescription("Remove post 1").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Remove post 2").performClick()
+        compose.waitForIdle()
+        assertEquals(listOf("one", "three"), owner.editor.entries.map { it.text })
+        assertEquals("m3", owner.editor.entries[1].media.single().id)
+    }
+
+    @Test
+    fun aThreeEntryThreadPublishesInOrderWithTheFirstAudience() {
+        val actions = Publications()
+        val owner = owner()
+        owner.draftsContract = DraftsContract(SavingDrafts())
+        show(owner, contract(audiences = setOf(Audience.Public, Audience.Followers), actions = actions))
+        compose.onNodeWithContentDescription("Post text").performTextInput("one")
+        compose.onNodeWithContentDescription("Add post").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Post 2 text").performTextInput("two")
+        compose.onNodeWithContentDescription("Add post").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Post 3 text").performTextInput("three")
+        compose.runOnIdle { owner.setAudience(Audience.Followers) }
+        compose.runOnIdle { owner.publish { _, _ -> } }
+        val publication = actions.published.single()
+        assertEquals(listOf("one", "two", "three"), publication.entries.map { it.text })
+        assertEquals(Audience.Followers, publication.audience)
     }
 
     @Test

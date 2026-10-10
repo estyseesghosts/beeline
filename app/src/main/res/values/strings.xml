@@ -748,4 +748,10 @@
     <string name="composer_warning_remaining">%1$d remaining</string>
     <string name="composer_entry_text">Post %1$d text</string>
     <string name="composer_publish_disabled">Publishing is disabled for this account.</string>
+    <string name="composer_add_post">Add post</string>
+    <string name="composer_remove_entry">Remove post %1$d</string>
+    <string name="composer_reuse_warning_title">Use the same content warning?</string>
+    <string name="composer_reuse_warning_yes">Yes</string>
+    <string name="composer_reuse_warning_no">No</string>
+    <string name="composer_thread_placeholder">Add to the thread</string>
 </resources>

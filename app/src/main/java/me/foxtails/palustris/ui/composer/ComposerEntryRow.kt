@@ -1,15 +1,21 @@
 package me.foxtails.palustris.ui.composer
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -20,7 +26,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
@@ -33,6 +42,7 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.PostLimits
+import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.Avatar
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.emoji.ComposerField
@@ -63,12 +73,17 @@ internal class CursorField(length: Int) {
     }
 }
 
+/** Where an entry sits in the thread. The body asks for focus on a new entry through [focusRequested]. */
+internal class ComposerEntryLayout(val index: Int, val last: Boolean, val focusRequested: Boolean)
+
 /** What one entry row reads and reports. The body owns focus and the editor. */
 internal class ComposerEntryActions(
     val onTextChange: (String) -> Unit,
     val onWarningChange: (String) -> Unit,
     val onFocus: (ComposerField.Kind) -> Unit,
     val onEmojiInserted: () -> Unit,
+    val onFocusRequestHandled: () -> Unit,
+    val onRemove: () -> Unit,
 )
 
 /**
@@ -79,13 +94,21 @@ internal class ComposerEntryActions(
 @Composable
 internal fun ComposerEntryRow(
     entry: ComposerEntryState,
-    index: Int,
+    layout: ComposerEntryLayout,
     account: Account?,
     limits: PostLimits,
     pendingEmojiInsertion: Pair<EmojiChoice, ComposerField>?,
     actions: ComposerEntryActions,
 ) {
+    val index = layout.index
     val first = index == 0
+    val focusRequester = remember(entry.id) { FocusRequester() }
+    LaunchedEffect(layout.focusRequested) {
+        if (layout.focusRequested) {
+            focusRequester.requestFocus()
+            actions.onFocusRequestHandled()
+        }
+    }
     val text = remember(entry.id) { CursorField(entry.text.length) }
     val warning = remember(entry.id) { CursorField(entry.warning.length) }
     LaunchedEffect(entry.text) { text.clamp(entry.text.length) }
@@ -102,47 +125,60 @@ internal fun ComposerEntryRow(
     }
     val textDescription = if (first) stringResource(R.string.composer_post_text) else stringResource(R.string.composer_entry_text, index + 1)
     val warningRemaining = entry.warningRemaining(limits)
-    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-        if (account != null) AccountAvatar(account, Modifier.size(40.dp)) else Avatar(Modifier.size(40.dp))
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(vertical = 8.dp)) {
+        Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (account != null) AccountAvatar(account, Modifier.size(40.dp)) else Avatar(Modifier.size(40.dp))
+            // The thread line joins this avatar to the next entry.
+            if (!layout.last) Box(Modifier.weight(1f).width(2.dp).background(MaterialTheme.colorScheme.outlineVariant))
+        }
         Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            ExpandableContent(visible = entry.warningEnabled, modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = warning.value(entry.warning),
+        Box(Modifier.weight(1f)) {
+            Column(Modifier.fillMaxWidth().padding(end = if (first) 0.dp else 40.dp)) {
+                ExpandableContent(visible = entry.warningEnabled, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = warning.value(entry.warning),
+                        onValueChange = { changed ->
+                            actions.onWarningChange(changed.text)
+                            warning.selection = changed.selection
+                        },
+                        label = { Text(stringResource(R.string.composer_content_warning)) },
+                        isError = warningRemaining != null && warningRemaining < 0,
+                        supportingText = warningRemaining?.let { left ->
+                            { Text(stringResource(R.string.composer_warning_remaining, left)) }
+                        },
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) actions.onFocus(ComposerField.Kind.Warning) },
+                    )
+                }
+                BasicTextField(
+                    value = text.value(entry.text),
                     onValueChange = { changed ->
-                        actions.onWarningChange(changed.text)
-                        warning.selection = changed.selection
+                        actions.onTextChange(changed.text)
+                        text.selection = changed.selection
                     },
-                    label = { Text(stringResource(R.string.composer_content_warning)) },
-                    isError = warningRemaining != null && warningRemaining < 0,
-                    supportingText = warningRemaining?.let { left ->
-                        { Text(stringResource(R.string.composer_warning_remaining, left)) }
+                    modifier = Modifier.fillMaxWidth()
+                        .heightIn(min = if (first) FIRST_ENTRY_MIN_HEIGHT else 48.dp)
+                        .padding(vertical = 8.dp)
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { if (it.isFocused) actions.onFocus(ComposerField.Kind.Text) }
+                        .semantics { contentDescription = textDescription },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    decorationBox = { field ->
+                        Box {
+                            if (entry.text.isEmpty()) {
+                                val hint = if (first) R.string.composer_placeholder else R.string.composer_thread_placeholder
+                                Text(stringResource(hint), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            field()
+                        }
                     },
-                    modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) actions.onFocus(ComposerField.Kind.Warning) },
                 )
             }
-            BasicTextField(
-                value = text.value(entry.text),
-                onValueChange = { changed ->
-                    actions.onTextChange(changed.text)
-                    text.selection = changed.selection
-                },
-                modifier = Modifier.fillMaxWidth()
-                    .heightIn(min = if (first) FIRST_ENTRY_MIN_HEIGHT else 48.dp)
-                    .padding(vertical = 8.dp)
-                    .onFocusChanged { if (it.isFocused) actions.onFocus(ComposerField.Kind.Text) }
-                    .semantics { contentDescription = textDescription },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                decorationBox = { field ->
-                    Box {
-                        if (entry.text.isEmpty()) {
-                            Text(stringResource(R.string.composer_placeholder), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        field()
-                    }
-                },
-            )
+            if (!first) {
+                IconButton(onClick = actions.onRemove, modifier = Modifier.align(Alignment.TopEnd)) {
+                    Icon(AppIcons.Close, stringResource(R.string.composer_remove_entry, index + 1))
+                }
+            }
         }
     }
 }

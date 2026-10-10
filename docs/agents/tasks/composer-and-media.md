@@ -1,6 +1,6 @@
 # Objective
 
-Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 8 (limits, upload transport, drive permission, image preparation, compression setting, draft and editor model, thread publication, composer surface) are done. Slice 9 (composer body) is done. Slices 10 (thread editing) and 11 (media in the composer) are in progress.
+Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 8 (limits, upload transport, drive permission, image preparation, compression setting, draft and editor model, thread publication, composer surface) are done. Slices 9 (composer body) and 10 (thread editing) are done. Slice 11 (media in the composer) is in progress.
 
 # Invariants
 
@@ -23,15 +23,16 @@ Implement `docs/composer-and-media-upload-plan.md`. Slices 1 to 8 (limits, uploa
 - Slice 6: draft and editor model for threads and media — commit 893ce8a3.
 - Slice 7: thread publication — commit a50298fa.
 - Slice 9: composer body (`ComposerBody.kt`, `ComposerEntryRow.kt`, `ComposerAudienceRow.kt`, `ComposerEntryRules.kt`, `domain/PostLimits.kt`; `ComposerField` carries the entry id; `ComposerContract.limits` and `prepareText`; `ComposerScreen.kt` deleted) — commit recorded in the follow-up.
+- Slice 10: thread editing (plus button, CW-reuse dialog, remove button, thread line, `ComposerIcons.kt`) — resolve the commit from Git (follows 4d86a8f1).
 - Slice 8: composer surface (`ComposerSurface.kt` new, `ComposerSheet.kt` deleted, card flag through the shell, `composer_publish_progress` string, wiki section) — commit 3ac01ce5.
 
 # Current slice
 
-Slice 10: thread editing.
+Slice 11: media in the composer.
 
 # Files involved
 
-Slice 10 has not started; its owner records its files here.
+Slice 11 has not started; its owner records its files here.
 
 # Verification
 
@@ -40,9 +41,11 @@ Slice 10 has not started; its owner records its files here.
 
 - Slice 9: ComposerEntryRulesTest, ComposerBodyTest, ReplyComposerTest, ComposerOwnerTest, NavigationTest, SignInScreenTest; full unit suite 1954 tests, 0 failures; tools/tests 52 OK; audit zero new regressions; ktlintCheck, lintDebug, assembleDebug, assembleRelease pass; emulator-5554 phone smoke in logs/s9-*.png. Tablet hardware unverified. See logs/20261010-150000.txt.
 
+- Slice 10: ComposerBodyTest (+6: plus disabled/enabled, CW dialog yes/no, remove keeps media, three-entry publish order); full unit suite 1960 tests, 0 failures; tools/tests 52 OK; audit zero new regressions; ktlintCheck, lintDebug, assembleDebug, assembleRelease pass; emulator-5554 phone smoke logs/s10-d.png. See logs/20261010-160000.txt.
+
 # Next
 
-Slice 10 of the plan (thread editing), then slice 11.
+Slice 11 of the plan (media in the composer).
 
 # Blockers
 
@@ -50,4 +53,4 @@ None. Tablet hardware check, live-server publish, and pre-existing API 29 instru
 
 # Last safe commit
 
-3ac01ce5 Show the composer full-screen or as a floating card (slice 9 commit follows in Git)
+4d86a8f1 Add the composer body with entries, audience row, and toolbar

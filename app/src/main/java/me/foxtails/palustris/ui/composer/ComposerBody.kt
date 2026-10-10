@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -70,6 +71,34 @@ internal fun ComposerBody(
         if (target != null && editor.entry(target) == null) onEmojiInsertionApplied()
     }
     val audienceOptions = contract.availableAudiences.sortedBy { it.ordinal }
+    var focusRequest by remember { mutableStateOf<String?>(null) }
+    // The entry whose warning the user may copy into a new entry. Null when no question is open.
+    var warningPrompt by remember { mutableStateOf<String?>(null) }
+    fun addAfter(entryId: String, copyWarning: Boolean) {
+        val source = editor.entry(entryId) ?: return
+        val added = owner.addEntryAfter(entryId) ?: return
+        if (copyWarning) {
+            owner.setEntryWarning(added, source.warning)
+            owner.setEntryWarningEnabled(added, true)
+        }
+        focusRequest = added
+    }
+    warningPrompt?.let { entryId ->
+        AlertDialog(
+            onDismissRequest = { warningPrompt = null },
+            title = { Text(stringResource(R.string.composer_reuse_warning_title)) },
+            confirmButton = {
+                TextButton(onClick = { warningPrompt = null; addAfter(entryId, copyWarning = true) }) {
+                    Text(stringResource(R.string.composer_reuse_warning_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { warningPrompt = null; addAfter(entryId, copyWarning = false) }) {
+                    Text(stringResource(R.string.composer_reuse_warning_no))
+                }
+            },
+        )
+    }
     Column(Modifier.fillMaxSize().navigationBarsPadding().imePadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             owner.quoteTarget?.let { target ->
@@ -80,7 +109,7 @@ internal fun ComposerBody(
                 key(entry.id) {
                     ComposerEntryRow(
                         entry = entry,
-                        index = index,
+                        layout = ComposerEntryLayout(index, last = index == editor.entries.lastIndex, focusRequested = focusRequest == entry.id),
                         account = account,
                         limits = contract.limits,
                         pendingEmojiInsertion = pendingEmojiInsertion,
@@ -89,6 +118,8 @@ internal fun ComposerBody(
                             onWarningChange = { owner.setEntryWarning(entry.id, it) },
                             onFocus = { kind -> focused = ComposerField(kind, entry.id) },
                             onEmojiInserted = onEmojiInsertionApplied,
+                            onFocusRequestHandled = { focusRequest = null },
+                            onRemove = { owner.removeEntry(entry.id) },
                         ),
                     )
                 }
@@ -116,6 +147,10 @@ internal fun ComposerBody(
             onEmoji = {
                 val kind = if (warningFocused) ComposerField.Kind.Warning else ComposerField.Kind.Text
                 onRequestEmoji(ComposerField(kind, focusedEntry.id))
+            },
+            addEnabled = focusedEntry.hasPostableContent() && !contract.publishing && !owner.submitting,
+            onAddEntry = {
+                if (focusedEntry.effectiveWarning.isNotBlank()) warningPrompt = focusedEntry.id else addAfter(focusedEntry.id, copyWarning = false)
             },
             onToggleWarning = {
                 owner.setEntryWarningEnabled(focusedEntry.id, !focusedEntry.warningEnabled)
@@ -162,6 +197,8 @@ internal fun ComposerToolbar(
     limits: PostLimits,
     onEmoji: () -> Unit,
     onToggleWarning: () -> Unit,
+    addEnabled: Boolean,
+    onAddEntry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val emojiDescription = stringResource(R.string.emoji_open_picker)
@@ -194,5 +231,6 @@ internal fun ComposerToolbar(
                 modifier = Modifier.padding(horizontal = 8.dp).semantics { contentDescription = description },
             )
         }
+        IconButton(onClick = onAddEntry, enabled = addEnabled) { Icon(ComposerIcons.Add, stringResource(R.string.composer_add_post)) }
     }
 }

@@ -141,4 +141,10 @@
     <string name="composer_characters_remaining">%1$d caractères restants</string>
     <string name="composer_warning_remaining">%1$d restants</string>
     <string name="composer_entry_text">Texte du message %1$d</string>
+    <string name="composer_add_post">Ajouter un message</string>
+    <string name="composer_remove_entry">Supprimer le message %1$d</string>
+    <string name="composer_reuse_warning_title">Utiliser le même avertissement de contenu ?</string>
+    <string name="composer_reuse_warning_yes">Oui</string>
+    <string name="composer_reuse_warning_no">Non</string>
+    <string name="composer_thread_placeholder">Ajouter au fil</string>
 </resources>

@@ -473,6 +473,23 @@ on. The saved draft keeps the text as typed until then.
 Limits: the photo picker, thumbnails, and alt text arrive with media in the composer.
 Tablet hardware is not verified. The w900dp Robolectric class covers the card.
 
+### Thread editing
+
+The plus button in the toolbar inserts an empty entry after the focused entry and moves
+focus to it. The button stays disabled while the focused entry has no text and no images,
+and while a publish runs. If the focused entry has a content warning, a dialog asks
+"Use the same content warning?". Yes copies the warning into the new entry. No leaves the
+new entry without one. Dismissing the dialog adds nothing.
+
+Each entry after the first has a remove button. The first entry stays because it carries
+the audience and the reply or quote target. Removing an entry keeps the other entries and
+their images. A line joins the avatars of consecutive entries. Each entry has its own
+content warning, text, and images. The thread publishes in order, and every entry after
+the first replies to the entry before it.
+
+Sources: `ui/composer/ComposerBody.kt`, `ComposerEntryRow.kt`, `ComposerIcons.kt`,
+`ComposerOwner.addEntryAfter` and `removeEntry`, `ComposerBodyTest`.
+
 Sources: `ui/composer/ComposerBody.kt`, `ComposerEntryRow.kt`, `ComposerAudienceRow.kt`,
 `ComposerEntryRules.kt`, `domain/PostLimits.kt`, `ui/emoji/EmojiPicker.kt`
 (`ComposerField`), `ComposerBodyTest`, `ComposerEntryRulesTest`, `ReplyComposerTest`.

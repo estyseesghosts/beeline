@@ -181,4 +181,10 @@
     <string name="composer_characters_remaining">%1$d caracteres restantes</string>
     <string name="composer_warning_remaining">%1$d restantes</string>
     <string name="composer_entry_text">Texto de la publicación %1$d</string>
+    <string name="composer_add_post">Agregar publicación</string>
+    <string name="composer_remove_entry">Quitar la publicación %1$d</string>
+    <string name="composer_reuse_warning_title">¿Usar la misma advertencia de contenido?</string>
+    <string name="composer_reuse_warning_yes">Sí</string>
+    <string name="composer_reuse_warning_no">No</string>
+    <string name="composer_thread_placeholder">Agregar al hilo</string>
 </resources>
