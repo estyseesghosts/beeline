@@ -31,6 +31,7 @@ internal fun PostDraft.toEditorEntries(): List<ComposerEntryState> = listOf(
         warning = contentWarning.orEmpty(),
         warningEnabled = !contentWarning.isNullOrBlank(),
         media = media,
+        poll = poll,
     ),
 ) + followUps.map {
     ComposerEntryState(
@@ -39,6 +40,7 @@ internal fun PostDraft.toEditorEntries(): List<ComposerEntryState> = listOf(
         warning = it.contentWarning.orEmpty(),
         warningEnabled = !it.contentWarning.isNullOrBlank(),
         media = it.media,
+        poll = it.poll,
     )
 }
 
@@ -49,5 +51,6 @@ internal fun ComposerEditorState.toFollowUps(): List<PostDraftEntry> = entries.d
         text = it.text,
         contentWarning = it.effectiveWarning.takeIf(String::isNotBlank),
         media = it.media,
+        poll = it.poll,
     )
 }

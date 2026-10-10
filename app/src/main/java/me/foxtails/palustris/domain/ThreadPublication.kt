@@ -25,6 +25,7 @@ data class ThreadPublicationEntry(
     val text: String = "",
     val contentWarning: String? = null,
     val media: List<ThreadPublicationMedia> = emptyList(),
+    val poll: PollRequest? = null,
 )
 
 /**
@@ -85,12 +86,14 @@ fun ThreadPublication.toPostDraft(accountId: AccountId?): PostDraft {
         replyTo = replyTo,
         quoteOf = quoteOf,
         media = first.media.map(ThreadPublicationMedia::toDraftMedia),
+        poll = first.poll,
         followUps = entries.drop(1).map {
             PostDraftEntry(
                 id = it.id,
                 text = it.text,
                 contentWarning = it.contentWarning,
                 media = it.media.map(ThreadPublicationMedia::toDraftMedia),
+                poll = it.poll,
             )
         },
     )

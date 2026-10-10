@@ -7,6 +7,7 @@ import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.DraftMedia
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.PollRequest
 import me.foxtails.palustris.domain.PostDraftQuotePreview
 import me.foxtails.palustris.domain.Protocol
 
@@ -105,10 +106,10 @@ internal val ComposerEditorStateSaver: Saver<ComposerEditorState, Any> = listSav
 )
 
 private fun saveEntry(entry: ComposerEntryState): List<Any?> =
-    listOf(entry.id, entry.text, entry.warning, entry.warningEnabled, entry.media.map(::saveMedia))
+    listOf(entry.id, entry.text, entry.warning, entry.warningEnabled, entry.media.map(::saveMedia), entry.poll?.let(::savePoll))
 
 private fun saveContent(content: ComposerEntryContent): List<Any?> =
-    listOf(content.id, content.text, content.warning, content.media.map(::saveMedia))
+    listOf(content.id, content.text, content.warning, content.media.map(::saveMedia), content.poll?.let(::savePoll))
 
 private fun saveMedia(media: DraftMedia): List<Any?> =
     listOf(media.id, media.mimeType, media.width, media.height, media.byteSize, media.altText)
@@ -123,6 +124,7 @@ private fun restoreEntries(value: Any?): List<ComposerEntryState> =
             warning = row[2] as? String ?: "",
             warningEnabled = row[3] as? Boolean ?: false,
             media = restoreMedia(row[4]),
+            poll = restorePoll(row.getOrNull(5)),
         )
     }
 
@@ -135,8 +137,23 @@ private fun restoreContents(value: Any?): List<ComposerEntryContent> =
             text = row[1] as? String ?: "",
             warning = row[2] as? String ?: "",
             media = restoreMedia(row[3]),
+            poll = restorePoll(row.getOrNull(4)),
         )
     }
+
+private fun savePoll(poll: PollRequest): List<Any?> =
+    listOf(poll.choices, poll.multiple, poll.expiresInSeconds, poll.hideTotals)
+
+private fun restorePoll(value: Any?): PollRequest? {
+    val row = value as? List<*> ?: return null
+    if (row.size < 4) return null
+    return PollRequest(
+        choices = (row[0] as? List<*>).orEmpty().map { it as? String ?: "" },
+        multiple = row[1] as? Boolean ?: false,
+        expiresInSeconds = (row[2] as? Number)?.toLong(),
+        hideTotals = row[3] as? Boolean ?: false,
+    )
+}
 
 private fun restoreMedia(value: Any?): List<DraftMedia> =
     (value as? List<*>).orEmpty().mapNotNull { raw ->

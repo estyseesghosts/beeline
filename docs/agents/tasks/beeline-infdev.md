@@ -1,6 +1,6 @@
 # Objective
 
-Deliver `docs/beeline_infdev.md` milestone by milestone. This task covers M0 (own-post actions in the share sheet) and M5 (server-side translation). M1 to M4 and M6 to M8 are not started.
+Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5 and M1 (polls) are done. M3 (delete and edit) is next. M2, M4 and M6 to M8 are not started.
 
 # Invariants
 
@@ -20,9 +20,21 @@ Deliver `docs/beeline_infdev.md` milestone by milestone. This task covers M0 (ow
 - Notifications do not drop a deleted post's item yet. Deleted-post handling there is left for M3.
 - `Post.language` is new (Mastodon `language`). Misskey notes carry none, so the Translate row shows for them whenever the server supports it.
 
+# Decisions (M1, polls)
+
+- Domain: `Poll(id, options, multiple, expiresAtEpochMillis, expired, votersCount, voted)`; `PollOption(text, votes, picked)`. `Post.poll` replaces `Post.pollOptions`.
+- `PollRequest` carries a relative `expiresInSeconds` and `hideTotals`, so a saved draft never holds a past absolute time. Misskey sends `poll.expiredAfter` in ms; Mastodon sends `poll[expires_in]` (default one day) and refuses a poll together with media.
+- `PostingCapabilities.poll: PollLimits?`. Mastodon reads `configuration.polls`, then Pleroma's `poll_limits`, then documented defaults. Misskey family is fixed at 10 choices of 50 characters.
+- `SocialSource.votePoll(postId, pollId, choices)` returns the poll. Mastodon posts `choices[]` once; Misskey calls `notes/polls/vote` per choice, then refetches the note.
+- Votes live in the session-scoped `PostPollOwner` (via `LocalPostPolls`), like translations. This deviates from the plan's `PostInteractionMutationOwner`: that owner has no per-surface seam for a new action, and a session overlay shows the same poll in every surface without touching each one. A copy of the post that already shows the account voted, with at least as many votes, wins over the overlay.
+- Misskey sign-in now requests `write:votes` (`AccessScope.PollVote`). Misskey sessions made before this need signing in again to vote; the vote fails with the server's policy error until then. Mastodon `write` already covers voting.
+- Drafts keep a poll on any entry (`PostDraftEntry.poll`). The notification cache keeps its frozen `pollOptions` array and adds `poll` beside it when the poll has an ID.
+- Capability schema version is 10 (adds poll limits and the edit status).
+
 # Completed
 
 - M0 and M5 share one commit because the share sheet, capability schema and adapters changed together.
+- M1: poll model, adapters, composer editor, drafts and voting. Live on `emulator-5554`: created a single-choice poll on mstdn.ca and a multiple-choice poll on dvd.chat, voted on the dvd.chat poll (both choices, results bars and checks showed). Mastodon voting is covered by unit tests only.
 
 # Current slice
 

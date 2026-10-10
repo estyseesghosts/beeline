@@ -480,7 +480,7 @@ class NotificationJsonCodecTest {
         assertEquals(setOf(PostAction.Reply, PostAction.React, PostAction.Bookmark), post.availableActions)
         assertEquals(1, post.interactionCounts.favouriteCount)
         assertEquals(4, post.interactionCounts.quoteRepostCount)
-        assertEquals(PollOption("Cats", 3), post.pollOptions.first())
+        assertEquals(PollOption("Cats", 3), post.poll!!.options.first())
         assertEquals(":blobcat:", post.myReaction)
         assertEquals(EntityId("https://misskey.example", "repost-1"), post.ownRepostId)
         assertEquals(EntityId("https://misskey.example", "target-1"), post.actionTargetId)

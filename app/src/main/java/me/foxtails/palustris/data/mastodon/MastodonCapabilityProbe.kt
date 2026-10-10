@@ -10,6 +10,7 @@ import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfileCapabilities
 import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.OwnPostCapabilities
+import me.foxtails.palustris.domain.PollLimits
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostLengthRule
 import me.foxtails.palustris.domain.PostingCapabilities
@@ -199,7 +200,7 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 profile = ProfileCapabilities(editable = editable.copy(imageDeletion = imageDeletion)),
                 emoji = emoji,
                 quotes = quotes,
-                ownPosts = OwnPostCapabilities(delete = CapabilityStatus.Supported),
+                ownPosts = OwnPostCapabilities(delete = CapabilityStatus.Supported, edit = editCapability(instance, releaseVersion)),
                 translation = translationCapability(instance),
                 primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Native),
                 savedPosts = SavedPostsCapability(CapabilityStatus.Supported, SavedPostsKind.Bookmarks),
@@ -244,6 +245,26 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
             }
         }
 
+        /**
+         * Mastodon 3.5 and later edit by `PUT /statuses/:id`. Pleroma-family servers advertise
+         * `editing` in their feature list, and their version string says nothing about it, so a
+         * server with a `pleroma` block is judged by that list alone.
+         */
+        private fun editCapability(instance: JSONObject, releaseVersion: VersionTriple?): CapabilityStatus {
+            val pleroma = instance.optJSONObject("pleroma")
+            if (pleroma != null) {
+                val features = pleroma.optJSONObject("metadata")?.optJSONArray("features")
+                val editing = features != null && (0 until features.length()).any { features.optString(it) == PLEROMA_EDITING_FEATURE }
+                return if (editing) CapabilityStatus.Supported else CapabilityStatus.Unsupported
+            }
+            return when {
+                releaseVersion == null -> CapabilityStatus.Unknown
+                releaseVersion.atLeast(3, 5, 0) -> CapabilityStatus.Supported
+                else -> CapabilityStatus.Unsupported
+            }
+        }
+
+        private const val PLEROMA_EDITING_FEATURE = "editing"
         private const val AKKOMA_TRANSLATION_FEATURE = "akkoma:machine_translation"
 
         private class PostingLimits(val maxPostLength: Int, val capabilities: PostingCapabilities)
@@ -279,9 +300,32 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                     mediaUpload = CapabilityStatus.Supported,
                     clientCompression = false,
                     quoteWithMedia = false,
+                    poll = pollLimits(instance, configuration),
                 ),
             )
         }
+
+        /**
+         * Mastodon reports `configuration.polls`. Pleroma-family servers report `poll_limits` at the
+         * top level with different key names. A server with neither gets Mastodon's documented defaults.
+         */
+        private fun pollLimits(instance: JSONObject, configuration: JSONObject?): PollLimits {
+            val polls = configuration?.optJSONObject("polls")
+            val pleroma = instance.optJSONObject("poll_limits")
+            return PollLimits(
+                maxOptions = polls.positiveInt("max_options") ?: pleroma.positiveInt("max_options") ?: DEFAULT_POLL_OPTIONS,
+                maxOptionLength = polls.positiveInt("max_characters_per_option")
+                    ?: pleroma.positiveInt("max_option_chars") ?: DEFAULT_POLL_OPTION_LENGTH,
+                minExpirySeconds = polls.positiveLong("min_expiration") ?: pleroma.positiveLong("min_expiration") ?: DEFAULT_POLL_MIN_EXPIRY,
+                maxExpirySeconds = polls.positiveLong("max_expiration") ?: pleroma.positiveLong("max_expiration") ?: DEFAULT_POLL_MAX_EXPIRY,
+                hideTotals = true,
+            )
+        }
+
+        private const val DEFAULT_POLL_OPTIONS = 4
+        private const val DEFAULT_POLL_OPTION_LENGTH = 50
+        private const val DEFAULT_POLL_MIN_EXPIRY = 300L
+        private const val DEFAULT_POLL_MAX_EXPIRY = 2_629_746L
 
         private fun JSONObject?.positiveInt(key: String): Int? =
             positiveLong(key)?.takeIf { it <= Int.MAX_VALUE }?.toInt()

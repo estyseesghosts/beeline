@@ -37,9 +37,11 @@ import me.foxtails.palustris.ui.notifications.NotificationSettingsHost
 import me.foxtails.palustris.ui.notifications.NotificationsHost
 import me.foxtails.palustris.ui.photogrid.PhotoGridHost
 import me.foxtails.palustris.ui.posts.LocalPostPendingLookup
+import me.foxtails.palustris.ui.posts.LocalPostPolls
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
 import me.foxtails.palustris.ui.posts.LocalPostTranslations
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
+import me.foxtails.palustris.ui.posts.PostPollOwner
 import me.foxtails.palustris.ui.posts.PostPopupOwner
 import me.foxtails.palustris.ui.posts.PostTranslationOwner
 import me.foxtails.palustris.ui.posts.pendingLookup
@@ -248,6 +250,14 @@ fun ConnectedSessionHost(
     val translationOwner = remember(accountId, sessionRevision, sharedSource) {
         PostTranslationOwner(accountId, sessionRevision, sharedSource, settingsScope, UiStrings.from(context))
     }
+    val pollOwner = remember(accountId, sessionRevision, sharedSource) {
+        PostPollOwner(accountId, sessionRevision, sharedSource, settingsScope, UiStrings.from(context))
+    }
+    LaunchedEffect(entryStore, sessionGeneration, pollOwner) {
+        entryStore.register(sessionGeneration, "post-polls-$accountId-$sessionGeneration") {
+            pollOwner.retire()
+        }
+    }
     LaunchedEffect(entryStore, sessionGeneration, translationOwner) {
         entryStore.register(sessionGeneration, "post-translations-$accountId-$sessionGeneration") {
             translationOwner.retire()
@@ -295,6 +305,7 @@ fun ConnectedSessionHost(
     CompositionLocalProvider(
         LocalPostPopupOwner provides postActionOwner,
         LocalPostTranslations provides translationOwner,
+        LocalPostPolls provides pollOwner,
         LocalPostPendingLookup provides pendingLookup,
     ) {
         PalustrisApp(

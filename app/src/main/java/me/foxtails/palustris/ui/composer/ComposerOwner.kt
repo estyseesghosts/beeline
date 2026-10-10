@@ -13,6 +13,7 @@ import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.DraftMedia
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.PollRequest
 import me.foxtails.palustris.domain.PostDraft
 import me.foxtails.palustris.domain.PostingVisibilityPolicy
 import me.foxtails.palustris.domain.ServerCapabilities
@@ -114,6 +115,11 @@ class ComposerOwner internal constructor(
     fun setEntryText(entryId: String, text: String) = editEntry(entryId) { it.copy(text = text) }
     fun setEntryWarning(entryId: String, text: String) = editEntry(entryId) { it.copy(warning = text) }
     fun setEntryWarningEnabled(entryId: String, enabled: Boolean) = editEntry(entryId) { it.copy(warningEnabled = enabled) }
+
+    /** Sets or clears the poll of an entry. A poll and images exclude each other, so a poll never lands on an entry with images. */
+    fun setPoll(entryId: String, poll: PollRequest?) = editEntry(entryId) {
+        if (poll != null && it.media.isNotEmpty()) it else it.copy(poll = poll)
+    }
     fun addMedia(entryId: String, media: DraftMedia) = editEntry(entryId) { it.copy(media = it.media + media) }
     fun removeMedia(entryId: String, mediaId: String) = editEntry(entryId) { it.withoutMedia(mediaId) }
     fun setAltText(entryId: String, mediaId: String, altText: String?) = editEntry(entryId) { it.withAltText(mediaId, altText) }
@@ -465,6 +471,7 @@ class ComposerOwner internal constructor(
             replyTo = replyTo?.takeIf { it.connection == account?.id?.connection?.origin },
             quotePreview = target?.toQuotePreview() ?: editor.targetPreview,
             media = editor.first.media,
+            poll = editor.first.poll,
             followUps = editor.toFollowUps(),
         )
     }

@@ -367,9 +367,11 @@ private fun encodePost(post: me.foxtails.palustris.domain.Post): JSONObject = JS
     post.interactionCounts.reactionCount?.let { put("reactionCount", it) }
     post.interactionCounts.quoteRepostCount?.let { put("quoteRepostCount", it) }
     post.quote?.let { put("quote", encodePost(it)) }
-    put("pollOptions", JSONArray(post.pollOptions.map { option ->
+    // The frozen cache format keeps `pollOptions`. A poll with an ID adds the fuller `poll` object beside it.
+    put("pollOptions", JSONArray(post.poll?.options.orEmpty().map { option ->
         JSONObject().put("text", option.text).put("votes", option.votes)
     }))
+    post.poll?.takeIf { it.id.isNotBlank() }?.let { put("poll", encodePoll(it)) }
     put("reposted", post.reposted)
     put("favourited", post.favourited)
     put("saved", post.saved)
@@ -421,13 +423,7 @@ private fun decodePost(json: JSONObject): me.foxtails.palustris.domain.Post =
             replyCount = json.optionalNonNegativeInt("replyCount"),
         ),
         quote = json.optJSONObject("quote")?.let { runCatching { decodePost(it) }.getOrNull() },
-        pollOptions = json.optJSONArray("pollOptions")?.let { values ->
-            (0 until values.length()).mapNotNull { index ->
-                values.optJSONObject(index)?.let { option ->
-                    me.foxtails.palustris.domain.PollOption(option.optString("text"), option.optInt("votes"))
-                }
-            }
-        }.orEmpty(),
+        poll = decodePoll(json),
         reposted = json.optBoolean("reposted"),
         favourited = json.optBoolean("favourited"),
         saved = json.optBoolean("saved"),
@@ -706,4 +702,41 @@ private fun JSONObject.optionalNonNegativeInt(key: String): Int? {
     return runCatching { java.math.BigDecimal(raw).toBigIntegerExact().intValueExact() }
         .getOrNull()
         ?.takeIf { it >= 0 }
+}
+
+private fun encodePoll(poll: me.foxtails.palustris.domain.Poll): JSONObject = JSONObject()
+    .put("id", poll.id)
+    .put("multiple", poll.multiple)
+    .put("expired", poll.expired)
+    .put("voted", poll.voted)
+    .put("options", JSONArray(poll.options.map { option ->
+        JSONObject().put("text", option.text).put("votes", option.votes).put("picked", option.picked)
+    }))
+    .apply {
+        poll.expiresAtEpochMillis?.let { put("expiresAt", it) }
+        poll.votersCount?.let { put("votersCount", it) }
+    }
+
+/**
+ * Reads a cached poll. A row cached before polls could be voted on holds only `pollOptions`; it
+ * decodes to a poll with no ID, which the row shows as results and never offers for voting.
+ */
+private fun decodePoll(json: JSONObject): me.foxtails.palustris.domain.Poll? {
+    val current = json.optJSONObject("poll")
+    val values = (current?.optJSONArray("options") ?: json.optJSONArray("pollOptions")) ?: return null
+    val options = (0 until values.length()).mapNotNull { index ->
+        values.optJSONObject(index)?.let { option ->
+            me.foxtails.palustris.domain.PollOption(option.optString("text"), option.optInt("votes"), option.optBoolean("picked"))
+        }
+    }
+    if (options.isEmpty()) return null
+    return me.foxtails.palustris.domain.Poll(
+        id = current?.optString("id").orEmpty(),
+        options = options,
+        multiple = current?.optBoolean("multiple") ?: false,
+        expiresAtEpochMillis = current?.optLong("expiresAt")?.takeIf { it > 0 },
+        expired = current?.optBoolean("expired") ?: true,
+        votersCount = current?.optionalNonNegativeInt("votersCount"),
+        voted = current?.optBoolean("voted") ?: false,
+    )
 }

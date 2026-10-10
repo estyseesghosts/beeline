@@ -114,7 +114,7 @@ class MastodonIntegrationTest {
         assertEquals("A photo", post.attachments.single().description)
         assertTrue(post.attachments.single().sensitive)
         assertEquals("image/*", post.attachments.single().mimeType)
-        assertEquals("Yes", post.pollOptions.single().text)
+        assertEquals("Yes", post.poll!!.options.single().text)
         assertTrue(PostAction.Favorite in post.availableActions)
         assertFalse(PostAction.React in post.availableActions)
         assertEquals("Bio & details", MastodonMapper.account(localAccount, origin).biography)
@@ -1535,7 +1535,11 @@ class MastodonIntegrationTest {
         val unsupported = listOf(
             CreatePostRequest("text", quoteOf = EntityId(requestOrigin, "quoted")),
             CreatePostRequest("text", attachments = listOf(me.foxtails.palustris.domain.Attachment("https://example.org/photo.jpg", "image/jpeg", null))),
-            CreatePostRequest("text", poll = me.foxtails.palustris.domain.PollRequest(listOf("yes", "no"))),
+            CreatePostRequest(
+                "text",
+                attachments = listOf(me.foxtails.palustris.domain.Attachment("https://example.org/photo.jpg", "image/jpeg", null)),
+                poll = me.foxtails.palustris.domain.PollRequest(listOf("yes", "no")),
+            ),
         )
 
         unsupported.forEach { request ->

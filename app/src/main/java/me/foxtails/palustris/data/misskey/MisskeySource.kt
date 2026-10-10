@@ -47,6 +47,7 @@ import me.foxtails.palustris.domain.NotificationReadSemantics
 import me.foxtails.palustris.domain.NotificationUnreadPrecision
 import me.foxtails.palustris.domain.NotificationUnreadState
 import me.foxtails.palustris.domain.Page
+import me.foxtails.palustris.domain.Poll
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostActionResult
 import me.foxtails.palustris.domain.ProfileCapabilities
@@ -268,10 +269,21 @@ class MisskeySource(
             body.put("poll", JSONObject()
                 .put("choices", JSONArray(poll.choices))
                 .put("multiple", poll.multiple)
-                .apply { poll.expiresAt?.let { put("expiresAt", it.toEpochMilli()) } })
+                .apply { poll.expiresInSeconds?.let { put("expiredAfter", it * 1000L) } })
         }
         val response = JSONObject(api.post(origin, "notes/create", body, MISSKEY_MAX_RESPONSE_BYTES).body)
         MisskeyMapper.post(response.getJSONObject("createdNote"), origin)
+    }
+
+    override suspend fun votePoll(postId: EntityId, pollId: String, choices: List<Int>): Poll = request("poll.vote") {
+        validatePostId(postId, "poll.vote")
+        if (choices.isEmpty()) throw SourceError.Unsupported("poll.vote.choices")
+        // Misskey takes one choice per call. A multiple-choice vote is several calls, then one refetch.
+        choices.forEach { choice ->
+            api.post(origin, "notes/polls/vote", JSONObject().put("i", token).put("noteId", postId.value).put("choice", choice), MISSKEY_MAX_RESPONSE_BYTES)
+        }
+        val note = JSONObject(api.post(origin, "notes/show", JSONObject().put("i", token).put("noteId", postId.value), MISSKEY_MAX_RESPONSE_BYTES).body)
+        MisskeyMapper.post(note, origin).poll ?: throw SourceError.Unsupported("poll.vote.missing")
     }
 
     override suspend fun conversations(cursor: String?): Page<DirectConversation> = request("direct.conversations") { directMessageService.conversations(cursor) }

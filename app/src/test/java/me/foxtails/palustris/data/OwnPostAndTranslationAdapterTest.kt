@@ -198,6 +198,6 @@ class OwnPostAndTranslationAdapterTest {
         val capabilities = MastodonCapabilityProbe.parseCapabilities(JSONObject().put("version", "4.5.0"))
 
         assertEquals(CapabilityStatus.Supported, capabilities.ownPosts.delete)
-        assertEquals(CapabilityStatus.Unknown, capabilities.ownPosts.edit)
+        assertEquals(CapabilityStatus.Supported, capabilities.ownPosts.edit)
     }
 }

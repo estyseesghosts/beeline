@@ -6,6 +6,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.DraftMedia
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.PollRequest
 import me.foxtails.palustris.domain.PostDraftQuotePreview
 
 /**
@@ -18,12 +19,14 @@ data class ComposerEntryState(
     val warning: String = "",
     val warningEnabled: Boolean = false,
     val media: List<DraftMedia> = emptyList(),
+    /** The poll being written, or null. A poll and images exclude each other. */
+    val poll: PollRequest? = null,
 ) {
     /** The warning that is saved and published. A hidden warning field contributes nothing. */
     val effectiveWarning: String get() = if (warningEnabled) warning else ""
 
     /** What the dirty check compares. The warning toggle alone changes nothing the user can lose. */
-    val content: ComposerEntryContent get() = ComposerEntryContent(id, text, effectiveWarning, media)
+    val content: ComposerEntryContent get() = ComposerEntryContent(id, text, effectiveWarning, media, poll)
 }
 
 /** The saved-or-not content of one entry. */
@@ -32,6 +35,7 @@ data class ComposerEntryContent(
     val text: String,
     val warning: String,
     val media: List<DraftMedia>,
+    val poll: PollRequest? = null,
 )
 
 /**
@@ -84,7 +88,7 @@ data class ComposerEditorState(
 
     /** True when any entry carries text, a warning, or an image. */
     val hasContent: Boolean
-        get() = entries.any { it.text.isNotBlank() || it.effectiveWarning.isNotBlank() || it.media.isNotEmpty() }
+        get() = entries.any { it.text.isNotBlank() || it.effectiveWarning.isNotBlank() || it.media.isNotEmpty() || it.poll != null }
 
     fun entry(id: String): ComposerEntryState? = entries.firstOrNull { it.id == id }
 

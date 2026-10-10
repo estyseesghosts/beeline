@@ -18,6 +18,7 @@ import me.foxtails.palustris.domain.NotificationDestination
 import me.foxtails.palustris.domain.NotificationGroup
 import me.foxtails.palustris.domain.NotificationGroupId
 import me.foxtails.palustris.domain.NotificationTarget
+import me.foxtails.palustris.domain.Poll
 import me.foxtails.palustris.domain.PollOption
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Translation
@@ -211,6 +212,24 @@ object MastodonMapper {
         }.orEmpty(),
     )
 
+    /** Maps a Mastodon poll. `votes_count` is null when the author hides totals, which reads as zero. */
+    fun poll(json: JSONObject): Poll {
+        val ownVotes = json.optJSONArray("own_votes")?.let { votes -> (0 until votes.length()).map(votes::optInt) }.orEmpty().toSet()
+        val options = json.optJSONArray("options")
+        return Poll(
+            id = json.optString("id"),
+            options = (0 until (options?.length() ?: 0)).map { index ->
+                val option = options!!.getJSONObject(index)
+                PollOption(option.optString("title"), option.optInt("votes_count"), picked = index in ownVotes)
+            },
+            multiple = json.optBoolean("multiple"),
+            expiresAtEpochMillis = json.nullableString("expires_at")?.let(::parseInstant),
+            expired = json.optBoolean("expired"),
+            votersCount = json.optionalNonNegativeInt("voters_count"),
+            voted = json.optBoolean("voted"),
+        )
+    }
+
     fun post(json: JSONObject, origin: String, depth: Int = 0): Post {
         val id = EntityId(origin, json.getString("id"))
         val reblog = json.optJSONObject("reblog")
@@ -270,13 +289,7 @@ object MastodonMapper {
             url = json.nullableString("url") ?: json.nullableString("uri"),
             interactionCounts = interactionCounts,
             quote = if (filtered) null else quotedStatus?.takeIf { depth < MAX_NESTING_DEPTH }?.let { post(it, origin, depth + 1) },
-            pollOptions = poll?.optJSONArray("options")?.let { options ->
-                (0 until options.length()).map { option ->
-                    options.getJSONObject(option).let {
-                        PollOption(it.optString("title"), it.optInt("votes_count"))
-                    }
-                }
-            }.orEmpty(),
+            poll = poll?.let(::poll),
             reposted = json.optBoolean("reblogged"),
             favourited = json.optBoolean("favourited"),
             saved = json.optBoolean("bookmarked"),

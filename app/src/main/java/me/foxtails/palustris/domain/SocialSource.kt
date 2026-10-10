@@ -79,7 +79,12 @@ interface SocialSource {
         return PostActionResult(selected = selected)
     }
     suspend fun quote(id: EntityId, text: String) = unsupported<Unit>("quote")
-    suspend fun votePoll(id: EntityId, optionIndex: Int) = unsupported<Unit>("votePoll")
+
+    /**
+     * Votes for the options at [choices] and returns the poll as the server now holds it.
+     * [pollId] is [Poll.id]; [postId] is the post that carries the poll.
+     */
+    suspend fun votePoll(postId: EntityId, pollId: String, choices: List<Int>): Poll = unsupported("votePoll")
     suspend fun uploadMedia(request: MediaUploadRequest): Attachment = unsupported("uploadMedia")
 
     /**

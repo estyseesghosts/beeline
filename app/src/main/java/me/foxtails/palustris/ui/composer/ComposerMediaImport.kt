@@ -75,7 +75,7 @@ internal fun ComposerEditorState.photoButtonState(
 ): PhotoButtonState = when {
     busy || mediaUpload == CapabilityStatus.Unsupported -> PhotoButtonState.Disabled
     mediaUpload == CapabilityStatus.Denied -> PhotoButtonState.SignInAgain
-    entry.imageSlots(limits) == 0 -> PhotoButtonState.Disabled
+    entry.imageSlots(limits) == 0 || entry.poll != null -> PhotoButtonState.Disabled
     entry.id == first.id && quoteOf != null && !limits.posting.quoteWithMedia -> PhotoButtonState.Disabled
     else -> PhotoButtonState.Enabled
 }

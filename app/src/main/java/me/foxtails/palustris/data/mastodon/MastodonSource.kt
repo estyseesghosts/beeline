@@ -47,6 +47,7 @@ import me.foxtails.palustris.domain.NotificationPage
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.NotificationUnreadState
 import me.foxtails.palustris.domain.Page
+import me.foxtails.palustris.domain.Poll
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostActionResult
@@ -83,6 +84,9 @@ internal const val MASTODON_MAX_RESPONSE_BYTES = 4L * 1024 * 1024
 
 /** Mastodon applies the primary hashtag and three `any[]` extras. The documentation says four. */
 private const val MAX_COMBINED_HASHTAGS = 3
+
+/** Mastodon's own default poll length: one day. */
+private const val DEFAULT_POLL_SECONDS = 86_400L
 
 class MastodonSource(
     private val origin: String,
@@ -210,7 +214,7 @@ class MastodonSource(
         if (post.quoteOf != null && (post.attachments.isNotEmpty() || post.poll != null)) {
             throw SourceError.Unsupported("quote.attachments-or-poll")
         }
-        if (post.poll != null) throw SourceError.Unsupported("create.poll")
+        if (post.poll != null && post.attachments.isNotEmpty()) throw SourceError.Unsupported("create.poll-with-media")
         val mediaIds = post.attachments.map { it.id ?: throw SourceError.Unsupported("create.attachment-id") }
         val fields = buildList {
             // The server accepts an empty status when media is attached.
@@ -220,11 +224,27 @@ class MastodonSource(
             post.contentWarning?.let { add("spoiler_text" to it) }
             post.replyTo?.let { add("in_reply_to_id" to it.value) }
             post.quoteOf?.let { add("quoted_status_id" to it.value) }
+            post.poll?.let { poll ->
+                poll.choices.forEach { add("poll[options][]" to it) }
+                // The server requires an expiry whenever options are sent.
+                add("poll[expires_in]" to (poll.expiresInSeconds ?: DEFAULT_POLL_SECONDS).toString())
+                if (poll.multiple) add("poll[multiple]" to "true")
+                if (poll.hideTotals) add("poll[hide_totals]" to "true")
+            }
         }
         val headers = post.idempotencyKey?.let { mapOf("Idempotency-Key" to it) }.orEmpty()
         MastodonMapper.post(
             api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES, headers).body.toJson(),
             origin,
+        )
+    }
+
+    override suspend fun votePoll(postId: EntityId, pollId: String, choices: List<Int>): Poll = request("poll.vote") {
+        validatePostId(postId, "poll.vote")
+        if (pollId.isBlank() || choices.isEmpty()) throw SourceError.Unsupported("poll.vote.choices")
+        val fields = choices.map { "choices[]" to it.toString() }
+        MastodonMapper.poll(
+            api.postForm(origin, "api/v1/polls/${URLEncoder.encode(pollId, Charsets.UTF_8.name())}/votes", fields, token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(),
         )
     }
 

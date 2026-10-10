@@ -93,6 +93,7 @@ internal class ComposerEntryActions(
     val loadThumbnail: ThumbnailLoader,
     val onRemoveMedia: (mediaId: String) -> Unit,
     val onEditAlt: (mediaId: String) -> Unit,
+    val onPollChange: (me.foxtails.palustris.domain.PollRequest?) -> Unit = {},
     val hashtags: ComposerHashtags = ComposerHashtags(),
 )
 
@@ -200,6 +201,15 @@ internal fun ComposerEntryRow(
                 )
                 if (entry.media.isNotEmpty()) {
                     ComposerMediaStrip(entry.media, actions.loadThumbnail, actions.onRemoveMedia, actions.onEditAlt)
+                }
+                val pollLimits = limits.posting.poll
+                if (entry.poll != null && pollLimits != null) {
+                    ComposerPollEditor(
+                        poll = entry.poll,
+                        limits = pollLimits,
+                        onChange = { actions.onPollChange(it) },
+                        onRemove = { actions.onPollChange(null) },
+                    )
                 }
             }
             if (!first) {

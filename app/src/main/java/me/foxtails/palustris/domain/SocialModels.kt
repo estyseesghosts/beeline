@@ -92,7 +92,46 @@ internal fun Int?.adjustedBy(delta: Int): Int? = this?.let {
     (it.toLong() + delta).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
 }
 
-data class PollOption(val text: String, val votes: Int)
+/** One choice of a [Poll]. [picked] is true when the signed-in account voted for it. */
+data class PollOption(val text: String, val votes: Int, val picked: Boolean = false)
+
+/**
+ * A poll on a post. [id] is the Mastodon poll ID, or the note ID on Misskey. [votersCount] is null
+ * when the server reports no voter total; the vote total then sums the options. [expiresAtEpochMillis]
+ * is null for a poll that never ends.
+ */
+data class Poll(
+    val id: String,
+    val options: List<PollOption>,
+    val multiple: Boolean = false,
+    val expiresAtEpochMillis: Long? = null,
+    val expired: Boolean = false,
+    val votersCount: Int? = null,
+    val voted: Boolean = false,
+) {
+    /** Indexes of the options the account picked. */
+    val ownVotes: List<Int> get() = options.indices.filter { options[it].picked }
+
+    val totalVotes: Int get() = options.sumOf(PollOption::votes)
+
+    /** True when the account may still vote: the poll is open and the account has not voted. */
+    val open: Boolean get() = !expired && !voted
+
+    /** Results show once the account has voted or the poll has ended. */
+    val showsResults: Boolean get() = expired || voted
+
+    /** The poll as it reads right after the account votes for [choices], before the server answers. */
+    fun withVote(choices: List<Int>): Poll {
+        val picked = choices.toSet()
+        return copy(
+            options = options.mapIndexed { index, option ->
+                if (index in picked) option.copy(votes = option.votes + 1, picked = true) else option
+            },
+            votersCount = votersCount?.plus(1),
+            voted = true,
+        )
+    }
+}
 
 /**
  * A server-side translation of one post. [text] is in the same form as [Post.text], so it
@@ -124,7 +163,7 @@ data class Post(
     val url: String? = null,
     val interactionCounts: PostInteractionCounts = PostInteractionCounts(),
     val quote: Post? = null,
-    val pollOptions: List<PollOption> = emptyList(),
+    val poll: Poll? = null,
     val reposted: Boolean = false,
     val favourited: Boolean = false,
     val saved: Boolean = false,

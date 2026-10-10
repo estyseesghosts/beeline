@@ -1,17 +1,13 @@
 package me.foxtails.palustris.ui.posts
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
@@ -49,24 +45,6 @@ internal fun PostContentWarningToggle(
     )
     TextButton(onClick = onToggle, modifier = Modifier.padding(horizontal = 4.dp)) {
         Text(stringResource(if (expanded) R.string.content_warning_hide else R.string.content_warning_show))
-    }
-}
-
-/** Poll options with vote counts. Shared by the row and Photo Grid detail. */
-@Composable
-internal fun PostPollOptions(ownedPost: OwnedPost) {
-    val post = ownedPost.post
-    post.pollOptions.forEach { option ->
-        Surface(
-            Modifier.padding(horizontal = 16.dp, vertical = 4.dp).fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surfaceContainer,
-        ) {
-            Row(Modifier.padding(12.dp)) {
-                InlineEmojiText(option.text, post.emoji, Modifier.weight(1f), MaterialTheme.typography.bodyMedium)
-                Text(pluralStringResource(R.plurals.post_poll_votes, option.votes, option.votes), style = MaterialTheme.typography.labelLarge)
-            }
-        }
     }
 }
 

@@ -8,6 +8,7 @@ import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.Poll
 import me.foxtails.palustris.domain.PollOption
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Translation
@@ -111,7 +112,6 @@ object MisskeyMapper {
             json.optJSONObject("reactionEmojis") ?: JSONObject(), origin,
         ) + MisskeyEmojiMapper.parseEmojis(json.optJSONObject("emojis") ?: JSONObject(), origin)
         val myReaction = json.nullableString("myReaction")
-        val poll = json.optJSONObject("poll")?.optJSONArray("choices")
         val replyToAuthorId = json.nullableString("replyUserId")
             ?: json.optJSONObject("reply")?.nullableString("userId")
             ?: json.optJSONObject("reply")?.optJSONObject("user")?.nullableString("id")
@@ -144,9 +144,7 @@ object MisskeyMapper {
             url = json.nullableString("url") ?: json.nullableString("uri") ?: "$origin/notes/${id.value}",
             interactionCounts = interactionCounts,
             quote = if (!hidden && renote != null && depth < MAX_NESTING_DEPTH) post(renote, origin, depth + 1) else null,
-            pollOptions = if (poll == null) emptyList() else (0 until poll.length()).map { poll.getJSONObject(it).let { option ->
-                PollOption(option.getString("text"), option.optInt("votes"))
-            } },
+            poll = json.optJSONObject("poll")?.let { poll(id.value, it) },
             availableActions = if (hidden) emptySet() else MISSKEY_ACTIONS,
             myReaction = myReaction.takeUnless { hidden },
             selectedReactions = if (hidden) emptyList() else listOfNotNull(myChoice),
@@ -156,6 +154,25 @@ object MisskeyMapper {
             ownRepostId = json.optString("myRenoteId").takeIf { it.isNotBlank() }
                 ?.let { EntityId(origin, it) },
             contentVisibility = if (hidden) PostContentVisibility.Hidden else PostContentVisibility.Visible,
+        )
+    }
+
+    /** Maps a note's poll. Misskey sends no expired flag, so the end time decides it. */
+    fun poll(noteId: String, json: JSONObject, nowMillis: Long = System.currentTimeMillis()): Poll {
+        val choices = json.optJSONArray("choices")
+        val options = (0 until (choices?.length() ?: 0)).map { index ->
+            val choice = choices!!.getJSONObject(index)
+            PollOption(choice.optString("text"), choice.optInt("votes"), picked = choice.optBoolean("isVoted"))
+        }
+        val expiresAt = json.nullableString("expiresAt")?.let { runCatching { Instant.parse(it).toEpochMilli() }.getOrNull() }
+        return Poll(
+            id = noteId,
+            options = options,
+            multiple = json.optBoolean("multiple"),
+            expiresAtEpochMillis = expiresAt,
+            expired = expiresAt != null && expiresAt <= nowMillis,
+            votersCount = null,
+            voted = options.any(PollOption::picked),
         )
     }
 

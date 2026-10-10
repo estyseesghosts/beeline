@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -126,6 +127,7 @@ internal fun ComposerBody(
                             loadThumbnail = media.loadThumbnail,
                             onRemoveMedia = { owner.removeMedia(entry.id, it) },
                             onEditAlt = { media.editAlt(entry.id, it) },
+                            onPollChange = { owner.setPoll(entry.id, it) },
                             hashtags = hashtags,
                         ),
                     )
@@ -159,6 +161,11 @@ internal fun ComposerBody(
             limits = contract.limits,
             photo = media.photoState(focusedEntry),
             onPhoto = { media.onPhoto(focusedEntry) },
+            pollEnabled = contract.limits.posting.poll != null && focusedEntry.media.isEmpty() && !contract.publishing && !owner.submitting,
+            onPoll = {
+                val limits = contract.limits.posting.poll
+                if (focusedEntry.poll != null) owner.setPoll(focusedEntry.id, null) else if (limits != null) owner.setPoll(focusedEntry.id, newPoll(limits))
+            },
             onEmoji = {
                 val kind = if (warningFocused) ComposerField.Kind.Warning else ComposerField.Kind.Text
                 onRequestEmoji(ComposerField(kind, focusedEntry.id))
@@ -212,6 +219,8 @@ internal fun ComposerToolbar(
     limits: PostLimits,
     photo: PhotoButtonState,
     onPhoto: () -> Unit,
+    pollEnabled: Boolean,
+    onPoll: () -> Unit,
     onEmoji: () -> Unit,
     onToggleWarning: () -> Unit,
     addEnabled: Boolean,
@@ -220,6 +229,7 @@ internal fun ComposerToolbar(
 ) {
     val emojiDescription = stringResource(R.string.emoji_open_picker)
     val warningDescription = stringResource(R.string.composer_content_warning)
+    val pollDescription = stringResource(R.string.composer_poll)
     val remaining = entry.remaining(limits)
     Row(
         modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
@@ -227,6 +237,18 @@ internal fun ComposerToolbar(
     ) {
         IconButton(onClick = onPhoto, enabled = photo != PhotoButtonState.Disabled) {
             Icon(AppIcons.Image, stringResource(R.string.composer_add_photo))
+        }
+        if (limits.posting.poll != null) {
+            TextButton(
+                onClick = onPoll,
+                enabled = pollEnabled || entry.poll != null,
+                modifier = Modifier.semantics { contentDescription = pollDescription }.testTag("composer_poll_toggle"),
+                colors = if (entry.poll != null) {
+                    ButtonDefaults.textButtonColors()
+                } else {
+                    ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                },
+            ) { Text(stringResource(R.string.composer_poll_short)) }
         }
         TextButton(onClick = onEmoji, modifier = Modifier.semantics { contentDescription = emojiDescription }) {
             Text(stringResource(R.string.composer_emoji))

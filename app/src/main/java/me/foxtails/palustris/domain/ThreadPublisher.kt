@@ -130,6 +130,7 @@ class ThreadPublisher(
                 contentWarning = entry.contentWarning,
                 replyTo = previousReply,
                 attachments = attachments,
+                poll = entry.poll,
                 quoteOf = if (index == 0) publication.quoteOf else null,
                 idempotencyKey = "${publication.draftId}-${entry.id}",
             )

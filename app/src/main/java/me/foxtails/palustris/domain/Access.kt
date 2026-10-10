@@ -13,6 +13,7 @@ enum class AccessScope {
     ModerationRead,
     ModerationWrite,
     MediaUpload,
+    PollVote,
 }
 
 enum class AccessStatus { Granted, Denied, Unknown }

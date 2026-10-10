@@ -200,7 +200,7 @@ class NavigationTest {
         text = text,
         publishedAtEpochMillis = 0,
         audience = Audience.Public,
-        pollOptions = listOf(PollOption("Known fixture stripe", 1)),
+        poll = me.foxtails.palustris.domain.Poll("fixture-poll", listOf(PollOption("Known fixture stripe", 1)), expired = true),
     )
 
     private fun fixtureNotification(id: String, account: Account, actor: Account, text: String) = Notification(

@@ -9,6 +9,7 @@ import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.NotificationCapabilities
 import me.foxtails.palustris.domain.OwnPostCapabilities
 import me.foxtails.palustris.domain.ModerationCapabilities
+import me.foxtails.palustris.domain.PollLimits
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostLengthRule
 import me.foxtails.palustris.domain.PostingCapabilities
@@ -22,6 +23,7 @@ import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.TranslationCapability
 import me.foxtails.palustris.domain.withTimelineStatuses
+import org.json.JSONArray
 import org.json.JSONObject
 
 class MisskeyCapabilityProbe(
@@ -67,6 +69,7 @@ class MisskeyCapabilityProbe(
             quotes = CapabilityStatus.Supported,
             ownPosts = OwnPostCapabilities(
                 delete = if (token.isNullOrBlank()) CapabilityStatus.Denied else CapabilityStatus.Supported,
+                edit = if (token.isNullOrBlank()) CapabilityStatus.Denied else editEndpointStatus(connection),
             ),
             translation = TranslationCapability(translationStatus(meta, policies)),
             primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Reaction),
@@ -102,6 +105,18 @@ class MisskeyCapabilityProbe(
         ).withTimelineStatuses(statuses)
     }
 
+    /**
+     * Sharkey serves `notes/edit`; Misskey has no edit route. The endpoint list says which. A failed
+     * or unreadable list leaves the status unknown, which hides the row instead of guessing.
+     */
+    private suspend fun editEndpointStatus(connection: Connection): CapabilityStatus = runCatching {
+        val body = api.post(connection.origin, "endpoints", maxResponseBytes = maxResponseBytes).body
+        val names = if (body.trimStart().startsWith("[")) JSONArray(body) else JSONObject(body).optJSONArray("endpoints")
+        names?.let { list ->
+            if ((0 until list.length()).any { list.optString(it) == EDIT_ENDPOINT }) CapabilityStatus.Supported else CapabilityStatus.Unsupported
+        } ?: CapabilityStatus.Unknown
+    }.getOrDefault(CapabilityStatus.Unknown)
+
     /** The server needs a configured translator, and the account's role must allow it (default true). */
     private fun translationStatus(meta: JSONObject, policies: JSONObject?): CapabilityStatus = when {
         !meta.optBoolean("translatorAvailable", false) -> CapabilityStatus.Unsupported
@@ -121,6 +136,7 @@ class MisskeyCapabilityProbe(
             lengthRule = PostLengthRule.Utf16TextOnly,
             maxWarningLength = meta.positiveInt("maxCwLength") ?: DEFAULT_MAX_CW_LENGTH,
             maxAttachments = MAX_ATTACHMENTS,
+            poll = MISSKEY_POLL_LIMITS,
             maxAltTextLength = meta.positiveInt("maxAltTextLength") ?: DEFAULT_MAX_ALT_TEXT_LENGTH,
             maxImageBytes = limits.minOrNull(),
             maxVideoBytes = limits.minOrNull(),
@@ -176,5 +192,9 @@ class MisskeyCapabilityProbe(
         const val DEFAULT_MAX_ALT_TEXT_LENGTH = 512
         const val MAX_ATTACHMENTS = 16
         const val BYTES_PER_MEGABYTE = 1024L * 1024
+        const val EDIT_ENDPOINT = "notes/edit"
+
+        /** Neither Misskey nor Sharkey publishes poll limits in meta. 50 characters is the lower of the two. */
+        val MISSKEY_POLL_LIMITS = PollLimits(maxOptions = 10, maxOptionLength = 50, minExpirySeconds = 60L, maxExpirySeconds = null)
     }
 }

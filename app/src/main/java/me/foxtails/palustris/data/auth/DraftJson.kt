@@ -46,9 +46,9 @@ internal fun PostDraft.toJson() = JSONObject()
     }))
     .put("media", mediaJson(media))
     .put("followUps", JSONArray(followUps.map { entry ->
-        JSONObject().put("id", entry.id).put("text", entry.text).put("contentWarning", entry.contentWarning).put("media", mediaJson(entry.media))
+        JSONObject().put("id", entry.id).put("text", entry.text).put("contentWarning", entry.contentWarning).put("media", mediaJson(entry.media)).put("poll", entry.poll?.let(::pollJson))
     }))
-    .put("poll", poll?.let { JSONObject().put("choices", JSONArray(it.choices)).put("multiple", it.multiple).put("expiresAt", it.expiresAt?.toEpochMilli()) })
+    .put("poll", poll?.let(::pollJson))
 
 internal fun JSONObject.toDraft(): PostDraft {
     val origin = optString("origin").takeIf { it.isNotBlank() }
@@ -77,8 +77,7 @@ internal fun JSONObject.toDraft(): PostDraft {
             }
         }
     }.orEmpty()
-    val pollJson = optJSONObject("poll")
-    val poll = pollJson?.let { PollRequest((0 until it.getJSONArray("choices").length()).map(it.getJSONArray("choices")::getString), it.optBoolean("multiple"), it.optLong("expiresAt").takeIf { value -> value > 0 }?.let(java.time.Instant::ofEpochMilli)) }
+    val poll = optJSONObject("poll")?.toPollRequest()
     val quotePreview = optJSONObject("quotePreview")?.let {
         PostDraftQuotePreview(
             authorDisplayName = it.optString("authorDisplayName"),
@@ -177,6 +176,24 @@ private fun JSONArray?.toFollowUps(): List<PostDraftEntry> {
             text = json.optString("text"),
             contentWarning = json.nullableString("contentWarning"),
             media = json.optJSONArray("media").toDraftMedia(),
+            poll = json.optJSONObject("poll")?.toPollRequest(),
         )
     }
+}
+
+private fun pollJson(poll: PollRequest) = JSONObject()
+    .put("choices", JSONArray(poll.choices))
+    .put("multiple", poll.multiple)
+    .put("expiresInSeconds", poll.expiresInSeconds)
+    .put("hideTotals", poll.hideTotals)
+
+/** Reads a saved poll. A poll saved before polls had a composer holds no relative expiry and reads as none. */
+private fun JSONObject.toPollRequest(): PollRequest? {
+    val choices = optJSONArray("choices") ?: return null
+    return PollRequest(
+        choices = (0 until choices.length()).map(choices::optString),
+        multiple = optBoolean("multiple"),
+        expiresInSeconds = if (isNull("expiresInSeconds")) null else optLong("expiresInSeconds").takeIf { it > 0 },
+        hideTotals = optBoolean("hideTotals"),
+    )
 }

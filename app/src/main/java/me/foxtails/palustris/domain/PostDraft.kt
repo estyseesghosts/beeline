@@ -31,6 +31,7 @@ data class PostDraftEntry(
     val text: String = "",
     val contentWarning: String? = null,
     val media: List<DraftMedia> = emptyList(),
+    val poll: PollRequest? = null,
 )
 
 /**
@@ -54,5 +55,8 @@ data class PostDraft(
     val followUps: List<PostDraftEntry> = emptyList(),
 ) {
     /** Every image the draft keeps, first post first. */
+    /** Every poll the draft keeps, first post first. */
+    val allPolls: List<PollRequest> get() = listOfNotNull(poll) + followUps.mapNotNull(PostDraftEntry::poll)
+
     val allMedia: List<DraftMedia> get() = media + followUps.flatMap(PostDraftEntry::media)
 }

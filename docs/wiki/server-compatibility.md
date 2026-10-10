@@ -168,3 +168,11 @@ and `FfmpegBridgeTest`. Live-server uploads are unverified.
 
 - Delete: supported on the Mastodon API and the Misskey API. Edit stays hidden until its capability is reported as supported.
 - Translation: the Mastodon API reads `configuration.translation.enabled`, or `akkoma:machine_translation` in the feature list, and offers it for public and unlisted posts only. The Misskey API needs `translatorAvailable` in `meta` and the role policy `canUseTranslator`. A server that offers neither never shows the Translate row.
+
+## Polls
+
+- Create: Mastodon sends `poll[options][]`, `poll[expires_in]` (default one day), `poll[multiple]` and `poll[hide_totals]`. A poll and media never go in one Mastodon post. Misskey sends `poll.choices`, `poll.multiple` and `poll.expiredAfter` in milliseconds.
+- Limits: Mastodon reads `configuration.polls` (`max_options`, `max_characters_per_option`, `min_expiration`, `max_expiration`). Pleroma-family servers report `poll_limits` with `max_option_chars` instead. Neither `meta` of Misskey nor Sharkey lists poll limits, so the Misskey family uses 10 choices of 50 characters, the lower of the two.
+- Vote: Mastodon `POST /api/v1/polls/:id/votes` with `choices[]` returns the poll. Misskey `notes/polls/vote` takes one choice per call, so a multiple-choice vote is several calls and one `notes/show`.
+- Access: Misskey needs the `write:votes` permission. Sessions signed in before it was requested get the server's policy error on a vote until the account signs in again. Mastodon `write` covers voting.
+- Misskey notes carry no expired flag; the end time decides it. Mastodon may hide totals (`votes_count` null), which reads as zero.

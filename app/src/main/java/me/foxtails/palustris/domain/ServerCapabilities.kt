@@ -34,7 +34,7 @@ data class ServerCapabilities(
          * invalidates snapshots that predate the quote-with-media rule. Revision 9
          * invalidates snapshots that predate own-post actions and translation.
          */
-        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 9
+        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 10
     }
 }
 
@@ -63,6 +63,25 @@ enum class PostLengthRule {
 }
 
 /**
+ * What a server accepts for a new poll. Expiry bounds are seconds; [maxExpirySeconds] is null when
+ * the server sets no upper bound.
+ */
+data class PollLimits(
+    val maxOptions: Int,
+    val maxOptionLength: Int,
+    val minExpirySeconds: Long,
+    val maxExpirySeconds: Long?,
+    /** True when the server hides vote totals on request (Mastodon only). */
+    val hideTotals: Boolean = false,
+) {
+    val minOptions: Int get() = MIN_OPTIONS
+
+    companion object {
+        const val MIN_OPTIONS = 2
+    }
+}
+
+/**
  * Posting and media limits that the composer enforces before it contacts the server.
  * A null limit means the server did not report one and the app does not enforce it.
  */
@@ -84,6 +103,8 @@ data class PostingCapabilities(
     val clientCompression: Boolean = false,
     /** False when the server rejects a post that quotes another post and also carries images. */
     val quoteWithMedia: Boolean = true,
+    /** Null when the server takes no poll at creation. */
+    val poll: PollLimits? = null,
 ) {
     /** True when the server may take a video: it lists no types, or lists at least one video type. */
     val acceptsVideo: Boolean get() = uploadTypes == null || uploadTypes.any { it.startsWith("video/") }

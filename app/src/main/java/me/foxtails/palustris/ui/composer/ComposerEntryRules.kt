@@ -23,7 +23,11 @@ internal fun ComposerEntryState.exceedsLimit(limits: PostLimits): Boolean = limi
 
 /** True when every entry has content and none is over a limit. Empty entries block Post. */
 internal fun ComposerEditorState.postable(limits: PostLimits): Boolean =
-    entries.all { it.hasPostableContent() && !it.exceedsLimit(limits) }
+    entries.all { it.hasPostableContent() && !it.exceedsLimit(limits) && it.pollProblem(limits) == null }
+
+/** Why this entry's poll cannot be sent, or null when it has none or it is sound. */
+internal fun ComposerEntryState.pollProblem(limits: PostLimits): me.foxtails.palustris.domain.PollProblem? =
+    poll?.problem(limits.posting.poll)
 
 /** True when an entry holds an image the app may re-encode. A GIF never counts. */
 internal fun ComposerEditorState.hasCompressibleImage(): Boolean =

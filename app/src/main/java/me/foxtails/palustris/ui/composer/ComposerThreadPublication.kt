@@ -43,6 +43,7 @@ internal fun ComposerEditorState.toThreadPublication(
                     byteSize = media.byteSize,
                 )
             },
+            poll = entry.poll?.cleaned(),
         )
     },
     audience = audience,
@@ -89,6 +90,7 @@ internal fun ThreadPublicationEntry.toEntryState(): ComposerEntryState = Compose
             altText = it.description,
         )
     },
+    poll = poll,
 )
 
 /** Human detail for a publish failure. */

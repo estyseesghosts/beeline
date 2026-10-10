@@ -17,6 +17,7 @@ import me.foxtails.palustris.domain.NotificationCapabilities
 import me.foxtails.palustris.domain.OwnPostCapabilities
 import me.foxtails.palustris.domain.NotificationReadSemantics
 import me.foxtails.palustris.domain.NotificationUnreadPrecision
+import me.foxtails.palustris.domain.PollLimits
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostLengthRule
 import me.foxtails.palustris.domain.PostingCapabilities
@@ -71,7 +72,8 @@ class AccountFileStore internal constructor(
                 ?.takeIf { it.capabilitySchemaVersion == ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION }
                 ?: ServerCapabilities(),
             access = (json.optJSONObject("access")?.toAccessGrant() ?: AccessGrant())
-                .withMastodonMediaUpload(storedConnection.protocol),
+                .withMastodonMediaUpload(storedConnection.protocol)
+                .withMastodonPollVote(storedConnection.protocol),
             pushInstanceName = json.optString("pushInstanceName").takeIf { it.isNotBlank() },
             sessionRevision = json.optLong("sessionRevision", 1L).coerceAtLeast(1L),
             pushState = json.optJSONObject("pushState")?.toPushSessionState() ?: PushSessionState(),
@@ -318,6 +320,14 @@ private fun PostingCapabilities.toJson(): JSONObject = JSONObject()
     .put("mediaUpload", mediaUpload.name)
     .put("clientCompression", clientCompression)
     .put("quoteWithMedia", quoteWithMedia)
+    .put("poll", poll?.let {
+        JSONObject()
+            .put("maxOptions", it.maxOptions)
+            .put("maxOptionLength", it.maxOptionLength)
+            .put("minExpirySeconds", it.minExpirySeconds)
+            .put("maxExpirySeconds", it.maxExpirySeconds)
+            .put("hideTotals", it.hideTotals)
+    })
 
 private fun JSONObject.toPostingCapabilities(): PostingCapabilities = PostingCapabilities(
     lengthRule = enumOrDefault("lengthRule", PostLengthRule.Utf16TextOnly),
@@ -334,6 +344,15 @@ private fun JSONObject.toPostingCapabilities(): PostingCapabilities = PostingCap
     mediaUpload = enumOrDefault("mediaUpload", CapabilityStatus.Unknown),
     clientCompression = optBoolean("clientCompression"),
     quoteWithMedia = optBoolean("quoteWithMedia", true),
+    poll = optJSONObject("poll")?.let {
+        PollLimits(
+            maxOptions = it.optInt("maxOptions", 4),
+            maxOptionLength = it.optInt("maxOptionLength", 50),
+            minExpirySeconds = it.optLong("minExpirySeconds", 300L),
+            maxExpirySeconds = it.optLongOrNull("maxExpirySeconds"),
+            hideTotals = it.optBoolean("hideTotals"),
+        )
+    },
 )
 
 private fun JSONObject.optIntOrNull(name: String): Int? = if (isNull(name)) null else optInt(name)
@@ -437,6 +456,16 @@ private fun AccessGrant.toJson(): JSONObject = JSONObject()
  * Mastodon sessions saved before [AccessScope.MediaUpload] existed already hold the `write` scope,
  * which covers uploads. Misskey sessions saved earlier never asked for drive access, so they keep no record.
  */
+/** Mastodon sessions saved before [AccessScope.PollVote] existed hold `write`, which covers voting. */
+private fun AccessGrant.withMastodonPollVote(protocol: Protocol): AccessGrant =
+    if (protocol == Protocol.MASTODON && AccessScope.PollVote !in known &&
+        status(AccessScope.NotificationsWrite) == AccessStatus.Granted
+    ) {
+        copy(known = known + (AccessScope.PollVote to AccessStatus.Granted))
+    } else {
+        this
+    }
+
 private fun AccessGrant.withMastodonMediaUpload(protocol: Protocol): AccessGrant =
     if (protocol == Protocol.MASTODON && AccessScope.MediaUpload !in known &&
         status(AccessScope.NotificationsWrite) == AccessStatus.Granted

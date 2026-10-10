@@ -60,7 +60,6 @@ import okhttp3.OkHttpClient
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.time.Instant
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -162,7 +161,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                 requestedAccess = setOf(AccessScope.NotificationsRead, AccessScope.NotificationsWrite, AccessScope.FollowRequests),
             )
             val url = okhttp3.HttpUrl.Companion.run { auth.browserUrl(pending).toHttpUrl() }
-            assertEquals("read:account,write:account,write:notes,read:notifications,write:notifications,write:following,read:reactions,write:reactions,read:favorites,write:favorites,read:blocks,write:blocks,read:mutes,write:mutes,write:drive", url.queryParameter("permission"))
+            assertEquals("read:account,write:account,write:notes,read:notifications,write:notifications,write:following,read:reactions,write:reactions,read:favorites,write:favorites,read:blocks,write:blocks,read:mutes,write:mutes,write:drive,write:votes", url.queryParameter("permission"))
             assertEquals("palustris://auth/misskey", url.queryParameter("callback"))
             val result = auth.complete(pending)
             assertEquals("Alice", result.account.displayName)
@@ -195,7 +194,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                 audience = Audience.Unlisted,
                 contentWarning = "Spoilers",
                 replyTo = EntityId(origin, "parent"),
-                poll = PollRequest(listOf("Yes", "No"), multiple = true, expiresAt = Instant.parse("2026-09-08T00:00:00Z")),
+                poll = PollRequest(listOf("Yes", "No"), multiple = true, expiresInSeconds = 3600L),
                 quoteOf = EntityId(origin, "quoted"),
             )
 
@@ -211,7 +210,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                 (0 until choices.length()).map(choices::getString)
             })
             assertTrue(body.getJSONObject("poll").getBoolean("multiple"))
-            assertEquals(Instant.parse("2026-09-08T00:00:00Z").toEpochMilli(), body.getJSONObject("poll").getLong("expiresAt"))
+            assertEquals(3_600_000L, body.getJSONObject("poll").getLong("expiredAfter"))
         }
     }
 
@@ -760,6 +759,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             server.enqueue(MockResponse().setBody(JSONObject().put("version", "2026.1.0").toString()))
             server.enqueue(MockResponse().setBody(JSONObject().put("policies", JSONObject()).toString()))
             server.enqueue(MockResponse().setBody("[]"))
+            server.enqueue(MockResponse().setBody("[]"))
             server.enqueue(MockResponse().setBody(JSONObject().put("version", "2026.1.0").toString()))
             val connection = Connection(server.url("/").toString().removeSuffix("/"), Protocol.MISSKEY)
 
@@ -775,6 +775,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
                 .put("maxFileSize", 50L * 1024 * 1024).toString()))
             server.enqueue(MockResponse().setBody(JSONObject().put("policies", JSONObject()
                 .put("maxFileSizeMb", 25)).toString()))
+            server.enqueue(MockResponse().setBody("[]"))
             server.enqueue(MockResponse().setBody("[]"))
             val connection = Connection(server.url("/").toString().removeSuffix("/"), Protocol.MISSKEY)
             val capabilities = MisskeyCapabilityProbe(MisskeyApi(), "token").probeCapabilities(connection)
