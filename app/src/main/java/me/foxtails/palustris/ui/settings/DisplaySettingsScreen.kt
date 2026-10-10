@@ -60,6 +60,7 @@ fun DisplaySettingsScreen(
     compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
     onCompactWideNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
     onCombineRelatedHashtags: (Boolean) -> Unit = {},
+    onAutoplayVideos: (Boolean) -> Unit = {},
 ) {
     // The page sits below the composition root, where LocalLayoutDirection is the forced direction.
     // The device direction names what turning the switch on produces, so it is the base here.
@@ -134,6 +135,12 @@ fun DisplaySettingsScreen(
             trailingContent = {
                 Switch(checked = preferences.combineRelatedHashtags, onCheckedChange = onCombineRelatedHashtags)
             },
+        )
+        ListItem(
+            modifier = Modifier.testTag("autoplay_videos"),
+            headlineContent = { Text(stringResource(R.string.settings_autoplay_videos)) },
+            supportingContent = { Text(stringResource(R.string.settings_autoplay_videos_summary)) },
+            trailingContent = { Switch(checked = preferences.autoplayVideos, onCheckedChange = onAutoplayVideos) },
         )
         ListItem(
             // The headline carries no supporting summary, because a summary needs a third string.

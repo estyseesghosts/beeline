@@ -1,3 +1,5 @@
+Video (`docs/video.md`) is in progress. Read `docs/agents/tasks/video.md`. Slice 6 is `164621d6`; slice 2 follows it. Slice 3 (feed autoplay) is next. The emulator is x86_64, so FFmpeg and WebM need an arm64 device.
+
 Related hashtags (`docs/related-tags.md`) is complete: slices 1 to 6 are committed. Read `docs/agents/tasks/related-hashtags.md` and `docs/agents/related-hashtags.md`. Slice 1 is `2b551c12`, slice 2 `c8771358`, slice 3 `0829f3d4`, slice 4 `3df65066`, slice 5 `3901c0f8`. Slice 6 (composer autocomplete) is the next commit on top of them.
 
 Release gate: the owner must review the catalog before a release (the largest groups and every `amb` hashtag). Until then treat a build as a test build. Risks: fork behavior of `any[]`, the Mastodon limit of 3 extras, and `v2/suggestions` unverified with a token.

@@ -99,6 +99,20 @@ class AppPreferencesRepositoryTest {
     }
 
     @Test
+    fun autoplayVideosDefaultsToTrueAndRoundTripsFalse() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertEquals(true, FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.autoplayVideos)
+
+        file.writeText("""{"colorScheme":"Palette"}""")
+        val legacy = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(true, legacy.autoplayVideos)
+
+        FileAppPreferencesRepository(context).update { it.copy(autoplayVideos = false) }
+        val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(false, restored.autoplayVideos)
+    }
+
+    @Test
     fun combineRelatedHashtagsDefaultsToTrueAndRoundTripsFalse() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         assertEquals(true, FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.combineRelatedHashtags)

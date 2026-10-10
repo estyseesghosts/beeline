@@ -23,6 +23,8 @@
     <string name="profile_tab_replies">Respuestas</string>
     <string name="settings_combine_related_hashtags">Combinar hashtags relacionados</string>
     <string name="settings_combine_related_hashtags_summary">Los resultados de búsqueda y de la cuadrícula de fotos incluyen hashtags similares en otras formas e idiomas.</string>
+    <string name="settings_autoplay_videos">Reproducir vídeos automáticamente</string>
+    <string name="settings_autoplay_videos_summary">Reproduce vídeos en silencio en el feed y la cuadrícula de fotos. No se reproducen en redes de datos limitados.</string>
     <string name="search_hashtag_includes">Incluye %1$s</string>
     <string name="search_hashtag_includes_more">Incluye %1$s y %2$d más</string>
     <string name="search_hashtag_show_only">Mostrar solo %1$s</string>

@@ -166,6 +166,8 @@
     <string name="composer_compress_no">Originale behalten</string>
     <string name="settings_combine_related_hashtags">Verwandte Hashtags zusammenführen</string>
     <string name="settings_combine_related_hashtags_summary">Such- und Fotoraster-Ergebnisse enthalten ähnliche Hashtags in anderen Formen und Sprachen.</string>
+    <string name="settings_autoplay_videos">Videos automatisch abspielen</string>
+    <string name="settings_autoplay_videos_summary">Spielt Videos im Feed und im Fotoraster stumm ab. Spielt nicht in getakteten Netzwerken ab.</string>
     <string name="search_hashtag_includes">Enthält %1$s</string>
     <string name="search_hashtag_includes_more">Enthält %1$s und %2$d weitere</string>
     <string name="search_hashtag_show_only">Nur %1$s zeigen</string>

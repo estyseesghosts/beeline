@@ -126,6 +126,9 @@ class SettingsViewModel @Inject constructor(
     fun setCombineRelatedHashtags(value: Boolean): Unit =
         updateApp(retry = { setCombineRelatedHashtags(value) }) { it.copy(combineRelatedHashtags = value) }
 
+    fun setAutoplayVideos(value: Boolean): Unit =
+        updateApp(retry = { setAutoplayVideos(value) }) { it.copy(autoplayVideos = value) }
+
     fun setContentWarningRules(value: ContentWarningRules): Unit =
         updateApp(retry = { setContentWarningRules(value) }) {
             it.copy(contentWarningRules = value.normalized())

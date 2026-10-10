@@ -51,6 +51,7 @@ fun SettingsHost(
     onLanguage: (me.foxtails.palustris.domain.AppLanguage) -> Unit = {},
     onTrackingCleanup: (Boolean) -> Unit = {},
     onCombineRelatedHashtags: (Boolean) -> Unit = {},
+    onAutoplayVideos: (Boolean) -> Unit = {},
     onContentWarningRules: (me.foxtails.palustris.domain.ContentWarningRules) -> Unit = {},
     onHiddenContentPresentation: (me.foxtails.palustris.domain.HiddenContentPresentation) -> Unit = {},
     postPreferences: PostPreferences = PostPreferences(),
@@ -163,6 +164,7 @@ fun SettingsHost(
                     compactWideNavigationAnchor = state.preferences.compactWideNavigationAnchor,
                     onCompactWideNavigationAnchor = onCompactWideNavigationAnchor,
                     onCombineRelatedHashtags = onCombineRelatedHashtags,
+                    onAutoplayVideos = onAutoplayVideos,
                 )
                 SettingsRoute.Language -> LanguageSettingsScreen(state.preferences.language, onLanguage)
                 SettingsRoute.Notifications -> NotificationAccountsScreen(accounts, onNotificationAccount)

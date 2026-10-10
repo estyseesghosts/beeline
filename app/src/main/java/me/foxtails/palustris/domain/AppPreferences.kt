@@ -14,6 +14,7 @@ data class AppPreferences(
     val compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
     val cleanTrackingParameters: Boolean = false,
     val combineRelatedHashtags: Boolean = true,
+    val autoplayVideos: Boolean = true,
     val contentWarningRules: ContentWarningRules = ContentWarningRules(),
     val hiddenContentPresentation: HiddenContentPresentation = HiddenContentPresentation.Placeholder,
 )

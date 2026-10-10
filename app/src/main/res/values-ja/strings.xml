@@ -109,6 +109,8 @@
     <string name="audience_followers">フォロワーのみ</string>
     <string name="settings_combine_related_hashtags">関連ハッシュタグをまとめる</string>
     <string name="settings_combine_related_hashtags_summary">検索とフォトグリッドの結果に、他の表記や言語の似たハッシュタグを含めます。</string>
+    <string name="settings_autoplay_videos">動画を自動再生</string>
+    <string name="settings_autoplay_videos_summary">フィードとフォトグリッドで動画をミュートで再生します。従量制ネットワークでは再生しません。</string>
     <string name="search_hashtag_includes">%1$s を含む</string>
     <string name="search_hashtag_includes_more">%1$s ほか %2$d 件を含む</string>
     <string name="search_hashtag_show_only">%1$s のみ表示</string>

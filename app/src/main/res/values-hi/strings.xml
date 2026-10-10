@@ -23,6 +23,8 @@
     <string name="profile_tab_replies">जवाब</string>
     <string name="settings_combine_related_hashtags">संबंधित हैशटैग मिलाएँ</string>
     <string name="settings_combine_related_hashtags_summary">खोज और फ़ोटो ग्रिड के परिणामों में अन्य रूपों और भाषाओं के समान हैशटैग शामिल होते हैं।</string>
+    <string name="settings_autoplay_videos">वीडियो अपने-आप चलाएँ</string>
+    <string name="settings_autoplay_videos_summary">फ़ीड और फ़ोटो ग्रिड में वीडियो बिना आवाज़ के चलते हैं। सीमित डेटा वाले नेटवर्क पर नहीं चलते।</string>
     <string name="search_hashtag_includes">इसमें %1$s शामिल हैं</string>
     <string name="search_hashtag_includes_more">इसमें %1$s और %2$d अन्य शामिल हैं</string>
     <string name="search_hashtag_show_only">केवल %1$s दिखाएँ</string>
