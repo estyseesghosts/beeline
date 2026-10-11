@@ -26,12 +26,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,6 +54,10 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.components.BeelineBubbleMinHeight
+import me.foxtails.palustris.ui.components.ChromeBackdrop
+import me.foxtails.palustris.ui.components.ChromeEdge
+import me.foxtails.palustris.ui.components.floatingChromeBlur
+import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.motion.TriggerSurface
 import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
@@ -317,14 +323,23 @@ private fun ComposerLayers(
     content: @Composable (topReserve: Dp) -> Unit,
 ) {
     val statusBar = if (statusBarClearance) WindowInsets.statusBars.asPaddingValues().calculateTopPadding() else 0.dp
+    // The scrolling content records itself into one backdrop. The top bubbles and the bottom bubbles each draw a
+    // blur band over their part of it.
+    val backdrop = rememberChromeBackdrop()
     Box(Modifier.fillMaxSize()) {
-        content(statusBar + TOP_BUBBLE_ROW_HEIGHT)
+        CompositionLocalProvider(LocalComposerBackdrop provides backdrop) {
+            content(statusBar + TOP_BUBBLE_ROW_HEIGHT)
+        }
         Box(
             Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                .floatingChromeBlur(backdrop = backdrop, edge = ChromeEdge.Top)
                 .then(if (statusBarClearance) Modifier.statusBarsPadding() else Modifier),
         ) { topBar() }
     }
 }
+
+/** The composer's blur source, shared by its layers. Null where the platform cannot blur. */
+internal val LocalComposerBackdrop = staticCompositionLocalOf<ChromeBackdrop?> { null }
 
 /**
  * Composer top bubbles. A back circle runs the guarded close on the left. Drafts and the

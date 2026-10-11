@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.ui.components.ChromeBackdrop
-import me.foxtails.palustris.ui.components.floatingChromeScrim
+import me.foxtails.palustris.ui.components.floatingChromeBlur
 
 internal val LargeBottomDockClearance = 88.dp
 internal val LargeSearchDockClearance = 144.dp
@@ -40,7 +40,7 @@ internal fun LargeBottomDock(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .floatingChromeScrim(backdrop = backdrop)
+            .floatingChromeBlur(backdrop = backdrop)
             // The band reaches the screen edge. The controls rest above the navigation bar.
             .padding(bottom = LocalLargeBottomInset.current)
             .padding(vertical = LargeBottomDockEdgeGap),

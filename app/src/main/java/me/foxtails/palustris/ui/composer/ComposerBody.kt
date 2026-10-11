@@ -37,6 +37,8 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.components.chromeBackdropSource
+import me.foxtails.palustris.ui.components.floatingChromeBlur
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.shell.ComposerContract
@@ -104,8 +106,9 @@ internal fun ComposerBody(
     val target = owner.quoteTarget
     val isReply = owner.isReply
     Box(Modifier.fillMaxSize().navigationBarsPadding().imePadding()) {
+        val backdrop = LocalComposerBackdrop.current
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            Modifier.fillMaxSize().chromeBackdropSource(backdrop).verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, end = 16.dp, top = topReserve, bottom = bottomReserve),
         ) {
             if (isReply && target != null) ComposerReplyTarget(target)
@@ -179,7 +182,8 @@ internal fun ComposerBody(
             }
         }
         Column(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().onSizeChanged { bubbleStackPx = it.height },
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().floatingChromeBlur(backdrop = backdrop)
+                .onSizeChanged { bubbleStackPx = it.height },
         ) {
             // The chips follow the focused text field. The warning field never shows them.
             ComposerHashtagChips(

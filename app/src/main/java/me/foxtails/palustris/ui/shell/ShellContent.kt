@@ -50,7 +50,7 @@ import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.ChromeBackdrop
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.chromeBackdropSource
-import me.foxtails.palustris.ui.components.floatingChromeScrim
+import me.foxtails.palustris.ui.components.floatingChromeBlur
 import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.large.LargeLayoutMode
 import me.foxtails.palustris.ui.large.LargeScreenShell
@@ -113,7 +113,7 @@ private fun BoxScope.CompactShellNavigation(
     ) {
         Box(
             Modifier.fillMaxWidth()
-                .floatingChromeScrim(backdrop = backdrop)
+                .floatingChromeBlur(backdrop = backdrop)
                 .windowInsetsPadding(compactGlobalNavigationPositioningInsets())
                 .padding(vertical = CompactOverlayVerticalPadding),
             contentAlignment = Alignment.Center,

@@ -22,6 +22,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
+import me.foxtails.palustris.ui.components.FloatingControlElevation
 import me.foxtails.palustris.ui.components.PillAction
 import me.foxtails.palustris.ui.motion.HapticEvent
 import me.foxtails.palustris.ui.motion.LocalPalustrisHaptics
@@ -57,7 +58,7 @@ internal fun RepostChoice(
             Surface(
                 shape = BeelineBubbleShape,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                shadowElevation = 8.dp,
+                shadowElevation = FloatingControlElevation,
             ) {
                 RepostChoiceContent(pending.selected, quoteEnabled, onRepost, onQuote, Modifier.padding(8.dp))
             }

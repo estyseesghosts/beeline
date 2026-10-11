@@ -55,6 +55,8 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.ui.Avatar
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
+import me.foxtails.palustris.ui.components.FloatingControlElevation
+import me.foxtails.palustris.ui.components.floatingControlShadow
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
 import me.foxtails.palustris.ui.motion.rememberSelectedColor
@@ -226,7 +228,7 @@ internal fun ContextualNavigationActionButton(
     FilledIconButton(
         onClick = if (action.followChoice != null) ({ choice.request(bounds) }) else action.onClick,
         enabled = action.enabled,
-        modifier = modifier.size(56.dp).triggerSurfaceSource(action.triggerSource)
+        modifier = modifier.size(56.dp).floatingControlShadow(CircleShape).triggerSurfaceSource(action.triggerSource)
             .onGloballyPositioned { bounds = it.boundsInWindow() }
             .semantics { contentDescription = action.contentDescription },
         colors = IconButtonDefaults.filledIconButtonColors(
@@ -280,7 +282,7 @@ internal fun NavigationCapsule(
         modifier = modifier,
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f),
-        shadowElevation = 6.dp,
+        shadowElevation = FloatingControlElevation,
     ) {
         val capsulePadding = if (orientation == Orientation.Horizontal) {
             Modifier.padding(horizontal = 2.dp)

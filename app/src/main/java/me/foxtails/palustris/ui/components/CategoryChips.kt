@@ -234,6 +234,7 @@ private fun DestinationChipVisibilityButton(
         color = MaterialTheme.colorScheme.surfaceContainer,
         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         border = destinationChipBorder(selected = false),
+        shadowElevation = FloatingControlElevation,
     ) {
         IconButton(
             onClick = onToggleVisibility,

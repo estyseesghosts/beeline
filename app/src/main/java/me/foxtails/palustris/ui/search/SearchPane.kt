@@ -72,6 +72,7 @@ import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.chromeBackdropSource
 import me.foxtails.palustris.ui.components.floatingChromeDock
+import me.foxtails.palustris.ui.components.floatingControlShadow
 import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
@@ -508,6 +509,7 @@ private fun SearchField(query: String, onSubmit: () -> Unit, onQueryChange: (Str
         value = query,
         onValueChange = onQueryChange,
         modifier = Modifier.fillMaxWidth()
+            .floatingControlShadow(CircleShape)
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = searchFieldDescription; this[SearchEntryModeKey] = mode },
         placeholder = { Text(stringResource(R.string.search_placeholder), maxLines = 1) },

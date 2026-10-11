@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.ui.components.BeelineBubbleMinHeight
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
+import me.foxtails.palustris.ui.components.FloatingControlElevation
 
 /** How a composer bubble reads: plain, picked by the user, or the one emphasized action. */
 internal enum class ComposerBubbleTone { Plain, Selected, Emphasized }
@@ -67,9 +68,12 @@ private fun ComposerBubble(
         )
     }
     if (onClick == null) {
-        Surface(semantic, shape = shape, color = container, contentColor = contentColor, content = body)
+        Surface(semantic, shape = shape, color = container, contentColor = contentColor, shadowElevation = FloatingControlElevation, content = body)
     } else {
-        Surface(onClick, semantic, enabled = enabled, shape = shape, color = container, contentColor = contentColor, content = body)
+        Surface(
+            onClick, semantic, enabled = enabled, shape = shape, color = container, contentColor = contentColor,
+            shadowElevation = FloatingControlElevation, content = body,
+        )
     }
 }
 

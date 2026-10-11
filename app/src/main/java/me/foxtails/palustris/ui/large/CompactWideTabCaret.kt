@@ -3,6 +3,7 @@ package me.foxtails.palustris.ui.large
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -24,6 +25,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.components.floatingControlShadow
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 
 /**
@@ -110,6 +112,7 @@ internal fun ContextualTabCaretButton(
         onClick = state.onToggle,
         modifier = modifier
             .size(NAVIGATION_CARET_SIZE_DP.dp)
+            .floatingControlShadow(CircleShape)
             .semantics { contentDescription = description }
             .testTag(COMPACT_WIDE_TAB_CARET_TAG),
         interactionSource = interactionSource,

@@ -67,6 +67,7 @@ internal fun DestinationFilterChip(entry: FilterChipEntry, modifier: Modifier = 
         },
         enabled = entry.enabled,
         border = destinationChipBorder(entry.selected),
+        elevation = floatingFilterChipElevation(),
         interactionSource = interactionSource,
         label = { Text(entry.label) },
         trailingIcon = entry.onDismiss?.let { dismiss ->

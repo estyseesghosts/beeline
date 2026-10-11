@@ -944,26 +944,41 @@ Compact docks share one rule, `Modifier.floatingChromeDock(insets, backdrop)`: t
 
 Verification: `SystemBarsPolicyTest` and `LargeBottomDockInsetTest` (JVM). Device (emulator-5554, API 37): the app window and the Compose view span the display and the large layouts draw the band to the edge with the controls above it. That AVD draws a launcher Taskbar strip with its own opaque background in both gesture and three-button navigation, so a transparent bar is not visible there. Transparent bars on a phone, the API 29 emulator and the IME double-count check on API 30 and later are not verified.
 
-## Floating chrome depth: gradient (infdev 02 S8a)
+## Floating chrome depth: shadows and blur (infdev 03 S4)
 
-`Modifier.floatingChromeScrim()` (`ui/components/FloatingChromeScrim.kt`) draws a vertical gradient behind a stack of floating
-controls: transparent 32 dp above the node, theme scrim at 0.18 alpha (light) or 0.28 (dark) at its bottom edge. It only draws,
-so it takes no pointer input, adds no semantics and changes no clearance; it follows the node it decorates, so it moves with
-the IME and leaves with the controls. Hosts: the inner box of the compact bottom overlay in `ShellContent` (before the inset
-padding, so it extends under the system bar), the Photo Grid chip row, the compact Search stack and `LargeBottomDock`.
-The pane hosts cover only their own controls, so with the pill hidden the band stops above the system bar. The alpha values
-and the double darkening where the Photo Grid band meets the pill band are not tuned on a device. The blur is S8b.
+This section replaces the gradient of infdev 02 S8a. No tint gradient exists any more (`floatingChromeScrimAlpha` and its
+constants are deleted). Two parts remain, and both only draw: they take no pointer input and add no semantics.
 
-## Floating chrome depth: blur (infdev 02 S8b)
+**Blur.** `Modifier.floatingChromeBlur(backdrop, edge)` (`ui/components/FloatingChromeBlur.kt`, was `floatingChromeScrim`) draws a
+16 dp blurred copy (12 dp before) of the content under a stack of floating controls, faded in by an alpha mask that starts 32 dp
+beyond the node and is full at its edge, so the blur never starts with a hard edge. The host records its content into one `GraphicsLayer`
+(`chromeBackdropSource`) and the band, a sibling drawn above it, draws that layer into its own layer with a `BlurEffect`.
+`rememberChromeBackdrop()` returns null on API 29 and 30 and while battery saver is on. The band then draws nothing, and the
+shadows alone separate the controls. `Modifier.floatingChromeDock(insets, backdrop)` puts the band before the inset padding.
+Hosts: the compact shell overlay, the Search pane, the Photo Grid, every `LargeBottomDock`, and the composer. The composer
+(`ComposerLayers`) records the scrolling card content once (`LocalComposerBackdrop`). The top bubble row draws a band with
+`ChromeEdge.Top` and the bottom bubble stack draws a bottom band.
 
-On API 31 and later, a band with a `ChromeBackdrop` also draws a blurred copy (12 dp) of the content under it, faded in by the
-band gradient. The host records its content into one `GraphicsLayer` (`chromeBackdropSource`) and the band, a sibling drawn above
-it, draws that layer into its own layer with a `BlurEffect` and a gradient mask. `rememberChromeBackdrop()` returns null on API 29
-and 30 and while battery saver is on, and the band then draws the gradient alone. Hosts: the compact shell overlay (source is the
-destination content), the Search pane, the Photo Grid and every `LargeBottomDock` (Home, Notifications, Profile). Platform path only, so no haze fallback was needed.
-Robolectric does not render `RenderEffect`; tests cover the alpha values and that a row under the band stays tappable. The gradient
-was lowered to 0.18 and 0.28 after a first look on the emulator. Not verified: blur strength, scroll performance on the SM-G986W,
-an API 29 emulator, and the monochrome and Pure black themes.
+**Shadow.** `FloatingControlElevation` (6 dp) in `ui/components/FloatingControlShadow.kt` is the one elevation of every control that
+floats over content. A `Surface` control passes it as `shadowElevation`; any other control calls `Modifier.floatingControlShadow(shape)`;
+chips use `floatingFilterChipElevation()` and `floatingAssistChipElevation()`. No control sets its own number. Inventory:
+
+| Control | File | Before | Now |
+| --- | --- | --- | --- |
+| Navigation pill (compact and wide) | `NavigationPresentation.kt` | `shadowElevation` 6 dp | token |
+| Contextual action button | `NavigationPresentation.kt` | none | `floatingControlShadow(CircleShape)` |
+| Inline chip caret | `CategoryChips.kt` | none | `shadowElevation` token |
+| Contextual tab caret | `CompactWideTabCaret.kt` | none | `floatingControlShadow(CircleShape)` |
+| Destination chips (Home, Search tabs, Photo Grid, Notifications, Profile) | `DestinationFilterChip.kt` | none | `floatingFilterChipElevation()` |
+| Search field | `SearchPane.kt` | none | `floatingControlShadow(CircleShape)` |
+| Composer bubbles (top bar, tools, options) | `ComposerBubbles.kt` | none | `shadowElevation` token |
+| Composer hashtag suggestions | `ComposerHashtags.kt` | none | `floatingAssistChipElevation()` |
+| Post action, hashtag, repost and follow bubbles | `PostActionBubbles.kt`, `HashtagBubble.kt`, `HashtagChipBubble.kt`, `PostRepostChoice.kt`, `FollowChoice.kt` | 8 dp | token |
+
+Tests: `FloatingChromeBlurTest` (token, blur radius, that the shadow changes no layout, that a row under the band stays tappable).
+Robolectric does not render shadows or `RenderEffect`. Device (emulator-5554, API 37, light theme, compact): no gradient shows, every control in the table
+shows one shadow, the blur band shows under the chips and under the composer bubbles. Not verified: a bright photo under the controls, Dark and Pure black
+(a shadow is hard to see on Pure black; the default is to accept that), 600 dp and 840 dp layouts, font scale 2.0, frame drops on the SM-G986W, API 29 and 30.
 
 ## Mention data (infdev 02 S9)
 

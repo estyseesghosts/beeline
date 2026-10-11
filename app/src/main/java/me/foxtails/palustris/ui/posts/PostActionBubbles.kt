@@ -49,6 +49,7 @@ import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.ui.components.FloatingControlElevation
 import me.foxtails.palustris.ui.emoji.EmojiCatalogState
 import me.foxtails.palustris.ui.emoji.EmojiChoiceGrid
 import me.foxtails.palustris.ui.emoji.EmojiPreferenceActions
@@ -263,7 +264,7 @@ private fun ReactionBubble(
             .testTag(if (expanded) "reaction_bubble_expanded" else "reaction_bubble_compact"),
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shadowElevation = 8.dp,
+        shadowElevation = FloatingControlElevation,
     ) {
         EmojiChoiceGrid(
             catalogItems = catalog.items,

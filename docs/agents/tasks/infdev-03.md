@@ -15,11 +15,11 @@ Complete `docs/03_infdev.md`: slices S1 to S6 (hashtag input, Photo Grid black t
 
 # Completed
 
-S1 `4b9871d6` hashtag input. S2 `f5e477ce` Photo Grid black tile investigation: debug-only `MediaLoadDiagnostics`. S3 edge to edge (this commit).
+S1 `4b9871d6` hashtag input. S2 `f5e477ce` Photo Grid black tile investigation: debug-only `MediaLoadDiagnostics`. S3 `15828318` edge to edge. S4 (this commit) drop shadows replace the gradient, blur 12 dp to 16 dp, composer blur and shadows.
 
 # Current slice
 
-S3 edge to edge (this commit). S4 is next.
+S4 shadows and blur (this commit), including the composer buttons (owner request). S5 is next.
 
 # Files involved
 
@@ -67,9 +67,11 @@ S3 audit of bottom-anchored controls (S3-D10). "Inset" means the bottom navigati
 Gate: tests, lint, ktlint, assembleDebug and assembleRelease passed on the rerun. The first run failed on one import order (fixed) and one timing flake in `MisskeyApiTest.cancellationCancelsTheInFlightCallAndDoesNotBecomeApiFailure` (passes alone).
 Not run: transparent bars on a phone, API 29 emulator (no system image installed), landscape phone and 600/840 dp tablets on AVDs (the 240 dpi override of emulator-5554 gave a compact-wide layout), font scale 2.0, Dark and Pure black with system light mode. The "navigation bar" strip on emulator-5554 is drawn by the launcher Taskbar.
 
+S4: the S4-D1 inventory table is in `docs/wiki/ui-and-navigation.md` ("Floating chrome depth: shadows and blur"). Token 6 dp, chosen on the emulator in the light theme. Pure black: the shadow is accepted as is (plan default). Device (emulator-5554, API 37, compact, light theme): no gradient, shadows on the pill, buttons, chips, search field and composer bubbles, blur under the chips and composer bubbles. Not run: bright photo check, dark themes, 600/840 dp, font scale 2.0, SM-G986W frame check, API 29/30.
+
 # Next
 
-S4.
+S5.
 
 # Blockers
 

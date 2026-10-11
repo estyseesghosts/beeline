@@ -31,6 +31,7 @@ import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
 import me.foxtails.palustris.domain.hashtags.HashtagSuggestionService
+import me.foxtails.palustris.ui.components.floatingAssistChipElevation
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 
 /** The hashtag under the cursor of one entry. */
@@ -102,6 +103,7 @@ internal fun ComposerHashtagChips(
             AssistChip(
                 onClick = { onInsert(suggestion.name) },
                 label = { Text(hashtagLabel(suggestion.name)) },
+                elevation = floatingAssistChipElevation(),
                 modifier = Modifier.testTag("composer_hashtag_chip_${suggestion.name}")
                     .semantics { contentDescription = description; role = Role.Button },
             )
