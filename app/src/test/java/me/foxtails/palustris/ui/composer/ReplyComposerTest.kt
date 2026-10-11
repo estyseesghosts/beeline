@@ -105,7 +105,7 @@ class ReplyComposerTest {
     @Test
     fun replyOpensComposerForTheEffectiveActionTarget() {
         openReply()
-        compose.onNodeWithText("Replying to Display Name").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Replying to Display Name").assertIsDisplayed()
     }
 
     @Test
@@ -121,7 +121,7 @@ class ReplyComposerTest {
     @Test
     fun closeButtonDismissesTheComposer() {
         openReply()
-        compose.onNodeWithText("Replying to Display Name").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Replying to Display Name").assertIsDisplayed()
         compose.onNodeWithContentDescription("Close composer").performClick()
         compose.waitForIdle()
         compose.onNodeWithTag(COMPOSER_SURFACE_TAG).assertDoesNotExist()

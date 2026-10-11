@@ -124,6 +124,8 @@ class ComposerOwnerTest {
         canQuote: Boolean = true,
         composerOpen: Boolean = false,
         overlayOpen: Boolean = false,
+        preferences: PostPreferences = PostPreferences(),
+        audiences: Set<Audience> = setOf(Audience.Public, Audience.Unlisted, Audience.Followers),
     ): ComposerOwner {
         val owner = ComposerOwner(
             mutableStateOf(ComposerEditorState()),
@@ -131,7 +133,7 @@ class ComposerOwnerTest {
         )
         owner.context = ComposerOwnerContext(
             account = account,
-            contract = contract(composer),
+            contract = contract(composer, audiences = audiences, preferences = preferences),
             canReply = canReply,
             canQuote = canQuote,
             composerOpen = composerOpen,
@@ -149,6 +151,33 @@ class ComposerOwnerTest {
         assertTrue(owner.navigation is ComposerNavigation.Reply)
         assertTrue(owner.isReply)
         assertEquals("orig", (owner.quoteTarget?.post?.actionTargetId ?: owner.quoteTarget?.post?.id)?.value)
+    }
+
+    @Test
+    fun replyAndQuoteKeepAPublicTargetPublicByDefault() {
+        val reply = owner()
+        reply.requestReply(OwnedPost(accountId, post("a", audience = Audience.Public)))
+        assertEquals(Audience.Public, reply.editor.audience)
+
+        val quote = owner()
+        quote.requestQuote(OwnedPost(accountId, post("q", audience = Audience.Public)))
+        assertEquals(Audience.Public, quote.editor.audience)
+    }
+
+    @Test
+    fun repliesUnlistedNarrowsAPublicTargetOnly() {
+        val preferences = PostPreferences(repliesUnlisted = true)
+        val publicReply = owner(preferences = preferences)
+        publicReply.requestReply(OwnedPost(accountId, post("a", audience = Audience.Public)))
+        assertEquals(Audience.Unlisted, publicReply.editor.audience)
+
+        val followersReply = owner(preferences = preferences)
+        followersReply.requestReply(OwnedPost(accountId, post("b", audience = Audience.Followers)))
+        assertEquals(Audience.Followers, followersReply.editor.audience)
+
+        val directQuote = owner(preferences = preferences, audiences = Audience.entries.toSet())
+        directQuote.requestQuote(OwnedPost(accountId, post("c", audience = Audience.Direct)))
+        assertEquals(Audience.Direct, directQuote.editor.audience)
     }
 
     @Test

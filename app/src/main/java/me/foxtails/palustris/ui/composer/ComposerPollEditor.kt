@@ -13,8 +13,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,6 +28,7 @@ import me.foxtails.palustris.domain.PollLimits
 import me.foxtails.palustris.domain.PollProblem
 import me.foxtails.palustris.domain.PollRequest
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.components.BeelineNestedSurfaceShape
 
 /** How long a new poll runs when the author picks nothing: one day, held inside the server's bounds. */
 private const val DEFAULT_EXPIRY_SECONDS = 86_400L
@@ -71,7 +72,11 @@ internal fun ComposerPollEditor(
     modifier: Modifier = Modifier,
     removable: Boolean = true,
 ) {
-    OutlinedCard(modifier.fillMaxWidth().padding(vertical = 8.dp).testTag("composer_poll"), shape = MaterialTheme.shapes.large) {
+    Surface(
+        modifier.fillMaxWidth().testTag("composer_poll"),
+        shape = BeelineNestedSurfaceShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             poll.choices.forEachIndexed { index, choice ->
                 val remaining = limits.maxOptionLength - choice.length

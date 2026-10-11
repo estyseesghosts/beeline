@@ -10,13 +10,15 @@ object PostingVisibilityPolicy {
      * target to Unlisted and never widens another audience.
      */
     fun forReply(preferences: PostPreferences, capabilities: ServerCapabilities, context: Audience? = null): Audience {
-        val requested = when {
-            context == null -> if (preferences.repliesUnlisted) Audience.Unlisted else preferences.defaultAudience
-            context == Audience.Public && preferences.repliesUnlisted -> Audience.Unlisted
-            else -> context
-        }
+        val requested = context?.let { narrowedByPreference(it, preferences) } ?: withoutTarget(preferences)
         return supportedOrThrow(requested, capabilities)
     }
+
+    private fun narrowedByPreference(target: Audience, preferences: PostPreferences): Audience =
+        if (target == Audience.Public && preferences.repliesUnlisted) Audience.Unlisted else target
+
+    private fun withoutTarget(preferences: PostPreferences): Audience =
+        if (preferences.repliesUnlisted) Audience.Unlisted else preferences.defaultAudience
 
     fun validateExplicit(audience: Audience, capabilities: ServerCapabilities): Audience =
         supportedOrThrow(audience, capabilities)

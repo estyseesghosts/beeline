@@ -109,7 +109,7 @@ class ShellCharacterizationTest {
         compose.waitForIdle()
 
         compose.onNodeWithContentDescription("Reply").performClick()
-        compose.onNodeWithText("Replying to Fixture reply-owner").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Replying to Fixture reply-owner").assertIsDisplayed()
         compose.onNodeWithContentDescription("Post text").performTextInput("A reply")
         compose.onNodeWithTag(COMPOSER_POST_TAG).performClick()
         compose.waitUntil(timeoutMillis = 5_000) { request != null }

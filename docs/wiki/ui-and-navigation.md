@@ -409,14 +409,14 @@ also shows the full-screen surface. Expanded windows (tablet) show a floating
 card. The card is at most 600 dp wide and 85% of the window height. An outside
 tap runs the guarded close. Back runs the same guarded close.
 
-The top bar holds Close on the left. It holds Drafts and a filled Post button
-on the right. While publishing, the Post button shows a spinner with the posted
-entry count. The shell chooses placement. It passes a card flag to the composer
-overlay. The composer owns the surface assembly.
+The top bubbles float over the content. A back circle on the left runs the guarded close. A Drafts pill and the
+emphasized Post pill sit on the right. While publishing, the Post pill shows a spinner with the posted entry count
+or the video percentage. The shell chooses placement. It passes a card flag to the composer overlay. The composer
+owns the surface assembly.
 
 Drafts opens the draft list inside the composer. Opening a draft saves the
 current editor first. Deleting a draft refreshes the list. The drafts top bar
-holds a back button. It returns to the editor.
+holds a back circle. It returns to the editor. It shows neither Drafts nor Post.
 
 Closing a dirty composer saves the draft and closes the overlay. Back, an
 outside tap, and Close all run this rule. A clean close saves nothing. A failed
@@ -431,17 +431,31 @@ Sources: `ui/composer/ComposerSurface.kt`, `ui/composer/ComposerOverlayHost.kt`,
 
 Status: source verified and test verified. Device verified on a phone emulator only.
 
-Each entry of the thread has an avatar, an optional content warning field, and a text
-field. The composer opens with one entry. The toolbar sits at the bottom. It holds a
-photo button, an emoji button, a content warning toggle, and the characters remaining
-for the focused entry. The photo button stays disabled until the composer can attach
-images. The old Local draft header, the publishing enabled text, and the bottom Publish
-button are gone. The Post button in the top bar is the only way to publish.
+Status: source verified and test verified. Device verified on a phone emulator only. The redesign follows
+`docs/composer.md`.
 
-The audience row sits above the toolbar. It shows the current audience. A tap opens a
-menu with one line of description for each audience that the server offers. The row
-shows only while the first entry has focus, because the first entry decides the audience
-of the whole thread. The row hides when the server reports no audiences.
+The screen has two layers. The scroll layer holds the cards. It reserves the status bar and the top bubble row at
+its top. It reserves the full bottom bubble stack at its bottom, and the keyboard through the window insets. A long
+post scrolls under the bubbles, and the last card can scroll above them. The bubble layer never scrolls. Bubbles are
+opaque. They use `BeelineBubbleShape`, `BeelineBubbleMinHeight`, and the theme bubble colors (`ComposerBubbles.kt`).
+
+Each entry of the thread is one card. A card starts as one line, shows the placeholder, and grows with its content.
+The card uses `BeelineCardShape` on `surfaceContainer`. Inner surfaces sit 8 dp inside the card on
+`surfaceContainerHigh`. They use `BeelineNestedSurfaceShape`, which is the card radius minus that inset. Inside a
+card, the order is content warning, text, images, poll, and the quoted post. The page scrolls. The text field does
+not. Growth animates with the `gentleSize` motion token, and reduced motion turns it off.
+
+The avatar hangs beside the card. It is on the left for the first card of a new post or a quote. It is on the right
+for every later entry and for a reply. A thread line runs from each avatar to the next card.
+
+Row 1 of the bottom bubbles acts on the focused card. Photo, poll, and emoji circles sit on the left. A content
+warning pill, the characters remaining, and an add circle sit on the right. The server decides which bubbles exist.
+An unsupported bubble is absent. It is not disabled. Photo, poll, and add are absent while editing a post.
+
+Row 2 acts on the thread. It shows only while the first card has focus and the user is not editing. It holds the
+audience pill, Local only, the quote policy, and Schedule. Each pill shows only when the server offers it. The row
+scrolls sideways when the pills do not fit. The audience pill opens a menu with one line of description for each
+audience. It is disabled when the server offers one audience.
 
 | Audience | Label |
 |---|---|
@@ -480,22 +494,35 @@ and while a publish runs. If the focused entry has a content warning, a dialog a
 "Use the same content warning?". Yes copies the warning into the new entry. No leaves the
 new entry without one. Dismissing the dialog adds nothing.
 
-Each entry after the first has a remove button. The first entry stays because it carries
-the audience and the reply or quote target. Removing an entry keeps the other entries and
-their images. A line joins the avatars of consecutive entries. Each entry has its own
-content warning, text, and images. The thread publishes in order, and every entry after
+Each entry after the first has a small remove circle on the top corner of its card, on the side away from the
+avatar. The first entry stays because it carries the audience and the reply or quote target. Removing an entry
+keeps the other entries and their images. Each entry has its own content warning, text, and images. The thread publishes in order, and every entry after
 the first replies to the entry before it.
 
 Sources: `ui/composer/ComposerBody.kt`, `ComposerEntryRow.kt`, `ComposerIcons.kt`,
 `ComposerOwner.addEntryAfter` and `removeEntry`, `ComposerBodyTest`.
 
-Sources: `ui/composer/ComposerBody.kt`, `ComposerEntryRow.kt`, `ComposerAudienceRow.kt`,
+### Reply, quote, and default audience
+
+A reply shows the post that the user answers as a read-only card above the reply card. A short line joins them. The
+reply card has its avatar on the right. A quote shows the quoted post as a smaller card inside the first card, below
+the text, images, and poll. It shows four lines of text at most. Neither has a remove control. The user cancels the
+post to drop the target. The two quote notices show as small text below the first card.
+
+A reply or quote takes the audience of the post it answers (`PostingVisibilityPolicy.forReply`). The setting
+"Always make replies unlisted" is off by default. When it is on, it narrows a public target to Unlisted. It never
+widens a followers-only or direct target. A new post uses the default audience. A choice in the audience pill is
+never overwritten. Later entries use the audience of the first entry.
+
+Sources: `ui/composer/ComposerBody.kt`, `ComposerEntryRow.kt`, `ComposerTargetCards.kt`, `ComposerBubbles.kt`,
+`ComposerOptionsRow.kt`, `ComposerAudienceLabels.kt`, `domain/PostingVisibilityPolicy.kt`,
+`PostingVisibilityPolicyTest`, `ComposerOwnerTest`,
 `ComposerEntryRules.kt`, `domain/PostLimits.kt`, `ui/emoji/EmojiPicker.kt`
 (`ComposerField`), `ComposerBodyTest`, `ComposerEntryRulesTest`, `ReplyComposerTest`.
 
 ### Media in the composer
 
-The toolbar photo button opens the system photo picker (one image when one slot is free, several
+The photo bubble of row 1 opens the system photo picker (one image when one slot is free, several
 otherwise). The manifest declares the Google Play services photo picker backport, so Android 10 and
 later share one picker. Each picked file is copied into `DraftMediaStore` (encrypted, under the
 draft's media directory) before the picker's access ends. A file that is not a decodable image, is
@@ -508,8 +535,10 @@ publish runs, and on Mastodon-compatible servers when the post quotes another po
 (`PostingCapabilities.quoteWithMedia` is false there). A token that cannot upload shows the button as
 available; tapping it saves the editor and starts the sign-in-again flow.
 
-Each entry shows a thumbnail strip. A thumbnail has a remove button and an ALT badge, filled once the
-image has a description. Tapping a thumbnail opens the description dialog with the image, the text
+Each card shows its images as one row of tiles that scrolls sideways inside the card. The row has one fixed height
+of 160 dp. Each tile width follows the image aspect ratio between 96 dp and 240 dp (`composerTileWidth`). A tile fills
+its frame by cropping and uses the nested corner radius. The gap between tiles is the card inset. A tile has a remove
+circle, an ALT badge filled once the image has a description, and a play badge on video. Tapping a tile opens the description dialog with the image, the text
 field, and the characters remaining against `maxAltTextLength`. Save stays disabled past the limit,
 and a blank description clears it. While the keyboard is up the dialog hides the image so Save stays
 in view. An entry with only images can be posted.

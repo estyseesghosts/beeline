@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
@@ -16,7 +17,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,11 +44,12 @@ import me.foxtails.palustris.domain.LocalOnlyRoute
 import me.foxtails.palustris.domain.PostOptions
 import me.foxtails.palustris.domain.PostingCapabilities
 import me.foxtails.palustris.domain.QuoteApprovalPolicy
+import me.foxtails.palustris.ui.AppIcons
 
 /**
- * The choices that belong to the whole thread: keep it on the author's server, who may quote it, and when to
- * send it. Each chip shows only when the server offers it. The row holds no state beyond its open picker; the
- * editor owns [options].
+ * Row 2 of the composer bubbles: the choices that belong to the whole thread. They are its audience, keeping it
+ * on the author's server, who may quote it, and when to send it. Each pill shows only when the server offers it.
+ * The row holds no state beyond its open menus and picker; the editor owns [options] and [audience].
  */
 @Composable
 internal fun ComposerOptionsRow(
@@ -59,34 +61,72 @@ internal fun ComposerOptionsRow(
     onQuotePolicy: (QuoteApprovalPolicy?) -> Unit,
     onScheduledAt: (Long?) -> Unit,
     modifier: Modifier = Modifier,
+    audienceOptions: List<Audience> = emptyList(),
+    onAudience: (Audience) -> Unit = {},
     nowMillis: () -> Long = System::currentTimeMillis,
 ) {
     val localOnlyShown = posting.localOnly != LocalOnlyRoute.None
     val scheduling = posting.scheduling
-    if (!localOnlyShown && !posting.quoteApprovalPolicy && scheduling == null) return
+    if (audienceOptions.isEmpty() && !localOnlyShown && !posting.quoteApprovalPolicy && scheduling == null) return
+    var audienceOpen by remember { mutableStateOf(false) }
     var policyOpen by remember { mutableStateOf(false) }
     var pickerOpen by remember { mutableStateOf(false) }
     Row(
         modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        if (audienceOptions.isNotEmpty()) {
+            Box {
+                val label = stringResource(audience.labelRes)
+                ComposerPillBubble(
+                    label = label,
+                    description = stringResource(R.string.composer_audience_row, label),
+                    leadingIcon = AppIcons.Globe,
+                    enabled = audienceOptions.size > 1,
+                    onClick = { audienceOpen = true },
+                    modifier = Modifier.testTag("composer_option_audience"),
+                )
+                DropdownMenu(expanded = audienceOpen, onDismissRequest = { audienceOpen = false }) {
+                    audienceOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text(stringResource(option.labelRes), style = MaterialTheme.typography.bodyLarge)
+                                    Text(
+                                        stringResource(option.descriptionRes),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            },
+                            trailingIcon = { if (option == audience) Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                            onClick = {
+                                audienceOpen = false
+                                onAudience(option)
+                            },
+                        )
+                    }
+                }
+            }
+        }
         if (localOnlyShown) {
             // Pleroma keeps a post on the server through the `local` visibility, which only a public post has.
             val enabled = posting.localOnly != LocalOnlyRoute.PleromaVisibility || audience == Audience.Public
-            FilterChip(
-                selected = options.localOnly && enabled,
-                onClick = { onLocalOnly(!options.localOnly) },
+            ComposerPillBubble(
+                label = stringResource(R.string.composer_option_local_only),
+                leadingIcon = AppIcons.Person,
+                tone = if (options.localOnly && enabled) ComposerBubbleTone.Selected else ComposerBubbleTone.Plain,
                 enabled = enabled,
-                label = { Text(stringResource(R.string.composer_option_local_only)) },
+                onClick = { onLocalOnly(!options.localOnly) },
                 modifier = Modifier.testTag("composer_option_local_only"),
             )
         }
         if (posting.quoteApprovalPolicy) {
             Box {
-                FilterChip(
-                    selected = options.quotePolicy != null,
+                ComposerPillBubble(
+                    label = stringResource(R.string.composer_option_quote_policy, stringResource(options.quotePolicy.label())),
+                    tone = if (options.quotePolicy != null) ComposerBubbleTone.Selected else ComposerBubbleTone.Plain,
                     onClick = { policyOpen = true },
-                    label = { Text(stringResource(R.string.composer_option_quote_policy, stringResource(options.quotePolicy.label()))) },
                     modifier = Modifier.testTag("composer_option_quote_policy"),
                 )
                 DropdownMenu(expanded = policyOpen, onDismissRequest = { policyOpen = false }) {
@@ -104,20 +144,18 @@ internal fun ComposerOptionsRow(
         }
         if (scheduling != null) {
             val scheduled = options.scheduledAtEpochMillis
-            FilterChip(
-                selected = scheduled != null,
+            val context = LocalContext.current
+            ComposerPillBubble(
+                label = if (scheduled == null) {
+                    stringResource(R.string.composer_option_schedule)
+                } else {
+                    DateUtils.formatDateTime(context, scheduled, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_ABBREV_ALL)
+                },
+                leadingIcon = ComposerIcons.Calendar,
+                tone = if (scheduled != null) ComposerBubbleTone.Selected else ComposerBubbleTone.Plain,
                 // A thread cannot be scheduled, because its later posts reply to a post that does not exist yet.
                 enabled = entryCount == 1,
                 onClick = { pickerOpen = true },
-                label = {
-                    Text(
-                        if (scheduled == null) {
-                            stringResource(R.string.composer_option_schedule)
-                        } else {
-                            stringResource(R.string.composer_option_scheduled_for, DateUtils.formatDateTime(LocalContext.current, scheduled, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_ABBREV_ALL))
-                        },
-                    )
-                },
                 modifier = Modifier.testTag("composer_option_schedule"),
             )
             if (pickerOpen) {

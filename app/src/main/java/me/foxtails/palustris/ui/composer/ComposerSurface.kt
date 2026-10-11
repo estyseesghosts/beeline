@@ -4,24 +4,23 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -51,7 +51,7 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.ui.AppIcons
-import me.foxtails.palustris.ui.composer.PublishNotice
+import me.foxtails.palustris.ui.components.BeelineBubbleMinHeight
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.motion.TriggerSurface
 import me.foxtails.palustris.ui.motion.TriggerSurfaceSource
@@ -66,6 +66,9 @@ internal const val COMPOSER_SCRIM_TAG = "composer_scrim"
 
 /** Test tag of the top-bar Post button. */
 internal const val COMPOSER_POST_TAG = "composer_post"
+
+/** Test tag of the back bubble that runs the guarded close. */
+internal const val COMPOSER_BACK_TAG = "composer_back"
 
 /** Width cap of the floating composer card on expanded windows. */
 private val COMPOSER_CARD_MAX_WIDTH = 600.dp
@@ -167,24 +170,26 @@ internal fun ComposerSurfaceHost(
                 )
             }
         },
-    ) {
+    ) { topReserve ->
         if (draftsOpen) {
-            DraftsScreen(
-                drafts = owner.drafts,
-                onEdit = { draft -> owner.save { owner.requestDraft(draft); draftsOpen = false } },
-                onDelete = owner::deleteDraft,
-                scheduled = contract.limits.posting.scheduling?.let { scheduling ->
-                    ScheduledTab(
-                        items = owner.scheduled,
-                        loading = owner.scheduledLoading,
-                        error = owner.scheduledError,
-                        minLeadSeconds = scheduling.minLeadSeconds,
-                        onRefresh = owner::refreshScheduled,
-                        onCancel = owner::cancelScheduled,
-                        onReschedule = owner::reschedule,
-                    )
-                },
-            )
+            Box(Modifier.padding(top = topReserve)) {
+                DraftsScreen(
+                    drafts = owner.drafts,
+                    onEdit = { draft -> owner.save { owner.requestDraft(draft); draftsOpen = false } },
+                    onDelete = owner::deleteDraft,
+                    scheduled = contract.limits.posting.scheduling?.let { scheduling ->
+                        ScheduledTab(
+                            items = owner.scheduled,
+                            loading = owner.scheduledLoading,
+                            error = owner.scheduledError,
+                            minLeadSeconds = scheduling.minLeadSeconds,
+                            onRefresh = owner::refreshScheduled,
+                            onCancel = owner::cancelScheduled,
+                            onReschedule = owner::reschedule,
+                        )
+                    },
+                )
+            }
         } else {
             ComposerBody(
                 owner = owner,
@@ -193,6 +198,7 @@ internal fun ComposerSurfaceHost(
                 onRequestEmoji = onRequestEmoji,
                 pendingEmojiInsertion = pendingEmojiInsertion,
                 onEmojiInsertionApplied = onEmojiInsertionApplied,
+                topReserve = topReserve,
             )
         }
     }
@@ -229,7 +235,7 @@ internal fun ComposerSurface(
     onDismiss: () -> Unit,
     triggerSource: TriggerSurfaceSource? = null,
     topBar: @Composable (requestClose: () -> Unit) -> Unit,
-    content: @Composable () -> Unit,
+    content: @Composable (topReserve: Dp) -> Unit,
 ) {
     val surface = rememberTriggerSurfaceState()
     val dismissLabel = stringResource(R.string.composer_close)
@@ -266,17 +272,14 @@ internal fun ComposerSurface(
                             onClosed = onDismiss,
                             returnFocus = { triggerSource?.restoreFocus() },
                         ) { requestClose ->
-                            Column(Modifier.fillMaxWidth()) {
-                                topBar(requestClose)
-                                content()
-                            }
+                            ComposerLayers(topBar = { topBar(requestClose) }, statusBarClearance = false, content = content)
                         }
                     }
                 }
             }
         } else {
             Surface(
-                modifier = Modifier.fillMaxSize().statusBarsPadding().testTag(COMPOSER_SURFACE_TAG),
+                modifier = Modifier.fillMaxSize().testTag(COMPOSER_SURFACE_TAG),
                 color = MaterialTheme.colorScheme.surface,
             ) {
                 TriggerSurface(
@@ -286,19 +289,41 @@ internal fun ComposerSurface(
                     onClosed = onDismiss,
                     returnFocus = { triggerSource?.restoreFocus() },
                 ) { requestClose ->
-                    Column(Modifier.fillMaxSize()) {
-                        topBar(requestClose)
-                        content()
-                    }
+                    ComposerLayers(topBar = { topBar(requestClose) }, statusBarClearance = true, content = content)
                 }
             }
         }
     }
 }
 
+/** Height of the row of top bubbles: one bubble and its margins. */
+private val TOP_BUBBLE_ROW_HEIGHT = BeelineBubbleMinHeight + 16.dp
+
 /**
- * Composer top bar. Close sits on the left. Drafts and the filled Post button sit on the
- * right. While publishing the Post button shows a spinner with the posted entry count.
+ * The two layers of the composer. The content layer scrolls and reserves the top bubble row, below
+ * the status bar when [statusBarClearance] is set. The bubble layer floats over it and never
+ * scrolls. The content lambda receives the clearance it must keep at its top.
+ */
+@Composable
+private fun ComposerLayers(
+    topBar: @Composable () -> Unit,
+    statusBarClearance: Boolean,
+    content: @Composable (topReserve: Dp) -> Unit,
+) {
+    val statusBar = if (statusBarClearance) WindowInsets.statusBars.asPaddingValues().calculateTopPadding() else 0.dp
+    Box(Modifier.fillMaxSize()) {
+        content(statusBar + TOP_BUBBLE_ROW_HEIGHT)
+        Box(
+            Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                .then(if (statusBarClearance) Modifier.statusBarsPadding() else Modifier),
+        ) { topBar() }
+    }
+}
+
+/**
+ * Composer top bubbles. A back circle runs the guarded close on the left. Drafts and the
+ * emphasized Post pill sit on the right. While publishing the Post pill shows a spinner with the
+ * posted entry count.
  */
 @Composable
 internal fun ComposerTopBar(
@@ -314,43 +339,49 @@ internal fun ComposerTopBar(
     editing: Boolean = false,
     scheduling: Boolean = false,
 ) {
+    val closeDescription = stringResource(R.string.composer_close)
+    val label = when {
+        publishing && mediaProgress != null -> stringResource(R.string.composer_video_converting, (mediaProgress * 100).toInt())
+        publishing && total > 0 -> stringResource(R.string.composer_publish_progress, posted, total)
+        publishing -> ""
+        editing -> stringResource(R.string.composer_save)
+        scheduling -> stringResource(R.string.composer_schedule_action)
+        else -> stringResource(R.string.composer_publish)
+    }
     Row(
-        Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onClose) { Icon(AppIcons.Close, stringResource(R.string.composer_close)) }
+        ComposerCircleBubble(AppIcons.Back, closeDescription, onClose, Modifier.testTag(COMPOSER_BACK_TAG))
         Spacer(Modifier.weight(1f))
         if (!editing) {
-            TextButton(enabled = draftsEnabled, onClick = onOpenDrafts) {
-                Text(stringResource(R.string.drafts_page_title))
-            }
-            Spacer(Modifier.width(8.dp))
+            ComposerPillBubble(stringResource(R.string.drafts_page_title), onOpenDrafts, enabled = draftsEnabled)
         }
-        Button(onClick = onPublish, enabled = postEnabled, modifier = Modifier.testTag(COMPOSER_POST_TAG)) {
-            if (publishing) {
-                CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                if (mediaProgress != null) {
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.composer_video_converting, (mediaProgress * 100).toInt()))
-                } else if (total > 0) {
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.composer_publish_progress, posted, total))
-                }
+        ComposerPillBubble(
+            label = label,
+            onClick = onPublish,
+            enabled = postEnabled,
+            tone = ComposerBubbleTone.Emphasized,
+            modifier = Modifier.testTag(COMPOSER_POST_TAG),
+            leading = if (publishing) {
+                { CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) }
             } else {
-                Text(stringResource(if (editing) R.string.composer_save else if (scheduling) R.string.composer_schedule_action else R.string.composer_publish))
-            }
-        }
+                null
+            },
+        )
     }
 }
 
-/** Top bar of the drafts browser inside the composer. Back returns to the editor. */
+/** Top bubble of the drafts browser inside the composer. Back returns to the editor. */
 @Composable
 internal fun ComposerDraftsTopBar(onBack: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onBack) { Icon(AppIcons.Back, stringResource(R.string.app_back)) }
+        ComposerCircleBubble(AppIcons.Back, stringResource(R.string.app_back), onBack)
         Text(stringResource(R.string.drafts_page_title), style = MaterialTheme.typography.titleLarge)
     }
 }

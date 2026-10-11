@@ -1,58 +1,51 @@
 package me.foxtails.palustris.ui.composer
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
-import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostLimits
-import me.foxtails.palustris.domain.QuoteApproval
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.emoji.ComposerField
-import me.foxtails.palustris.ui.emoji.InlineEmojiText
-import me.foxtails.palustris.ui.emoji.PostText
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.shell.ComposerContract
 
 /**
- * The composer body: the thread entries, the audience row, and the toolbar. The toolbar and the
- * counter act on the focused entry. The audience row shows only while the first entry has focus,
- * because the first entry decides the audience of every entry.
+ * The composer body in two layers. The scroll layer holds the cards. It reserves [topReserve] at its top and the
+ * height of the bottom bubbles at its bottom, so a long post scrolls under the bubbles and every card can still
+ * be reached. The bubble layer floats over it: row 1 acts on the focused card, and row 2 acts on the thread and
+ * shows only while the first card has focus, because the first card decides the audience and options of all.
  */
 @Composable
 internal fun ComposerBody(
@@ -62,6 +55,7 @@ internal fun ComposerBody(
     onRequestEmoji: (ComposerField) -> Unit,
     pendingEmojiInsertion: Pair<EmojiChoice, ComposerField>?,
     onEmojiInsertionApplied: () -> Unit,
+    topReserve: Dp = 64.dp,
 ) {
     val editor = owner.editor
     val editing = editor.editing
@@ -105,30 +99,19 @@ internal fun ComposerBody(
             },
         )
     }
-    Column(Modifier.fillMaxSize().navigationBarsPadding().imePadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-            owner.quoteTarget?.let { target ->
-                ComposerTargetCard(target, owner.isReply, owner::removeTargets)
-                if (!owner.isReply && !contract.quoteConfirmed) {
-                    Text(
-                        stringResource(R.string.quote_unconfirmed_notice),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp).testTag("composer_quote_unconfirmed"),
-                    )
-                }
-                if (!owner.isReply && target.post.quoteApproval == QuoteApproval.Manual) {
-                    Text(
-                        stringResource(R.string.quote_manual_notice),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp).testTag("composer_quote_manual"),
-                    )
-                }
-                Spacer(Modifier.height(12.dp))
-            }
+    var bubbleStackPx by remember { mutableIntStateOf(0) }
+    val bottomReserve = with(LocalDensity.current) { bubbleStackPx.toDp() } + 8.dp
+    val target = owner.quoteTarget
+    val isReply = owner.isReply
+    Box(Modifier.fillMaxSize().navigationBarsPadding().imePadding()) {
+        Column(
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = topReserve, bottom = bottomReserve),
+        ) {
+            if (isReply && target != null) ComposerReplyTarget(target)
             editor.entries.forEachIndexed { index, entry ->
                 key(entry.id) {
+                    val quote = target?.takeIf { index == 0 && !isReply }
                     ComposerEntryRow(
                         entry = entry,
                         layout = ComposerEntryLayout(index, last = index == editor.entries.lastIndex, focusRequested = focusRequest == entry.id),
@@ -148,6 +131,12 @@ internal fun ComposerBody(
                             onPollChange = { owner.setPoll(entry.id, it) },
                             pollRemovable = editing == null,
                             hashtags = hashtags,
+                        ),
+                        // The first card of a reply has its avatar on the right, under the post it answers.
+                        decor = ComposerEntryDecor(
+                            avatarOnRight = index > 0 || isReply,
+                            quoted = quote?.let { { ComposerQuotedCard(it) } },
+                            belowCard = quote?.let { { ComposerQuoteNotices(it, contract.quoteConfirmed) } },
                         ),
                     )
                 }
@@ -189,85 +178,61 @@ internal fun ComposerBody(
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
             }
         }
-        if (editing == null && focusedEntry.id == editor.first.id && audienceOptions.isNotEmpty()) {
-            HorizontalDivider()
-            ComposerAudienceRow(editor.audience, audienceOptions, owner::setAudience)
-        }
-        if (editing == null) {
-            ComposerOptionsRow(
-                options = editor.options,
-                audience = editor.audience,
-                posting = contract.limits.posting,
-                entryCount = editor.entries.size,
-                onLocalOnly = owner::setLocalOnly,
-                onQuotePolicy = owner::setQuotePolicy,
-                onScheduledAt = owner::setScheduledAt,
+        Column(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().onSizeChanged { bubbleStackPx = it.height },
+        ) {
+            // The chips follow the focused text field. The warning field never shows them.
+            ComposerHashtagChips(
+                fragment = hashtags.active?.takeIf { it.entryId == focusedEntry.id && !warningFocused }?.token?.fragment,
+                suggestions = contract.hashtagSuggestions,
+                onInsert = hashtags::insert,
             )
-        }
-        HorizontalDivider()
-        // The chips follow the focused text field. The warning field never shows them.
-        ComposerHashtagChips(
-            fragment = hashtags.active?.takeIf { it.entryId == focusedEntry.id && !warningFocused }?.token?.fragment,
-            suggestions = contract.hashtagSuggestions,
-            onInsert = hashtags::insert,
-        )
-        ComposerToolbar(
-            entry = focusedEntry,
-            limits = contract.limits,
-            editing = editing != null,
-            photo = media.photoState(focusedEntry),
-            onPhoto = { media.onPhoto(focusedEntry) },
-            pollEnabled = contract.limits.posting.poll != null && focusedEntry.media.isEmpty() && !contract.publishing && !owner.submitting,
-            onPoll = {
-                val limits = contract.limits.posting.poll
-                if (focusedEntry.poll != null) owner.setPoll(focusedEntry.id, null) else if (limits != null) owner.setPoll(focusedEntry.id, newPoll(limits))
-            },
-            onEmoji = {
-                val kind = if (warningFocused) ComposerField.Kind.Warning else ComposerField.Kind.Text
-                onRequestEmoji(ComposerField(kind, focusedEntry.id))
-            },
-            addEnabled = focusedEntry.hasPostableContent() && !contract.publishing && !owner.submitting,
-            onAddEntry = {
-                if (focusedEntry.effectiveWarning.isNotBlank()) warningPrompt = focusedEntry.id else addAfter(focusedEntry.id, copyWarning = false)
-            },
-            onToggleWarning = {
-                owner.setEntryWarningEnabled(focusedEntry.id, !focusedEntry.warningEnabled)
-                if (focusedEntry.warningEnabled) focused = ComposerField(ComposerField.Kind.Text, focusedEntry.id)
-            },
-        )
-    }
-}
-
-/** The target of a reply or quote with a remove button. It stays on the first entry. */
-@Composable
-private fun ComposerTargetCard(target: OwnedPost, isReply: Boolean, onRemove: () -> Unit) {
-    OutlinedCard(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
-        Column(Modifier.padding(12.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                InlineEmojiText(
-                    text = if (isReply) {
-                        stringResource(R.string.composer_replying_to, target.post.author.displayName)
-                    } else {
-                        stringResource(R.string.composer_quoting, target.post.author.displayName)
-                    },
-                    emoji = target.post.author.emoji,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.weight(1f),
+            ComposerToolbar(
+                entry = focusedEntry,
+                limits = contract.limits,
+                editing = editing != null,
+                photo = media.photoState(focusedEntry),
+                onPhoto = { media.onPhoto(focusedEntry) },
+                pollEnabled = contract.limits.posting.poll != null && focusedEntry.media.isEmpty() && !contract.publishing && !owner.submitting,
+                onPoll = {
+                    val limits = contract.limits.posting.poll
+                    if (focusedEntry.poll != null) owner.setPoll(focusedEntry.id, null) else if (limits != null) owner.setPoll(focusedEntry.id, newPoll(limits))
+                },
+                onEmoji = {
+                    val kind = if (warningFocused) ComposerField.Kind.Warning else ComposerField.Kind.Text
+                    onRequestEmoji(ComposerField(kind, focusedEntry.id))
+                },
+                addEnabled = focusedEntry.hasPostableContent() && !contract.publishing && !owner.submitting,
+                onAddEntry = {
+                    if (focusedEntry.effectiveWarning.isNotBlank()) warningPrompt = focusedEntry.id else addAfter(focusedEntry.id, copyWarning = false)
+                },
+                onToggleWarning = {
+                    owner.setEntryWarningEnabled(focusedEntry.id, !focusedEntry.warningEnabled)
+                    if (focusedEntry.warningEnabled) focused = ComposerField(ComposerField.Kind.Text, focusedEntry.id)
+                },
+            )
+            if (editing == null && focusedEntry.id == editor.first.id) {
+                ComposerOptionsRow(
+                    options = editor.options,
+                    audience = editor.audience,
+                    posting = contract.limits.posting,
+                    entryCount = editor.entries.size,
+                    onLocalOnly = owner::setLocalOnly,
+                    onQuotePolicy = owner::setQuotePolicy,
+                    onScheduledAt = owner::setScheduledAt,
+                    audienceOptions = audienceOptions,
+                    onAudience = owner::setAudience,
                 )
-                TextButton(onClick = onRemove) { Text(stringResource(R.string.composer_remove_quote)) }
-            }
-            if (target.post.text.isBlank()) {
-                Text(stringResource(R.string.composer_no_post_text), maxLines = 4, overflow = TextOverflow.Ellipsis)
-            } else {
-                PostText(target.post, style = MaterialTheme.typography.bodyMedium, maxLines = 4, overflow = TextOverflow.Ellipsis)
             }
         }
     }
 }
 
 /**
- * Photo, emoji, and content warning on the left. The characters remaining for the focused entry
- * on the right. The photo button follows [PhotoButtonState].
+ * Row 1 of the bubbles. Photo, poll, and emoji circles sit on the left. The content warning pill, the characters
+ * remaining for the focused card, and the add circle sit on the right. The photo bubble follows [PhotoButtonState].
+ * The server decides which bubbles exist: the poll bubble is absent without poll support, and photo, poll, and
+ * add are absent while editing a post.
  */
 @Composable
 internal fun ComposerToolbar(
@@ -284,55 +249,43 @@ internal fun ComposerToolbar(
     onAddEntry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val emojiDescription = stringResource(R.string.emoji_open_picker)
-    val warningDescription = stringResource(R.string.composer_content_warning)
-    val pollDescription = stringResource(R.string.composer_poll)
     val remaining = entry.remaining(limits)
     Row(
-        modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+        modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (!editing) {
-            IconButton(onClick = onPhoto, enabled = photo != PhotoButtonState.Disabled) {
-                Icon(AppIcons.Image, stringResource(R.string.composer_add_photo))
-            }
+            ComposerCircleBubble(AppIcons.Image, stringResource(R.string.composer_add_photo), onPhoto, enabled = photo != PhotoButtonState.Disabled)
         }
         if (limits.posting.poll != null && !editing) {
-            TextButton(
-                onClick = onPoll,
+            ComposerCircleBubble(
+                ComposerIcons.Poll,
+                stringResource(R.string.composer_poll),
+                onPoll,
+                modifier = Modifier.testTag("composer_poll_toggle"),
                 enabled = pollEnabled || entry.poll != null,
-                modifier = Modifier.semantics { contentDescription = pollDescription }.testTag("composer_poll_toggle"),
-                colors = if (entry.poll != null) {
-                    ButtonDefaults.textButtonColors()
-                } else {
-                    ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
-                },
-            ) { Text(stringResource(R.string.composer_poll_short)) }
+                tone = if (entry.poll != null) ComposerBubbleTone.Selected else ComposerBubbleTone.Plain,
+            )
         }
-        TextButton(onClick = onEmoji, modifier = Modifier.semantics { contentDescription = emojiDescription }) {
-            Text(stringResource(R.string.composer_emoji))
-        }
-        TextButton(
+        ComposerCircleBubble(ComposerIcons.Emoji, stringResource(R.string.emoji_open_picker), onEmoji)
+        Box(Modifier.weight(1f))
+        ComposerPillBubble(
+            label = stringResource(R.string.composer_content_warning_short),
+            description = stringResource(R.string.composer_content_warning),
             onClick = onToggleWarning,
-            modifier = Modifier.semantics { contentDescription = warningDescription },
-            colors = if (entry.warningEnabled) {
-                ButtonDefaults.textButtonColors()
-            } else {
-                ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
-            },
-        ) { Text(stringResource(R.string.composer_content_warning_short)) }
-        Spacer(Modifier.weight(1f))
+            tone = if (entry.warningEnabled) ComposerBubbleTone.Selected else ComposerBubbleTone.Plain,
+        )
         if (remaining != null) {
-            val description = stringResource(R.string.composer_characters_remaining, remaining)
-            Text(
-                remaining.toString(),
-                style = MaterialTheme.typography.labelLarge,
-                color = if (remaining < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 8.dp).semantics { contentDescription = description },
+            ComposerPillBubble(
+                label = remaining.toString(),
+                description = stringResource(R.string.composer_characters_remaining, remaining),
+                onClick = null,
+                labelColor = if (remaining < 0) MaterialTheme.colorScheme.error else Color.Unspecified,
             )
         }
         if (!editing) {
-            IconButton(onClick = onAddEntry, enabled = addEnabled) { Icon(ComposerIcons.Add, stringResource(R.string.composer_add_post)) }
+            ComposerCircleBubble(ComposerIcons.Add, stringResource(R.string.composer_add_post), onAddEntry, enabled = addEnabled)
         }
     }
 }

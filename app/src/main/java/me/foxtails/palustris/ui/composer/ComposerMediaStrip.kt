@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.isImeVisible
@@ -47,21 +48,30 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.DraftMedia
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.components.BeelineNestedSurfaceShape
 
 /** Loads a thumbnail of a draft image no larger than the edge. The callback reports null on failure. */
 internal typealias ThumbnailLoader = (media: DraftMedia, maxEdge: Int, onResult: (Bitmap?) -> Unit) -> Unit
 
-private val THUMBNAIL_SIZE = 88.dp
-private const val THUMBNAIL_EDGE_PX = 320
+/** Height of the one row of tiles. Each tile keeps the aspect ratio of its image between the width bounds. */
+private val TILE_HEIGHT = 160.dp
+private val TILE_MIN_WIDTH = 96.dp
+private val TILE_MAX_WIDTH = 240.dp
+private const val THUMBNAIL_EDGE_PX = 480
 private const val DIALOG_EDGE_PX = 960
 
+/** Tile width for an image of [ratio] (width over height). An unknown ratio gives a square tile. */
+internal fun composerTileWidth(ratio: Float?, height: Dp = TILE_HEIGHT): Dp =
+    (height * (ratio ?: 1f)).coerceIn(TILE_MIN_WIDTH, TILE_MAX_WIDTH)
+
 /**
- * The images of one entry as a row of thumbnails. Each thumbnail has a remove button and an ALT
- * badge. A tap on the thumbnail opens the alt text editor.
+ * The images of one entry as one row of tiles that scrolls sideways inside the card, like the media row of a
+ * feed post. Each tile has a remove circle and an ALT badge. A tap on the tile opens the alt text editor.
  */
 @Composable
 internal fun ComposerMediaStrip(
@@ -72,8 +82,8 @@ internal fun ComposerMediaStrip(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(COMPOSER_CARD_INSET),
     ) {
         media.forEach { item ->
             ComposerThumbnail(item, loadThumbnail, onRemove = { onRemove(item.id) }, onEditAlt = { onEditAlt(item.id) })
@@ -110,19 +120,24 @@ private fun ComposerThumbnail(
     val description = media.altText?.takeIf(String::isNotBlank)
         ?: stringResource(if (isVideo) R.string.composer_video_without_description else R.string.composer_image_without_description)
     val editLabel = stringResource(R.string.composer_alt_title)
-    Box(Modifier.size(THUMBNAIL_SIZE).clip(RoundedCornerShape(12.dp))) {
+    val ratio = if (media.width != null && media.height != null && media.height > 0) {
+        media.width.toFloat() / media.height
+    } else {
+        picture?.let { it.width.toFloat() / it.height }
+    }
+    Box(Modifier.size(composerTileWidth(ratio), TILE_HEIGHT).clip(BeelineNestedSurfaceShape)) {
         Surface(
-            modifier = Modifier.fillMaxWidth().height(THUMBNAIL_SIZE)
+            modifier = Modifier.fillMaxSize()
                 .clickable(onClickLabel = editLabel, role = Role.Button, onClick = onEditAlt),
-            color = MaterialTheme.colorScheme.surfaceVariant,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             picture?.let {
-                Image(it, contentDescription = description, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().height(THUMBNAIL_SIZE))
+                Image(it, contentDescription = description, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             }
         }
         if (isVideo) VideoThumbnailBadge(Modifier.align(Alignment.Center))
         Surface(
-            modifier = Modifier.align(Alignment.BottomStart).padding(4.dp),
+            modifier = Modifier.align(Alignment.BottomStart).padding(8.dp),
             shape = RoundedCornerShape(6.dp),
             color = if (described) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
             contentColor = if (described) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
