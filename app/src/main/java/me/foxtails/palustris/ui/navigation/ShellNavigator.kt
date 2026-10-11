@@ -10,6 +10,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.large.LargeNavTarget
@@ -42,6 +43,9 @@ internal class ShellNavigator internal constructor() {
     var destination by mutableStateOf(Destination.Home)
     var destinationTransitionDirection by mutableStateOf(0)
     var timeline by mutableStateOf(Timeline.Home)
+
+    /** A list, hashtag or antenna chosen on Home. Null while a built-in [timeline] is selected. Never restored. */
+    var homeFeedOverride by mutableStateOf<FeedSource?>(null)
     var page by mutableStateOf<LocalPage?>(null)
     var sheet by mutableStateOf<String?>(null)
     var searchPanelName by mutableStateOf(SearchPanel.Search.name)
@@ -206,6 +210,19 @@ internal class ShellNavigator internal constructor() {
         onSearch(username)
     }
 
+    /** The feed Home shows: the override when one is chosen, otherwise the built-in [timeline]. */
+    val homeFeed: FeedSource
+        get() = homeFeedOverride ?: FeedSource.Timeline(timeline)
+
+    fun selectHomeFeed(feed: FeedSource) {
+        if (feed is FeedSource.Timeline) {
+            timeline = feed.timeline
+            homeFeedOverride = null
+        } else {
+            homeFeedOverride = feed
+        }
+    }
+
     fun clampTimeline(available: Set<Timeline>) {
         if (timeline !in available) timeline = Timeline.Home
     }
@@ -233,6 +250,7 @@ internal class ShellNavigator internal constructor() {
      * reset. Popup, media, and thread state reset with the shell.
      */
     fun resetForAccount() {
+        homeFeedOverride = null
         viewedProfile = null
         page = null
         searchQuery = ""
@@ -270,6 +288,7 @@ internal class ShellNavigator internal constructor() {
             boundLocalId == currentLocalId &&
             boundRevision == sessionRevision
         if (matches) return NavigatorSessionBind.MATCHING
+        homeFeedOverride = null
         viewedProfile = null
         page = null
         searchQuery = ""

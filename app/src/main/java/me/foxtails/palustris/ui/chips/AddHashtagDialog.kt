@@ -7,7 +7,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.R
@@ -25,7 +25,7 @@ internal fun AddHashtagDialog(
     onClearError: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var input by rememberSaveable { mutableStateOf("") }
+    var input by remember { mutableStateOf("") }
     val valid = isExactHashtag(input)
     AlertDialog(
         onDismissRequest = { if (!busy) onDismiss() },

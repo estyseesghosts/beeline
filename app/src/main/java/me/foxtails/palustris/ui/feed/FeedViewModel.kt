@@ -21,6 +21,7 @@ import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.DEFAULT_FAVOURITE_EMOJI
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
@@ -116,18 +117,22 @@ class FeedViewModel @AssistedInject constructor(
      * Reloads the timeline from the first page. Each call advances the feed epoch.
      * A superseded launch drops its page instead of writing stale rows.
      */
-    fun refresh(timeline: Timeline = _feed.value.timeline) {
+    fun refresh(timeline: Timeline) = refresh(FeedSource.Timeline(timeline))
+
+    fun refresh(feed: FeedSource = _feed.value.feedSource) {
         if (stopped) return
         val epoch = ++feedEpoch
         acceptedCursors.clear()
         feedJob?.cancel()
         val previous = _feed.value
-        val timelineChanged = timeline != previous.timeline
+        val timeline = (feed as? FeedSource.Timeline)?.timeline ?: previous.timeline
+        val timelineChanged = feed.key != previous.feedSource.key
         // Reserve the request synchronously. A queued paging call must not start behind it.
         _feed.value = previous.copy(
             posts = if (timelineChanged) emptyList() else previous.posts,
             ownedPosts = if (timelineChanged) emptyList() else previous.ownedPosts,
             timeline = timeline,
+            feedSource = feed,
             loading = true,
             loadingMore = false,
             nextCursor = if (timelineChanged) null else previous.nextCursor,
@@ -136,7 +141,7 @@ class FeedViewModel @AssistedInject constructor(
         )
         feedJob = viewModelScope.launch {
             try {
-                val page = source.timeline(timeline)
+                val page = source.feed(feed)
                 if (epoch != feedEpoch || stopped) return@launch
                 val posts = page.items.distinctBy { it.id }.map(::applyFavouritePreference)
                 page.nextCursor?.let(acceptedCursors::add)
@@ -144,6 +149,7 @@ class FeedViewModel @AssistedInject constructor(
                     posts = posts,
                     ownedPosts = posts.map { OwnedPost(accountId, it, sessionRevision) },
                     timeline = timeline,
+                    feedSource = feed,
                     timelines = source.capabilities.timelines,
                     canPublish = source.capabilities.canPublish,
                     audiences = source.capabilities.audiences,
@@ -192,10 +198,12 @@ class FeedViewModel @AssistedInject constructor(
         }
     }
 
-    fun loadMore(timeline: Timeline = _feed.value.timeline) {
+    fun loadMore(timeline: Timeline) = loadMore(FeedSource.Timeline(timeline))
+
+    fun loadMore(feed: FeedSource = _feed.value.feedSource) {
         if (stopped) return
         val state = _feed.value
-        if (timeline != state.timeline) return
+        if (feed.key != state.feedSource.key) return
         val cursor = state.nextCursor ?: return
         if (state.loading || state.loadingMore || state.needsSignIn) return
         val epoch = feedEpoch
@@ -203,10 +211,10 @@ class FeedViewModel @AssistedInject constructor(
         _feed.value = state.copy(loadingMore = true, error = null)
         feedJob = viewModelScope.launch {
             try {
-                val page = source.timeline(state.timeline, cursor)
+                val page = source.feed(state.feedSource, cursor)
                 if (epoch != feedEpoch || stopped) return@launch
                 val current = _feed.value
-                if (current.timeline != state.timeline) return@launch
+                if (current.feedSource.key != state.feedSource.key) return@launch
                 // The input cursor must still own the current continuation. A newer page
                 // that advanced the cursor first makes this page stale, even in the
                 // same epoch. Overlapping same-epoch pages cannot normally occur: the

@@ -1,6 +1,6 @@
 # Objective
 
-Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5, M1 (polls), M3 (delete and edit), M2 (quote interop) and M4 (local-only and scheduled posts) and M6 (unified search, Trends and Photo Grid carry-over) are done. M7 and M8 are not started.
+Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5, M1 (polls), M3 (delete and edit), M2 (quote interop) and M4 (local-only and scheduled posts), M6 (unified search, Trends and Photo Grid carry-over) and M7 (feed chips) are done. M8 is not started.
 
 # Invariants
 
@@ -54,6 +54,7 @@ Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5, M1 (polls), M3 
 
 # Completed
 
+- M7: feed chips. `FeedSource` (timeline, list, hashtag, antenna) and `SocialSource.feed` route to the right endpoint on both adapters, and capability schema version 13 adds `feedChips`. `FeedChipCatalog` is one owner for each session. Home and the Photo Grid read the same catalog, and each keeps its own selection. Mastodon hashtags are followed tags on the server and Misskey hashtags are saved on the device. `PhotoGridPreferences` became `SavedHashtags` and keeps its stored key. A Mastodon account follows its locally saved tags on the first refresh of a session. A long press on a hashtag chip opens an Unfollow or Remove bubble. Adapters are in `f67dfacb`, the catalog and Photo Grid in `ea8f8473`, and Home follows in the next commit. Verified by unit and Robolectric tests only. Not live: the Samsung SM-G986W was not connected.
 - M6: one Search field with suggestions, post search, handle and link lookups, Trends and Photo Grid carry-over. The category chips are gone. A blank field shows Trends: tags, trending posts, and on Mastodon link cards. Typing shows at most three accounts and six hashtags, debounced by 300 ms. Enter searches posts, opens a handle, or resolves a link to a post or profile. The Photo Grid shows the same `SearchController` pages and cursor as a first, dismissible chip (`PhotoGridFeed.Search`). It is never saved. Adapters are in `957ec894`, the UI in `607bd608`. Verified by unit and Robolectric tests only. Not live: the Samsung SM-G986W was not connected, so no device run has happened for M6. Sharkey `notes/featured` paging with `untilId` was checked live on dvd.chat.
 - M2 and M4 share one commit because the composer owner, capability model, session host and strings changed together. Live on `emulator-5554`: quote created on mstdn.ca, rendered as a card, and the card opened the quoted post in the app; local-only post on mstdn.ca (its server reports `local_only`, shown as a Local only label); a scheduled post on mstdn.ca created, listed in the Scheduled tab and cancelled; the dvd.chat composer shows Local only and Schedule and no quote policy. Not live: dvd.chat (Sharkey) refused `notes/schedule/create` and `notes/schedule/list` for the test account with a permission error, so Sharkey scheduling is fixture-tested only; vanilla Misskey draft scheduling, Pleroma and Akkoma local-only, Fedibird quotes, and Mastodon 4.5 quote policy are fixture-tested only.
 
@@ -63,7 +64,7 @@ Deliver `docs/beeline_infdev.md` milestone by milestone. M0, M5, M1 (polls), M3 
 
 # Current slice
 
-M7 (feed chips for lists, hashtags and antennas) is next.
+M8 (static MFM, low priority) is next, at the owner's choice.
 
 # Files involved
 
@@ -81,7 +82,7 @@ M7 (feed chips for lists, hashtags and antennas) is next.
 
 # Next
 
-Do M7. Then run M6 and M7 on the SM-G986W. Check Sharkey scheduling with an account whose role allows it.
+Run M6 and M7 on the SM-G986W. Check Sharkey scheduling with an account whose role allows it.
 
 # Blockers
 

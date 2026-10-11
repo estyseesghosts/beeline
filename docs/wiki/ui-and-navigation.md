@@ -841,3 +841,15 @@ first frame with a play badge. A tap opens the description editor, as for an ima
 - Cancelling the publish stops the conversion and deletes the partial file.
 - Sources: `ui/composer/ComposerMediaControls.kt`, `ComposerMediaStrip.kt`, `ComposerSurface.kt`,
   `ui/feed/ThreadPublicationRunner.kt`, and `data/media/DraftMediaImporter.kt`. Device visuals are unverified.
+
+## Feed chips (infdev M7)
+
+Home and the Photo Grid share one chip row: built-in timelines, then lists, hashtags and antennas, then an add-hashtag control. `FeedChipCatalog` owns the lists, hashtags and antennas for one connected session. `FeedChipsHost` registers it with the entry store, so it retires with the session. Each surface keeps its own selected chip.
+
+- A hashtag chip comes from the server on Mastodon (followed tags) and from the device on Misskey-family servers (`SavedHashtagRepository`, stored in `photo-grid-preferences.json` under the old `hashtags` key).
+- A long press, or the TalkBack action, on a hashtag chip opens a bubble with one button: Unfollow on Mastodon, Remove on Misskey. List and antenna chips have no long-press action.
+- A selected chip that leaves the catalog sends that surface back to Home.
+- The catalog refreshes at session start, on pull-to-refresh, and after every follow, unfollow, save and remove.
+- On the first refresh of a session, a Mastodon account follows every tag it saved on the device. A tag that fails stays saved and is tried next session.
+- The Home row scrolls the selected chip into view only when it is not already fully visible, so the inline caret stays put.
+- Photo Grid Search chip (M6): the grid shows the Search pages as a first, dismissible chip. It is never saved.

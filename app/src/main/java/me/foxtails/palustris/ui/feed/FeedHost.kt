@@ -5,6 +5,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.foxtails.palustris.domain.AccountId
@@ -12,6 +13,7 @@ import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.EmojiChoice
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.domain.ScheduledPost
@@ -19,9 +21,9 @@ import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.domain.ThreadPublishFailure
 import me.foxtails.palustris.domain.ThreadPublishListener
-import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
+import me.foxtails.palustris.ui.shell.FeedChipsContract
 import me.foxtails.palustris.ui.shell.HomeContract
 import me.foxtails.palustris.ui.shell.HomeFeedUiState
 import me.foxtails.palustris.ui.shell.PostInteractions
@@ -65,6 +67,7 @@ fun FeedHost(
     executionAuthority: PostInteractionExecutionAuthority,
     coordinator: PostProjectionCoordinator,
     entryStore: ConnectedEntryStore,
+    chips: FeedChipsContract = FeedChipsContract.Empty,
 ): Feed {
     val feedModel = hiltViewModel<FeedViewModel, FeedViewModel.Factory>(
         key = "feed-$accountId-$sessionGeneration",
@@ -77,13 +80,17 @@ fun FeedHost(
         entryStore.register(sessionGeneration, modelKey) { feedModel.stop() }
     }
     val feed by feedModel.feed.collectAsStateWithLifecycle()
+    val latestChips by rememberUpdatedState(chips)
     val homeActions = remember(feedModel) {
         object : HomeContract.Actions {
-            override fun refresh(timeline: Timeline) { feedModel.refresh(timeline) }
-            override fun loadMore(timeline: Timeline) { feedModel.loadMore(timeline) }
+            override fun refresh(feed: FeedSource) {
+                feedModel.refresh(feed)
+                latestChips.actions.refresh()
+            }
+            override fun loadMore(feed: FeedSource) { feedModel.loadMore(feed) }
         }
     }
-    val home = remember(feed, homeActions) {
+    val home = remember(feed, homeActions, chips) {
         HomeContract(
             state = HomeFeedUiState(
                 favouriteArtworkStyle = feedModel.favouriteArtworkStyle,
@@ -95,10 +102,12 @@ fun FeedHost(
                 error = feed.error,
                 needsSignIn = feed.needsSignIn,
                 selectedTimeline = feed.timeline,
+                selectedFeed = feed.feedSource,
                 availableTimelines = feed.timelines,
                 requestEpoch = feed.requestEpoch,
             ),
             actions = homeActions,
+            chips = chips,
         )
     }
     val postInteractionsActions = remember(feedModel) {

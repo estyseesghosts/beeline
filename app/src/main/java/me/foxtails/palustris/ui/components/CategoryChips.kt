@@ -2,7 +2,8 @@ package me.foxtails.palustris.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -54,6 +56,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.large.LocalLargeDockEdgeInsets
@@ -129,10 +132,18 @@ internal fun DestinationChipRow(
             snapshotFlow { listState.layoutInfo.totalItemsCount }
                 .first { it > selectedEntryIndex + firstChipIndex }
             withFrameNanos { }
-            if (scheme.reducedMotion) {
-                listState.scrollToItem(selectedEntryIndex + firstChipIndex)
-            } else {
-                listState.animateScrollToItem(selectedEntryIndex + firstChipIndex)
+            // A chip that is already fully in view stays put, so the caret is not scrolled away from the start.
+            val target = selectedEntryIndex + firstChipIndex
+            val layout = listState.layoutInfo
+            val visible = layout.visibleItemsInfo.firstOrNull { it.index == target }
+            val inView = visible != null && visible.offset >= layout.viewportStartOffset &&
+                visible.offset + visible.size <= layout.viewportEndOffset
+            if (!inView) {
+                if (scheme.reducedMotion) {
+                    listState.scrollToItem(target)
+                } else {
+                    listState.animateScrollToItem(target)
+                }
             }
         }
     }
@@ -273,17 +284,33 @@ private fun DestinationFilterChip(entry: FilterChipEntry, modifier: Modifier = M
                 if (longClick == null) {
                     Modifier
                 } else {
+                    // The chip's own click handler consumes the press, so watch it in the Initial pass.
                     Modifier.pointerInput(longClick) {
-                        detectTapGestures(
-                            onPress = {
-                                longPressed[0] = false
-                                tryAwaitRelease()
-                            },
-                            onLongPress = {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                            longPressed[0] = false
+                            val ended = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                                while (true) {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    val change = event.changes.firstOrNull { it.id == down.id } ?: return@withTimeoutOrNull true
+                                    // A release is a tap and a drag is a scroll. Neither is a long press.
+                                    if (!change.pressed ||
+                                        (change.position - down.position).getDistance() > viewConfiguration.touchSlop
+                                    ) {
+                                        return@withTimeoutOrNull true
+                                    }
+                                }
+                                @Suppress("UNREACHABLE_CODE")
+                                false
+                            }
+                            if (ended == null) {
                                 longPressed[0] = true
                                 longClick(windowBounds[0])
-                            },
-                        )
+                                do {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                } while (event.changes.any { it.id == down.id && it.pressed })
+                            }
+                        }
                     }
                 },
             )

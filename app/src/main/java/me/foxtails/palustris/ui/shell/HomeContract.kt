@@ -1,6 +1,7 @@
 package me.foxtails.palustris.ui.shell
 
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Timeline
@@ -21,6 +22,8 @@ data class HomeFeedUiState(
     val error: String? = null,
     val needsSignIn: Boolean = false,
     val selectedTimeline: Timeline = Timeline.Home,
+    /** The feed Home shows. It differs from [selectedTimeline] for a list, hashtag or antenna. */
+    val selectedFeed: FeedSource = FeedSource.Timeline(Timeline.Home),
     val availableTimelines: Set<Timeline> = setOf(Timeline.Home),
     /** Home request epoch from the feed owner. Demand resets when it changes. */
     val requestEpoch: Long = 0L,
@@ -30,10 +33,12 @@ data class HomeFeedUiState(
 data class HomeContract(
     val state: HomeFeedUiState,
     val actions: Actions,
+    /** The shared chip catalog: lists, hashtags and antennas. The Photo Grid reads the same one. */
+    val chips: FeedChipsContract = FeedChipsContract.Empty,
 ) {
     interface Actions {
-        fun refresh(timeline: Timeline)
-        fun loadMore(timeline: Timeline)
+        fun refresh(feed: FeedSource)
+        fun loadMore(feed: FeedSource)
     }
 
     companion object {
@@ -42,6 +47,6 @@ data class HomeContract(
 }
 
 private object HomeEmptyActions : HomeContract.Actions {
-    override fun refresh(timeline: Timeline) = Unit
-    override fun loadMore(timeline: Timeline) = Unit
+    override fun refresh(feed: FeedSource) = Unit
+    override fun loadMore(feed: FeedSource) = Unit
 }

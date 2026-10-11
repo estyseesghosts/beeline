@@ -67,10 +67,12 @@ import me.foxtails.palustris.ui.navigation.CompactCaretSlot
 import me.foxtails.palustris.ui.navigation.CompactContextualNavigationBar
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.navigation.contextualActionFor
-import me.foxtails.palustris.ui.navigation.homeTimelineChipEntries
+import me.foxtails.palustris.ui.navigation.homeFeedChipEntries
+import me.foxtails.palustris.ui.navigation.homeSelectedEntryKey
 import me.foxtails.palustris.ui.navigation.wideContextualAction
 import me.foxtails.palustris.ui.posts.PostPopupPresentation
 import me.foxtails.palustris.ui.posts.SinglePostScreen
+import me.foxtails.palustris.ui.shell.FeedChipsContract
 import me.foxtails.palustris.ui.thread.PostThreadUiState
 
 /**
@@ -116,20 +118,21 @@ private fun BoxScope.CompactShellNavigation(
             ) {
                 if (showTimelineTabs && navigator.destination == Destination.Home) {
                     DestinationChipRow(
-                        entries = homeTimelineChipEntries(
+                        entries = homeFeedChipEntries(
                             timelines = availableTimelines,
-                            selected = navigator.timeline,
+                            chips = home?.chips ?: FeedChipsContract.Empty,
+                            selected = navigator.homeFeed,
                         ) { item ->
                             overlay.clearPostActionBubble()
-                            val changed = item != navigator.timeline
-                            navigator.timeline = item
+                            val changed = item.key != navigator.homeFeed.key
+                            navigator.selectHomeFeed(item)
                             if (changed) home?.actions?.refresh(item)
                         },
                         rowContentDescription = stringResource(R.string.home_timeline_filter_description),
                         listState = homeChipListState,
                         visible = homeChipRowVisible,
                         onToggleVisibility = onToggleHomeChipRow,
-                        selectedEntryKey = "home-timeline:${navigator.timeline.name}",
+                        selectedEntryKey = homeSelectedEntryKey(navigator.homeFeed),
                         modifier = Modifier.height(CompactTimelineTabsHeight),
                         rowTestTag = "home_timeline_tabs",
                         visibilityToggleTestTag = "home_timeline_visibility",

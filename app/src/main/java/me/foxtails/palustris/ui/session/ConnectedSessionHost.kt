@@ -179,6 +179,7 @@ fun ConnectedSessionHost(
         executionAuthority = postInteractionAuthority,
         coordinator = projectionCoordinator,
         entryStore = entryStore,
+        chips = chips,
     )
     val savedCollections = SavedCollectionsHost(
         accountId = accountId,

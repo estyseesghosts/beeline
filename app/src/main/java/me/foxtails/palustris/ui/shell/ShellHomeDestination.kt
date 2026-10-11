@@ -5,12 +5,14 @@ import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
@@ -22,7 +24,8 @@ import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
 import me.foxtails.palustris.ui.navigation.ShellNavigator
-import me.foxtails.palustris.ui.navigation.homeTimelineChipEntries
+import me.foxtails.palustris.ui.navigation.homeFeedChipEntries
+import me.foxtails.palustris.ui.navigation.homeSelectedEntryKey
 
 /**
  * Home destination wiring for the application shell.
@@ -68,14 +71,24 @@ internal fun ShellHomeDestination(
             onToggle = onToggleHomeChipRow,
         )
     }
+    // A list, hashtag or antenna that left the catalog (unfollowed or removed) sends Home back to Home.
+    val chipState = home?.chips?.state
+    LaunchedEffect(chipState) {
+        val offered = chipState ?: return@LaunchedEffect
+        if (offered.loaded && !offered.offers(navigator.homeFeed)) {
+            val fallback = FeedSource.Timeline(Timeline.Home)
+            navigator.selectHomeFeed(fallback)
+            home.actions.refresh(fallback)
+        }
+    }
     if (home != null) HomeFeed(
         state = home.state,
         compactLayout = !largePresentation,
         rightObstructionClearance = rightObstructionClearance,
         leftObstructionClearance = leftObstructionClearance,
         bottomObstructionClearance = bottomObstructionClearance,
-        onRefresh = { home.actions.refresh(navigator.timeline) },
-        onLoadMore = { home.actions.loadMore(navigator.timeline) },
+        onRefresh = { home.actions.refresh(navigator.homeFeed) },
+        onLoadMore = { home.actions.loadMore(navigator.homeFeed) },
         onSignIn = accountSwitcher.actions::signOut,
         availableActions = postCallbacks.availableActions,
         quoteEnabled = postCallbacks.quoteEnabled,
@@ -100,20 +113,21 @@ internal fun ShellHomeDestination(
         refreshIndicatorTopPadding = if (largePresentation) 16.dp else null,
         bottomDock = if (largePresentation) ({
             DestinationChipRow(
-                entries = homeTimelineChipEntries(
+                entries = homeFeedChipEntries(
                     timelines = availableTimelines,
-                    selected = navigator.timeline,
+                    chips = home.chips,
+                    selected = navigator.homeFeed,
                 ) { item ->
-                    val changed = item != navigator.timeline
+                    val changed = item.key != navigator.homeFeed.key
                     if (changed) navigator.clearSelectedPost()
-                    navigator.timeline = item
+                    navigator.selectHomeFeed(item)
                     if (changed) home.actions.refresh(item)
                 },
                 rowContentDescription = stringResource(R.string.home_timeline_filter_description),
                 listState = timelineChipListState,
                 visible = homeChipRowVisible,
                 onToggleVisibility = onToggleHomeChipRow,
-                selectedEntryKey = "home-timeline:${navigator.timeline.name}",
+                selectedEntryKey = homeSelectedEntryKey(navigator.homeFeed),
                 rowTestTag = "home_timeline_tabs",
                 visibilityToggleTestTag = "home_timeline_visibility",
                 caretPresentation = homeCaretPresentation,
@@ -136,19 +150,20 @@ internal fun ShellHomeDestination(
                 rightClearance = wideRight,
                 content = {
                     DestinationChipRow(
-                        entries = homeTimelineChipEntries(
+                        entries = homeFeedChipEntries(
                             timelines = availableTimelines,
-                            selected = navigator.timeline,
+                            chips = FeedChipsContract.Empty,
+                            selected = navigator.homeFeed,
                         ) { item ->
-                            val changed = item != navigator.timeline
+                            val changed = item.key != navigator.homeFeed.key
                             if (changed) navigator.clearSelectedPost()
-                            navigator.timeline = item
+                            navigator.selectHomeFeed(item)
                         },
                         rowContentDescription = stringResource(R.string.home_timeline_filter_description),
                         listState = timelineChipListState,
                         visible = homeChipRowVisible,
                         onToggleVisibility = onToggleHomeChipRow,
-                        selectedEntryKey = "home-timeline:${navigator.timeline.name}",
+                        selectedEntryKey = homeSelectedEntryKey(navigator.homeFeed),
                         rowTestTag = "home_timeline_tabs",
                         visibilityToggleTestTag = "home_timeline_visibility",
                         caretPresentation = homeCaretPresentation,

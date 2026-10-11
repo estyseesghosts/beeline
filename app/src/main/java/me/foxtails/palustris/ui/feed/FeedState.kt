@@ -3,6 +3,7 @@ package me.foxtails.palustris.ui.feed
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
@@ -17,7 +18,10 @@ data class FeedState(
     val ownedPosts: List<OwnedPost> = emptyList(),
     /** Retained for isolated presentation fixtures; connected Search owns live state. */
     val accountSearch: SearchState = SearchState(),
+    /** The last built-in timeline shown. A list, hashtag or antenna feed leaves it as it was. */
     val timeline: Timeline = Timeline.Home,
+    /** The feed Home shows: a built-in timeline, a list, a hashtag or an antenna. */
+    val feedSource: FeedSource = FeedSource.Timeline(Timeline.Home),
     val timelines: Set<Timeline> = setOf(Timeline.Home),
     val canPublish: Boolean = false,
     val audiences: Set<Audience> = emptySet(),

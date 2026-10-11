@@ -108,7 +108,7 @@ not in `PalustrisApp`. The acceptance matrix records each exit condition. See
 - Sessions and accounts: `SessionViewModelTest`, `AuthGatewayTest`.
 - Shell boundaries: `ShellCharacterizationTest`, `NavigationTest`, `HomeFeedTest`, `WideNavigationTest`, `PostProjectionCoordinatorTest`, `ShellBackPolicyTest`, `ShellNavigatorTest`, `ReplyComposerTest`, `ComposerOwnerTest`, `SearchPanelRestorationTest`, `SignInScreenTest`.
 - Notifications: `NotificationRepositoryTest`, `NotificationContractTest`, `NotificationAdapterContractTest`.
-- Persistence: `AppPreferencesRepositoryTest`, `PhotoGridPreferencesRepositoryTest`, `EmojiCacheDatabaseTest`.
+- Persistence: `AppPreferencesRepositoryTest`, `SavedHashtagRepositoryTest`, `EmojiCacheDatabaseTest`.
 - Device behavior: `Api29StartupInstrumentedTest`, `RoomNotificationStoreInstrumentedTest`.
 
 Tests live in `app/src/test/java/me/foxtails/palustris/` and `app/src/androidTest/java/me/foxtails/palustris/`.

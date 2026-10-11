@@ -7,50 +7,51 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import me.foxtails.palustris.data.auth.AccountRef
+import me.foxtails.palustris.data.auth.DraftActions
+import me.foxtails.palustris.data.auth.DraftStore
+import me.foxtails.palustris.data.auth.DraftWriteAuthority
+import me.foxtails.palustris.data.auth.InMemoryDraftStore
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
-import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.AppNavigationAnchor
+import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfile
+import me.foxtails.palustris.domain.EditableProfilePatch
 import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.EmojiChoice
-import me.foxtails.palustris.domain.EditableProfilePatch
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.Timeline
-import me.foxtails.palustris.data.auth.DraftActions
-import me.foxtails.palustris.data.auth.DraftStore
-import me.foxtails.palustris.data.auth.DraftWriteAuthority
-import me.foxtails.palustris.data.auth.InMemoryDraftStore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import me.foxtails.palustris.ui.feed.FeedState
-import me.foxtails.palustris.ui.notifications.NotificationsUiState
 import me.foxtails.palustris.ui.PalustrisApp
-import me.foxtails.palustris.ui.emoji.EmojiCatalogState
-import me.foxtails.palustris.ui.navigation.AppRoute
-import me.foxtails.palustris.ui.profile.ProfileCategory
 import me.foxtails.palustris.ui.composer.asDraftsContract
+import me.foxtails.palustris.ui.emoji.EmojiCatalogState
+import me.foxtails.palustris.ui.feed.FeedState
+import me.foxtails.palustris.ui.navigation.AppRoute
+import me.foxtails.palustris.ui.notifications.NotificationsUiState
+import me.foxtails.palustris.ui.profile.ProfileCategory
 import me.foxtails.palustris.ui.profile.ProfileUiState
+import me.foxtails.palustris.ui.saved.SavedPostsUiState
 import me.foxtails.palustris.ui.shell.AccountSwitcher
 import me.foxtails.palustris.ui.shell.BookmarksContract
 import me.foxtails.palustris.ui.shell.ComposerContract
 import me.foxtails.palustris.ui.shell.DirectMessagesContract
-import me.foxtails.palustris.ui.shell.EmojiPresentation
 import me.foxtails.palustris.ui.shell.DraftsContract
+import me.foxtails.palustris.ui.shell.EmojiPresentation
 import me.foxtails.palustris.ui.shell.HomeContract
 import me.foxtails.palustris.ui.shell.HomeFeedUiState
-import me.foxtails.palustris.ui.saved.SavedPostsUiState
-import me.foxtails.palustris.ui.shell.NotificationsContract
 import me.foxtails.palustris.ui.shell.NotificationSettingsContract
+import me.foxtails.palustris.ui.shell.NotificationsContract
 import me.foxtails.palustris.ui.shell.PhotoGridContract
 import me.foxtails.palustris.ui.shell.PostInteractions
 import me.foxtails.palustris.ui.shell.ProfileContract
@@ -175,6 +176,7 @@ internal object AppShellFixtures {
         error = feed.error,
         needsSignIn = feed.needsSignIn,
         selectedTimeline = feed.timeline,
+        selectedFeed = feed.feedSource,
         availableTimelines = feed.timelines,
         requestEpoch = feed.requestEpoch,
     )
@@ -184,12 +186,20 @@ internal object AppShellFixtures {
         feed: FeedState,
         onRefresh: (Timeline) -> Unit = {},
         onLoadMore: (Timeline) -> Unit = {},
+        chips: FeedChipsContract = FeedChipsContract.Empty,
+        onRefreshFeed: (FeedSource) -> Unit = {},
     ): HomeContract = HomeContract(
         state = homeFeed(feed),
         actions = object : HomeContract.Actions {
-            override fun refresh(timeline: Timeline) = onRefresh(timeline)
-            override fun loadMore(timeline: Timeline) = onLoadMore(timeline)
+            override fun refresh(feed: FeedSource) {
+                (feed as? FeedSource.Timeline)?.let { onRefresh(it.timeline) }
+                onRefreshFeed(feed)
+            }
+            override fun loadMore(feed: FeedSource) {
+                (feed as? FeedSource.Timeline)?.let { onLoadMore(it.timeline) }
+            }
         },
+        chips = chips,
     )
 
     /** Test-only search contract derived from a fixture feed. */
