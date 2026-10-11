@@ -25,6 +25,7 @@ import me.foxtails.palustris.domain.SchedulingCapability
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.TranslationCapability
+import me.foxtails.palustris.domain.search.SearchCapabilities
 import me.foxtails.palustris.domain.withTimelineStatuses
 import org.json.JSONArray
 import org.json.JSONObject
@@ -77,6 +78,7 @@ class MisskeyCapabilityProbe(
                 edit = if (token.isNullOrBlank()) CapabilityStatus.Denied else editStatus(endpoints),
             ),
             translation = TranslationCapability(translationStatus(meta, policies)),
+            search = SearchCapabilities(posts = policyStatus(policies, "canSearchNotes", CapabilityStatus.Unknown)),
             primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Reaction),
             savedPosts = SavedPostsCapability(CapabilityStatus.Supported, SavedPostsKind.Favourites),
             likedPosts = CapabilityStatus.Supported,

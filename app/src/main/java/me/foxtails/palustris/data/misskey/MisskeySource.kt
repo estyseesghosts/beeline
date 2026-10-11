@@ -80,6 +80,9 @@ import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
 import me.foxtails.palustris.domain.hashtags.TrendingHashtag
 import me.foxtails.palustris.domain.normalizeFavouriteEmoji
+import me.foxtails.palustris.domain.search.SearchQuery
+import me.foxtails.palustris.domain.search.SearchSuggestions
+import me.foxtails.palustris.domain.search.Trends
 import me.foxtails.palustris.domain.unsupported
 import org.json.JSONArray
 import org.json.JSONObject
@@ -125,6 +128,7 @@ class MisskeySource(
     private val mediaService = MisskeyMediaService(origin, token, api)
     private val scheduleService = MisskeyScheduleService(origin, token, api)
     private val discoveryService = MisskeyDiscoveryService(origin, token, api, accountId)
+    private val searchService = MisskeySearchService(origin, token, api, discoveryService)
     private val timelineService = MisskeyTimelineService(origin, token, api, MISSKEY_MAX_RESPONSE_BYTES)
     private val threadService = MisskeyThreadService(
         origin = origin,
@@ -211,6 +215,26 @@ class MisskeySource(
         parts.getOrNull(1)?.takeIf { it.isNotBlank() && !it.equals(java.net.URI(origin).host, ignoreCase = true) }
             ?.let { body.put("host", it) }
         listOf(MisskeyMapper.account(JSONObject(api.post(origin, "users/show", body, MISSKEY_MAX_RESPONSE_BYTES).body), origin))
+    }
+
+    /** The role policy `canSearchNotes` can switch note search off. The probe records it. */
+    override suspend fun searchPosts(query: String, cursor: String?): Page<Post> = request("search") {
+        if (capabilities.search.posts == CapabilityStatus.Denied) throw SourceError.AccessDenied("search")
+        searchService.searchPosts(query, cursor)
+    }
+
+    override suspend fun searchSuggestions(query: SearchQuery): SearchSuggestions = request("search.suggestions") {
+        searchService.suggestions(query)
+    }
+
+    override suspend fun trends(): Trends = request("trends") { searchService.trends() }
+
+    override suspend fun trendingPosts(cursor: String?): Page<Post> = request("trends.posts") {
+        searchService.trendingPosts(cursor)
+    }
+
+    override suspend fun resolveAccountUrl(url: String): Account? = request("resolve.account") {
+        searchService.resolveAccount(url)
     }
 
     override val maxCombinedHashtags: Int get() = MAX_COMBINED_HASHTAGS

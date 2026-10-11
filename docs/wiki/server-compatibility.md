@@ -200,6 +200,21 @@ and `FfmpegBridgeTest`. Live-server uploads are unverified.
 - Misskey: `notes/drafts/*` with `scheduledAt` and `isActuallyScheduled`; role policy `scheduledNoteLimit` (default 1). A limit of 0 turns scheduling off.
 - The route comes from `POST /api/endpoints`. A scheduled post never enters a timeline.
 
+## Search, Trends and profile links
+
+Source: `data/mastodon/MastodonSearchService.kt`, `data/misskey/MisskeySearchService.kt`, `SearchAdapterTest`. Status: test verified.
+
+- Query kinds: handle, hashtag, URL and free text. `classifySearchQuery` decides, and the adapters never see a URL.
+- Suggestions return at most 3 accounts and 6 hashtags. A hashtag query asks for no accounts. A handle query asks for no hashtags. One failed call keeps the other result.
+- Mastodon suggestions: `GET api/v2/search` with `type=accounts&limit=3` and `type=hashtags&limit=6`. `resolve=true` goes only with a full `@user@host` handle.
+- Misskey-family suggestions: `users/search` (`users/search-by-username-and-host` for a handle) and `hashtags/search`.
+- Mastodon post search: `GET api/v2/search?type=statuses&limit=20&offset=N`. The cursor is the offset. The server returns nothing without Elasticsearch or OpenSearch, so the screen shows an empty state.
+- Misskey-family post search: `notes/search` paged by `untilId`. The role policy `canSearchNotes` goes into `ServerCapabilities.search`. A denied policy blocks the call and the screen says so.
+- Mastodon Trends: `api/v1/trends/tags` (10), `trends/statuses` (20, paged by offset) and `trends/links` (10). A refused section stays empty. Pleroma and Akkoma have no posts or links route.
+- Misskey-family Trends: `hashtags/trend` and `notes/featured` paged by `untilId`. Checked live on dvd.chat: `untilId` pages, `offset` does nothing. There are no trending links.
+- Profile links: Mastodon `GET api/v2/search?resolve=true&type=accounts&limit=1`. Misskey-family `users/show` for an address on the same server, otherwise `ap/show` with type `User`.
+- Capability schema version is 12 (adds `search.posts`).
+
 ## Video posters
 
 - Mastodon API servers always send `preview_url`. Misskey does not for videos that federated in: `thumbnailUrl` is empty and `properties` is empty, so a tile had no poster and the viewer had nothing to fling from, and fell back to a fade.

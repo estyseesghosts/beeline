@@ -1,5 +1,7 @@
 package me.foxtails.palustris.domain
 
+import me.foxtails.palustris.domain.search.SearchCapabilities
+
 /** Supplied by an adapter and refreshed as the server's feature set changes. */
 data class ServerCapabilities(
     val timelines: Set<Timeline> = emptySet(),
@@ -23,6 +25,8 @@ data class ServerCapabilities(
     val ownPosts: OwnPostCapabilities = OwnPostCapabilities(),
     /** Server-side translation of a post. Never an on-device fallback. */
     val translation: TranslationCapability = TranslationCapability(),
+    /** Whether the account may search post text. */
+    val search: SearchCapabilities = SearchCapabilities(),
     /** Bumps when capability shapes change; older snapshots force a fresh probe. */
     val capabilitySchemaVersion: Int = CURRENT_CAPABILITY_SCHEMA_VERSION,
 ) {
@@ -34,7 +38,7 @@ data class ServerCapabilities(
          * invalidates snapshots that predate the quote-with-media rule. Revision 9
          * invalidates snapshots that predate own-post actions and translation.
          */
-        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 11
+        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 12
     }
 }
 

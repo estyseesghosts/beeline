@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.flowOf
 import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
 import me.foxtails.palustris.domain.hashtags.TrendingHashtag
+import me.foxtails.palustris.domain.search.SearchQuery
+import me.foxtails.palustris.domain.search.SearchSuggestions
+import me.foxtails.palustris.domain.search.Trends
 
 /** Transport-independent boundary implemented by individual server adapters. */
 interface SocialSource {
@@ -102,6 +105,9 @@ interface SocialSource {
      */
     suspend fun resolvePostUrl(url: String): Post? = null
 
+    /** The account that profile address [url] names, found through the account's own server, or null. */
+    suspend fun resolveAccountUrl(url: String): Account? = null
+
     /** Hands a post to the server to publish at [CreatePostRequest.scheduledAtEpochMillis]. */
     suspend fun schedule(request: CreatePostRequest): ScheduledPost = unsupported("schedule")
 
@@ -113,7 +119,17 @@ interface SocialSource {
     /** Moves [item] to [atEpochMillis]. A server without a route for it cancels the post and schedules it again. */
     suspend fun reschedule(item: ScheduledPost, atEpochMillis: Long): ScheduledPost = unsupported("schedule")
 
-    suspend fun search(query: String): List<Post> = unsupported("search")
+    /** A page of posts whose text matches [query]. [cursor] comes from the previous page. */
+    suspend fun searchPosts(query: String, cursor: String? = null): Page<Post> = unsupported("search")
+
+    /** Up to [SearchSuggestions.MAX_ACCOUNTS] accounts and [SearchSuggestions.MAX_HASHTAGS] hashtags for a typed query. */
+    suspend fun searchSuggestions(query: SearchQuery): SearchSuggestions = unsupported("search.suggestions")
+
+    /** Trending tags, the first page of trending posts and trending links. A refused section is empty. */
+    suspend fun trends(): Trends = unsupported("trends")
+
+    /** The page of trending posts after [cursor]. */
+    suspend fun trendingPosts(cursor: String?): Page<Post> = unsupported("trends.posts")
     suspend fun searchHashtag(tag: String, cursor: String? = null): Page<Post> = unsupported("hashtag search")
 
     /** How many extra hashtags one hashtag search accepts. Zero means the source cannot combine. */

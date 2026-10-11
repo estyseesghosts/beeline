@@ -10,6 +10,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
@@ -25,6 +26,12 @@ interface PostLinkResolver {
 
     /** The post with [id] on the connected server, or null when it cannot be loaded in time. */
     suspend fun load(id: EntityId): OwnedPost?
+
+    /** True for an address that has the shape of a profile. */
+    fun looksLikeAccount(url: String): Boolean = false
+
+    /** The account behind profile address [url] on the connected server, or null when it cannot be resolved in time. */
+    suspend fun resolveAccount(url: String): Account? = null
 }
 
 /** The resolver of the connected session. Null in previews, where every link opens in the browser. */
@@ -98,6 +105,7 @@ class SessionPostLinkResolver(
     private val timeoutMillis: Long = DEFAULT_TIMEOUT_MILLIS,
 ) : PostLinkResolver {
     private val resolved = mutableMapOf<String, OwnedPost?>()
+    private val resolvedAccounts = mutableMapOf<String, Account?>()
     private var retired = false
 
     override fun looksLikePost(url: String): Boolean = !retired && POST_PATHS.any { it.containsMatchIn(url) }
@@ -118,6 +126,22 @@ class SessionPostLinkResolver(
         return owned
     }
 
+    override fun looksLikeAccount(url: String): Boolean = !retired && ACCOUNT_PATHS.any { it.containsMatchIn(url) }
+
+    override suspend fun resolveAccount(url: String): Account? {
+        if (!looksLikeAccount(url)) return null
+        if (resolvedAccounts.containsKey(url)) return resolvedAccounts[url]
+        val account = try {
+            withTimeoutOrNull(timeoutMillis) { source.resolveAccountUrl(url) }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            null
+        }
+        if (!retired && account != null) resolvedAccounts[url] = account
+        return account
+    }
+
     override suspend fun load(id: EntityId): OwnedPost? {
         if (retired) return null
         val post = try {
@@ -133,6 +157,7 @@ class SessionPostLinkResolver(
     fun retire() {
         retired = true
         resolved.clear()
+        resolvedAccounts.clear()
     }
 
     companion object {
@@ -145,6 +170,12 @@ class SessionPostLinkResolver(
             Regex("^https?://[^/]+/notes/[A-Za-z0-9]+/?$"),
             Regex("^https?://[^/]+/notice/[A-Za-z0-9]+/?$"),
             Regex("^https?://[^/]+/objects/[A-Za-z0-9-]+/?$"),
+        )
+
+        /** `/@user`, `/@user@host`, `/users/<u>` and `/user/<u>`. A post address never matches. */
+        internal val ACCOUNT_PATHS = listOf(
+            Regex("^https?://[^/]+/@[^/]+/?$"),
+            Regex("^https?://[^/]+/users?/[^/]+/?$"),
         )
     }
 }

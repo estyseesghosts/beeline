@@ -941,7 +941,7 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
             override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = Page(emptyList())
         }
         try {
-            source.search("hello")
+            source.searchPosts("hello")
             fail("Unsupported operation should throw")
         } catch (error: SourceError.Unsupported) {
             assertEquals("search", error.feature)

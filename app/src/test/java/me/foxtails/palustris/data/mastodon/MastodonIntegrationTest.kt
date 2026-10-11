@@ -832,7 +832,7 @@ class MastodonIntegrationTest {
         source.renote(EntityId(origin, "renote-1"))
         val notifications = source.notifications(NotificationQuery())
         val attachment = source.uploadMedia(uploadRequest(ByteArrayInputStream("bytes".toByteArray())))
-        val search = source.search("hello world")
+        val search = source.searchPosts("hello world").items
 
         assertEquals("created", created.id.value)
         val createRequest = server.takeRequest()
@@ -856,7 +856,7 @@ class MastodonIntegrationTest {
         assertEquals("/api/v2/media", uploadRequest.path)
         assertEquals("Bearer token", uploadRequest.getHeader("Authorization"))
         assertTrue(uploadRequest.body.readUtf8().contains("bytes"))
-        assertEquals("/api/v2/search?q=hello+world", server.takeRequest().path)
+        assertEquals("/api/v2/search?q=hello+world&type=statuses&limit=20&offset=0", server.takeRequest().path)
     }
 
     @Test

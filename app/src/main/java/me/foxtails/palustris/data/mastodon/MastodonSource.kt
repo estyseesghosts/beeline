@@ -81,6 +81,9 @@ import me.foxtails.palustris.domain.hashtagBody
 import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
 import me.foxtails.palustris.domain.hashtags.TrendingHashtag
+import me.foxtails.palustris.domain.search.SearchQuery
+import me.foxtails.palustris.domain.search.SearchSuggestions
+import me.foxtails.palustris.domain.search.Trends
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONArray
 import org.json.JSONObject
@@ -125,6 +128,7 @@ class MastodonSource(
     private val threadService = MastodonThreadService(origin, token, api, accountId, sessionRevision)
     private val mediaService = MastodonMediaService(origin, token, api)
     private val discoveryService = MastodonDiscoveryService(origin, token, api)
+    private val searchService = MastodonSearchService(origin, token, api)
     private val pageClient = MastodonPageClient(origin, token, api, accountId.localId, sessionRevision, sourceInstance)
     private val timelineService = MastodonTimelineService(pageClient, origin)
     override val capabilities: ServerCapabilities get() = _capabilities.value
@@ -601,11 +605,22 @@ class MastodonSource(
         mediaService.delete(attachmentId)
     }
 
-    override suspend fun search(query: String): List<Post> = request("search") {
-        val encodedQuery = URLEncoder.encode(query, Charsets.UTF_8.name())
-        val statuses = JSONObject(api.get(origin, "api/v2/search?q=$encodedQuery", token, MASTODON_MAX_RESPONSE_BYTES).body)
-            .optJSONArray("statuses") ?: JSONArray()
-        (0 until statuses.length()).map { MastodonMapper.post(statuses.getJSONObject(it), origin) }
+    override suspend fun searchPosts(query: String, cursor: String?): Page<Post> = request("search") {
+        searchService.searchPosts(query, cursor)
+    }
+
+    override suspend fun searchSuggestions(query: SearchQuery): SearchSuggestions = request("search.suggestions") {
+        searchService.suggestions(query)
+    }
+
+    override suspend fun trends(): Trends = request("trends") { searchService.trends() }
+
+    override suspend fun trendingPosts(cursor: String?): Page<Post> = request("trends.posts") {
+        searchService.trendingPosts(cursor)
+    }
+
+    override suspend fun resolveAccountUrl(url: String): Account? = request("resolve.account") {
+        searchService.resolveAccount(url)
     }
 
     override val maxCombinedHashtags: Int get() = MAX_COMBINED_HASHTAGS

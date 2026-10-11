@@ -46,6 +46,7 @@ import me.foxtails.palustris.domain.Session
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.TranslationCapability
 import me.foxtails.palustris.domain.ValidatedUrl
+import me.foxtails.palustris.domain.search.SearchCapabilities
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -258,6 +259,7 @@ private fun ServerCapabilities.toJson(): JSONObject = JSONObject()
     .put("moderation", moderation.toJson())
     .put("ownPosts", JSONObject().put("delete", ownPosts.delete.name).put("edit", ownPosts.edit.name))
     .put("translation", JSONObject().put("status", translation.status.name).put("publicOnly", translation.publicOnly))
+    .put("search", JSONObject().put("posts", search.posts.name))
     .put("capabilitiesLastUpdated", capabilitiesLastUpdated)
     .put("capabilitySchemaVersion", capabilitySchemaVersion)
 
@@ -306,6 +308,9 @@ private fun JSONObject.toCapabilities(): ServerCapabilities = ServerCapabilities
              publicOnly = it.optBoolean("publicOnly"),
          )
      } ?: TranslationCapability(),
+     search = optJSONObject("search")?.let {
+         SearchCapabilities(posts = it.enumOrDefault("posts", CapabilityStatus.Unknown))
+     } ?: SearchCapabilities(),
      capabilitiesLastUpdated = optLong("capabilitiesLastUpdated"),
     capabilitySchemaVersion = optInt("capabilitySchemaVersion", 0),
 )
