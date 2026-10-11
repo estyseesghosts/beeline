@@ -380,7 +380,22 @@ private fun encodePost(post: me.foxtails.palustris.domain.Post): JSONObject = JS
     put("emoji", encodeEmojiMap(post.emoji))
     post.ownRepostId?.let { put("ownRepostId", encodeEntity(it)) }
     post.actionTargetId?.let { put("actionTargetId", encodeEntity(it)) }
+    if (post.mentions.isNotEmpty()) put("mentions", JSONArray(post.mentions.map(::encodeMention)))
 }
+
+private fun encodeMention(mention: me.foxtails.palustris.domain.PostMention): JSONObject = JSONObject()
+    .put("handle", mention.handle)
+    .apply {
+        mention.accountId?.let { put("accountId", encodeAccountId(it)) }
+        mention.url?.let { put("url", it) }
+    }
+
+private fun decodeMention(json: JSONObject): me.foxtails.palustris.domain.PostMention =
+    me.foxtails.palustris.domain.PostMention(
+        handle = json.getString("handle"),
+        accountId = json.optJSONObject("accountId")?.let(::decodeAccountId),
+        url = json.optString("url").takeIf { it.isNotBlank() },
+    )
 
 private fun decodePost(json: JSONObject): me.foxtails.palustris.domain.Post =
     me.foxtails.palustris.domain.Post(
@@ -436,6 +451,12 @@ private fun decodePost(json: JSONObject): me.foxtails.palustris.domain.Post =
         emoji = decodeEmojiMap(json.optJSONObject("emoji")),
         ownRepostId = json.optJSONObject("ownRepostId")?.let(::decodeEntity),
         actionTargetId = json.optJSONObject("actionTargetId")?.let(::decodeEntity),
+        // Old blobs predate mentions and decode to none.
+        mentions = json.optJSONArray("mentions")?.let { values ->
+            (0 until values.length()).mapNotNull { index ->
+                runCatching { decodeMention(values.getJSONObject(index)) }.getOrNull()
+            }
+        }.orEmpty(),
     )
 
 private fun encodeAttachment(attachment: me.foxtails.palustris.domain.Attachment): JSONObject = JSONObject()

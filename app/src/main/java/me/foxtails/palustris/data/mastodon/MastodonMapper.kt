@@ -24,6 +24,7 @@ import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostContentVisibility
 import me.foxtails.palustris.domain.PostInteractionCounts
+import me.foxtails.palustris.domain.PostMention
 import me.foxtails.palustris.domain.ProfileField
 import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.Protocol
@@ -231,6 +232,25 @@ object MastodonMapper {
         )
     }
 
+    /**
+     * Maps a status's `mentions` array. `acct` has no host for an account on the home server, so the connection's host
+     * completes it. An item with no `acct` is skipped.
+     */
+    fun mentions(items: org.json.JSONArray?, origin: String): List<PostMention> {
+        if (items == null) return emptyList()
+        val homeHost = java.net.URI(origin).host.orEmpty()
+        return (0 until items.length()).mapNotNull { index ->
+            val item = items.optJSONObject(index) ?: return@mapNotNull null
+            val acct = item.optString("acct").removePrefix("@").ifBlank { return@mapNotNull null }
+            val handle = if ('@' in acct) "@$acct" else "@$acct@$homeHost"
+            PostMention(
+                handle = handle,
+                accountId = item.nullableString("id")?.let { AccountId(Connection(origin, Protocol.MASTODON), it) },
+                url = item.nullableString("url"),
+            )
+        }.distinctBy { it.handle.lowercase() }
+    }
+
     fun post(json: JSONObject, origin: String, depth: Int = 0): Post {
         val id = EntityId(origin, json.getString("id"))
         val reblog = json.optJSONObject("reblog")
@@ -267,10 +287,12 @@ object MastodonMapper {
         val selectedReactions = MastodonReactionExtensionMapper.selectedChoices(
             json, emoji, independentSelection = true,
         ).orEmpty()
+        val mentions = mentions(json.optJSONArray("mentions"), origin)
         return Post(
             id = id,
             author = account(json.getJSONObject("account"), origin),
-            text = if (filtered) "" else quoted.contentWithoutFallback(json.optString("content")).htmlToMarkdown(emoji),
+            mentions = if (filtered) emptyList() else mentions,
+            text = if (filtered) "" else quoted.contentWithoutFallback(json.optString("content")).htmlToMarkdown(emoji, mentions),
             publishedAtEpochMillis = parseInstant(json.optString("created_at")),
             audience = when (json.optString("visibility")) {
                 "unlisted" -> Audience.Unlisted
@@ -512,10 +534,16 @@ private fun String.preserveEmojiAlts(emoji: Map<String, CustomEmoji>): String {
     }
 }
 
-private fun String.htmlToMarkdown(emoji: Map<String, CustomEmoji> = emptyMap()): String {
+private fun String.htmlToMarkdown(
+    emoji: Map<String, CustomEmoji> = emptyMap(),
+    mentions: List<PostMention> = emptyList(),
+): String {
     val linked = preserveEmojiAlts(emoji).replace(htmlAnchor) { match ->
         val label = match.groupValues[2].htmlToText()
-        if (label.trimStart().startsWith("@")) label
+        // A mention link names its account by URL. The text then carries the complete handle, not the short one.
+        val mention = mentions.firstOrNull { it.url != null && it.url == match.groupValues[1] }
+        if (mention != null && label.trimStart().startsWith("@")) mention.handle
+        else if (label.trimStart().startsWith("@")) label
         else "[$label](${match.groupValues[1]})"
     }
     return linked.htmlToText()

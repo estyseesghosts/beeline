@@ -1,7 +1,8 @@
 package me.foxtails.palustris.ui.emoji
 
-import me.foxtails.palustris.domain.CustomEmoji
 import java.net.URI
+import me.foxtails.palustris.domain.CustomEmoji
+import me.foxtails.palustris.domain.PostMention
 
 internal sealed interface RichTextSegment {
     val range: IntRange
@@ -22,6 +23,8 @@ internal sealed interface RichTextSegment {
         val displayLabel: String,
         val target: String,
         override val range: IntRange,
+        /** The post's mention entry for this token, when the post has one. */
+        val mention: PostMention? = null,
     ) : RichTextSegment
 
     data class Hashtag(
@@ -68,13 +71,18 @@ internal object EmojiTextParser {
     private val markdownLink = Regex("""\[([^\]\r\n]*)\]\(\s*(?:<)?(https?://[^)\s>]+)(?:>)?\s*\)""")
     private val plainUrl = Regex("""https?://[^\s<>()\[\]]+""")
     private val username = Regex("""@[\p{L}\p{N}_.-]+@[\p{L}\p{N}.-]+""")
+    private val localUsername = Regex("""@[\p{L}\p{N}_]+""")
     private val hashtag = Regex("#[\\p{L}\\p{N}_](?:[\\p{L}\\p{N}\\p{M}_])*")
 
-    fun parse(text: String, emoji: Map<String, CustomEmoji>): RichTextModel {
+    /**
+     * [mentions] are the post's own mention entries. A complete `@user@host` token is a username on its own. A local
+     * `@user` token is a username only when a mention entry names it, so `@word` and an email address stay text.
+     */
+    fun parse(text: String, emoji: Map<String, CustomEmoji>, mentions: List<PostMention> = emptyList()): RichTextModel {
         if (text.isEmpty()) return RichTextModel(text, emptyList(), emptyList())
         val segments = mutableListOf<RichTextSegment>()
         val emojiRanges = mutableListOf<IntRange>()
-        parseRange(text, emoji, 0, text.length, segments, emojiRanges)
+        parseRange(text, emoji, 0, text.length, segments, emojiRanges, mentions)
         return RichTextModel(text, segments, emojiRanges)
     }
 
@@ -85,6 +93,7 @@ internal object EmojiTextParser {
         endExclusive: Int,
         segments: MutableList<RichTextSegment>,
         emojiRanges: MutableList<IntRange>,
+        mentions: List<PostMention> = emptyList(),
     ) {
         var cursor = start
         while (cursor < endExclusive) {
@@ -98,7 +107,7 @@ internal object EmojiTextParser {
                 } else {
                     val labelSegments = mutableListOf<RichTextSegment>()
                     val labelEmoji = mutableListOf<IntRange>()
-                    parseRange(text, emoji, labelStart, labelEnd, labelSegments, labelEmoji)
+                    parseRange(text, emoji, labelStart, labelEnd, labelSegments, labelEmoji, mentions)
                     segments += RichTextSegment.Link(labelSegments, link.groupValues[2], link.range)
                     emojiRanges += labelEmoji
                 }
@@ -139,9 +148,22 @@ internal object EmojiTextParser {
             if (usernameMatch != null) {
                 val target = usernameMatch.value
                 val handle = target.substringBeforeLast('@')
-                segments += RichTextSegment.Username(handle, target, usernameMatch.range)
+                val mention = mentions.firstOrNull { it.handle.equals(target, ignoreCase = true) }
+                segments += RichTextSegment.Username(handle, target, usernameMatch.range, mention)
                 cursor = usernameMatch.range.last + 1
                 continue
+            }
+
+            val localMatch = localUsername.matchAt(text, cursor)
+                ?.takeIf { it.range.last + 1 <= endExclusive && entityBoundaryBefore(text, cursor) }
+            if (localMatch != null && mentions.isNotEmpty()) {
+                val next = text.getOrNull(localMatch.range.last + 1)
+                val mention = mentions.firstOrNull { it.handle.startsWith(localMatch.value + "@", ignoreCase = true) }
+                if (mention != null && next != '@' && (next == null || !next.isLetterOrDigit())) {
+                    segments += RichTextSegment.Username(localMatch.value, mention.handle, localMatch.range, mention)
+                    cursor = localMatch.range.last + 1
+                    continue
+                }
             }
 
             val hashtagMatch = hashtag.matchAt(text, cursor)

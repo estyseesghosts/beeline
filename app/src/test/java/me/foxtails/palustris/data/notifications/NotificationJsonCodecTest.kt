@@ -966,4 +966,26 @@ class NotificationJsonCodecTest {
             else -> assertEquals("value at $path", expected, actual)
         }
     }
+
+    @Test
+    fun aPostWithMentionsRoundTripsAndAnOldEntryDecodesToNone() {
+        val text = fixtureText("posts_and_accounts.json")
+        val withMentions = JSONObject(text)
+        val items = withMentions.getJSONArray("items")
+        val index = (0 until items.length()).first { items.getJSONObject(it).has("post") }
+        items.getJSONObject(index).getJSONObject("post").put(
+            "mentions",
+            org.json.JSONArray().put(
+                JSONObject().put("handle", "@far@remote.example").put("url", "https://remote.example/@far")
+                    .put("accountId", JSONObject().put("origin", "https://remote.example").put("protocol", "MASTODON").put("localId", "12")),
+            ),
+        )
+
+        val mention = decode(withMentions).items[index].post!!.mentions.single()
+        assertEquals("@far@remote.example", mention.handle)
+        assertEquals("12", mention.accountId?.localId)
+        assertEquals("https://remote.example/@far", mention.url)
+        assertEquals(mention, decode(encode(decode(withMentions))).items[index].post!!.mentions.single())
+        assertTrue(decode(fixture("posts_and_accounts.json")).items[index].post!!.mentions.isEmpty())
+    }
 }

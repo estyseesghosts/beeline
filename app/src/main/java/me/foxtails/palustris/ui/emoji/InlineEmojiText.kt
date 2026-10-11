@@ -56,6 +56,7 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.PostMention
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.links.rememberLinkOpener
 import me.foxtails.palustris.ui.motion.springClickable
@@ -78,6 +79,7 @@ fun InlineEmojiText(
     onSearchHashtag: ((String) -> Unit)? = null,
     onTextTap: (() -> Unit)? = null,
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
+    mentions: List<PostMention> = emptyList(),
 ) {
     val context = LocalContext.current
     val resolvedStyle = style.copy(
@@ -87,7 +89,7 @@ fun InlineEmojiText(
         color = MaterialTheme.colorScheme.primary,
         textDecoration = TextDecoration.Underline,
     )
-    val model = remember(text, emoji) { EmojiTextParser.parse(text, emoji) }
+    val model = remember(text, emoji, mentions) { EmojiTextParser.parse(text, emoji, mentions) }
     val bubbleTextStyle = MaterialTheme.typography.labelMedium
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current

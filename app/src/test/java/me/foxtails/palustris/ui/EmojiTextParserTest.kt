@@ -1,6 +1,7 @@
 package me.foxtails.palustris.ui.emoji
 
 import me.foxtails.palustris.domain.CustomEmoji
+import me.foxtails.palustris.domain.PostMention
 import me.foxtails.palustris.domain.ValidatedUrl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -165,5 +166,36 @@ class EmojiTextParserTest {
         assertEquals(1, model.segments.filterIsInstance<RichTextSegment.Hashtag>().size)
         assertTrue(model.segments.filterIsInstance<RichTextSegment.Link>().isEmpty())
         assertEquals("#Zurich", model.segments.filterIsInstance<RichTextSegment.Hashtag>().single().displayLabel)
+    }
+
+    private val mentions = listOf(
+        PostMention("@local@example.org"),
+        PostMention("@far@remote.example"),
+    )
+
+    @Test
+    fun aLocalTokenIsAUsernameOnlyWhenTheMentionListNamesIt() {
+        val named = EmojiTextParser.parse("hi @local and @word", emptyMap(), mentions)
+        val usernames = named.segments.filterIsInstance<RichTextSegment.Username>()
+
+        assertEquals(1, usernames.size)
+        assertEquals("@local", usernames.single().displayLabel)
+        assertEquals("@local@example.org", usernames.single().target)
+        assertEquals(mentions[0], usernames.single().mention)
+        assertTrue(EmojiTextParser.parse("hi @local", emptyMap()).segments.none { it is RichTextSegment.Username })
+    }
+
+    @Test
+    fun anEmailAddressAndAFollowedHostStayText() {
+        val model = EmojiTextParser.parse("mail local@example.org or @local@else.example", emptyMap(), mentions)
+
+        assertTrue(model.segments.filterIsInstance<RichTextSegment.Username>().all { it.mention == null })
+    }
+
+    @Test
+    fun aCompleteHandleCarriesItsMention() {
+        val model = EmojiTextParser.parse("@far@remote.example hi", emptyMap(), mentions)
+
+        assertEquals(mentions[1], model.segments.filterIsInstance<RichTextSegment.Username>().single().mention)
     }
 }

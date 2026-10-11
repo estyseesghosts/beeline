@@ -951,3 +951,17 @@ destination content), the Search pane, the Photo Grid and every `LargeBottomDock
 Robolectric does not render `RenderEffect`; tests cover the alpha values and that a row under the band stays tappable. The gradient
 was lowered to 0.18 and 0.28 after a first look on the emulator. Not verified: blur strength, scroll performance on the SM-G986W,
 an API 29 emulator, and the monochrome and Pure black themes.
+
+## Mention data (infdev 02 S9)
+
+`Post.mentions` (`PostMention(handle, accountId, url)`, `domain/SocialModels.kt`) holds the accounts a post mentions, each with a
+complete handle (`@user@host`). Mastodon maps the status `mentions` array: `acct` without a host gets the connection's host, the
+item's `id` becomes the account ID, and `htmlToMarkdown` writes the complete handle for a mention link whose `href` equals an item's
+`url`; a mention link with no item keeps its label. Misskey derives mentions from the note text (`MisskeyMapper.mentionsInText`):
+`@user` gets the connection's host, an email address or `word@word` is not a mention, and `accountId` stays null because the mapper
+makes no request. The parser (`EmojiTextParser.parse(text, emoji, mentions)`) accepts a local `@user` as a `Username` segment only
+when a mention names it; the segment carries its `PostMention`. The notification cache encodes mentions only when present, so old
+entries decode to none and re-encode unchanged. An edit replaces the mentions with the edit's. Edit, reply and quote do not send
+rendered text: edit reads the server source, reply and quote build their own text. The Username segment still shows `@user`
+without the host until S10 draws the bubble. Sources: `MastodonMapperTest`, `MisskeyMapperTest`, `EmojiTextParserTest`,
+`NotificationJsonCodecTest`. Pleroma and Akkoma mention shapes are not fixture-tested.

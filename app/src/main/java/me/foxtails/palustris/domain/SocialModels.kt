@@ -191,6 +191,18 @@ data class Post(
     val editedAtEpochMillis: Long? = null,
     /** True when the author kept the post on their own server. */
     val localOnly: Boolean = false,
+    /** The accounts this post mentions, with complete handles. Empty when the server named none. */
+    val mentions: List<PostMention> = emptyList(),
+)
+
+/**
+ * One account mentioned in a post. [handle] is complete, such as `@user@example.org`. [accountId] is set when the
+ * server gave the account's ID, and [url] when it gave the profile address. Neither server sends a display name.
+ */
+data class PostMention(
+    val handle: String,
+    val accountId: AccountId? = null,
+    val url: String? = null,
 )
 
 data class PostActionResult(

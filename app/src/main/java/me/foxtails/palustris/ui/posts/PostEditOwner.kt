@@ -58,6 +58,7 @@ internal fun mergedEdit(base: Post, stored: Post): Post {
     if (storedAt <= (base.editedAtEpochMillis ?: 0L)) return base
     return base.copy(
         text = stored.text,
+        mentions = stored.mentions,
         contentWarning = stored.contentWarning,
         attachments = stored.attachments,
         poll = stored.poll ?: base.poll,

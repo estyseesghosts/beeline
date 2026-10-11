@@ -13,6 +13,7 @@ import me.foxtails.palustris.domain.PollOption
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Translation
 import me.foxtails.palustris.domain.PostInteractionCounts
+import me.foxtails.palustris.domain.PostMention
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostContentVisibility
 import me.foxtails.palustris.domain.ProfileField
@@ -123,10 +124,12 @@ object MisskeyMapper {
             repostCount = json.optionalNonNegativeInt("renoteCount"),
             replyCount = json.optionalNonNegativeInt("repliesCount"),
         )
+        val noteText = if (hidden) "" else json.nullableString("text").orEmpty()
         return Post(
             id = id,
             author = account(json.getJSONObject("user"), origin),
-            text = if (hidden) "" else json.nullableString("text").orEmpty(),
+            mentions = mentionsInText(noteText, origin),
+            text = noteText,
             publishedAtEpochMillis = runCatching { Instant.parse(json.getString("createdAt")).toEpochMilli() }.getOrDefault(0),
             audience = when (json.optString("visibility")) { "home" -> Audience.Unlisted; "followers" -> Audience.Followers; "specified" -> Audience.Direct; else -> Audience.Public },
             attachments = if (hidden) emptyList() else (0 until files.length()).mapNotNull { i -> attachment(files.optJSONObject(i)) },
@@ -157,6 +160,21 @@ object MisskeyMapper {
                 ?.let { EntityId(origin, it) },
             contentVisibility = if (hidden) PostContentVisibility.Hidden else PostContentVisibility.Visible,
         )
+    }
+
+    /**
+     * Derives mentions from note text. The payload's `mentions` holds user IDs only, so the handles come from the
+     * text, with the connection's host added to `@user`. An email address or `word@word` is not a mention. The
+     * account ID stays null: the mapper makes no request.
+     */
+    fun mentionsInText(text: String, origin: String): List<PostMention> {
+        if (text.isEmpty()) return emptyList()
+        val homeHost = java.net.URI(origin).host.orEmpty()
+        return MENTION_PATTERN.findAll(text).map { match ->
+            val user = match.groupValues[1]
+            val host = match.groupValues[2].ifBlank { homeHost }
+            PostMention("@$user@$host")
+        }.distinctBy { it.handle.lowercase() }.toList()
     }
 
     /** Maps a note's poll. Misskey sends no expired flag, so the end time decides it. */
@@ -215,6 +233,7 @@ object MisskeyMapper {
     }
 
     private const val MAX_NESTING_DEPTH = 3
+    private val MENTION_PATTERN = Regex("(?<![A-Za-z0-9_.@/])@([A-Za-z0-9_]+)(?:@([A-Za-z0-9.-]*[A-Za-z0-9]))?(?![A-Za-z0-9_@])")
     private val MISSKEY_ACTIONS = setOf(PostAction.Reply, PostAction.Reshare, PostAction.Favorite, PostAction.React, PostAction.Bookmark)
 }
 

@@ -255,4 +255,16 @@ class MisskeyMapperTest {
                 .put("type", type)
                 .put("thumbnailUrl", JSONObject.NULL),
         ))
+
+    @Test
+    fun mentionsInTextGetCompleteHandlesAndPlainWordsAreNotMentions() {
+        val mentions = MisskeyMapper.mentionsInText(
+            "hello @user and @other@remote.example. mail me at me@example.org, @user again",
+            origin,
+        )
+
+        assertEquals(listOf("@user@example.org", "@other@remote.example"), mentions.map { it.handle })
+        assertTrue(mentions.all { it.accountId == null })
+        assertTrue(MisskeyMapper.mentionsInText("no mentions, only me@example.org", origin).isEmpty())
+    }
 }

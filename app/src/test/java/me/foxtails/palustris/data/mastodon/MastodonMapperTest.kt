@@ -320,4 +320,40 @@ class MastodonMapperTest {
         .put("account", JSONObject().put("id", "author").put("username", "author").put("acct", "author"))
         .put("content", id)
         .put("visibility", "public")
+
+    private fun status(content: String, mentions: JSONArray) = JSONObject()
+        .put("id", "s1").put("created_at", "2026-10-10T12:00:00.000Z").put("visibility", "public")
+        .put("content", content).put("mentions", mentions)
+        .put("account", JSONObject().put("id", "a0").put("username", "author").put("acct", "author").put("display_name", "Author"))
+
+    @Test
+    fun mentionsGetCompleteHandlesAndTheTextCarriesThem() {
+        val html = """<p><a href="https://example.org/@local" class="u-url mention">@<span>local</span></a> and """ +
+            """<a href="https://remote.example/@far" class="u-url mention">@<span>far</span></a> hi</p>"""
+        val post = MastodonMapper.post(
+            status(
+                html,
+                JSONArray()
+                    .put(JSONObject().put("id", "11").put("username", "local").put("acct", "local").put("url", "https://example.org/@local"))
+                    .put(JSONObject().put("id", "12").put("username", "far").put("acct", "far@remote.example").put("url", "https://remote.example/@far")),
+            ),
+            "https://example.org",
+        )
+
+        assertEquals(listOf("@local@example.org", "@far@remote.example"), post.mentions.map { it.handle })
+        assertEquals(listOf("11", "12"), post.mentions.map { it.accountId?.localId })
+        assertEquals("https://remote.example/@far", post.mentions[1].url)
+        assertEquals("@local@example.org and @far@remote.example hi", post.text)
+    }
+
+    @Test
+    fun aMentionLinkWithoutAnEntryKeepsItsLabel() {
+        val post = MastodonMapper.post(
+            status("""<p><a href="https://other.example/@x">@x</a> hi</p>""", JSONArray()),
+            "https://example.org",
+        )
+
+        assertTrue(post.mentions.isEmpty())
+        assertEquals("@x hi", post.text)
+    }
 }

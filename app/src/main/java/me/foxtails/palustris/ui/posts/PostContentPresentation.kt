@@ -47,6 +47,7 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.PostMention
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
@@ -93,6 +94,7 @@ internal fun PostBodyContent(
                             PostBodyText(
                                 text = bodyText,
                                 emoji = post.emoji,
+                                mentions = post.mentions,
                                 onTextTap = onOpenPost,
                                 onOpenUrl = onOpenUrl,
                                 onOpenUsername = onOpenUsername,
@@ -105,6 +107,7 @@ internal fun PostBodyContent(
                         PostBodyText(
                             text = bodyText,
                             emoji = post.emoji,
+                            mentions = post.mentions,
                             onTextTap = onOpenPost,
                             onOpenUrl = onOpenUrl,
                             onOpenUsername = onOpenUsername,
@@ -138,10 +141,12 @@ internal fun PostBodyText(
     onOpenUrl: ((String) -> Unit)? = null,
     onOpenUsername: ((String) -> Unit)? = null,
     onSearchHashtag: ((String) -> Unit)? = null,
+    mentions: List<PostMention> = emptyList(),
 ) {
     InlineEmojiText(
         text = text,
         emoji = emoji,
+        mentions = mentions,
         modifier = modifier,
         style = style,
         onTextTap = onTextTap,
