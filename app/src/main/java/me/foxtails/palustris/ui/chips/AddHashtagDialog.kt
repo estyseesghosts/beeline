@@ -10,8 +10,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.isExactHashtag
+import me.foxtails.palustris.domain.stripHashtagMarks
 
 /**
  * Asks for one exact hashtag to follow or save. The catalog validates and writes it. [onAdd] closes the
@@ -25,16 +28,17 @@ internal fun AddHashtagDialog(
     onClearError: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var input by remember { mutableStateOf("") }
+    var field by remember { mutableStateOf(TextFieldValue("")) }
+    val input = field.text
     val valid = isExactHashtag(input)
     AlertDialog(
         onDismissRequest = { if (!busy) onDismiss() },
         title = { Text(stringResource(R.string.photo_grid_add_hashtag_title)) },
         text = {
             OutlinedTextField(
-                value = input,
+                value = field,
                 onValueChange = {
-                    input = it
+                    field = it.withoutHashtagMarks()
                     onClearError()
                 },
                 enabled = !busy,
@@ -58,5 +62,19 @@ internal fun AddHashtagDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) }
         },
+    )
+}
+
+/**
+ * Removes `#` marks typed, pasted or composed into the field and keeps the caret on the same character.
+ * A value without marks returns unchanged, so an IME composition in progress is not disturbed.
+ */
+internal fun TextFieldValue.withoutHashtagMarks(): TextFieldValue {
+    val stripped = stripHashtagMarks(text)
+    if (stripped == text) return this
+    fun shifted(offset: Int) = stripHashtagMarks(text.substring(0, offset)).length
+    return TextFieldValue(
+        text = stripped,
+        selection = TextRange(shifted(selection.start), shifted(selection.end)),
     )
 }

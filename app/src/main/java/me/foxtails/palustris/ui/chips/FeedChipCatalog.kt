@@ -18,6 +18,7 @@ import me.foxtails.palustris.domain.HashtagOrigin
 import me.foxtails.palustris.domain.SavedHashtagRepository
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.hashtagIdentity
+import me.foxtails.palustris.domain.stripHashtagMarks
 import me.foxtails.palustris.domain.validateExactHashtag
 
 /**
@@ -97,7 +98,8 @@ internal class FeedChipCatalog(
      */
     fun addHashtag(raw: String, onAdded: (FeedSource.Hashtag) -> Unit = {}) {
         if (stopped || _state.value.busy) return
-        val accepted = runCatching { validateExactHashtag(raw) }.getOrElse {
+        // Both paths store the tag without the mark. The chip label adds the single `#` back.
+        val accepted = runCatching { validateExactHashtag(stripHashtagMarks(raw)) }.getOrElse {
             publish(error = FeedChipError.InvalidHashtag)
             return
         }
@@ -110,11 +112,11 @@ internal class FeedChipCatalog(
         change {
             if (useServerTags == true) {
                 source.followTag(accepted)
-                serverTags = (serverTags + accepted.removePrefix("#")).distinctBy(::hashtagIdentity)
+                serverTags = (serverTags + accepted).distinctBy(::hashtagIdentity)
             } else {
                 saved.update(accountId) { it.copy(tags = (it.tags + accepted).distinctBy(::hashtagIdentity)) }
             }
-            onAdded(FeedSource.Hashtag(accepted.removePrefix("#"), origin()))
+            onAdded(FeedSource.Hashtag(accepted, origin()))
         }
     }
 

@@ -202,7 +202,7 @@ class HomeChipsTest {
         compose.onNode(hasSetTextAction()).performSemanticsAction(SemanticsActions.SetText) { it(AnnotatedString("#dogs")) }
         compose.onNodeWithText("Add").performClick()
 
-        assertEquals(listOf("#dogs"), added)
+        assertEquals(listOf("dogs"), added)
         assertEquals(FeedSource.Hashtag("dogs", HashtagOrigin.Server), selected)
     }
 

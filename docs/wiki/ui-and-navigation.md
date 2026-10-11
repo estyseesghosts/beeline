@@ -876,7 +876,7 @@ first frame with a play badge. A tap opens the description editor, as for an ima
 
 Home and the Photo Grid share one chip row: built-in timelines, then lists, hashtags and antennas, then an add-hashtag control. `FeedChipCatalog` owns the lists, hashtags and antennas for one connected session. `FeedChipsHost` registers it with the entry store, so it retires with the session. Each surface keeps its own selected chip.
 
-- A hashtag chip comes from the server on Mastodon (followed tags) and from the device on Misskey-family servers (`SavedHashtagRepository`, stored in `photo-grid-preferences.json` under the old `hashtags` key).
+- A hashtag chip comes from the server on Mastodon (followed tags) and from the device on Misskey-family servers (`SavedHashtagRepository`, stored in `photo-grid-preferences.json` under the old `hashtags` key). Both paths store the tag without `#`. A value saved with `#` loads without it. The add dialog removes `#` and `＃` as the user types or pastes (`stripHashtagMarks`), and `hashtagChipLabel` adds the one displayed `#`.
 - A long press, or the TalkBack action, on a hashtag chip opens a bubble with one button: Unfollow on Mastodon, Remove on Misskey. List and antenna chips have no long-press action.
 - A selected chip that leaves the catalog sends that surface back to Home.
 - The catalog refreshes at session start, on pull-to-refresh, and after every follow, unfollow, save and remove.

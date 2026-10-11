@@ -23,8 +23,8 @@ import kotlinx.coroutines.withContext
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.SavedHashtagRepository
 import me.foxtails.palustris.domain.SavedHashtags
+import me.foxtails.palustris.domain.hashtagBody
 import me.foxtails.palustris.domain.hashtagIdentity
-import me.foxtails.palustris.domain.validateExactHashtag
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -120,14 +120,16 @@ class FileSavedHashtagRepository @Inject constructor(
     )
 }
 
+/** Stores a tag without its `#`. A value saved before this rule keeps its mark on disk and loads without it. */
+private fun storedTag(value: String): String? = runCatching { hashtagBody(value) }.getOrNull()
+
 private fun normalize(preferences: SavedHashtags): SavedHashtags = SavedHashtags(
-    preferences.tags.mapNotNull { runCatching { validateExactHashtag(it) }.getOrNull() }
-        .distinctBy(::hashtagIdentity),
+    preferences.tags.mapNotNull(::storedTag).distinctBy(::hashtagIdentity),
 )
 
 private fun validHashtags(values: JSONArray): List<String> = (0 until values.length())
     .mapNotNull { index -> values.optString(index).takeIf(String::isNotBlank) }
-    .mapNotNull { runCatching { validateExactHashtag(it) }.getOrNull() }
+    .mapNotNull(::storedTag)
     .distinctBy(::hashtagIdentity)
 
 class InMemorySavedHashtagRepository : SavedHashtagRepository {

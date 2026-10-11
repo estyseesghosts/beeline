@@ -12,6 +12,7 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.SavedHashtags
 import me.foxtails.palustris.domain.hashtagIdentity
 import me.foxtails.palustris.domain.isExactHashtag
+import me.foxtails.palustris.domain.stripHashtagMarks
 import me.foxtails.palustris.domain.validateExactHashtag
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -43,7 +44,7 @@ class SavedHashtagRepositoryTest {
             SavedHashtags(listOf("#Cats", "#cats", "dogs"))
         }
 
-        assertEquals(listOf("#Cats", "dogs"), repository.observe(account).first().tags)
+        assertEquals(listOf("Cats", "dogs"), repository.observe(account).first().tags)
         assertEquals(hashtagIdentity("#Cats"), hashtagIdentity("cats"))
     }
 
@@ -58,8 +59,28 @@ class SavedHashtagRepositoryTest {
         }
 
         val recreated = FileSavedHashtagRepository(context)
-        assertEquals(listOf("#Travel"), recreated.observe(misskey).first { it.tags.isNotEmpty() }.tags)
+        assertEquals(listOf("Travel"), recreated.observe(misskey).first { it.tags.isNotEmpty() }.tags)
         assertTrue(recreated.observe(mastodon).first().tags.isEmpty())
+    }
+
+    @Test
+    fun fileWrittenWithMarksLoadsWithoutThem() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = File(context.noBackupFilesDir, "photo-grid-preferences.json")
+        val misskey = account(Protocol.MISSKEY)
+        file.delete()
+        FileSavedHashtagRepository(context).update(misskey) { SavedHashtags(listOf("Seed")) }
+        file.writeText(file.readText().replace("Seed", "#photo\",\"#Photo\",\"art"))
+
+        val loaded = FileSavedHashtagRepository(context).observe(misskey).first { it.tags.isNotEmpty() }
+        assertEquals(listOf("photo", "art"), loaded.tags)
+    }
+
+    @Test
+    fun stripHashtagMarksRemovesEveryMark() {
+        assertEquals("cats", stripHashtagMarks("#cats"))
+        assertEquals("cats", stripHashtagMarks("＃c#a＃ts#"))
+        assertEquals("cats", stripHashtagMarks("cats"))
     }
 
     private fun account(protocol: Protocol) = AccountId(

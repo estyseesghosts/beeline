@@ -145,7 +145,7 @@ class FeedChipCatalogTest {
         catalog.addHashtag("#Cats") { added = it }
         advanceUntilIdle()
 
-        assertEquals(listOf("#Cats"), source.followCalls)
+        assertEquals(listOf("Cats"), source.followCalls)
         assertEquals(FeedSource.Hashtag("Cats", HashtagOrigin.Server), added)
         assertEquals(listOf("Cats"), catalog.state.value.hashtags.map { it.tag })
         catalog.stop()
@@ -228,7 +228,7 @@ class FeedChipCatalogTest {
         val catalog = catalog(this, source, repository)
         advanceUntilIdle()
 
-        assertEquals(listOf("#photo", "#art"), source.followCalls)
+        assertEquals(listOf("photo", "art"), source.followCalls)
         assertTrue(repository.snapshot().isEmpty())
         assertEquals(listOf("photo", "art"), catalog.state.value.hashtags.map { it.tag })
         catalog.stop()
@@ -243,7 +243,7 @@ class FeedChipCatalogTest {
         advanceUntilIdle()
         first.stop()
 
-        assertEquals(listOf("#art"), repository.snapshot())
+        assertEquals(listOf("art"), repository.snapshot())
         assertEquals(listOf("photo"), source.followed)
 
         source.failFollow = emptySet()
@@ -264,8 +264,38 @@ class FeedChipCatalogTest {
         advanceUntilIdle()
 
         assertTrue(source.followCalls.isEmpty())
-        assertEquals(listOf("#photo"), repository.snapshot())
+        // The old value with its mark loads and is held without it.
+        assertEquals(listOf("photo"), repository.snapshot())
         catalog.stop()
+    }
+
+    @Test
+    fun addingWithOrWithoutTheMarkGivesTheSameChipOnBothProtocols() = runTest {
+        for (caps in listOf(misskeyCaps(), mastodonCaps())) {
+            val source = FakeSource(caps)
+            val repository = InMemorySavedHashtagRepository()
+            val catalog = catalog(this, source, repository)
+            advanceUntilIdle()
+
+            var added: FeedSource.Hashtag? = null
+            catalog.addHashtag("#tag") { added = it }
+            advanceUntilIdle()
+            catalog.addHashtag("tag")
+            advanceUntilIdle()
+
+            assertEquals("tag", added?.tag)
+            assertEquals(listOf("tag"), catalog.state.value.hashtags.map { it.tag })
+            assertEquals("#tag", hashtagChipLabel(catalog.state.value.hashtags.single().tag))
+            assertTrue(repository.snapshot().all { '#' !in it })
+            assertTrue(source.followCalls.all { '#' !in it })
+            catalog.stop()
+        }
+    }
+
+    @Test
+    fun hashtagChipLabelShowsOneMarkForStoredTagWithOrWithoutIt() {
+        assertEquals("#tag", hashtagChipLabel("tag"))
+        assertEquals("#tag", hashtagChipLabel("#tag"))
     }
 
     @Test
