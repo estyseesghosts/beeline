@@ -2,11 +2,20 @@
 
 Status: current  
 Owner: Maintainers  
-Last reviewed: 2026-10-09  
+Last reviewed: 2026-10-10  
 Stale when: A release ships without an entry here.
 
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
+
+## 0.2.15
+
+### New
+
+- Polls work on Misskey-family and Mastodon-compatible servers. Create a poll in the composer, vote on polls in the feed, and see the results.
+- You can edit your own posts on Mastodon and Sharkey servers.
+- Quote posts interoperate with other servers. Posts can be local-only or scheduled.
+- A video without a server-sent poster image uses its first frame as the poster.
 
 ## 0.2.14
 
