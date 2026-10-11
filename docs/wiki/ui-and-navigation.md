@@ -934,9 +934,20 @@ and `#name` otherwise. News shows the link cards and keeps its own scroll state.
 ## Floating chrome depth: gradient (infdev 02 S8a)
 
 `Modifier.floatingChromeScrim()` (`ui/components/FloatingChromeScrim.kt`) draws a vertical gradient behind a stack of floating
-controls: transparent 32 dp above the node, theme scrim at 0.30 alpha (light) or 0.45 (dark) at its bottom edge. It only draws,
+controls: transparent 32 dp above the node, theme scrim at 0.18 alpha (light) or 0.28 (dark) at its bottom edge. It only draws,
 so it takes no pointer input, adds no semantics and changes no clearance; it follows the node it decorates, so it moves with
 the IME and leaves with the controls. Hosts: the inner box of the compact bottom overlay in `ShellContent` (before the inset
 padding, so it extends under the system bar), the Photo Grid chip row, the compact Search stack and `LargeBottomDock`.
 The pane hosts cover only their own controls, so with the pill hidden the band stops above the system bar. The alpha values
 and the double darkening where the Photo Grid band meets the pill band are not tuned on a device. The blur is S8b.
+
+## Floating chrome depth: blur (infdev 02 S8b)
+
+On API 31 and later, a band with a `ChromeBackdrop` also draws a blurred copy (12 dp) of the content under it, faded in by the
+band gradient. The host records its content into one `GraphicsLayer` (`chromeBackdropSource`) and the band, a sibling drawn above
+it, draws that layer into its own layer with a `BlurEffect` and a gradient mask. `rememberChromeBackdrop()` returns null on API 29
+and 30 and while battery saver is on, and the band then draws the gradient alone. Hosts: the compact shell overlay (source is the
+destination content), the Search pane, the Photo Grid and `LargeBottomDock`. Platform path only, so no haze fallback was needed.
+Robolectric does not render `RenderEffect`; tests cover the alpha values and that a row under the band stays tappable. The gradient
+was lowered to 0.18 and 0.28 after a first look on the emulator. Not verified: blur strength, scroll performance on the SM-G986W,
+an API 29 emulator, and the monochrome and Pure black themes.

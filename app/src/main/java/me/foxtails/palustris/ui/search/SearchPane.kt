@@ -71,7 +71,9 @@ import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
+import me.foxtails.palustris.ui.components.chromeBackdropSource
 import me.foxtails.palustris.ui.components.floatingChromeScrim
+import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
@@ -247,9 +249,10 @@ fun SearchPane(
         ),
     )
 
+    val backdrop = rememberChromeBackdrop()
     Box(Modifier.fillMaxSize()) {
         SearchContent(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().chromeBackdropSource(backdrop),
             query = query,
             search = search,
             trends = trends,
@@ -266,6 +269,7 @@ fun SearchPane(
         )
         if (largeLayout) {
             LargeBottomDock(
+                backdrop = backdrop,
                 leftClearance = wideLeftClearance,
                 rightClearance = wideRightClearance,
                 content = {
@@ -305,7 +309,7 @@ fun SearchPane(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .windowInsetsPadding(controlsPositioningInsets)
-                    .floatingChromeScrim(),
+                    .floatingChromeScrim(backdrop = backdrop),
                 verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing),
             ) {
                 if (tabRowSpace) {

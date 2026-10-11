@@ -74,7 +74,9 @@ import me.foxtails.palustris.ui.chips.feedExtraChipEntries
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
+import me.foxtails.palustris.ui.components.chromeBackdropSource
 import me.foxtails.palustris.ui.components.floatingChromeScrim
+import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
@@ -323,8 +325,9 @@ fun PhotoGridScreen(
         )
     }
 
+    val backdrop = rememberChromeBackdrop()
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().chromeBackdropSource(backdrop)) {
             when {
                 state.loading && mediaItems.isEmpty() -> PhotoGridLoading(Modifier.fillMaxSize().testTag("photo_grid_content"))
                 state.error != null && mediaItems.isEmpty() -> PhotoGridError(
@@ -417,7 +420,7 @@ fun PhotoGridScreen(
                     .windowInsetsPadding(
                         compactContextualControlsPositioningInsets(compactNavigationVisible),
                     )
-                    .floatingChromeScrim(),
+                    .floatingChromeScrim(backdrop = backdrop),
                 rowTestTag = "photo_grid_filters",
                 visibilityToggleTestTag = "photo_grid_filters_visibility",
                 caretPresentation = photoGridCaretPresentation,
@@ -426,6 +429,7 @@ fun PhotoGridScreen(
             )
         } else {
             LargeBottomDock(
+                backdrop = backdrop,
                 // The wide dock clears the floating chrome the same way the Home timeline dock does.
                 modifier = Modifier.align(Alignment.BottomStart)
                     .absolutePadding(bottom = wideBottomClearance)

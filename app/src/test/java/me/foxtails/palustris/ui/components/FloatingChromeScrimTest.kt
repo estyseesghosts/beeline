@@ -29,8 +29,8 @@ class FloatingChromeScrimTest {
 
     @Test
     fun darkThemesGetAStrongerBandThanLightOnes() {
-        assertEquals(0.30f, floatingChromeScrimAlpha(darkTheme = false), 0.001f)
-        assertEquals(0.45f, floatingChromeScrimAlpha(darkTheme = true), 0.001f)
+        assertEquals(0.18f, floatingChromeScrimAlpha(darkTheme = false), 0.001f)
+        assertEquals(0.28f, floatingChromeScrimAlpha(darkTheme = true), 0.001f)
         assertTrue(floatingChromeScrimAlpha(true) > floatingChromeScrimAlpha(false))
     }
 

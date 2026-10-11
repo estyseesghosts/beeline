@@ -47,8 +47,11 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
+import me.foxtails.palustris.ui.components.ChromeBackdrop
 import me.foxtails.palustris.ui.components.DestinationChipRow
+import me.foxtails.palustris.ui.components.chromeBackdropSource
 import me.foxtails.palustris.ui.components.floatingChromeScrim
+import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.large.LargeLayoutMode
 import me.foxtails.palustris.ui.large.LargeScreenShell
 import me.foxtails.palustris.ui.large.NavigationFit
@@ -99,6 +102,7 @@ private fun BoxScope.CompactShellNavigation(
     homeChipRowVisible: Boolean,
     onToggleHomeChipRow: () -> Unit,
     caretSlot: CompactCaretSlot = CompactCaretSlot.Inline,
+    backdrop: ChromeBackdrop? = null,
 ) {
     val motionScheme = LocalPalustrisMotionScheme.current
     AnimatedVisibility(
@@ -109,7 +113,7 @@ private fun BoxScope.CompactShellNavigation(
     ) {
         Box(
             Modifier.fillMaxWidth()
-                .floatingChromeScrim()
+                .floatingChromeScrim(backdrop = backdrop)
                 .windowInsetsPadding(compactGlobalNavigationPositioningInsets())
                 .padding(vertical = CompactOverlayVerticalPadding),
             contentAlignment = Alignment.Center,
@@ -263,6 +267,7 @@ internal fun ShellContent(
         navigator.page == null && navigator.singlePost == null
     // The compact bar is the only chrome in a wide pane layout when the vertical stack cannot
     // fit, so wide content keeps its own end clearance for that bar.
+    val backdrop = rememberChromeBackdrop()
     val compactFallbackClearance = if (wideContent && compactNavigation && navigator.navigationVisible) {
         val base = compactGlobalNavigationPositioningInsets().asPaddingValues().calculateBottomPadding()
         val paneBottomInset = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
@@ -380,7 +385,7 @@ internal fun ShellContent(
                     )
                 } else {
                     ShellDestinationContent(
-                        paneModifier = Modifier.fillMaxSize(),
+                        paneModifier = Modifier.fillMaxSize().chromeBackdropSource(backdrop),
                         navigator = navigator,
                         overlay = overlay,
                         screenStates = screenStates,
@@ -422,6 +427,7 @@ internal fun ShellContent(
                 // navigation surface.
                 if (compactNavigation && navigator.page == null && !modalOverlayOpen) {
                     CompactShellNavigation(
+                        backdrop = backdrop,
                         navigator = navigator,
                         overlay = overlay,
                         account = account,
