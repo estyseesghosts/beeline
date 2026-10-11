@@ -7,11 +7,12 @@ import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
-import me.foxtails.palustris.domain.hashtags.HashtagSuggestionService
+import me.foxtails.palustris.ui.links.PostLinkResolver
 
-/** Owns Search state and requests for one connected account and session revision. */
+/** Owns Search and Trends state and requests for one connected account and session revision. */
 internal class SearchOwner(
     val accountId: AccountId,
     private val source: SocialSource,
@@ -19,6 +20,7 @@ internal class SearchOwner(
     scope: CoroutineScope,
     applyFavouritePreference: (Post) -> Post,
     hashtagInput: () -> HashtagExpansionInput = { HashtagExpansionInput.Disabled },
+    linkResolver: () -> PostLinkResolver? = { null },
 ) {
     private val controller = SearchController(
         source = source,
@@ -26,51 +28,68 @@ internal class SearchOwner(
         applyFavouritePreference = applyFavouritePreference,
         onStateChanged = {},
         hashtagInput = hashtagInput,
+        linkResolver = linkResolver,
     )
 
-    private val explore = SearchExploreController(
+    private val trends = SearchTrendsController(
         source = source,
         scope = scope,
-        suggestionService = HashtagSuggestionService(
-            catalog = hashtagInput().catalog,
-            accountKey = "${accountId.connection.origin}/${accountId.localId}",
-            policy = { hashtagInput().policy },
-            fetchServer = source::suggestHashtags,
-        ),
+        applyFavouritePreference = applyFavouritePreference,
     )
 
-    val state: StateFlow<AccountSearchState> = controller.state
+    val state: StateFlow<SearchState> = controller.state
 
-    val exploreState: StateFlow<SearchExploreState> = explore.state
+    val trendsState: StateFlow<SearchTrendsState> = trends.state
 
     fun search(query: String) = controller.search(query)
 
     fun searchWithoutRelated(query: String) = controller.searchWithoutRelated(query)
 
+    fun suggest(text: String) = controller.suggest(text)
+
     fun loadMore() = controller.loadMore()
 
-    fun loadTrending() = explore.loadTrending()
+    fun consumeTarget() = controller.consumeTarget()
 
-    fun loadPopularAccounts() = explore.loadPopularAccounts()
+    fun loadTrends() = trends.load()
 
-    fun suggestHashtags(text: String) = explore.suggest(text)
+    fun loadMoreTrends() = trends.loadMore()
+
+    fun refreshTrends() = trends.refresh()
 
     fun applyExternalPost(updated: OwnedPost) {
         if (updated.fetchedBy != accountId || updated.sessionRevision != sessionRevision) return
         controller.updateExternalPost(updated.effectiveTargetId(), updated.post)
+        trends.updateExternalPost(updated.effectiveTargetId(), updated.post)
     }
 
     fun applyDeletedPost(deleted: OwnedPost) {
         if (deleted.fetchedBy != accountId || deleted.sessionRevision != sessionRevision) return
         controller.removeDeletedPost(deleted.post)
+        trends.removeDeletedPost(deleted.post)
     }
 
-    fun applyPublishedPost(request: CreatePostRequest) = controller.applyPublishedPost(request)
+    fun applyPublishedPost(request: CreatePostRequest) {
+        controller.applyPublishedPost(request)
+        request.replyTo?.let { target ->
+            trends.updatePost(target) { post ->
+                post.copy(interactionCounts = post.interactionCounts.copy(replyCount = post.interactionCounts.replyCount.adjustedBy(1)))
+            }
+        }
+        request.quoteOf?.let { target ->
+            trends.updatePost(target) { post ->
+                post.copy(interactionCounts = post.interactionCounts.copy(quoteRepostCount = post.interactionCounts.quoteRepostCount.adjustedBy(1)))
+            }
+        }
+    }
 
-    fun updateFavouritePreference(transform: (Post) -> Post) = controller.updatePosts(transform)
+    fun updateFavouritePreference(transform: (Post) -> Post) {
+        controller.updatePosts(transform)
+        trends.updatePosts(transform)
+    }
 
     fun release() {
         controller.stop()
-        explore.stop()
+        trends.stop()
     }
 }

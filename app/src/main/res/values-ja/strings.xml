@@ -73,10 +73,6 @@
     <string name="common_refresh">リロード</string>
     <string name="photo_grid_hashtag_hint">ハッシュタグ</string>
     <string name="dialog_add">追加</string>
-    <string name="search_category_profiles">プロフィール</string>
-    <string name="search_category_hashtags">ハッシュタグ</string>
-    <string name="search_category_news">ニュース</string>
-    <string name="search_category_for_you">おすすめ</string>
     <string name="composer_remove_quote">削除</string>
     <string name="composer_content_warning">コンテンツ警告</string>
     <string name="composer_publish">公開</string>
@@ -126,6 +122,5 @@
     <plurals name="search_trending_people">
         <item quantity="other">%1$d人</item>
     </plurals>
-    <string name="search_popular_accounts">人気のアカウント</string>
     <string name="composer_insert_hashtag">ハッシュタグ %1$s を挿入</string>
 </resources>

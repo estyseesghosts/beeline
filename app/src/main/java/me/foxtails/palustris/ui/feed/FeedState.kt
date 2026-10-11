@@ -9,14 +9,14 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.domain.SavedPostsCapability
 import me.foxtails.palustris.domain.Timeline
-import me.foxtails.palustris.ui.search.AccountSearchState
+import me.foxtails.palustris.ui.search.SearchState
 
 data class FeedState(
     val favouriteArtworkStyle: FavouriteArtworkStyle = FavouriteArtworkStyle.Heart,
     val posts: List<Post> = emptyList(),
     val ownedPosts: List<OwnedPost> = emptyList(),
     /** Retained for isolated presentation fixtures; connected Search owns live state. */
-    val accountSearch: AccountSearchState = AccountSearchState(),
+    val accountSearch: SearchState = SearchState(),
     val timeline: Timeline = Timeline.Home,
     val timelines: Set<Timeline> = setOf(Timeline.Home),
     val canPublish: Boolean = false,

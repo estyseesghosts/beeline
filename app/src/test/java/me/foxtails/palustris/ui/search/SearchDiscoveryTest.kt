@@ -1,8 +1,10 @@
 package me.foxtails.palustris.ui.search
 
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -12,6 +14,8 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
 import me.foxtails.palustris.domain.hashtags.TrendingHashtag
+import me.foxtails.palustris.domain.search.SearchSuggestions
+import me.foxtails.palustris.domain.search.TrendingLink
 import me.foxtails.palustris.ui.PalustrisTheme
 import me.foxtails.palustris.ui.shell.AppShellFixtures
 import org.junit.Assert.assertEquals
@@ -33,30 +37,32 @@ class SearchDiscoveryTest {
     private val searched = mutableListOf<String>()
     private val typed = mutableListOf<String>()
     private var trendingLoads = 0
-    private var popularLoads = 0
     private val opened = mutableListOf<Account>()
 
-    private val actions = object : SearchExploreActions {
-        override fun loadTrending() { trendingLoads++ }
-        override fun loadPopularAccounts() { popularLoads++ }
-        override fun suggestHashtags(text: String) { typed += text }
+    private val trendsActions = object : SearchTrendsActions {
+        override fun loadTrends() {
+            trendingLoads++
+        }
+
+        override fun refreshTrends() {
+            trendingLoads++
+        }
     }
 
     private fun show(
         query: String,
-        tab: Int,
-        accountSearch: AccountSearchState = AccountSearchState(),
-        explore: SearchExploreState = SearchExploreState(),
+        search: SearchState = SearchState(),
+        trends: SearchTrendsState = SearchTrendsState(),
     ) {
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 PalustrisTheme {
                     SearchScreen(
-                        accountSearch = accountSearch,
-                        explore = explore,
-                        exploreActions = actions,
+                        search = search,
+                        trends = trends,
+                        trendsActions = trendsActions,
                         sharedQuery = query,
-                        sharedTab = tab,
+                        onSuggest = { typed += it },
                         onSearchHashtag = { searched += it },
                         onAccountClick = { opened += it },
                         mediaOwner = author.id,
@@ -70,8 +76,14 @@ class SearchDiscoveryTest {
     private fun text(id: Int) = compose.activity.getString(id)
 
     @Test
-    fun blankHashtagsTabListsTrendingRowsAndATapSearchesTheHashtag() {
-        show("", 1, explore = SearchExploreState(trending = listOf(TrendingHashtag("cats", 120, 400), TrendingHashtag("art", 1, null))))
+    fun blankQueryShowsTrendingTagsAndATapSearchesTheHashtag() {
+        show(
+            "",
+            trends = SearchTrendsState(
+                tags = listOf(TrendingHashtag("cats", 120, 400), TrendingHashtag("art", 1, null)),
+                loaded = true,
+            ),
+        )
 
         compose.onNodeWithText(text(R.string.search_trending_hashtags)).assertIsDisplayed()
         compose.onNodeWithText("120 people").assertIsDisplayed()
@@ -83,51 +95,107 @@ class SearchDiscoveryTest {
     }
 
     @Test
-    fun anEmptyTrendingListKeepsTheOldPromptAndShowsNoError() {
-        show("", 1)
+    fun trendingPostsAndLinksAppearWhenTheServerReportsThem() {
+        show(
+            "",
+            trends = SearchTrendsState(
+                posts = listOf(AppShellFixtures.post("t1", author, "Trending hello")),
+                links = listOf(TrendingLink("https://example.org/a", "A headline", null, "Example", null)),
+                loaded = true,
+            ),
+        )
 
-        compose.onNodeWithText(text(R.string.search_explore_hashtags)).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.search_trending_posts)).assertIsDisplayed()
         assertTrue(compose.onAllTagged("search_trending_results").isEmpty())
-        assertEquals(1, trendingLoads)
     }
 
     @Test
-    fun aTypedHashtagShowsSuggestionsAndATapSearchesIt() {
-        show("#pho", 1, explore = SearchExploreState(suggestions = listOf(HashtagSuggestion("photography", 9.0), HashtagSuggestion("phone", null))))
+    fun anEmptyTrendsAnswerShowsOneEmptyState() {
+        show("", trends = SearchTrendsState(loaded = true))
 
-        compose.onNodeWithTag("search_suggestion_row_photography", useUnmergedTree = true).assertIsDisplayed()
-        compose.onNodeWithTag("search_suggestion_row_phone", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.search_trends_empty)).assertIsDisplayed()
+    }
+
+    @Test
+    fun aFailedTrendsLoadShowsTheErrorAndRetryLoadsAgain() {
+        show("", trends = SearchTrendsState(loaded = true, error = "offline"))
+
+        compose.onNodeWithText(text(R.string.search_trends_failed)).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.search_trends_retry)).performClick()
+        assertEquals(2, trendingLoads)
+    }
+
+    @Test
+    fun typingShowsPeopleAndHashtagSuggestionsAndTapsRoute() {
+        val matched = AppShellFixtures.account("matched")
+        show(
+            "pho",
+            search = SearchState(
+                suggestionsFor = "pho",
+                suggestions = SearchSuggestions(
+                    accounts = listOf(matched),
+                    hashtags = listOf(HashtagSuggestion("photography", 9.0), HashtagSuggestion("phone", null)),
+                ),
+            ),
+        )
+
+        compose.onNodeWithText(text(R.string.search_suggestions_people)).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.search_suggestions_hashtags)).assertIsDisplayed()
         compose.onNodeWithTag("search_suggestion_row_phone", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("search_account_row_matched", useUnmergedTree = true).performClick()
 
         assertEquals(listOf("#phone"), searched)
-        assertEquals("#pho", typed.last())
+        assertEquals(listOf(matched.id), opened.map { it.id })
+        assertEquals("pho", typed.last())
     }
 
     @Test
-    fun aTypedHashtagWithoutSuggestionsKeepsTheReadyState() {
-        show("#pho", 1)
+    fun aSectionWithNoRowsDoesNotAppear() {
+        show(
+            "pho",
+            search = SearchState(
+                suggestionsFor = "pho",
+                suggestions = SearchSuggestions(hashtags = listOf(HashtagSuggestion("phone", null))),
+            ),
+        )
 
-        compose.onNodeWithText(text(R.string.search_hashtag_ready)).assertIsDisplayed()
+        assertTrue(compose.onAllNodes(hasText(text(R.string.search_suggestions_people))).fetchSemanticsNodes().isEmpty())
+        compose.onNodeWithText(text(R.string.search_suggestions_hashtags)).assertIsDisplayed()
     }
 
     @Test
-    fun aSubmittedSearchReplacesSuggestionsAndStopsAskingForThem() {
-        val answered = AccountSearchState(query = "#pho", tagQuery = "pho", posts = listOf(AppShellFixtures.post("p1", author, "Hello")))
-        show("#pho", 1, accountSearch = answered, explore = SearchExploreState(suggestions = listOf(HashtagSuggestion("photography", 9.0))))
+    fun noSuggestionsKeepsThePressEnterPrompt() {
+        show("pho")
+
+        compose.onNodeWithText(text(R.string.search_ready_prompt)).assertIsDisplayed()
+    }
+
+    @Test
+    fun aSubmittedSearchReplacesSuggestions() {
+        val answered = SearchState(
+            query = "#pho",
+            mode = SearchMode.Hashtag,
+            tagQuery = "pho",
+            posts = listOf(AppShellFixtures.post("p1", author, "Hello")),
+            suggestions = SearchSuggestions(hashtags = listOf(HashtagSuggestion("photography", 9.0))),
+            suggestionsFor = "#pho",
+        )
+        show("#pho", search = answered)
 
         assertTrue(compose.onAllTagged("search_suggestion_results").isEmpty())
-        assertEquals("", typed.last())
+        compose.onNodeWithTag("search_hashtag_results", useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test
     fun relatedChipsFollowTheStateAndATapSearchesThatHashtag() {
-        val answered = AccountSearchState(
+        val answered = SearchState(
             query = "#caturday",
+            mode = SearchMode.Hashtag,
             tagQuery = "caturday",
             relatedTags = listOf("cats", "kitten"),
             posts = listOf(AppShellFixtures.post("p1", author, "Hello")),
         )
-        show("#caturday", 1, accountSearch = answered)
+        show("#caturday", search = answered)
 
         compose.onNodeWithTag("search_hashtag_related", useUnmergedTree = true).assertIsDisplayed()
         // No merge happened, so the "Includes" line stays hidden while the chips show.
@@ -139,69 +207,41 @@ class SearchDiscoveryTest {
 
     @Test
     fun noRelatedChipsWhenThereAreNone() {
-        val answered = AccountSearchState(
+        val answered = SearchState(
             query = "#dogs",
+            mode = SearchMode.Hashtag,
             tagQuery = "dogs",
             posts = listOf(AppShellFixtures.post("p1", author, "Hello")),
         )
-        show("#dogs", 1, accountSearch = answered)
+        show("#dogs", search = answered)
 
         assertTrue(compose.onAllTagged("search_hashtag_related").isEmpty())
     }
 
     @Test
-    fun trendingLoadsOnlyForABlankHashtagsTab() {
-        val tab = mutableStateOf(0)
-        compose.activity.runOnUiThread {
-            compose.activity.setContent {
-                PalustrisTheme {
-                    SearchScreen(exploreActions = actions, sharedQuery = "", sharedTab = tab.value)
-                }
-            }
-        }
-        compose.waitForIdle()
-        assertEquals(0, trendingLoads)
+    fun aDeniedPostSearchNamesThePolicyInsteadOfAnEmptyAnswer() {
+        show("hello", search = SearchState(query = "hello", mode = SearchMode.Posts, postSearchDenied = true))
 
-        compose.runOnIdle { tab.value = 1 }
-        compose.waitForIdle()
-        assertEquals(1, trendingLoads)
+        compose.onNodeWithText(text(R.string.search_posts_denied)).assertIsDisplayed()
     }
 
     @Test
-    fun blankProfilesTabListsPopularAccountsAndATapOpensTheProfile() {
-        val popular = AppShellFixtures.account("popular")
-        show("", 0, explore = SearchExploreState(popularAccounts = listOf(popular)))
-
-        compose.onNodeWithText(text(R.string.search_popular_accounts)).assertIsDisplayed()
-        compose.onNodeWithTag("search_account_row_popular", useUnmergedTree = true).performClick()
-
-        assertEquals(listOf(popular.id), opened.map { it.id })
-        assertEquals(1, popularLoads)
-        assertEquals(0, trendingLoads)
-    }
-
-    @Test
-    fun anEmptyPopularListKeepsTheOldPrompt() {
-        show("", 0)
-
-        compose.onNodeWithText(text(R.string.search_find_account)).assertIsDisplayed()
-        assertTrue(compose.onAllTagged("search_popular_accounts").isEmpty())
-    }
-
-    @Test
-    fun typingAnAccountQueryReplacesThePopularList() {
-        val popular = AppShellFixtures.account("popular")
-        val matched = AppShellFixtures.account("matched")
+    fun aPostSearchShowsItsRows() {
         show(
-            "fixture owner", 0,
-            accountSearch = AccountSearchState(query = "fixture owner", accounts = listOf(matched)),
-            explore = SearchExploreState(popularAccounts = listOf(popular)),
+            "hello",
+            search = SearchState(query = "hello", mode = SearchMode.Posts, posts = listOf(AppShellFixtures.post("p1", author, "Hello"))),
         )
 
-        assertTrue(compose.onAllTagged("search_popular_accounts").isEmpty())
-        compose.onNodeWithTag("search_account_row_matched", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("search_post_results", useUnmergedTree = true).assertIsDisplayed()
     }
 
-    private fun androidx.compose.ui.test.junit4.AndroidComposeTestRule<*, *>.onAllTagged(tag: String) =
-        onAllNodes(androidx.compose.ui.test.hasTestTag(tag), useUnmergedTree = true).fetchSemanticsNodes()
+    @Test
+    fun anEmptyPostSearchShowsTheServerHint() {
+        show("hello", search = SearchState(query = "hello", mode = SearchMode.Posts))
+
+        compose.onNodeWithText(text(R.string.search_no_posts_server_hint)).assertIsDisplayed()
+    }
+
+    private fun AndroidComposeTestRule<*, *>.onAllTagged(tag: String) =
+        onAllNodes(hasTestTag(tag), useUnmergedTree = true).fetchSemanticsNodes()
 }

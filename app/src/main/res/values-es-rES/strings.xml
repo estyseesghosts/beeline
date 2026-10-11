@@ -140,11 +140,6 @@
     <string name="profile_unfollow_action">Dejar de seguir</string>
     <string name="profile_unfollow_confirm">¿Dejar de seguir?</string>
     <string name="profile_follow_confirm">¿Seguir?</string>
-    <string name="search_category_for_you">Para ti</string>
-    <string name="search_category_hashtags">Hashtags</string>
-    <string name="search_category_news">Noticias</string>
-    <string name="search_category_profiles">Perfiles</string>
-    <string name="search_placeholder_handle">Buscar por @handle@server</string>
     <string name="settings_blocked_users">Usuarios bloqueados</string>
     <string name="settings_choose_account">Elegir cuenta</string>
     <string name="settings_colour_style_system">Sistema</string>
@@ -234,6 +229,5 @@
         <item quantity="one">%1$d persona</item>
         <item quantity="other">%1$d personas</item>
     </plurals>
-    <string name="search_popular_accounts">Cuentas populares</string>
     <string name="composer_insert_hashtag">Insertar el hashtag %1$s</string>
 </resources>

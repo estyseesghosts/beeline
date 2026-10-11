@@ -68,8 +68,6 @@
     <string name="profile_tab_posts">貼文</string>
     <string name="profile_tab_replies">回覆</string>
     <string name="profile_tab_reposts">轉發</string>
-    <string name="search_category_hashtags">主題標籤</string>
-    <string name="search_placeholder_handle">搜尋 @handle@server</string>
     <string name="settings_blocked_users">封鎖名單</string>
     <string name="settings_language">語言</string>
     <string name="settings_moderation_add">新增</string>
@@ -111,6 +109,5 @@
     <plurals name="search_trending_people">
         <item quantity="other">%1$d 人</item>
     </plurals>
-    <string name="search_popular_accounts">熱門帳戶</string>
     <string name="composer_insert_hashtag">插入主題標籤 %1$s</string>
 </resources>

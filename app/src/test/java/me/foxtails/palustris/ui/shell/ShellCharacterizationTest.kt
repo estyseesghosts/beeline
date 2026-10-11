@@ -135,7 +135,7 @@ class ShellCharacterizationTest {
 
         compose.onNodeWithText("Home remains available").assertIsDisplayed()
         compose.onNodeWithContentDescription("Search").performClick()
-        compose.onNodeWithText("Find an account").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Search field").assertIsDisplayed()
         compose.onNodeWithContentDescription("Home").performClick()
         compose.onNodeWithText("Home remains available").assertIsDisplayed()
     }
@@ -157,6 +157,6 @@ class ShellCharacterizationTest {
         compose.waitForIdle()
 
         compose.onNodeWithContentDescription("Search").performClick()
-        compose.onNodeWithText("Find an account").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Search field").assertIsDisplayed()
     }
 }

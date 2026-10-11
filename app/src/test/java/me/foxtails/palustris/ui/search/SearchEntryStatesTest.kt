@@ -44,9 +44,8 @@ class SearchEntryStatesTest {
                     CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
                         SearchScreen(
                             sharedQuery = query,
-                            sharedTab = 0,
                             onSharedQueryChange = { query = it },
-                            onSearchAccounts = { submitted += it },
+                            onSearch = { submitted += it },
                         )
                     }
                 }

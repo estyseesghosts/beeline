@@ -126,7 +126,7 @@ class SearchCombinedHashtagsTest {
     }
 
     @Test
-    fun anAccountSearchNeverExpands() = runTest {
+    fun aHandleSearchNeverExpandsAndOpensTheProfile() = runTest {
         val source = object : SocialSource {
             override val capabilities = ServerCapabilities()
             override suspend fun timeline(timeline: Timeline, cursor: String?) = Page<Post>(emptyList())
@@ -138,7 +138,7 @@ class SearchCombinedHashtagsTest {
         advanceUntilIdle()
 
         assertTrue(owner.state.value.combinedTags.isEmpty())
-        assertEquals(listOf(author), owner.state.value.accounts)
+        assertEquals(SearchTarget.Profile(author), owner.state.value.target)
     }
 
     @Test

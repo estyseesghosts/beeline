@@ -116,11 +116,6 @@
     <string name="profile_tab_replies">回覆</string>
     <string name="profile_tab_reposts">轉發</string>
     <string name="profile_tab_show_more">顯示更多</string>
-    <string name="search_category_for_you">為您推薦</string>
-    <string name="search_category_hashtags">主題標籤</string>
-    <string name="search_category_news">最新消息</string>
-    <string name="search_category_profiles">個人檔案</string>
-    <string name="search_placeholder_handle">搜尋 @handle@server</string>
     <string name="settings_blocked_users">已封鎖使用者</string>
     <string name="settings_choose_account">選擇帳號</string>
     <string name="settings_display">顯示</string>
@@ -175,6 +170,5 @@
     <plurals name="search_trending_people">
         <item quantity="other">%1$d 人</item>
     </plurals>
-    <string name="search_popular_accounts">熱門帳號</string>
     <string name="composer_insert_hashtag">插入主題標籤 %1$s</string>
 </resources>

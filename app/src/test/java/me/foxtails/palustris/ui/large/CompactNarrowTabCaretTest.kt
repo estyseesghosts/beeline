@@ -83,7 +83,6 @@ class CompactNarrowTabCaretTest {
     fun everyChipDestinationHidesItsInlineCaretBesideTheContextualOne() {
         showApp()
         listOf(
-            "Search" to "search_categories_visibility",
             "Notifications" to "notification_filters_visibility",
             "Profile" to "profile_categories_visibility",
         ).forEach { (destination, inlineTag) ->

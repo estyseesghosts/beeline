@@ -43,8 +43,9 @@ import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.feed.HomeFeed
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
 import me.foxtails.palustris.ui.PalustrisApp
+import me.foxtails.palustris.ui.search.SearchMode
 import me.foxtails.palustris.ui.search.SearchScreen
-import me.foxtails.palustris.ui.search.AccountSearchState
+import me.foxtails.palustris.ui.search.SearchState
 import me.foxtails.palustris.ui.shell.HomeFeedUiState
 import me.foxtails.palustris.ui.profile.ProfileUiState
 import me.foxtails.palustris.ui.thread.PostThreadPhase
@@ -178,8 +179,9 @@ private fun show(
             )
         }
         val feed = FeedState(
-            accountSearch = AccountSearchState(
+            accountSearch = SearchState(
                 query = "#cats",
+                mode = SearchMode.Hashtag,
                 tagQuery = "cats",
                 posts = results,
             ),
@@ -205,7 +207,7 @@ private fun show(
 
         val finalBounds = compose.onNodeWithTag("post_row_search-6", useUnmergedTree = true)
             .fetchSemanticsNode().boundsInRoot
-        val chips = compose.onNodeWithContentDescription("Search categories; swipe horizontally for more")
+        val chips = compose.onNodeWithContentDescription("Search field")
             .fetchSemanticsNode().boundsInRoot
         assertTrue("the final Search result should clear the floating controls", finalBounds.bottom <= chips.top)
         compose.onNodeWithText("Search result 6").assertIsDisplayed()
@@ -351,7 +353,7 @@ private fun show(
         var submitted = ""
         compose.activity.runOnUiThread {
             compose.activity.setContent {
-                SearchScreen(onSearchAccounts = { submitted = it })
+                SearchScreen(onSearch = { submitted = it })
             }
         }
         compose.onNode(hasSetTextAction()).performTextInput("@alice@example.org")
@@ -544,9 +546,8 @@ private fun show(
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 SearchScreen(
-                    accountSearch = AccountSearchState(query = "#counts", tagQuery = "counts", posts = listOf(result)),
+                    search = SearchState(mode = SearchMode.Hashtag, query = "#counts", tagQuery = "counts", posts = listOf(result)),
                     sharedQuery = "#counts",
-                    sharedTab = 1,
                 )
             }
         }
@@ -581,27 +582,14 @@ private fun show(
         compose.onNodeWithText("unknown_token").assertDoesNotExist()
     }
 
-    @Test fun searchChipsUseCompactSelectionSemanticsAndHorizontalScrolling() {
-        compose.activity.runOnUiThread {
-            compose.activity.setContent { SearchScreen() }
-        }
-        compose.waitForIdle()
-
-        compose.onNodeWithText("Profiles").assertIsSelected()
-        compose.onNodeWithText("Hashtags").performClick()
-        compose.onNodeWithText("Hashtags").assertIsSelected()
-        compose.onNodeWithText("Explore hashtags").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Search categories; swipe horizontally for more").assert(hasScrollAction())
-    }
-
     @Test fun searchSubmitsExactHashtagAndDisplaysRecentPosts() {
         var submitted = ""
         val result = Post(postId("tag-result"), account, "A recent #cats post", 0, Audience.Public)
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 SearchScreen(
-                    accountSearch = AccountSearchState(query = "#cats", tagQuery = "cats", posts = listOf(result)),
-                    onSearchAccounts = { submitted = it },
+                    search = SearchState(mode = SearchMode.Hashtag, query = "#cats", tagQuery = "cats", posts = listOf(result)),
+                    onSearch = { submitted = it },
                 )
             }
         }
@@ -681,8 +669,9 @@ private fun show(
                     account = account,
                     home = AppShellFixtures.home(
                         FeedState(
-                            accountSearch = AccountSearchState(
+                            accountSearch = SearchState(
                                 query = "#cats",
+                                mode = SearchMode.Hashtag,
                                 tagQuery = "cats",
                                 posts = listOf(post),
                             ),
@@ -690,8 +679,9 @@ private fun show(
                     ),
                     search = AppShellFixtures.search(
                         FeedState(
-                            accountSearch = AccountSearchState(
+                            accountSearch = SearchState(
                                 query = "#cats",
+                                mode = SearchMode.Hashtag,
                                 tagQuery = "cats",
                                 posts = listOf(post),
                             ),
@@ -754,7 +744,8 @@ private fun show(
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 SearchScreen(
-                    accountSearch = AccountSearchState(
+                    search = SearchState(
+                        mode = SearchMode.Hashtag,
                         query = "#cats",
                         tagQuery = "cats",
                         posts = listOf(post),
@@ -778,7 +769,7 @@ private fun show(
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 SearchScreen(
-                    accountSearch = AccountSearchState(query = "#cats", tagQuery = "cats", posts = listOf(result)),
+                    search = SearchState(mode = SearchMode.Hashtag, query = "#cats", tagQuery = "cats", posts = listOf(result)),
                     initialQuery = "#cats",
                     mediaOwner = account.id,
                     availableActions = setOf(
@@ -822,7 +813,7 @@ private fun show(
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 SearchScreen(
-                    accountSearch = AccountSearchState(query = "#cats", tagQuery = "cats", posts = listOf(result)),
+                    search = SearchState(mode = SearchMode.Hashtag, query = "#cats", tagQuery = "cats", posts = listOf(result)),
                     initialQuery = "#cats",
                     mediaOwner = account.id,
                     availableActions = setOf(PostAction.React),
@@ -1043,7 +1034,7 @@ private fun show(
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 SearchScreen(
-                    accountSearch = AccountSearchState(query = "#cats", tagQuery = "cats", posts = listOf(result)),
+                    search = SearchState(mode = SearchMode.Hashtag, query = "#cats", tagQuery = "cats", posts = listOf(result)),
                     initialQuery = "#cats",
                 )
             }
@@ -1054,7 +1045,7 @@ private fun show(
         compose.waitForIdle()
 
         compose.onNodeWithText("A cached tag result").assertDoesNotExist()
-        compose.onNodeWithText("Find an account").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Search field").assertIsDisplayed()
     }
 
     private fun postId(value: String) = EntityId("https://example.org", value)

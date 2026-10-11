@@ -195,17 +195,6 @@ class WideNavigationTest {
         compose.onNodeWithText("Connect an account to view messages").assertIsDisplayed()
     }
 
-    @Test fun largeSearchKeepsCategoriesAboveTheField() {
-        compose.onNodeWithContentDescription("Search").performClick()
-        compose.waitForIdle()
-
-        val categories = compose.onNodeWithContentDescription("Search categories; swipe horizontally for more")
-        val field = compose.onNodeWithContentDescription("Search field")
-        categories.assertIsDisplayed()
-        field.assertIsDisplayed()
-        assertTrue(categories.fetchSemanticsNode().boundsInRoot.top < field.fetchSemanticsNode().boundsInRoot.top)
-    }
-
     @Test
     fun largeShortPostHasExplicitDetailAffordance() {
         val account = wideProfile()

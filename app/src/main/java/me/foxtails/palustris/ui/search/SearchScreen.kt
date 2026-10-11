@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -65,17 +66,12 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.components.ChipCaretPresentation
-import me.foxtails.palustris.ui.components.DestinationChipRow
-import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
-import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
-import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeSearchDockClearance
 import me.foxtails.palustris.ui.large.LocalLargeDockEdgeInsets
@@ -92,7 +88,8 @@ import me.foxtails.palustris.ui.posts.PostRowEvents
 import me.foxtails.palustris.ui.posts.PostRowPresentation
 
 /**
- * Keeps the Search viewport full size while wide obstruction inputs clear interaction content.
+ * Search: one field, the suggestion panel while the user types, post or hashtag results after a submit,
+ * and Trends while the field is empty. There is no category row. The pane follows [searchPresentation].
  *
  * @param rightObstructionClearance Physical-right clearance for wide result content and the wide dock.
  * @param bottomObstructionClearance Wide scroll clearance only. It never moves the dock or the field.
@@ -100,10 +97,11 @@ import me.foxtails.palustris.ui.posts.PostRowPresentation
  * Compact layout ignores both values and retains its IME-aware control placement.
  */
 @Composable
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 fun SearchScreen(
-    accountSearch: AccountSearchState = AccountSearchState(),
-    onSearchAccounts: (String) -> Unit = {},
+    search: SearchState = SearchState(),
+    onSearch: (String) -> Unit = {},
+    onSuggest: (String) -> Unit = {},
+    onConsumeTarget: () -> Unit = {},
     onAccountClick: (Account) -> Unit = {},
     availableActions: Set<PostAction> = emptySet(),
     onReact: (OwnedPost) -> Unit = {},
@@ -119,8 +117,8 @@ fun SearchScreen(
     onShowOnlyHashtag: (String) -> Unit = {},
     onOpenHashtagBubble: ((OwnedPost, List<String>, Rect) -> Unit)? = null,
     onLoadMoreSearch: () -> Unit = {},
-    explore: SearchExploreState = SearchExploreState(),
-    exploreActions: SearchExploreActions = SearchExploreActions.None,
+    trends: SearchTrendsState = SearchTrendsState(),
+    trendsActions: SearchTrendsActions = SearchTrendsActions.None,
     initialQuery: String = "",
     compactLayout: Boolean = true,
     compactNavigationVisible: Boolean = false,
@@ -136,17 +134,10 @@ fun SearchScreen(
     onOpenUsername: ((String) -> Unit)? = null,
     largeLayout: Boolean = false,
     sharedQuery: String? = null,
-    sharedTab: Int? = null,
     onSharedQueryChange: (String) -> Unit = {},
-    onSharedTabChange: (Int) -> Unit = {},
     listState: LazyListState? = null,
-    useCompactWideCaret: Boolean = false,
-    tabCaretHost: CompactWideTabCaretHost? = null,
 ) {
     var localQuery by rememberSaveable { mutableStateOf("") }
-    var localTab by rememberSaveable { mutableIntStateOf(0) }
-    var chipRowVisible by rememberSaveable { mutableStateOf(true) }
-    val chipListState = rememberLazyListState()
     var largeDockHeightPx by remember { mutableIntStateOf(0) }
     val largeDockClearance = if (largeDockHeightPx > 0) {
         with(LocalDensity.current) { largeDockHeightPx.toDp() }
@@ -154,44 +145,29 @@ fun SearchScreen(
         LargeSearchDockClearance
     }
     val query = sharedQuery ?: localQuery
-    val tab = sharedTab ?: localTab
     fun updateQuery(value: String) {
         if (sharedQuery == null) localQuery = value else onSharedQueryChange(value)
-    }
-    fun updateTab(value: Int) {
-        if (sharedTab == null) localTab = value else onSharedTabChange(value)
     }
     LaunchedEffect(initialQuery, sharedQuery == null) {
         if (sharedQuery == null && initialQuery.isNotBlank()) updateQuery(initialQuery)
     }
-    val hashtagSearchRequested = isExactHashtag(query)
-    // A typed hashtag that no search has answered yet asks for suggestions. Anything else clears them.
-    val typedHashtag = query.takeIf { hashtagSearchRequested && accountSearch.query != it.trim() }.orEmpty()
-    LaunchedEffect(typedHashtag) { exploreActions.suggestHashtags(typedHashtag) }
-    LaunchedEffect(tab, query.isBlank()) {
-        if (!query.isBlank()) return@LaunchedEffect
-        when (tab) {
-            0 -> exploreActions.loadPopularAccounts()
-            1 -> exploreActions.loadTrending()
-        }
+    // Text that no search has answered yet asks for suggestions. A submitted query asks for none.
+    val typedForSuggestions = query.takeIf { it.isNotBlank() && it.trim() != search.query }.orEmpty()
+    LaunchedEffect(typedForSuggestions) { onSuggest(typedForSuggestions) }
+    LaunchedEffect(query.isBlank()) {
+        if (query.isBlank()) trendsActions.loadTrends()
     }
-    val sections = listOf(
-        stringResource(R.string.search_category_profiles),
-        stringResource(R.string.search_category_hashtags),
-        stringResource(R.string.search_category_news),
-        stringResource(R.string.search_category_for_you),
-    )
-    val chipEntries = sections.mapIndexed { index, title ->
-        FilterChipEntry(
-            label = title,
-            selected = tab == index,
-            onClick = { updateTab(index) },
-            testTag = "search_category_$index",
-            key = "search-category:$index",
-        )
+    // A handle or link search opens its target once. Consuming it keeps a recomposition from opening it twice.
+    LaunchedEffect(search.target) {
+        when (val target = search.target) {
+            is SearchTarget.Profile -> onAccountClick(target.account)
+            is SearchTarget.SinglePost -> onOpenPost(OwnedPost(mediaOwner ?: target.post.author.id, target.post, sessionRevision))
+            null -> return@LaunchedEffect
+        }
+        onConsumeTarget()
     }
     fun submitSearch() {
-        if (query.isNotBlank()) onSearchAccounts(query)
+        if (query.isNotBlank()) onSearch(query)
     }
     val controlsPositioningInsets = compactContextualControlsPositioningInsets(
         navigationVisible = compactNavigationVisible,
@@ -221,79 +197,61 @@ fun SearchScreen(
             (WindowInsets.ime.getBottom(this) - WindowInsets.systemBars.getBottom(this)).coerceAtLeast(0).toDp()
         }
     }
-    if (useCompactWideCaret) {
-        CompactWideTabCaretRegistration(
-            host = tabCaretHost,
-            expanded = chipRowVisible,
-            onToggle = { chipRowVisible = !chipRowVisible },
-        )
-    }
-    val searchCaretPresentation = if (useCompactWideCaret) ChipCaretPresentation.Hidden
-    else ChipCaretPresentation.Inline
+    val endClearance = if (largeLayout) largeDockClearance + maxOf(wideBottomClearance, wideImeLift) else searchEndClearance
+    val rowContext = SearchPostRowContext(
+        availableActions = availableActions.intersect(ClientReadyPostActions),
+        quoteEnabled = quoteEnabled,
+        largeLayout = largeLayout,
+        mediaOwner = mediaOwner,
+        sessionRevision = sessionRevision,
+        clearance = SearchListClearance(endClearance, wideRightClearance, wideLeftClearance),
+        events = PostRowEvents(
+            onFavourite = onReact,
+            onReply = onReply,
+            onRepost = onReshare,
+            onBookmark = onBookmark,
+            onReaction = onReaction,
+            onOpenProfile = onAccountClick,
+            onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
+            onOpenReactionPicker = onOpenReactionPicker,
+            onQuote = onQuote,
+            onSearchHashtag = onSearchHashtag,
+            onOpenHashtagBubble = onOpenHashtagBubble,
+            onOpenMedia = if (mediaOwner != null) onOpenMedia else { _: me.foxtails.palustris.ui.media.MediaOpenRequest -> },
+            onOpenPost = onOpenPost,
+            onOpenUrl = onOpenUrl,
+            onOpenUsername = onOpenUsername,
+        ),
+    )
 
     Box(Modifier.fillMaxSize()) {
         SearchContent(
             modifier = Modifier.fillMaxSize(),
             query = query,
-            tab = tab,
-            hashtagSearchRequested = hashtagSearchRequested,
-            accountSearch = accountSearch,
+            search = search,
+            trends = trends,
+            trendsActions = trendsActions,
+            rowContext = rowContext,
             onAccountClick = onAccountClick,
-            availableActions = availableActions,
-            onReact = onReact,
-            onReply = onReply,
-            onReshare = onReshare,
-            onBookmark = onBookmark,
-            onReaction = onReaction,
-            onOpenReactionBubble = onOpenReactionBubble,
-            onOpenReactionPicker = onOpenReactionPicker,
-            quoteEnabled = quoteEnabled,
-            onQuote = onQuote,
             onLoadMoreSearch = onLoadMoreSearch,
-            explore = explore,
-            endClearance = if (largeLayout) largeDockClearance + maxOf(wideBottomClearance, wideImeLift) else searchEndClearance,
-            rightClearance = wideRightClearance,
-            leftClearance = wideLeftClearance,
-            mediaOwner = mediaOwner,
-            sessionRevision = sessionRevision,
-            onOpenMedia = onOpenMedia,
-            onOpenPost = onOpenPost,
-            onOpenUrl = onOpenUrl,
-            onOpenUsername = onOpenUsername,
             onSearchHashtag = onSearchHashtag,
             onShowOnlyHashtag = onShowOnlyHashtag,
-            onOpenHashtagBubble = onOpenHashtagBubble,
+            onOpenUrl = onOpenUrl,
             listState = listState,
-            largeLayout = largeLayout,
         )
         if (largeLayout) {
             LargeBottomDock(
                 leftClearance = wideLeftClearance,
                 rightClearance = wideRightClearance,
                 content = {
-                    Column(
-                        Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing),
+                    // The field keeps its bounded width and clears the floating chrome.
+                    val dockInsets = LocalLargeDockEdgeInsets.current
+                    Box(
+                        Modifier.fillMaxWidth()
+                            .absolutePadding(left = dockInsets.left, right = dockInsets.right),
                     ) {
-                        DestinationChipRow(
-                            entries = chipEntries,
-                            rowContentDescription = stringResource(R.string.search_categories_description),
-                            listState = chipListState,
-                            visible = chipRowVisible,
-                            onToggleVisibility = { chipRowVisible = !chipRowVisible },
-                            rowTestTag = "search_categories",
-                            visibilityToggleTestTag = "search_categories_visibility",
-                            caretPresentation = searchCaretPresentation,
-                        )
-                        // The field keeps its bounded width and clears the floating chrome. The chips do not.
-                        val dockInsets = LocalLargeDockEdgeInsets.current
-                        Box(
-                            Modifier.fillMaxWidth()
-                                .absolutePadding(left = dockInsets.left, right = dockInsets.right),
-                        ) {
-                            Box(Modifier.widthIn(max = 520.dp).fillMaxWidth()) {
-                                SearchField(query, ::submitSearch, ::updateQuery)
-                            }
+                        Box(Modifier.widthIn(max = 520.dp).fillMaxWidth()) {
+                            SearchField(query, ::submitSearch, ::updateQuery)
                         }
                     }
                 },
@@ -312,21 +270,77 @@ fun SearchScreen(
                     .windowInsetsPadding(controlsPositioningInsets),
                 verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing),
             ) {
-                DestinationChipRow(
-                    entries = chipEntries,
-                    rowContentDescription = stringResource(R.string.search_categories_description),
-                    listState = chipListState,
-                    visible = chipRowVisible,
-                    onToggleVisibility = { chipRowVisible = !chipRowVisible },
-                    rowTestTag = "search_categories",
-                    visibilityToggleTestTag = "search_categories_visibility",
-                    caretPresentation = searchCaretPresentation,
-                    leftInset = CompactOverlayHorizontalPadding,
-                    rightInset = CompactOverlayHorizontalPadding,
-                )
                 Box(Modifier.fillMaxWidth().padding(horizontal = CompactOverlayHorizontalPadding)) {
                     SearchField(query, ::submitSearch, ::updateQuery)
                 }
+            }
+        }
+    }
+}
+
+/** What a post row in Search or Trends needs from its screen. */
+internal class SearchPostRowContext(
+    val availableActions: Set<PostAction>,
+    val quoteEnabled: Boolean,
+    val largeLayout: Boolean,
+    val mediaOwner: AccountId?,
+    val sessionRevision: Long,
+    val clearance: SearchListClearance,
+    val events: PostRowEvents,
+)
+
+/** Post rows with their dividers. The floating edges clear interaction content only, so rows keep full width. */
+internal fun LazyListScope.searchPostItems(posts: List<Post>, context: SearchPostRowContext, keyPrefix: String) {
+    items(posts, key = { "$keyPrefix-${it.id.connection}/${it.id.value}" }) { post ->
+        val scheme = LocalPalustrisMotionScheme.current
+        Column(
+            Modifier.animateItem(
+                fadeInSpec = scheme.fastFadeIn,
+                fadeOutSpec = scheme.fastFadeOut,
+                placementSpec = scheme.gentleOffset,
+            ),
+        ) {
+            PostRow(
+                ownedPost = OwnedPost(context.mediaOwner ?: post.author.id, post, context.sessionRevision),
+                modifier = Modifier.absolutePadding(left = context.clearance.left, right = context.clearance.right),
+                presentation = PostRowPresentation(
+                    availableActions = context.availableActions,
+                    quoteEnabled = context.quoteEnabled,
+                    largeLayout = context.largeLayout,
+                    interactionPresentation = PostInteractionPresentation.Detailed,
+                ),
+                events = context.events,
+            )
+            androidx.compose.material3.HorizontalDivider(
+                modifier = Modifier.testTag("search_divider_${post.id.value}"),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f),
+            )
+        }
+    }
+}
+
+/** The footer under a paged list: a spinner, the load button, or the end marker. */
+internal fun LazyListScope.searchPagingFooter(
+    loadingMore: Boolean,
+    hasMore: Boolean,
+    onLoadMore: () -> Unit,
+    clearance: SearchListClearance,
+) {
+    item(key = "paging-footer") {
+        Box(
+            Modifier.fillMaxWidth().absolutePadding(left = clearance.left, right = clearance.right).padding(16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (loadingMore) {
+                CircularProgressIndicator(Modifier.size(24.dp))
+            } else if (hasMore) {
+                androidx.compose.material3.TextButton(onClick = onLoadMore) { Text(stringResource(R.string.search_load_older)) }
+            } else {
+                Text(
+                    stringResource(R.string.search_up_to_date),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
@@ -336,102 +350,69 @@ fun SearchScreen(
 private fun SearchContent(
     modifier: Modifier,
     query: String,
-    tab: Int,
-    hashtagSearchRequested: Boolean,
-    accountSearch: AccountSearchState,
+    search: SearchState,
+    trends: SearchTrendsState,
+    trendsActions: SearchTrendsActions,
+    rowContext: SearchPostRowContext,
     onAccountClick: (Account) -> Unit,
-    availableActions: Set<PostAction>,
-    onReact: (OwnedPost) -> Unit,
-    onReply: (OwnedPost) -> Unit,
-    onReshare: (OwnedPost) -> Unit,
-    onBookmark: (OwnedPost) -> Unit,
-    onReaction: (OwnedPost, EmojiChoice) -> Unit,
-    onOpenReactionBubble: ((OwnedPost, Rect) -> Unit)?,
-    onOpenReactionPicker: (OwnedPost) -> Unit,
-    quoteEnabled: Boolean,
-    onQuote: (OwnedPost) -> Unit,
     onLoadMoreSearch: () -> Unit,
-    explore: SearchExploreState,
-    endClearance: Dp,
-    rightClearance: Dp,
-    leftClearance: Dp,
-    mediaOwner: AccountId?,
-    sessionRevision: Long,
-    onOpenMedia: (me.foxtails.palustris.ui.media.MediaOpenRequest) -> Unit,
-    onOpenPost: (OwnedPost) -> Unit,
-    onOpenUrl: ((String) -> Unit)?,
-    onOpenUsername: ((String) -> Unit)?,
     onSearchHashtag: (String) -> Unit,
     onShowOnlyHashtag: (String) -> Unit,
-    onOpenHashtagBubble: ((OwnedPost, List<String>, Rect) -> Unit)?,
+    onOpenUrl: ((String) -> Unit)?,
     listState: LazyListState?,
-    largeLayout: Boolean,
 ) {
-    val clearance = SearchListClearance(endClearance, rightClearance, leftClearance)
+    val presentation = searchPresentation(query, search)
+    val clearance = rowContext.clearance
     Box(modifier.testTag("search_content")) {
-        val queryKind = when {
-            hashtagSearchRequested -> "hashtag"
-            query.isBlank() -> "blank"
-            else -> "account"
-        }
         val resultKind = when {
-            accountSearch.loading -> "loading"
-            accountSearch.error != null -> "error"
-            accountSearch.accounts.isNotEmpty() || accountSearch.posts.isNotEmpty() -> "results"
+            search.loading -> "loading"
+            search.error != null || search.postSearchDenied -> "error"
+            search.posts.isNotEmpty() -> "results"
             else -> "empty"
         }
-        AnimatedStatePane(stateKey = "$tab:$queryKind:$resultKind", modifier = Modifier.fillMaxSize()) {
-            if (tab == 0 || hashtagSearchRequested) {
-                if (hashtagSearchRequested && explore.suggestions.isNotEmpty() && accountSearch.query != query.trim()) {
-                    HashtagSuggestionList(explore.suggestions, onSearchHashtag, clearance, listState)
-                } else if (hashtagSearchRequested) HashtagSearchResults(
-                    state = accountSearch,
-                    query = query,
-                    onLoadMore = onLoadMoreSearch,
-                    onAccountClick = onAccountClick,
-                    availableActions = availableActions,
-                    onReact = onReact,
-                    onReply = onReply,
-                    onReshare = onReshare,
-                    onBookmark = onBookmark,
-                    onReaction = onReaction,
-                    onOpenReactionBubble = onOpenReactionBubble,
-                    onOpenReactionPicker = onOpenReactionPicker,
-                    quoteEnabled = quoteEnabled,
-                    onQuote = onQuote,
-                    endClearance = endClearance,
-                    rightClearance = rightClearance,
-                    leftClearance = leftClearance,
-                    mediaOwner = mediaOwner,
-                    sessionRevision = sessionRevision,
-                    onOpenMedia = onOpenMedia,
-                    onSearchHashtag = onSearchHashtag,
-                    onShowOnlyHashtag = onShowOnlyHashtag,
-                    onOpenHashtagBubble = onOpenHashtagBubble,
-                    listState = listState,
-                    largeLayout = largeLayout,
-                    onOpenPost = onOpenPost,
+        AnimatedStatePane(stateKey = "$presentation:$resultKind", modifier = Modifier.fillMaxSize()) {
+            when (presentation) {
+                SearchPresentation.Trends -> SearchTrendsPane(
+                    state = trends,
+                    context = rowContext,
+                    onHashtag = onSearchHashtag,
+                    onLoadMore = trendsActions::loadMoreTrends,
+                    onRetry = trendsActions::refreshTrends,
                     onOpenUrl = onOpenUrl,
-                    onOpenUsername = onOpenUsername,
-                ) else AccountSearchResults(query, accountSearch, explore.popularAccounts, onAccountClick, clearance, listState)
-            } else if (tab == 1 && query.isBlank() && explore.trending.isNotEmpty()) {
-                TrendingHashtagList(explore.trending, onSearchHashtag, clearance, listState)
-            } else {
-                EmptyState(
-                    AppIcons.Hashtag,
-                    if (query.isNotBlank()) stringResource(R.string.search_ready_when_you_are) else when (tab) {
-                        1 -> stringResource(R.string.search_explore_hashtags)
-                        2 -> stringResource(R.string.search_news_from_network)
-                        else -> stringResource(R.string.search_find_your_people)
-                    },
-                    if (query.isNotBlank()) stringResource(R.string.search_accounts_available_profiles)
-                    else when (tab) {
-                        1 -> stringResource(R.string.search_trending_topics)
-                        2 -> stringResource(R.string.search_popular_links)
-                        else -> stringResource(R.string.search_suggested_accounts)
-                    },
-                    bottomClearance = endClearance,
+                    listState = listState,
                 )
+                SearchPresentation.Suggestions -> SearchSuggestionPanel(
+                    suggestions = search.suggestions,
+                    onAccountClick = onAccountClick,
+                    onHashtag = onSearchHashtag,
+                    clearance = clearance,
+                    listState = listState,
+                )
+                SearchPresentation.Posts -> SearchPostResults(
+                    state = search,
+                    context = rowContext,
+                    onLoadMore = onLoadMoreSearch,
+                    onHashtag = onSearchHashtag,
+                    onShowOnlyHashtag = onShowOnlyHashtag,
+                    listState = listState,
+                )
+                SearchPresentation.Hashtag -> SearchPostResults(
+                    state = search,
+                    context = rowContext,
+                    onLoadMore = onLoadMoreSearch,
+                    onHashtag = onSearchHashtag,
+                    onShowOnlyHashtag = onShowOnlyHashtag,
+                    listState = listState,
+                )
+                SearchPresentation.Lookup -> when {
+                    search.error != null -> EmptyState(
+                        AppIcons.SearchBeeline,
+                        stringResource(R.string.search_lookup_failed),
+                        search.error,
+                        bottomClearance = clearance.end,
+                    )
+                    else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                }
             }
         }
     }
@@ -483,7 +464,7 @@ private fun SearchField(query: String, onSubmit: () -> Unit, onQueryChange: (Str
         modifier = Modifier.animateContentSize(scheme.gentleSize).then(width)
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = searchFieldDescription; this[SearchEntryModeKey] = mode },
-        placeholder = { Text(stringResource(R.string.search_placeholder_handle), maxLines = 1) },
+        placeholder = { Text(stringResource(R.string.search_placeholder), maxLines = 1) },
         leadingIcon = { Icon(AppIcons.SearchBeeline, null) },
         trailingIcon = { SearchClearButton(query.isNotEmpty()) { onQueryChange("") } },
         singleLine = true,
@@ -516,130 +497,63 @@ private fun SearchClearButton(visible: Boolean, onClear: () -> Unit) {
     ) { shown -> if (shown) ActionIcon(AppIcons.Close, stringResource(R.string.search_clear), onClear) }
 }
 
+/**
+ * Post results for a text query or a hashtag. A hashtag adds its header with the combined and related tags.
+ * An empty answer names the likely cause: the role policy on a Misskey-family server, or the missing search
+ * backend on a Mastodon-API server.
+ */
 @Composable
-private fun HashtagSearchResults(
-    state: AccountSearchState,
-    query: String,
+private fun SearchPostResults(
+    state: SearchState,
+    context: SearchPostRowContext,
     onLoadMore: () -> Unit,
-    onAccountClick: (Account) -> Unit,
-    availableActions: Set<PostAction>,
-    onReact: (OwnedPost) -> Unit,
-    onReply: (OwnedPost) -> Unit,
-    onReshare: (OwnedPost) -> Unit,
-    onBookmark: (OwnedPost) -> Unit,
-    onReaction: (OwnedPost, EmojiChoice) -> Unit,
-    onOpenReactionBubble: ((OwnedPost, Rect) -> Unit)?,
-    onOpenReactionPicker: (OwnedPost) -> Unit,
-    quoteEnabled: Boolean,
-    onQuote: (OwnedPost) -> Unit,
-    endClearance: Dp,
-    rightClearance: Dp,
-    leftClearance: Dp,
-    mediaOwner: AccountId?,
-    sessionRevision: Long,
-    onOpenMedia: (me.foxtails.palustris.ui.media.MediaOpenRequest) -> Unit,
-    onSearchHashtag: (String) -> Unit,
+    onHashtag: (String) -> Unit,
     onShowOnlyHashtag: (String) -> Unit,
-    onOpenHashtagBubble: ((OwnedPost, List<String>, Rect) -> Unit)?,
-    onOpenPost: (OwnedPost) -> Unit,
-    onOpenUrl: ((String) -> Unit)?,
-    onOpenUsername: ((String) -> Unit)?,
     listState: LazyListState?,
-    largeLayout: Boolean,
 ) {
-    val scheme = LocalPalustrisMotionScheme.current
+    val clearance = context.clearance
+    val hashtag = state.mode == SearchMode.Hashtag
     when {
         state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        state.error != null -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_hashtag_failed), state.error)
-        state.posts.isNotEmpty() && state.query == query.trim() -> LazyColumn(
-            state = listState ?: rememberLazyListState(),
-            modifier = Modifier.fillMaxSize().testTag("search_hashtag_results"),
-            contentPadding = PaddingValues(bottom = 24.dp + endClearance),
-        ) {
-            hashtagResultsHeader(state, Modifier.absolutePadding(left = leftClearance, right = rightClearance), onShowOnlyHashtag, onSearchHashtag)
-            items(state.posts, key = { "${it.id.connection}/${it.id.value}" }) { post ->
-                Column(
-                    Modifier.animateItem(
-                        fadeInSpec = scheme.fastFadeIn,
-                        fadeOutSpec = scheme.fastFadeOut,
-                        placementSpec = scheme.gentleOffset,
-                    ),
-                ) {
-                    PostRow(
-                        ownedPost = OwnedPost(mediaOwner ?: post.author.id, post, sessionRevision),
-                        // The floating edges clear interaction content only. The row extent and its
-                        // divider keep full width so content passes under floating chrome.
-                        modifier = Modifier.absolutePadding(left = leftClearance, right = rightClearance),
-                        presentation = PostRowPresentation(
-                            availableActions = availableActions.intersect(ClientReadyPostActions),
-                            quoteEnabled = quoteEnabled,
-                            largeLayout = largeLayout,
-                            interactionPresentation = PostInteractionPresentation.Detailed,
-                        ),
-                        events = PostRowEvents(
-                            onFavourite = onReact,
-                            onReply = onReply,
-                            onRepost = onReshare,
-                            onBookmark = onBookmark,
-                            onReaction = onReaction,
-                            onOpenProfile = onAccountClick,
-                            onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
-                            onOpenReactionPicker = onOpenReactionPicker,
-                            onQuote = onQuote,
-                            onSearchHashtag = onSearchHashtag,
-                            onOpenHashtagBubble = onOpenHashtagBubble,
-                            onOpenMedia = if (mediaOwner != null) onOpenMedia else { _: me.foxtails.palustris.ui.media.MediaOpenRequest -> },
-                            onOpenPost = onOpenPost,
-                            onOpenUrl = onOpenUrl,
-                            onOpenUsername = onOpenUsername,
-                        ),
-                    )
-                    androidx.compose.material3.HorizontalDivider(
-                        modifier = Modifier.testTag("search_divider_${post.id.value}"),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f),
-                    )
-                }
-            }
-            item {
-                Box(Modifier.fillMaxWidth().absolutePadding(left = leftClearance, right = rightClearance).padding(16.dp), contentAlignment = Alignment.Center) {
-                    if (state.loadingMore) CircularProgressIndicator(Modifier.size(24.dp))
-                    else if (state.nextCursor != null) androidx.compose.material3.TextButton(onClick = onLoadMore) { Text(stringResource(R.string.search_load_older)) }
-                    else Text(stringResource(R.string.search_up_to_date), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-        query.isBlank() -> EmptyState(AppIcons.Hashtag, stringResource(R.string.search_find_hashtag), stringResource(R.string.search_hashtag_prompt))
-        state.query == query.trim() -> EmptyState(AppIcons.Hashtag, stringResource(R.string.search_no_posts), stringResource(R.string.search_no_posts_for, state.query))
-        else -> EmptyState(AppIcons.Hashtag, stringResource(R.string.search_hashtag_ready), stringResource(R.string.search_hashtag_ready_prompt))
-    }
-}
-
-@Composable
-private fun AccountSearchResults(
-    query: String,
-    state: AccountSearchState,
-    popularAccounts: List<Account>,
-    onAccountClick: (Account) -> Unit,
-    clearance: SearchListClearance,
-    listState: LazyListState?,
-) {
-    val endClearance = clearance.end
-    when {
-        query.isBlank() && popularAccounts.isNotEmpty() -> AccountList(
-            popularAccounts,
-            stringResource(R.string.search_popular_accounts),
-            onAccountClick,
-            clearance,
-            listState,
-            "search_popular_accounts",
+        state.postSearchDenied -> EmptyState(
+            AppIcons.SearchBeeline,
+            stringResource(R.string.search_posts_denied),
+            stringResource(R.string.search_posts_denied_prompt),
+            bottomClearance = clearance.end,
         )
-        state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        state.error != null -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_account_failed), state.error, bottomClearance = endClearance)
-        // Both physical edges belong to the scroll content, so account rows and their
-        // click bounds keep clear of floating chrome. The list viewport keeps its width.
-        state.accounts.isNotEmpty() -> AccountList(state.accounts, null, onAccountClick, clearance, listState, "search_account_results")
-        query.isBlank() -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_find_account), stringResource(R.string.search_account_prompt), bottomClearance = endClearance)
-        state.query == query.trim() -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_no_account), stringResource(R.string.search_no_account_prompt), bottomClearance = endClearance)
-        else -> EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_ready), stringResource(R.string.search_ready_prompt), bottomClearance = endClearance)
+        state.error != null -> EmptyState(
+            AppIcons.SearchBeeline,
+            stringResource(if (hashtag) R.string.search_hashtag_failed else R.string.search_posts_failed),
+            state.error,
+            bottomClearance = clearance.end,
+        )
+        state.posts.isNotEmpty() -> LazyColumn(
+            state = listState ?: rememberLazyListState(),
+            modifier = Modifier.fillMaxSize().testTag(if (hashtag) "search_hashtag_results" else "search_post_results"),
+            contentPadding = PaddingValues(bottom = 24.dp + clearance.end),
+        ) {
+            if (hashtag) {
+                hashtagResultsHeader(
+                    state,
+                    Modifier.absolutePadding(left = clearance.left, right = clearance.right),
+                    onShowOnlyHashtag,
+                    onHashtag,
+                )
+            }
+            searchPostItems(state.posts, context, "result")
+            searchPagingFooter(state.loadingMore, state.nextCursor != null, onLoadMore, clearance)
+        }
+        hashtag -> EmptyState(
+            AppIcons.Hashtag,
+            stringResource(R.string.search_no_posts),
+            stringResource(R.string.search_no_posts_for, state.query),
+            bottomClearance = clearance.end,
+        )
+        else -> EmptyState(
+            AppIcons.SearchBeeline,
+            stringResource(R.string.search_no_posts),
+            stringResource(R.string.search_no_posts_server_hint),
+            bottomClearance = clearance.end,
+        )
     }
 }

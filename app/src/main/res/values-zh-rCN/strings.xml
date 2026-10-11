@@ -116,11 +116,6 @@
     <string name="profile_tab_replies">回复</string>
     <string name="profile_tab_reposts">转发</string>
     <string name="profile_tab_show_more">显示更多</string>
-    <string name="search_category_for_you">推荐</string>
-    <string name="search_category_hashtags">话题标签</string>
-    <string name="search_category_news">新闻</string>
-    <string name="search_category_profiles">个人资料</string>
-    <string name="search_placeholder_handle">搜索 @handle@server</string>
     <string name="settings_blocked_users">屏蔽的用户</string>
     <string name="settings_choose_account">选择账户</string>
     <string name="settings_display">显示</string>
@@ -175,6 +170,5 @@
     <plurals name="search_trending_people">
         <item quantity="other">%1$d 人</item>
     </plurals>
-    <string name="search_popular_accounts">热门账号</string>
     <string name="composer_insert_hashtag">插入话题标签 %1$s</string>
 </resources>

@@ -101,10 +101,6 @@
     <string name="post_action_not_selected">Nicht ausgewählt</string>
     <string name="dialog_discard">Verwerfen</string>
     <string name="media_viewer">Medienanzeige</string>
-    <string name="search_category_profiles">Profile</string>
-    <string name="search_category_hashtags">Hashtags</string>
-    <string name="search_category_news">Nachrichten</string>
-    <string name="search_category_for_you">Vorschläge</string>
     <string name="composer_remove_quote">Entfernen</string>
     <string name="timeline_local">Lokal</string>
     <string name="settings_title">Einstellungen</string>
@@ -184,6 +180,5 @@
         <item quantity="one">%1$d Person</item>
         <item quantity="other">%1$d Personen</item>
     </plurals>
-    <string name="search_popular_accounts">Beliebte Konten</string>
     <string name="composer_insert_hashtag">Hashtag %1$s einfügen</string>
 </resources>

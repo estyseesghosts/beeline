@@ -18,22 +18,15 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.SemanticsNode
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -51,8 +44,8 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.hashtags.HashtagSuggestion
 import me.foxtails.palustris.domain.hashtags.TrendingHashtag
+import me.foxtails.palustris.domain.search.SearchSuggestions
 import me.foxtails.palustris.domain.timelineDisplayOrder
-import me.foxtails.palustris.ui.components.restingChipEdge
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.shell.AppShellFixtures
@@ -92,10 +85,6 @@ class SearchClearanceTest {
     private val wideRight = 120.dp
     private val density get() = compose.activity.resources.displayMetrics.density
 
-    private fun chipsRest(direction: LayoutDirection, physicalLeft: Boolean): Float = compose
-        .onNodeWithContentDescription(compose.activity.getString(R.string.search_categories_description))
-        .restingChipEdge(compose, direction, physicalLeft)
-
     private fun bounds(tag: String): Rect = compose.onNodeWithTag(tag, useUnmergedTree = true)
         .fetchSemanticsNode().boundsInRoot
 
@@ -104,7 +93,6 @@ class SearchClearanceTest {
         .fetchSemanticsNode().boundsInRoot
 
     private fun fieldBounds() = described(R.string.search_field)
-    private fun chipsBounds() = described(R.string.search_categories_description)
     private fun text(@StringRes label: Int) = compose.activity.getString(label)
 
     private fun show(direction: LayoutDirection, content: @Composable () -> Unit) {
@@ -123,8 +111,7 @@ class SearchClearanceTest {
     private fun assertClicksClearRight(safeRight: Float) {
         val nodes = compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
         assertTrue("fixture must exercise interactions", nodes.isNotEmpty())
-        // Chips scroll beneath floating chrome by design; chipsRest asserts where they rest.
-        nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 && !it.isChipRowEntry() }.forEach {
+        nodes.filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
             assertTrue("click target ${it.config} crosses physical right: ${it.boundsInRoot}",
                 it.boundsInRoot.right <= safeRight + 1f)
         }
@@ -144,8 +131,8 @@ class SearchClearanceTest {
         for (direction in LayoutDirection.entries) {
             show(direction) {
                 SearchScreen(
-                    accountSearch = AccountSearchState(query = "#fixture", tagQuery = "fixture", posts = listOf(result)),
-                    compactLayout = false, largeLayout = true, sharedQuery = "#fixture", sharedTab = 0,
+                    search = SearchState(query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = listOf(result)),
+                    compactLayout = false, largeLayout = true, sharedQuery = "#fixture",
                     leftObstructionClearance = right, mediaOwner = author.id,
                     availableActions = setOf(PostAction.Reply, PostAction.Favorite),
                 )
@@ -156,7 +143,6 @@ class SearchClearanceTest {
             val safeLeft = viewport.left + right.value * density
             assertEquals(safeLeft, bounds("post_row_left").left, 1f)
             assertTrue(fieldBounds().left >= safeLeft - 1f)
-            assertTrue(chipsRest(direction, true) >= safeLeft - 1f)
             compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
                 .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }.forEach {
                     assertTrue("Search interaction clears physical left", it.boundsInRoot.left >= safeLeft - 1f)
@@ -174,9 +160,9 @@ class SearchClearanceTest {
             var favourites = 0
             show(direction) {
                 SearchScreen(
-                    accountSearch = AccountSearchState(query = "#fixture", tagQuery = "fixture", posts = listOf(result)),
+                    search = SearchState(query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = listOf(result)),
                     compactLayout = false, largeLayout = true,
-                    sharedQuery = "#fixture", sharedTab = 0,
+                    sharedQuery = "#fixture",
                     rightObstructionClearance = right, bottomObstructionClearance = bottom,
                     availableActions = setOf(PostAction.Reply, PostAction.Favorite, PostAction.Bookmark),
                     mediaOwner = author.id,
@@ -205,12 +191,12 @@ class SearchClearanceTest {
             var loaded = 0
             show(direction) {
                 SearchScreen(
-                    accountSearch = AccountSearchState(
-                        query = "#fixture", tagQuery = "fixture",
+                    search = SearchState(
+                        query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture",
                         posts = posts(12, "final"), nextCursor = "next",
                     ),
                     compactLayout = false, largeLayout = true,
-                    sharedQuery = "#fixture", sharedTab = 0,
+                    sharedQuery = "#fixture",
                     rightObstructionClearance = right, bottomObstructionClearance = bottom,
                     onLoadMoreSearch = { loaded++ },
                 )
@@ -235,16 +221,16 @@ class SearchClearanceTest {
     }
 
     @Test fun wideAccountResultsKeepFullViewportAndClearRowClickBounds() {
-        // A spaced query is not an exact hashtag, so the account pane renders.
+        // Typed text without a submitted search shows the suggestion pane.
         val query = "fixture owner"
         for (direction in LayoutDirection.entries) {
             var opened: Account? = null
             val clearance = mutableStateOf(0.dp)
             show(direction) {
                 SearchScreen(
-                    accountSearch = AccountSearchState(query = query, accounts = listOf(matched)),
+                    search = SearchState(suggestionsFor = query, suggestions = SearchSuggestions(accounts = listOf(matched))),
                     compactLayout = false, largeLayout = true,
-                    sharedQuery = query, sharedTab = 0,
+                    sharedQuery = query,
                     rightObstructionClearance = clearance.value, bottomObstructionClearance = bottom,
                     onAccountClick = { opened = it },
                 )
@@ -256,7 +242,7 @@ class SearchClearanceTest {
             compose.runOnIdle { clearance.value = right }
             compose.waitForIdle()
             assertEquals("account content keeps the full viewport", viewport, bounds("search_content"))
-            assertEquals("account list keeps the full viewport", viewport, bounds("search_account_results"))
+            assertEquals("account list keeps the full viewport", viewport, bounds("search_suggestion_results"))
             assertEquals("account row keeps its existing start inset",
                 viewport.left + 8 * density, bounds("search_account_row_matched").left, 1f)
             assertTrue("account row clears physical right",
@@ -268,28 +254,33 @@ class SearchClearanceTest {
     }
 
     @Test fun wideDiscoveryRowsAndRelatedChipsClearBothPhysicalEdges() {
-        val explore = SearchExploreState(
-            trending = listOf(TrendingHashtag("cats", 40, 90), TrendingHashtag("art", 12, 30)),
-            suggestions = listOf(HashtagSuggestion("photography", 9.0), HashtagSuggestion("phone", null)),
+        val trends = SearchTrendsState(
+            tags = listOf(TrendingHashtag("cats", 40, 90), TrendingHashtag("art", 12, 30)),
+            loaded = true,
         )
-        val related = AccountSearchState(
-            query = "#fixture", tagQuery = "fixture", relatedTags = listOf("cats", "kitten", "caturday"),
+        val suggestions = SearchState(
+            suggestionsFor = "#pho",
+            suggestions = SearchSuggestions(
+                accounts = listOf(matched),
+                hashtags = listOf(HashtagSuggestion("photography", 9.0), HashtagSuggestion("phone", null)),
+            ),
+        )
+        val related = SearchState(
+            query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", relatedTags = listOf("cats", "kitten", "caturday"),
             posts = listOf(AppShellFixtures.post("related", author, "Search related fixture")),
         )
-        val popular = SearchExploreState(popularAccounts = listOf(matched))
         val cases = listOf(
-            Triple("search_popular_accounts", "", Pair(0, AccountSearchState())),
-            Triple("search_trending_results", "", Pair(1, AccountSearchState())),
-            Triple("search_suggestion_results", "#pho", Pair(1, AccountSearchState())),
-            Triple("search_hashtag_results", "#fixture", Pair(1, related)),
+            Triple("search_trends", "", SearchState()),
+            Triple("search_suggestion_results", "#pho", suggestions),
+            Triple("search_hashtag_results", "#fixture", related),
         )
         for (direction in LayoutDirection.entries) {
-            for ((listTag, query, tabAndState) in cases) {
+            for ((listTag, query, state) in cases) {
                 show(direction) {
                     SearchScreen(
-                        accountSearch = tabAndState.second, explore = if (tabAndState.first == 0) popular else explore,
+                        search = state, trends = trends,
                         compactLayout = false, largeLayout = true,
-                        sharedQuery = query, sharedTab = tabAndState.first,
+                        sharedQuery = query,
                         leftObstructionClearance = right, rightObstructionClearance = right,
                         mediaOwner = author.id,
                     )
@@ -299,7 +290,7 @@ class SearchClearanceTest {
                 val safeLeft = viewport.left + right.value * density
                 val safeRight = viewport.right - right.value * density
                 val targets = compose.onAllNodes(hasClickAction(), useUnmergedTree = true).fetchSemanticsNodes()
-                    .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 && !it.isChipRowEntry() }
+                    .filter { it.boundsInRoot.width > 0 && it.boundsInRoot.height > 0 }
                     .filter { it.boundsInRoot.top < bounds("search_dock").top }
                 assertTrue("$listTag must expose interactions", targets.isNotEmpty())
                 targets.forEach {
@@ -314,16 +305,14 @@ class SearchClearanceTest {
 
     @Test
     @Config(qualifiers = "w600dp-h800dp-420dpi")
-    fun wideDockClearsPhysicalRightWithoutMovingOrResizingAndKeepsChipsSelectable() {
+    fun wideDockClearsPhysicalRightWithoutMovingOrResizing() {
         for (direction in LayoutDirection.entries) {
-            val selectedTab = mutableStateOf(0)
             val clearance = mutableStateOf(0.dp)
             show(direction) {
                 SearchScreen(
                     compactLayout = false, largeLayout = true,
-                    sharedQuery = "", sharedTab = selectedTab.value,
+                    sharedQuery = "",
                     rightObstructionClearance = clearance.value,
-                    onSharedTabChange = { selectedTab.value = it },
                 )
             }
             // The idle bubble is narrow. Focus expands the field to its widest state, which must clear.
@@ -340,18 +329,8 @@ class SearchClearanceTest {
             assertEquals("clearance must not move the dock", unmeasuredDock.top, dock.top, 1f)
             assertEquals("clearance must not move the dock", unmeasuredDock.bottom, dock.bottom, 1f)
             assertEquals("dock spans to the physical right edge", viewport.right, dock.right, 1f)
-            assertTrue("chip row clears physical right", chipsRest(direction, false) <= safeRight + 1f)
             assertTrue("search field clears physical right", fieldBounds().right <= safeRight + 1f)
             assertClicksClearRight(safeRight)
-            compose.onNodeWithContentDescription(text(R.string.search_categories_description)).assert(hasScrollAction())
-            val lastCategory = text(R.string.search_category_for_you)
-            compose.onNodeWithContentDescription(text(R.string.search_categories_description))
-                .performScrollToNode(hasText(lastCategory))
-            assertTrue("reachable chip clears physical right",
-                compose.onNodeWithText(lastCategory).fetchSemanticsNode().boundsInRoot.right <= safeRight + 1f)
-            compose.onNodeWithText(lastCategory).assertIsDisplayed().performClick()
-            compose.onNodeWithText(lastCategory).assertIsSelected()
-            assertEquals(3, selectedTab.value)
             assertEquals("Search content keeps the full viewport", viewport, bounds("search_content"))
         }
     }
@@ -363,7 +342,7 @@ class SearchClearanceTest {
             val clearance = mutableStateOf(0.dp)
             show(direction) {
                 SearchScreen(
-                    accountSearch = AccountSearchState(query = "#fixture", tagQuery = "fixture", posts = posts(12, "ime")),
+                    search = SearchState(query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = posts(12, "ime")),
                     compactLayout = false, largeLayout = true,
                     rightObstructionClearance = right, bottomObstructionClearance = clearance.value,
                 )
@@ -413,7 +392,7 @@ class SearchClearanceTest {
             show(direction) {
                 CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale = 2f)) {
                     SearchScreen(
-                        accountSearch = AccountSearchState(query = "#fixture", tagQuery = "fixture", posts = posts(12, "big")),
+                        search = SearchState(query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = posts(12, "big")),
                         compactLayout = false, largeLayout = true,
                         rightObstructionClearance = right,
                     )
@@ -426,10 +405,7 @@ class SearchClearanceTest {
             // The harness has no pane system-bar padding, so the 24 dp system bar sits below the lifted dock.
             val keyboardTop = root.bottom - keyboardDp * density
             val field = fieldBounds()
-            val chips = chipsBounds()
             assertTrue("field stays above the keyboard at 200% in $direction", field.bottom <= keyboardTop + 24 * density + 1f)
-            assertTrue("chips stay above the field at 200% in $direction", chips.bottom <= field.top + 1f)
-            assertTrue("chips stay on screen at 200% in $direction", chips.top >= root.top)
             assertTrue("field does not shrink to nothing at 200% in $direction", field.height > 0f)
             scrollToEnd("search_hashtag_results")
             assertTrue("final result clears the dock at 200% with the keyboard open",
@@ -447,7 +423,7 @@ class SearchClearanceTest {
                 val clearance = mutableStateOf(0.dp)
                 show(direction) {
                     SearchScreen(
-                        accountSearch = AccountSearchState(query = query, accounts = listOf(matched)),
+                        search = SearchState(suggestionsFor = query, suggestions = SearchSuggestions(accounts = listOf(matched))),
                         compactLayout = true, compactNavigationVisible = navigationVisible,
                         rightObstructionClearance = clearance.value,
                         bottomObstructionClearance = clearance.value,
@@ -460,14 +436,12 @@ class SearchClearanceTest {
                     compose.runOnIdle { clearance.value = 0.dp }
                     compose.waitForIdle()
                     val content = bounds("search_content")
-                    val accounts = bounds("search_account_results")
-                    val chips = chipsBounds()
-                    val field = fieldBounds()
+                    val accounts = bounds("search_suggestion_results")
+                            val field = fieldBounds()
                     compose.runOnIdle { clearance.value = 96.dp }
                     compose.waitForIdle()
                     assertEquals("compact content keeps the full viewport", content, bounds("search_content"))
-                    assertEquals("compact account list keeps the full viewport", accounts, bounds("search_account_results"))
-                    assertEquals("compact chip row ignores wide inputs", chips, chipsBounds())
+                    assertEquals("compact account list keeps the full viewport", accounts, bounds("search_suggestion_results"))
                     assertEquals("compact field ignores wide inputs", field, fieldBounds())
                     compose.onNodeWithContentDescription(text(R.string.search_field))
                         .assertIsDisplayed().assertTextContains(query, substring = true)
@@ -485,7 +459,7 @@ class SearchClearanceTest {
 
     @Test
     @Config(qualifiers = "w600dp-h1000dp-420dpi")
-    fun searchDestinationForwardsClearanceAndKeepsQueryAndCategoryState() {
+    fun searchDestinationForwardsClearanceAndKeepsQueryState() {
         for (direction in LayoutDirection.entries) {
             val navigator = ShellNavigator()
             navigator.destination = Destination.Search
@@ -493,8 +467,8 @@ class SearchClearanceTest {
             show(direction) {
                 destination(navigator, AppShellFixtures.search(
                     FeedState(
-                        accountSearch = AccountSearchState(
-                            query = "#fixture", tagQuery = "fixture", posts = posts(10, "branch"),
+                        accountSearch = SearchState(
+                            query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = posts(10, "branch"),
                         ),
                     ),
                 ))
@@ -502,16 +476,10 @@ class SearchClearanceTest {
             val viewport = bounds("search_test_viewport")
             val safeRight = viewport.right - wideRight.value * density
             assertEquals("branch dock spans to the physical right edge", viewport.right, bounds("search_dock").right, 1f)
-            assertTrue("branch chip row clears physical right", chipsRest(direction, false) <= safeRight + 1f)
             assertTrue("branch field clears physical right", fieldBounds().right <= safeRight + 1f)
             assertTrue("branch result clears physical right", bounds("post_row_branch-0").right <= safeRight + 1f)
             assertEquals("branch content keeps the full viewport", viewport, bounds("search_content"))
             assertClicksClearRight(safeRight)
-            compose.onNodeWithText(text(R.string.search_category_hashtags)).assertIsDisplayed().performClick()
-            assertEquals(1, navigator.searchCategory)
-            assertEquals("#fixture", navigator.searchQuery)
-            compose.onNodeWithText(text(R.string.search_category_profiles)).assertIsDisplayed().performClick()
-            assertEquals(0, navigator.searchCategory)
             assertEquals("#fixture", navigator.searchQuery)
             val dock = bounds("search_dock")
             scrollToEnd("search_hashtag_results")
@@ -526,9 +494,9 @@ class SearchClearanceTest {
         val clearance = mutableStateOf(0.dp)
         show(LayoutDirection.Ltr) {
             SearchScreen(
-                accountSearch = AccountSearchState(query = "#fixture", tagQuery = "fixture", posts = posts(16, "retained")),
+                search = SearchState(query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = posts(16, "retained")),
                 compactLayout = false, largeLayout = true,
-                sharedQuery = "#fixture", sharedTab = 0, listState = list,
+                sharedQuery = "#fixture", listState = list,
                 rightObstructionClearance = clearance.value, bottomObstructionClearance = clearance.value,
             )
         }
@@ -576,6 +544,3 @@ class SearchClearanceTest {
         )
     }
 }
-
-private fun SemanticsNode.isChipRowEntry() =
-    parent?.config?.contains(SemanticsProperties.SelectableGroup) == true

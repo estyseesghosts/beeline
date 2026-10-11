@@ -74,7 +74,8 @@ import me.foxtails.palustris.ui.photogrid.PhotoGridFeedState
 import me.foxtails.palustris.ui.profile.ProfileCategory
 import me.foxtails.palustris.ui.profile.ProfilePageState
 import me.foxtails.palustris.ui.profile.ProfileUiState
-import me.foxtails.palustris.ui.search.AccountSearchState
+import me.foxtails.palustris.ui.search.SearchMode
+import me.foxtails.palustris.ui.search.SearchState
 import me.foxtails.palustris.ui.shell.AppShellFixtures
 import me.foxtails.palustris.ui.shell.DirectMessagesContract
 import me.foxtails.palustris.ui.shell.PhotoGridContract
@@ -298,13 +299,11 @@ class NavigationTest {
         compose.onNodeWithTag("home_timeline_tab_Local").performClick()
         compose.onNodeWithText("Local posts will appear here when an account is connected.").assertIsDisplayed()
         compose.onNodeWithContentDescription("Search").performClick()
-        compose.onNodeWithText("Hashtags").performClick()
         compose.onNode(hasSetTextAction()).performTextInput("photography")
         compose.onNodeWithContentDescription("Notifications").performClick()
         compose.onNodeWithText("All caught up").assertIsDisplayed()
         compose.onNodeWithContentDescription("Search").performClick()
         compose.onNodeWithText("photography").assertIsDisplayed()
-        compose.onNodeWithText("Hashtags").assertIsSelected()
         compose.onNodeWithContentDescription("Profile").performClick()
         compose.onAllNodesWithText("Your profile").onLast().assertIsDisplayed()
     }
@@ -397,10 +396,8 @@ class NavigationTest {
         compose.waitForIdle()
 
         val field = bounds("Search field")
-        val chips = bounds("Search categories; swipe horizontally for more")
         val action = bounds("Photo grid")
         assertTrue("search field should be above navigation", field.bottom < action.top)
-        assertTrue("search chips should be above the search field", chips.bottom <= field.top)
         val density = compose.activity.resources.displayMetrics.density
         assertTrue("search field should keep the compact navigation side margins", field.left / density >= 16f)
         assertTrue("search field should keep the compact navigation side margins", field.right / density <= 411f - 16f)
@@ -474,8 +471,9 @@ class NavigationTest {
         val account = fixtureAccount()
         val final = fixturePost("search-final", account, "Search final fixture")
         val feed = FeedState(
-            accountSearch = AccountSearchState(
+            accountSearch = SearchState(
                 query = "#fixture",
+                mode = SearchMode.Hashtag,
                 tagQuery = "fixture",
                 posts = listOf(
                  fixturePost("search-underlap", account, longFixtureText("Search", lines = 28)).copy(
@@ -500,18 +498,17 @@ class NavigationTest {
         compose.waitForIdle()
 
         screenshot("search")
-        assertUnderlaps("post_row_search-underlap", "Search categories; swipe horizontally for more")
-        assertFixtureVisibleThroughGap("post_row_search-underlap", "Profiles", "Hashtags")
+        assertUnderlaps("post_row_search-underlap", "Search field")
         scrollToEnd("search_content")
         val finalBounds = compose.onNodeWithTag("post_row_search-final").fetchSemanticsNode().boundsInRoot
-        val chips = bounds("Search categories; swipe horizontally for more")
+        val chips = bounds("Search field")
         assertTrue("final Search result should clear the floating controls", finalBounds.bottom <= chips.top)
         for (keyboardDp in listOf(360, 0)) {
             applyKeyboardInsets(keyboardDp)
             scrollToEnd("search_content")
             val row = compose.onNodeWithTag("post_row_search-final").fetchSemanticsNode().boundsInRoot
             assertTrue("final Search actions must clear controls at IME $keyboardDp",
-                row.bottom <= bounds("Search categories; swipe horizontally for more").top)
+                row.bottom <= bounds("Search field").top)
             screenshot("search-ime-$keyboardDp")
         }
     }
@@ -1302,12 +1299,10 @@ class NavigationTest {
         }
         compose.waitForIdle()
         compose.onNodeWithContentDescription("Search").performClick()
-        compose.onNodeWithText("Hashtags").performClick()
         compose.onNode(hasSetTextAction()).performTextInput("photography")
         compose.onNodeWithContentDescription("Notifications").performClick()
         compose.onNodeWithContentDescription("Search").performClick()
         compose.onNodeWithText("photography").assertIsDisplayed()
-        compose.onNodeWithText("Hashtags").assertIsSelected()
 
         compose.activity.runOnUiThread {
             compose.activity.setContent {

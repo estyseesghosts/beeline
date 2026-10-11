@@ -53,8 +53,10 @@ internal fun ShellSearchDestination(
     ) { panel ->
         when (panel) {
             SearchPanel.Search -> SearchScreen(
-                accountSearch = search.state,
-                onSearchAccounts = search.actions::search,
+                search = search.state,
+                onSearch = search.actions::search,
+                onSuggest = search.actions::suggest,
+                onConsumeTarget = search.actions::consumeTarget,
                 onAccountClick = navigator::openProfile,
                 availableActions = postCallbacks.availableActions,
                 onReact = postCallbacks.onReact,
@@ -72,13 +74,11 @@ internal fun ShellSearchDestination(
                 onShowOnlyHashtag = search.actions::searchWithoutRelated,
                 onOpenHashtagBubble = overlay::openHashtagBubble,
                 onLoadMoreSearch = search.actions::loadMore,
-                explore = search.explore,
-                exploreActions = search.actions,
+                trends = search.trends,
+                trendsActions = search.actions,
                 initialQuery = navigator.searchPrefill,
                 sharedQuery = navigator.searchQuery,
-                sharedTab = navigator.searchCategory,
                 onSharedQueryChange = { navigator.searchQuery = it },
-                onSharedTabChange = { navigator.searchCategory = it },
                 rightObstructionClearance = rightObstructionClearance,
                 leftObstructionClearance = leftObstructionClearance,
                 bottomObstructionClearance = bottomObstructionClearance,
@@ -92,8 +92,6 @@ internal fun ShellSearchDestination(
                 onOpenMedia = overlay::openMedia,
                 onOpenPost = { post -> navigationCallbacks.onOpenPost(post, LargePostOrigin.Search) },
                 onOpenUsername = navigator::openAccountSearch,
-                useCompactWideCaret = useCompactWideCaret,
-                tabCaretHost = tabCaretHost,
             )
             SearchPanel.PhotoGrid -> PhotoGridScreen(
                 state = photoGrid.state,

@@ -16,6 +16,7 @@ import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
+import me.foxtails.palustris.ui.links.LocalPostLinkResolver
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.shell.PostProjectionCoordinator
 import me.foxtails.palustris.ui.shell.SearchContract
@@ -35,6 +36,8 @@ fun SearchHost(
     val scope = rememberCoroutineScope()
     // A search reads the latest setting when it starts. A change never rewrites an open result.
     val latestHashtagInput by rememberUpdatedState(hashtagInput)
+    // A link search resolves through the session's own resolver, which caches its answers.
+    val latestLinkResolver by rememberUpdatedState(LocalPostLinkResolver.current)
     val owner = remember(accountId, sessionRevision, source) {
         SearchOwner(
             accountId = accountId,
@@ -43,6 +46,7 @@ fun SearchHost(
             scope = scope,
             applyFavouritePreference = { post -> applyFavouritePreference(source, postPreferences, post) },
             hashtagInput = { latestHashtagInput },
+            linkResolver = { latestLinkResolver },
         )
     }
     LaunchedEffect(owner, postPreferences.favouriteEmoji) {
@@ -66,18 +70,20 @@ fun SearchHost(
         onDispose { coordinator.unregister(sink) }
     }
     val state by owner.state.collectAsStateWithLifecycle()
-    val explore by owner.exploreState.collectAsStateWithLifecycle()
+    val trends by owner.trendsState.collectAsStateWithLifecycle()
     val actions = remember(owner) {
         object : SearchContract.Actions {
             override fun search(query: String) = owner.search(query)
             override fun searchWithoutRelated(query: String) = owner.searchWithoutRelated(query)
             override fun loadMore() = owner.loadMore()
-            override fun loadTrending() = owner.loadTrending()
-            override fun loadPopularAccounts() = owner.loadPopularAccounts()
-            override fun suggestHashtags(text: String) = owner.suggestHashtags(text)
+            override fun suggest(text: String) = owner.suggest(text)
+            override fun consumeTarget() = owner.consumeTarget()
+            override fun loadTrends() = owner.loadTrends()
+            override fun loadMoreTrends() = owner.loadMoreTrends()
+            override fun refreshTrends() = owner.refreshTrends()
         }
     }
-    return remember(state, explore, actions) { SearchContract(state, actions, explore) }
+    return remember(state, trends, actions) { SearchContract(state, actions, trends) }
 }
 
 private fun applyFavouritePreference(
