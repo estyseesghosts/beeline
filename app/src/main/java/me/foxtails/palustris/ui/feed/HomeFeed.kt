@@ -52,6 +52,8 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.components.chromeBackdropSource
+import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.emoji.EmojiCatalogState
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.layout.LegacyFeedBottomClearance
@@ -334,12 +336,13 @@ private fun HomeFeedContent(
     wideRightClearance: Dp,
     wideBottomClearance: Dp,
 ) {
+    val backdrop = rememberChromeBackdrop()
     Box(Modifier.fillMaxSize()) {
         PullToRefreshBox(
             isRefreshing = state.loading,
             onRefresh = onRefresh,
             state = pullToRefreshState,
-            modifier = Modifier.fillMaxSize().testTag("home_feed_content"),
+            modifier = Modifier.fillMaxSize().chromeBackdropSource(backdrop).testTag("home_feed_content"),
             indicator = { PullToRefreshDefaults.Indicator(state = pullToRefreshState, isRefreshing = state.loading, modifier = Modifier.align(Alignment.TopCenter).padding(top = refreshIndicatorTopPadding ?: 96.dp)) },
         ) {
             LazyColumn(
@@ -416,6 +419,7 @@ private fun HomeFeedContent(
         }
         bottomDock?.let {
             LargeBottomDock(
+                backdrop = backdrop,
                 content = it,
                 modifier = Modifier.align(Alignment.BottomStart)
                     .absolutePadding(bottom = wideBottomClearance),

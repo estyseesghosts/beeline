@@ -93,8 +93,8 @@ class SearchDiscoveryTest {
             ),
         )
 
-        compose.onNodeWithText("#cats: 400 posts").assertIsDisplayed()
-        compose.onNodeWithText("#art: 1 user").assertIsDisplayed()
+        compose.onNodeWithText("cats: 400 posts").assertIsDisplayed()
+        compose.onNodeWithText("art: 1 user").assertIsDisplayed()
         compose.onNodeWithTag("search_trending_row_cats", useUnmergedTree = true).performClick()
 
         assertEquals(listOf("#cats"), searched)
@@ -125,7 +125,7 @@ class SearchDiscoveryTest {
     fun aTagWithNeitherCountShowsOnlyItsName() {
         show("", trends = SearchTrendsState(tags = listOf(TrendingHashtag("plain", null, null)), loaded = true))
 
-        compose.onNodeWithText("#plain").assertIsDisplayed()
+        compose.onNodeWithText("plain").assertIsDisplayed()
     }
 
     @Test
@@ -137,7 +137,7 @@ class SearchDiscoveryTest {
         )
 
         assertTrue(compose.onAllTagged("search_tabs").isEmpty())
-        compose.onNodeWithText("#cats: 3 posts").assertIsDisplayed()
+        compose.onNodeWithText("cats: 3 posts").assertIsDisplayed()
     }
 
     @Test

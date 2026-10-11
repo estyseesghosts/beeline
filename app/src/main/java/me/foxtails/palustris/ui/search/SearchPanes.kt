@@ -182,12 +182,14 @@ internal fun SearchTrendsPane(
 @Composable
 private fun TrendingTagPill(tag: TrendingHashtag, onHashtag: (String) -> Unit) {
     val label = hashtagLabel(tag.name)
+    // The pill's logogram is the hashtag mark, so the text carries the name alone.
+    val name = label.removePrefix("#")
     val uses = tag.uses
     val accounts = tag.accounts
     val text = when {
-        uses != null -> pluralStringResource(R.plurals.search_trending_tag_posts, uses, label, uses)
-        accounts != null -> pluralStringResource(R.plurals.search_trending_tag_users, accounts, label, accounts)
-        else -> label
+        uses != null -> pluralStringResource(R.plurals.search_trending_tag_posts, uses, name, uses)
+        accounts != null -> pluralStringResource(R.plurals.search_trending_tag_users, accounts, name, accounts)
+        else -> name
     }
     HashtagPill(
         label = text,

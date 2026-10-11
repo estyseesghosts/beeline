@@ -22,7 +22,9 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
+import me.foxtails.palustris.ui.components.ChromeBackdropSource
 import me.foxtails.palustris.ui.components.DestinationChipRow
+import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
@@ -105,73 +107,76 @@ internal fun ProfileTimelinePresentation(
     val profileCaretPresentation = if (useCompactWideCaret) ChipCaretPresentation.Hidden
     else ChipCaretPresentation.Inline
 
+    val backdrop = rememberChromeBackdrop()
     Box(Modifier.fillMaxSize()) {
-        ProfileTimelineList(
-            account = account,
-            state = state,
-            compactLayout = compactLayout,
-            endContentClearance = endContentClearance,
-            rightObstructionClearance = rightObstructionClearance,
-            leftObstructionClearance = leftObstructionClearance,
-            isSelf = isSelf,
-            onCategorySelected = onCategorySelected,
-            onOpenDrafts = onOpenDrafts,
-            onOpenBookmarks = onOpenBookmarks,
-            onRefresh = onRefresh,
-            onLoadMore = onLoadMore,
-            onOpenProfile = onOpenProfile,
-            onSearchHashtag = onSearchHashtag,
-            availableActions = availableActions,
-            onReact = onReact,
-            onReply = onReply,
-            onReshare = onReshare,
-            onBookmark = onBookmark,
-            onReaction = onReaction,
-            onOpenReactionBubble = onOpenReactionBubble,
-            onOpenReactionPicker = onOpenReactionPicker,
-            onOpenHashtagBubble = onOpenHashtagBubble,
-            onOpenMedia = onOpenMedia,
-            onOpenPost = onOpenPost,
-            onOpenUrl = onOpenUrl,
-            onOpenUsername = onOpenUsername,
-            quoteEnabled = quoteEnabled,
-            onQuote = onQuote,
-            header = {
-                // Compact-wide lets the banner bleed to the display edges, so the header applies the
-                // clearance itself; every other layout pads the whole header.
-                val bannerBleed = compactWidePresentation
-                val topBleed = LocalPaneEdgeBleed.current.top
-                Box(
-                    if (bannerBleed) Modifier.fillMaxWidth() else Modifier.fillMaxWidth().absolutePadding(
-                        left = leftObstructionClearance,
-                        right = rightObstructionClearance,
-                    ),
-                ) {
-                    ProfileHeader(
-                        account = account,
-                        state = state,
-                        isSelf = isSelf,
-                        onRefresh = onRefresh,
-                        onFollow = onFollow,
-                        onUnfollow = onUnfollow,
-                        onMessage = { onMessage(account) },
-                        onOpenProfile = onOpenProfile,
-                        onOpenProfileImage = onOpenProfileImage,
-                        insets = ProfileHeaderInsets(
-                            left = if (bannerBleed) leftObstructionClearance else 0.dp,
-                            right = if (bannerBleed) rightObstructionClearance else 0.dp,
-                            statusBar = topBleed.takeIf { it > 0.dp },
+        ChromeBackdropSource(backdrop) {
+            ProfileTimelineList(
+                account = account,
+                state = state,
+                compactLayout = compactLayout,
+                endContentClearance = endContentClearance,
+                rightObstructionClearance = rightObstructionClearance,
+                leftObstructionClearance = leftObstructionClearance,
+                isSelf = isSelf,
+                onCategorySelected = onCategorySelected,
+                onOpenDrafts = onOpenDrafts,
+                onOpenBookmarks = onOpenBookmarks,
+                onRefresh = onRefresh,
+                onLoadMore = onLoadMore,
+                onOpenProfile = onOpenProfile,
+                onSearchHashtag = onSearchHashtag,
+                availableActions = availableActions,
+                onReact = onReact,
+                onReply = onReply,
+                onReshare = onReshare,
+                onBookmark = onBookmark,
+                onReaction = onReaction,
+                onOpenReactionBubble = onOpenReactionBubble,
+                onOpenReactionPicker = onOpenReactionPicker,
+                onOpenHashtagBubble = onOpenHashtagBubble,
+                onOpenMedia = onOpenMedia,
+                onOpenPost = onOpenPost,
+                onOpenUrl = onOpenUrl,
+                onOpenUsername = onOpenUsername,
+                quoteEnabled = quoteEnabled,
+                onQuote = onQuote,
+                header = {
+                    // Compact-wide lets the banner bleed to the display edges, so the header applies the
+                    // clearance itself; every other layout pads the whole header.
+                    val bannerBleed = compactWidePresentation
+                    val topBleed = LocalPaneEdgeBleed.current.top
+                    Box(
+                        if (bannerBleed) Modifier.fillMaxWidth() else Modifier.fillMaxWidth().absolutePadding(
+                            left = leftObstructionClearance,
+                            right = rightObstructionClearance,
                         ),
-                    )
-                }
-            },
-            details = { ProfileDetails(account) },
-            listState = listState,
-            showInlineCategories = !compactLayout && !compactWidePresentation,
-            categoryChipListState = categoryChipListState,
-            categoryRowVisible = categoryRowVisible,
-            onToggleCategoryRow = onToggleCategoryRow,
-        )
+                    ) {
+                        ProfileHeader(
+                            account = account,
+                            state = state,
+                            isSelf = isSelf,
+                            onRefresh = onRefresh,
+                            onFollow = onFollow,
+                            onUnfollow = onUnfollow,
+                            onMessage = { onMessage(account) },
+                            onOpenProfile = onOpenProfile,
+                            onOpenProfileImage = onOpenProfileImage,
+                            insets = ProfileHeaderInsets(
+                                left = if (bannerBleed) leftObstructionClearance else 0.dp,
+                                right = if (bannerBleed) rightObstructionClearance else 0.dp,
+                                statusBar = topBleed.takeIf { it > 0.dp },
+                            ),
+                        )
+                    }
+                },
+                details = { ProfileDetails(account) },
+                listState = listState,
+                showInlineCategories = !compactLayout && !compactWidePresentation,
+                categoryChipListState = categoryChipListState,
+                categoryRowVisible = categoryRowVisible,
+                onToggleCategoryRow = onToggleCategoryRow,
+            )
+        }
 
         if (compactLayout) {
             Box(
@@ -200,6 +205,7 @@ internal fun ProfileTimelinePresentation(
             }
         } else if (compactWidePresentation) {
             LargeBottomDock(
+                backdrop = backdrop,
                 modifier = Modifier.align(Alignment.BottomStart)
                     .absolutePadding(bottom = bottomObstructionClearance)
                     .testTag("profile_categories_dock"),

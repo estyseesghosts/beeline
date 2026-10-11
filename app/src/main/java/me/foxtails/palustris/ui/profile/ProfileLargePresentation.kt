@@ -25,7 +25,10 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.ui.components.ChromeBackdropSource
 import me.foxtails.palustris.ui.components.DestinationChipRow
+import me.foxtails.palustris.ui.components.chromeBackdropSource
+import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 
@@ -126,11 +129,14 @@ internal fun ProfileLargePresentation(
         )
     }
 
+    val backdrop = rememberChromeBackdrop()
+
     // The dock keeps its bottom-start placement and its own LargeBottomDock spacing. Clearance only
     // moves it clear of floating obstruction; it adds no dock measurement. Chips scroll beneath it to the display edge.
     @Composable
     fun dock(modifier: Modifier = Modifier, leftClearance: Dp, rightClearance: Dp) {
         LargeBottomDock(
+            backdrop = backdrop,
             content = {
                 DestinationChipRow(
                     entries = profileCategoryChipEntries(
@@ -161,7 +167,7 @@ internal fun ProfileLargePresentation(
 
     if (showSummary) {
         Box(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxSize()) {
+            Row(Modifier.fillMaxSize().chromeBackdropSource(backdrop)) {
                 Column(
                     Modifier
                         .weight(0.42f)
@@ -203,7 +209,7 @@ internal fun ProfileLargePresentation(
     } else {
         Box(Modifier.fillMaxSize()) {
             // Without the summary the timeline fills the pane, so it always reaches the edge.
-            timeline(rightObstructionClearance, leftObstructionClearance)
+            ChromeBackdropSource(backdrop) { timeline(rightObstructionClearance, leftObstructionClearance) }
             dock(
                 Modifier.align(Alignment.BottomStart)
                     .absolutePadding(bottom = bottomObstructionClearance)

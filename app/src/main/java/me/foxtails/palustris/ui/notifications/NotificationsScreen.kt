@@ -55,6 +55,8 @@ import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
+import me.foxtails.palustris.ui.components.chromeBackdropSource
+import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
@@ -251,6 +253,7 @@ fun NotificationsScreen(
             }
         }
     } else {
+        val backdrop = rememberChromeBackdrop()
         Box(Modifier.fillMaxSize()) {
             NotificationContent(
                 title = title,
@@ -263,7 +266,7 @@ fun NotificationsScreen(
                 onDismiss = onDismissNotification,
                 onFollowRequest = onFollowRequest,
                 onOpen = onOpenNotification,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().chromeBackdropSource(backdrop),
                 endClearance = LargeBottomDockClearance + wideBottomClearance,
                 rightClearance = wideRightClearance,
                 leftClearance = wideLeftClearance,
@@ -277,6 +280,7 @@ fun NotificationsScreen(
                 contentWarningRules = contentWarningRules,
             )
             LargeBottomDock(
+                backdrop = backdrop,
                 modifier = Modifier.align(Alignment.BottomStart)
                     .absolutePadding(bottom = wideBottomClearance)
                     .testTag("notification_filter_dock"),

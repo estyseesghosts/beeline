@@ -927,8 +927,8 @@ the query and its results. The selected tab lives in `ShellNavigator.searchTabNa
 The inline caret collapses the row; on a compact wide screen the shell caret does, and then the row takes no height.
 End clearance is the field alone when no row takes space, and the field plus the chip row otherwise.
 Trending shows the hashtag pills (`ui/components/HashtagPill.kt`, shared with the hashtag bubble) at the top of one list, then
-trending posts. A pill reads `#name: N posts` when the server reports uses, `#name: N users` when it reports only accounts,
-and `#name` otherwise. News shows the link cards and keeps its own scroll state. Sources: `SearchDiscoveryTest`,
+trending posts. A pill reads `name: N posts` when the server reports uses, `name: N users` when it reports only accounts,
+and `name` otherwise; the pill logogram is the hashtag mark, so the text has no `#`. News shows the link cards and keeps its own scroll state. Sources: `SearchDiscoveryTest`,
 `SearchPresentationTest`, `ShellNavigatorTest`. The caret and compact-wide behavior is not device checked.
 
 ## Floating chrome depth: gradient (infdev 02 S8a)
@@ -947,7 +947,7 @@ On API 31 and later, a band with a `ChromeBackdrop` also draws a blurred copy (1
 band gradient. The host records its content into one `GraphicsLayer` (`chromeBackdropSource`) and the band, a sibling drawn above
 it, draws that layer into its own layer with a `BlurEffect` and a gradient mask. `rememberChromeBackdrop()` returns null on API 29
 and 30 and while battery saver is on, and the band then draws the gradient alone. Hosts: the compact shell overlay (source is the
-destination content), the Search pane, the Photo Grid and `LargeBottomDock`. Platform path only, so no haze fallback was needed.
+destination content), the Search pane, the Photo Grid and every `LargeBottomDock` (Home, Notifications, Profile). Platform path only, so no haze fallback was needed.
 Robolectric does not render `RenderEffect`; tests cover the alpha values and that a row under the band stays tappable. The gradient
 was lowered to 0.18 and 0.28 after a first look on the emulator. Not verified: blur strength, scroll performance on the SM-G986W,
 an API 29 emulator, and the monochrome and Pure black themes.

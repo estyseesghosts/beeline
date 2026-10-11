@@ -6,6 +6,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.PowerManager
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -74,4 +76,10 @@ internal fun Modifier.chromeBackdropSource(backdrop: ChromeBackdrop?): Modifier 
             backdrop.layer.record { content.drawContent() }
             drawLayer(backdrop.layer)
         }
+}
+
+/** A full-size host for content that a band draws over, so the band can blur it. Content and band stay siblings. */
+@Composable
+internal fun ChromeBackdropSource(backdrop: ChromeBackdrop?, content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxSize().chromeBackdropSource(backdrop)) { content() }
 }
