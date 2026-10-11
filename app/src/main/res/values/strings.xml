@@ -868,11 +868,6 @@
     <string name="search_hashtag_includes">Includes %1$s</string>
     <string name="search_hashtag_includes_more">Includes %1$s and %2$d more</string>
     <string name="search_hashtag_show_only">Show only %1$s</string>
-    <string name="search_trending_hashtags">Trending hashtags</string>
-    <plurals name="search_trending_people">
-        <item quantity="one">%1$d person</item>
-        <item quantity="other">%1$d people</item>
-    </plurals>
     <string name="search_placeholder">Search posts, people and #tags</string>
     <string name="search_lookup_failed">Could not find that account or link</string>
     <string name="search_posts_failed">Post search failed</string>
@@ -881,12 +876,21 @@
     <string name="search_no_posts_server_hint">Nothing matched. Some servers search only public posts from people who opted in, and some do not search posts at all.</string>
     <string name="search_suggestions_people">People</string>
     <string name="search_suggestions_hashtags">Hashtags</string>
-    <string name="search_trending_posts">Trending posts</string>
-    <string name="search_trending_links">Trending links</string>
     <string name="search_trends_empty">Nothing is trending</string>
     <string name="search_trends_empty_prompt">This server does not report trending hashtags, posts or links.</string>
     <string name="search_trends_failed">Trends could not load</string>
     <string name="search_trends_retry">Try again</string>
     <string name="composer_insert_hashtag">Insert hashtag %1$s</string>
     <string name="a11y_content_warning_tile">%1$s. Double tap to show the content</string>
+    <string name="search_tab_trending">Trending</string>
+    <string name="search_tab_news">News</string>
+    <string name="search_tabs_description">Search sections</string>
+    <plurals name="search_trending_tag_posts">
+        <item quantity="one">%1$s: %2$d post</item>
+        <item quantity="other">%1$s: %2$d posts</item>
+    </plurals>
+    <plurals name="search_trending_tag_users">
+        <item quantity="one">%1$s: %2$d user</item>
+        <item quantity="other">%1$s: %2$d users</item>
+    </plurals>
 </resources>

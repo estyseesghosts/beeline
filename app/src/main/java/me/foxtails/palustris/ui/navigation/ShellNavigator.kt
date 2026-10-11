@@ -15,6 +15,7 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.large.LargeNavTarget
 import me.foxtails.palustris.ui.motion.motionDirection
+import me.foxtails.palustris.ui.search.SearchTab
 import me.foxtails.palustris.ui.shell.Destination
 import me.foxtails.palustris.ui.shell.LargePostOrigin
 import me.foxtails.palustris.ui.shell.LocalPage
@@ -50,7 +51,7 @@ internal class ShellNavigator internal constructor() {
     var sheet by mutableStateOf<String?>(null)
     var searchPanelName by mutableStateOf(SearchPanel.Search.name)
     var searchQuery by mutableStateOf("")
-    var searchCategory by mutableStateOf(0)
+    var searchTabName by mutableStateOf(SearchTab.Trending.name)
     var searchPrefill by mutableStateOf("")
     var notificationsPanelName by mutableStateOf(NotificationsPanel.Notifications.name)
     var navigationVisible by mutableStateOf(true)
@@ -80,6 +81,8 @@ internal class ShellNavigator internal constructor() {
         }
     val searchPanel: SearchPanel
         get() = SearchPanel.valueOf(searchPanelName)
+    val searchTab: SearchTab
+        get() = SearchTab.valueOf(searchTabName)
     val notificationsPanel: NotificationsPanel
         get() = NotificationsPanel.valueOf(notificationsPanelName)
 
@@ -254,7 +257,7 @@ internal class ShellNavigator internal constructor() {
         viewedProfile = null
         page = null
         searchQuery = ""
-        searchCategory = 0
+        searchTabName = SearchTab.Trending.name
         clearSelectedPost()
     }
 
@@ -292,7 +295,7 @@ internal class ShellNavigator internal constructor() {
         viewedProfile = null
         page = null
         searchQuery = ""
-        searchCategory = 0
+        searchTabName = SearchTab.Trending.name
         searchPrefill = ""
         clearSelectedPost()
         boundOrigin = currentOrigin
@@ -337,6 +340,14 @@ internal class ShellNavigator internal constructor() {
                 SearchPanel.Search.name
             }
 
+        /** An unknown or older saved value falls back to Trending. */
+        private fun safeSearchTab(value: Any?): String =
+            try {
+                SearchTab.valueOf(value as String).name
+            } catch (_: Exception) {
+                SearchTab.Trending.name
+            }
+
         private fun safeNotificationsPanel(value: Any?): String =
             try {
                 NotificationsPanel.valueOf(value as String).name
@@ -360,7 +371,7 @@ internal class ShellNavigator internal constructor() {
                     it.overlayKey ?: NULL_SENTINEL,
                     it.searchPanelName,
                     it.searchQuery,
-                    it.searchCategory,
+                    it.searchTabName,
                     it.searchPrefill,
                     it.notificationsPanelName,
                     it.navigationVisible,
@@ -382,7 +393,7 @@ internal class ShellNavigator internal constructor() {
                                 ?.let { overlayKey = it }
                             searchPanelName = safeSearchPanel(saved[6])
                             searchQuery = ""
-                            searchCategory = 0
+                            searchTabName = SearchTab.Trending.name
                             searchPrefill = ""
                             notificationsPanelName = safeNotificationsPanel(saved[10])
                             navigationVisible = (saved[11] as? Boolean) ?: true
@@ -404,12 +415,12 @@ internal class ShellNavigator internal constructor() {
                             if (!hasBoundOwner) {
                                 page = null
                                 searchQuery = ""
-                                searchCategory = 0
+                                searchTabName = SearchTab.Trending.name
                                 searchPrefill = ""
                             } else {
                                 page = safeLocalPage(saved[8])
                                 searchQuery = saved[12] as? String ?: ""
-                                searchCategory = (saved[13] as? Number)?.toInt() ?: 0
+                                searchTabName = safeSearchTab(saved[13])
                                 searchPrefill = saved[14] as? String ?: ""
                             }
                             (saved[9] as? String)?.takeIf { it.isNotEmpty() }?.let { sheet = it }

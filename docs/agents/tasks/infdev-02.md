@@ -13,23 +13,23 @@ Complete `docs/02_infdev.md`: slices S1 to S10 (search field width, outline colo
 
 # Completed
 
-None yet.
+S1 `9cf0f475` search field width. S2 `91da7ed1` outline colors. S3 `4df1b6a0` hashtag bubble. S4 `ac6179c6` inline bubble height. S5 `372d47fd` composer drafts. S6 `f7d3246b` post reveal owner. S7 Search tabs (this commit).
 
 # Current slice
 
-S1: search field keeps one width.
+S7 is committed. Next is S8 (depth under the nav pill and tab chips).
 
 # Files involved
 
-See the plan.
+See the plan. S7: `ui/search/SearchTabs.kt`, `SearchPane.kt`, `SearchPanes.kt`, `SearchState.kt`, `ui/components/HashtagPill.kt`, `ShellNavigator.kt` (`searchTabName`), the Search shell adapters, 15 `strings.xml`.
 
 # Verification
 
-None yet.
+Focused tests per slice plus `:app:ktlintCheck`. The full CI-parity gate has not run yet. No device checks yet.
 
 # Next
 
-S2.
+S8, S9, S10, then the full gate and the testsigned release build.
 
 # Blockers
 

@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +39,7 @@ import me.foxtails.palustris.domain.search.TrendingLink
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.AccountAvatar
+import me.foxtails.palustris.ui.components.HashtagPill
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.motion.springPress
 
@@ -104,9 +104,9 @@ internal fun SearchSuggestionPanel(
 }
 
 /**
- * What Search shows while the field is empty: trending hashtags as chips, trending posts as normal rows,
- * and on Mastodon a short list of link cards. A section with no rows does not appear. A server that reports
- * nothing gets one empty state.
+ * What Search shows while the field is empty. The Trending tab shows the trending hashtags as pills at the
+ * top of one list, then the trending posts. The News tab shows the link cards. The tabs share the loading,
+ * error and empty states. A server that reports nothing gets one empty state.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -118,8 +118,14 @@ internal fun SearchTrendsPane(
     onRetry: () -> Unit,
     onOpenUrl: ((String) -> Unit)?,
     listState: LazyListState?,
+    tab: SearchTab = SearchTab.Trending,
+    newsListState: LazyListState = rememberLazyListState(),
 ) {
     val clearance = context.clearance
+    val tabEmpty = when (tab) {
+        SearchTab.Trending -> state.tags.isEmpty() && state.posts.isEmpty()
+        SearchTab.News -> state.links.isEmpty()
+    }
     when {
         state.isEmpty && !state.loaded -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         state.isEmpty && state.error != null -> Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -130,41 +136,43 @@ internal fun SearchTrendsPane(
                 Text(stringResource(R.string.search_trends_retry))
             }
         }
-        state.isEmpty -> EmptyState(
+        tabEmpty -> EmptyState(
             AppIcons.Hashtag,
             stringResource(R.string.search_trends_empty),
             stringResource(R.string.search_trends_empty_prompt),
             bottomClearance = clearance.end,
         )
+        tab == SearchTab.News -> LazyColumn(
+            state = newsListState,
+            modifier = Modifier.fillMaxSize().testTag("search_news"),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 24.dp + clearance.end),
+        ) {
+            items(state.links, key = { "trending-link-${it.url}" }) { link ->
+                TrendingLinkCard(link, onOpenUrl, Modifier.padding(start = 16.dp + clearance.left, end = 16.dp + clearance.right, bottom = 8.dp))
+            }
+        }
         else -> LazyColumn(
             state = listState ?: rememberLazyListState(),
             modifier = Modifier.fillMaxSize().testTag("search_trends"),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 24.dp + clearance.end),
         ) {
             if (state.tags.isNotEmpty()) {
-                item(key = "trending-heading") { DiscoveryHeading(stringResource(R.string.search_trending_hashtags), 8.dp + clearance.left) }
                 item(key = "trending-tags") {
                     FlowRow(
                         Modifier.fillMaxWidth()
-                            .padding(start = 8.dp + clearance.left, end = 8.dp + clearance.right, bottom = 8.dp)
+                            .padding(start = 8.dp + clearance.left, end = 8.dp + clearance.right, top = 8.dp, bottom = 8.dp)
                             .testTag("search_trending_results"),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        state.tags.forEach { tag -> TrendingTagChip(tag, onHashtag) }
+                        state.tags.forEach { tag -> TrendingTagPill(tag, onHashtag) }
                     }
                 }
             }
             if (state.posts.isNotEmpty()) {
-                item(key = "trending-posts-heading") { DiscoveryHeading(stringResource(R.string.search_trending_posts), 8.dp + clearance.left) }
                 searchPostItems(state.posts, context, "trending")
                 if (state.loadingMore || state.nextCursor != null) {
                     searchPagingFooter(state.loadingMore, state.nextCursor != null, onLoadMore, clearance)
-                }
-            }
-            if (state.links.isNotEmpty()) {
-                item(key = "trending-links-heading") { DiscoveryHeading(stringResource(R.string.search_trending_links), 8.dp + clearance.left) }
-                items(state.links, key = { "trending-link-${it.url}" }) { link ->
-                    TrendingLinkCard(link, onOpenUrl, Modifier.padding(start = 16.dp + clearance.left, end = 16.dp + clearance.right, bottom = 8.dp))
                 }
             }
         }
@@ -172,15 +180,18 @@ internal fun SearchTrendsPane(
 }
 
 @Composable
-private fun TrendingTagChip(tag: TrendingHashtag, onHashtag: (String) -> Unit) {
-    val people = tag.accounts
+private fun TrendingTagPill(tag: TrendingHashtag, onHashtag: (String) -> Unit) {
     val label = hashtagLabel(tag.name)
-    AssistChip(
+    val uses = tag.uses
+    val accounts = tag.accounts
+    val text = when {
+        uses != null -> pluralStringResource(R.plurals.search_trending_tag_posts, uses, label, uses)
+        accounts != null -> pluralStringResource(R.plurals.search_trending_tag_users, accounts, label, accounts)
+        else -> label
+    }
+    HashtagPill(
+        label = text,
         onClick = { onHashtag(label) },
-        label = { Text(label) },
-        trailingIcon = people?.let { count ->
-            { Text(pluralStringResource(R.plurals.search_trending_people, count, count), style = MaterialTheme.typography.labelSmall) }
-        },
         modifier = Modifier.testTag("search_trending_row_${tag.name}"),
     )
 }

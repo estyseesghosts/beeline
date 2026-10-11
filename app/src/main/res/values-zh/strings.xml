@@ -132,10 +132,15 @@
     <string name="search_hashtag_includes">包含 %1$s</string>
     <string name="search_hashtag_includes_more">包含 %1$s 等另外 %2$d 个</string>
     <string name="search_hashtag_show_only">仅显示 %1$s</string>
-    <string name="search_trending_hashtags">热门话题标签</string>
-    <plurals name="search_trending_people">
-        <item quantity="other">%1$d 人</item>
-    </plurals>
     <string name="composer_insert_hashtag">插入话题标签 %1$s</string>
     <string name="a11y_content_warning_tile">%1$s。双击以显示内容</string>
+    <string name="search_tab_trending">趋势</string>
+    <string name="search_tab_news">新闻</string>
+    <string name="search_tabs_description">搜索分区</string>
+    <plurals name="search_trending_tag_posts">
+        <item quantity="other">%1$s：%2$d 条帖子</item>
+    </plurals>
+    <plurals name="search_trending_tag_users">
+        <item quantity="other">%1$s：%2$d 位用户</item>
+    </plurals>
 </resources>

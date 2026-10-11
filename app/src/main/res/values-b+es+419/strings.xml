@@ -211,11 +211,17 @@
     <string name="search_hashtag_includes">Incluye %1$s</string>
     <string name="search_hashtag_includes_more">Incluye %1$s y %2$d más</string>
     <string name="search_hashtag_show_only">Mostrar solo %1$s</string>
-    <string name="search_trending_hashtags">Hashtags en tendencia</string>
-    <plurals name="search_trending_people">
-        <item quantity="one">%1$d persona</item>
-        <item quantity="other">%1$d personas</item>
-    </plurals>
     <string name="composer_insert_hashtag">Insertar el hashtag %1$s</string>
     <string name="a11y_content_warning_tile">%1$s. Toca dos veces para mostrar el contenido</string>
+    <string name="search_tab_trending">Tendencias</string>
+    <string name="search_tab_news">Noticias</string>
+    <string name="search_tabs_description">Secciones de búsqueda</string>
+    <plurals name="search_trending_tag_posts">
+        <item quantity="one">%1$s: %2$d publicación</item>
+        <item quantity="other">%1$s: %2$d publicaciones</item>
+    </plurals>
+    <plurals name="search_trending_tag_users">
+        <item quantity="one">%1$s: %2$d usuario</item>
+        <item quantity="other">%1$s: %2$d usuarios</item>
+    </plurals>
 </resources>

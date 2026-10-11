@@ -118,10 +118,15 @@
     <string name="search_hashtag_includes">%1$s を含む</string>
     <string name="search_hashtag_includes_more">%1$s ほか %2$d 件を含む</string>
     <string name="search_hashtag_show_only">%1$s のみ表示</string>
-    <string name="search_trending_hashtags">トレンドのハッシュタグ</string>
-    <plurals name="search_trending_people">
-        <item quantity="other">%1$d人</item>
-    </plurals>
     <string name="composer_insert_hashtag">ハッシュタグ %1$s を挿入</string>
     <string name="a11y_content_warning_tile">%1$s。ダブルタップでコンテンツを表示</string>
+    <string name="search_tab_trending">トレンド</string>
+    <string name="search_tab_news">ニュース</string>
+    <string name="search_tabs_description">検索のセクション</string>
+    <plurals name="search_trending_tag_posts">
+        <item quantity="other">%1$s: %2$d件の投稿</item>
+    </plurals>
+    <plurals name="search_trending_tag_users">
+        <item quantity="other">%1$s: %2$d人のユーザー</item>
+    </plurals>
 </resources>

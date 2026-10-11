@@ -36,10 +36,15 @@
     <string name="search_hashtag_includes">%1$s 포함</string>
     <string name="search_hashtag_includes_more">%1$s 외 %2$d개 포함</string>
     <string name="search_hashtag_show_only">%1$s만 보기</string>
-    <string name="search_trending_hashtags">인기 해시태그</string>
-    <plurals name="search_trending_people">
-        <item quantity="other">%1$d명</item>
-    </plurals>
     <string name="composer_insert_hashtag">해시태그 %1$s 삽입</string>
     <string name="a11y_content_warning_tile">%1$s. 두 번 탭하여 콘텐츠 표시</string>
+    <string name="search_tab_trending">트렌드</string>
+    <string name="search_tab_news">뉴스</string>
+    <string name="search_tabs_description">검색 섹션</string>
+    <plurals name="search_trending_tag_posts">
+        <item quantity="other">%1$s: 게시물 %2$d개</item>
+    </plurals>
+    <plurals name="search_trending_tag_users">
+        <item quantity="other">%1$s: 사용자 %2$d명</item>
+    </plurals>
 </resources>

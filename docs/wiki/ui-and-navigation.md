@@ -917,3 +917,17 @@ warning covers the media again. A tap on a Photo Grid warning tile reveals the p
 a second tap opens the post. The owner never overrides `ContentWarningDecision.Hidden`. `QuotePreviewCard` keeps its own key.
 The device double reveal was traced in source and not reproduced. Sources: `PostRevealOwnerTest`, `PhotoGridScreenTest`,
 `PostMediaCarouselTest`.
+
+## Search tabs (infdev 02 S7)
+
+Search has two tabs, Trending and News, shown as a chip row (`SearchTabChips`) above the field. The row exists only while the
+server supplies trending links; with no links there is one tab and no row. A selected News tab falls back to Trending while
+there are no links. The row stays in every Search state (results, suggestions, lookup); a chip tap changes only the tab and keeps
+the query and its results. The selected tab lives in `ShellNavigator.searchTabName` (saved slot 13, reset with the account).
+The inline caret collapses the row; on a compact wide screen the shell caret does, and then the row takes no height.
+End clearance is the field alone when no row takes space, and the field plus the chip row otherwise.
+Trending shows the hashtag pills (`ui/components/HashtagPill.kt`, shared with the hashtag bubble) at the top of one list, then
+trending posts. A pill reads `#name: N posts` when the server reports uses, `#name: N users` when it reports only accounts,
+and `#name` otherwise. News shows the link cards and keeps its own scroll state. Sources: `SearchDiscoveryTest`,
+`SearchPresentationTest`, `ShellNavigatorTest`. The caret and compact-wide behavior is not device checked.
+

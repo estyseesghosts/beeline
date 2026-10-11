@@ -70,13 +70,17 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
+import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
+import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeSearchDockClearance
 import me.foxtails.palustris.ui.large.LocalLargeDockEdgeInsets
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.CompactSearchControlsSpacing
 import me.foxtails.palustris.ui.layout.CompactSearchDockHeight
+import me.foxtails.palustris.ui.layout.CompactSearchFieldHeight
 import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
 import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
@@ -88,7 +92,8 @@ import me.foxtails.palustris.ui.posts.PostRowPresentation
 
 /**
  * Search: one field, the suggestion panel while the user types, post or hashtag results after a submit,
- * and Trends while the field is empty. There is no category row. The pane follows [searchPresentation].
+ * and Trends while the field is empty. A Trending/News chip row sits above the field while the server
+ * supplies links. The pane follows [searchPresentation].
  *
  * @param rightObstructionClearance Physical-right clearance for wide result content and the wide dock.
  * @param bottomObstructionClearance Wide scroll clearance only. It never moves the dock or the field.
@@ -135,6 +140,10 @@ fun SearchPane(
     sharedQuery: String? = null,
     onSharedQueryChange: (String) -> Unit = {},
     listState: LazyListState? = null,
+    tab: SearchTab = SearchTab.Trending,
+    onSelectTab: (SearchTab) -> Unit = {},
+    useCompactWideCaret: Boolean = false,
+    tabCaretHost: CompactWideTabCaretHost? = null,
 ) {
     var localQuery by rememberSaveable { mutableStateOf("") }
     var largeDockHeightPx by remember { mutableIntStateOf(0) }
@@ -144,6 +153,20 @@ fun SearchPane(
         LargeSearchDockClearance
     }
     val query = sharedQuery ?: localQuery
+    val shownTab = effectiveSearchTab(tab, trends)
+    val tabsAvailable = searchTabsAvailable(trends)
+    var tabRowVisible by rememberSaveable { mutableStateOf(true) }
+    val tabChipListState = rememberLazyListState()
+    val newsListState = rememberLazyListState()
+    if (useCompactWideCaret && tabsAvailable) {
+        CompactWideTabCaretRegistration(
+            host = tabCaretHost,
+            expanded = tabRowVisible,
+            onToggle = { tabRowVisible = !tabRowVisible },
+        )
+    }
+    val tabCaretPresentation = if (useCompactWideCaret) ChipCaretPresentation.Hidden else ChipCaretPresentation.Inline
+    val tabRowSpace = searchTabRowOccupiesSpace(tabsAvailable, useCompactWideCaret, tabRowVisible)
     fun updateQuery(value: String) {
         if (sharedQuery == null) localQuery = value else onSharedQueryChange(value)
     }
@@ -174,7 +197,7 @@ fun SearchPane(
     )
     val searchEndClearance = if (compactLayout) {
         compactScrollEndClearance(
-            controlStackHeight = CompactSearchDockHeight,
+            controlStackHeight = if (tabRowSpace) CompactSearchDockHeight else CompactSearchFieldHeight,
             navigationVisible = compactNavigationVisible,
             ime = WindowInsets.ime,
         )
@@ -237,6 +260,8 @@ fun SearchPane(
             onShowOnlyHashtag = onShowOnlyHashtag,
             onOpenUrl = onOpenUrl,
             listState = listState,
+            tab = shownTab,
+            newsListState = newsListState,
         )
         if (largeLayout) {
             LargeBottomDock(
@@ -249,8 +274,20 @@ fun SearchPane(
                         Modifier.fillMaxWidth()
                             .absolutePadding(left = dockInsets.left, right = dockInsets.right),
                     ) {
-                        Box(Modifier.widthIn(max = 520.dp).fillMaxWidth()) {
-                            SearchField(query, ::submitSearch, ::updateQuery)
+                        Column(verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing)) {
+                            if (tabRowSpace) {
+                                SearchTabChips(
+                                    selected = shownTab,
+                                    onSelect = onSelectTab,
+                                    listState = tabChipListState,
+                                    visible = tabRowVisible,
+                                    onToggleVisibility = { tabRowVisible = !tabRowVisible },
+                                    caretPresentation = tabCaretPresentation,
+                                )
+                            }
+                            Box(Modifier.widthIn(max = 520.dp).fillMaxWidth()) {
+                                SearchField(query, ::submitSearch, ::updateQuery)
+                            }
                         }
                     }
                 },
@@ -269,6 +306,18 @@ fun SearchPane(
                     .windowInsetsPadding(controlsPositioningInsets),
                 verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing),
             ) {
+                if (tabRowSpace) {
+                    SearchTabChips(
+                        selected = shownTab,
+                        onSelect = onSelectTab,
+                        listState = tabChipListState,
+                        visible = tabRowVisible,
+                        onToggleVisibility = { tabRowVisible = !tabRowVisible },
+                        caretPresentation = tabCaretPresentation,
+                        leftInset = CompactOverlayHorizontalPadding,
+                        rightInset = CompactOverlayHorizontalPadding,
+                    )
+                }
                 Box(Modifier.fillMaxWidth().padding(horizontal = CompactOverlayHorizontalPadding)) {
                     SearchField(query, ::submitSearch, ::updateQuery)
                 }
@@ -359,6 +408,8 @@ private fun SearchContent(
     onShowOnlyHashtag: (String) -> Unit,
     onOpenUrl: ((String) -> Unit)?,
     listState: LazyListState?,
+    tab: SearchTab,
+    newsListState: LazyListState,
 ) {
     val presentation = searchPresentation(query, search)
     val clearance = rowContext.clearance
@@ -369,7 +420,7 @@ private fun SearchContent(
             search.posts.isNotEmpty() -> "results"
             else -> "empty"
         }
-        AnimatedStatePane(stateKey = "$presentation:$resultKind", modifier = Modifier.fillMaxSize()) {
+        AnimatedStatePane(stateKey = "$presentation:$resultKind:${if (presentation == SearchPresentation.Trends) tab.name else ""}", modifier = Modifier.fillMaxSize()) {
             when (presentation) {
                 SearchPresentation.Trends -> SearchTrendsPane(
                     state = trends,
@@ -379,6 +430,8 @@ private fun SearchContent(
                     onRetry = trendsActions::refreshTrends,
                     onOpenUrl = onOpenUrl,
                     listState = listState,
+                    tab = tab,
+                    newsListState = newsListState,
                 )
                 SearchPresentation.Suggestions -> SearchSuggestionPanel(
                     suggestions = search.suggestions,

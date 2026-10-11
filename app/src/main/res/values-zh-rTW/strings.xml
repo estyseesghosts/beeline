@@ -166,10 +166,15 @@
     <string name="search_hashtag_includes">包含 %1$s</string>
     <string name="search_hashtag_includes_more">包含 %1$s 與其他 %2$d 個</string>
     <string name="search_hashtag_show_only">僅顯示 %1$s</string>
-    <string name="search_trending_hashtags">熱門主題標籤</string>
-    <plurals name="search_trending_people">
-        <item quantity="other">%1$d 人</item>
-    </plurals>
     <string name="composer_insert_hashtag">插入主題標籤 %1$s</string>
     <string name="a11y_content_warning_tile">%1$s。雙擊以顯示內容</string>
+    <string name="search_tab_trending">趨勢</string>
+    <string name="search_tab_news">新聞</string>
+    <string name="search_tabs_description">搜尋分區</string>
+    <plurals name="search_trending_tag_posts">
+        <item quantity="other">%1$s：%2$d 則貼文</item>
+    </plurals>
+    <plurals name="search_trending_tag_users">
+        <item quantity="other">%1$s：%2$d 位使用者</item>
+    </plurals>
 </resources>

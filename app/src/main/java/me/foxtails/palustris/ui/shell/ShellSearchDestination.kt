@@ -56,7 +56,7 @@ internal fun ShellSearchDestination(
             SearchPanel.Search -> ShellSearchPane(
                 navigator, overlay, search, postCallbacks, navigationCallbacks, largePresentation,
                 rightObstructionClearance, leftObstructionClearance, bottomObstructionClearance,
-                bottomNavigationClearance, searchListState, account, sessionRevision,
+                bottomNavigationClearance, searchListState, account, sessionRevision, useCompactWideCaret, tabCaretHost,
             )
             SearchPanel.PhotoGrid -> ShellPhotoGridPane(
                 navigator, overlay, search, photoGrid, postCallbacks, navigationCallbacks, largePresentation,

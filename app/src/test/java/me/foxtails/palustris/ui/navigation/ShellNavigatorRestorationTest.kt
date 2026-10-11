@@ -10,6 +10,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.Timeline
+import me.foxtails.palustris.ui.search.SearchTab
 import me.foxtails.palustris.ui.shell.LocalPage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -70,14 +71,14 @@ class ShellNavigatorRestorationTest {
         }
         compose.runOnIdle {
             holder[0]!!.searchQuery = "photography"
-            holder[0]!!.searchCategory = 2
+            holder[0]!!.searchTabName = SearchTab.News.name
             holder[0]!!.searchPrefill = "photo"
             holder[0]!!.page = LocalPage.Drafts
         }
         restoration.emulateSavedInstanceStateRestore()
         compose.waitForIdle()
         assertEquals("photography", holder[0]!!.searchQuery)
-        assertEquals(2, holder[0]!!.searchCategory)
+        assertEquals(SearchTab.News.name, holder[0]!!.searchTabName)
         assertEquals("photo", holder[0]!!.searchPrefill)
         assertEquals(LocalPage.Drafts, holder[0]!!.page)
     }
@@ -102,7 +103,7 @@ class ShellNavigatorRestorationTest {
         }
         compose.runOnIdle {
             holder[0]!!.searchQuery = "photography"
-            holder[0]!!.searchCategory = 2
+            holder[0]!!.searchTabName = SearchTab.News.name
             holder[0]!!.searchPrefill = "photo"
             holder[0]!!.page = LocalPage.Drafts
         }
@@ -110,7 +111,7 @@ class ShellNavigatorRestorationTest {
         restoration.emulateSavedInstanceStateRestore()
         compose.waitForIdle()
         assertEquals("", holder[0]!!.searchQuery)
-        assertEquals(0, holder[0]!!.searchCategory)
+        assertEquals(SearchTab.Trending.name, holder[0]!!.searchTabName)
         assertEquals("", holder[0]!!.searchPrefill)
         assertNull(holder[0]!!.page)
     }

@@ -34,6 +34,8 @@ internal fun ShellSearchPane(
     searchListState: LazyListState,
     account: Account?,
     sessionRevision: Long,
+    useCompactWideCaret: Boolean,
+    tabCaretHost: CompactWideTabCaretHost?,
 ) {
     SearchPane(
             search = search.state,
@@ -75,6 +77,10 @@ internal fun ShellSearchPane(
             onOpenMedia = overlay::openMedia,
             onOpenPost = { post -> navigationCallbacks.onOpenPost(post, LargePostOrigin.Search) },
             onOpenUsername = navigator::openAccountSearch,
+            tab = navigator.searchTab,
+            onSelectTab = { navigator.searchTabName = it.name },
+            useCompactWideCaret = useCompactWideCaret,
+            tabCaretHost = tabCaretHost,
         )
 }
 

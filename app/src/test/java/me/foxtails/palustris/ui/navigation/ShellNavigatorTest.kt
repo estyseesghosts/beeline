@@ -14,6 +14,7 @@ import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.large.LargeNavTarget
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.navigation.ShellNavigator
+import me.foxtails.palustris.ui.search.SearchTab
 import me.foxtails.palustris.ui.shell.Destination
 import me.foxtails.palustris.ui.shell.LargePostOrigin
 import me.foxtails.palustris.ui.shell.LocalPage
@@ -42,7 +43,8 @@ class ShellNavigatorTest {
     @Suppress("UNCHECKED_CAST")
     private val saver = ShellNavigator.Saver as Saver<ShellNavigator, Any>
 
-    private fun ownedPost(id: String) = OwnedPost(        fetchedBy = accountId,
+    private fun ownedPost(id: String) = OwnedPost(
+        fetchedBy = accountId,
         post = Post(
             id = EntityId(connection.origin, id),
             author = account,
@@ -110,7 +112,7 @@ class ShellNavigatorTest {
         navigator.viewedProfile = account
         navigator.page = LocalPage.Drafts
         navigator.searchQuery = "tag"
-        navigator.searchCategory = 2
+        navigator.searchTabName = SearchTab.News.name
         navigator.searchPrefill = "pre"
         navigator.singlePost = ownedPost("p1")
         navigator.singlePostOrigin = LargePostOrigin.Home
@@ -118,7 +120,7 @@ class ShellNavigatorTest {
         assertNull(navigator.viewedProfile)
         assertNull(navigator.page)
         assertEquals("", navigator.searchQuery)
-        assertEquals(0, navigator.searchCategory)
+        assertEquals(SearchTab.Trending.name, navigator.searchTabName)
         assertNull(navigator.singlePost)
         assertEquals(LargePostOrigin.Other, navigator.singlePostOrigin)
         assertEquals(Destination.Profile, navigator.destination)
@@ -165,7 +167,7 @@ class ShellNavigatorTest {
         navigator.openEditProfileOverlay()
         navigator.searchPanelName = SearchPanel.PhotoGrid.name
         navigator.searchQuery = "tag"
-        navigator.searchCategory = 3
+        navigator.searchTabName = SearchTab.News.name
         navigator.searchPrefill = "pre"
         navigator.notificationsPanelName = NotificationsPanel.DirectMessages.name
         navigator.navigationVisible = false
@@ -179,7 +181,7 @@ class ShellNavigatorTest {
         assertEquals(Overlay.EditProfile, restored.overlay)
         assertEquals(SearchPanel.PhotoGrid, restored.searchPanel)
         assertEquals("tag", restored.searchQuery)
-        assertEquals(3, restored.searchCategory)
+        assertEquals(SearchTab.News.name, restored.searchTabName)
         assertEquals("pre", restored.searchPrefill)
         assertEquals(NotificationsPanel.DirectMessages, restored.notificationsPanel)
         assertFalse(restored.navigationVisible)
@@ -206,13 +208,13 @@ class ShellNavigatorTest {
         val navigator = ShellNavigator()
         assertEquals(NavigatorSessionBind.FRESH, navigator.bindSession(accountId, 7L))
         navigator.searchQuery = "tag"
-        navigator.searchCategory = 2
+        navigator.searchTabName = SearchTab.News.name
         navigator.searchPrefill = "pre"
         navigator.page = LocalPage.Drafts
         navigator.destination = Destination.Search
         assertEquals(NavigatorSessionBind.MATCHING, navigator.bindSession(accountId, 7L))
         assertEquals("tag", navigator.searchQuery)
-        assertEquals(2, navigator.searchCategory)
+        assertEquals(SearchTab.News.name, navigator.searchTabName)
         assertEquals("pre", navigator.searchPrefill)
         assertEquals(LocalPage.Drafts, navigator.page)
     }
@@ -223,13 +225,13 @@ class ShellNavigatorTest {
         val navigator = ShellNavigator()
         navigator.bindSession(accountId, 7L)
         navigator.searchQuery = "tag"
-        navigator.searchCategory = 2
+        navigator.searchTabName = SearchTab.News.name
         navigator.searchPrefill = "pre"
         navigator.page = LocalPage.Drafts
         navigator.destination = Destination.Search
         assertEquals(NavigatorSessionBind.MISMATCHED, navigator.bindSession(otherId, 7L))
         assertEquals("", navigator.searchQuery)
-        assertEquals(0, navigator.searchCategory)
+        assertEquals(SearchTab.Trending.name, navigator.searchTabName)
         assertEquals("", navigator.searchPrefill)
         assertNull(navigator.page)
         assertEquals(Destination.Search, navigator.destination)
@@ -240,12 +242,12 @@ class ShellNavigatorTest {
         val navigator = ShellNavigator()
         navigator.bindSession(accountId, 7L)
         navigator.searchQuery = "tag"
-        navigator.searchCategory = 2
+        navigator.searchTabName = SearchTab.News.name
         navigator.searchPrefill = "pre"
         navigator.page = LocalPage.Drafts
         assertEquals(NavigatorSessionBind.MISMATCHED, navigator.bindSession(accountId, 8L))
         assertEquals("", navigator.searchQuery)
-        assertEquals(0, navigator.searchCategory)
+        assertEquals(SearchTab.Trending.name, navigator.searchTabName)
         assertEquals("", navigator.searchPrefill)
         assertNull(navigator.page)
     }
@@ -255,7 +257,7 @@ class ShellNavigatorTest {
         val navigator = ShellNavigator()
         navigator.bindSession(accountId, 7L)
         navigator.searchQuery = "tag"
-        navigator.searchCategory = 2
+        navigator.searchTabName = SearchTab.News.name
         navigator.searchPrefill = "pre"
         assertEquals(NavigatorSessionBind.MISMATCHED, navigator.bindSession(null, 0L))
         assertEquals("", navigator.searchQuery)
@@ -282,7 +284,7 @@ class ShellNavigatorTest {
         assertEquals(Destination.Search, restored.destination)
         assertEquals(SearchPanel.PhotoGrid, restored.searchPanel)
         assertEquals("", restored.searchQuery)
-        assertEquals(0, restored.searchCategory)
+        assertEquals(SearchTab.Trending.name, restored.searchTabName)
         assertEquals("", restored.searchPrefill)
         assertNull(restored.page)
     }
@@ -332,7 +334,7 @@ class ShellNavigatorTest {
         assertEquals(Destination.Search, restored.destination)
         assertEquals(SearchPanel.PhotoGrid, restored.searchPanel)
         assertEquals("", restored.searchQuery)
-        assertEquals(0, restored.searchCategory)
+        assertEquals(SearchTab.Trending.name, restored.searchTabName)
         assertEquals("", restored.searchPrefill)
         assertNull(restored.page)
     }

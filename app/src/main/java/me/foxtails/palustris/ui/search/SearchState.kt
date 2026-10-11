@@ -44,6 +44,19 @@ data class SearchState(
         get() = (mode == SearchMode.Posts || mode == SearchMode.Hashtag) && query.isNotBlank() && error == null && !postSearchDenied
 }
 
+/**
+ * The tab chips of the Search destination. Trending shows hashtags and trending posts. News shows the
+ * trending links and exists only while the server supplies links. The field does not depend on the tab.
+ */
+enum class SearchTab { Trending, News }
+
+/** News is available when the server supplied links. With one tab, Search shows no chip row. */
+internal fun searchTabsAvailable(trends: SearchTrendsState): Boolean = trends.links.isNotEmpty()
+
+/** The tab to show. A selected News tab falls back to Trending while no links exist. */
+internal fun effectiveSearchTab(selected: SearchTab, trends: SearchTrendsState): SearchTab =
+    if (selected == SearchTab.News && !searchTabsAvailable(trends)) SearchTab.Trending else selected
+
 /** What the Search screen shows for the typed text and the state. */
 internal enum class SearchPresentation { Trends, Suggestions, Posts, Hashtag, Lookup }
 

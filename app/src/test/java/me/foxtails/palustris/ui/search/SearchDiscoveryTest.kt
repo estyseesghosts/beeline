@@ -1,6 +1,10 @@
 package me.foxtails.palustris.ui.search
 
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -53,11 +57,15 @@ class SearchDiscoveryTest {
         query: String,
         search: SearchState = SearchState(),
         trends: SearchTrendsState = SearchTrendsState(),
+        initialTab: SearchTab = SearchTab.Trending,
     ) {
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 PalustrisTheme {
+                    var tab by remember { mutableStateOf(initialTab) }
                     SearchPane(
+                        tab = tab,
+                        onSelectTab = { tab = it },
                         search = search,
                         trends = trends,
                         trendsActions = trendsActions,
@@ -85,9 +93,8 @@ class SearchDiscoveryTest {
             ),
         )
 
-        compose.onNodeWithText(text(R.string.search_trending_hashtags)).assertIsDisplayed()
-        compose.onNodeWithText("120 people").assertIsDisplayed()
-        compose.onNodeWithText("1 person").assertIsDisplayed()
+        compose.onNodeWithText("#cats: 400 posts").assertIsDisplayed()
+        compose.onNodeWithText("#art: 1 user").assertIsDisplayed()
         compose.onNodeWithTag("search_trending_row_cats", useUnmergedTree = true).performClick()
 
         assertEquals(listOf("#cats"), searched)
@@ -105,8 +112,47 @@ class SearchDiscoveryTest {
             ),
         )
 
-        compose.onNodeWithText(text(R.string.search_trending_posts)).assertIsDisplayed()
+        compose.onNodeWithText("Trending hello").assertIsDisplayed()
         assertTrue(compose.onAllTagged("search_trending_results").isEmpty())
+        compose.onNodeWithTag("search_tabs").assertIsDisplayed()
+        compose.onNodeWithTag("search_tab_News").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText("A headline").assertIsDisplayed()
+    }
+
+    @Test
+    fun aTagWithNeitherCountShowsOnlyItsName() {
+        show("", trends = SearchTrendsState(tags = listOf(TrendingHashtag("plain", null, null)), loaded = true))
+
+        compose.onNodeWithText("#plain").assertIsDisplayed()
+    }
+
+    @Test
+    fun withoutLinksThereIsNoTabRowAndASelectedNewsTabShowsTrending() {
+        show(
+            "",
+            trends = SearchTrendsState(tags = listOf(TrendingHashtag("cats", null, 3)), loaded = true),
+            initialTab = SearchTab.News,
+        )
+
+        assertTrue(compose.onAllTagged("search_tabs").isEmpty())
+        compose.onNodeWithText("#cats: 3 posts").assertIsDisplayed()
+    }
+
+    @Test
+    fun theTabRowStaysWhileResultsShowAndATabTapKeepsTheQuery() {
+        show(
+            "cats",
+            search = SearchState(query = "cats", mode = SearchMode.Posts, posts = listOf(AppShellFixtures.post("r1", author, "A cat post"))),
+            trends = SearchTrendsState(links = listOf(TrendingLink("https://example.org/a", "A headline", null, null, null)), loaded = true),
+        )
+
+        compose.onNodeWithTag("search_tab_News").assertIsDisplayed()
+        compose.onNodeWithTag("search_tab_News").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText("A cat post").assertIsDisplayed()
     }
 
     @Test
