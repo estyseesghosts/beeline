@@ -1,6 +1,7 @@
 package me.foxtails.palustris.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -35,8 +36,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selectableGroup
 import androidx.compose.ui.semantics.selected
@@ -65,6 +68,9 @@ internal data class FilterChipEntry(
     val testTag: String? = null,
     val stateDescription: String? = null,
     val key: String = "$role:$label",
+    /** When set, the chip shows a close icon and a TalkBack action that call this. */
+    val onDismiss: (() -> Unit)? = null,
+    val dismissDescription: String? = null,
 )
 
 /**
@@ -225,6 +231,15 @@ private fun DestinationFilterChip(entry: FilterChipEntry, modifier: Modifier = M
         enabled = entry.enabled,
         interactionSource = interactionSource,
         label = { Text(entry.label) },
+        trailingIcon = entry.onDismiss?.let { dismiss ->
+            {
+                Icon(
+                    AppIcons.Close,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp).clickable(onClick = dismiss),
+                )
+            }
+        },
         colors = FilterChipDefaults.filterChipColors(
             containerColor = selectedContainerColor,
             labelColor = selectedContentColor,
@@ -245,6 +260,15 @@ private fun DestinationFilterChip(entry: FilterChipEntry, modifier: Modifier = M
                 role = entry.role
                 this.selected = entry.selected
                 entry.stateDescription?.let { stateDescription = it }
+                val dismiss = entry.onDismiss
+                if (dismiss != null) {
+                    customActions = listOf(
+                        CustomAccessibilityAction(entry.dismissDescription ?: entry.label) {
+                            dismiss()
+                            true
+                        },
+                    )
+                }
             },
         shape = BeelineBubbleShape,
     )

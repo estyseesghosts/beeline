@@ -174,6 +174,7 @@ fun PhotoGridScreen(
     onSelectFeed: (PhotoGridFeed) -> Unit = {},
     onAddHashtag: (String, () -> Unit) -> Unit = { _, onSuccess -> onSuccess() },
     onClearPreferenceError: () -> Unit = {},
+    onDismissSearch: () -> Unit = {},
     onOpenPost: (OwnedPost) -> Unit = {},
     cardActions: PhotoGridCardActions = PhotoGridCardActions(),
     compactLayout: Boolean = true,
@@ -277,6 +278,20 @@ fun PhotoGridScreen(
 
     val selectedTimeline = (state.selectedFeed as? PhotoGridFeed.TimelineFeed)?.timeline
     val chipEntries = buildList {
+        state.carriedSearch?.let { query ->
+            add(
+                FilterChipEntry(
+                    label = query,
+                    selected = state.selectedFeed == PhotoGridFeed.Search(query),
+                    onClick = { onSelectFeed(PhotoGridFeed.Search(query)) },
+                    contentDescription = stringResource(R.string.photo_grid_search_chip, query),
+                    testTag = "photo_grid_search_chip",
+                    key = "photo-grid-search:$query",
+                    onDismiss = onDismissSearch,
+                    dismissDescription = stringResource(R.string.photo_grid_search_dismiss),
+                ),
+            )
+        }
         timelineDisplayOrder.filter { it in state.availableTimelines }.forEach { timeline ->
             add(
                 FilterChipEntry(
@@ -284,6 +299,7 @@ fun PhotoGridScreen(
                     selected = selectedTimeline == timeline,
                     onClick = { onSelectFeed(PhotoGridFeed.TimelineFeed(timeline)) },
                     contentDescription = stringResource(timelineLabelRes(timeline)),
+                    testTag = "photo_grid_timeline_${timeline.name}",
                     key = "photo-grid-timeline:${timeline.name}",
                 ),
             )

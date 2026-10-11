@@ -213,6 +213,7 @@ Source: `data/mastodon/MastodonSearchService.kt`, `data/misskey/MisskeySearchSer
 - Mastodon Trends: `api/v1/trends/tags` (10), `trends/statuses` (20, paged by offset) and `trends/links` (10). A refused section stays empty. Pleroma and Akkoma have no posts or links route.
 - Misskey-family Trends: `hashtags/trend` and `notes/featured` paged by `untilId`. Checked live on dvd.chat: `untilId` pages, `offset` does nothing. There are no trending links.
 - Profile links: Mastodon `GET api/v2/search?resolve=true&type=accounts&limit=1`. Misskey-family `users/show` for an address on the same server, otherwise `ap/show` with type `User`.
+- Photo Grid carry-over: the grid shows the Search pages and cursor from `SearchController`. It never fetches search pages itself, and the search feed is never saved.
 - Capability schema version is 12 (adds `search.posts`).
 
 ## Video posters

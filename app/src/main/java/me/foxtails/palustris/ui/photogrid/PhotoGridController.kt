@@ -220,6 +220,8 @@ internal class PhotoGridController(
         is PhotoGridFeed.Hashtag -> _state.value.savedHashtags.any {
             hashtagIdentity(it) == runCatching { hashtagIdentity(feed.tag) }.getOrNull()
         }
+        // Search results belong to the Search owner. The grid only displays them.
+        is PhotoGridFeed.Search -> false
     }
 
     private fun availableTimelines(): List<Timeline> {
@@ -249,6 +251,7 @@ internal class PhotoGridController(
                 val page = when (feed) {
                     is PhotoGridFeed.TimelineFeed -> source.timeline(feed.timeline, cursor)
                     is PhotoGridFeed.Hashtag -> source.searchHashtags(HashtagQuery(feed.tag, combinedTags), cursor)
+                    is PhotoGridFeed.Search -> return@launch
                 }
                 if (stopped || requestGeneration != generation || _state.value.selectedFeed != feed) return@launch
                 val fetched = page.items.distinctBy { it.id }.map {
