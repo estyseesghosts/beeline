@@ -12,13 +12,14 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
-import me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository
+import me.foxtails.palustris.data.preferences.InMemorySavedHashtagRepository
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
@@ -48,7 +49,7 @@ class PhotoGridOwnerTest {
             advanceUntilIdle()
             assertTrue(source.timelineCalls.none { it == Timeline.Bubble })
 
-            model.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Bubble))
+            model.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Bubble)))
             advanceUntilIdle()
 
             assertEquals(listOf("bubble-post"), model.state.value.posts.map { it.post.id.value })
@@ -70,7 +71,7 @@ class PhotoGridOwnerTest {
         val model = model(source)
         try {
             advanceUntilIdle()
-            model.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Bubble))
+            model.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Bubble)))
             advanceUntilIdle()
             model.loadMore()
             advanceUntilIdle()
@@ -92,12 +93,12 @@ class PhotoGridOwnerTest {
         val model = model(source)
         try {
             advanceUntilIdle()
-            model.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Bubble))
-            model.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Home))
+            model.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Bubble)))
+            model.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Home)))
             advanceUntilIdle()
             delayed.complete(Unit)
             advanceUntilIdle()
-            assertEquals(PhotoGridFeed.TimelineFeed(Timeline.Home), model.state.value.selectedFeed)
+            assertEquals(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Home)), model.state.value.selectedFeed)
             assertTrue(model.state.value.posts.none { it.post.id.value == "bubble-post" })
         } finally {
             model.release()
@@ -116,7 +117,7 @@ class PhotoGridOwnerTest {
             assertFalse(owner.state.value.posts.any { it.post.id.value == "stale" })
             owner.release()
             owner.release()
-            owner.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Bubble))
+            owner.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Bubble)))
             advanceUntilIdle()
             assertTrue(owner.state.value.posts.isEmpty())
         } finally {
@@ -135,7 +136,7 @@ class PhotoGridOwnerTest {
         successSource.bubbleResults += refreshedSuccess
         val successOwner = model(successSource)
         try {
-            successOwner.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Bubble))
+            successOwner.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Bubble)))
             runCurrent()
             successOwner.refresh()
             runCurrent()
@@ -158,7 +159,7 @@ class PhotoGridOwnerTest {
         failureSource.bubbleResults += refreshedFailure
         val failureOwner = model(failureSource)
         try {
-            failureOwner.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Bubble))
+            failureOwner.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Bubble)))
             runCurrent()
             failureOwner.refresh()
             runCurrent()
@@ -177,28 +178,16 @@ class PhotoGridOwnerTest {
     }
 
     @Test
-    fun preferencesAreAccountScopedAndHashtagRemovalFollowsRetirement() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        val repository = InMemoryPhotoGridPreferencesRepository()
+    fun savedHashtagsAreAccountScopedAndRemovalFollowsRetirement() = runTest {
+        val repository = InMemorySavedHashtagRepository()
         val other = AccountId(connection, "other")
-        val first = PhotoGridOwner(account, GridSource(), 7L, kotlinx.coroutines.CoroutineScope(Dispatchers.Main), repository) { it }
-        val second = PhotoGridOwner(other, GridSource(), 8L, kotlinx.coroutines.CoroutineScope(Dispatchers.Main), repository) { it }
-        try {
-            first.addHashtag("one")
-            second.addHashtag("two")
-            advanceUntilIdle()
-            assertEquals(listOf("one"), first.state.value.savedHashtags)
-            assertEquals(listOf("two"), second.state.value.savedHashtags)
-            first.release()
-            second.release()
-            repository.remove(account)
-            assertEquals(emptyList<String>(), repositorySnapshot(repository, account).hashtags)
-            assertEquals(listOf("two"), repositorySnapshot(repository, other).hashtags)
-        } finally {
-            first.release()
-            second.release()
-            Dispatchers.resetMain()
-        }
+        repository.update(account) { it.copy(tags = listOf("one")) }
+        repository.update(other) { it.copy(tags = listOf("two")) }
+
+        repository.remove(account)
+
+        assertEquals(emptyList<String>(), repositorySnapshot(repository, account).tags)
+        assertEquals(listOf("two"), repositorySnapshot(repository, other).tags)
     }
 
     @Test
@@ -207,7 +196,7 @@ class PhotoGridOwnerTest {
         val source = GridSource()
         val owner = model(source)
         try {
-            owner.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Bubble))
+            owner.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Bubble)))
             advanceUntilIdle()
             val original = owner.state.value.posts.single().post
             owner.updateFavouritePreference { it.copy(favourited = true) }
@@ -253,8 +242,8 @@ class PhotoGridOwnerTest {
         val first = model(temporary)
         val second = model(unauthorized)
         try {
-            first.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Bubble))
-            second.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Bubble))
+            first.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Bubble)))
+            second.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Bubble)))
             advanceUntilIdle()
             assertEquals("temporary", first.state.value.error)
             assertFalse(first.state.value.needsSignIn)
@@ -281,7 +270,7 @@ class PhotoGridOwnerTest {
         try {
             old.applyExternalPost(OwnedPost(account, post("late-old"), 7L))
             assertTrue(old.state.value.posts.isEmpty())
-            replacement.selectFeed(PhotoGridFeed.TimelineFeed(Timeline.Bubble))
+            replacement.selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Bubble)))
             advanceUntilIdle()
             assertEquals(listOf("bubble-post"), replacement.state.value.posts.map { it.post.id.value })
         } finally {
@@ -293,16 +282,15 @@ class PhotoGridOwnerTest {
     }
 
     private suspend fun repositorySnapshot(
-        repository: InMemoryPhotoGridPreferencesRepository,
+        repository: InMemorySavedHashtagRepository,
         id: AccountId,
-    ): me.foxtails.palustris.domain.PhotoGridPreferences = repository.observe(id).first()
+    ): me.foxtails.palustris.domain.SavedHashtags = repository.observe(id).first()
 
     private fun model(source: GridSource, revision: Long = 7L) = PhotoGridOwner(
         accountId = account,
         source = source,
         sessionRevision = revision,
         scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main),
-        preferencesRepository = InMemoryPhotoGridPreferencesRepository(),
         applyFavouritePreference = { it },
     )
 

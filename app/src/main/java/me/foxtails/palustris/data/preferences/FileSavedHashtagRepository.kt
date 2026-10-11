@@ -21,21 +21,21 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import me.foxtails.palustris.domain.AccountId
-import me.foxtails.palustris.domain.PhotoGridPreferences
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
+import me.foxtails.palustris.domain.SavedHashtagRepository
+import me.foxtails.palustris.domain.SavedHashtags
 import me.foxtails.palustris.domain.hashtagIdentity
 import me.foxtails.palustris.domain.validateExactHashtag
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Stores validated, non-secret Photo Grid preferences in no-backup storage. */
+/** Stores validated, non-secret saved hashtags in no-backup storage. */
 @Singleton
-class FilePhotoGridPreferencesRepository @Inject constructor(
+class FileSavedHashtagRepository @Inject constructor(
     @ApplicationContext context: Context,
-) : PhotoGridPreferencesRepository {
+) : SavedHashtagRepository {
     private val file = File(context.noBackupFilesDir, "photo-grid-preferences.json")
     private val mutex = Mutex()
-    private val values = MutableStateFlow<Map<String, PhotoGridPreferences>>(emptyMap())
+    private val values = MutableStateFlow<Map<String, SavedHashtags>>(emptyMap())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var loaded = false
 
@@ -43,18 +43,18 @@ class FilePhotoGridPreferencesRepository @Inject constructor(
         scope.launch { mutex.withLock { loadLocked() } }
     }
 
-    override fun observe(accountId: AccountId): Flow<PhotoGridPreferences> = values
-        .map { it[keyFor(accountId)] ?: PhotoGridPreferences() }
+    override fun observe(accountId: AccountId): Flow<SavedHashtags> = values
+        .map { it[keyFor(accountId)] ?: SavedHashtags() }
         .distinctUntilChanged()
 
     override suspend fun update(
         accountId: AccountId,
-        transform: (PhotoGridPreferences) -> PhotoGridPreferences,
+        transform: (SavedHashtags) -> SavedHashtags,
     ) = withContext(Dispatchers.IO) {
         mutex.withLock {
             loadLocked()
             val key = keyFor(accountId)
-            val next = normalize(transform(values.value[key] ?: PhotoGridPreferences()))
+            val next = normalize(transform(values.value[key] ?: SavedHashtags()))
             val updated = values.value.toMutableMap().apply { put(key, next) }.toMap()
             persist(updated)
             values.value = updated
@@ -80,7 +80,7 @@ class FilePhotoGridPreferencesRepository @Inject constructor(
             buildMap {
                 accounts.keys().forEach { key ->
                     val tags = accounts.optJSONObject(key)?.optJSONArray("hashtags")?.let(::validHashtags).orEmpty()
-                    if (tags.isNotEmpty()) put(key, PhotoGridPreferences(tags))
+                    if (tags.isNotEmpty()) put(key, SavedHashtags(tags))
                 }
             }
         }.getOrDefault(emptyMap())
@@ -88,11 +88,11 @@ class FilePhotoGridPreferencesRepository @Inject constructor(
         loaded = true
     }
 
-    private fun persist(values: Map<String, PhotoGridPreferences>) {
+    private fun persist(values: Map<String, SavedHashtags>) {
         file.parentFile?.mkdirs()
         val accounts = JSONObject()
         values.forEach { (key, preferences) ->
-            accounts.put(key, JSONObject().put("hashtags", JSONArray(preferences.hashtags)))
+            accounts.put(key, JSONObject().put("hashtags", JSONArray(preferences.tags)))
         }
         val root = JSONObject().put("version", 1).put("accounts", accounts)
         val temporary = File("${file.path}.new")
@@ -120,8 +120,8 @@ class FilePhotoGridPreferencesRepository @Inject constructor(
     )
 }
 
-private fun normalize(preferences: PhotoGridPreferences): PhotoGridPreferences = PhotoGridPreferences(
-    preferences.hashtags.mapNotNull { runCatching { validateExactHashtag(it) }.getOrNull() }
+private fun normalize(preferences: SavedHashtags): SavedHashtags = SavedHashtags(
+    preferences.tags.mapNotNull { runCatching { validateExactHashtag(it) }.getOrNull() }
         .distinctBy(::hashtagIdentity),
 )
 
@@ -130,19 +130,19 @@ private fun validHashtags(values: JSONArray): List<String> = (0 until values.len
     .mapNotNull { runCatching { validateExactHashtag(it) }.getOrNull() }
     .distinctBy(::hashtagIdentity)
 
-class InMemoryPhotoGridPreferencesRepository : PhotoGridPreferencesRepository {
-    private val values = MutableStateFlow<Map<AccountId, PhotoGridPreferences>>(emptyMap())
+class InMemorySavedHashtagRepository : SavedHashtagRepository {
+    private val values = MutableStateFlow<Map<AccountId, SavedHashtags>>(emptyMap())
     private val mutex = Mutex()
 
-    override fun observe(accountId: AccountId): Flow<PhotoGridPreferences> = values
-        .map { it[accountId] ?: PhotoGridPreferences() }
+    override fun observe(accountId: AccountId): Flow<SavedHashtags> = values
+        .map { it[accountId] ?: SavedHashtags() }
         .distinctUntilChanged()
 
     override suspend fun update(
         accountId: AccountId,
-        transform: (PhotoGridPreferences) -> PhotoGridPreferences,
+        transform: (SavedHashtags) -> SavedHashtags,
     ) = mutex.withLock {
-        val next = normalize(transform(values.value[accountId] ?: PhotoGridPreferences()))
+        val next = normalize(transform(values.value[accountId] ?: SavedHashtags()))
         values.value = values.value + (accountId to next)
     }
 

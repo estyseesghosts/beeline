@@ -341,6 +341,11 @@
     <string name="notifications_test_posted">Local test notification posted. This checks Android permission and channel delivery only.</string>
     <string name="notifications_title">Notifications</string>
     <string name="notifications_unread_present">Unread notifications</string>
+    <string name="feed_chip_list">List %1$s</string>
+    <string name="feed_chip_antenna">Antenna %1$s</string>
+    <string name="feed_chip_hashtag">Hashtag %1$s</string>
+    <string name="feed_chip_unfollow_tag">Unfollow %1$s</string>
+    <string name="feed_chip_remove_tag">Remove %1$s</string>
     <string name="photo_grid_search_chip">Search results for %1$s</string>
     <string name="photo_grid_search_dismiss">Remove search results</string>
     <string name="photo_grid_add_hashtag">Add hashtag</string>

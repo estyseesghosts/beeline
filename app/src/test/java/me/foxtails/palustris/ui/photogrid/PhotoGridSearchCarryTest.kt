@@ -65,8 +65,6 @@ class PhotoGridSearchCarryTest {
                 override fun loadMore() {
                     loadMoreCalls += "grid"
                 }
-                override fun addHashtag(value: String, onSuccess: () -> Unit) = Unit
-                override fun clearPreferenceError() = Unit
             },
         )
         compose.activity.runOnUiThread {

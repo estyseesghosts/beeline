@@ -27,8 +27,8 @@ import me.foxtails.palustris.data.notifications.ForegroundNotificationStreamCont
 import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppPreferencesRepository
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferencesRepository
+import me.foxtails.palustris.domain.SavedHashtagRepository
 import me.foxtails.palustris.domain.hashtags.HashtagExpander
 import me.foxtails.palustris.ui.ConnectedApp
 import me.foxtails.palustris.ui.display.RefreshRateController
@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var postPreferencesRepository: PostPreferencesRepository
 
-    @Inject lateinit var photoGridPreferencesRepository: PhotoGridPreferencesRepository
+    @Inject lateinit var savedHashtagRepository: SavedHashtagRepository
 
     @Inject lateinit var hashtagExpander: HashtagExpander
 
@@ -100,7 +100,7 @@ class MainActivity : ComponentActivity() {
                 notificationStreamController,
                 appPreferencesRepository,
                 postPreferencesRepository,
-                photoGridPreferencesRepository,
+                savedHashtagRepository,
                 hashtagExpander,
                 meteredNetworkMonitor,
             )

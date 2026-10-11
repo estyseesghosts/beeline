@@ -11,13 +11,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
+import me.foxtails.palustris.ui.shell.FeedChipsContract
 import me.foxtails.palustris.ui.shell.PhotoGridContract
 import me.foxtails.palustris.ui.shell.PostProjectionCoordinator
 
@@ -29,7 +29,7 @@ fun PhotoGridHost(
     sessionRevision: Long,
     source: SocialSource,
     postPreferences: PostPreferences,
-    preferencesRepository: PhotoGridPreferencesRepository,
+    chips: FeedChipsContract,
     coordinator: PostProjectionCoordinator,
     entryStore: ConnectedEntryStore,
     hashtagInput: HashtagExpansionInput = HashtagExpansionInput.Disabled,
@@ -43,11 +43,11 @@ fun PhotoGridHost(
             source = source,
             sessionRevision = sessionRevision,
             scope = scope,
-            preferencesRepository = preferencesRepository,
             applyFavouritePreference = { post -> applyFavouritePreference(source, postPreferences, post) },
             hashtagInput = { latestHashtagInput },
         )
     }
+    LaunchedEffect(owner, chips.state) { owner.updateChips(chips.state) }
     LaunchedEffect(owner, postPreferences.favouriteEmoji) {
         if (source.capabilities.primaryFavourite.mode == PrimaryFavouriteMode.Reaction) {
             owner.updateFavouritePreference { post -> applyFavouritePreference(source, postPreferences, post) }
@@ -70,18 +70,20 @@ fun PhotoGridHost(
         coordinator.register(sink)
         onDispose { coordinator.unregister(sink) }
     }
+    val latestChips by rememberUpdatedState(chips)
     val state by owner.state.collectAsStateWithLifecycle()
     val actions = remember(owner) {
         object : PhotoGridContract.Actions {
             override fun ensureLoaded() = owner.ensureLoaded()
             override fun selectFeed(feed: PhotoGridFeed) = owner.selectFeed(feed)
-            override fun refresh() = owner.refresh()
+            override fun refresh() {
+                owner.refresh()
+                latestChips.actions.refresh()
+            }
             override fun loadMore() = owner.loadMore()
-            override fun addHashtag(value: String, onSuccess: () -> Unit) = owner.addHashtag(value, onSuccess)
-            override fun clearPreferenceError() = owner.clearPreferenceError()
         }
     }
-    return remember(state, actions) { PhotoGridContract(state, actions) }
+    return remember(state, actions, chips) { PhotoGridContract(state, actions, chips) }
 }
 
 private fun applyFavouritePreference(source: SocialSource, preferences: PostPreferences, post: Post): Post =

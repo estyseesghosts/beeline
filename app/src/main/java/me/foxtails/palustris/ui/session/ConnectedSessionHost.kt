@@ -24,15 +24,16 @@ import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.EditPostRequest
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.PostEditSource
 import me.foxtails.palustris.domain.PostPreferences
+import me.foxtails.palustris.domain.SavedHashtagRepository
 import me.foxtails.palustris.domain.ScheduledPost
 import me.foxtails.palustris.domain.ThreadPublication
 import me.foxtails.palustris.domain.ThreadPublishListener
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.ui.PalustrisApp
 import me.foxtails.palustris.ui.UiStrings
+import me.foxtails.palustris.ui.chips.FeedChipsHost
 import me.foxtails.palustris.ui.composer.asDraftsContract
 import me.foxtails.palustris.ui.composer.rememberComposerHashtagSuggestions
 import me.foxtails.palustris.ui.directmessages.DirectMessagesHost
@@ -82,7 +83,7 @@ fun ConnectedSessionHost(
     notificationStreamController: NotificationStreamController,
     accountIndex: AccountIndex,
     postPreferences: PostPreferences,
-    photoGridPreferences: PhotoGridPreferencesRepository,
+    savedHashtagRepository: SavedHashtagRepository,
     hashtagInput: HashtagExpansionInput,
     initialNotificationRoute: AppRoute?,
     onOpenSettings: () -> Unit,
@@ -151,13 +152,21 @@ fun ConnectedSessionHost(
         entryStore = entryStore,
         hashtagInput = hashtagInput,
     )
+    val chips = FeedChipsHost(
+        accountId = accountId,
+        sessionGeneration = sessionGeneration,
+        sessionRevision = sessionRevision,
+        source = sharedSource,
+        savedHashtags = savedHashtagRepository,
+        entryStore = entryStore,
+    )
     val photoGrid = PhotoGridHost(
         accountId = accountId,
         sessionGeneration = sessionGeneration,
         sessionRevision = sessionRevision,
         source = sharedSource,
         postPreferences = postPreferences,
-        preferencesRepository = photoGridPreferences,
+        chips = chips,
         coordinator = projectionCoordinator,
         entryStore = entryStore,
         hashtagInput = hashtagInput,

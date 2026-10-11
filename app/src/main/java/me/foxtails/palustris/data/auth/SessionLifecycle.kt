@@ -19,9 +19,9 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.EmojiCatalogRepository
 import me.foxtails.palustris.domain.EmojiPickerPreferencesRepository
 import me.foxtails.palustris.domain.NotificationSyncToken
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.domain.PushSessionState
+import me.foxtails.palustris.domain.SavedHashtagRepository
 import me.foxtails.palustris.domain.Session
 import me.foxtails.palustris.domain.SocialSource
 import org.json.JSONObject
@@ -35,7 +35,7 @@ class SessionLifecycle @Inject constructor(
     private val push: PushRegistrationManager,
     private val streams: NotificationStreamController,
     private val postPreferences: PostPreferencesRepository,
-    private val photoGridPreferences: PhotoGridPreferencesRepository,
+    private val savedHashtagRepository: SavedHashtagRepository,
     private val directMessages: DirectMessageStore,
     private val directMessageWriters: DirectMessageWriteAuthority,
     private val emoji: EmojiCatalogRepository,
@@ -145,7 +145,7 @@ class SessionLifecycle @Inject constructor(
             notificationSync.removeAccount(accountId)
             capabilityCache.invalidate(accountId)
             postPreferences.remove(accountId)
-            photoGridPreferences.remove(accountId)
+            savedHashtagRepository.remove(accountId)
             emoji.remove(accountId)
             emojiPicker.remove(accountId)
             directMessageWriters.invalidateAndDelete(accountId) { directMessages.delete(accountId) }

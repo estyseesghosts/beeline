@@ -24,10 +24,8 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -47,7 +45,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.unit.Dp
@@ -60,16 +57,20 @@ import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.ContentWarningRules
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.MediaRequestDecision
 import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.MediaRequestRole
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.chips.AddHashtagDialog
+import me.foxtails.palustris.ui.chips.HashtagChipBubble
+import me.foxtails.palustris.ui.chips.HashtagChipMenu
+import me.foxtails.palustris.ui.chips.feedExtraChipEntries
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
@@ -86,6 +87,7 @@ import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
 import me.foxtails.palustris.ui.posts.isPostContentVisible
 import me.foxtails.palustris.ui.posts.postHashtags
+import me.foxtails.palustris.ui.shell.FeedChipsContract
 import me.foxtails.palustris.ui.shell.timelineLabelRes
 
 internal data class PhotoGridItem(
@@ -172,8 +174,7 @@ fun PhotoGridScreen(
     onRefresh: () -> Unit = {},
     onLoadMore: () -> Unit = {},
     onSelectFeed: (PhotoGridFeed) -> Unit = {},
-    onAddHashtag: (String, () -> Unit) -> Unit = { _, onSuccess -> onSuccess() },
-    onClearPreferenceError: () -> Unit = {},
+    chips: FeedChipsContract = FeedChipsContract.Empty,
     onDismissSearch: () -> Unit = {},
     onOpenPost: (OwnedPost) -> Unit = {},
     cardActions: PhotoGridCardActions = PhotoGridCardActions(),
@@ -188,7 +189,7 @@ fun PhotoGridScreen(
     tabCaretHost: CompactWideTabCaretHost? = null,
 ) {
     var addHashtagDialog by rememberSaveable { mutableStateOf(false) }
-    var hashtagInput by rememberSaveable { mutableStateOf("") }
+    var hashtagMenu by remember { mutableStateOf<HashtagChipMenu?>(null) }
     var chipRowVisible by rememberSaveable { mutableStateOf(true) }
     val chipListState = rememberLazyListState()
     val rows = state.posts
@@ -276,7 +277,8 @@ fun PhotoGridScreen(
         }
     }
 
-    val selectedTimeline = (state.selectedFeed as? PhotoGridFeed.TimelineFeed)?.timeline
+    val selectedSource = (state.selectedFeed as? PhotoGridFeed.Source)?.source
+    val selectedTimeline = (selectedSource as? FeedSource.Timeline)?.timeline
     val chipEntries = buildList {
         state.carriedSearch?.let { query ->
             add(
@@ -297,36 +299,25 @@ fun PhotoGridScreen(
                 FilterChipEntry(
                     label = stringResource(timelineLabelRes(timeline)),
                     selected = selectedTimeline == timeline,
-                    onClick = { onSelectFeed(PhotoGridFeed.TimelineFeed(timeline)) },
+                    onClick = { onSelectFeed(PhotoGridFeed.Source(FeedSource.Timeline(timeline))) },
                     contentDescription = stringResource(timelineLabelRes(timeline)),
                     testTag = "photo_grid_timeline_${timeline.name}",
                     key = "photo-grid-timeline:${timeline.name}",
                 ),
             )
         }
-        state.savedHashtags.forEach { tag ->
-            add(
-                FilterChipEntry(
-                    label = "#$tag".removePrefix("##"),
-                    selected = (state.selectedFeed as? PhotoGridFeed.Hashtag)?.tag == tag,
-                    onClick = { onSelectFeed(PhotoGridFeed.Hashtag(tag)) },
-                    contentDescription = tag,
-                    key = "photo-grid-hashtag:$tag",
-                ),
-            )
-        }
-        add(
-            FilterChipEntry(
-                label = stringResource(R.string.photo_grid_add_hashtag),
-                onClick = {
-                    hashtagInput = ""
-                    onClearPreferenceError()
+        addAll(
+            feedExtraChipEntries(
+                extras = chips.state.extras,
+                selectedKey = selectedSource?.takeUnless { it is FeedSource.Timeline }?.key,
+                keyPrefix = "photo_grid",
+                addTestTag = "photo_grid_add_hashtag",
+                onSelect = { onSelectFeed(PhotoGridFeed.Source(it)) },
+                onHashtagMenu = { hashtag, bounds -> hashtagMenu = HashtagChipMenu(hashtag, bounds) },
+                onAddHashtag = {
+                    chips.actions.clearError()
                     addHashtagDialog = true
                 },
-                role = Role.Button,
-                contentDescription = stringResource(R.string.photo_grid_add_hashtag),
-                testTag = "photo_grid_add_hashtag",
-                key = "photo-grid-action:add-hashtag",
             ),
         )
     }
@@ -456,41 +447,29 @@ fun PhotoGridScreen(
     }
 
     if (addHashtagDialog) {
-        val validInput = isExactHashtag(hashtagInput)
-        AlertDialog(
-            onDismissRequest = {
-                if (!state.preferenceSaving) {
-                    addHashtagDialog = false
-                    onClearPreferenceError()
+        AddHashtagDialog(
+            busy = chips.state.busy,
+            error = chips.state.error,
+            onAdd = { value, onDone ->
+                chips.actions.addHashtag(value) { added ->
+                    onSelectFeed(PhotoGridFeed.Source(added))
+                    onDone()
                 }
             },
-            title = { Text(stringResource(R.string.photo_grid_add_hashtag_title)) },
-            text = {
-                OutlinedTextField(
-                    value = hashtagInput,
-                    onValueChange = { hashtagInput = it; onClearPreferenceError() },
-                    enabled = !state.preferenceSaving,
-                    label = { Text(stringResource(R.string.photo_grid_hashtag_hint)) },
-                    singleLine = true,
-                    isError = hashtagInput.isNotEmpty() && !validInput,
-                    supportingText = {
-                        when {
-                            hashtagInput.isNotEmpty() && !validInput -> Text(stringResource(R.string.photo_grid_invalid_hashtag))
-                            state.preferenceError == "save" -> Text(stringResource(R.string.photo_grid_preference_save_failed))
-                        }
-                    },
-                )
+            onClearError = chips.actions::clearError,
+            onDismiss = {
+                addHashtagDialog = false
+                chips.actions.clearError()
             },
-            confirmButton = {
-                TextButton(
-                    enabled = validInput && !state.preferenceSaving,
-                    onClick = { onAddHashtag(hashtagInput) { addHashtagDialog = false; hashtagInput = "" } },
-                ) { Text(stringResource(R.string.dialog_add)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { addHashtagDialog = false; onClearPreferenceError() }) {
-                    Text(stringResource(R.string.dialog_cancel))
-                }
+        )
+    }
+    hashtagMenu?.let { menu ->
+        HashtagChipBubble(
+            menu = menu,
+            onDismiss = { hashtagMenu = null },
+            onConfirm = {
+                hashtagMenu = null
+                chips.actions.removeHashtag(menu.hashtag.tag) {}
             },
         )
     }

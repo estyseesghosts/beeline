@@ -43,9 +43,13 @@ import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.data.notifications.NotificationStreamController
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.AppPreferencesState
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostPreferencesRepository
+import me.foxtails.palustris.domain.SavedHashtagRepository
+import me.foxtails.palustris.domain.hashtags.HashtagCatalog
+import me.foxtails.palustris.domain.hashtags.HashtagExpander
+import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
+import me.foxtails.palustris.domain.hashtags.HashtagLanguagePolicy
 import me.foxtails.palustris.ui.layout.deviceLayoutDirection
 import me.foxtails.palustris.ui.layout.resolveAgainst
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
@@ -57,10 +61,6 @@ import me.foxtails.palustris.ui.notifications.NotificationLaunchHost
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
-import me.foxtails.palustris.domain.hashtags.HashtagCatalog
-import me.foxtails.palustris.domain.hashtags.HashtagExpander
-import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
-import me.foxtails.palustris.domain.hashtags.HashtagLanguagePolicy
 import me.foxtails.palustris.ui.session.AccountManager
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.session.ConnectedSessionHost
@@ -77,7 +77,7 @@ fun ConnectedApp(
     notificationStreamController: NotificationStreamController,
     appPreferencesRepository: AppPreferencesRepository,
     postPreferencesRepository: PostPreferencesRepository,
-    photoGridPreferencesRepository: PhotoGridPreferencesRepository,
+    savedHashtagRepository: SavedHashtagRepository,
     hashtagExpander: HashtagExpander = HashtagExpander(HashtagCatalog.Empty),
     meteredNetworkMonitor: MeteredNetworkMonitor? = null,
 ) {
@@ -212,7 +212,7 @@ fun ConnectedApp(
                     notificationStreamController = notificationStreamController,
                     accountIndex = accountIndex,
                     postPreferences = postPreferences,
-                    photoGridPreferences = photoGridPreferencesRepository,
+                    savedHashtagRepository = savedHashtagRepository,
                     hashtagInput = hashtagInput,
                     tabletNavigationAnchor = appPreferences.preferences.tabletNavigationAnchor,
                     compactWideNavigationAnchor = appPreferences.preferences.compactWideNavigationAnchor,

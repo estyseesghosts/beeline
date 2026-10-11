@@ -5,26 +5,24 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.afterOwnedDeletion
 import me.foxtails.palustris.domain.effectiveTargetId
-import me.foxtails.palustris.domain.hashtagIdentity
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import me.foxtails.palustris.domain.mergeExternalActionFields
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.domain.timelineStatus
-import me.foxtails.palustris.domain.validateExactHashtag
 import me.foxtails.palustris.ui.UiStrings
+import me.foxtails.palustris.ui.chips.FeedChipState
 import me.foxtails.palustris.ui.requiresSignIn
 
 internal class PhotoGridController(
@@ -32,31 +30,27 @@ internal class PhotoGridController(
     private val source: SocialSource,
     private val sessionRevision: Long,
     private val scope: CoroutineScope,
-    private val preferencesRepository: PhotoGridPreferencesRepository,
     private val applyFavouritePreference: (Post) -> Post,
     private val uiStrings: UiStrings = UiStrings.Default,
     private val hashtagInput: () -> HashtagExpansionInput = { HashtagExpansionInput.Disabled },
 ) {
-    private var preferencesJob: Job? = null
     private var loadingJob: Job? = null
-    private var saveJob: Job? = null
+    private var chips = FeedChipState()
     private var generation = 0L
     private val consumedCursors = mutableSetOf<String>()
     private var stopped = false
     private val _state = MutableStateFlow(PhotoGridFeedState())
     val state = _state.asStateFlow()
 
-    init {
-        preferencesJob = scope.launch {
-            preferencesRepository.observe(accountId).collectLatest { preferences ->
-                if (!stopped) {
-                    _state.value = _state.value.copy(
-                        savedHashtags = preferences.hashtags,
-                        preferenceLoading = false,
-                    )
-                }
-            }
-        }
+    /**
+     * Takes the latest shared chip catalog. A selected list, hashtag or antenna that left the catalog
+     * falls back to Home, so the grid never shows a feed that has no chip.
+     */
+    fun updateChips(latest: FeedChipState) {
+        if (stopped) return
+        chips = latest
+        val selected = (_state.value.selectedFeed as? PhotoGridFeed.Source)?.source ?: return
+        if (latest.loaded && !latest.offers(selected)) selectFeed(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Home)))
     }
 
     fun ensureLoaded() {
@@ -123,51 +117,6 @@ internal class PhotoGridController(
         startRequest(current.selectedFeed, generation, cursor)
     }
 
-    fun addHashtag(value: String, onSuccess: () -> Unit = {}) {
-        if (stopped || _state.value.preferenceSaving) return
-        val accepted = runCatching { validateExactHashtag(value) }.getOrElse {
-            _state.value = _state.value.copy(preferenceError = "invalid")
-            return
-        }
-        val existing = _state.value.savedHashtags.firstOrNull {
-            hashtagIdentity(it) == hashtagIdentity(accepted)
-        }
-        if (existing != null) {
-            _state.value = _state.value.copy(preferenceError = null)
-            selectFeed(PhotoGridFeed.Hashtag(existing))
-            onSuccess()
-            return
-        }
-        saveJob?.cancel()
-        saveJob = scope.launch {
-            _state.value = _state.value.copy(preferenceSaving = true, preferenceError = null)
-            try {
-                preferencesRepository.update(accountId) { preferences ->
-                    preferences.copy(hashtags = preferences.hashtags + accepted)
-                }
-                val saved = (_state.value.savedHashtags + accepted).distinctBy(::hashtagIdentity)
-                _state.value = _state.value.copy(
-                    savedHashtags = saved,
-                    preferenceSaving = false,
-                    preferenceError = null,
-                )
-                selectFeed(PhotoGridFeed.Hashtag(accepted))
-                onSuccess()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                _state.value = _state.value.copy(
-                    preferenceSaving = false,
-                    preferenceError = "save",
-                )
-            }
-        }
-    }
-
-    fun clearPreferenceError() {
-        _state.value = _state.value.copy(preferenceError = null)
-    }
-
     fun updatePost(id: EntityId, transform: (Post) -> Post) {
         _state.value = _state.value.copy(
             posts = _state.value.posts.map { owned ->
@@ -209,16 +158,14 @@ internal class PhotoGridController(
     fun stop() {
         if (stopped) return
         stopped = true
-        preferencesJob?.cancel()
         loadingJob?.cancel()
-        saveJob?.cancel()
         generation++
     }
 
     private fun isValidFeed(feed: PhotoGridFeed): Boolean = when (feed) {
-        is PhotoGridFeed.TimelineFeed -> feed.timeline in availableTimelines()
-        is PhotoGridFeed.Hashtag -> _state.value.savedHashtags.any {
-            hashtagIdentity(it) == runCatching { hashtagIdentity(feed.tag) }.getOrNull()
+        is PhotoGridFeed.Source -> when (val item = feed.source) {
+            is FeedSource.Timeline -> item.timeline in availableTimelines()
+            else -> chips.offers(item)
         }
         // Search results belong to the Search owner. The grid only displays them.
         is PhotoGridFeed.Search -> false
@@ -235,9 +182,10 @@ internal class PhotoGridController(
         loadingJob = scope.launch {
             if (stopped || requestGeneration != generation || _state.value.selectedFeed != feed) return@launch
             // The extras are fixed when a feed starts. Paging reuses them, so the cursor stays valid.
+            val tag = ((feed as? PhotoGridFeed.Source)?.source as? FeedSource.Hashtag)?.tag
             val combinedTags = when {
-                feed !is PhotoGridFeed.Hashtag -> emptyList()
-                cursor == null -> hashtagInput().expand(feed.tag, source.maxCombinedHashtags).applied
+                tag == null -> emptyList()
+                cursor == null -> hashtagInput().expand(tag, source.maxCombinedHashtags).applied
                 else -> _state.value.combinedTags
             }
             _state.value = _state.value.copy(
@@ -249,9 +197,12 @@ internal class PhotoGridController(
             )
             try {
                 val page = when (feed) {
-                    is PhotoGridFeed.TimelineFeed -> source.timeline(feed.timeline, cursor)
-                    is PhotoGridFeed.Hashtag -> source.searchHashtags(HashtagQuery(feed.tag, combinedTags), cursor)
                     is PhotoGridFeed.Search -> return@launch
+                    is PhotoGridFeed.Source -> if (tag != null) {
+                        source.searchHashtags(HashtagQuery(tag, combinedTags), cursor)
+                    } else {
+                        source.feed(feed.source, cursor)
+                    }
                 }
                 if (stopped || requestGeneration != generation || _state.value.selectedFeed != feed) return@launch
                 val fetched = page.items.distinctBy { it.id }.map {

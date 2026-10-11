@@ -12,14 +12,14 @@ import me.foxtails.palustris.ui.photogrid.PhotoGridFeedState
 data class PhotoGridContract(
     val state: PhotoGridFeedState,
     val actions: Actions,
+    /** The shared chip catalog: lists, hashtags and antennas. The grid and Home read the same one. */
+    val chips: FeedChipsContract = FeedChipsContract.Empty,
 ) {
     interface Actions {
         fun ensureLoaded()
         fun selectFeed(feed: PhotoGridFeed)
         fun refresh()
         fun loadMore()
-        fun addHashtag(value: String, onSuccess: () -> Unit)
-        fun clearPreferenceError()
     }
 
     companion object {
@@ -32,6 +32,4 @@ private object PhotoGridEmptyActions : PhotoGridContract.Actions {
     override fun selectFeed(feed: PhotoGridFeed) = Unit
     override fun refresh() = Unit
     override fun loadMore() = Unit
-    override fun addHashtag(value: String, onSuccess: () -> Unit) = Unit
-    override fun clearPreferenceError() = Unit
 }

@@ -22,8 +22,8 @@ import me.foxtails.palustris.data.notifications.push.NoOpPushRegistrationManager
 import me.foxtails.palustris.data.notifications.push.PushRegistrationManager
 import me.foxtails.palustris.data.notifications.push.PushRegistrationWorkResult
 import me.foxtails.palustris.data.preferences.InMemoryEmojiPickerPreferencesRepository
-import me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository
 import me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository
+import me.foxtails.palustris.data.preferences.InMemorySavedHashtagRepository
 import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -381,7 +381,7 @@ class SessionLifecycleTest {
         push = push,
         streams = streams,
         postPreferences = InMemoryPostPreferencesRepository(),
-        photoGridPreferences = InMemoryPhotoGridPreferencesRepository(),
+        savedHashtagRepository = InMemorySavedHashtagRepository(),
         directMessages = InMemoryDirectMessageStore(),
         directMessageWriters = directMessageWriters,
         emoji = InMemoryEmojiCatalogRepository(),

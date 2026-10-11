@@ -17,8 +17,8 @@ import me.foxtails.palustris.data.notifications.NoOpNotificationSyncController
 import me.foxtails.palustris.data.notifications.NotificationSyncController
 import me.foxtails.palustris.data.notifications.push.NoOpPushRegistrationManager
 import me.foxtails.palustris.data.preferences.InMemoryEmojiPickerPreferencesRepository
-import me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository
 import me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository
+import me.foxtails.palustris.data.preferences.InMemorySavedHashtagRepository
 import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.ui.UiStrings
 
@@ -41,7 +41,7 @@ internal fun accountManagerFixture(
         push = NoOpPushRegistrationManager(),
         streams = NoOpNotificationStreamController(),
         postPreferences = InMemoryPostPreferencesRepository(),
-        photoGridPreferences = InMemoryPhotoGridPreferencesRepository(),
+        savedHashtagRepository = InMemorySavedHashtagRepository(),
         directMessages = InMemoryDirectMessageStore(),
         directMessageWriters = DirectMessageWriteAuthority(),
         emoji = InMemoryEmojiCatalogRepository(),

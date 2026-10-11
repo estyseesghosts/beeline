@@ -4,12 +4,12 @@ import androidx.test.core.app.ApplicationProvider
 import java.io.File
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import me.foxtails.palustris.data.preferences.FilePhotoGridPreferencesRepository
-import me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository
+import me.foxtails.palustris.data.preferences.FileSavedHashtagRepository
+import me.foxtails.palustris.data.preferences.InMemorySavedHashtagRepository
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Connection
-import me.foxtails.palustris.domain.PhotoGridPreferences
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.SavedHashtags
 import me.foxtails.palustris.domain.hashtagIdentity
 import me.foxtails.palustris.domain.isExactHashtag
 import me.foxtails.palustris.domain.validateExactHashtag
@@ -23,7 +23,7 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
-class PhotoGridPreferencesRepositoryTest {
+class SavedHashtagRepositoryTest {
     @Test
     fun validatorAcceptsOptionalHashAndRejectsInvalidSyntax() {
         assertEquals("#Photography", validateExactHashtag("  #Photography  "))
@@ -37,13 +37,13 @@ class PhotoGridPreferencesRepositoryTest {
 
     @Test
     fun inMemoryRepositoryNormalizesDuplicatesWithoutChangingFirstSpelling() = runBlocking {
-        val repository = InMemoryPhotoGridPreferencesRepository()
+        val repository = InMemorySavedHashtagRepository()
         val account = account(Protocol.MISSKEY)
         repository.update(account) {
-            PhotoGridPreferences(listOf("#Cats", "#cats", "dogs"))
+            SavedHashtags(listOf("#Cats", "#cats", "dogs"))
         }
 
-        assertEquals(listOf("#Cats", "dogs"), repository.observe(account).first().hashtags)
+        assertEquals(listOf("#Cats", "dogs"), repository.observe(account).first().tags)
         assertEquals(hashtagIdentity("#Cats"), hashtagIdentity("cats"))
     }
 
@@ -53,13 +53,13 @@ class PhotoGridPreferencesRepositoryTest {
         File(context.noBackupFilesDir, "photo-grid-preferences.json").delete()
         val misskey = account(Protocol.MISSKEY)
         val mastodon = account(Protocol.MASTODON)
-        FilePhotoGridPreferencesRepository(context).update(misskey) {
-            PhotoGridPreferences(listOf("#Travel"))
+        FileSavedHashtagRepository(context).update(misskey) {
+            SavedHashtags(listOf("#Travel"))
         }
 
-        val recreated = FilePhotoGridPreferencesRepository(context)
-        assertEquals(listOf("#Travel"), recreated.observe(misskey).first { it.hashtags.isNotEmpty() }.hashtags)
-        assertTrue(recreated.observe(mastodon).first().hashtags.isEmpty())
+        val recreated = FileSavedHashtagRepository(context)
+        assertEquals(listOf("#Travel"), recreated.observe(misskey).first { it.tags.isNotEmpty() }.tags)
+        assertTrue(recreated.observe(mastodon).first().tags.isEmpty())
     }
 
     private fun account(protocol: Protocol) = AccountId(

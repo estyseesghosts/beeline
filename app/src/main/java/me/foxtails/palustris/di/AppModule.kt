@@ -2,71 +2,71 @@ package me.foxtails.palustris.di
 
 import android.content.Context
 import androidx.room.Room
-import java.io.File
-import java.time.Clock
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.io.File
+import java.time.Clock
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import me.foxtails.palustris.data.SocialSourceFactory
 import me.foxtails.palustris.data.AppMessages
+import me.foxtails.palustris.data.SocialSourceFactory
 import me.foxtails.palustris.data.auth.AppRegistrationCache
-import me.foxtails.palustris.domain.hashtags.HashtagExpander
 import me.foxtails.palustris.data.auth.AuthGateway
 import me.foxtails.palustris.data.auth.DetectingAuthGateway
-import me.foxtails.palustris.data.auth.EncryptedSessionStore
-import me.foxtails.palustris.data.hashtags.HashtagCatalogRepository
-import me.foxtails.palustris.data.preferences.FileAppPreferencesRepository
-import me.foxtails.palustris.data.preferences.FilePostPreferencesRepository
-import me.foxtails.palustris.data.preferences.FileEmojiPickerPreferencesRepository
-import me.foxtails.palustris.data.preferences.FilePhotoGridPreferencesRepository
 import me.foxtails.palustris.data.auth.DraftStore
 import me.foxtails.palustris.data.auth.EncryptedDraftStore
+import me.foxtails.palustris.data.auth.EncryptedSessionStore
 import me.foxtails.palustris.data.auth.MastodonAuth
 import me.foxtails.palustris.data.auth.MisskeyAuth
 import me.foxtails.palustris.data.auth.SessionStore
-import me.foxtails.palustris.data.transport.HttpClientPool
-import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
-import me.foxtails.palustris.data.misskey.CapabilityCache
+import me.foxtails.palustris.data.directmessages.DIRECT_MESSAGE_MIGRATIONS
+import me.foxtails.palustris.data.directmessages.DirectMessageDatabase
+import me.foxtails.palustris.data.directmessages.DirectMessageStore
+import me.foxtails.palustris.data.directmessages.RoomDirectMessageStore
+import me.foxtails.palustris.data.emoji.EmojiAssetStore
+import me.foxtails.palustris.data.emoji.EmojiCacheDatabase
+import me.foxtails.palustris.data.emoji.RoomEmojiCatalogRepository
+import me.foxtails.palustris.data.hashtags.HashtagCatalogRepository
 import me.foxtails.palustris.data.media.MediaImageLoader
+import me.foxtails.palustris.data.misskey.CapabilityCache
+import me.foxtails.palustris.data.notifications.AndroidNotificationPermissionController
+import me.foxtails.palustris.data.notifications.AndroidNotificationPresenter
+import me.foxtails.palustris.data.notifications.ForegroundNotificationStreamController
+import me.foxtails.palustris.data.notifications.NotificationPermissionController
+import me.foxtails.palustris.data.notifications.NotificationPresenter
 import me.foxtails.palustris.data.notifications.NotificationStore
+import me.foxtails.palustris.data.notifications.NotificationStreamController
 import me.foxtails.palustris.data.notifications.NotificationSyncController
 import me.foxtails.palustris.data.notifications.NotificationSyncIntents
 import me.foxtails.palustris.data.notifications.NotificationSyncOrchestrator
-import me.foxtails.palustris.data.notifications.work.NotificationDeliveryScheduler
-import me.foxtails.palustris.data.notifications.work.NotificationWorkScheduler
-import me.foxtails.palustris.data.notifications.ForegroundNotificationStreamController
-import me.foxtails.palustris.data.notifications.NotificationStreamController
-import me.foxtails.palustris.data.notifications.AndroidNotificationPermissionController
-import me.foxtails.palustris.data.notifications.AndroidNotificationPresenter
-import me.foxtails.palustris.data.notifications.NotificationPermissionController
-import me.foxtails.palustris.data.notifications.NotificationPresenter
 import me.foxtails.palustris.data.notifications.RoomNotificationStore
-import me.foxtails.palustris.data.notifications.push.PushRegistrationManager
+import me.foxtails.palustris.data.notifications.db.NOTIFICATION_MIGRATIONS
+import me.foxtails.palustris.data.notifications.db.NotificationDatabase
 import me.foxtails.palustris.data.notifications.push.AndroidUnifiedPushConnector
+import me.foxtails.palustris.data.notifications.push.PushRegistrationManager
 import me.foxtails.palustris.data.notifications.push.UnifiedPushConnector
 import me.foxtails.palustris.data.notifications.push.UnifiedPushRegistrationManager
-import me.foxtails.palustris.data.notifications.db.NotificationDatabase
-import me.foxtails.palustris.data.notifications.db.NOTIFICATION_MIGRATIONS
-import me.foxtails.palustris.data.directmessages.DirectMessageDatabase
-import me.foxtails.palustris.data.directmessages.DIRECT_MESSAGE_MIGRATIONS
-import me.foxtails.palustris.data.directmessages.DirectMessageStore
-import me.foxtails.palustris.data.directmessages.RoomDirectMessageStore
-import me.foxtails.palustris.data.emoji.EmojiCacheDatabase
-import me.foxtails.palustris.data.emoji.EmojiAssetStore
-import me.foxtails.palustris.data.emoji.RoomEmojiCatalogRepository
-import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.data.notifications.work.NotificationDeliveryScheduler
+import me.foxtails.palustris.data.notifications.work.NotificationWorkScheduler
+import me.foxtails.palustris.data.preferences.FileAppPreferencesRepository
+import me.foxtails.palustris.data.preferences.FileEmojiPickerPreferencesRepository
+import me.foxtails.palustris.data.preferences.FilePostPreferencesRepository
+import me.foxtails.palustris.data.preferences.FileSavedHashtagRepository
+import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
+import me.foxtails.palustris.data.transport.HttpClientPool
 import me.foxtails.palustris.domain.AppPreferencesRepository
+import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EmojiCatalogRepository
 import me.foxtails.palustris.domain.EmojiPickerPreferencesRepository
-import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.PostPreferencesRepository
-import me.foxtails.palustris.domain.PhotoGridPreferencesRepository
+import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.SavedHashtagRepository
+import me.foxtails.palustris.domain.hashtags.HashtagExpander
 import org.json.JSONObject
 
 @Qualifier
@@ -173,9 +173,9 @@ object StorageModule {
 
     @Provides
     @Singleton
-    fun providePhotoGridPreferencesRepository(
-        repository: FilePhotoGridPreferencesRepository,
-    ): PhotoGridPreferencesRepository = repository
+    fun provideSavedHashtagRepository(
+        repository: FileSavedHashtagRepository,
+    ): SavedHashtagRepository = repository
 
     @Provides
     @Singleton

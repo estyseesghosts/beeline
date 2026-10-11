@@ -8,10 +8,11 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import me.foxtails.palustris.data.preferences.InMemoryPhotoGridPreferencesRepository
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.FeedSource
+import me.foxtails.palustris.domain.HashtagOrigin
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
@@ -26,6 +27,7 @@ import me.foxtails.palustris.domain.hashtags.HashtagGroup
 import me.foxtails.palustris.domain.hashtags.HashtagLanguagePolicy
 import me.foxtails.palustris.domain.hashtags.HashtagQuery
 import me.foxtails.palustris.domain.hashtags.HashtagRelation
+import me.foxtails.palustris.ui.chips.FeedChipState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -74,28 +76,29 @@ class PhotoGridCombinedHashtagsTest {
         source = source,
         sessionRevision = 1L,
         scope = CoroutineScope(Dispatchers.Main),
-        preferencesRepository = InMemoryPhotoGridPreferencesRepository(),
         applyFavouritePreference = { it },
         hashtagInput = { input },
     )
 
+    private val chips = FeedChipState(hashtags = listOf(FeedSource.Hashtag("foto", HashtagOrigin.Device)), loaded = true)
+
     @Test
-    fun hashtagFeedSendsTheExtrasAndSavesOnlyTheTypedHashtag() = runTest {
+    fun hashtagFeedSendsTheExtrasForTheSelectedHashtagOnly() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val source = RecordingSource()
         val owner = owner(source, input(enabled = true))
         try {
-            owner.addHashtag("#foto")
+            owner.updateChips(chips)
+            owner.selectFeed(PhotoGridFeed.Source(FeedSource.Hashtag("foto", HashtagOrigin.Device)))
             advanceUntilIdle()
             owner.loadMore()
             advanceUntilIdle()
 
             val expected = listOf("photography", "fotografia")
             assertEquals(
-                listOf(HashtagQuery("#foto", expected) to null, HashtagQuery("#foto", expected) to "next"),
+                listOf(HashtagQuery("foto", expected) to null, HashtagQuery("foto", expected) to "next"),
                 source.queries,
             )
-            assertEquals(listOf("#foto"), owner.state.value.savedHashtags)
             assertEquals(expected, owner.state.value.combinedTags)
         } finally {
             owner.release()
@@ -109,7 +112,8 @@ class PhotoGridCombinedHashtagsTest {
         val source = RecordingSource()
         val owner = owner(source, input(enabled = false))
         try {
-            owner.addHashtag("#foto")
+            owner.updateChips(chips)
+            owner.selectFeed(PhotoGridFeed.Source(FeedSource.Hashtag("foto", HashtagOrigin.Device)))
             advanceUntilIdle()
 
             assertTrue(source.queries.single().first.alsoMatching.isEmpty())

@@ -24,7 +24,6 @@ internal class PhotoGridOwner(
         source: SocialSource,
         sessionRevision: Long,
         scope: CoroutineScope,
-        preferencesRepository: me.foxtails.palustris.domain.PhotoGridPreferencesRepository,
         hashtagInput: () -> HashtagExpansionInput = { HashtagExpansionInput.Disabled },
         applyFavouritePreference: (Post) -> Post,
     ) : this(
@@ -37,7 +36,6 @@ internal class PhotoGridOwner(
             source = source,
             sessionRevision = sessionRevision,
             scope = scope,
-            preferencesRepository = preferencesRepository,
             applyFavouritePreference = applyFavouritePreference,
             hashtagInput = hashtagInput,
         ),
@@ -53,8 +51,7 @@ internal class PhotoGridOwner(
     fun selectFeed(feed: PhotoGridFeed) = delegate.selectFeed(feed)
     fun refresh() = delegate.refresh()
     fun loadMore() = delegate.loadMore()
-    fun addHashtag(value: String, onSuccess: () -> Unit = {}) = delegate.addHashtag(value, onSuccess)
-    fun clearPreferenceError() = delegate.clearPreferenceError()
+    fun updateChips(chips: me.foxtails.palustris.ui.chips.FeedChipState) = delegate.updateChips(chips)
 
     fun updateFavouritePreference(transform: (Post) -> Post) {
         if (!released) delegate.updatePosts(transform)

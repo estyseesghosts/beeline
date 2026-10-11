@@ -139,8 +139,7 @@ internal fun ShellSearchDestination(
                     dismissedQuery = carriedQuery
                     searchChipSelected = false
                 },
-                onAddHashtag = photoGrid.actions::addHashtag,
-                onClearPreferenceError = photoGrid.actions::clearPreferenceError,
+                chips = photoGrid.chips,
                 onOpenPost = { post -> navigationCallbacks.onOpenPost(post, LargePostOrigin.PhotoGrid) },
                 cardActions = PhotoGridCardActions(
                     availableActions = postCallbacks.availableActions,

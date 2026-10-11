@@ -42,6 +42,8 @@ import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.FeedSource
+import me.foxtails.palustris.domain.HashtagOrigin
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
@@ -49,6 +51,7 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.PalustrisTheme
+import me.foxtails.palustris.ui.chips.FeedChipState
 import me.foxtails.palustris.ui.components.restingChipEdge
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.navigation.ShellNavigator
@@ -58,6 +61,7 @@ import me.foxtails.palustris.ui.shell.DestinationDraftCallbacks
 import me.foxtails.palustris.ui.shell.DestinationNavigationCallbacks
 import me.foxtails.palustris.ui.shell.DestinationPostCallbacks
 import me.foxtails.palustris.ui.shell.DirectMessagesContract
+import me.foxtails.palustris.ui.shell.FeedChipsContract
 import me.foxtails.palustris.ui.shell.PhotoGridContract
 import me.foxtails.palustris.ui.shell.SearchPanel
 import me.foxtails.palustris.ui.shell.ShellDestinationContent
@@ -179,9 +183,8 @@ class PhotoGridClearanceTest {
         nextCursor: String? = null,
         error: String? = null,
     ) = PhotoGridFeedState(
-        selectedFeed = PhotoGridFeed.TimelineFeed(Timeline.Home),
+        selectedFeed = PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Home)),
         availableTimelines = timelineDisplayOrder,
-        savedHashtags = listOf("fixture"),
         posts = posts(count, label),
         initialLoadComplete = true,
         nextCursor = nextCursor,
@@ -246,7 +249,7 @@ class PhotoGridClearanceTest {
             show(direction) {
                 PhotoGridScreen(
                     state = PhotoGridFeedState(
-                        selectedFeed = PhotoGridFeed.TimelineFeed(Timeline.Home),
+                        selectedFeed = PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Home)),
                         availableTimelines = listOf(Timeline.Home),
                         posts = listOf(AppShellFixtures.owned(author, post("sensitive", sensitive = true))),
                         initialLoadComplete = true,
@@ -359,9 +362,12 @@ class PhotoGridClearanceTest {
             show(direction) {
                 PhotoGridScreen(
                     state = PhotoGridFeedState(
-                        selectedFeed = PhotoGridFeed.TimelineFeed(Timeline.Home),
+                        selectedFeed = PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Home)),
                         availableTimelines = timelineDisplayOrder,
-                        savedHashtags = listOf("fixture"),
+                    ),
+                    chips = FeedChipsContract(
+                        FeedChipState(hashtags = listOf(FeedSource.Hashtag("fixture", HashtagOrigin.Device)), loaded = true),
+                        FeedChipsContract.Empty.actions,
                     ),
                     compactLayout = false,
                     rightObstructionClearance = clearance.value,
@@ -386,7 +392,7 @@ class PhotoGridClearanceTest {
             compose.onNodeWithContentDescription(text(R.string.photo_grid_filter_description))
                 .performScrollToNode(hasText(savedHashtag))
             compose.onNodeWithText(savedHashtag).assertIsDisplayed().performClick()
-            assertEquals("Hashtag(tag=fixture)", selected)
+            assertEquals("Source(source=Hashtag(tag=fixture, origin=Device))", selected)
             // The add entry is the last chip, so scroll it into view before touching it.
             compose.onNodeWithContentDescription(text(R.string.photo_grid_filter_description))
                 .performScrollToNode(hasTestTag("photo_grid_add_hashtag"))
@@ -402,7 +408,7 @@ class PhotoGridClearanceTest {
             val navigator = ShellNavigator()
             navigator.destination = Destination.Search
             navigator.searchPanelName = SearchPanel.PhotoGrid.name
-            val selected = mutableStateOf<PhotoGridFeed>(PhotoGridFeed.TimelineFeed(Timeline.Home))
+            val selected = mutableStateOf<PhotoGridFeed>(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Home)))
             val selectedLabel = mutableStateOf<String?>(null)
             show(direction) { destination(navigator, selected, selectedLabel) }
             val viewport = bounds("photo_grid_test_viewport")
@@ -420,8 +426,8 @@ class PhotoGridClearanceTest {
                 .performScrollToNode(hasText(federated))
             compose.onNodeWithText(federated).assertIsDisplayed().performClick()
             compose.onNodeWithText(federated).assertIsSelected()
-            assertEquals("TimelineFeed(timeline=Federated)", selectedLabel.value)
-            assertEquals(PhotoGridFeed.TimelineFeed(Timeline.Federated), selected.value)
+            assertEquals("Source(source=Timeline(timeline=Federated))", selectedLabel.value)
+            assertEquals(PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Federated)), selected.value)
             assertEquals(SearchPanel.PhotoGrid, navigator.searchPanel)
             scrollToEnd()
             val finalTile = tileBounds("branch-9")
@@ -523,8 +529,6 @@ class PhotoGridClearanceTest {
             }
             override fun refresh() = Unit
             override fun loadMore() = Unit
-            override fun addHashtag(value: String, onSuccess: () -> Unit) = onSuccess()
-            override fun clearPreferenceError() = Unit
         },
     )
 

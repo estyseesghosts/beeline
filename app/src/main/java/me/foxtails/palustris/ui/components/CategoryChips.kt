@@ -2,6 +2,7 @@ package me.foxtails.palustris.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -32,7 +33,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -71,6 +76,9 @@ internal data class FilterChipEntry(
     /** When set, the chip shows a close icon and a TalkBack action that call this. */
     val onDismiss: (() -> Unit)? = null,
     val dismissDescription: String? = null,
+    /** A long press and a TalkBack action report the chip's window bounds here, labelled [longClickLabel]. */
+    val onLongClick: ((Rect) -> Unit)? = null,
+    val longClickLabel: String? = null,
 )
 
 /**
@@ -225,9 +233,15 @@ private fun DestinationFilterChip(entry: FilterChipEntry, modifier: Modifier = M
         MaterialTheme.colorScheme.onSurfaceVariant,
     )
     val selectedScale = rememberSelectedScale(entry.selected)
+    // A long press that opens a menu must not also select the chip when the finger lifts.
+    val windowBounds = remember { arrayOf(Rect.Zero) }
+    val longPressed = remember { booleanArrayOf(false) }
+    val longClick = entry.onLongClick
     FilterChip(
         selected = entry.selected,
-        onClick = entry.onClick,
+        onClick = {
+            if (longPressed[0]) longPressed[0] = false else entry.onClick()
+        },
         enabled = entry.enabled,
         interactionSource = interactionSource,
         label = { Text(entry.label) },
@@ -254,6 +268,25 @@ private fun DestinationFilterChip(entry: FilterChipEntry, modifier: Modifier = M
                 scaleX = selectedScale
                 scaleY = selectedScale
             }
+            .onGloballyPositioned { windowBounds[0] = it.boundsInWindow() }
+            .then(
+                if (longClick == null) {
+                    Modifier
+                } else {
+                    Modifier.pointerInput(longClick) {
+                        detectTapGestures(
+                            onPress = {
+                                longPressed[0] = false
+                                tryAwaitRelease()
+                            },
+                            onLongPress = {
+                                longPressed[0] = true
+                                longClick(windowBounds[0])
+                            },
+                        )
+                    }
+                },
+            )
             .then(entry.testTag?.let { Modifier.testTag(it) } ?: Modifier)
             .semantics {
                 contentDescription = entry.contentDescription
@@ -261,14 +294,25 @@ private fun DestinationFilterChip(entry: FilterChipEntry, modifier: Modifier = M
                 this.selected = entry.selected
                 entry.stateDescription?.let { stateDescription = it }
                 val dismiss = entry.onDismiss
-                if (dismiss != null) {
-                    customActions = listOf(
-                        CustomAccessibilityAction(entry.dismissDescription ?: entry.label) {
-                            dismiss()
-                            true
-                        },
-                    )
+                val actions = buildList {
+                    if (dismiss != null) {
+                        add(
+                            CustomAccessibilityAction(entry.dismissDescription ?: entry.label) {
+                                dismiss()
+                                true
+                            },
+                        )
+                    }
+                    if (longClick != null) {
+                        add(
+                            CustomAccessibilityAction(entry.longClickLabel ?: entry.label) {
+                                longClick(windowBounds[0])
+                                true
+                            },
+                        )
+                    }
                 }
+                if (actions.isNotEmpty()) customActions = actions
             },
         shape = BeelineBubbleShape,
     )
