@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.Account
@@ -32,6 +31,7 @@ import me.foxtails.palustris.ui.posts.PostPopupPresentation
 import me.foxtails.palustris.ui.posts.PostShareSheet
 import me.foxtails.palustris.ui.posts.copyPostShareContent
 import me.foxtails.palustris.ui.posts.postShareRows
+import me.foxtails.palustris.ui.posts.rememberTranslationTargetLanguage
 import me.foxtails.palustris.ui.posts.sharePost
 import me.foxtails.palustris.ui.profile.EditProfileSheet
 import me.foxtails.palustris.ui.shell.AppDialogs
@@ -140,7 +140,7 @@ internal fun ShellBubbleHost(
     )
     val translations = LocalPostTranslations.current
     val editRequest = LocalPostEditRequest.current
-    val targetLanguage = LocalConfiguration.current.locales[0].language
+    val targetLanguage = rememberTranslationTargetLanguage()
     postActionOwner?.target?.let { target ->
         PostShareSheet(
             target = target,

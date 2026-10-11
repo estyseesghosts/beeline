@@ -124,6 +124,8 @@ class FileAppPreferencesRepository(
             combineRelatedHashtags = json.optBoolean("combineRelatedHashtags", true),
             // A missing key reads true, so existing users get the default behavior.
             autoplayVideos = json.optBoolean("autoplayVideos", true),
+            // A missing key reads false, so a file from an earlier build keeps manual translation.
+            alwaysTranslatePosts = json.optBoolean("alwaysTranslatePosts", false),
             contentWarningRules = warning?.toContentWarningRules() ?: ContentWarningRules(),
             hiddenContentPresentation = enumOrDefault(json, "hiddenContentPresentation", HiddenContentPresentation.Placeholder),
         )
@@ -146,6 +148,7 @@ class FileAppPreferencesRepository(
             .put("cleanTrackingParameters", preferences.cleanTrackingParameters)
             .put("combineRelatedHashtags", preferences.combineRelatedHashtags)
             .put("autoplayVideos", preferences.autoplayVideos)
+            .put("alwaysTranslatePosts", preferences.alwaysTranslatePosts)
             .put("contentWarningRules", preferences.contentWarningRules.toJson())
             .put("hiddenContentPresentation", preferences.hiddenContentPresentation.name)
         val temporary = File("${file.path}.new")

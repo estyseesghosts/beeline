@@ -155,6 +155,9 @@
     <string name="settings_combine_related_hashtags_summary">搜索和照片网格的结果会包含其他形式和语言的相似话题标签。</string>
     <string name="settings_autoplay_videos">自动播放视频</string>
     <string name="settings_autoplay_videos_summary">在信息流和照片网格中静音播放视频。在按流量计费的网络上不会播放。</string>
+    <string name="settings_always_translate_posts">自动翻译帖子</string>
+    <string name="settings_always_translate_posts_summary">显示其他语言帖子的翻译。你的服务器会把帖子文本发送给它的翻译服务商。只翻译公开和不公开列出的帖子。</string>
+    <string name="settings_always_translate_posts_a11y">自动翻译帖子</string>
     <string name="video_mute">将视频静音</string>
     <string name="video_unmute">取消视频静音</string>
     <string name="video_play">播放视频</string>

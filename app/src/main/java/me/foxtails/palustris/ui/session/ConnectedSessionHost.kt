@@ -91,6 +91,7 @@ fun ConnectedSessionHost(
     hashtagInput: HashtagExpansionInput,
     initialNotificationRoute: AppRoute?,
     onOpenSettings: () -> Unit,
+    alwaysTranslatePosts: Boolean = false,
     tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
     compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
 ) {
@@ -275,6 +276,7 @@ fun ConnectedSessionHost(
     val translationOwner = remember(accountId, sessionRevision, sharedSource) {
         PostTranslationOwner(accountId, sessionRevision, sharedSource, settingsScope, UiStrings.from(context))
     }
+    LaunchedEffect(translationOwner, alwaysTranslatePosts) { translationOwner.applyAutomaticSetting(alwaysTranslatePosts) }
     val editOwner = remember(accountId, sessionRevision) { PostEditOwner(accountId, sessionRevision) }
     LaunchedEffect(entryStore, sessionGeneration, editOwner) {
         entryStore.register(sessionGeneration, "post-edits-$accountId-$sessionGeneration") {

@@ -25,6 +25,9 @@
     <string name="settings_combine_related_hashtags_summary">खोज और फ़ोटो ग्रिड के परिणामों में अन्य रूपों और भाषाओं के समान हैशटैग शामिल होते हैं।</string>
     <string name="settings_autoplay_videos">वीडियो अपने-आप चलाएँ</string>
     <string name="settings_autoplay_videos_summary">फ़ीड और फ़ोटो ग्रिड में वीडियो बिना आवाज़ के चलते हैं। सीमित डेटा वाले नेटवर्क पर नहीं चलते।</string>
+    <string name="settings_always_translate_posts">पोस्ट अपने आप अनुवाद करें</string>
+    <string name="settings_always_translate_posts_summary">दूसरी भाषाओं की पोस्ट का अनुवाद दिखाता है। आपका सर्वर पोस्ट का टेक्स्ट अपने अनुवाद प्रदाता को भेजता है। केवल सार्वजनिक और असूचीबद्ध पोस्ट का अनुवाद होता है।</string>
+    <string name="settings_always_translate_posts_a11y">पोस्ट अपने आप अनुवाद करें</string>
     <string name="video_mute">वीडियो म्यूट करें</string>
     <string name="video_unmute">वीडियो की आवाज़ चालू करें</string>
     <string name="video_play">वीडियो चलाएँ</string>

@@ -362,6 +362,7 @@ class MastodonSource(
             // 404 means translation is not configured. 503 means the quota or the provider is busy.
             when (e.status) {
                 404 -> throw SourceError.Unsupported("translate")
+                429 -> throw SourceError.RateLimited
                 503 -> throw SourceError.ResourceLimit("translate.busy")
                 else -> throw e
             }

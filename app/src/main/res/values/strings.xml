@@ -857,6 +857,9 @@
     <string name="settings_combine_related_hashtags_summary">Search and photo grid results include similar hashtags in other forms and languages.</string>
     <string name="settings_autoplay_videos">Autoplay videos</string>
     <string name="settings_autoplay_videos_summary">Plays videos in the feed and photo grid, muted. Does not play on metered networks.</string>
+    <string name="settings_always_translate_posts">Translate posts automatically</string>
+    <string name="settings_always_translate_posts_summary">Shows a translation of posts in other languages. Your server sends the post text to its translation provider. Only public and unlisted posts are translated.</string>
+    <string name="settings_always_translate_posts_a11y">Translate posts automatically</string>
     <string name="video_mute">Mute video</string>
     <string name="video_unmute">Unmute video</string>
     <string name="video_play">Play video</string>

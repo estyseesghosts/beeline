@@ -109,6 +109,15 @@ private fun PostRowContent(
     }
     val contentVisible = isPostContentVisible(warningDecision, post.contentWarning != null, expanded)
     if (warningDecision == ContentWarningDecision.Hidden && LocalHiddenContentPresentation.current == me.foxtails.palustris.domain.HiddenContentPresentation.Remove) return
+    // With the setting on, a post that shows its text asks the owner for a translation. The owner holds every rule.
+    val targetLanguage = rememberTranslationTargetLanguage()
+    if (translations?.automatic == true && contentVisible && warningDecision != ContentWarningDecision.Hidden &&
+        post.contentVisibility == me.foxtails.palustris.domain.PostContentVisibility.Visible
+    ) {
+        LaunchedEffect(ownedPost.fetchedBy, translationId, ownedPost.sessionRevision, targetLanguage) {
+            translations.requestAutomatic(ownedPost, targetLanguage)
+        }
+    }
     val bodyTruncated = isPostBodyTruncated(shownPost, displayPresentation, truncateBody)
     Column(modifier.fillMaxWidth().testTag("post_row_${post.id.value}")) {
         post.resharedBy?.let {

@@ -140,3 +140,10 @@ unknown value, loads as `Always`. Posting settings show the choice only when the
 Typed text goes to the account server in one case. When you type a hashtag in Search or in the composer, the app sends the text after `#` to your account server to ask for suggestions. The app sends only that fragment. It never sends the draft, the rest of the query, or the content warning field.
 `HashtagSuggestionService` keeps up to 50 answers for 5 minutes in memory only. It drops them when the account session ends. A failed request, or one that takes more than 2 seconds, shows the matches from the bundled catalog and no error. The catalog never reads the network.
 Sources: `domain/hashtags/HashtagSuggestionService.kt`, `ui/composer/ComposerHashtags.kt`, `ComposerHashtagTest` ("onlyTheFragmentReachesTheServer").
+
+## Post translation
+
+The server translates posts. Beeline has no translator on the device, and it stores no translation. The owner (`PostTranslationOwner`) keeps entries in memory for one connected session.
+The manual path sends the post to the account server when the user selects Translate. The automatic path is off by default. When the user turns on "Translate posts automatically" (Settings, Language), a post that shows its text asks the account server for a translation. The server then sends the post text to its translation provider. The app cannot see that provider on Misskey. The setting summary states this.
+Automatic mode never sends a post that is not public or unlisted, on any protocol. It sends each post once for each session, at most two requests at a time. It stops after a busy or rate-limited answer (five minutes) and after an answer that says the server cannot translate (until the session ends).
+Sources: `ui/posts/PostTranslationOwner.kt`, `ui/settings/LanguageSettingsScreen.kt`, `PostTranslationOwnerTest`.

@@ -137,6 +137,18 @@ class OwnPostAndTranslationAdapterTest {
     }
 
     @Test
+    fun mastodonTranslateMapsRateLimitSoTheCircuitBreakerSeesIt() = runBlocking {
+        server.enqueue(MockResponse().setResponseCode(429).setBody("{\"error\":\"Too many requests\"}"))
+
+        try {
+            mastodon().translate(id("1"), "en")
+            fail("expected rate limit")
+        } catch (_: SourceError.RateLimited) {
+            // The owner pauses automatic translation on this answer.
+        }
+    }
+
+    @Test
     fun misskeyTranslateSendsTargetLangAndMapsTheResponse() = runBlocking {
         server.enqueue(MockResponse().setBody(JSONObject().put("sourceLang", "ja").put("text", "Hello").toString()))
 

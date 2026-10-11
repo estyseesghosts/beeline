@@ -30,7 +30,7 @@ internal fun PostTranslationFooter(
     modifier: Modifier = Modifier,
 ) {
     when (entry) {
-        null -> Unit
+        null, TranslationEntry.SameLanguage -> Unit
         TranslationEntry.Loading -> Text(
             stringResource(R.string.post_translate_loading),
             modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag("post_translation_loading"),

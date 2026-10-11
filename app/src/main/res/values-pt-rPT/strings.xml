@@ -165,6 +165,9 @@
     <string name="settings_combine_related_hashtags_summary">Os resultados da pesquisa e da grelha de fotografias incluem hashtags semelhantes noutras formas e idiomas.</string>
     <string name="settings_autoplay_videos">Reprodução automática de vídeos</string>
     <string name="settings_autoplay_videos_summary">Reproduz vídeos sem som no feed e na grelha de fotos. Não reproduz em redes com tráfego limitado.</string>
+    <string name="settings_always_translate_posts">Traduzir publicações automaticamente</string>
+    <string name="settings_always_translate_posts_summary">Mostra a tradução de publicações noutros idiomas. O seu servidor envia o texto da publicação ao fornecedor de tradução. Só são traduzidas as publicações públicas e não listadas.</string>
+    <string name="settings_always_translate_posts_a11y">Traduzir publicações automaticamente</string>
     <string name="video_mute">Silenciar vídeo</string>
     <string name="video_unmute">Ativar som do vídeo</string>
     <string name="video_play">Reproduzir vídeo</string>

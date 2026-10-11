@@ -168,6 +168,7 @@ and `FfmpegBridgeTest`. Live-server uploads are unverified.
 
 - Delete: supported on the Mastodon API and the Misskey API. Edit stays hidden until its capability is reported as supported.
 - Translation: the Mastodon API reads `configuration.translation.enabled`, or `akkoma:machine_translation` in the feature list, and offers it for public and unlisted posts only. The Misskey API needs `translatorAvailable` in `meta` and the role policy `canUseTranslator`. A server that offers neither never shows the Translate row.
+- Automatic translation (infdev 03 S5) uses the same capability and the same endpoints. Mastodon answers 429 with a rate-limit error and 503 with a busy error, and the app pauses automatic requests for five minutes on either. Misskey answers `UNAVAILABLE` when no translator is configured or the call failed. The adapter maps it to unsupported, and the owner then stops automatic requests for that account session. Misskey posts carry no language, so a post in the reader's language is translated and then hidden when the answer names the same source language. Not verified on a live server: the translation provider, the quota and the rate limits.
 
 ## Polls
 

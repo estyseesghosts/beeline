@@ -15,11 +15,11 @@ Complete `docs/03_infdev.md`: slices S1 to S6 (hashtag input, Photo Grid black t
 
 # Completed
 
-S1 `4b9871d6` hashtag input. S2 `f5e477ce` Photo Grid black tile investigation: debug-only `MediaLoadDiagnostics`. S3 `15828318` edge to edge. S4 (this commit) drop shadows replace the gradient, blur 12 dp to 16 dp, composer blur and shadows.
+S1 `4b9871d6` hashtag input. S2 `f5e477ce` Photo Grid black tile investigation: debug-only `MediaLoadDiagnostics`. S3 `15828318` edge to edge. S4 drop shadows replace the gradient, blur 12 dp to 16 dp, composer blur and shadows. S5 (this commit) automatic translation.
 
 # Current slice
 
-S4 shadows and blur (this commit), including the composer buttons (owner request). S5 is next.
+S5 automatic translation (this commit). S6 is next.
 
 # Files involved
 
@@ -69,9 +69,11 @@ Not run: transparent bars on a phone, API 29 emulator (no system image installed
 
 S4: the S4-D1 inventory table is in `docs/wiki/ui-and-navigation.md` ("Floating chrome depth: shadows and blur"). Token 6 dp, chosen on the emulator in the light theme. Pure black: the shadow is accepted as is (plan default). Device (emulator-5554, API 37, compact, light theme): no gradient, shadows on the pill, buttons, chips, search field and composer bubbles, blur under the chips and composer bubbles. Not run: bright photo check, dark themes, 600/840 dp, font scale 2.0, SM-G986W frame check, API 29/30.
 
+S5: focused tests (`PostTranslationOwnerTest`, `PostRowAutomaticTranslationTest`, preferences and adapter tests) pass. A bounded-entries test found that an in-flight oldest entry was dropped from the order but kept in the map. It is fixed. The target language reads through `rememberTranslationTargetLanguage()`. The setting reaches the owner as a state setter (`applyAutomaticSetting`), not as a flow. Mastodon 429 already mapped to a rate-limit error through the shared request wrapper; the translate call now maps it explicitly. An automatic failure is quiet and leaves no entry. Device (emulator-5554): the Language page shows the switch (off by default) and it turns on. No foreign-language post appeared in a short scroll of mstdn.ca, so no live translation was checked. Not run: dvd.chat checks, followers-only post, request log while scrolling, account switch, font scale 2.0.
+
 # Next
 
-S5.
+S6.
 
 # Blockers
 

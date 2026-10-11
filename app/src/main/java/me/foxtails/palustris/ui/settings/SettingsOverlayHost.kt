@@ -139,6 +139,7 @@ fun SettingsOverlayHost(
         onTrackingCleanup = settingsModel::setTrackingCleanup,
         onCombineRelatedHashtags = settingsModel::setCombineRelatedHashtags,
         onAutoplayVideos = settingsModel::setAutoplayVideos,
+        onAlwaysTranslatePosts = settingsModel::setAlwaysTranslatePosts,
         onContentWarningRules = settingsModel::setContentWarningRules,
         onHiddenContentPresentation = settingsModel::setHiddenContentPresentation,
         postPreferences = postPreferences,

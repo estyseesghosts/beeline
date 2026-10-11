@@ -15,6 +15,8 @@ data class AppPreferences(
     val cleanTrackingParameters: Boolean = false,
     val combineRelatedHashtags: Boolean = true,
     val autoplayVideos: Boolean = true,
+    /** Shows the server translation of every translatable post without a tap. Off by default. */
+    val alwaysTranslatePosts: Boolean = false,
     val contentWarningRules: ContentWarningRules = ContentWarningRules(),
     val hiddenContentPresentation: HiddenContentPresentation = HiddenContentPresentation.Placeholder,
 )

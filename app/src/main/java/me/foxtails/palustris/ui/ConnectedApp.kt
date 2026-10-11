@@ -220,6 +220,7 @@ fun ConnectedApp(
                     compactWideNavigationAnchor = appPreferences.preferences.compactWideNavigationAnchor,
                     initialNotificationRoute = initialNotificationRoute,
                     onOpenSettings = { settingsVisible = true },
+                    alwaysTranslatePosts = appPreferences.preferences.alwaysTranslatePosts,
                 )
             }
         }

@@ -99,6 +99,21 @@ class AppPreferencesRepositoryTest {
     }
 
     @Test
+    fun alwaysTranslatePostsIsOffByDefaultAndRoundTripsTrue() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertEquals(false, FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.alwaysTranslatePosts)
+
+        // A file written by an earlier build has no key and keeps manual translation.
+        file.writeText("""{"colorScheme":"Palette"}""")
+        val legacy = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(false, legacy.alwaysTranslatePosts)
+
+        FileAppPreferencesRepository(context).update { it.copy(alwaysTranslatePosts = true) }
+        val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(true, restored.alwaysTranslatePosts)
+    }
+
+    @Test
     fun autoplayVideosDefaultsToTrueAndRoundTripsFalse() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         assertEquals(true, FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.autoplayVideos)

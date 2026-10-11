@@ -52,6 +52,7 @@ fun SettingsHost(
     onTrackingCleanup: (Boolean) -> Unit = {},
     onCombineRelatedHashtags: (Boolean) -> Unit = {},
     onAutoplayVideos: (Boolean) -> Unit = {},
+    onAlwaysTranslatePosts: (Boolean) -> Unit = {},
     onContentWarningRules: (me.foxtails.palustris.domain.ContentWarningRules) -> Unit = {},
     onHiddenContentPresentation: (me.foxtails.palustris.domain.HiddenContentPresentation) -> Unit = {},
     postPreferences: PostPreferences = PostPreferences(),
@@ -166,7 +167,12 @@ fun SettingsHost(
                     onCombineRelatedHashtags = onCombineRelatedHashtags,
                     onAutoplayVideos = onAutoplayVideos,
                 )
-                SettingsRoute.Language -> LanguageSettingsScreen(state.preferences.language, onLanguage)
+                SettingsRoute.Language -> LanguageSettingsScreen(
+                    selected = state.preferences.language,
+                    onSelected = onLanguage,
+                    alwaysTranslatePosts = state.preferences.alwaysTranslatePosts,
+                    onAlwaysTranslatePosts = onAlwaysTranslatePosts,
+                )
                 SettingsRoute.Notifications -> NotificationAccountsScreen(accounts, onNotificationAccount)
                 is SettingsRoute.NotificationAccount -> NotificationSettingsScreen(
                     state = notificationSettingsState,
