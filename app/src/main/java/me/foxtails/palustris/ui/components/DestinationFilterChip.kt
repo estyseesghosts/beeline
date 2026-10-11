@@ -66,6 +66,7 @@ internal fun DestinationFilterChip(entry: FilterChipEntry, modifier: Modifier = 
             if (longPressed[0]) longPressed[0] = false else entry.onClick()
         },
         enabled = entry.enabled,
+        border = destinationChipBorder(entry.selected),
         interactionSource = interactionSource,
         label = { Text(entry.label) },
         trailingIcon = entry.onDismiss?.let { dismiss ->

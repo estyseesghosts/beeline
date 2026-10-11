@@ -881,3 +881,12 @@ Home and the Photo Grid share one chip row: built-in timelines, then lists, hash
 - On the first refresh of a session, a Mastodon account follows every tag it saved on the device. A tag that fails stays saved and is tried next session.
 - The Home row scrolls the selected chip into view only when it is not already fully visible, so the inline caret stays put.
 - Photo Grid Search chip (M6): the grid shows the Search pages as a first, dismissible chip. It is never saved.
+
+## Outline colors (infdev 02 S2)
+
+`selectedAppColorScheme` tints `outline` and `outlineVariant` with the palette accent. `outline` moves away from `surface` and
+`surfaceContainer` until it keeps 3:1 contrast (`accessibleOutline`), so bright hues such as yellow get a darker light-theme tone.
+`outlineVariant` is a soft accent tone (lightness 0.80 light, 0.30 dark). The monochrome and system schemes are unchanged.
+`destinationChipBorder` in `ui/components/ChipBorder.kt` is the one chip border rule: unselected chips use `outlineVariant`, selected
+chips have no border. `DestinationFilterChip` and the chip caret call it. Source: `AppColorSchemesTest`. Not device checked: dividers,
+`TrendingLinkCard`, the thread connector, the composer target rail and the settings swatch border read the same roles.

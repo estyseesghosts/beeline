@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
@@ -77,6 +78,7 @@ fun selectedAppColorScheme(
     val onSurfaceVariant = tone(seed, if (darkTheme) 0.78f else 0.34f, if (darkTheme) 0.12f else 0.14f)
     val error = if (darkTheme) Color(0xFFFFB4AB) else Color(0xFFBA1A1A)
     val errorContainer = if (darkTheme) Color(0xFF93000A) else Color(0xFFFFDAD6)
+    val surfaceContainer = tone(seed, if (darkTheme) 0.16f else 0.94f, if (darkTheme) 0.12f else 0.06f)
     val base = if (darkTheme) darkColorScheme() else lightColorScheme()
     return base.copy(
         primary = primary,
@@ -105,14 +107,14 @@ fun selectedAppColorScheme(
         onError = contrasting(error),
         errorContainer = errorContainer,
         onErrorContainer = contrasting(errorContainer),
-        outline = tone(seed, 0.22f, if (darkTheme) 0.62f else 0.50f),
-        outlineVariant = tone(seed, if (darkTheme) 0.16f else 0.12f, if (darkTheme) 0.34f else 0.78f),
+        outline = accessibleOutline(seed, darkTheme, listOf(neutralSurface, surfaceContainer)),
+        outlineVariant = tone(seed, if (darkTheme) 0.30f else 0.80f, if (darkTheme) 0.50f else 0.60f),
         scrim = Color.Black,
         surfaceBright = tone(seed, if (darkTheme) 0.24f else 0.98f, if (darkTheme) 0.16f else 0.04f),
         surfaceDim = tone(seed, if (darkTheme) 0.10f else 0.90f, if (darkTheme) 0.04f else 0.10f),
         surfaceContainerLowest = tone(seed, if (darkTheme) 0.11f else 1f, if (darkTheme) 0.03f else 0.02f),
         surfaceContainerLow = tone(seed, if (darkTheme) 0.13f else 0.97f, if (darkTheme) 0.09f else 0.04f),
-        surfaceContainer = tone(seed, if (darkTheme) 0.16f else 0.94f, if (darkTheme) 0.12f else 0.06f),
+        surfaceContainer = surfaceContainer,
         surfaceContainerHigh = tone(seed, if (darkTheme) 0.20f else 0.90f, if (darkTheme) 0.17f else 0.08f),
         surfaceContainerHighest = tone(seed, if (darkTheme) 0.24f else 0.86f, if (darkTheme) 0.18f else 0.10f),
     )
@@ -138,6 +140,30 @@ private fun tone(seed: PaletteSeed, lightness: Float, saturationScale: Float): C
     saturation = (seed.saturation * saturationScale).coerceIn(0f, 1f),
     lightness = lightness.coerceIn(0f, 1f),
 )
+
+/**
+ * The accent-tinted outline tone, moved away from the surfaces until it keeps [MIN_OUTLINE_CONTRAST]
+ * against every one of them. Bright hues such as yellow need a darker light-theme outline than blue.
+ */
+private fun accessibleOutline(seed: PaletteSeed, darkTheme: Boolean, surfaces: List<Color>): Color {
+    var lightness = if (darkTheme) 0.60f else 0.50f
+    val step = if (darkTheme) 0.02f else -0.02f
+    var outline = tone(seed, lightness, 0.70f)
+    while (lightness in 0.05f..0.95f && surfaces.any { contrastRatio(outline, it) < MIN_OUTLINE_CONTRAST }) {
+        lightness += step
+        outline = tone(seed, lightness, 0.70f)
+    }
+    return outline
+}
+
+internal const val MIN_OUTLINE_CONTRAST = 3f
+
+/** WCAG contrast ratio between two opaque colors. */
+internal fun contrastRatio(a: Color, b: Color): Float {
+    val la = a.luminance()
+    val lb = b.luminance()
+    return (maxOf(la, lb) + 0.05f) / (minOf(la, lb) + 0.05f)
+}
 
 private fun contrasting(color: Color): Color {
     val brightness = color.red * 0.2126f + color.green * 0.7152f + color.blue * 0.0722f

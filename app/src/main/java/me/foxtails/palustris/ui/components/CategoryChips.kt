@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -234,7 +233,7 @@ private fun DestinationChipVisibilityButton(
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainer,
         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        border = FilterChipDefaults.filterChipBorder(enabled = true, selected = false),
+        border = destinationChipBorder(selected = false),
     ) {
         IconButton(
             onClick = onToggleVisibility,
