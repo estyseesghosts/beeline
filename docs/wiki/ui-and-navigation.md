@@ -898,3 +898,9 @@ hashtags. `hashtagBubbleSide` picks the side with more room (below on a tie); th
 (`WindowAnchorPositionProvider(keepSide = true)`) and the entry order (`hashtagBubbleEntries`) all use that one result. "See all?"
 and the expanded "close" pill sit farthest from the anchor: last below it, first above it. Traversal reads hashtags before the
 action. Source: `HashtagBubbleTest`. Not device checked.
+
+## Inline bubble height (infdev 02 S4)
+
+`entityContent` keeps the 1.5 em placeholder so line metrics do not change, and insets the bubble `Surface` by 0.5 dp above and below.
+Bubbles on adjacent lines thus leave a 1 dp gap. Source: `InlineEmojiTextTest.entityBubbleIsOneDpShorterThanItsPlaceholder`.
+The fit of the icon and label at font scale 2.0 is covered by the logogram test; the line gap is not device checked.

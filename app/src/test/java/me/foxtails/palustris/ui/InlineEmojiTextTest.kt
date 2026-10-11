@@ -176,6 +176,20 @@ class InlineEmojiTextTest {
     }
 
     @Test
+    fun entityBubbleIsOneDpShorterThanItsPlaceholder() {
+        var placeholderPx = 0f
+        show {
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val style = androidx.compose.material3.MaterialTheme.typography.bodyLarge
+            placeholderPx = with(density) { style.fontSize.toPx() } * 1.5f
+            InlineEmojiText("see https://example.org/a", emptyMap(), style = style, enableInlineEntities = true)
+        }
+        val bubble = compose.onNodeWithContentDescription("Link example.org").fetchSemanticsNode().boundsInRoot
+        val oneDp = compose.activity.resources.displayMetrics.density
+        assertEquals(placeholderPx - oneDp, bubble.height, 1.5f)
+    }
+
+    @Test
     fun entityLabelsAreDirectionIsolatedButTargetsStayExact() {
         var openedUrl = ""
         show {

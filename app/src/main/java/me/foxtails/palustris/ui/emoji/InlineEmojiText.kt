@@ -416,8 +416,11 @@ private fun entityContent(
     }
     val interactionSource = remember { MutableInteractionSource() }
     Surface(
+        // The placeholder keeps the 1.5 em line metrics. The bubble is 1 dp shorter inside it, so bubbles
+        // on adjacent lines leave a gap.
         modifier = Modifier
             .fillMaxSize()
+            .padding(vertical = ENTITY_VERTICAL_INSET)
             .then(
                 onClick?.let { callback ->
                     Modifier.springClickable(interactionSource, role = Role.Button, onClick = callback)
@@ -453,6 +456,7 @@ private fun entityContent(
 }
 
 private val ENTITY_EDGE_PADDING = 6.dp
+private val ENTITY_VERTICAL_INSET = 0.5.dp
 private val ENTITY_ICON_GAP = 4.dp
 
 private enum class DisplayIsolation(val opener: Char) {
