@@ -730,11 +730,11 @@ Sources: `ui/motion/HapticEvents.kt`, `HapticEventsTest`. Device haptic feel is 
 
 ## Search entry states (Phase 7D)
 
-`SearchPane` renders one field in three visual states (`SearchEntryMode`): `Idle` (compact bubble with the placeholder),
-`Entry` (expanded while the field has focus, where the IME shows), and `Results` (compact bubble that still shows the query).
+`SearchPane` renders one field in three visual states (`SearchEntryMode`): `Idle` (placeholder),
+`Entry` (the field has focus, where the IME shows), and `Results` (the field still shows the query).
 `searchEntryMode(query, focused)` derives the state; the query stays with Search and `ShellNavigator`, and focus stays
-in the field. The field stays composed through every state, so the query, caret, and focus survive; only its width animates
-(`gentleSize`, snapped under reduced motion). The IME search action submits and clears focus, which collapses to `Results`.
+in the field. The field stays composed through every state, so the query, caret, and focus survive. It always fills the width its caller grants (infdev 02 S1), so
+focus and submit do not resize it. The IME search action submits and clears focus, which moves to `Results`.
 With the keyboard already hidden, Back clears focus before it leaves Search. Tall and wide presentations share the field
 and differ only in the width their caller grants. A query cleared by an account change returns the field to `Idle`.
 Sources: `SearchEntryStatesTest`, `SearchClearanceTest`. Focus is not saved across rotation (the query is). Device feel and

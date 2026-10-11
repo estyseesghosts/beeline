@@ -58,8 +58,6 @@ class SearchEntryStatesTest {
 
     private fun inMode(mode: SearchEntryMode) = SemanticsMatcher.expectValue(SearchEntryModeKey, mode)
 
-    private val density get() = compose.activity.resources.displayMetrics.density
-
     @Test
     fun modeFollowsFocusAndQuery() {
         assertEquals(SearchEntryMode.Idle, searchEntryMode("", focused = false))
@@ -70,7 +68,7 @@ class SearchEntryStatesTest {
     }
 
     @Test
-    fun idleBubbleExpandsForEntryAndCollapsesToAResultsBubbleThatKeepsTheQuery() {
+    fun fieldKeepsOneWidthThroughIdleEntryAndResultsAndKeepsTheQuery() {
         show()
         field().assert(inMode(SearchEntryMode.Idle))
         val idleWidth = field().fetchSemanticsNode().boundsInRoot.width
@@ -79,15 +77,15 @@ class SearchEntryStatesTest {
         field().assert(inMode(SearchEntryMode.Entry))
         field().performTextInput("alice")
         assertTrue(
-            "entry is wider than the bubble",
-            field().fetchSemanticsNode().boundsInRoot.width > idleWidth,
+            "entry keeps the idle width",
+            field().fetchSemanticsNode().boundsInRoot.width == idleWidth,
         )
 
         field().performImeAction()
         assertEquals(listOf("alice"), submitted)
         field().assert(inMode(SearchEntryMode.Results))
         field().assertTextContains("alice")
-        assertTrue(field().fetchSemanticsNode().boundsInRoot.width <= 240f * density + 1f)
+        assertEquals(idleWidth, field().fetchSemanticsNode().boundsInRoot.width)
 
         field().performClick()
         field().assert(inMode(SearchEntryMode.Entry))
@@ -113,7 +111,7 @@ class SearchEntryStatesTest {
         show()
 
         field().assert(inMode(SearchEntryMode.Results)).assertIsDisplayed()
-        assertTrue(field().fetchSemanticsNode().boundsInRoot.width <= 240f * density + 1f)
+        assertTrue(field().fetchSemanticsNode().boundsInRoot.width <= compose.activity.resources.displayMetrics.widthPixels.toFloat())
     }
 
     @Test

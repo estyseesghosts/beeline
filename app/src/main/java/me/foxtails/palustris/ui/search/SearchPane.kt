@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -414,13 +413,13 @@ private fun SearchLookupPane(search: SearchState, bottomClearance: Dp) {
 
 /** The three visual states of the one Search field. */
 internal enum class SearchEntryMode {
-    /** Compact bubble with the placeholder; nothing typed. */
+    /** Placeholder shown; nothing typed. */
     Idle,
 
-    /** Expanded field with focus, where the IME is shown. */
+    /** Field with focus, where the IME is shown. */
     Entry,
 
-    /** Compact bubble that still shows the submitted or restored query. */
+    /** Field that still shows the submitted or restored query. */
     Results,
 }
 
@@ -433,29 +432,24 @@ internal fun searchEntryMode(query: String, focused: Boolean): SearchEntryMode =
 
 internal val SearchEntryModeKey = SemanticsPropertyKey<SearchEntryMode>("SearchEntryMode")
 
-private val SearchBubbleMaxWidth = 240.dp
-
 /**
  * Search's single field. It stays composed through every state, so the query, focus, and caret
- * survive the change; only its width animates. Focus expands it for entry. Submitting or leaving
- * focus collapses it to a bubble that keeps the query visible. Tall and wide presentations share it
- * and differ only in the width their caller grants.
+ * survive the change. It always fills the width its caller grants, so focus and submit do not
+ * resize it. Tall and wide presentations share it and differ only in that width.
  */
 @Composable
 private fun SearchField(query: String, onSubmit: () -> Unit, onQueryChange: (String) -> Unit) {
-    val scheme = LocalPalustrisMotionScheme.current
     val searchFieldDescription = stringResource(R.string.search_field)
     val focusManager = LocalFocusManager.current
     var focused by remember { mutableStateOf(false) }
     val mode = searchEntryMode(query, focused)
     // With the keyboard already hidden, Back first closes the entry instead of leaving Search.
     BackHandler(enabled = focused) { focusManager.clearFocus() }
-    val width = if (mode == SearchEntryMode.Entry) Modifier.fillMaxWidth() else Modifier.widthIn(max = SearchBubbleMaxWidth)
     val submit = { onSubmit(); focusManager.clearFocus() }
     TextField(
         value = query,
         onValueChange = onQueryChange,
-        modifier = Modifier.animateContentSize(scheme.gentleSize).then(width)
+        modifier = Modifier.fillMaxWidth()
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = searchFieldDescription; this[SearchEntryModeKey] = mode },
         placeholder = { Text(stringResource(R.string.search_placeholder), maxLines = 1) },
