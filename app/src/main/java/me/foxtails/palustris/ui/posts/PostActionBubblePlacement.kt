@@ -10,10 +10,16 @@ import kotlin.math.roundToInt
 
 internal enum class BubblePlacement { Above, Below }
 
+/**
+ * Places a popup beside an anchor. By default it flips to the other side when its side does not fit.
+ * With [keepSide] it stays on the requested side and aligns to the anchor's end, for callers that
+ * already chose the side with room and sized the popup to it.
+ */
 internal class WindowAnchorPositionProvider(
     private val targetBounds: Rect,
     private val placement: BubblePlacement,
     private val edgeMargin: Int = 8,
+    private val keepSide: Boolean = false,
     private val onPlaced: ((IntOffset) -> Unit)? = null,
 ) : PopupPositionProvider {
     override fun calculatePosition(
@@ -33,7 +39,7 @@ internal class WindowAnchorPositionProvider(
         val preferredX = when (placement) {
             BubblePlacement.Above -> anchor.center.x.roundToInt() - popupContentSize.width / 2
             BubblePlacement.Below -> anchor.right.roundToInt() - popupContentSize.width
-        }
+        }.let { if (keepSide && placement == BubblePlacement.Above) anchor.right.roundToInt() - popupContentSize.width else it }
         val x = preferredX.coerceIn(
             margin,
             (windowSize.width - popupContentSize.width - margin).coerceAtLeast(margin),
@@ -47,7 +53,7 @@ internal class WindowAnchorPositionProvider(
             BubblePlacement.Below -> anchor.top.roundToInt() - popupContentSize.height - margin
         }
         val maxY = (windowSize.height - popupContentSize.height - margin).coerceAtLeast(margin)
-        val y = if (preferredY in margin..maxY) preferredY else alternateY.coerceIn(margin, maxY)
+        val y = if (keepSide || preferredY in margin..maxY) preferredY.coerceIn(margin, maxY) else alternateY.coerceIn(margin, maxY)
         return IntOffset(x, y).also { onPlaced?.invoke(it) }
     }
 }

@@ -140,17 +140,21 @@ fun PostActionBubbleHost(
         ReactionPickerSheet(current.ownedPost.post, emojiCatalog, recents, actions, selectReaction, dismiss)
         return
     }
+    val hashtagSide = (current as? PostActionBubbleTarget.HashtagList)
+        ?.let { hashtagBubbleSide(current.anchorBounds, hashtagBottomClearance) }
     AnimatedBubblePopup(
         anchorBounds = current.anchorBounds,
-        placement = if (current is PostActionBubbleTarget.Reaction) BubblePlacement.Above else BubblePlacement.Below,
+        placement = if (current is PostActionBubbleTarget.Reaction) BubblePlacement.Above else hashtagSide ?: BubblePlacement.Below,
+        keepSide = hashtagSide != null,
         visible = visible,
         onDismiss = dismiss,
     ) {
         when (current) {
             is PostActionBubbleTarget.HashtagList -> HashtagBubble(
                 hashtags = current.hashtags,
-                maxHeight = hashtagBubbleMaxHeight(current.anchorBounds, hashtagBottomClearance),
+                maxHeight = hashtagBubbleMaxHeight(current.anchorBounds, hashtagBottomClearance, hashtagSide ?: BubblePlacement.Below),
                 openingKey = hashtagOpeningKey,
+                side = hashtagSide ?: BubblePlacement.Below,
                 onSelected = { hashtag ->
                     onHashtagSelected(hashtag)
                     dismiss()
@@ -192,13 +196,14 @@ private fun reactionSurface(target: PostActionBubbleTarget.Reaction, mode: React
 private fun AnimatedBubblePopup(
     anchorBounds: Rect,
     placement: BubblePlacement,
+    keepSide: Boolean = false,
     visible: Boolean,
     onDismiss: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     val motionScheme = LocalPalustrisMotionScheme.current
     Popup(
-        popupPositionProvider = WindowAnchorPositionProvider(anchorBounds, placement),
+        popupPositionProvider = WindowAnchorPositionProvider(anchorBounds, placement, keepSide = keepSide),
         onDismissRequest = onDismiss,
         properties = PopupProperties(
             focusable = true,
@@ -324,13 +329,25 @@ private fun Modifier.reactionBubbleFlick(
     }
 }
 
+/** The side of the post anchor with more room for the hashtag bubble. */
 @Composable
-private fun hashtagBubbleMaxHeight(anchorBounds: Rect, bottomClearance: Dp): Dp {
+private fun hashtagBubbleSide(anchorBounds: Rect, bottomClearance: Dp): BubblePlacement {
+    val density = LocalDensity.current
+    return hashtagBubbleSide(
+        anchor = anchorBounds,
+        windowHeight = LocalWindowInfo.current.containerSize.height.toFloat(),
+        bottomClearance = with(density) { bottomClearance.toPx() },
+        margin = with(density) { 8.dp.toPx() },
+    )
+}
+
+/** The room on the chosen [side], so the bubble never has to move to the other side. */
+@Composable
+private fun hashtagBubbleMaxHeight(anchorBounds: Rect, bottomClearance: Dp, side: BubblePlacement): Dp {
     val density = LocalDensity.current
     val windowHeight = with(density) { LocalWindowInfo.current.containerSize.height.toDp() }
     val anchorTop = with(density) { anchorBounds.top.toDp() }
     val anchorBottom = with(density) { anchorBounds.bottom.toDp() }
-    val below = windowHeight - bottomClearance - anchorBottom - 8.dp
-    val above = anchorTop - 8.dp
-    return maxOf(1.dp, maxOf(below, above))
+    val room = if (side == BubblePlacement.Below) windowHeight - bottomClearance - anchorBottom - 8.dp else anchorTop - 8.dp
+    return maxOf(1.dp, room)
 }

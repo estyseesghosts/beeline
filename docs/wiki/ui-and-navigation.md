@@ -890,3 +890,11 @@ Home and the Photo Grid share one chip row: built-in timelines, then lists, hash
 `destinationChipBorder` in `ui/components/ChipBorder.kt` is the one chip border rule: unselected chips use `outlineVariant`, selected
 chips have no border. `DestinationFilterChip` and the chip caret call it. Source: `AppColorSchemesTest`. Not device checked: dividers,
 `TrendingLinkCard`, the thread connector, the composer target rail and the settings swatch border read the same roles.
+
+## Hashtag bubble (infdev 02 S3)
+
+`HashtagBubble` sizes to its widest pill (`IntrinsicSize.Max`, at most 280 dp). "See all?" shows only when the compact list hides
+hashtags. `hashtagBubbleSide` picks the side with more room (below on a tie); the max height, the popup position
+(`WindowAnchorPositionProvider(keepSide = true)`) and the entry order (`hashtagBubbleEntries`) all use that one result. "See all?"
+and the expanded "close" pill sit farthest from the anchor: last below it, first above it. Traversal reads hashtags before the
+action. Source: `HashtagBubbleTest`. Not device checked.
