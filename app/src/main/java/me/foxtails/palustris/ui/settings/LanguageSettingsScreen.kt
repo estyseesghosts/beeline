@@ -1,5 +1,7 @@
 package me.foxtails.palustris.ui.settings
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,30 +25,8 @@ import me.foxtails.palustris.domain.AppLanguage
 
 /** Every catalog language stays reachable on compact screens. One row is selected. */
 @Composable
-fun LanguageSettingsScreen(
-    selected: AppLanguage,
-    onSelected: (AppLanguage) -> Unit,
-    alwaysTranslatePosts: Boolean = false,
-    onAlwaysTranslatePosts: (Boolean) -> Unit = {},
-) {
+fun LanguageSettingsScreen(selected: AppLanguage, onSelected: (AppLanguage) -> Unit) {
     LazyColumn(Modifier.fillMaxWidth().selectableGroup()) {
-        // The setting is about reading, so it sits with the language. Its summary names the privacy cost.
-        item(key = "always-translate") {
-            val switchDescription = stringResource(R.string.settings_always_translate_posts_a11y)
-            ListItem(
-                modifier = Modifier.testTag("always_translate_posts"),
-                headlineContent = { Text(stringResource(R.string.settings_always_translate_posts)) },
-                supportingContent = { Text(stringResource(R.string.settings_always_translate_posts_summary)) },
-                trailingContent = {
-                    Switch(
-                        checked = alwaysTranslatePosts,
-                        onCheckedChange = onAlwaysTranslatePosts,
-                        modifier = Modifier.semantics { contentDescription = switchDescription },
-                    )
-                },
-            )
-            HorizontalDivider()
-        }
         items(AppLanguage.entries, key = { it.name }) { language ->
             val headline =
                 if (language == AppLanguage.SystemDefault) stringResource(R.string.language_system_default)
@@ -71,6 +51,39 @@ fun LanguageSettingsScreen(
             )
         }
     }
+}
+
+/** The Language page: the automatic translation switch, then the language list. */
+@Composable
+fun LanguageSettingsPage(
+    selected: AppLanguage,
+    onSelected: (AppLanguage) -> Unit,
+    alwaysTranslatePosts: Boolean,
+    onAlwaysTranslatePosts: (Boolean) -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        // The setting is about reading, so it sits with the language. Its summary names the privacy cost.
+        AlwaysTranslateRow(alwaysTranslatePosts, onAlwaysTranslatePosts)
+        HorizontalDivider()
+        LanguageSettingsScreen(selected, onSelected)
+    }
+}
+
+@Composable
+private fun AlwaysTranslateRow(checked: Boolean, onChecked: (Boolean) -> Unit) {
+    val switchDescription = stringResource(R.string.settings_always_translate_posts_a11y)
+    ListItem(
+        modifier = Modifier.testTag("always_translate_posts"),
+        headlineContent = { Text(stringResource(R.string.settings_always_translate_posts)) },
+        supportingContent = { Text(stringResource(R.string.settings_always_translate_posts_summary)) },
+        trailingContent = {
+            Switch(
+                checked = checked,
+                onCheckedChange = onChecked,
+                modifier = Modifier.semantics { contentDescription = switchDescription },
+            )
+        },
+    )
 }
 
 @Composable

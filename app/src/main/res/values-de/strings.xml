@@ -167,6 +167,9 @@
     <string name="settings_always_translate_posts">Beiträge automatisch übersetzen</string>
     <string name="settings_always_translate_posts_summary">Zeigt Übersetzungen von Beiträgen in anderen Sprachen. Dein Server sendet den Beitragstext an seinen Übersetzungsdienst. Es werden nur öffentliche und nicht gelistete Beiträge übersetzt.</string>
     <string name="settings_always_translate_posts_a11y">Beiträge automatisch übersetzen</string>
+    <string name="photo_grid_tile_loading">Bild wird geladen</string>
+    <string name="photo_grid_tile_failed">Bild nicht geladen</string>
+    <string name="photo_grid_tile_retry">Bild erneut laden</string>
     <string name="video_mute">Video stummschalten</string>
     <string name="video_unmute">Videoton einschalten</string>
     <string name="video_play">Video abspielen</string>

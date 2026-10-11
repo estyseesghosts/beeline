@@ -28,6 +28,9 @@
     <string name="settings_always_translate_posts">पोस्ट अपने आप अनुवाद करें</string>
     <string name="settings_always_translate_posts_summary">दूसरी भाषाओं की पोस्ट का अनुवाद दिखाता है। आपका सर्वर पोस्ट का टेक्स्ट अपने अनुवाद प्रदाता को भेजता है। केवल सार्वजनिक और असूचीबद्ध पोस्ट का अनुवाद होता है।</string>
     <string name="settings_always_translate_posts_a11y">पोस्ट अपने आप अनुवाद करें</string>
+    <string name="photo_grid_tile_loading">छवि लोड हो रही है</string>
+    <string name="photo_grid_tile_failed">छवि लोड नहीं हुई</string>
+    <string name="photo_grid_tile_retry">छवि फिर लोड करें</string>
     <string name="video_mute">वीडियो म्यूट करें</string>
     <string name="video_unmute">वीडियो की आवाज़ चालू करें</string>
     <string name="video_play">वीडियो चलाएँ</string>

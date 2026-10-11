@@ -110,6 +110,9 @@
     <string name="settings_always_translate_posts">投稿を自動で翻訳</string>
     <string name="settings_always_translate_posts_summary">他の言語の投稿の翻訳を表示します。サーバーが投稿のテキストを翻訳プロバイダーに送信します。公開と未収載の投稿だけを翻訳します。</string>
     <string name="settings_always_translate_posts_a11y">投稿を自動で翻訳</string>
+    <string name="photo_grid_tile_loading">画像を読み込み中</string>
+    <string name="photo_grid_tile_failed">画像を読み込めませんでした</string>
+    <string name="photo_grid_tile_retry">画像を再試行</string>
     <string name="video_mute">動画をミュート</string>
     <string name="video_unmute">動画のミュートを解除</string>
     <string name="video_play">動画を再生</string>

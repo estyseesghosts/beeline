@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -121,6 +122,8 @@ internal fun PhotoGridTile(
         stringResource(R.string.a11y_sensitive_media, item.attachmentIndex + 1)
     }
     var bounds by remember { mutableStateOf(Rect.Zero) }
+    // A tap on a failed tile raises this counter, which makes the tile ask for its image again.
+    var attempt by remember(item.attachment) { mutableIntStateOf(0) }
     val haptics = LocalHapticFeedback.current
     val quickViewLabel = stringResource(R.string.photo_quick_view_open)
     val isVideo = item.attachment.kind == MediaKind.Video
@@ -165,7 +168,7 @@ internal fun PhotoGridTile(
             // The decode size follows the lane width the card actually received.
             val decodeWidthPx = constraints.maxWidth.coerceAtLeast(1)
             val decodeHeightPx = constraints.maxHeight.coerceAtLeast(1)
-            val imageRequest = remember(item, decision, decodeWidthPx, decodeHeightPx) {
+            val imageRequest = remember(item, decision, decodeWidthPx, decodeHeightPx, attempt) {
                 (decision as? MediaRequestDecision.Request)?.let { request ->
                     mediaImageLoader.request(
                         context = context,
@@ -176,7 +179,7 @@ internal fun PhotoGridTile(
                         attachmentIndex = item.attachmentIndex,
                         decodeWidthPx = decodeWidthPx,
                         decodeHeightPx = decodeHeightPx,
-                    )
+                    ).newBuilder().setParameter("retry", attempt, memoryCacheKey = null).build()
                 }
             }
             val painter = imageRequest?.let { rememberAsyncImagePainter(it, mediaImageLoader.imageLoader) }
@@ -201,6 +204,10 @@ internal fun PhotoGridTile(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                 )
+            }
+            // Over the neutral surface: a quiet indicator while loading, a retry control after a failure.
+            if (revealed && painter != null) {
+                PhotoGridTileStateLayer(phase = tilePhase(painter.state), onRetry = { attempt++ })
             }
         }
     }

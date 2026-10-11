@@ -15,15 +15,15 @@ Complete `docs/03_infdev.md`: slices S1 to S6 (hashtag input, Photo Grid black t
 
 # Completed
 
-S1 `4b9871d6` hashtag input. S2 `f5e477ce` Photo Grid black tile investigation: debug-only `MediaLoadDiagnostics`. S3 `15828318` edge to edge. S4 drop shadows replace the gradient, blur 12 dp to 16 dp, composer blur and shadows. S5 (this commit) automatic translation.
+S1 `4b9871d6` hashtag input. S2 `f5e477ce` Photo Grid black tile investigation: debug-only `MediaLoadDiagnostics`. S3 `15828318` edge to edge. S4 drop shadows replace the gradient, blur 12 dp to 16 dp, composer blur and shadows. S5 `8850e47a` automatic translation. S6 (this commit) Photo Grid tile fix: tile states and one retry.
 
 # Current slice
 
-S5 automatic translation (this commit). S6 is next.
+All slices S1 to S6 are committed. Next is the testsigned release build.
 
 # Files involved
 
-`ui/chips/AddHashtagDialog.kt`, `domain/HashtagValidation.kt`, `ui/chips/FeedChipCatalog.kt`, `FileSavedHashtagRepository`, `ui/chips/FeedChipEntries.kt`.
+See the commits and `docs/03_infdev.md`. Main owners: `ui/chips/AddHashtagDialog.kt`, `data/media/MediaLoadDiagnostics.kt`, `ui/SystemBars.kt`, `ui/components/FloatingControlShadow.kt`, `ui/posts/PostTranslationOwner.kt`, `data/media/MediaRetryInterceptor.kt`, `ui/photogrid/PhotoGridTileState.kt`.
 
 # Verification
 
@@ -71,9 +71,12 @@ S4: the S4-D1 inventory table is in `docs/wiki/ui-and-navigation.md` ("Floating 
 
 S5: focused tests (`PostTranslationOwnerTest`, `PostRowAutomaticTranslationTest`, preferences and adapter tests) pass. A bounded-entries test found that an in-flight oldest entry was dropped from the order but kept in the map. It is fixed. The target language reads through `rememberTranslationTargetLanguage()`. The setting reaches the owner as a state setter (`applyAutomaticSetting`), not as a flow. Mastodon 429 already mapped to a rate-limit error through the shared request wrapper; the translate call now maps it explicitly. An automatic failure is quiet and leaves no entry. Device (emulator-5554): the Language page shows the switch (off by default) and it turns on. No foreign-language post appeared in a short scroll of mstdn.ca, so no live translation was checked. Not run: dvd.chat checks, followers-only post, request log while scrolling, account switch, font scale 2.0.
 
+S6 (start condition met by S2): done D1 (loading and failed states with tap to retry), D3 (one retry on timeout, 5xx and 429 with `Retry-After`, in `MediaRetryInterceptor`), D8 (tests) and D9 (wiki). Dropped from the task state, because S2 found no evidence: D2 User-Agent, D4 thumbnail timeout, D5 AVIF, D6 video first frame, D7 graphics memory. Device (emulator-5554, mstdn.ca, light theme): the same 50-swipe scroll gave 0 HTTP 429 failures (63 before), 7 HTTP 404 failures showed the failed state, and a retry loaded one of them (in the first version, where the whole failed tile was the retry target).
+The first S6 gate failed six Photo Grid tests, because that first failed state covered the whole tile and took the tap that opens the post. The final state makes only a "Retry image" pill interactive. A second change renamed the pill label, because `PhotoGridClearanceTest` looks for the exact text "Retry". The final gate passed. Audit: three function-growth regressions from S3 and S5 (`SystemBars`, `PaneSlot`, `LanguageSettingsScreen`) are fixed in this commit by splitting functions; the audit has no regression that is new against `801044e6` and still exits 1 on findings that predate this work. Not run: dvd.chat after the change, the 200 item scroll on both accounts, the final "Retry image" pill on a device (the last run showed no failed tile), dark themes, font scale 2.0. The plan says to report these.
+
 # Next
 
-S6.
+The full CI-parity gate on the final tree, then the testsigned release build.
 
 # Blockers
 

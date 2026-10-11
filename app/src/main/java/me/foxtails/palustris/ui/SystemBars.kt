@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
+import android.view.View
+import android.view.Window
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.tappableElement
 import androidx.compose.material3.MaterialTheme
@@ -51,33 +53,30 @@ internal fun navigationBarPolicy(
  */
 @Composable
 internal fun SystemBars(mediaViewerOpen: Boolean) {
-    val context = LocalContext.current
     val view = LocalView.current
-    val window = (view.rootView.context.findActivity() ?: context.findActivity())?.window ?: return
+    val window = (view.rootView.context.findActivity() ?: LocalContext.current.findActivity())?.window ?: return
     val background = MaterialTheme.colorScheme.background
-    // The tappable inset is only present with three-button navigation. Gesture navigation reports none.
-    val threeButtonNavigation = WindowInsets.tappableElement.getBottom(LocalDensity.current) > 0
-    val policy = navigationBarPolicy(Build.VERSION.SDK_INT, threeButtonNavigation, background, mediaViewerOpen)
-    // The icons sit on the color behind the bar: the viewer black, an opaque bar, or the theme background.
-    val colorBehindBar = when (policy) {
+    val policy = navigationBarPolicy(Build.VERSION.SDK_INT, rememberThreeButtonNavigation(), background, mediaViewerOpen)
+    SideEffect { window.applyNavigationBar(policy, background, view) }
+}
+
+/** The tappable inset is only present with three-button navigation. Gesture navigation reports none. */
+@Composable
+private fun rememberThreeButtonNavigation(): Boolean = WindowInsets.tappableElement.getBottom(LocalDensity.current) > 0
+
+/** Sets the bar color from [policy]. The icons sit on the color behind the bar: black, an opaque bar, or the theme. */
+private fun Window.applyNavigationBar(policy: NavigationBarPolicy, background: Color, view: View) {
+    val behind = when (policy) {
         NavigationBarPolicy.Black -> Color.Black
         is NavigationBarPolicy.Opaque -> policy.color
         NavigationBarPolicy.Transparent -> background
     }
-    val darkIcons = colorBehindBar.luminance() > 0.5f
-    val barColor = when (policy) {
-        NavigationBarPolicy.Black -> Color.Black
-        is NavigationBarPolicy.Opaque -> policy.color
-        NavigationBarPolicy.Transparent -> Color.Transparent
-    }
-
-    SideEffect {
-        window.setBackgroundDrawable(ColorDrawable(background.toArgb()))
-        window.navigationBarColor = barColor.toArgb()
-        window.navigationBarDividerColor = barColor.toArgb()
-        window.isNavigationBarContrastEnforced = false
-        WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = darkIcons
-    }
+    val barColor = if (policy == NavigationBarPolicy.Transparent) Color.Transparent else behind
+    setBackgroundDrawable(ColorDrawable(background.toArgb()))
+    navigationBarColor = barColor.toArgb()
+    navigationBarDividerColor = barColor.toArgb()
+    isNavigationBarContrastEnforced = false
+    WindowCompat.getInsetsController(this, view).isAppearanceLightNavigationBars = behind.luminance() > 0.5f
 }
 
 private fun Context.findActivity(): Activity? {

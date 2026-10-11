@@ -158,6 +158,9 @@
     <string name="settings_always_translate_posts">自動翻譯貼文</string>
     <string name="settings_always_translate_posts_summary">顯示其他語言貼文的翻譯。你的伺服器會將貼文文字傳送給它的翻譯供應商。只會翻譯公開與不公開列出的貼文。</string>
     <string name="settings_always_translate_posts_a11y">自動翻譯貼文</string>
+    <string name="photo_grid_tile_loading">正在載入圖片</string>
+    <string name="photo_grid_tile_failed">圖片無法載入</string>
+    <string name="photo_grid_tile_retry">重試圖片</string>
     <string name="video_mute">將影片靜音</string>
     <string name="video_unmute">取消影片靜音</string>
     <string name="video_play">播放影片</string>

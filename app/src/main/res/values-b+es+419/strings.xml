@@ -203,6 +203,9 @@
     <string name="settings_always_translate_posts">Traducir publicaciones automáticamente</string>
     <string name="settings_always_translate_posts_summary">Muestra la traducción de las publicaciones en otros idiomas. Tu servidor envía el texto de la publicación a su proveedor de traducción. Solo se traducen las publicaciones públicas y no listadas.</string>
     <string name="settings_always_translate_posts_a11y">Traducir publicaciones automáticamente</string>
+    <string name="photo_grid_tile_loading">Cargando imagen</string>
+    <string name="photo_grid_tile_failed">La imagen no se cargó</string>
+    <string name="photo_grid_tile_retry">Reintentar imagen</string>
     <string name="video_mute">Silenciar video</string>
     <string name="video_unmute">Activar sonido del video</string>
     <string name="video_play">Reproducir video</string>

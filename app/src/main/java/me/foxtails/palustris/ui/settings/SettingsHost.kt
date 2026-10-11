@@ -167,7 +167,7 @@ fun SettingsHost(
                     onCombineRelatedHashtags = onCombineRelatedHashtags,
                     onAutoplayVideos = onAutoplayVideos,
                 )
-                SettingsRoute.Language -> LanguageSettingsScreen(
+                SettingsRoute.Language -> LanguageSettingsPage(
                     selected = state.preferences.language,
                     onSelected = onLanguage,
                     alwaysTranslatePosts = state.preferences.alwaysTranslatePosts,

@@ -860,6 +860,9 @@
     <string name="settings_always_translate_posts">Translate posts automatically</string>
     <string name="settings_always_translate_posts_summary">Shows a translation of posts in other languages. Your server sends the post text to its translation provider. Only public and unlisted posts are translated.</string>
     <string name="settings_always_translate_posts_a11y">Translate posts automatically</string>
+    <string name="photo_grid_tile_loading">Loading image</string>
+    <string name="photo_grid_tile_failed">Image did not load</string>
+    <string name="photo_grid_tile_retry">Retry image</string>
     <string name="video_mute">Mute video</string>
     <string name="video_unmute">Unmute video</string>
     <string name="video_play">Play video</string>

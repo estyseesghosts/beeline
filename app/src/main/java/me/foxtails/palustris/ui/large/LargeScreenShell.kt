@@ -114,90 +114,92 @@ internal fun LargeScreenShell(
     Box(modifier.fillMaxSize().testTag(LARGE_SCREEN_SHELL_TAG)) {
         // The region pads the top and the sides only. Content draws under the bottom bar, and each pane
         // clears it through [LocalLargeBottomInset].
-        BoxWithConstraints(
-            Modifier.fillMaxSize()
-                .windowInsetsPadding(bars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
-                .testTag(LARGE_CONTENT_REGION_TAG),
-        ) {
-            val features = adaptiveInfo.windowPosture.hingeList.map { hinge ->
-                LargeFoldingFeature(
-                    bounds = largeFeatureBoundsInContentPx(hinge.bounds, origin),
-                    isVertical = hinge.isVertical,
-                    isSeparating = hinge.isSeparating,
-                    isOccluding = hinge.isOccluding,
+        CompositionLocalProvider(LocalLargeBottomInset provides bottomInset) {
+            BoxWithConstraints(
+                Modifier.fillMaxSize()
+                    .windowInsetsPadding(bars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+                    .testTag(LARGE_CONTENT_REGION_TAG),
+            ) {
+                val features = adaptiveInfo.windowPosture.hingeList.map { hinge ->
+                    LargeFoldingFeature(
+                        bounds = largeFeatureBoundsInContentPx(hinge.bounds, origin),
+                        isVertical = hinge.isVertical,
+                        isSeparating = hinge.isSeparating,
+                        isOccluding = hinge.isOccluding,
+                    )
+                }
+                val layout = calculateLargePaneLayout(
+                    windowWidthDp = windowWidth.value,
+                    contentWidthDp = maxWidth.value,
+                    contentHeightDp = maxHeight.value,
+                    density = density.density,
+                    foldingFeatures = features,
                 )
-            }
-            val layout = calculateLargePaneLayout(
-                windowWidthDp = windowWidth.value,
-                contentWidthDp = maxWidth.value,
-                contentHeightDp = maxHeight.value,
-                density = density.density,
-                foldingFeatures = features,
-            )
-            val showDetail = hasDetail && twoPane && layout.detail != null
-            val primary = primaryPaneBounds(layout, twoPane)
-            val windowPane = Rect(
-                left = (primary.left + origin.x) / density.density,
-                top = (primary.top + origin.y) / density.density,
-                right = (primary.right + origin.x) / density.density,
-                bottom = (primary.bottom + origin.y) / density.density,
-            )
-            // A chip row breaks out of the outer margin on the sides where the primary pane touches it.
-            // Single-pane detail keeps the margin, and so does every side that borders another pane.
-            val bleed = paneEdgeBleed(
-                primary = primary,
-                windowPane = windowPane,
-                regionWidthPx = with(density) { maxWidth.toPx() },
-                windowWidthDp = windowWidth.value,
-                density = density.density,
-                sides = PaneBleedSides(
-                    horizontal = chipEdgeBleed && !(hasDetail && !showDetail),
-                    top = topEdgeBleed && !(hasDetail && !showDetail),
-                ),
-            )
-            val primarySlot = Rect(
-                left = primary.left - bleed.left.value * density.density,
-                top = primary.top - bleed.top.value * density.density,
-                right = primary.right + bleed.right.value * density.density,
-                bottom = primary.bottom,
-            )
-            val bleedPane = Rect(
-                left = windowPane.left - bleed.left.value,
-                top = windowPane.top - bleed.top.value,
-                right = windowPane.right + bleed.right.value,
-                bottom = windowPane.bottom,
-            )
-            val primaryClearance = navigationPaneClearance(bleedPane, controls, anchorLeft).dp
-            // On a split layout, either physical anchor can overlap the detail pane instead.
-            val detailWindowPane = layout.detail?.let { detail ->
-                Rect(
-                    left = (detail.left + origin.x) / density.density,
-                    top = (detail.top + origin.y) / density.density,
-                    right = (detail.right + origin.x) / density.density,
-                    bottom = (detail.bottom + origin.y) / density.density,
+                val showDetail = hasDetail && twoPane && layout.detail != null
+                val primary = primaryPaneBounds(layout, twoPane)
+                val windowPane = Rect(
+                    left = (primary.left + origin.x) / density.density,
+                    top = (primary.top + origin.y) / density.density,
+                    right = (primary.right + origin.x) / density.density,
+                    bottom = (primary.bottom + origin.y) / density.density,
                 )
-            }
-            val detailClearance = detailWindowPane?.let {
-                navigationPaneClearance(it, controls, anchorLeft).dp
-            } ?: primaryClearance
-            // The widened pane keeps the margin as clearance on a bleeding side.
-            val primaryLeftClearance = maxOf(if (anchorLeft) primaryClearance else 0.dp, bleed.left)
-            val primaryRightClearance = maxOf(if (anchorLeft) 0.dp else primaryClearance, bleed.right)
-            val detailLeftClearance = if (anchorLeft) detailClearance else 0.dp
-            val detailRightClearance = if (anchorLeft) 0.dp else detailClearance
-            PaneSlot(primarySlot, density, bottomInset) { paneModifier ->
-                if (hasDetail && !showDetail) {
-                    detailContent(paneModifier, primaryLeftClearance, primaryRightClearance)
-                } else {
-                    CompositionLocalProvider(LocalPaneEdgeBleed provides bleed) {
-                        primaryContent(paneModifier, primaryLeftClearance, primaryRightClearance)
+                // A chip row breaks out of the outer margin on the sides where the primary pane touches it.
+                // Single-pane detail keeps the margin, and so does every side that borders another pane.
+                val bleed = paneEdgeBleed(
+                    primary = primary,
+                    windowPane = windowPane,
+                    regionWidthPx = with(density) { maxWidth.toPx() },
+                    windowWidthDp = windowWidth.value,
+                    density = density.density,
+                    sides = PaneBleedSides(
+                        horizontal = chipEdgeBleed && !(hasDetail && !showDetail),
+                        top = topEdgeBleed && !(hasDetail && !showDetail),
+                    ),
+                )
+                val primarySlot = Rect(
+                    left = primary.left - bleed.left.value * density.density,
+                    top = primary.top - bleed.top.value * density.density,
+                    right = primary.right + bleed.right.value * density.density,
+                    bottom = primary.bottom,
+                )
+                val bleedPane = Rect(
+                    left = windowPane.left - bleed.left.value,
+                    top = windowPane.top - bleed.top.value,
+                    right = windowPane.right + bleed.right.value,
+                    bottom = windowPane.bottom,
+                )
+                val primaryClearance = navigationPaneClearance(bleedPane, controls, anchorLeft).dp
+                // On a split layout, either physical anchor can overlap the detail pane instead.
+                val detailWindowPane = layout.detail?.let { detail ->
+                    Rect(
+                        left = (detail.left + origin.x) / density.density,
+                        top = (detail.top + origin.y) / density.density,
+                        right = (detail.right + origin.x) / density.density,
+                        bottom = (detail.bottom + origin.y) / density.density,
+                    )
+                }
+                val detailClearance = detailWindowPane?.let {
+                    navigationPaneClearance(it, controls, anchorLeft).dp
+                } ?: primaryClearance
+                // The widened pane keeps the margin as clearance on a bleeding side.
+                val primaryLeftClearance = maxOf(if (anchorLeft) primaryClearance else 0.dp, bleed.left)
+                val primaryRightClearance = maxOf(if (anchorLeft) 0.dp else primaryClearance, bleed.right)
+                val detailLeftClearance = if (anchorLeft) detailClearance else 0.dp
+                val detailRightClearance = if (anchorLeft) 0.dp else detailClearance
+                PaneSlot(primarySlot, density) { paneModifier ->
+                    if (hasDetail && !showDetail) {
+                        detailContent(paneModifier, primaryLeftClearance, primaryRightClearance)
+                    } else {
+                        CompositionLocalProvider(LocalPaneEdgeBleed provides bleed) {
+                            primaryContent(paneModifier, primaryLeftClearance, primaryRightClearance)
+                        }
                     }
                 }
-            }
-            if (twoPane && (showDetail || !hasDetail)) {
-                layout.detail?.let { detail ->
-                    PaneSlot(detail, density, bottomInset) { paneModifier ->
-                        detailContent(paneModifier, detailLeftClearance, detailRightClearance)
+                if (twoPane && (showDetail || !hasDetail)) {
+                    layout.detail?.let { detail ->
+                        PaneSlot(detail, density) { paneModifier ->
+                            detailContent(paneModifier, detailLeftClearance, detailRightClearance)
+                        }
                     }
                 }
             }
@@ -232,17 +234,13 @@ internal fun primaryPaneBounds(layout: LargePaneLayout, twoPane: Boolean): Rect 
 private fun BoxScope.PaneSlot(
     bounds: Rect,
     density: Density,
-    bottomInset: Dp,
     content: @Composable (Modifier) -> Unit,
 ) {
     val left = with(density) { bounds.left.toDp() }
     val top = with(density) { bounds.top.toDp() }
     val width = with(density) { bounds.width.toDp() }
     val height = with(density) { bounds.height.toDp() }
-    CompositionLocalProvider(
-        LocalContentColor provides MaterialTheme.colorScheme.onBackground,
-        LocalLargeBottomInset provides bottomInset,
-    ) {
+    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
         content(Modifier.align(AbsoluteAlignment.TopLeft).absoluteOffset(left, top).width(width).height(height))
     }
 }

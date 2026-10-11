@@ -842,7 +842,26 @@ Sources: `ui/composer/ComposerHashtags.kt`, `HashtagToken.kt`, `ComposerHashtagT
 ## Video playback
 
 Videos play in the feed, in Photo Grid tiles, and in the media viewer. A tile always shows the server preview image
-first. A video without a preview shows a neutral placeholder.
+first. A video without a preview shows its first frame, and while that frame loads the tile shows the neutral surface with a
+loading indicator (see "Photo Grid tile states").
+
+## Photo Grid tile states (infdev 03 S6)
+
+A Photo Grid tile never stays an unexplained empty surface. `PhotoGridTileStateLayer` (`ui/photogrid/PhotoGridTileState.kt`) draws over
+the tile surface from the painter state (`tilePhase`): a quiet indicator while the request runs, an image icon with "Image did not load"
+and a "Retry image" pill after a failure, and nothing once the image shows. Only the pill takes a tap, so a tap elsewhere on a failed tile
+still opens the post. The pill raises the attempt counter of `PhotoGridTile`, which asks for the image again (the retry parameter stays out
+of the memory cache key). The layer covers image tiles and the poster of video tiles.
+
+`MediaRetryInterceptor` (`data/media/`) sits in the OkHttp client of `MediaImageLoader`. It retries once after a timeout, a 5xx answer or a
+429 answer. A 429 waits for `Retry-After` in seconds, up to 3 s, and a missing or date value waits 1 s. No other 4xx answer is retried.
+The evidence came from S2: mstdn.ca answered about 60 preview requests with 429 during one scroll of the grid. With the retry the same
+scroll on the emulator gave no 429 failure. Seven previews still answered 404 (the server's media route); the failed state showed on those tiles, and a
+tap on Retry loaded one of them (a version of the tile where the whole tile was the retry target; the final pill was not re-run on the device).
+
+Not changed, because S2 found no evidence: the User-Agent of media requests, the thumbnail timeout, AVIF with hardware bitmaps, the
+video first frame and graphics memory. Tests: `MediaRetryInterceptorTest` (fake server), `PhotoGridTileStateTest`, `MediaImageLoaderTest`.
+Not verified: dvd.chat after the change, the dark themes, font scale 2.0 and the SM-G986W.
 
 Debug builds log one line per media request under the tag `MediaLoad` (`MediaLoadDiagnostics`): host, role, file
 extension, HTTP status, exception class, duration and whether the server sent a thumbnail. The line never holds a full

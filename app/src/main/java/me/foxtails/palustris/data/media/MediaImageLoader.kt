@@ -41,6 +41,8 @@ class MediaImageLoader private constructor(context: Context) {
                 .readTimeout(20, TimeUnit.SECONDS)
                 .writeTimeout(20, TimeUnit.SECONDS)
                 .callTimeout(30, TimeUnit.SECONDS)
+                // One retry after a timeout, a 5xx or a 429 answer, so a busy server does not leave an empty tile.
+                .addInterceptor(MediaRetryInterceptor())
                 .build()
         }
         .components {

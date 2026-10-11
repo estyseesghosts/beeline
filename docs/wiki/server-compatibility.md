@@ -229,6 +229,12 @@ Source: `data/mastodon/MastodonFeedService.kt`, `data/misskey/MisskeyFeedService
 - Misskey-family servers have no followed-tags route. Saved tags stay on the device and a Remove never reaches the server.
 - Capability schema version is 13 (adds `feedChips`).
 
+## Media requests
+
+- A server can answer preview requests with 429 when many tiles load at once. mstdn.ca did this for its media route during a Photo Grid scroll (infdev 03 S2). The media client retries once after a timeout, a 5xx answer or a 429 answer, and waits for `Retry-After` up to 3 s. It does not retry any other 4xx answer.
+- The same route answered some previews with 404 and then served them on a later request. The failed tile shows a retry control.
+- Not verified: the limits of other servers, and the effect of a User-Agent on a CDN.
+
 ## Video posters
 
 - Mastodon API servers always send `preview_url`. Misskey does not for videos that federated in: `thumbnailUrl` is empty and `properties` is empty, so a tile had no poster and the viewer had nothing to fling from, and fell back to a fade.

@@ -28,6 +28,9 @@
     <string name="settings_always_translate_posts">게시물 자동 번역</string>
     <string name="settings_always_translate_posts_summary">다른 언어로 된 게시물의 번역을 표시합니다. 서버가 게시물 텍스트를 번역 제공업체에 보냅니다. 공개 및 미등재 게시물만 번역합니다.</string>
     <string name="settings_always_translate_posts_a11y">게시물 자동 번역</string>
+    <string name="photo_grid_tile_loading">이미지 불러오는 중</string>
+    <string name="photo_grid_tile_failed">이미지를 불러오지 못했습니다</string>
+    <string name="photo_grid_tile_retry">이미지 다시 시도</string>
     <string name="video_mute">동영상 음소거</string>
     <string name="video_unmute">동영상 음소거 해제</string>
     <string name="video_play">동영상 재생</string>
