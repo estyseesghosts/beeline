@@ -13,11 +13,11 @@ Complete `docs/02_infdev.md`: slices S1 to S10 (search field width, outline colo
 
 # Completed
 
-S1 `9cf0f475` search field width. S2 `91da7ed1` outline colors. S3 `4df1b6a0` hashtag bubble. S4 `ac6179c6` inline bubble height. S5 `372d47fd` composer drafts. S6 `f7d3246b` post reveal owner. S7 Search tabs (this commit).
+S1 `9cf0f475` search field width. S2 `91da7ed1` outline colors. S3 `4df1b6a0` hashtag bubble. S4 `ac6179c6` inline bubble height. S5 `372d47fd` composer drafts. S6 `f7d3246b` post reveal owner. S7 `37bc4362` Search tabs. S8a gradient (this commit).
 
 # Current slice
 
-S7 is committed. Next is S8 (depth under the nav pill and tab chips).
+S8a is committed. Next is S8b (blur on API 31+).
 
 # Files involved
 
@@ -29,7 +29,7 @@ Focused tests per slice plus `:app:ktlintCheck`. The full CI-parity gate has not
 
 # Next
 
-S8, S9, S10, then the full gate and the testsigned release build.
+S8b, S9, S10, then the full gate and the testsigned release build.
 
 # Blockers
 

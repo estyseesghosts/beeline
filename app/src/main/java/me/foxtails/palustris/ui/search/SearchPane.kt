@@ -71,6 +71,7 @@ import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
+import me.foxtails.palustris.ui.components.floatingChromeScrim
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
@@ -303,7 +304,8 @@ fun SearchPane(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .windowInsetsPadding(controlsPositioningInsets),
+                    .windowInsetsPadding(controlsPositioningInsets)
+                    .floatingChromeScrim(),
                 verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing),
             ) {
                 if (tabRowSpace) {

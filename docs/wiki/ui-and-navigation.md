@@ -931,3 +931,12 @@ trending posts. A pill reads `#name: N posts` when the server reports uses, `#na
 and `#name` otherwise. News shows the link cards and keeps its own scroll state. Sources: `SearchDiscoveryTest`,
 `SearchPresentationTest`, `ShellNavigatorTest`. The caret and compact-wide behavior is not device checked.
 
+## Floating chrome depth: gradient (infdev 02 S8a)
+
+`Modifier.floatingChromeScrim()` (`ui/components/FloatingChromeScrim.kt`) draws a vertical gradient behind a stack of floating
+controls: transparent 32 dp above the node, theme scrim at 0.30 alpha (light) or 0.45 (dark) at its bottom edge. It only draws,
+so it takes no pointer input, adds no semantics and changes no clearance; it follows the node it decorates, so it moves with
+the IME and leaves with the controls. Hosts: the inner box of the compact bottom overlay in `ShellContent` (before the inset
+padding, so it extends under the system bar), the Photo Grid chip row, the compact Search stack and `LargeBottomDock`.
+The pane hosts cover only their own controls, so with the pill hidden the band stops above the system bar. The alpha values
+and the double darkening where the Photo Grid band meets the pill band are not tuned on a device. The blur is S8b.

@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import me.foxtails.palustris.ui.components.floatingChromeScrim
 
 internal val LargeBottomDockClearance = 88.dp
 internal val LargeSearchDockClearance = 144.dp
@@ -37,6 +38,7 @@ internal fun LargeBottomDock(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .floatingChromeScrim()
             .padding(vertical = LargeBottomDockEdgeGap),
         contentAlignment = Alignment.CenterStart,
     ) {

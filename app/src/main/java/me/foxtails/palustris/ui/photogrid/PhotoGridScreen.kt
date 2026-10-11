@@ -74,6 +74,7 @@ import me.foxtails.palustris.ui.chips.feedExtraChipEntries
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
+import me.foxtails.palustris.ui.components.floatingChromeScrim
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
@@ -415,7 +416,8 @@ fun PhotoGridScreen(
                     .fillMaxWidth()
                     .windowInsetsPadding(
                         compactContextualControlsPositioningInsets(compactNavigationVisible),
-                    ),
+                    )
+                    .floatingChromeScrim(),
                 rowTestTag = "photo_grid_filters",
                 visibilityToggleTestTag = "photo_grid_filters_visibility",
                 caretPresentation = photoGridCaretPresentation,
