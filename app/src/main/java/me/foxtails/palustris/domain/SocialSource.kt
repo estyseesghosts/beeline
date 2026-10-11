@@ -143,6 +143,32 @@ interface SocialSource {
         if (query.alsoMatching.isEmpty()) searchHashtag(query.primary, cursor) else unsupported("combined hashtag search")
     suspend fun searchAccounts(query: String): List<Account> = unsupported("account search")
 
+    /**
+     * A page of [feed]. A built-in timeline goes through [timeline] and a hashtag through [searchHashtags].
+     * A source overrides this for the kinds it serves itself, such as lists and antennas.
+     */
+    suspend fun feed(feed: FeedSource, cursor: String? = null): Page<Post> = when (feed) {
+        is FeedSource.Timeline -> timeline(feed.timeline, cursor)
+        is FeedSource.Hashtag -> searchHashtags(HashtagQuery(feed.tag), cursor)
+        is FeedSource.UserList -> unsupported("lists")
+        is FeedSource.Antenna -> unsupported("antennas")
+    }
+
+    /** The account's lists, in server order. */
+    suspend fun userLists(): List<FeedSource.UserList> = emptyList()
+
+    /** The account's antennas, in server order. */
+    suspend fun antennas(): List<FeedSource.Antenna> = emptyList()
+
+    /** The hashtags the account follows on the server, without the leading `#`. Empty where the server has none. */
+    suspend fun followedTags(): List<String> = emptyList()
+
+    /** Follows [tag] on the server. */
+    suspend fun followTag(tag: String): Unit = unsupported("tags.follow")
+
+    /** Stops following [tag] on the server. */
+    suspend fun unfollowTag(tag: String): Unit = unsupported("tags.unfollow")
+
     /** Hashtags that the server reports as trending, at most [limit]. */
     suspend fun trendingHashtags(limit: Int): List<TrendingHashtag> = unsupported("trending hashtags")
 

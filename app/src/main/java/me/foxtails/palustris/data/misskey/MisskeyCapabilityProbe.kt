@@ -6,6 +6,7 @@ import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfileCapabilities
 import me.foxtails.palustris.domain.EmojiCapabilities
+import me.foxtails.palustris.domain.FeedChipCapabilities
 import me.foxtails.palustris.domain.LocalOnlyRoute
 import me.foxtails.palustris.domain.ModerationCapabilities
 import me.foxtails.palustris.domain.NotificationCapabilities
@@ -79,6 +80,11 @@ class MisskeyCapabilityProbe(
             ),
             translation = TranslationCapability(translationStatus(meta, policies)),
             search = SearchCapabilities(posts = policyStatus(policies, "canSearchNotes", CapabilityStatus.Unknown)),
+            feedChips = FeedChipCapabilities(
+                lists = if (token.isNullOrBlank()) CapabilityStatus.Denied else endpointStatus(endpoints, "users/lists/list"),
+                followedTags = CapabilityStatus.Unsupported,
+                antennas = if (token.isNullOrBlank()) CapabilityStatus.Denied else endpointStatus(endpoints, "antennas/list"),
+            ),
             primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Reaction),
             savedPosts = SavedPostsCapability(CapabilityStatus.Supported, SavedPostsKind.Favourites),
             likedPosts = CapabilityStatus.Supported,
@@ -121,6 +127,13 @@ class MisskeyCapabilityProbe(
         val names = if (body.trimStart().startsWith("[")) JSONArray(body) else JSONObject(body).optJSONArray("endpoints")
         names?.let { list -> (0 until list.length()).map(list::optString).toSet() }
     }.getOrNull()
+
+    /** Supported when the endpoint list names [endpoint]. A list that could not be read leaves it Unknown. */
+    private fun endpointStatus(endpoints: Set<String>?, endpoint: String): CapabilityStatus = when {
+        endpoints == null -> CapabilityStatus.Unknown
+        endpoint in endpoints -> CapabilityStatus.Supported
+        else -> CapabilityStatus.Unsupported
+    }
 
     private fun editStatus(endpoints: Set<String>?): CapabilityStatus = when {
         endpoints == null -> CapabilityStatus.Unknown

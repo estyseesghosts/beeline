@@ -10,6 +10,7 @@ import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfileCapabilities
 import me.foxtails.palustris.domain.EmojiCapabilities
+import me.foxtails.palustris.domain.FeedChipCapabilities
 import me.foxtails.palustris.domain.LocalOnlyRoute
 import me.foxtails.palustris.domain.ModerationCapabilities
 import me.foxtails.palustris.domain.OwnPostCapabilities
@@ -202,6 +203,15 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 quotes = quotes,
                 ownPosts = OwnPostCapabilities(delete = CapabilityStatus.Supported, edit = editCapability(instance, releaseVersion)),
                 translation = translationCapability(instance),
+                feedChips = FeedChipCapabilities(
+                    lists = CapabilityStatus.Supported,
+                    followedTags = when {
+                        machineVersion != null -> CapabilityStatus.Supported
+                        releaseVersion != null -> if (releaseVersion.atLeast(4, 0, 0)) CapabilityStatus.Supported else CapabilityStatus.Unsupported
+                        else -> CapabilityStatus.Unknown
+                    },
+                    antennas = CapabilityStatus.Unsupported,
+                ),
                 primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Native),
                 savedPosts = SavedPostsCapability(CapabilityStatus.Supported, SavedPostsKind.Bookmarks),
                 likedPosts = CapabilityStatus.Supported,

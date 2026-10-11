@@ -216,6 +216,18 @@ Source: `data/mastodon/MastodonSearchService.kt`, `data/misskey/MisskeySearchSer
 - Photo Grid carry-over: the grid shows the Search pages and cursor from `SearchController`. It never fetches search pages itself, and the search feed is never saved.
 - Capability schema version is 12 (adds `search.posts`).
 
+## Feed chips: lists, followed hashtags and antennas
+
+Source: `data/mastodon/MastodonFeedService.kt`, `data/misskey/MisskeyFeedService.kt`, `FeedChipAdapterTest`. Status: test verified.
+
+- `SocialSource.feed(source, cursor)` serves one `FeedSource`. A built-in timeline keeps `timeline()`. A hashtag uses `searchHashtags`.
+- Mastodon lists: `GET api/v1/lists`, then `GET api/v1/timelines/list/:id?limit=40`, paged by the `Link` header.
+- Mastodon followed tags: `GET api/v1/followed_tags?limit=200`, paged by the `Link` header for at most five pages. Follow and unfollow are `POST api/v1/tags/:name/follow` and `/unfollow`. Needs Mastodon 4.0 or later. The probe marks 4.0 and later, and any server with `api_versions`, as Supported. A server below 4.0 is Unsupported and keeps tags on the device. A server with no version is Unknown.
+- Mastodon has no antennas.
+- Misskey-family lists: `users/lists/list`, then `notes/user-list-timeline` with `listId`. Antennas: `antennas/list`, then `antennas/notes` with `antennaId`. Both page by `untilId`. The probe reads the endpoint list, so a server without an endpoint hides that kind.
+- Misskey-family servers have no followed-tags route. Saved tags stay on the device and a Remove never reaches the server.
+- Capability schema version is 13 (adds `feedChips`).
+
 ## Video posters
 
 - Mastodon API servers always send `preview_url`. Misskey does not for videos that federated in: `thumbnailUrl` is empty and `properties` is empty, so a tile had no poster and the viewer had nothing to fling from, and fell back to a fade.

@@ -32,6 +32,7 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Event
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.MediaUploadRequest
 import me.foxtails.palustris.domain.ModerationAccount
 import me.foxtails.palustris.domain.ModerationCursor
@@ -129,6 +130,7 @@ class MisskeySource(
     private val scheduleService = MisskeyScheduleService(origin, token, api)
     private val discoveryService = MisskeyDiscoveryService(origin, token, api, accountId)
     private val searchService = MisskeySearchService(origin, token, api, discoveryService)
+    private val feedService = MisskeyFeedService(origin, token, api)
     private val timelineService = MisskeyTimelineService(origin, token, api, MISSKEY_MAX_RESPONSE_BYTES)
     private val threadService = MisskeyThreadService(
         origin = origin,
@@ -226,6 +228,16 @@ class MisskeySource(
     override suspend fun searchSuggestions(query: SearchQuery): SearchSuggestions = request("search.suggestions") {
         searchService.suggestions(query)
     }
+
+    override suspend fun feed(feed: FeedSource, cursor: String?): Page<Post> = when (feed) {
+        is FeedSource.UserList -> request("list") { feedService.listTimeline(feed.id, cursor) }
+        is FeedSource.Antenna -> request("antenna") { feedService.antennaTimeline(feed.id, cursor) }
+        else -> super.feed(feed, cursor)
+    }
+
+    override suspend fun userLists(): List<FeedSource.UserList> = request("lists") { feedService.lists() }
+
+    override suspend fun antennas(): List<FeedSource.Antenna> = request("antennas") { feedService.antennas() }
 
     override suspend fun trends(): Trends = request("trends") { searchService.trends() }
 

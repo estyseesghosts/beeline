@@ -21,6 +21,7 @@ import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfileCapabilities
 import me.foxtails.palustris.domain.EmojiCapabilities
+import me.foxtails.palustris.domain.FeedChipCapabilities
 import me.foxtails.palustris.domain.LocalOnlyRoute
 import me.foxtails.palustris.domain.ModerationCapabilities
 import me.foxtails.palustris.domain.NotificationCapabilities
@@ -260,6 +261,11 @@ private fun ServerCapabilities.toJson(): JSONObject = JSONObject()
     .put("ownPosts", JSONObject().put("delete", ownPosts.delete.name).put("edit", ownPosts.edit.name))
     .put("translation", JSONObject().put("status", translation.status.name).put("publicOnly", translation.publicOnly))
     .put("search", JSONObject().put("posts", search.posts.name))
+    .put(
+        "feedChips",
+        JSONObject().put("lists", feedChips.lists.name).put("followedTags", feedChips.followedTags.name)
+            .put("antennas", feedChips.antennas.name),
+    )
     .put("capabilitiesLastUpdated", capabilitiesLastUpdated)
     .put("capabilitySchemaVersion", capabilitySchemaVersion)
 
@@ -311,6 +317,13 @@ private fun JSONObject.toCapabilities(): ServerCapabilities = ServerCapabilities
      search = optJSONObject("search")?.let {
          SearchCapabilities(posts = it.enumOrDefault("posts", CapabilityStatus.Unknown))
      } ?: SearchCapabilities(),
+     feedChips = optJSONObject("feedChips")?.let {
+         FeedChipCapabilities(
+             lists = it.enumOrDefault("lists", CapabilityStatus.Unknown),
+             followedTags = it.enumOrDefault("followedTags", CapabilityStatus.Unknown),
+             antennas = it.enumOrDefault("antennas", CapabilityStatus.Unknown),
+         )
+     } ?: FeedChipCapabilities(),
      capabilitiesLastUpdated = optLong("capabilitiesLastUpdated"),
     capabilitySchemaVersion = optInt("capabilitySchemaVersion", 0),
 )

@@ -87,13 +87,14 @@ internal class MastodonPageClient(
         val names = page.queryParameterNames
         val pagination = listOf("max_id", "since_id", "min_id").filter { page.queryParameterValues(it).size == 1 && !page.queryParameter(it).isNullOrBlank() }
         val allowedNames = when (route.name) {
-            "bookmarks", "hashtag" -> setOf("max_id", "since_id", "min_id", "limit")
+            "bookmarks", "hashtag", "list", "followed_tags" -> setOf("max_id", "since_id", "min_id", "limit")
             else -> setOf("max_id", "since_id", "min_id", "local")
         }
         if (names.any { it !in allowedNames } || pagination.size != 1 ||
             page.queryParameterNames.any { page.queryParameterValues(it).size != 1 } ||
-            route.name in setOf("bookmarks", "hashtag") &&
+            route.name in setOf("bookmarks", "hashtag", "list") &&
                 (page.queryParameter("limit")?.let { it != "40" } == true) ||
+            route.name == "followed_tags" && (page.queryParameter("limit")?.let { it != "200" } == true) ||
             when (route.name) {
                 "timeline:Local" -> page.queryParameter("local") != "true"
                 "timeline:Federated", "timeline:Home" -> page.queryParameter("local") != null

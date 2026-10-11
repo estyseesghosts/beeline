@@ -34,6 +34,7 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Event
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.LocalOnlyRoute
 import me.foxtails.palustris.domain.MediaUploadRequest
 import me.foxtails.palustris.domain.ModerationAccount
@@ -130,6 +131,7 @@ class MastodonSource(
     private val discoveryService = MastodonDiscoveryService(origin, token, api)
     private val searchService = MastodonSearchService(origin, token, api)
     private val pageClient = MastodonPageClient(origin, token, api, accountId.localId, sessionRevision, sourceInstance)
+    private val feedService = MastodonFeedService(origin, token, api, pageClient)
     private val timelineService = MastodonTimelineService(pageClient, origin)
     override val capabilities: ServerCapabilities get() = _capabilities.value
     override fun observeCapabilities(): Flow<ServerCapabilities> = _capabilities
@@ -612,6 +614,20 @@ class MastodonSource(
     override suspend fun searchSuggestions(query: SearchQuery): SearchSuggestions = request("search.suggestions") {
         searchService.suggestions(query)
     }
+
+    override suspend fun feed(feed: FeedSource, cursor: String?): Page<Post> = when (feed) {
+        is FeedSource.UserList -> request("list") { feedService.listTimeline(feed.id, cursor) }
+        is FeedSource.Antenna -> throw SourceError.Unsupported("antennas")
+        else -> super.feed(feed, cursor)
+    }
+
+    override suspend fun userLists(): List<FeedSource.UserList> = request("lists") { feedService.lists() }
+
+    override suspend fun followedTags(): List<String> = request("tags.followed") { feedService.followedTags() }
+
+    override suspend fun followTag(tag: String) = request("tags.follow") { feedService.followTag(hashtagBody(tag)) }
+
+    override suspend fun unfollowTag(tag: String) = request("tags.unfollow") { feedService.unfollowTag(hashtagBody(tag)) }
 
     override suspend fun trends(): Trends = request("trends") { searchService.trends() }
 

@@ -27,6 +27,8 @@ data class ServerCapabilities(
     val translation: TranslationCapability = TranslationCapability(),
     /** Whether the account may search post text. */
     val search: SearchCapabilities = SearchCapabilities(),
+    /** Lists, followed hashtags and antennas as feed chips. */
+    val feedChips: FeedChipCapabilities = FeedChipCapabilities(),
     /** Bumps when capability shapes change; older snapshots force a fresh probe. */
     val capabilitySchemaVersion: Int = CURRENT_CAPABILITY_SCHEMA_VERSION,
 ) {
@@ -38,7 +40,7 @@ data class ServerCapabilities(
          * invalidates snapshots that predate the quote-with-media rule. Revision 9
          * invalidates snapshots that predate own-post actions and translation.
          */
-        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 12
+        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 13
     }
 }
 
