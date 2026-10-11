@@ -471,3 +471,16 @@ The stale claim in older ownership and bug records is removed.
   removal and late-write tests.
 - A Room-backed removal and late-write instrumentation test is not written. Device behavior stays
   unverified.
+
+## Session post-state owners (infdev 02)
+
+`ConnectedSessionHost` creates the owners of per-post session state and provides them as composition locals. Each registers with
+`entryStore` and retires with the session, so a session replacement or an account switch drops its entries.
+
+| Owner | Local | State | Bound |
+| --- | --- | --- | --- |
+| `PostPollOwner` | `LocalPostPolls` | poll votes | the session |
+| `PostRevealOwner` (S6) | `LocalPostReveals` | content warning expanded and sensitive media revealed, keyed by the fetching account and the wrapped post | 500 posts, oldest dropped first |
+
+The reveal owner records intent only. `isPostContentVisible` and `MediaRequestPolicy.resolve` stay the policy, so a rule-hidden post
+stays hidden. A preview or test without the local gets a private owner from `currentPostReveals()`.

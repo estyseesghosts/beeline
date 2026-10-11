@@ -50,11 +50,13 @@ import me.foxtails.palustris.ui.posts.LocalPostEdits
 import me.foxtails.palustris.ui.posts.LocalPostPendingLookup
 import me.foxtails.palustris.ui.posts.LocalPostPolls
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
+import me.foxtails.palustris.ui.posts.LocalPostReveals
 import me.foxtails.palustris.ui.posts.LocalPostTranslations
 import me.foxtails.palustris.ui.posts.PostEditOwner
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.posts.PostPollOwner
 import me.foxtails.palustris.ui.posts.PostPopupOwner
+import me.foxtails.palustris.ui.posts.PostRevealOwner
 import me.foxtails.palustris.ui.posts.PostTranslationOwner
 import me.foxtails.palustris.ui.posts.pendingLookup
 import me.foxtails.palustris.ui.profile.ProfileHost
@@ -288,6 +290,12 @@ fun ConnectedSessionHost(
     val pollOwner = remember(accountId, sessionRevision, sharedSource) {
         PostPollOwner(accountId, sessionRevision, sharedSource, settingsScope, UiStrings.from(context))
     }
+    val revealOwner = remember(accountId, sessionRevision, sharedSource) { PostRevealOwner() }
+    LaunchedEffect(entryStore, sessionGeneration, revealOwner) {
+        entryStore.register(sessionGeneration, "post-reveals-$accountId-$sessionGeneration") {
+            revealOwner.retire()
+        }
+    }
     LaunchedEffect(entryStore, sessionGeneration, pollOwner) {
         entryStore.register(sessionGeneration, "post-polls-$accountId-$sessionGeneration") {
             pollOwner.retire()
@@ -401,6 +409,7 @@ fun ConnectedSessionHost(
         LocalPostPopupOwner provides postActionOwner,
         LocalPostTranslations provides translationOwner,
         LocalPostPolls provides pollOwner,
+        LocalPostReveals provides revealOwner,
         LocalPostEdits provides editOwner,
         LocalPostLinkResolver provides linkResolver,
         LocalPostPendingLookup provides pendingLookup,

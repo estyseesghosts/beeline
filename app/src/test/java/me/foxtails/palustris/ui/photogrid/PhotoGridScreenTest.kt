@@ -163,7 +163,7 @@ class PhotoGridScreenTest {
     }
 
     @Test
-    fun coveredWarningTileShowsOnlyTheWarningAndStillOpensThePost() {
+    fun coveredWarningTileRevealsInPlaceOnTheFirstTapAndOpensThePostOnTheSecond() {
         var opened: OwnedPost? = null
         show(
             state = PhotoGridFeedState(
@@ -173,8 +173,10 @@ class PhotoGridScreenTest {
         )
 
         compose.onNodeWithText("Spoilers").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Spoilers").performClick()
+        compose.onNodeWithContentDescription("Spoilers. Double tap to show the content").performClick()
+        assertEquals(null, opened)
 
+        compose.onNodeWithContentDescription("Open post").performClick()
         assertEquals("cw", opened?.post?.id?.value)
     }
 

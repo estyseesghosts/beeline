@@ -17,9 +17,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -88,7 +86,8 @@ private fun PostRowContent(
     val post = ownedPost.post
     val context = LocalContext.current
     val repostConfirmationOwner = LocalPostRepostConfirmationState.current
-    var expanded by rememberSaveable(post.id.connection, post.id.value) { mutableStateOf(false) }
+    val reveals = currentPostReveals()
+    val expanded = reveals.warningExpanded(ownedPost)
     // A shown translation replaces the body and warning in place, through the same rendering path.
     val translations = LocalPostTranslations.current
     val translationId = ownedPost.effectiveTargetId()
@@ -151,7 +150,7 @@ private fun PostRowContent(
             return@Column
         }
         if (post.replyTo != null) Text(stringResource(R.string.post_reply), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        PostContentWarningToggle(ownedPost.copy(post = shownPost), expanded) { expanded = !expanded }
+        PostContentWarningToggle(ownedPost.copy(post = shownPost), expanded) { reveals.setWarningExpanded(ownedPost, !expanded) }
         ExpandableContent(visible = contentVisible, modifier = Modifier.fillMaxWidth()) {
             PostBodyContent(
                 post = shownPost,

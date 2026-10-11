@@ -888,4 +888,5 @@
     <string name="search_trends_failed">Trends could not load</string>
     <string name="search_trends_retry">Try again</string>
     <string name="composer_insert_hashtag">Insert hashtag %1$s</string>
+    <string name="a11y_content_warning_tile">%1$s. Double tap to show the content</string>
 </resources>

@@ -34,10 +34,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -197,7 +194,8 @@ internal fun SinglePostScreen(
                     )
                 } else {
             val presentation = remember(post.text, post.emoji) { parseHashtagBlocks(post.text, post.emoji) }
-            var expanded by rememberSaveable(post.id.connection, post.id.value) { mutableStateOf(false) }
+            val reveals = currentPostReveals()
+            val expanded = reveals.warningExpanded(ownedPost)
              val hashtags = remember(post.text, post.emoji) { postHashtags(post.text, post.emoji) }
              val warningDecision = remember(post.contentWarning, hashtags, contentWarningRules) {
                  ContentWarningPolicy.decide(post.contentWarning, hashtags, contentWarningRules, post.contentVisibility, post.text)
@@ -226,7 +224,7 @@ internal fun SinglePostScreen(
               if (contentVisible) {
                   PhotoPager(ownedPost, photos, viewportHeight = detailViewportHeight)
               } else {
-                  PhotoPagerCover(photos, detailViewportHeight) { expanded = true }
+                  PhotoPagerCover(photos, detailViewportHeight) { reveals.setWarningExpanded(ownedPost, true) }
               }
              val remainingAttachmentIndices = post.attachments.indices.filter { index ->
                  post.attachments[index].kind != MediaKind.Image && post.attachments[index].kind != MediaKind.AnimatedImage
@@ -268,7 +266,7 @@ internal fun SinglePostScreen(
                       showReactionNumbers = true,
                   )
               }
-             PostContentWarningToggle(ownedPost, expanded) { expanded = !expanded }
+             PostContentWarningToggle(ownedPost, expanded) { reveals.setWarningExpanded(ownedPost, !expanded) }
               if (contentVisible) {
                   PostBodyContent(
                       post = post,
@@ -409,7 +407,7 @@ private fun PhotoPager(
     viewportHeight: Dp? = null,
 ) {
     val pagerState = rememberPagerState { photos.size }
-    val revealedPages = remember { mutableStateMapOf<Int, Boolean>() }
+    val reveals = currentPostReveals()
     BoxWithConstraints(Modifier.fillMaxWidth().testTag("single_post_photo_pager")) {
         // The pager uses one shared aspect-aware height in compact and wide
         // layouts. Single photos use their natural height. Multi-photo posts
@@ -426,10 +424,10 @@ private fun PhotoPager(
                     attachment = photos[page],
                     index = page,
                     selected = page == pagerState.settledPage,
-                    revealed = !photos[page].sensitive || revealedPages[page] == true,
+                    revealed = !photos[page].sensitive || reveals.mediaRevealed(ownedPost),
                     accountIdentity = ownedPost.fetchedBy.toString(),
                     postIdentity = "${ownedPost.post.id.connection}/${ownedPost.post.id.value}",
-                    onReveal = { revealedPages[page] = true },
+                    onReveal = { reveals.revealMedia(ownedPost) },
                     edgeToEdge = true,
                 )
             }

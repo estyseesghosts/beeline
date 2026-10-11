@@ -10,8 +10,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +39,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,28 +50,29 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
-import me.foxtails.palustris.domain.Attachment
+import java.util.UUID
 import me.foxtails.palustris.R
+import me.foxtails.palustris.data.media.MediaImageLoader
+import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.MediaRequestDecision
 import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.MediaRequestRole
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.ui.AppIcons
-import me.foxtails.palustris.data.media.MediaImageLoader
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.springPress
-import java.util.UUID
+import me.foxtails.palustris.ui.posts.currentPostReveals
 
 data class MediaOpenRequest(
     val ownedPost: OwnedPost,
@@ -149,12 +149,8 @@ private fun MediaPreviewTile(
     val context = LocalContext.current
     val density = LocalDensity.current
     val registry = LocalMediaTransitionRegistry.current
-    var revealed by rememberSaveable(
-        ownedPost.fetchedBy,
-        ownedPost.post.id.connection,
-        ownedPost.post.id.value,
-        attachment.id ?: index,
-    ) { mutableStateOf(!attachment.sensitive) }
+    val reveals = currentPostReveals()
+    val revealed = !attachment.sensitive || reveals.mediaRevealed(ownedPost)
     val transitionKey = sourceKeys.getOrNull(index) ?: MediaTransitionKey.forAttachment(ownedPost, index)
     val active = registry.isSourceHidden(transitionKey)
     val videoFrameAllowed = LocalVideoPlaybackCoordinator.current?.firstFramesAllowed == true
@@ -283,7 +279,7 @@ private fun MediaPreviewTile(
                 label = "sensitiveMediaReveal",
             ) { isRevealed ->
                 if (!isRevealed) {
-                    SensitiveMediaTile(onReveal = { revealed = true })
+                    SensitiveMediaTile(onReveal = { reveals.revealMedia(ownedPost) })
                 } else {
                     when {
                         attachment.kind == MediaKind.Video -> VideoTileContent(

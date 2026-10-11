@@ -29,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +67,7 @@ import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.media.SensitiveMediaTile
 import me.foxtails.palustris.ui.media.VideoTileContent
+import me.foxtails.palustris.ui.posts.currentPostReveals
 import me.foxtails.palustris.ui.posts.favouriteIconFor
 
 @Composable
@@ -94,20 +94,17 @@ internal fun PhotoGridTile(
         }
         return
     }
-    if (item.collapsedWarning != null) {
+    val reveals = currentPostReveals()
+    // One tap on the warning tile reveals the post in place. The card then shows the image.
+    if (item.collapsedWarning != null && !reveals.warningExpanded(item.ownedPost)) {
         PhotoGridCard(item, modifier, favourite, leftRailInset, rightRailInset, caption = null, showMeta = true) {
-            PhotoGridWarningTile(item, item.collapsedWarning, onOpenPost)
+            PhotoGridWarningTile(item, item.collapsedWarning) { reveals.setWarningExpanded(item.ownedPost, true) }
         }
         return
     }
     val context = LocalContext.current
     val mediaImageLoader = remember(context) { MediaImageLoader.get(context) }
-    var revealed by rememberSaveable(
-        item.ownedPost.fetchedBy,
-        item.ownedPost.post.id.connection,
-        item.ownedPost.post.id.value,
-        item.attachment.id ?: item.attachmentIndex,
-    ) { mutableStateOf(!item.attachment.sensitive) }
+    val revealed = !item.attachment.sensitive || reveals.mediaRevealed(item.ownedPost)
     val decision = remember(item.attachment, revealed) {
         MediaRequestPolicy.resolve(
             attachment = item.attachment,
@@ -184,7 +181,7 @@ internal fun PhotoGridTile(
             }
             val painter = imageRequest?.let { rememberAsyncImagePainter(it, mediaImageLoader.imageLoader) }
             if (!revealed) {
-                SensitiveMediaTile(onReveal = { revealed = true })
+                SensitiveMediaTile(onReveal = { reveals.revealMedia(item.ownedPost) })
             } else if (isVideo) {
                 VideoTileContent(
                     tileKey = tileKey,
@@ -327,22 +324,23 @@ private fun PhotoGridCard(
     }
 }
 
-/** Stands in for a tile whose content warning is collapsed; tapping still opens the post. */
+/** Stands in for a tile whose content warning is collapsed. A tap reveals the post in place. */
 @Composable
 private fun PhotoGridWarningTile(
     item: PhotoGridItem,
     warningText: String,
-    onOpenPost: (OwnedPost) -> Unit,
+    onReveal: () -> Unit,
 ) {
     val warning = warningText.ifBlank { stringResource(R.string.content_warning) }
+    val description = stringResource(R.string.a11y_content_warning_tile, warning)
     Box(
         Modifier.fillMaxWidth().aspectRatio(photoGridAspectRatio(item.attachment))
             .clip(PhotoGridImageShape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable { onOpenPost(item.ownedPost) }
+            .clickable(onClick = onReveal)
             .testTag("photo_grid_tile_${photoGridItemKey(item)}")
             .semantics {
-                contentDescription = warning
+                contentDescription = description
                 role = Role.Button
             },
         contentAlignment = Alignment.Center,

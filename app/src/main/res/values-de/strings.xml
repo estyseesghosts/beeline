@@ -181,4 +181,5 @@
         <item quantity="other">%1$d Personen</item>
     </plurals>
     <string name="composer_insert_hashtag">Hashtag %1$s einfügen</string>
+    <string name="a11y_content_warning_tile">%1$s. Doppeltippen, um den Inhalt anzuzeigen</string>
 </resources>

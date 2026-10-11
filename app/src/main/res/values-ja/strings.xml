@@ -123,4 +123,5 @@
         <item quantity="other">%1$d人</item>
     </plurals>
     <string name="composer_insert_hashtag">ハッシュタグ %1$s を挿入</string>
+    <string name="a11y_content_warning_tile">%1$s。ダブルタップでコンテンツを表示</string>
 </resources>

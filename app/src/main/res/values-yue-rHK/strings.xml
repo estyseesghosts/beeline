@@ -110,4 +110,5 @@
         <item quantity="other">%1$d 人</item>
     </plurals>
     <string name="composer_insert_hashtag">插入主題標籤 %1$s</string>
+    <string name="a11y_content_warning_tile">%1$s。雙擊以顯示內容</string>
 </resources>

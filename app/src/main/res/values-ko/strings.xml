@@ -41,4 +41,5 @@
         <item quantity="other">%1$d명</item>
     </plurals>
     <string name="composer_insert_hashtag">해시태그 %1$s 삽입</string>
+    <string name="a11y_content_warning_tile">%1$s. 두 번 탭하여 콘텐츠 표시</string>
 </resources>

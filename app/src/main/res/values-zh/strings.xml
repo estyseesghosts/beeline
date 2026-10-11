@@ -137,4 +137,5 @@
         <item quantity="other">%1$d 人</item>
     </plurals>
     <string name="composer_insert_hashtag">插入话题标签 %1$s</string>
+    <string name="a11y_content_warning_tile">%1$s。双击以显示内容</string>
 </resources>

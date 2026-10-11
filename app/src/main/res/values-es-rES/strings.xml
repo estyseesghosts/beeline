@@ -230,4 +230,5 @@
         <item quantity="other">%1$d personas</item>
     </plurals>
     <string name="composer_insert_hashtag">Insertar el hashtag %1$s</string>
+    <string name="a11y_content_warning_tile">%1$s. Toca dos veces para mostrar el contenido</string>
 </resources>

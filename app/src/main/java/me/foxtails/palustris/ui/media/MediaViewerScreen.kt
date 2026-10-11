@@ -50,20 +50,21 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil.request.ImageRequest
+import kotlin.math.max
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
-import me.foxtails.palustris.data.media.MediaImageLoader
 import me.foxtails.palustris.R
+import me.foxtails.palustris.data.media.MediaImageLoader
 import me.foxtails.palustris.domain.MediaRequestDecision
 import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.MediaRequestRole
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.ui.AppIcons
-import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
+import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
-import kotlin.math.max
-import kotlin.math.roundToInt
+import me.foxtails.palustris.ui.posts.currentPostReveals
 
 @Composable
 fun MediaViewerScreen(
@@ -82,9 +83,9 @@ fun MediaViewerScreen(
     val videoCoordinator = LocalVideoPlaybackCoordinator.current
     val motionScheme = LocalPalustrisMotionScheme.current
     val pagerState = rememberPagerState(request.attachmentIndex.coerceIn(0, attachments.lastIndex)) { attachments.size }
-    val revealedPages = remember {
-        mutableStateMapOf<Int, Boolean>().apply { if (request.revealed) put(request.attachmentIndex, true) }
-    }
+    val reveals = currentPostReveals()
+    // The request only seeds the owner. A reveal made anywhere in the session shows here too.
+    LaunchedEffect(request.transitionKey) { if (request.revealed) reveals.revealMedia(request.ownedPost) }
     val fullQualityPages = remember(request.transitionKey) { mutableStateMapOf<Int, Boolean>() }
     val fullReadyPages = remember(request.transitionKey) { mutableStateMapOf<Int, Boolean>() }
     val fullDimensions = remember(request.transitionKey) { mutableStateMapOf<Int, Size>() }
@@ -151,7 +152,7 @@ fun MediaViewerScreen(
             fullDimensions[selectedPage] ?: videoSizeFor(selectedAttachment, videoCoordinator),
         )
         val selectedSourceFrame = sourceFrame(selectedSource, Rect.Zero, selectedAttachment)
-        val selectedRevealed = !selectedAttachment.sensitive || revealedPages[selectedPage] == true
+        val selectedRevealed = !selectedAttachment.sensitive || reveals.mediaRevealed(request.ownedPost)
         // The transition layer would paint the image over a sensitive cover that is still closed.
         // Once open, the layer only bridges the opened page until its full image is ready. A page
         // reached by swiping is drawn by the pager itself, so it moves with the carousel.
@@ -337,10 +338,10 @@ fun MediaViewerScreen(
                     index = page,
                     selected = selected,
                     fullQuality = fullQuality,
-                    revealed = !attachment.sensitive || revealedPages[page] == true,
+                    revealed = !attachment.sensitive || reveals.mediaRevealed(request.ownedPost),
                     accountIdentity = request.ownedPost.fetchedBy.toString(),
                     postIdentity = "${request.ownedPost.post.id.connection}/${request.ownedPost.post.id.value}",
-                    onReveal = { revealedPages[page] = true },
+                    onReveal = { reveals.revealMedia(request.ownedPost) },
                     onImageReady = {
                         if (selected) fullReadyPages[page] = true
                     },

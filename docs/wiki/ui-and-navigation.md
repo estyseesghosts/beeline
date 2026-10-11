@@ -906,3 +906,14 @@ action. Source: `HashtagBubbleTest`. Not device checked.
 `entityContent` keeps the 1.5 em placeholder so line metrics do not change, and insets the bubble `Surface` by 0.5 dp above and below.
 Bubbles on adjacent lines thus leave a 1 dp gap. Source: `InlineEmojiTextTest.entityBubbleIsOneDpShorterThanItsPlaceholder`.
 The fit of the icon and label at font scale 2.0 is covered by the logogram test; the line gap is not device checked.
+
+## One reveal state for each post (infdev 02 S6)
+
+`PostRevealOwner` (`ui/posts/`) holds, for each post, whether its content warning is expanded and whether its sensitive media is
+revealed. `ConnectedSessionHost` provides it as `LocalPostReveals`; it retires with the session. The feed row, the detail screen
+and its photo pager, the media carousel, the media viewer and the Photo Grid read and write the same entry.
+Rules: expanding the warning also reveals the media; revealing one image reveals every image of the post; collapsing the
+warning covers the media again. A tap on a Photo Grid warning tile reveals the post in place and the card then shows the image;
+a second tap opens the post. The owner never overrides `ContentWarningDecision.Hidden`. `QuotePreviewCard` keeps its own key.
+The device double reveal was traced in source and not reproduced. Sources: `PostRevealOwnerTest`, `PhotoGridScreenTest`,
+`PostMediaCarouselTest`.

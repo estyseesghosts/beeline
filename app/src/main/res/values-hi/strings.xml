@@ -42,4 +42,5 @@
         <item quantity="other">%1$d लोग</item>
     </plurals>
     <string name="composer_insert_hashtag">हैशटैग %1$s डालें</string>
+    <string name="a11y_content_warning_tile">%1$s. सामग्री दिखाने के लिए दो बार टैप करें</string>
 </resources>

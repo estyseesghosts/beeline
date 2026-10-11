@@ -8,6 +8,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -25,6 +28,8 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.media.PostMediaCarousel
+import me.foxtails.palustris.ui.posts.LocalPostReveals
+import me.foxtails.palustris.ui.posts.PostRevealOwner
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Buffer
@@ -66,6 +71,18 @@ class PostMediaCarouselTest {
         assertEquals(singleBounds.width, multiBounds.width, 1f)
         assertEquals(singleBounds.height, multiBounds.height, 1f)
         assertTrue(singleBounds.width / density < availableWidth)
+    }
+
+    @Test
+    fun revealingOneSensitiveImageRevealsEveryImageOfThePost() {
+        show(post("many", listOf(image("one").copy(sensitive = true), image("two").copy(sensitive = true))))
+        compose.onNodeWithContentDescription("Sensitive media 2").assertIsDisplayed()
+
+        compose.onNodeWithContentDescription("Sensitive media 1").performClick()
+        compose.waitForIdle()
+
+        compose.onAllNodesWithContentDescription("Sensitive media 1").assertCountEquals(0)
+        compose.onAllNodesWithContentDescription("Sensitive media 2").assertCountEquals(0)
     }
 
     @Test
@@ -252,9 +269,11 @@ class PostMediaCarouselTest {
     private fun show(vararg posts: Post) {
         compose.activity.runOnUiThread {
             compose.activity.setContent {
-                Column {
-                    posts.forEach { post ->
-                        PostMediaCarousel(OwnedPost(account.id, post), onOpenMedia = {})
+                CompositionLocalProvider(LocalPostReveals provides PostRevealOwner()) {
+                    Column {
+                        posts.forEach { post ->
+                            PostMediaCarousel(OwnedPost(account.id, post), onOpenMedia = {})
+                        }
                     }
                 }
             }
