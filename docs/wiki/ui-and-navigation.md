@@ -418,8 +418,10 @@ Drafts opens the draft list inside the composer. Opening a draft saves the
 current editor first. Deleting a draft refreshes the list. The drafts top bar
 holds a back circle. It returns to the editor. It shows neither Drafts nor Post.
 
-Closing a dirty composer saves the draft and closes the overlay. Back, an
-outside tap, and Close all run this rule. A clean close saves nothing. A failed
+Closing a dirty composer with content saves the draft, resets the editor and closes the overlay. Back, an
+outside tap, and Close all run this rule. A close with no content (no text, warning, media or poll, with or without a reply or
+quote target) writes no draft and deletes the draft the editor came from (infdev 02 S5). The compose button always opens a blank
+composer; only the drafts browser opens a draft. Loading the drafts deletes empty drafts. A clean close saves nothing. A failed
 save keeps the editor open and shows the error. The surface grows from the
 trigger that opened it. Focus returns to the trigger after close.
 

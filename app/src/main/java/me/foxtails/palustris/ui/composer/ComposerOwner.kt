@@ -196,7 +196,14 @@ class ComposerOwner internal constructor(
     fun refreshDrafts() {
         val epoch = ++draftLoadEpoch
         draftsContract.actions.load(
-            onResult = { result -> if (epoch == draftLoadEpoch) drafts = result },
+            onResult = { result ->
+                if (epoch == draftLoadEpoch) {
+                    // An empty draft only clutters the list. It goes from storage through the one delete path.
+                    val (empty, kept) = result.partition(PostDraft::isEmpty)
+                    drafts = kept
+                    empty.forEach { draftsContract.actions.delete(it.id, onDone = {}, onError = {}) }
+                }
+            },
             onError = { message -> if (epoch == draftLoadEpoch) editorState.value = editor.copy(error = message) },
         )
     }
@@ -276,7 +283,7 @@ class ComposerOwner internal constructor(
         val restored = editor
         if (!restored.hasTargets) return
         if (restored.boundAccount == accountId && restored.boundRevision == sessionRevision) return
-        if (accountId == null || restored.boundAccount != accountId) {
+        if (accountId == null || restored.boundAccount != accountId || !restored.hasContent) {
             resetTargets()
             return
         }
@@ -300,13 +307,12 @@ class ComposerOwner internal constructor(
         if (context.composerOpen) return
         // A closed edit editor never becomes the next post.
         if (editor.editing != null) mutateEditor { ComposerEditorState() }
-        val first = drafts.firstOrNull()
-        if (!editor.hasContent && editor.savedText.isBlank() && first != null) {
-            requestDraft(first)
-            return
+        // The compose button always opens a blank composer. Only the drafts browser opens a draft.
+        // An editor that still holds unsaved work, such as a restored reply, keeps it and its audience.
+        if (!hasChanges) {
+            resetForTarget()
+            applyNewPostAudience()
         }
-        // A restored reply or an edited post keeps its audience; only a blank editor takes the default.
-        if (!hasChanges && !editor.hasTargets) applyNewPostAudience()
         navigation = ComposerNavigation.New
     }
 
@@ -501,28 +507,22 @@ class ComposerOwner internal constructor(
             return
         }
         val current = editor
-        if (!current.hasContent && current.quoteOf == null && current.replyTo == null) {
+        if (!current.hasContent) {
+            discardEmptyEditor(current)
             onSaved()
             return
         }
         val submittedRevision = editorRevision
-        val submittedContents = current.entries.map(ComposerEntryState::content)
         val submittedAccountId = context.account?.id
         closing = true
         draftsContract.actions.save(
             draftValue(),
             onResult = { item ->
                 // A save that finishes after a newer edit must not reset the newer baseline.
+                // The saved draft now holds the work, so the next open starts blank.
                 if (editorRevision == submittedRevision && context.account?.id == submittedAccountId) {
-                    editorState.value = editor.copy(
-                        draftId = item.id,
-                        savedEntries = submittedContents,
-                        savedAudience = item.audience,
-                        savedOptions = item.options,
-                        savedQuoteOf = item.quoteOf?.value,
-                        savedReplyTo = item.replyTo?.value,
-                        error = null,
-                    )
+                    target = null
+                    mutateEditor { ComposerEditorState() }
                 }
                 refreshDrafts()
                 closing = false
@@ -533,6 +533,18 @@ class ComposerOwner internal constructor(
                 closing = false
             },
         )
+    }
+
+    /**
+     * Drops an editor with no content. The draft it came from and that draft's media go through the
+     * one delete path, without a prompt. The editor resets, so a later reply or quote is not blocked.
+     */
+    private fun discardEmptyEditor(empty: ComposerEditorState) {
+        empty.effectiveDraftId?.let { id ->
+            draftsContract.actions.delete(id, onDone = { refreshDrafts() }, onError = { refreshDrafts() })
+        }
+        target = null
+        mutateEditor { ComposerEditorState() }
     }
 
     /**

@@ -60,4 +60,9 @@ data class PostDraft(
     val allPolls: List<PollRequest> get() = listOfNotNull(poll) + followUps.mapNotNull(PostDraftEntry::poll)
 
     val allMedia: List<DraftMedia> get() = media + followUps.flatMap(PostDraftEntry::media)
+
+    /** True when no post of the draft has text, a warning, media or a poll. Such a draft is never kept. */
+    val isEmpty: Boolean
+        get() = text.isBlank() && contentWarning.isNullOrBlank() && allMedia.isEmpty() && allPolls.isEmpty() &&
+            attachments.isEmpty() && followUps.none { it.text.isNotBlank() || !it.contentWarning.isNullOrBlank() }
 }

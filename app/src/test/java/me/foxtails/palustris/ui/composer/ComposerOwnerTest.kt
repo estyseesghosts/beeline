@@ -239,10 +239,82 @@ class ComposerOwnerTest {
         owner.save()
 
         assertEquals(1, drafts.saved.size)
-        assertEquals("body to save", owner.editor.savedText)
+        // The saved draft holds the work, so the editor starts blank for the next open.
+        assertEquals("", owner.editor.text)
         assertFalse(owner.hasChanges)
         assertNull(owner.editor.error)
         assertFalse(owner.closing)
+    }
+
+    @Test
+    fun closingAnEmptyReplyWritesNoDraftAndTheNextOpenIsBlank() {
+        val drafts = RecordingDrafts()
+        val owner = owner(drafts = drafts)
+        owner.requestReply(OwnedPost(accountId, post("a")))
+        assertTrue(owner.hasChanges)
+        owner.save()
+
+        assertTrue(drafts.saved.isEmpty())
+        assertFalse(owner.hasChanges)
+        assertFalse(owner.isReply)
+        owner.consumeNavigation()
+        owner.requestNew()
+        assertTrue(owner.navigation is ComposerNavigation.New)
+        assertEquals("", owner.editor.text)
+        assertFalse(owner.isReply)
+    }
+
+    @Test
+    fun closingAnEmptiedDraftDeletesIt() {
+        val drafts = RecordingDrafts()
+        val owner = owner(drafts = drafts)
+        owner.requestDraft(PostDraft(id = "d1", accountId = accountId, text = "words", quoteOf = EntityId(connection.origin, "q")))
+        owner.setText("")
+        owner.save()
+
+        assertTrue(drafts.saved.isEmpty())
+        assertEquals(listOf("d1"), drafts.deleted)
+        assertNull(owner.editor.draftId)
+        assertFalse(owner.hasChanges)
+    }
+
+    @Test
+    fun requestNewDoesNotRestoreADraft() {
+        val drafts = RecordingDrafts().apply { loadResult = listOf(PostDraft(id = "d1", accountId = accountId, text = "old")) }
+        val owner = owner(drafts = drafts)
+        owner.refreshDrafts()
+        owner.requestNew()
+
+        assertTrue(owner.navigation is ComposerNavigation.New)
+        assertNull(owner.editor.draftId)
+        assertEquals("", owner.editor.text)
+    }
+
+    @Test
+    fun loadingDraftsDeletesEmptyOnesAndKeepsTheRest() {
+        val drafts = RecordingDrafts().apply {
+            loadResult = listOf(
+                PostDraft(id = "empty-reply", accountId = accountId, text = "  ", replyTo = EntityId(connection.origin, "a")),
+                PostDraft(id = "kept", accountId = accountId, text = "words"),
+            )
+        }
+        val owner = owner(drafts = drafts)
+        owner.refreshDrafts()
+
+        assertEquals(listOf("empty-reply"), drafts.deleted)
+        assertEquals(listOf("kept"), owner.drafts.map { it.id })
+    }
+
+    @Test
+    fun anEmptyRestoredReplyUnderANewRevisionIsDroppedNotSaved() {
+        val drafts = RecordingDrafts()
+        val source = owner()
+        source.requestReply(OwnedPost(accountId, post("a")))
+        val restored = restoredOwner(roundTrip(source.editor), drafts = drafts, revision = 3L)
+        restored.bindSession()
+
+        assertTrue(drafts.saved.isEmpty())
+        assertFalse(restored.isReply)
     }
 
     @Test
@@ -472,6 +544,7 @@ class ComposerOwnerTest {
         val drafts = RecordingDrafts()
         val (owner, ids) = threadOwner(drafts)
         owner.save()
+        owner.requestDraft(drafts.saved.single())
         assertFalse(owner.hasChanges)
 
         owner.setEntryText(ids[1], "two, edited")
