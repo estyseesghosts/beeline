@@ -71,6 +71,25 @@ class MediaImageLoaderTest {
     }
 
     @Test
+    fun requestCarriesTheRoleAndWhetherTheThumbnailIsMissing() {
+        val context = RuntimeEnvironment.getApplication()
+        val loader = MediaImageLoader.get(context)
+        fun tagFor(attachment: Attachment): MediaLoadTag? {
+            val decision = me.foxtails.palustris.domain.MediaRequestPolicy.resolve(
+                attachment, MediaRequestRole.Preview, revealed = true, explicitlyOpened = false,
+            ) as me.foxtails.palustris.domain.MediaRequestDecision.Request
+            return loader.request(context, decision, "account-a", "post-a", attachment, 0, 320, 240)
+                .tags.tag<MediaLoadTag>()
+        }
+
+        assertEquals(MediaLoadTag(MediaRequestRole.Preview, thumbnailMissing = false, videoFrame = false), tagFor(attachment))
+        assertEquals(
+            MediaLoadTag(MediaRequestRole.Preview, thumbnailMissing = true, videoFrame = false),
+            tagFor(attachment.copy(previewUrl = null)),
+        )
+    }
+
+    @Test
     fun emojiKeysShareAcrossAccountsAndIdentitiesForOneCanonicalUrl() {
         val first = MediaImageLoader.emojiCacheKey("https://CDN.example:443/emoji/../blob.png#fragment", 96)
         val second = MediaImageLoader.emojiCacheKey("https://cdn.example/blob.png", 96)

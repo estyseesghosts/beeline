@@ -844,6 +844,11 @@ Sources: `ui/composer/ComposerHashtags.kt`, `HashtagToken.kt`, `ComposerHashtagT
 Videos play in the feed, in Photo Grid tiles, and in the media viewer. A tile always shows the server preview image
 first. A video without a preview shows a neutral placeholder.
 
+Debug builds log one line per media request under the tag `MediaLoad` (`MediaLoadDiagnostics`): host, role, file
+extension, HTTP status, exception class, duration and whether the server sent a thumbnail. The line never holds a full
+URL. A release build does not install the listener. On 2026-10-11 the log showed that a Photo Grid tile whose preview
+request fails stays empty: the tile has no loading state, no failed state and no retry (`docs/agents/tasks/infdev-03.md`, S2).
+
 - Autoplay is on by default. Settings, Display, Autoplay videos turns it off. Videos start muted.
 - A video autoplays only when all of these hold: the setting is on, the post content is visible, the network is not
   metered, reduced motion is off, and the app is in the foreground. An unknown network counts as metered.

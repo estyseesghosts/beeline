@@ -6,6 +6,7 @@ import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.size.Size
+import me.foxtails.palustris.BuildConfig
 import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.EmojiImageRequest
 import me.foxtails.palustris.domain.MediaRequestDecision
@@ -46,6 +47,13 @@ class MediaImageLoader private constructor(context: Context) {
             add(AvifDecoder.Factory())
             add(VideoFrameFetcher.Factory())
         }
+        .apply {
+            // Debug builds only: log each request outcome (see MediaLoadDiagnostics) and Coil's own errors.
+            if (BuildConfig.DEBUG) {
+                logger(RedactingImageLogger())
+                eventListenerFactory { request -> MediaLoadDiagnostics(request) }
+            }
+        }
         .build()
 
     val emojiImageLoader: ImageLoader = ImageLoader.Builder(context)
@@ -75,6 +83,13 @@ class MediaImageLoader private constructor(context: Context) {
         .memoryCacheKey(renderCacheKey(accountIdentity, postIdentity, attachment, attachmentIndex, decision.role, decodeWidthPx, decodeHeightPx))
         .diskCacheKey(sourceCacheKey(accountIdentity, decision.url))
         .size(decodeWidthPx.coerceAtLeast(1), decodeHeightPx.coerceAtLeast(1))
+        .tag(
+            MediaLoadTag(
+                role = decision.role,
+                thumbnailMissing = attachment.previewUrl.isNullOrBlank(),
+                videoFrame = decision.videoFrame,
+            ),
+        )
         .crossfade(false)
         .build()
 
