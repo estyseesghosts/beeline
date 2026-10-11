@@ -80,11 +80,7 @@ class MisskeyCapabilityProbe(
             ),
             translation = TranslationCapability(translationStatus(meta, policies)),
             search = SearchCapabilities(posts = policyStatus(policies, "canSearchNotes", CapabilityStatus.Unknown)),
-            feedChips = FeedChipCapabilities(
-                lists = if (token.isNullOrBlank()) CapabilityStatus.Denied else endpointStatus(endpoints, "users/lists/list"),
-                followedTags = CapabilityStatus.Unsupported,
-                antennas = if (token.isNullOrBlank()) CapabilityStatus.Denied else endpointStatus(endpoints, "antennas/list"),
-            ),
+            feedChips = feedChips(token, endpoints),
             primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Reaction),
             savedPosts = SavedPostsCapability(CapabilityStatus.Supported, SavedPostsKind.Favourites),
             likedPosts = CapabilityStatus.Supported,
@@ -106,13 +102,7 @@ class MisskeyCapabilityProbe(
                     ?.let { CapabilityStatus.Supported }
                     ?: CapabilityStatus.Unsupported,
             ),
-            moderation = ModerationCapabilities(
-                read = if (token.isNullOrBlank()) CapabilityStatus.Denied else CapabilityStatus.Supported,
-                write = if (token.isNullOrBlank()) CapabilityStatus.Denied else CapabilityStatus.Supported,
-                blocked = if (token.isNullOrBlank()) CapabilityStatus.Denied else CapabilityStatus.Supported,
-                muted = if (token.isNullOrBlank()) CapabilityStatus.Denied else CapabilityStatus.Supported,
-                hashtags = CapabilityStatus.Unsupported,
-            ),
+            moderation = moderationCapabilities(token),
             capabilitiesLastUpdated = System.currentTimeMillis(),
             capabilitySchemaVersion = ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION,
         ).withTimelineStatuses(statuses)
@@ -127,6 +117,18 @@ class MisskeyCapabilityProbe(
         val names = if (body.trimStart().startsWith("[")) JSONArray(body) else JSONObject(body).optJSONArray("endpoints")
         names?.let { list -> (0 until list.length()).map(list::optString).toSet() }
     }.getOrNull()
+
+    /** Lists and antennas follow the endpoint list. Saved hashtags stay on the device, so followed tags are Unsupported. */
+    private fun feedChips(token: String?, endpoints: Set<String>?) = FeedChipCapabilities(
+        lists = if (token.isNullOrBlank()) CapabilityStatus.Denied else endpointStatus(endpoints, "users/lists/list"),
+        followedTags = CapabilityStatus.Unsupported,
+        antennas = if (token.isNullOrBlank()) CapabilityStatus.Denied else endpointStatus(endpoints, "antennas/list"),
+    )
+
+    private fun moderationCapabilities(token: String?): ModerationCapabilities {
+        val status = if (token.isNullOrBlank()) CapabilityStatus.Denied else CapabilityStatus.Supported
+        return ModerationCapabilities(read = status, write = status, blocked = status, muted = status, hashtags = CapabilityStatus.Unsupported)
+    }
 
     /** Supported when the endpoint list names [endpoint]. A list that could not be read leaves it Unknown. */
     private fun endpointStatus(endpoints: Set<String>?, endpoint: String): CapabilityStatus = when {

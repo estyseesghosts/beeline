@@ -11,6 +11,7 @@ import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.Timeline
@@ -178,6 +179,13 @@ internal class PhotoGridController(
         return available
     }
 
+    /** One page of [feed]. A hashtag feed sends its extras. Search results are not fetched here, so they give null. */
+    private suspend fun fetchPage(feed: PhotoGridFeed, tag: String?, combinedTags: List<String>, cursor: String?): Page<Post>? = when {
+        feed !is PhotoGridFeed.Source -> null
+        tag != null -> source.searchHashtags(HashtagQuery(tag, combinedTags), cursor)
+        else -> source.feed(feed.source, cursor)
+    }
+
     private fun startRequest(feed: PhotoGridFeed, requestGeneration: Long, cursor: String?) {
         loadingJob = scope.launch {
             if (stopped || requestGeneration != generation || _state.value.selectedFeed != feed) return@launch
@@ -196,14 +204,7 @@ internal class PhotoGridController(
                 needsSignIn = false,
             )
             try {
-                val page = when (feed) {
-                    is PhotoGridFeed.Search -> return@launch
-                    is PhotoGridFeed.Source -> if (tag != null) {
-                        source.searchHashtags(HashtagQuery(tag, combinedTags), cursor)
-                    } else {
-                        source.feed(feed.source, cursor)
-                    }
-                }
+                val page = fetchPage(feed, tag, combinedTags, cursor) ?: return@launch
                 if (stopped || requestGeneration != generation || _state.value.selectedFeed != feed) return@launch
                 val fetched = page.items.distinctBy { it.id }.map {
                     OwnedPost(accountId, applyFavouritePreference(it), sessionRevision)

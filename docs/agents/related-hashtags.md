@@ -40,7 +40,7 @@ Authority: [plan](../related-tags.md), [task state](tasks/related-hashtags.md), 
 `MainActivity` injects `HashtagExpander`. `ConnectedApp` builds one `HashtagExpansionInput` from the setting and the display language. It passes the input through `ConnectedSessionHost` to `SearchHost` and `PhotoGridHost`. The hosts hand the owners a provider of the latest input. Each controller reads it only when a search or feed starts.
 
 `HashtagExpansionInput` exposes the catalog and the language policy, so `SearchOwner` builds its suggestion service from the same input. It builds no second catalog.
-`SearchContract.explore` carries `SearchExploreState` (trending, popular accounts, suggestions) to `SearchScreen`. `SearchExploreActions` has `loadTrending`, `loadPopularAccounts` and `suggestHashtags`. Each default does nothing.
+`SearchContract.trends` carries `SearchTrendsState` (tags, trending posts, links) to `SearchPane`, and `SearchState.suggestions` carries the people and hashtag suggestions. `SearchTrendsActions` has `loadTrends`, `loadMoreTrends` and `refreshTrends`. Each default does nothing.
 
 ## Composer
 

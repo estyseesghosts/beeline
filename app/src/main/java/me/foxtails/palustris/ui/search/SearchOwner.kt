@@ -7,10 +7,10 @@ import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
-import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.ui.links.PostLinkResolver
+import me.foxtails.palustris.ui.shell.SearchContract
 
 /** Owns Search and Trends state and requests for one connected account and session revision. */
 internal class SearchOwner(
@@ -21,7 +21,7 @@ internal class SearchOwner(
     applyFavouritePreference: (Post) -> Post,
     hashtagInput: () -> HashtagExpansionInput = { HashtagExpansionInput.Disabled },
     linkResolver: () -> PostLinkResolver? = { null },
-) {
+) : SearchContract.Actions {
     private val controller = SearchController(
         source = source,
         scope = scope,
@@ -41,21 +41,21 @@ internal class SearchOwner(
 
     val trendsState: StateFlow<SearchTrendsState> = trends.state
 
-    fun search(query: String) = controller.search(query)
+    override fun search(query: String) = controller.search(query)
 
-    fun searchWithoutRelated(query: String) = controller.searchWithoutRelated(query)
+    override fun searchWithoutRelated(query: String) = controller.searchWithoutRelated(query)
 
-    fun suggest(text: String) = controller.suggest(text)
+    override fun suggest(text: String) = controller.suggest(text)
 
-    fun loadMore() = controller.loadMore()
+    override fun loadMore() = controller.loadMore()
 
-    fun consumeTarget() = controller.consumeTarget()
+    override fun consumeTarget() = controller.consumeTarget()
 
-    fun loadTrends() = trends.load()
+    override fun loadTrends() = trends.load()
 
-    fun loadMoreTrends() = trends.loadMore()
+    override fun loadMoreTrends() = trends.loadMore()
 
-    fun refreshTrends() = trends.refresh()
+    override fun refreshTrends() = trends.refresh()
 
     fun applyExternalPost(updated: OwnedPost) {
         if (updated.fetchedBy != accountId || updated.sessionRevision != sessionRevision) return
@@ -71,16 +71,7 @@ internal class SearchOwner(
 
     fun applyPublishedPost(request: CreatePostRequest) {
         controller.applyPublishedPost(request)
-        request.replyTo?.let { target ->
-            trends.updatePost(target) { post ->
-                post.copy(interactionCounts = post.interactionCounts.copy(replyCount = post.interactionCounts.replyCount.adjustedBy(1)))
-            }
-        }
-        request.quoteOf?.let { target ->
-            trends.updatePost(target) { post ->
-                post.copy(interactionCounts = post.interactionCounts.copy(quoteRepostCount = post.interactionCounts.quoteRepostCount.adjustedBy(1)))
-            }
-        }
+        request.countChanges().forEach { (id, change) -> trends.updatePost(id, change) }
     }
 
     fun updateFavouritePreference(transform: (Post) -> Post) {

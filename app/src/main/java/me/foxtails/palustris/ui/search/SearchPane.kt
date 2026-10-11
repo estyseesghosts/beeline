@@ -97,7 +97,7 @@ import me.foxtails.palustris.ui.posts.PostRowPresentation
  * Compact layout ignores both values and retains its IME-aware control placement.
  */
 @Composable
-fun SearchScreen(
+fun SearchPane(
     search: SearchState = SearchState(),
     onSearch: (String) -> Unit = {},
     onSuggest: (String) -> Unit = {},
@@ -388,7 +388,7 @@ private fun SearchContent(
                     clearance = clearance,
                     listState = listState,
                 )
-                SearchPresentation.Posts -> SearchPostResults(
+                SearchPresentation.Posts, SearchPresentation.Hashtag -> SearchPostResults(
                     state = search,
                     context = rowContext,
                     onLoadMore = onLoadMoreSearch,
@@ -396,25 +396,19 @@ private fun SearchContent(
                     onShowOnlyHashtag = onShowOnlyHashtag,
                     listState = listState,
                 )
-                SearchPresentation.Hashtag -> SearchPostResults(
-                    state = search,
-                    context = rowContext,
-                    onLoadMore = onLoadMoreSearch,
-                    onHashtag = onSearchHashtag,
-                    onShowOnlyHashtag = onShowOnlyHashtag,
-                    listState = listState,
-                )
-                SearchPresentation.Lookup -> when {
-                    search.error != null -> EmptyState(
-                        AppIcons.SearchBeeline,
-                        stringResource(R.string.search_lookup_failed),
-                        search.error,
-                        bottomClearance = clearance.end,
-                    )
-                    else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                }
+                SearchPresentation.Lookup -> SearchLookupPane(search, clearance.end)
             }
         }
+    }
+}
+
+/** A handle or link lookup in flight shows a spinner. A lookup that failed says so. */
+@Composable
+private fun SearchLookupPane(search: SearchState, bottomClearance: Dp) {
+    if (search.error != null) {
+        EmptyState(AppIcons.SearchBeeline, stringResource(R.string.search_lookup_failed), search.error, bottomClearance = bottomClearance)
+    } else {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
     }
 }
 

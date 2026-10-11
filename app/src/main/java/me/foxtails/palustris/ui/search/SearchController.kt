@@ -3,7 +3,6 @@ package me.foxtails.palustris.ui.search
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -11,22 +10,19 @@ import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
-import me.foxtails.palustris.domain.SourceError
-import me.foxtails.palustris.domain.adjustedBy
 import me.foxtails.palustris.domain.afterDeletion
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.domain.hashtags.HashtagQuery
-import me.foxtails.palustris.domain.mergeExternalActionFields
 import me.foxtails.palustris.domain.search.SearchQuery
-import me.foxtails.palustris.domain.search.SearchSuggestions
 import me.foxtails.palustris.domain.search.classifySearchQuery
 import me.foxtails.palustris.ui.UiStrings
 import me.foxtails.palustris.ui.links.PostLinkResolver
 
 /**
  * Owns the Search state of one session: the suggestions for the typed text and the result set of the last
- * submitted query. One generation counter guards each of the two, so a stale answer never replaces a newer
- * one. The Photo Grid reads [state] and pages through [loadMore]. It never fetches search pages itself.
+ * submitted query. One generation counter guards the results, and [SearchSuggester] guards the suggestions,
+ * so a stale answer never replaces a newer one. The Photo Grid reads [state] and pages through [loadMore].
+ * It never fetches search pages itself.
  */
 internal class SearchController(
     private val source: SocialSource,
@@ -35,16 +31,27 @@ internal class SearchController(
     private val onStateChanged: (SearchState) -> Unit,
     private val uiStrings: UiStrings = UiStrings.Default,
     private val hashtagInput: () -> HashtagExpansionInput = { HashtagExpansionInput.Disabled },
-    private val linkResolver: () -> PostLinkResolver? = { null },
-    private val suggestionDebounceMillis: Long = SUGGESTION_DEBOUNCE_MILLIS,
+    linkResolver: () -> PostLinkResolver? = { null },
+    suggestionDebounceMillis: Long = SUGGESTION_DEBOUNCE_MILLIS,
 ) {
     private var searchJob: Job? = null
-    private var suggestionJob: Job? = null
     private var generation = 0L
-    private var suggestionGeneration = 0L
     private var stopped = false
     private val _state = MutableStateFlow(SearchState())
     val state = _state.asStateFlow()
+
+    private val suggester = SearchSuggester(source, scope, suggestionDebounceMillis) { text, suggestions ->
+        if (!stopped && (text.isNotEmpty() || !_state.value.suggestions.isEmpty)) {
+            publish(_state.value.copy(suggestions = suggestions, suggestionsFor = text))
+        }
+    }
+
+    private val runner = SearchRunner(
+        source, uiStrings, applyFavouritePreference, linkResolver,
+        isStale = { stopped || it != generation },
+        state = { _state.value },
+        publish = ::publish,
+    )
 
     /** Starts a search. A hashtag follows the Combine related hashtags setting at this moment. */
     fun search(query: String) = start(query, combineRelated = null)
@@ -52,85 +59,50 @@ internal class SearchController(
     /** Starts a search that ignores the setting. "Show only" uses it to run the plain hashtag. */
     fun searchWithoutRelated(query: String) = start(query, combineRelated = false)
 
-    /**
-     * Reports the text of the field. After a quiet period of [suggestionDebounceMillis] it asks the
-     * source for suggestions. A blank text or a link clears them at once.
-     */
+    /** Reports the text of the field. See [SearchSuggester] for the quiet period and the clearing rules. */
     fun suggest(text: String) {
-        if (stopped) return
-        suggestionJob?.cancel()
-        val requestGeneration = ++suggestionGeneration
-        val parsed = classifySearchQuery(text)
-        if (parsed is SearchQuery.Blank || parsed is SearchQuery.Url) {
-            if (!_state.value.suggestions.isEmpty) publish(_state.value.copy(suggestions = SearchSuggestions(), suggestionsFor = ""))
-            return
-        }
-        suggestionJob = scope.launch {
-            delay(suggestionDebounceMillis)
-            val answer = try {
-                source.searchSuggestions(parsed).limited()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                // A failed suggestion call is not an error screen. The panel stays empty.
-                SearchSuggestions()
-            }
-            if (stopped || requestGeneration != suggestionGeneration) return@launch
-            publish(_state.value.copy(suggestions = answer, suggestionsFor = parsed.text))
-        }
+        if (!stopped) suggester.suggest(text)
     }
 
     private fun start(query: String, combineRelated: Boolean?) {
-        if (stopped) return
         val normalized = query.trim()
-        if (normalized.isBlank()) return
+        if (stopped || normalized.isBlank()) return
         searchJob?.cancel()
-        suggestionJob?.cancel()
-        suggestionGeneration++
+        suggester.cancel()
         val requestGeneration = ++generation
         val parsed = classifySearchQuery(normalized)
         val kept = _state.value.suggestions to _state.value.suggestionsFor
-        when (parsed) {
-            is SearchQuery.Hashtag -> {
-                // The expansion is pure and fixed once here. Load-more reuses the stored extras.
-                val input = hashtagInput()
-                val expansion = input.expand(normalized, source.maxCombinedHashtags, combineRelated ?: input.enabled)
-                publish(
-                    SearchState(
-                        query = normalized,
-                        mode = SearchMode.Hashtag,
-                        tagQuery = parsed.text,
-                        combinedTags = expansion.applied,
-                        relatedTags = expansion.related,
-                        loading = true,
-                        suggestions = kept.first,
-                        suggestionsFor = kept.second,
-                    ),
-                )
-                searchJob = scope.launch { searchHashtag(normalized, parsed.text, requestGeneration) }
+        val mode = when (parsed) {
+            is SearchQuery.Hashtag -> SearchMode.Hashtag
+            is SearchQuery.FreeText -> SearchMode.Posts
+            else -> SearchMode.Lookup
+        }
+        // The expansion is pure and fixed once here. Load-more reuses the stored extras.
+        val input = hashtagInput()
+        val expansion = (parsed as? SearchQuery.Hashtag)
+            ?.let { input.expand(normalized, source.maxCombinedHashtags, combineRelated ?: input.enabled) }
+        publish(
+            SearchState(
+                query = normalized,
+                mode = mode,
+                tagQuery = (parsed as? SearchQuery.Hashtag)?.text,
+                combinedTags = expansion?.applied.orEmpty(),
+                relatedTags = expansion?.related.orEmpty(),
+                loading = true,
+                suggestions = kept.first,
+                suggestionsFor = kept.second,
+            ),
+        )
+        searchJob = scope.launch {
+            when (parsed) {
+                is SearchQuery.Hashtag -> runner.hashtag(normalized, requestGeneration)
+                is SearchQuery.FreeText -> runner.posts(normalized, requestGeneration)
+                is SearchQuery.Handle -> runner.handle(parsed, requestGeneration)
+                is SearchQuery.Url -> runner.url(normalized, requestGeneration)
+                SearchQuery.Blank -> Unit
             }
-            is SearchQuery.FreeText -> {
-                publish(freshState(normalized, SearchMode.Posts, kept))
-                searchJob = scope.launch { searchPosts(normalized, requestGeneration) }
-            }
-            is SearchQuery.Handle -> {
-                publish(freshState(normalized, SearchMode.Lookup, kept))
-                searchJob = scope.launch { lookupHandle(normalized, parsed, requestGeneration) }
-            }
-            is SearchQuery.Url -> {
-                publish(freshState(normalized, SearchMode.Lookup, kept))
-                searchJob = scope.launch { lookupUrl(normalized, requestGeneration) }
-            }
-            SearchQuery.Blank -> Unit
         }
     }
-
-    private fun freshState(query: String, mode: SearchMode, kept: Pair<SearchSuggestions, String>) = SearchState(
-        query = query,
-        mode = mode,
-        loading = true,
-        suggestions = kept.first,
-        suggestionsFor = kept.second,
-    )
 
     fun loadMore() {
         if (stopped) return
@@ -169,154 +141,27 @@ internal class SearchController(
         if (_state.value.target != null) publish(_state.value.copy(target = null))
     }
 
-    fun updatePost(id: EntityId, transform: (Post) -> Post) {
-        publish(
-            _state.value.copy(
-                posts = _state.value.posts.map { post ->
-                    if (post.id == id || post.actionTargetId == id) transform(post) else post
-                },
-            ),
-        )
-    }
+    fun updatePost(id: EntityId, transform: (Post) -> Post) =
+        publish(_state.value.copy(posts = _state.value.posts.withUpdated(id, transform)))
 
-    fun updateExternalPost(target: EntityId, incoming: Post) {
-        publish(
-            _state.value.copy(
-                posts = _state.value.posts.map { post ->
-                    if (post.id == target || post.actionTargetId == target) mergeExternalActionFields(post, incoming) else post
-                },
-            ),
-        )
-    }
+    fun updateExternalPost(target: EntityId, incoming: Post) =
+        publish(_state.value.copy(posts = _state.value.posts.withExternal(target, incoming)))
 
-    fun removeDeletedPost(deleted: Post) {
-        publish(_state.value.copy(posts = _state.value.posts.afterDeletion(deleted)))
-    }
+    fun removeDeletedPost(deleted: Post) = publish(_state.value.copy(posts = _state.value.posts.afterDeletion(deleted)))
 
-    fun updatePosts(transform: (Post) -> Post) {
-        publish(_state.value.copy(posts = _state.value.posts.map(transform)))
-    }
+    fun updatePosts(transform: (Post) -> Post) = publish(_state.value.copy(posts = _state.value.posts.map(transform)))
 
     fun applyPublishedPost(request: CreatePostRequest) {
-        if (stopped) return
-        request.replyTo?.let { target ->
-            updatePost(target) { post ->
-                post.copy(
-                    interactionCounts = post.interactionCounts.copy(
-                        replyCount = post.interactionCounts.replyCount.adjustedBy(1),
-                    ),
-                )
-            }
-        }
-        request.quoteOf?.let { target ->
-            updatePost(target) { post ->
-                post.copy(
-                    interactionCounts = post.interactionCounts.copy(
-                        quoteRepostCount = post.interactionCounts.quoteRepostCount.adjustedBy(1),
-                    ),
-                )
-            }
-        }
+        if (!stopped) request.countChanges().forEach { (id, change) -> updatePost(id, change) }
     }
 
     fun stop() {
         if (stopped) return
         stopped = true
         searchJob?.cancel()
-        suggestionJob?.cancel()
+        suggester.cancel()
         generation++
-        suggestionGeneration++
     }
-
-    private suspend fun searchPosts(normalized: String, requestGeneration: Long) {
-        try {
-            val page = source.searchPosts(normalized)
-            if (stopped || requestGeneration != generation) return
-            publish(
-                _state.value.copy(
-                    posts = page.items.distinctBy { it.id }.map(applyFavouritePreference),
-                    loading = false,
-                    nextCursor = page.nextCursor,
-                ),
-            )
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            if (stopped || requestGeneration != generation) return
-            val denied = e is SourceError.AccessDenied
-            publish(
-                _state.value.copy(
-                    loading = false,
-                    postSearchDenied = denied,
-                    error = if (denied) null else uiStrings.sourceError(e),
-                ),
-            )
-        }
-    }
-
-    private suspend fun lookupHandle(normalized: String, handle: SearchQuery.Handle, requestGeneration: Long) {
-        try {
-            val account = source.searchAccounts(handle.text).firstOrNull()
-            if (stopped || requestGeneration != generation) return
-            publish(
-                _state.value.copy(
-                    loading = false,
-                    target = account?.let { SearchTarget.Profile(it) },
-                    error = if (account == null) uiStrings.sourceError(SourceError.Unsupported("account")) else null,
-                ),
-            )
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            if (stopped || requestGeneration != generation) return
-            publish(_state.value.copy(loading = false, error = uiStrings.sourceError(e)))
-        }
-    }
-
-    /**
-     * A link opens the post or profile it names. A link that is neither runs as a text search, because a
-     * server may still know the address as text.
-     */
-    private suspend fun lookupUrl(url: String, requestGeneration: Long) {
-        val resolver = linkResolver()
-        try {
-            val post = resolver?.resolve(url)
-            val account = if (post == null) resolver?.resolveAccount(url) else null
-            if (stopped || requestGeneration != generation) return
-            val target = post?.let { SearchTarget.SinglePost(it.post) } ?: account?.let { SearchTarget.Profile(it) }
-            if (target != null) {
-                publish(_state.value.copy(loading = false, target = target))
-            } else {
-                publish(freshState(url, SearchMode.Posts, _state.value.suggestions to _state.value.suggestionsFor))
-                searchPosts(url, requestGeneration)
-            }
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            if (stopped || requestGeneration != generation) return
-            publish(_state.value.copy(loading = false, error = uiStrings.sourceError(e)))
-        }
-    }
-
-    private suspend fun searchHashtag(normalized: String, tag: String, requestGeneration: Long) {
-        // The loading state that start() published holds the expansion for this search.
-        val loading = _state.value
-        try {
-            val page = source.searchHashtags(HashtagQuery(normalized, loading.combinedTags))
-            if (stopped || requestGeneration != generation) return
-            publish(
-                loading.copy(
-                    posts = page.items.distinctBy { it.id }.map(applyFavouritePreference),
-                    loading = false,
-                    nextCursor = page.nextCursor,
-                ),
-            )
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            if (stopped || requestGeneration != generation) return
-            publish(SearchState(query = normalized, mode = SearchMode.Hashtag, tagQuery = tag, error = uiStrings.sourceError(e)))
-        }
-    }
-
-    private fun mergeExternalActionFields(existing: Post, incoming: Post): Post =
-        existing.mergeExternalActionFields(incoming)
 
     private fun publish(next: SearchState) {
         _state.value = next

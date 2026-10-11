@@ -145,12 +145,11 @@ placement, its spacing, and its measured height. The search field therefore keep
 and its current wide IME behavior, which applies no field inset without compact fallback.
 Compact layout ignores wide inputs and keeps its IME-aware control placement and scroll clearance.
 The shared chip row includes a hide/show caret.
-`SearchScreen` owns saveable visibility and chip scroll state across compact and wide placement.
-Search category selection stays with the shell owner. Its circular caret uses the unselected chip surface, outline, and icon colors.
+The Photo Grid owns the saveable visibility and chip scroll state across compact and wide placement. Search has no chip row since M6. Its circular caret uses the unselected chip surface, outline, and icon colors.
 It stays in the first logical position outside the scrollable chips. Clearance sets resting insets only (see Chip travel).
 Production clearance is active. Wide compact fallback uses separate positioning clearance to keep the field above navigation.
 
-Sources: `ui/search/SearchScreen.kt`, `ui/shell/ShellDestinationContent.kt`, `SearchClearanceTest`.
+Sources: `ui/search/SearchPane.kt`, `ui/shell/ShellDestinationContent.kt`, `SearchClearanceTest`.
 Focused Compose tests verify viewport and divider bounds, interaction and dock clearance, final-content reach,
 chip selection, retained list position, synthetic IME open and close, branch forwarding, and compact compatibility.
 The shared-row test verifies collapse and retained chip position. Device Search rendering remains unverified.
@@ -702,9 +701,9 @@ Sources: `ui/motion/HapticEvents.kt`, `HapticEventsTest`. Device haptic feel is 
 
 ## Search entry states (Phase 7D)
 
-`SearchScreen` renders one field in three visual states (`SearchEntryMode`): `Idle` (compact bubble with the placeholder),
+`SearchPane` renders one field in three visual states (`SearchEntryMode`): `Idle` (compact bubble with the placeholder),
 `Entry` (expanded while the field has focus, where the IME shows), and `Results` (compact bubble that still shows the query).
-`searchEntryMode(query, focused)` derives the state; the query and tab stay with Search and `ShellNavigator`, and focus stays
+`searchEntryMode(query, focused)` derives the state; the query stays with Search and `ShellNavigator`, and focus stays
 in the field. The field stays composed through every state, so the query, caret, and focus survive; only its width animates
 (`gentleSize`, snapped under reduced motion). The IME search action submits and clears focus, which collapses to `Results`.
 With the keyboard already hidden, Back clears focus before it leaves Search. Tall and wide presentations share the field

@@ -71,19 +71,7 @@ fun SearchHost(
     }
     val state by owner.state.collectAsStateWithLifecycle()
     val trends by owner.trendsState.collectAsStateWithLifecycle()
-    val actions = remember(owner) {
-        object : SearchContract.Actions {
-            override fun search(query: String) = owner.search(query)
-            override fun searchWithoutRelated(query: String) = owner.searchWithoutRelated(query)
-            override fun loadMore() = owner.loadMore()
-            override fun suggest(text: String) = owner.suggest(text)
-            override fun consumeTarget() = owner.consumeTarget()
-            override fun loadTrends() = owner.loadTrends()
-            override fun loadMoreTrends() = owner.loadMoreTrends()
-            override fun refreshTrends() = owner.refreshTrends()
-        }
-    }
-    return remember(state, trends, actions) { SearchContract(state, actions, trends) }
+    return remember(state, trends, owner) { SearchContract(state, owner, trends) }
 }
 
 private fun applyFavouritePreference(

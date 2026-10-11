@@ -9,6 +9,8 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -16,12 +18,9 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeUp
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.longClick
-import androidx.compose.ui.test.performTouchInput
-import me.foxtails.palustris.ui.shell.AppShellFixtures
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -29,8 +28,8 @@ import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
-import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.EmojiCapabilities
+import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
@@ -42,12 +41,12 @@ import me.foxtails.palustris.domain.ThreadTreeBuilder
 import me.foxtails.palustris.ui.feed.FeedState
 import me.foxtails.palustris.ui.feed.HomeFeed
 import me.foxtails.palustris.ui.posts.LocalMutedHashtags
-import me.foxtails.palustris.ui.PalustrisApp
-import me.foxtails.palustris.ui.search.SearchMode
-import me.foxtails.palustris.ui.search.SearchScreen
-import me.foxtails.palustris.ui.search.SearchState
-import me.foxtails.palustris.ui.shell.HomeFeedUiState
 import me.foxtails.palustris.ui.profile.ProfileUiState
+import me.foxtails.palustris.ui.search.SearchMode
+import me.foxtails.palustris.ui.search.SearchPane
+import me.foxtails.palustris.ui.search.SearchState
+import me.foxtails.palustris.ui.shell.AppShellFixtures
+import me.foxtails.palustris.ui.shell.HomeFeedUiState
 import me.foxtails.palustris.ui.thread.PostThreadPhase
 import me.foxtails.palustris.ui.thread.PostThreadUiState
 import org.junit.Assert.assertEquals
@@ -353,7 +352,7 @@ private fun show(
         var submitted = ""
         compose.activity.runOnUiThread {
             compose.activity.setContent {
-                SearchScreen(onSearch = { submitted = it })
+                SearchPane(onSearch = { submitted = it })
             }
         }
         compose.onNode(hasSetTextAction()).performTextInput("@alice@example.org")
@@ -545,7 +544,7 @@ private fun show(
         )
         compose.activity.runOnUiThread {
             compose.activity.setContent {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(mode = SearchMode.Hashtag, query = "#counts", tagQuery = "counts", posts = listOf(result)),
                     sharedQuery = "#counts",
                 )
@@ -587,7 +586,7 @@ private fun show(
         val result = Post(postId("tag-result"), account, "A recent #cats post", 0, Audience.Public)
         compose.activity.runOnUiThread {
             compose.activity.setContent {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(mode = SearchMode.Hashtag, query = "#cats", tagQuery = "cats", posts = listOf(result)),
                     onSearch = { submitted = it },
                 )
@@ -743,7 +742,7 @@ private fun show(
         val post = Post(postId("search-link-truncation"), account, text, 0, Audience.Public)
         compose.activity.runOnUiThread {
             compose.activity.setContent {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(
                         mode = SearchMode.Hashtag,
                         query = "#cats",
@@ -768,7 +767,7 @@ private fun show(
         var bookmarked = false
         compose.activity.runOnUiThread {
             compose.activity.setContent {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(mode = SearchMode.Hashtag, query = "#cats", tagQuery = "cats", posts = listOf(result)),
                     initialQuery = "#cats",
                     mediaOwner = account.id,
@@ -812,7 +811,7 @@ private fun show(
         var bubbleTarget: OwnedPost? = null
         compose.activity.runOnUiThread {
             compose.activity.setContent {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(mode = SearchMode.Hashtag, query = "#cats", tagQuery = "cats", posts = listOf(result)),
                     initialQuery = "#cats",
                     mediaOwner = account.id,
@@ -1033,7 +1032,7 @@ private fun show(
         val result = Post(postId("clear-tag"), account, "A cached tag result", 0, Audience.Public)
         compose.activity.runOnUiThread {
             compose.activity.setContent {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(mode = SearchMode.Hashtag, query = "#cats", tagQuery = "cats", posts = listOf(result)),
                     initialQuery = "#cats",
                 )

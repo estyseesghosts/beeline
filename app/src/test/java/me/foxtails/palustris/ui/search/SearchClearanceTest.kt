@@ -130,7 +130,7 @@ class SearchClearanceTest {
         val result = AppShellFixtures.post("left", author, "Search left")
         for (direction in LayoutDirection.entries) {
             show(direction) {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = listOf(result)),
                     compactLayout = false, largeLayout = true, sharedQuery = "#fixture",
                     leftObstructionClearance = right, mediaOwner = author.id,
@@ -159,7 +159,7 @@ class SearchClearanceTest {
             var replies = 0
             var favourites = 0
             show(direction) {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = listOf(result)),
                     compactLayout = false, largeLayout = true,
                     sharedQuery = "#fixture",
@@ -190,7 +190,7 @@ class SearchClearanceTest {
         for (direction in LayoutDirection.entries) {
             var loaded = 0
             show(direction) {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(
                         query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture",
                         posts = posts(12, "final"), nextCursor = "next",
@@ -227,7 +227,7 @@ class SearchClearanceTest {
             var opened: Account? = null
             val clearance = mutableStateOf(0.dp)
             show(direction) {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(suggestionsFor = query, suggestions = SearchSuggestions(accounts = listOf(matched))),
                     compactLayout = false, largeLayout = true,
                     sharedQuery = query,
@@ -277,7 +277,7 @@ class SearchClearanceTest {
         for (direction in LayoutDirection.entries) {
             for ((listTag, query, state) in cases) {
                 show(direction) {
-                    SearchScreen(
+                    SearchPane(
                         search = state, trends = trends,
                         compactLayout = false, largeLayout = true,
                         sharedQuery = query,
@@ -309,7 +309,7 @@ class SearchClearanceTest {
         for (direction in LayoutDirection.entries) {
             val clearance = mutableStateOf(0.dp)
             show(direction) {
-                SearchScreen(
+                SearchPane(
                     compactLayout = false, largeLayout = true,
                     sharedQuery = "",
                     rightObstructionClearance = clearance.value,
@@ -341,7 +341,7 @@ class SearchClearanceTest {
         for (direction in LayoutDirection.entries) {
             val clearance = mutableStateOf(0.dp)
             show(direction) {
-                SearchScreen(
+                SearchPane(
                     search = SearchState(query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = posts(12, "ime")),
                     compactLayout = false, largeLayout = true,
                     rightObstructionClearance = right, bottomObstructionClearance = clearance.value,
@@ -391,7 +391,7 @@ class SearchClearanceTest {
         for (direction in LayoutDirection.entries) {
             show(direction) {
                 CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale = 2f)) {
-                    SearchScreen(
+                    SearchPane(
                         search = SearchState(query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = posts(12, "big")),
                         compactLayout = false, largeLayout = true,
                         rightObstructionClearance = right,
@@ -422,7 +422,7 @@ class SearchClearanceTest {
             for (navigationVisible in listOf(true, false)) {
                 val clearance = mutableStateOf(0.dp)
                 show(direction) {
-                    SearchScreen(
+                    SearchPane(
                         search = SearchState(suggestionsFor = query, suggestions = SearchSuggestions(accounts = listOf(matched))),
                         compactLayout = true, compactNavigationVisible = navigationVisible,
                         rightObstructionClearance = clearance.value,
@@ -493,7 +493,7 @@ class SearchClearanceTest {
         val list = LazyListState(3, 12)
         val clearance = mutableStateOf(0.dp)
         show(LayoutDirection.Ltr) {
-            SearchScreen(
+            SearchPane(
                 search = SearchState(query = "#fixture", mode = SearchMode.Hashtag, tagQuery = "fixture", posts = posts(16, "retained")),
                 compactLayout = false, largeLayout = true,
                 sharedQuery = "#fixture", listState = list,

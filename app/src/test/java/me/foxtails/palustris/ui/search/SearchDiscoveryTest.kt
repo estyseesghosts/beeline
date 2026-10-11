@@ -57,7 +57,7 @@ class SearchDiscoveryTest {
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 PalustrisTheme {
-                    SearchScreen(
+                    SearchPane(
                         search = search,
                         trends = trends,
                         trendsActions = trendsActions,

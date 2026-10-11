@@ -85,8 +85,8 @@ and pass through unchanged.
 It owns no Home state: the feed contract, list state, chip list state, chip visibility, and callbacks pass through.
 A connected Home refreshes its feature owner on a timeline change. The empty Home records the selection without a refresh.
 The compact Home chips stay with `CompactShellNavigation`, so the adapter renders only the wide dock.
-`ui/shell/ShellSearchDestination.kt` adapts the shell inputs to `SearchScreen` and `PhotoGridScreen`.
-It owns no search or Photo Grid state: the query and category stay with `ShellNavigator`, account results stay with the search owner, and Photo Grid keeps its own feed, selection, paging, and scroll state.
+`ui/shell/ShellSearchDestination.kt` adapts the shell inputs to `SearchPane` and `PhotoGridScreen` through `ShellSearchPanes.kt`.
+It owns no search or Photo Grid state: the query stays with `ShellNavigator`, search results and Trends stay with the search owner, and Photo Grid keeps its own feed, selection, paging, and scroll state.
 `ui/shell/ShellProfileDestination.kt` adapts the shell inputs to `ProfileScreen`.
 It owns no Profile state: the target, categories, relationship, editor, and paging state stay with the Profile owner.
 The shell keeps the presentation selection and the selected-post clearing.
@@ -334,14 +334,13 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   Production clearance is active. The folded outer-screen Home rendering is emulator verified; other hardware rendering remains unverified.
 
 - `ShellDestinationContent` forwards shell clearances to Search without changing query, category, or list-state owners.
-  `SearchScreen` clears physical right inside hashtag post rows, account result rows, the continuation item, and the wide dock.
+  `SearchPane` clears physical right inside post rows, suggestion rows, Trends, the continuation item, and the wide dock.
   Its content viewport, both list viewports, outer row extents, dividers, empty states, and loading indicators keep their width.
   Account rows clear through the list's absolute content inset, because the account row surface is its own click target.
   Bottom clearance adds to the wide result end spacing only. The wide dock keeps its bottom-start placement,
   `LargeBottomDock` spacing, and measured height, so obstruction clearance never moves the dock or the search field.
   Wide Search applies no IME field inset without compact fallback and keeps its current dock geometry.
-  `SearchScreen` owns saveable chip visibility and one `LazyListState` across compact and wide placement.
-  `DestinationChipRow` renders Search's shared entries and keeps its caret visible while chips are hidden.
+  `SearchPane` has no chip row since M6. The Photo Grid keeps the shared chip row and one `LazyListState` across compact and wide placement.
   Search category selection remains with the existing shell owner. Compact Search ignores wide inputs and keeps
   `compactContextualControlsPositioningInsets` and `compactScrollEndClearance`.
   `SearchClearanceTest` verifies synthetic LTR/RTL bounds, row and divider underlay, account row and continuation callbacks,

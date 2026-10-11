@@ -12,7 +12,6 @@ import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.afterDeletion
 import me.foxtails.palustris.domain.hashtags.TrendingHashtag
-import me.foxtails.palustris.domain.mergeExternalActionFields
 import me.foxtails.palustris.domain.search.TrendingLink
 import me.foxtails.palustris.ui.UiStrings
 
@@ -119,19 +118,15 @@ internal class SearchTrendsController(
         }
     }
 
-    fun updatePost(id: EntityId, transform: (Post) -> Post) = mapPosts { post ->
-        if (post.id == id || post.actionTargetId == id) transform(post) else post
-    }
+    fun updatePost(id: EntityId, transform: (Post) -> Post) = setPosts(_state.value.posts.withUpdated(id, transform))
 
-    fun updateExternalPost(target: EntityId, incoming: Post) = mapPosts { post ->
-        if (post.id == target || post.actionTargetId == target) post.mergeExternalActionFields(incoming) else post
-    }
+    fun updateExternalPost(target: EntityId, incoming: Post) = setPosts(_state.value.posts.withExternal(target, incoming))
 
     fun removeDeletedPost(deleted: Post) {
         _state.value = _state.value.copy(posts = _state.value.posts.afterDeletion(deleted))
     }
 
-    fun updatePosts(transform: (Post) -> Post) = mapPosts(transform)
+    fun updatePosts(transform: (Post) -> Post) = setPosts(_state.value.posts.map(transform))
 
     fun stop() {
         if (stopped) return
@@ -140,7 +135,7 @@ internal class SearchTrendsController(
         generation++
     }
 
-    private fun mapPosts(transform: (Post) -> Post) {
-        _state.value = _state.value.copy(posts = _state.value.posts.map(transform))
+    private fun setPosts(posts: List<Post>) {
+        _state.value = _state.value.copy(posts = posts)
     }
 }

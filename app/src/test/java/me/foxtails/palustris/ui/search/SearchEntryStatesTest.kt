@@ -42,7 +42,7 @@ class SearchEntryStatesTest {
                 PalustrisTheme {
                     val density = LocalDensity.current
                     CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
-                        SearchScreen(
+                        SearchPane(
                             sharedQuery = query,
                             onSharedQueryChange = { query = it },
                             onSearch = { submitted += it },
