@@ -1,5 +1,6 @@
 package me.foxtails.palustris.ui.components
 
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +36,14 @@ private const val SCRIM_ALPHA_DARK = 0.28f
 
 /** The scrim strength at the screen edge: dark themes need more to separate controls from dark content. */
 internal fun floatingChromeScrimAlpha(darkTheme: Boolean): Float = if (darkTheme) SCRIM_ALPHA_DARK else SCRIM_ALPHA_LIGHT
+
+/**
+ * One rule for every bottom dock: the band comes before the inset padding, so it reaches the physical screen
+ * edge and the controls inside it stay clear of the navigation bar, the IME and the floating navigation.
+ */
+@Composable
+internal fun Modifier.floatingChromeDock(insets: androidx.compose.foundation.layout.WindowInsets, backdrop: ChromeBackdrop?): Modifier =
+    floatingChromeScrim(backdrop = backdrop).windowInsetsPadding(insets)
 
 /**
  * Draws the depth band behind a stack of floating controls: a vertical gradient from transparent, [fade] above the

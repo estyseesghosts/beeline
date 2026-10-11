@@ -1,0 +1,12 @@
+<resources>
+    <!-- Platform window colors for the first frame in system dark mode, before Compose draws. -->
+    <style name="Theme.MisskeyClient" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">#101412</item>
+        <item name="android:navigationBarColor">#101412</item>
+        <item name="android:navigationBarDividerColor">#101412</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

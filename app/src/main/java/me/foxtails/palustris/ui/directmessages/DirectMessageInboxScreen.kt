@@ -2,12 +2,12 @@ package me.foxtails.palustris.ui.directmessages
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,15 +29,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.DirectConversation
-import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.components.AccountAvatar
+import me.foxtails.palustris.ui.emoji.InlineEmojiText
+import me.foxtails.palustris.ui.large.LocalLargeBottomInset
 import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
 import me.foxtails.palustris.ui.layout.compactScrollEndClearance
-import me.foxtails.palustris.ui.emoji.InlineEmojiText
 
 /**
  * Renders the inbox with shell-supplied clearance for wide floating chrome.
@@ -109,7 +110,7 @@ fun DirectMessageInboxScreen(
             )
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize().testTag("direct_message_conversation_list"),
-                contentPadding = PaddingValues(bottom = endClearance + wideBottomClearance + 24.dp),
+                contentPadding = PaddingValues(bottom = endClearance + wideBottomClearance + LocalLargeBottomInset.current + 24.dp),
             ) {
                 items(
                     items = state.conversations,

@@ -1,4 +1,7 @@
-@file:OptIn(androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi::class)
+@file:OptIn(
+    androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi::class,
+    androidx.compose.foundation.layout.ExperimentalLayoutApi::class,
+)
 
 package me.foxtails.palustris.ui.large
 
@@ -6,9 +9,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -89,6 +94,7 @@ internal fun LargeScreenShell(
     chipEdgeBleed: Boolean = false,
     topEdgeBleed: Boolean = false,
     reserveHiddenNavigation: Boolean = false,
+    bottomInset: Dp = 0.dp,
 ) {
     val adaptiveInfo = currentWindowAdaptiveInfoV2()
     val density = LocalDensity.current
@@ -106,8 +112,12 @@ internal fun LargeScreenShell(
         null
     }
     Box(modifier.fillMaxSize().testTag(LARGE_SCREEN_SHELL_TAG)) {
+        // The region pads the top and the sides only. Content draws under the bottom bar, and each pane
+        // clears it through [LocalLargeBottomInset].
         BoxWithConstraints(
-            Modifier.fillMaxSize().windowInsetsPadding(bars).testTag(LARGE_CONTENT_REGION_TAG),
+            Modifier.fillMaxSize()
+                .windowInsetsPadding(bars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+                .testTag(LARGE_CONTENT_REGION_TAG),
         ) {
             val features = adaptiveInfo.windowPosture.hingeList.map { hinge ->
                 LargeFoldingFeature(
@@ -175,7 +185,7 @@ internal fun LargeScreenShell(
             val primaryRightClearance = maxOf(if (anchorLeft) 0.dp else primaryClearance, bleed.right)
             val detailLeftClearance = if (anchorLeft) detailClearance else 0.dp
             val detailRightClearance = if (anchorLeft) 0.dp else detailClearance
-            PaneSlot(primarySlot, density) { paneModifier ->
+            PaneSlot(primarySlot, density, bottomInset) { paneModifier ->
                 if (hasDetail && !showDetail) {
                     detailContent(paneModifier, primaryLeftClearance, primaryRightClearance)
                 } else {
@@ -186,7 +196,7 @@ internal fun LargeScreenShell(
             }
             if (twoPane && (showDetail || !hasDetail)) {
                 layout.detail?.let { detail ->
-                    PaneSlot(detail, density) { paneModifier ->
+                    PaneSlot(detail, density, bottomInset) { paneModifier ->
                         detailContent(paneModifier, detailLeftClearance, detailRightClearance)
                     }
                 }
@@ -222,13 +232,17 @@ internal fun primaryPaneBounds(layout: LargePaneLayout, twoPane: Boolean): Rect 
 private fun BoxScope.PaneSlot(
     bounds: Rect,
     density: Density,
+    bottomInset: Dp,
     content: @Composable (Modifier) -> Unit,
 ) {
     val left = with(density) { bounds.left.toDp() }
     val top = with(density) { bounds.top.toDp() }
     val width = with(density) { bounds.width.toDp() }
     val height = with(density) { bounds.height.toDp() }
-    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
+    CompositionLocalProvider(
+        LocalContentColor provides MaterialTheme.colorScheme.onBackground,
+        LocalLargeBottomInset provides bottomInset,
+    ) {
         content(Modifier.align(AbsoluteAlignment.TopLeft).absoluteOffset(left, top).width(width).height(height))
     }
 }

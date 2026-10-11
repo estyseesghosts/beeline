@@ -55,6 +55,7 @@ import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
+import me.foxtails.palustris.ui.large.LocalLargeBottomInset
 import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
 import me.foxtails.palustris.ui.layout.compactScrollEndClearance
 import me.foxtails.palustris.ui.media.MediaOpenRequest
@@ -142,7 +143,7 @@ fun ProfileScreen(
     val isSelf = displayedAccount.id == authenticatedAccountId
     val expandedProfile = largeLayout && !compactWidePresentation
     val endContentClearance = if (expandedProfile || compactWidePresentation) {
-        LargeBottomDockClearance + wideBottomClearance
+        LargeBottomDockClearance + wideBottomClearance + LocalLargeBottomInset.current
     } else if (compactLayout) {
         compactScrollEndClearance(
             controlStackHeight = CompactFilterDockHeight,
@@ -150,7 +151,7 @@ fun ProfileScreen(
             ime = WindowInsets.ime,
         )
     } else {
-        wideBottomClearance
+        wideBottomClearance + LocalLargeBottomInset.current
     }
 
     if (expandedProfile) {

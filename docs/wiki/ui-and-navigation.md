@@ -290,7 +290,7 @@ Physical tablet rendering, device RTL, and TalkBack remain unverified.
 ## Large panes and folding coordinates
 
 `LargeLayoutMode` chooses compact, single-pane, or expanded-pane behavior from 600/840 dp window-width cutoffs.
-`LargeScreenShell` applies system-bar insets around one destination host. Floating navigation does not subtract a rail from pane geometry.
+`LargeScreenShell` pads its content region with the top and side system-bar insets only (infdev 03 S3). The bottom inset is not padded, so feeds and the blur band reach the screen edge. A pane clears the bottom bar through `LocalLargeBottomInset`: `LargeBottomDock` pads its content with it, and the end clearance of each large list adds it. The value is zero while a compact navigation bar sits at the bottom and owns that inset. Floating navigation does not subtract a rail from pane geometry.
 
 Material 3 Adaptive supplies folding-feature bounds in window coordinates. The shell translates
 those bounds into the pane-content pixel space. Content starts after the physical left/top system inset in both directions.
@@ -935,6 +935,14 @@ Trending shows the hashtag pills (`ui/components/HashtagPill.kt`, shared with th
 trending posts. A pill reads `name: N posts` when the server reports uses, `name: N users` when it reports only accounts,
 and `name` otherwise; the pill logogram is the hashtag mark, so the text has no `#`. News shows the link cards and keeps its own scroll state. Sources: `SearchDiscoveryTest`,
 `SearchPresentationTest`, `ShellNavigatorTest`. The caret and compact-wide behavior is not device checked.
+
+## System bars and edge to edge (infdev 03 S3)
+
+`SystemBars` (`ui/SystemBars.kt`) owns the navigation bar for the activity window. `navigationBarPolicy(sdkInt, threeButtonNavigation, background, mediaViewerOpen)` returns `Transparent`, `Black` (media viewer) or `Opaque(background)`. The bar is transparent on every level except Android 10 with three buttons, which keeps an opaque bar in the app background color because a transparent bar there was not confirmed on a device. Three-button navigation is detected with the tappable-element inset. `SystemBars` also paints the window background in the theme background and sets the icon appearance from the color behind the bar. `PalustrisApp` calls it for the connected shell (media viewer rule) and `ConnectedApp` calls it for the startup, sign-in and connecting states. `values-night/themes.xml` gives the first frame a dark window in system dark mode. The composer dialog sets a transparent bar over its surface color (`DialogSystemBars`).
+
+Compact docks share one rule, `Modifier.floatingChromeDock(insets, backdrop)`: the band comes before the inset padding, so it reaches the screen edge while the controls stay above the bar. The Photo Grid and the Search stack use it like the pill band. Post detail lists end with `detailScrollEndClearance()` (navigation inset plus 72 dp) instead of a fixed 96 dp.
+
+Verification: `SystemBarsPolicyTest` and `LargeBottomDockInsetTest` (JVM). Device (emulator-5554, API 37): the app window and the Compose view span the display and the large layouts draw the band to the edge with the controls above it. That AVD draws a launcher Taskbar strip with its own opaque background in both gesture and three-button navigation, so a transparent bar is not visible there. Transparent bars on a phone, the API 29 emulator and the IME double-count check on API 30 and later are not verified.
 
 ## Floating chrome depth: gradient (infdev 02 S8a)
 

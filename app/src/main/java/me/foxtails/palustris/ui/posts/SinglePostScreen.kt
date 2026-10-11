@@ -56,6 +56,7 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.layout.detailScrollEndClearance
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.media.MediaPage
 import me.foxtails.palustris.ui.media.PostMediaCarousel
@@ -122,7 +123,7 @@ internal fun SinglePostScreen(
                     contentPadding = PaddingValues.Absolute(
                         left = leftObstructionClearance,
                         right = rightObstructionClearance,
-                        bottom = 96.dp,
+                        bottom = detailScrollEndClearance(),
                     ),
                 ) {
                 item("single-post-header", contentType = "header") {

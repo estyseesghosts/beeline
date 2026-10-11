@@ -15,11 +15,11 @@ Complete `docs/03_infdev.md`: slices S1 to S6 (hashtag input, Photo Grid black t
 
 # Completed
 
-S1 `4b9871d6` hashtag input. S2 (this commit) Photo Grid black tile investigation: debug-only `MediaLoadDiagnostics`.
+S1 `4b9871d6` hashtag input. S2 `f5e477ce` Photo Grid black tile investigation: debug-only `MediaLoadDiagnostics`. S3 edge to edge (this commit).
 
 # Current slice
 
-S2 Photo Grid black tiles: investigation (done in source, committed with this state). S3 is next.
+S3 edge to edge (this commit). S4 is next.
 
 # Files involved
 
@@ -46,9 +46,30 @@ S6 starts with D1 (visible loading and failed states with retry) and D3 (one ret
 Not run: S2-D5 repeat with `allowHardware(false)` (no AVIF failure). Release build check: the release dex holds no `MediaLoadDiagnostics`, no `RedactingImageLogger` and no "coil error" string (R8 removes them).
 Gate: tests, ktlint, assembleDebug and assembleRelease passed. The first lint run crashed inside lint (FIR error on unrelated test files); a rerun of `:app:lintDebug` passed.
 
+S3 audit of bottom-anchored controls (S3-D10). "Inset" means the bottom navigation inset.
+
+| Surface | Owner of the inset | Result |
+| --- | --- | --- |
+| Compact pill and chip rows (`ShellContent`) | `compactGlobalNavigationPositioningInsets`, band before the padding | Unchanged, correct |
+| Compact Photo Grid and Search stack | `compactContextualControlsPositioningInsets` | Band now before the padding (`floatingChromeDock`), reaches the edge |
+| Compact Notifications and Profile chip rows | same insets, no band | Unchanged. No band, so S4 only adds the shadow |
+| Large docks (Home, Search, Photo Grid, Notifications, Profile) | `LocalLargeBottomInset` in `LargeBottomDock` | Fixed: the band reaches the edge, controls above the bar |
+| Large list ends (Home, Photo Grid, Notifications, Profile, Search, DM inbox) | `LocalLargeBottomInset` added to the end clearance | Fixed |
+| Compact fallback bar on a wide layout | `compactFallbackClearance` (now the whole inset) and inset zero for panes | Fixed, no double count |
+| Floating navigation stack | `calculateNavigationFit` (reads `systemBars`) | Unchanged, correct |
+| Post detail (`SinglePostScreen`) | `detailScrollEndClearance()` | Fixed (was a fixed 96 dp) |
+| Saved posts | own `navigationBars` padding | Correct. It counted the inset twice before, because the large region was padded |
+| DM conversation editor | `imePadding` then navigation inset | Correct: Compose consumes the IME inset, so the sum does not double count. Not device verified |
+| Composer body and dialog | `navigationBarsPadding().imePadding()`, `DialogSystemBars` | Bar now transparent over the surface. Not changed otherwise |
+| Sheets and small dialogs (`ModalBottomSheet`, `AlertDialog`) | Material 3 defaults | Not changed. Not checked on a device |
+| Setup, sign-in, connecting | `SystemBars` in `ConnectedApp`; `SetupScreens` pad the bars | Bar and window now match the theme |
+
+Gate: tests, lint, ktlint, assembleDebug and assembleRelease passed on the rerun. The first run failed on one import order (fixed) and one timing flake in `MisskeyApiTest.cancellationCancelsTheInFlightCallAndDoesNotBecomeApiFailure` (passes alone).
+Not run: transparent bars on a phone, API 29 emulator (no system image installed), landscape phone and 600/840 dp tablets on AVDs (the 240 dpi override of emulator-5554 gave a compact-wide layout), font scale 2.0, Dark and Pure black with system light mode. The "navigation bar" strip on emulator-5554 is drawn by the launcher Taskbar.
+
 # Next
 
-S3.
+S4.
 
 # Blockers
 

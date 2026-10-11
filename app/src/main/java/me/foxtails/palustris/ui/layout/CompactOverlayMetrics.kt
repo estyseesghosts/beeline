@@ -28,6 +28,7 @@ internal val CompactSearchDockHeight = CompactFilterDockHeight + CompactSearchFi
 internal val CompactContextualControlsPositioningClearance = CompactNavigationHeight +
     CompactOverlayControlSpacing + CompactOverlayVerticalPadding
 internal val LegacyFeedBottomClearance = 96.dp
+internal val DetailEndClearance = 72.dp
 internal val CompactNavigationCapsuleWidth = 200.dp
 internal val CompactNavigationControlSize = 56.dp
 internal val CompactNavigationControlSpacing = 8.dp
@@ -83,6 +84,12 @@ internal fun compactScrollEndClearance(
     // replaces the system-bar base; it must not replace navigation clearance.
     return controlsBottom + controlStackHeight
 }
+
+/** End clearance of a post detail list: the navigation bar inset plus room under the last item. */
+@Composable
+internal fun detailScrollEndClearance(): Dp =
+    WindowInsets.navigationBarsIgnoringVisibility.only(WindowInsetsSides.Bottom).asPaddingValues()
+        .calculateBottomPadding() + DetailEndClearance
 
 @Composable
 internal fun compactHomeScrollEndClearance(): Dp {

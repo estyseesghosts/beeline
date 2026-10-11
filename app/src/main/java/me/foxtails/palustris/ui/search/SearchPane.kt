@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -72,13 +71,14 @@ import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.chromeBackdropSource
-import me.foxtails.palustris.ui.components.floatingChromeScrim
+import me.foxtails.palustris.ui.components.floatingChromeDock
 import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeSearchDockClearance
+import me.foxtails.palustris.ui.large.LocalLargeBottomInset
 import me.foxtails.palustris.ui.large.LocalLargeDockEdgeInsets
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.CompactSearchControlsSpacing
@@ -153,7 +153,7 @@ fun SearchPane(
     val largeDockClearance = if (largeDockHeightPx > 0) {
         with(LocalDensity.current) { largeDockHeightPx.toDp() }
     } else {
-        LargeSearchDockClearance
+        LargeSearchDockClearance + LocalLargeBottomInset.current
     }
     val query = sharedQuery ?: localQuery
     val shownTab = effectiveSearchTab(tab, trends)
@@ -308,8 +308,7 @@ fun SearchPane(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .windowInsetsPadding(controlsPositioningInsets)
-                    .floatingChromeScrim(backdrop = backdrop),
+                    .floatingChromeDock(controlsPositioningInsets, backdrop),
                 verticalArrangement = Arrangement.spacedBy(CompactSearchControlsSpacing),
             ) {
                 if (tabRowSpace) {

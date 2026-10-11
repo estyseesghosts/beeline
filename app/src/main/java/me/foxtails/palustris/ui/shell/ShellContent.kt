@@ -268,13 +268,19 @@ internal fun ShellContent(
     // The compact bar is the only chrome in a wide pane layout when the vertical stack cannot
     // fit, so wide content keeps its own end clearance for that bar.
     val backdrop = rememberChromeBackdrop()
-    val compactFallbackClearance = if (wideContent && compactNavigation && navigator.navigationVisible) {
-        val base = compactGlobalNavigationPositioningInsets().asPaddingValues().calculateBottomPadding()
-        val paneBottomInset = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-        (base - paneBottomInset).coerceAtLeast(0.dp) +
+    val compactFallbackBarShown = wideContent && compactNavigation && navigator.navigationVisible
+    val compactFallbackClearance = if (compactFallbackBarShown) {
+        // The panes draw to the screen edge, so the bar clearance counts the whole inset.
+        compactGlobalNavigationPositioningInsets().asPaddingValues().calculateBottomPadding() +
             CompactNavigationHeight + CompactOverlayVerticalPadding * 2f
     } else {
         0.dp
+    }
+    // Panes clear the navigation bar themselves. A compact fallback bar at the bottom owns that inset instead.
+    val paneBottomInset = if (compactFallbackBarShown) {
+        0.dp
+    } else {
+        with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     }
     val modalOverlayOpen = modalOverlayOpenBeforeContent
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -297,6 +303,7 @@ internal fun ShellContent(
                         // Modal surfaces and local pages hide the floating stack, as compact does.
                         navigationVisible = navigator.page == null && !modalOverlayOpen,
                         reserveHiddenNavigation = navigator.page == null && navigator.singlePost == null,
+                        bottomInset = paneBottomInset,
                         action = wideContextualAction(
                             target = selectedTarget.toWideNavigationItem(),
                             profileTarget = displayedProfile,

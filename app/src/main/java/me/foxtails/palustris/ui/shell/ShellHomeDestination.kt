@@ -23,6 +23,7 @@ import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
+import me.foxtails.palustris.ui.large.LocalLargeBottomInset
 import me.foxtails.palustris.ui.navigation.ShellNavigator
 import me.foxtails.palustris.ui.navigation.homeFeedChipEntries
 import me.foxtails.palustris.ui.navigation.homeSelectedEntryKey
@@ -109,7 +110,7 @@ internal fun ShellHomeDestination(
         onOpenUsername = navigator::openAccountSearch,
         listState = homeListState,
         topContentPadding = if (largePresentation) 16.dp else null,
-        bottomContentClearance = if (largePresentation) LargeBottomDockClearance else null,
+        bottomContentClearance = if (largePresentation) LargeBottomDockClearance + LocalLargeBottomInset.current else null,
         refreshIndicatorTopPadding = if (largePresentation) 16.dp else null,
         bottomDock = if (largePresentation) ({
             DestinationChipRow(

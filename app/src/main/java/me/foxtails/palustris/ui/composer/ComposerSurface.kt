@@ -208,7 +208,7 @@ internal fun ComposerSurfaceHost(
  * Matches the dialog window to the surface. The dialog content stays below the status bar,
  * so the window background shows through that strip. Painting it the surface color keeps
  * the strip seamless instead of the default window gray. Icon appearance follows the
- * surface luminance, like the shell navigation bars.
+ * surface luminance, like the shell navigation bars. The navigation bar is transparent over the same surface.
  */
 @Composable
 private fun DialogSystemBars() {
@@ -217,9 +217,15 @@ private fun DialogSystemBars() {
     SideEffect {
         val window = (view.parent as? DialogWindowProvider)?.window ?: return@SideEffect
         window.isStatusBarContrastEnforced = false
+        window.isNavigationBarContrastEnforced = false
+        // A transparent bar shows the window background, which is the surface color, so the bar always matches.
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarDividerColor = android.graphics.Color.TRANSPARENT
         window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(surface.toArgb()))
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars =
-            surface.luminance() > 0.5f
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = surface.luminance() > 0.5f
+            isAppearanceLightNavigationBars = surface.luminance() > 0.5f
+        }
     }
 }
 

@@ -41,6 +41,8 @@ internal fun LargeBottomDock(
         modifier = modifier
             .fillMaxWidth()
             .floatingChromeScrim(backdrop = backdrop)
+            // The band reaches the screen edge. The controls rest above the navigation bar.
+            .padding(bottom = LocalLargeBottomInset.current)
             .padding(vertical = LargeBottomDockEdgeGap),
         contentAlignment = Alignment.CenterStart,
     ) {

@@ -161,6 +161,8 @@ fun ConnectedApp(
              LocalHiddenContentPresentation provides appPreferences.preferences.hiddenContentPresentation,
              LocalVideoPlaybackCoordinator provides videoCoordinator,
         ) {
+        // The connected shell sets its own bars (the media viewer is black there). Every other state gets them here.
+        if (topLevelScreen != "app") SystemBars(mediaViewerOpen = false)
         Box(Modifier.fillMaxSize()) {
         AnimatedContent(
         targetState = topLevelScreen,

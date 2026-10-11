@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -75,12 +74,13 @@ import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.components.chromeBackdropSource
-import me.foxtails.palustris.ui.components.floatingChromeScrim
+import me.foxtails.palustris.ui.components.floatingChromeDock
 import me.foxtails.palustris.ui.components.rememberChromeBackdrop
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
+import me.foxtails.palustris.ui.large.LocalLargeBottomInset
 import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
 import me.foxtails.palustris.ui.layout.compactContextualControlsPositioningInsets
@@ -210,7 +210,7 @@ fun PhotoGridScreen(
             navigationVisible = compactNavigationVisible,
         )
     } else {
-        LargeBottomDockClearance
+        LargeBottomDockClearance + LocalLargeBottomInset.current
     }
     // A tile is opaque media and one click target, so the grid content area clears the floating
     // navigation on both physical edges. The viewport keeps its full size and the lanes stay
@@ -417,10 +417,7 @@ fun PhotoGridScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .windowInsetsPadding(
-                        compactContextualControlsPositioningInsets(compactNavigationVisible),
-                    )
-                    .floatingChromeScrim(backdrop = backdrop),
+                    .floatingChromeDock(compactContextualControlsPositioningInsets(compactNavigationVisible), backdrop),
                 rowTestTag = "photo_grid_filters",
                 visibilityToggleTestTag = "photo_grid_filters_visibility",
                 caretPresentation = photoGridCaretPresentation,

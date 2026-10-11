@@ -61,6 +61,7 @@ import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
 import me.foxtails.palustris.ui.large.LargeBottomDockClearance
+import me.foxtails.palustris.ui.large.LocalLargeBottomInset
 import me.foxtails.palustris.ui.large.LocalLargeDockEdgeInsets
 import me.foxtails.palustris.ui.layout.CompactFilterDockHeight
 import me.foxtails.palustris.ui.layout.CompactOverlayHorizontalPadding
@@ -267,7 +268,7 @@ fun NotificationsScreen(
                 onFollowRequest = onFollowRequest,
                 onOpen = onOpenNotification,
                 modifier = Modifier.fillMaxSize().chromeBackdropSource(backdrop),
-                endClearance = LargeBottomDockClearance + wideBottomClearance,
+                endClearance = LargeBottomDockClearance + wideBottomClearance + LocalLargeBottomInset.current,
                 rightClearance = wideRightClearance,
                 leftClearance = wideLeftClearance,
                 stateKey = "${selectedFilterName ?: "all"}:${when {
