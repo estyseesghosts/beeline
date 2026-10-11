@@ -965,3 +965,16 @@ entries decode to none and re-encode unchanged. An edit replaces the mentions wi
 rendered text: edit reads the server source, reply and quote build their own text. The Username segment still shows `@user`
 without the host until S10 draws the bubble. Sources: `MastodonMapperTest`, `MisskeyMapperTest`, `EmojiTextParserTest`,
 `NotificationJsonCodecTest`. Pleroma and Akkoma mention shapes are not fixture-tested.
+
+## Inline mention bubbles (infdev 02 S10)
+
+A mention in post text is an inline bubble that shows the mentioned account's display name (custom emoji shortcodes removed) with its
+avatar, drawn through the same `entityContent` as links and hashtags, which now takes a leading slot. `MentionProfileOwner`
+(`ui/posts/`, contract in `ui/emoji/MentionProfiles.kt`) resolves each `PostMention`; see `docs/agents/protocol-and-session-ownership.md`.
+A row requests a profile only while it shows the mention; the author and the reposter are seeded. Until the profile resolves, or after a
+failure, the bubble shows `@user` and a person icon, so it is never empty. A blank display name falls back to the user name. The label
+width is measured and capped at 14 em, and recomputed when the profile resolves. A tap on a resolved bubble opens the profile
+(`onOpenProfile`); an unresolved one keeps the Search route (`onOpenUsername`). The description reads "Mention: name, handle", and
+copied text is the complete handle. The S4 height rule applies. Only post bodies pass mentions (`PostBodyText`); other text surfaces keep
+their text. Sources: `MentionProfileOwnerTest`, `InlineEmojiTextTest`. Not verified on a device: avatars and names on mstdn.ca and dvd.chat,
+the request count in a busy feed, the one-reflow limit with the network off, and right-to-left isolation of the label.

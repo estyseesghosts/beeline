@@ -480,7 +480,13 @@ The stale claim in older ownership and bug records is removed.
 | Owner | Local | State | Bound |
 | --- | --- | --- | --- |
 | `PostPollOwner` | `LocalPostPolls` | poll votes | the session |
+| `MentionProfileOwner` (S10) | `LocalMentionProfiles` (`ui/emoji`) | the account a mention names: pending, resolved or failed, keyed by the lowercase handle | 500 handles, oldest dropped first; at most 2 requests at once; one request per handle, no retry of a failure |
 | `PostRevealOwner` (S6) | `LocalPostReveals` | content warning expanded and sensitive media revealed, keyed by the fetching account and the wrapped post | 500 posts, oldest dropped first |
 
 The reveal owner records intent only. `isPostContentVisible` and `MediaRequestPolicy.resolve` stay the policy, so a rule-hidden post
 stays hidden. A preview or test without the local gets a private owner from `currentPostReveals()`.
+
+The mention owner asks the session's own source only: `profile(id)` when the mention has an account ID on this connection, otherwise the
+handle lookup (`searchAccounts`). A row asks only while it shows the mention, and post rows seed it with the author and the reposter.
+`retire()` cancels the requests. The contract (`MentionProfilePresentation`, `LocalMentionProfiles`, an inert default) lives in
+`ui/emoji` so the inline text renderer needs no dependency on `ui/posts`, which holds the owner class.

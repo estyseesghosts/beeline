@@ -1,7 +1,9 @@
 package me.foxtails.palustris.ui.emoji
 
 import androidx.activity.compose.setContent
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -16,6 +18,7 @@ import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.PostMention
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ValidatedUrl
 import org.junit.Assert.assertEquals
@@ -241,5 +244,77 @@ class InlineEmojiTextTest {
 
         assertEquals("https://example.org/guide", openedUrl)
         assertFalse(tapped)
+    }
+
+    private class FakeMentionProfiles(private val known: Map<String, MentionProfile>) : MentionProfilePresentation {
+        val requested = mutableListOf<String>()
+        override fun profile(mention: PostMention): MentionProfile? = known[mention.handle]
+        override fun request(mention: PostMention) {
+            requested += mention.handle
+        }
+        override fun seed(accounts: List<Account>) = Unit
+    }
+
+    private val localMention = PostMention("@local@example.org")
+    private val localAccount = Account(
+        AccountId(Connection("https://example.org", Protocol.MASTODON), "local"),
+        "Local :blob_cat: Person",
+        "@local@example.org",
+    )
+
+    @Test
+    fun anUnresolvedMentionShowsTheHandleAndAPersonIconAndRoutesToSearch() {
+        val profiles = FakeMentionProfiles(emptyMap())
+        val searched = mutableListOf<String>()
+        show {
+            androidx.compose.runtime.CompositionLocalProvider(LocalMentionProfiles provides profiles) {
+                InlineEmojiText(
+                    "hi @local", emptyMap(), enableInlineEntities = true,
+                    mentions = listOf(localMention), onOpenUsername = { searched += it },
+                )
+            }
+        }
+
+        compose.onNodeWithTag("entity_label", useUnmergedTree = true).assertTextContains("@local", substring = true)
+        compose.onAllNodesWithTag("entity_icon", useUnmergedTree = true).assertCountEquals(1)
+        compose.onNodeWithContentDescription("Mention: @local, @local@example.org").performClick()
+
+        assertEquals(listOf("@local@example.org"), profiles.requested)
+        assertEquals(listOf("@local@example.org"), searched)
+    }
+
+    @Test
+    fun aResolvedMentionShowsTheDisplayNameAndTheAvatarAndOpensTheProfile() {
+        val profiles = FakeMentionProfiles(mapOf(localMention.handle to MentionProfile.Resolved(localAccount)))
+        val opened = mutableListOf<Account>()
+        val searched = mutableListOf<String>()
+        show {
+            androidx.compose.runtime.CompositionLocalProvider(LocalMentionProfiles provides profiles) {
+                InlineEmojiText(
+                    "hi @local", emptyMap(), enableInlineEntities = true,
+                    mentions = listOf(localMention), onOpenUsername = { searched += it }, onOpenProfile = { opened += it },
+                )
+            }
+        }
+
+        compose.onNodeWithTag("entity_label", useUnmergedTree = true).assertTextContains("Local Person", substring = true)
+        compose.onAllNodesWithTag("entity_avatar", useUnmergedTree = true).assertCountEquals(1)
+        compose.onNodeWithContentDescription("Mention: Local Person, @local@example.org").performClick()
+
+        assertEquals(listOf(localAccount), opened)
+        assertTrue(searched.isEmpty())
+    }
+
+    @Test
+    fun aMentionWithABlankDisplayNameFallsBackToTheUserName() {
+        val blank = localAccount.copy(displayName = ":blob_cat:")
+        val profiles = FakeMentionProfiles(mapOf(localMention.handle to MentionProfile.Resolved(blank)))
+        show {
+            androidx.compose.runtime.CompositionLocalProvider(LocalMentionProfiles provides profiles) {
+                InlineEmojiText("hi @local", emptyMap(), enableInlineEntities = true, mentions = listOf(localMention))
+            }
+        }
+
+        compose.onNodeWithTag("entity_label", useUnmergedTree = true).assertTextContains("@local", substring = true)
     }
 }

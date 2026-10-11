@@ -18,6 +18,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,7 @@ import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostMention
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.links.rememberLinkOpener
 import me.foxtails.palustris.ui.motion.springClickable
 
@@ -80,6 +82,7 @@ fun InlineEmojiText(
     onTextTap: (() -> Unit)? = null,
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
     mentions: List<PostMention> = emptyList(),
+    onOpenProfile: ((Account) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val resolvedStyle = style.copy(
@@ -90,11 +93,18 @@ fun InlineEmojiText(
         textDecoration = TextDecoration.Underline,
     )
     val model = remember(text, emoji, mentions) { EmojiTextParser.parse(text, emoji, mentions) }
+    val mentionProfiles = LocalMentionProfiles.current
+    val mentionsShown = remember(model, enableInlineEntities) {
+        if (enableInlineEntities) model.segments.filterIsInstance<RichTextSegment.Username>().mapNotNull { it.mention } else emptyList()
+    }
+    // A row asks for a profile only while it shows the mention. Reading the state here recomposes the row when it resolves.
+    LaunchedEffect(mentionsShown, mentionProfiles) { mentionsShown.forEach(mentionProfiles::request) }
+    val mentionStates = mentionsShown.associate { it.handle to mentionProfiles.profile(it) }
     val bubbleTextStyle = MaterialTheme.typography.labelMedium
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val linkOpener = rememberLinkOpener()
-    val inlineContent = remember(model, style.fontSize, enableInlineEntities, onOpenUrl, onOpenUsername, onSearchHashtag, context, linkOpener) {
+    val inlineContent = remember(model, style.fontSize, enableInlineEntities, onOpenUrl, onOpenUsername, onOpenProfile, onSearchHashtag, mentionStates, context, linkOpener) {
         buildInlineContent(
             model = model,
             emSize = style.fontSize,
@@ -105,6 +115,8 @@ fun InlineEmojiText(
             context = context,
             onOpenUrl = { url -> onOpenUrl?.invoke(url) ?: linkOpener(url) },
             onOpenUsername = onOpenUsername,
+            onOpenProfile = onOpenProfile,
+            mentionStates = mentionStates,
             onSearchHashtag = onSearchHashtag,
         )
     }
@@ -301,7 +313,11 @@ private fun appendSegment(
         is RichTextSegment.Username -> {
             if (enableInlineEntities) {
                 builder.pushStringAnnotation(USERNAME_ANNOTATION, segment.target)
-                builder.appendInlineContent(inlineContentId(segment), alternateText = segment.displayLabel)
+                // A mention copies as its complete handle, whatever the bubble shows.
+                builder.appendInlineContent(
+                    inlineContentId(segment),
+                    alternateText = if (segment.mention != null) segment.target else segment.displayLabel,
+                )
                 builder.pop()
             } else {
                 builder.append(source.substring(segment.range))
@@ -329,6 +345,8 @@ private fun buildInlineContent(
     context: android.content.Context,
     onOpenUrl: (String) -> Unit,
     onOpenUsername: ((String) -> Unit)?,
+    onOpenProfile: ((Account) -> Unit)?,
+    mentionStates: Map<String, MentionProfile?>,
     onSearchHashtag: ((String) -> Unit)?,
 ): Map<String, androidx.compose.foundation.text.InlineTextContent> = buildMap {
     fun addSegments(segments: List<RichTextSegment>) {
@@ -363,16 +381,35 @@ private fun buildInlineContent(
                     }
                 }
                 is RichTextSegment.Username -> if (enableInlineEntities) {
+                    val mention = segment.mention
+                    val account = mention?.let { (mentionStates[it.handle] as? MentionProfile.Resolved)?.account }
+                    // Before the profile resolves, or after a failure, the bubble shows the handle and a person icon.
+                    val label = account?.let(::mentionDisplayName) ?: segment.displayLabel
+                    val openAccount = account?.let { resolved -> onOpenProfile?.let { open -> { open(resolved) } } }
+                    val labelWidth = entityWidthEm(label, mention != null, DisplayIsolation.FirstStrong, emSize, textMeasurer, density, bubbleTextStyle)
                     put(
                         inlineContentId(segment),
                         entityContent(
-                            label = segment.displayLabel,
-                            description = context.getString(R.string.a11y_username_description, segment.displayLabel),
+                            label = label,
+                            description = if (mention != null) {
+                                context.getString(R.string.a11y_mention_description, label, mention.handle)
+                            } else {
+                                context.getString(R.string.a11y_username_description, segment.displayLabel)
+                            },
                             emSize = emSize,
-                            width = entityWidthEm(segment.displayLabel, false, DisplayIsolation.FirstStrong, emSize, textMeasurer, density, bubbleTextStyle),
-                            onClick = onOpenUsername?.let { callback -> { callback(segment.target) } },
+                            width = if (mention != null && labelWidth.value > MENTION_MAX_WIDTH_EM) MENTION_MAX_WIDTH_EM.em else labelWidth,
+                            onClick = openAccount ?: onOpenUsername?.let { callback -> { callback(segment.target) } },
                             leadingIcon = null,
                             isolation = DisplayIsolation.FirstStrong,
+                            leading = if (mention != null) { size ->
+                                if (account != null) {
+                                    AccountAvatar(account, Modifier.size(size).testTag("entity_avatar"), exposeSemantics = false)
+                                } else {
+                                    Icon(AppIcons.Person, contentDescription = null, modifier = Modifier.size(size).testTag("entity_icon"))
+                                }
+                            } else {
+                                null
+                            },
                         ),
                     )
                 }
@@ -406,6 +443,8 @@ private fun entityContent(
     onClick: (() -> Unit)?,
     leadingIcon: androidx.compose.ui.graphics.vector.ImageVector?,
     isolation: DisplayIsolation,
+    /** Replaces [leadingIcon] with other content of the given square size, such as an avatar. */
+    leading: (@Composable (androidx.compose.ui.unit.Dp) -> Unit)? = null,
 ): androidx.compose.foundation.text.InlineTextContent = androidx.compose.foundation.text.InlineTextContent(
     placeholder = androidx.compose.ui.text.Placeholder(
         width = width,
@@ -441,7 +480,10 @@ private fun entityContent(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (leadingIcon != null) {
+            if (leading != null) {
+                leading(iconSize)
+                Spacer(Modifier.width(ENTITY_ICON_GAP))
+            } else if (leadingIcon != null) {
                 Icon(leadingIcon, contentDescription = null, modifier = Modifier.size(iconSize).testTag("entity_icon"))
                 Spacer(Modifier.width(ENTITY_ICON_GAP))
             }
@@ -460,6 +502,9 @@ private fun entityContent(
 private val ENTITY_EDGE_PADDING = 6.dp
 private val ENTITY_VERTICAL_INSET = 0.5.dp
 private val ENTITY_ICON_GAP = 4.dp
+
+/** A long display name does not fill the line: the mention bubble stops growing here and ellipsizes. */
+private const val MENTION_MAX_WIDTH_EM = 14f
 
 private enum class DisplayIsolation(val opener: Char) {
     /** Domains and addresses read left to right even inside right-to-left text. */

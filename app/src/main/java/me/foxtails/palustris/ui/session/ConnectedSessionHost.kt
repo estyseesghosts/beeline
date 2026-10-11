@@ -38,6 +38,7 @@ import me.foxtails.palustris.ui.composer.asDraftsContract
 import me.foxtails.palustris.ui.composer.rememberComposerHashtagSuggestions
 import me.foxtails.palustris.ui.directmessages.DirectMessagesHost
 import me.foxtails.palustris.ui.emoji.EmojiHost
+import me.foxtails.palustris.ui.emoji.LocalMentionProfiles
 import me.foxtails.palustris.ui.feed.FeedHost
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.links.LocalPostLinkResolver
@@ -52,6 +53,7 @@ import me.foxtails.palustris.ui.posts.LocalPostPolls
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
 import me.foxtails.palustris.ui.posts.LocalPostReveals
 import me.foxtails.palustris.ui.posts.LocalPostTranslations
+import me.foxtails.palustris.ui.posts.MentionProfileOwner
 import me.foxtails.palustris.ui.posts.PostEditOwner
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.posts.PostPollOwner
@@ -291,6 +293,14 @@ fun ConnectedSessionHost(
         PostPollOwner(accountId, sessionRevision, sharedSource, settingsScope, UiStrings.from(context))
     }
     val revealOwner = remember(accountId, sessionRevision, sharedSource) { PostRevealOwner() }
+    val mentionOwner = remember(accountId, sessionRevision, sharedSource) {
+        MentionProfileOwner(accountId, sharedSource, settingsScope)
+    }
+    LaunchedEffect(entryStore, sessionGeneration, mentionOwner) {
+        entryStore.register(sessionGeneration, "mention-profiles-$accountId-$sessionGeneration") {
+            mentionOwner.retire()
+        }
+    }
     LaunchedEffect(entryStore, sessionGeneration, revealOwner) {
         entryStore.register(sessionGeneration, "post-reveals-$accountId-$sessionGeneration") {
             revealOwner.retire()
@@ -410,6 +420,7 @@ fun ConnectedSessionHost(
         LocalPostTranslations provides translationOwner,
         LocalPostPolls provides pollOwner,
         LocalPostReveals provides revealOwner,
+        LocalMentionProfiles provides mentionOwner,
         LocalPostEdits provides editOwner,
         LocalPostLinkResolver provides linkResolver,
         LocalPostPendingLookup provides pendingLookup,

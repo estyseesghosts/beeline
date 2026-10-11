@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +45,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
@@ -51,6 +53,7 @@ import me.foxtails.palustris.domain.PostMention
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
+import me.foxtails.palustris.ui.emoji.LocalMentionProfiles
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.springPress
 import me.foxtails.palustris.ui.theme.postAuthor
@@ -72,8 +75,14 @@ internal fun PostBodyContent(
     onOpenUrl: ((String) -> Unit)? = null,
     onOpenUsername: ((String) -> Unit)? = null,
     onSearchHashtag: ((String) -> Unit)? = null,
+    onOpenProfile: ((Account) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    // The author and the reposter are accounts the session already holds, so their mentions need no request.
+    val mentionProfiles = LocalMentionProfiles.current
+    LaunchedEffect(post.author, post.resharedBy, mentionProfiles) {
+        mentionProfiles.seed(listOfNotNull(post.author, post.resharedBy))
+    }
     val bodyTruncated = isPostBodyTruncated(post, presentation, truncateBody)
     val bodyText = if (bodyTruncated) {
         truncatedPostBody(presentation.visibleText, post.emoji)
@@ -95,6 +104,7 @@ internal fun PostBodyContent(
                                 text = bodyText,
                                 emoji = post.emoji,
                                 mentions = post.mentions,
+                                onOpenProfile = onOpenProfile,
                                 onTextTap = onOpenPost,
                                 onOpenUrl = onOpenUrl,
                                 onOpenUsername = onOpenUsername,
@@ -108,6 +118,7 @@ internal fun PostBodyContent(
                             text = bodyText,
                             emoji = post.emoji,
                             mentions = post.mentions,
+                            onOpenProfile = onOpenProfile,
                             onTextTap = onOpenPost,
                             onOpenUrl = onOpenUrl,
                             onOpenUsername = onOpenUsername,
@@ -142,11 +153,13 @@ internal fun PostBodyText(
     onOpenUsername: ((String) -> Unit)? = null,
     onSearchHashtag: ((String) -> Unit)? = null,
     mentions: List<PostMention> = emptyList(),
+    onOpenProfile: ((Account) -> Unit)? = null,
 ) {
     InlineEmojiText(
         text = text,
         emoji = emoji,
         mentions = mentions,
+        onOpenProfile = onOpenProfile,
         modifier = modifier,
         style = style,
         onTextTap = onTextTap,

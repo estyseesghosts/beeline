@@ -129,4 +129,5 @@
     <plurals name="search_trending_tag_users">
         <item quantity="other">%1$s: %2$d人のユーザー</item>
     </plurals>
+    <string name="a11y_mention_description">メンション: %1$s、%2$s</string>
 </resources>

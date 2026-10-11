@@ -47,4 +47,5 @@
     <plurals name="search_trending_tag_users">
         <item quantity="other">%1$s: 사용자 %2$d명</item>
     </plurals>
+    <string name="a11y_mention_description">멘션: %1$s, %2$s</string>
 </resources>

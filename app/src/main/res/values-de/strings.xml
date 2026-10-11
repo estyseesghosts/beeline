@@ -188,4 +188,5 @@
         <item quantity="one">%1$s: %2$d Nutzer</item>
         <item quantity="other">%1$s: %2$d Nutzer</item>
     </plurals>
+    <string name="a11y_mention_description">Erwähnung: %1$s, %2$s</string>
 </resources>

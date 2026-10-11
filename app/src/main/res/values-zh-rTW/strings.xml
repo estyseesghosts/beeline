@@ -177,4 +177,5 @@
     <plurals name="search_trending_tag_users">
         <item quantity="other">%1$s：%2$d 位使用者</item>
     </plurals>
+    <string name="a11y_mention_description">提及：%1$s，%2$s</string>
 </resources>

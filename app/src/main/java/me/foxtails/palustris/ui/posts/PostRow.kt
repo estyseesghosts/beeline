@@ -160,6 +160,7 @@ private fun PostRowContent(
                 onOpenUrl = onOpenUrl,
                 onOpenUsername = onOpenUsername,
                 onSearchHashtag = onSearchHashtag,
+                onOpenProfile = events.onOpenProfile,
             )
             PostTranslationFooter(translationEntry, translationId, translations)
             if (post.editedAtEpochMillis != null) PostEditedLabel()

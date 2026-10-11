@@ -275,6 +275,7 @@ internal fun SinglePostScreen(
                       onOpenUrl = onOpenUrl,
                       onOpenUsername = onOpenUsername,
                       onSearchHashtag = onSearchHashtag,
+                      onOpenProfile = onOpenProfile,
                       modifier = Modifier.padding(top = 12.dp),
                   )
               }
