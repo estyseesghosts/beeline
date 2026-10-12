@@ -281,7 +281,7 @@ internal fun NavigationCapsule(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f),
+        color = MaterialTheme.colorScheme.surfaceContainer,
         shadowElevation = FloatingControlElevation,
     ) {
         val capsulePadding = if (orientation == Orientation.Horizontal) {

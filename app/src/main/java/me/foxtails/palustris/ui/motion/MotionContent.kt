@@ -73,6 +73,10 @@ fun <T> AnimatedStatePane(
     ) { content(it) }
 }
 
+/**
+ * Shows [content] with a vertical expand and shrink. The size change clips while it runs; at rest nothing clips, so
+ * a child may draw a shadow outside its bounds.
+ */
 @Composable
 fun ExpandableContent(
     visible: Boolean,
@@ -82,7 +86,7 @@ fun ExpandableContent(
     val scheme = LocalPalustrisMotionScheme.current
     AnimatedVisibility(
         visible = visible,
-        modifier = modifier.clipToBounds(),
+        modifier = modifier,
         enter = if (scheme.reducedMotion) EnterTransition.None else expandVertically(scheme.gentleSize) + fadeIn(scheme.fastFadeIn),
         exit = if (scheme.reducedMotion) ExitTransition.None else shrinkVertically(scheme.gentleSize) + fadeOut(scheme.fastFadeOut),
     ) {

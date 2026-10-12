@@ -996,11 +996,11 @@ chips use `floatingFilterChipElevation()` and `floatingAssistChipElevation()`. N
 
 | Control | File | Before | Now |
 | --- | --- | --- | --- |
-| Navigation pill (compact and wide) | `NavigationPresentation.kt` | `shadowElevation` 6 dp | token |
+| Navigation pill (compact and wide) | `NavigationPresentation.kt` | `shadowElevation` 6 dp | token, and an opaque `surfaceContainer` (infdev 04 S2; it was 85 % opaque, so content and its own shadow showed through) |
 | Contextual action button | `NavigationPresentation.kt` | none | `floatingControlShadow(CircleShape)` |
 | Inline chip caret | `CategoryChips.kt` | none | `shadowElevation` token |
 | Contextual tab caret | `CompactWideTabCaret.kt` | none | `floatingControlShadow(CircleShape)` |
-| Destination chips (Home, Search tabs, Photo Grid, Notifications, Profile) | `DestinationFilterChip.kt` | none | `floatingFilterChipElevation()` |
+| Destination chips (Home, Search tabs, Photo Grid, Notifications, Profile) | `DestinationFilterChip.kt` | none | `floatingFilterChipElevation()`. `ExpandableContent` no longer clips at rest (infdev 04 S2), so a chip row with a hidden caret shows the whole shadow. The expand and shrink still clip while they run. Callers: chip row, composer warning field, notifications sync notice, post body behind a warning. None needs a clip at rest |
 | Search field | `SearchPane.kt` | none | `floatingControlShadow(CircleShape)` |
 | Composer bubbles (top bar, tools, options) | `ComposerBubbles.kt` | none | `shadowElevation` token |
 | Composer hashtag suggestions | `ComposerHashtags.kt` | none | `floatingAssistChipElevation()` |
