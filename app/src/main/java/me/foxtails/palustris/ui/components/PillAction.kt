@@ -22,6 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
+private const val DISABLED_CONTENT_ALPHA = 0.38f
+
 /** A compact action control shared by anchored post controls and action sheets. */
 @Composable
 internal fun PillAction(
@@ -49,7 +51,7 @@ internal fun PillAction(
             },
         shape = BeelineBubbleShape,
         color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = if (enabled) 1f else DISABLED_CONTENT_ALPHA),
     ) {
         Row(
             modifier = Modifier

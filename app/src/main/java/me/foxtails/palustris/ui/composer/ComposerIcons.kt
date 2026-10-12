@@ -31,6 +31,9 @@ internal object ComposerIcons {
     /** Bars of a poll. */
     val Poll: ImageVector = traced("ComposerPoll", "M5,9.2h3V19H5z M10.6,5h2.8v14h-2.8z M16.2,13H19v6h-2.8z")
 
+    /** A warning triangle for the content warning row of the attachment menu. */
+    val Warning: ImageVector = traced("ComposerWarning", "M1,21h22L12,2z M13,18h-2v-2h2z M13,14h-2v-4h2z")
+
     /** A smiling face for the emoji picker. */
     val Emoji: ImageVector = traced(
         "ComposerEmoji",

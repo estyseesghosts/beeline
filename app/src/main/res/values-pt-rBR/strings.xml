@@ -186,4 +186,9 @@
         <item quantity="other">%1$s: %2$d usuários</item>
     </plurals>
     <string name="a11y_mention_description">Menção: %1$s, %2$s</string>
+    <string name="composer_attach">Adicionar anexo</string>
+    <string name="composer_warning_add">Adicionar aviso de conteúdo</string>
+    <string name="composer_warning_remove">Remover aviso de conteúdo</string>
+    <string name="composer_poll_add">Adicionar enquete</string>
+    <string name="composer_attach_active">Há uma enquete ou um aviso de conteúdo</string>
 </resources>

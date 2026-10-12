@@ -136,7 +136,6 @@
     <string name="audience_direct_description">Nur die Personen, die du erwähnst, können es sehen.</string>
     <string name="composer_audience_row">Zielgruppe: %1$s</string>
     <string name="composer_add_photo">Foto hinzufügen</string>
-    <string name="composer_content_warning_short">IW</string>
     <string name="composer_characters_remaining">%1$d Zeichen übrig</string>
     <string name="composer_warning_remaining">%1$d übrig</string>
     <string name="composer_entry_text">Text von Beitrag %1$d</string>
@@ -195,4 +194,9 @@
         <item quantity="other">%1$s: %2$d Nutzer</item>
     </plurals>
     <string name="a11y_mention_description">Erwähnung: %1$s, %2$s</string>
+    <string name="composer_attach">Anhang hinzufügen</string>
+    <string name="composer_warning_add">Inhaltswarnung hinzufügen</string>
+    <string name="composer_warning_remove">Inhaltswarnung entfernen</string>
+    <string name="composer_poll_add">Umfrage hinzufügen</string>
+    <string name="composer_attach_active">Umfrage oder Inhaltswarnung ist gesetzt</string>
 </resources>

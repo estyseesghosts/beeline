@@ -184,12 +184,19 @@ class ComposerMediaUiTest {
         assertEquals(true, altTextOverLimit("x".repeat(11), 10))
     }
 
+    /** Opens the attachment menu and returns one of its rows. */
+    private fun attachRow(tag: String): androidx.compose.ui.test.SemanticsNodeInteraction {
+        compose.onNodeWithTag("composer_attach").performClick()
+        compose.waitForIdle()
+        return compose.onNodeWithTag(tag)
+    }
+
     @Test
     fun photoButtonIsDisabledWhenTheEntryIsFullOrUploadIsUnsupported() {
         val full = Actions()
         val fullContract = contract(full, PostingCapabilities(maxAttachments = 1))
         showBody(ownerWith(ComposerEntryState(text = "hi", media = listOf(image("a"))), fullContract), fullContract)
-        compose.onNodeWithContentDescription("Add photo").assertIsNotEnabled()
+        attachRow("composer_attach_photo").assertIsNotEnabled()
     }
 
     @Test
@@ -197,7 +204,7 @@ class ComposerMediaUiTest {
         val actions = Actions()
         val contract = contract(actions, PostingCapabilities(maxAttachments = 4, mediaUpload = CapabilityStatus.Unsupported))
         showBody(ownerWith(ComposerEntryState(text = "hi"), contract), contract)
-        compose.onNodeWithContentDescription("Add photo").assertIsNotEnabled()
+        attachRow("composer_attach_photo").assertIsNotEnabled()
     }
 
     @Test
@@ -206,7 +213,7 @@ class ComposerMediaUiTest {
         val drafts = Drafts()
         val contract = contract(actions, PostingCapabilities(maxAttachments = 4, mediaUpload = CapabilityStatus.Supported), mediaAccess = AccessStatus.Denied)
         showBody(ownerWith(ComposerEntryState(text = "keep me"), contract, drafts), contract)
-        compose.onNodeWithContentDescription("Add photo").assertIsEnabled().performClick()
+        attachRow("composer_attach_photo").assertIsEnabled().performClick()
         compose.waitForIdle()
         assertEquals(1, actions.signInRequests)
         assertTrue("the editor is saved before the sign-in flow", drafts.saved.any { it.text == "keep me" })

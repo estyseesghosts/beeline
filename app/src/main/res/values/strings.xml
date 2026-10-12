@@ -794,7 +794,6 @@
     <string name="audience_direct_description">Only the people you mention can see it.</string>
     <string name="composer_audience_row">Audience: %1$s</string>
     <string name="composer_add_photo">Add photo</string>
-    <string name="composer_content_warning_short">CW</string>
     <string name="composer_characters_remaining">%1$d characters remaining</string>
     <string name="composer_warning_remaining">%1$d remaining</string>
     <string name="composer_entry_text">Post %1$d text</string>
@@ -900,4 +899,9 @@
         <item quantity="other">%1$s: %2$d users</item>
     </plurals>
     <string name="a11y_mention_description">Mention: %1$s, %2$s</string>
+    <string name="composer_attach">Add attachment</string>
+    <string name="composer_warning_add">Add content warning</string>
+    <string name="composer_warning_remove">Remove content warning</string>
+    <string name="composer_poll_add">Add poll</string>
+    <string name="composer_attach_active">A poll or content warning is set</string>
 </resources>

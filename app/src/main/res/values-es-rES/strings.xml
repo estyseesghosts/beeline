@@ -185,7 +185,6 @@
     <string name="audience_direct_description">Solo las personas que menciones pueden verla.</string>
     <string name="composer_audience_row">Audiencia: %1$s</string>
     <string name="composer_add_photo">Añadir foto</string>
-    <string name="composer_content_warning_short">AC</string>
     <string name="composer_characters_remaining">%1$d caracteres restantes</string>
     <string name="composer_warning_remaining">%1$d restantes</string>
     <string name="composer_entry_text">Texto de la publicación %1$d</string>
@@ -244,4 +243,9 @@
         <item quantity="other">%1$s: %2$d usuarios</item>
     </plurals>
     <string name="a11y_mention_description">Mención: %1$s, %2$s</string>
+    <string name="composer_attach">Añadir adjunto</string>
+    <string name="composer_warning_add">Añadir advertencia de contenido</string>
+    <string name="composer_warning_remove">Quitar advertencia de contenido</string>
+    <string name="composer_poll_add">Añadir encuesta</string>
+    <string name="composer_attach_active">Hay una encuesta o una advertencia de contenido</string>
 </resources>

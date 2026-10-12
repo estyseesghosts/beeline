@@ -15,17 +15,19 @@ Complete `docs/04_infdev.md`: S1 blur band, S2 shadows and opaque pill, S3 edge 
 
 # Completed
 
-S1 `5ef55e75` blur band. S2 `b71b5daa` shadows and opaque pill.
+S1 `5ef55e75` blur band. S2 `b71b5daa` shadows and opaque pill. S3 `bd5f8f9d` edge veil.
 
 # Current slice
 
-S3: edge veil in the band geometry and draw block; `edgeInsets` passed from the dock, compact shell and large dock.
+S4: composer attachment menu, `AnchoredChoiceBubble` scaffold, `PillAction` disabled look.
 
 # Files involved
 
-`ui/components/ChromeBandGeometry.kt`, `FloatingChromeBlur.kt`, `ui/large/LargeBottomDock.kt`, `ui/shell/ShellContent.kt`, `ChromeBandGeometryTest.kt`, wiki.
+`ui/posts/AnchoredChoiceBubble.kt`, `ui/composer/ComposerAttachMenu.kt`, `ComposerBody.kt`, `FollowChoice.kt`, `PostRepostChoice.kt`, `PillAction.kt`, strings in 15 locales, tests, wiki.
 
 # Verification
+
+S3 gate passed. S4 device (emulator-5554, Mastodon test account): row 1 holds four controls; the menu pops out above the paperclip in the Repost style; Add content warning shows the field and the circle takes the selected tone. Not checked: the keyboard with the menu open (no soft keyboard on the emulator, S4-D8 open), TalkBack, Misskey poll row on a device, 320 dp on a device. Unit tests cover rows, rules, edit mode, one-run choice, sheet at font scale 1.5, tone, and the width tests.
 
 S2 gate passed. S3 device (emulator-5554, compact-wide Home): the image under the chips fades into the background color toward the bottom edge; chips keep their contrast. Not checked: dark themes and Pure black, SM-G986W scroll shimmer (S3-D1 recording not run), API 29/30. Composer bands get no veil because they do not rest on the screen edge.
 
@@ -37,7 +39,7 @@ Not run: S1-D0 and the repeat recording (the emulator Taskbar hides the bottom e
 
 # Next
 
-Run the gate and commit S3, then S4.
+Run the gate, commit S4, then build the testsigned release APK the owner asked for.
 
 # Blockers
 
@@ -45,4 +47,4 @@ None.
 
 # Last safe commit
 
-b71b5daa Show whole chip shadows and make the navigation pill opaque (infdev 04 S2)
+bd5f8f9d Fade the blur band into the background color toward the screen edge (infdev 04 S3)

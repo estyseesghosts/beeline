@@ -56,4 +56,9 @@
         <item quantity="other">%1$s: %2$d उपयोगकर्ता</item>
     </plurals>
     <string name="a11y_mention_description">उल्लेख: %1$s, %2$s</string>
+    <string name="composer_attach">अटैचमेंट जोड़ें</string>
+    <string name="composer_warning_add">सामग्री चेतावनी जोड़ें</string>
+    <string name="composer_warning_remove">सामग्री चेतावनी हटाएँ</string>
+    <string name="composer_poll_add">पोल जोड़ें</string>
+    <string name="composer_attach_active">पोल या सामग्री चेतावनी सेट है</string>
 </resources>

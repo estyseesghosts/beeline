@@ -54,4 +54,9 @@
         <item quantity="other">%1$s: 사용자 %2$d명</item>
     </plurals>
     <string name="a11y_mention_description">멘션: %1$s, %2$s</string>
+    <string name="composer_attach">첨부 추가</string>
+    <string name="composer_warning_add">콘텐츠 경고 추가</string>
+    <string name="composer_warning_remove">콘텐츠 경고 제거</string>
+    <string name="composer_poll_add">투표 추가</string>
+    <string name="composer_attach_active">투표 또는 콘텐츠 경고가 설정되어 있습니다</string>
 </resources>

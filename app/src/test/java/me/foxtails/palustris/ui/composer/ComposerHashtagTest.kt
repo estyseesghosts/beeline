@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import kotlinx.coroutines.flow.Flow
@@ -167,8 +168,8 @@ class ComposerHashtagTest {
         settle()
 
         val chips = compose.onNode(hasTestTag("composer_hashtag_suggestions")).fetchSemanticsNode().boundsInRoot
-        val toolbar = compose.onNodeWithContentDescription("Add photo").fetchSemanticsNode().boundsInRoot
+        val toolbar = compose.onNodeWithTag("composer_attach").fetchSemanticsNode().boundsInRoot
         assertTrue("the chips sit above the toolbar", chips.bottom <= toolbar.top + 1f)
-        compose.onNodeWithContentDescription("Add photo").assertIsDisplayed()
+        compose.onNodeWithTag("composer_attach").assertIsDisplayed()
     }
 }

@@ -25,11 +25,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
@@ -195,13 +200,22 @@ internal fun ComposerBody(
                 entry = focusedEntry,
                 limits = contract.limits,
                 editing = editing != null,
-                photo = media.photoState(focusedEntry),
-                onPhoto = { media.onPhoto(focusedEntry) },
-                pollEnabled = contract.limits.posting.poll != null && focusedEntry.media.isEmpty() && !contract.publishing && !owner.submitting,
-                onPoll = {
-                    val limits = contract.limits.posting.poll
-                    if (focusedEntry.poll != null) owner.setPoll(focusedEntry.id, null) else if (limits != null) owner.setPoll(focusedEntry.id, newPoll(limits))
-                },
+                attachRows = composerAttachRows(
+                    entry = focusedEntry,
+                    editing = editing != null,
+                    photo = media.photoState(focusedEntry),
+                    pollSupported = contract.limits.posting.poll != null,
+                    pollEnabled = focusedEntry.media.isEmpty() && !contract.publishing && !owner.submitting,
+                    onPhoto = { media.onPhoto(focusedEntry) },
+                    onPoll = {
+                        val limits = contract.limits.posting.poll
+                        if (focusedEntry.poll != null) owner.setPoll(focusedEntry.id, null) else if (limits != null) owner.setPoll(focusedEntry.id, newPoll(limits))
+                    },
+                    onToggleWarning = {
+                        owner.setEntryWarningEnabled(focusedEntry.id, !focusedEntry.warningEnabled)
+                        if (focusedEntry.warningEnabled) focused = ComposerField(ComposerField.Kind.Text, focusedEntry.id)
+                    },
+                ),
                 onEmoji = {
                     val kind = if (warningFocused) ComposerField.Kind.Warning else ComposerField.Kind.Text
                     onRequestEmoji(ComposerField(kind, focusedEntry.id))
@@ -209,10 +223,6 @@ internal fun ComposerBody(
                 addEnabled = focusedEntry.hasPostableContent() && !contract.publishing && !owner.submitting,
                 onAddEntry = {
                     if (focusedEntry.effectiveWarning.isNotBlank()) warningPrompt = focusedEntry.id else addAfter(focusedEntry.id, copyWarning = false)
-                },
-                onToggleWarning = {
-                    owner.setEntryWarningEnabled(focusedEntry.id, !focusedEntry.warningEnabled)
-                    if (focusedEntry.warningEnabled) focused = ComposerField(ComposerField.Kind.Text, focusedEntry.id)
                 },
             )
             if (editing == null && focusedEntry.id == editor.first.id) {
@@ -233,53 +243,43 @@ internal fun ComposerBody(
 }
 
 /**
- * Row 1 of the bubbles. Photo, poll, and emoji circles sit on the left. The content warning pill, the characters
- * remaining for the focused card, and the add circle sit on the right. The photo bubble follows [PhotoButtonState].
- * The server decides which bubbles exist: the poll bubble is absent without poll support, and photo, poll, and
- * add are absent while editing a post.
+ * Row 1 of the bubbles: the attachment circle and the emoji circle on the left, the characters remaining for the focused
+ * card and the add circle on the right. The attachment circle opens [ComposerAttachMenu] with [attachRows] (photo,
+ * content warning, poll) and shows the selected tone while the card has a warning or a poll. The add circle is absent
+ * while editing a post.
  */
 @Composable
 internal fun ComposerToolbar(
     entry: ComposerEntryState,
     limits: PostLimits,
-    photo: PhotoButtonState,
-    editing: Boolean = false,
-    onPhoto: () -> Unit,
-    pollEnabled: Boolean,
-    onPoll: () -> Unit,
+    attachRows: List<ComposerAttachRow>,
     onEmoji: () -> Unit,
-    onToggleWarning: () -> Unit,
     addEnabled: Boolean,
     onAddEntry: () -> Unit,
     modifier: Modifier = Modifier,
+    editing: Boolean = false,
 ) {
     val remaining = entry.remaining(limits)
+    var menuOpen by remember { mutableStateOf(false) }
+    var anchor by remember { mutableStateOf(Rect.Zero) }
+    val attachActive = entry.poll != null || entry.warningEnabled
+    val attachDescription = stringResource(R.string.composer_attach)
+    val activeDescription = stringResource(R.string.composer_attach_active)
     Row(
         modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (!editing) {
-            ComposerCircleBubble(AppIcons.Image, stringResource(R.string.composer_add_photo), onPhoto, enabled = photo != PhotoButtonState.Disabled)
-        }
-        if (limits.posting.poll != null && !editing) {
-            ComposerCircleBubble(
-                ComposerIcons.Poll,
-                stringResource(R.string.composer_poll),
-                onPoll,
-                modifier = Modifier.testTag("composer_poll_toggle"),
-                enabled = pollEnabled || entry.poll != null,
-                tone = if (entry.poll != null) ComposerBubbleTone.Selected else ComposerBubbleTone.Plain,
-            )
-        }
+        ComposerCircleBubble(
+            AppIcons.Paperclip,
+            attachDescription,
+            onClick = { menuOpen = true },
+            modifier = Modifier.testTag("composer_attach").onGloballyPositioned { anchor = it.boundsInWindow() }
+                .semantics { if (attachActive) stateDescription = activeDescription },
+            tone = if (attachActive) ComposerBubbleTone.Selected else ComposerBubbleTone.Plain,
+        )
         ComposerCircleBubble(ComposerIcons.Emoji, stringResource(R.string.emoji_open_picker), onEmoji)
         Box(Modifier.weight(1f))
-        ComposerPillBubble(
-            label = stringResource(R.string.composer_content_warning_short),
-            description = stringResource(R.string.composer_content_warning),
-            onClick = onToggleWarning,
-            tone = if (entry.warningEnabled) ComposerBubbleTone.Selected else ComposerBubbleTone.Plain,
-        )
         if (remaining != null) {
             ComposerPillBubble(
                 label = remaining.toString(),
@@ -292,4 +292,5 @@ internal fun ComposerToolbar(
             ComposerCircleBubble(ComposerIcons.Add, stringResource(R.string.composer_add_post), onAddEntry, enabled = addEnabled)
         }
     }
+    if (menuOpen) ComposerAttachMenu(anchor, attachRows, onDismiss = { menuOpen = false })
 }

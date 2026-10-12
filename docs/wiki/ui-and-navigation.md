@@ -450,9 +450,18 @@ not. Growth animates with the `gentleSize` motion token, and reduced motion turn
 The avatar hangs beside the card. It is on the left for the first card of a new post or a quote. It is on the right
 for every later entry and for a reply. A thread line runs from each avatar to the next card.
 
-Row 1 of the bottom bubbles acts on the focused card. Photo, poll, and emoji circles sit on the left. A content
-warning pill, the characters remaining, and an add circle sit on the right. The server decides which bubbles exist.
-An unsupported bubble is absent. It is not disabled. Photo, poll, and add are absent while editing a post.
+Row 1 of the bottom bubbles acts on the focused card (infdev 04 S4). The attachment circle (paperclip) and the emoji circle sit on
+the left. The characters remaining and an add circle sit on the right. The row fits a 320 dp window with a four-digit counter, and
+no control overlaps another at font scale 2.0 (`ComposerAttachMenuTest`). The attachment circle opens `ComposerAttachMenu`, a pop-out
+menu above it in the style of Follow and Repost, with Photo, Content warning and Poll rows. `AnchoredChoiceBubble`
+(`ui/posts/AnchoredChoiceBubble.kt`) is the one scaffold for that style: a popup bubble, or a bottom sheet from font scale 1.5. Follow,
+Repost and the attachment menu all use it. It holds no state. `composerAttachRows` builds the rows and each rule stays with its
+owner: Photo follows `PhotoButtonState`, Poll is absent without server poll support and disabled while the card has media (unless
+it has a poll), and Content warning is always available. Editing a post shows the Content warning row only, and no add circle.
+A disabled row is dimmed (`PillAction` now dims at `enabled = false`). A tap closes the menu first and then runs the action once.
+The circle shows the selected tone and a state description while the card has a warning or a poll. The first enabled row takes the focus.
+The anchor is read live from the circle, so a moved row moves the menu. Not checked on a device: the keyboard (the emulator
+shows no soft keyboard), TalkBack, 320 dp and font scale 2.0 beyond the Robolectric tests.
 
 Row 2 acts on the thread. It shows only while the first card has focus and the user is not editing. It holds the
 audience pill, Local only, the quote policy, and Schedule. Each pill shows only when the server offers it. The row

@@ -133,7 +133,6 @@
     <string name="audience_direct_description">Seules les personnes que vous mentionnez peuvent le voir.</string>
     <string name="composer_audience_row">Audience : %1$s</string>
     <string name="composer_add_photo">Ajouter une photo</string>
-    <string name="composer_content_warning_short">AC</string>
     <string name="composer_characters_remaining">%1$d caractères restants</string>
     <string name="composer_warning_remaining">%1$d restants</string>
     <string name="composer_entry_text">Texte du message %1$d</string>
@@ -192,4 +191,9 @@
         <item quantity="other">%1$s : %2$d utilisateurs</item>
     </plurals>
     <string name="a11y_mention_description">Mention : %1$s, %2$s</string>
+    <string name="composer_attach">Ajouter une pièce jointe</string>
+    <string name="composer_warning_add">Ajouter un avertissement de contenu</string>
+    <string name="composer_warning_remove">Retirer l’avertissement de contenu</string>
+    <string name="composer_poll_add">Ajouter un sondage</string>
+    <string name="composer_attach_active">Un sondage ou un avertissement de contenu est défini</string>
 </resources>

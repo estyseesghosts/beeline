@@ -184,4 +184,9 @@
         <item quantity="other">%1$s：%2$d 位使用者</item>
     </plurals>
     <string name="a11y_mention_description">提及：%1$s，%2$s</string>
+    <string name="composer_attach">新增附件</string>
+    <string name="composer_warning_add">新增內容警告</string>
+    <string name="composer_warning_remove">移除內容警告</string>
+    <string name="composer_poll_add">新增投票</string>
+    <string name="composer_attach_active">已設定投票或內容警告</string>
 </resources>
