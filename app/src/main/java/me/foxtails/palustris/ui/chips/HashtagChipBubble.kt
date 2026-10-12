@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
 import me.foxtails.palustris.ui.components.FloatingControlElevation
@@ -27,12 +28,22 @@ import me.foxtails.palustris.ui.motion.HapticEvent
 import me.foxtails.palustris.ui.motion.LocalPalustrisHaptics
 import me.foxtails.palustris.ui.posts.BubblePlacement
 import me.foxtails.palustris.ui.posts.WindowAnchorPositionProvider
+import me.foxtails.palustris.ui.shell.FeedChipsContract
 
 /** At or above this font scale the menu opens as a bottom sheet because a bubble no longer fits beside its chip. */
 private const val LARGE_FONT_SHEET_SCALE = 1.5f
 
+/** Removes the hashtag or group chip [feed]. Other chip kinds have no menu. */
+internal fun FeedChipsContract.Actions.removeChip(feed: FeedSource) {
+    when (feed) {
+        is FeedSource.Hashtag -> removeHashtag(feed.tag) {}
+        is FeedSource.HashtagGroup -> removeHashtagGroup(feed) {}
+        else -> Unit
+    }
+}
+
 /** The hashtag chip whose menu is open, and the window bounds of that chip. */
-internal data class HashtagChipMenu(val hashtag: FeedSource.Hashtag, val anchorBounds: Rect)
+internal data class HashtagChipMenu(val feed: FeedSource, val anchorBounds: Rect)
 
 /**
  * The menu that a long press on a hashtag chip opens. It has one button: Unfollow for a tag followed on
@@ -49,7 +60,7 @@ internal fun HashtagChipBubble(
     val density = LocalDensity.current
     if (density.fontScale >= LARGE_FONT_SHEET_SCALE) {
         ModalBottomSheet(onDismissRequest = onDismiss) {
-            HashtagChipBubbleContent(menu.hashtag, onConfirm, Modifier.navigationBarsPadding().padding(16.dp))
+            HashtagChipBubbleContent(menu.feed, onConfirm, Modifier.navigationBarsPadding().padding(16.dp))
         }
     } else {
         Popup(
@@ -62,18 +73,22 @@ internal fun HashtagChipBubble(
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 shadowElevation = FloatingControlElevation,
             ) {
-                HashtagChipBubbleContent(menu.hashtag, onConfirm, Modifier.padding(8.dp))
+                HashtagChipBubbleContent(menu.feed, onConfirm, Modifier.padding(8.dp))
             }
         }
     }
 }
 
 @Composable
-private fun HashtagChipBubbleContent(hashtag: FeedSource.Hashtag, onConfirm: () -> Unit, modifier: Modifier) {
+private fun HashtagChipBubbleContent(feed: FeedSource, onConfirm: () -> Unit, modifier: Modifier) {
     val haptics = LocalPalustrisHaptics.current
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    val label = stringResource(hashtagMenuLabel(hashtag.origin), hashtagChipLabel(hashtag.tag))
+    val label = when (feed) {
+        is FeedSource.Hashtag -> stringResource(hashtagMenuLabel(feed.origin), hashtagChipLabel(feed.tag))
+        is FeedSource.HashtagGroup -> stringResource(R.string.feed_chip_remove_tag, feed.name)
+        else -> return
+    }
     PillAction(
         label = label,
         onClick = {

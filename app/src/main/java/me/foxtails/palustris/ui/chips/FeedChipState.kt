@@ -15,6 +15,10 @@ data class FeedChipState(
     val lists: List<FeedSource.UserList> = emptyList(),
     val hashtags: List<FeedSource.Hashtag> = emptyList(),
     val antennas: List<FeedSource.Antenna> = emptyList(),
+    /** Local groups of hashtags searched together. They live on the device on every protocol. */
+    val hashtagGroups: List<FeedSource.HashtagGroup> = emptyList(),
+    /** Most tags one group may hold. Below two, the add dialog offers no group. */
+    val maxGroupTags: Int = 0,
     /** True once the first refresh has answered, so a missing chip is not mistaken for one still loading. */
     val loaded: Boolean = false,
     /** True while a follow, save, unfollow or remove runs. */
@@ -22,7 +26,7 @@ data class FeedChipState(
     val error: FeedChipError? = null,
 ) {
     /** The chips after the built-in timelines, in row order. */
-    val extras: List<FeedSource> get() = lists + hashtags + antennas
+    val extras: List<FeedSource> get() = lists + hashtags + hashtagGroups + antennas
 
     /** The whole row: [builtIn] timelines in display order, then lists, hashtags and antennas. */
     fun chips(builtIn: Collection<Timeline>): List<FeedSource> =

@@ -36,6 +36,10 @@ fun FeedChipsHost(
             override fun refresh() = catalog.refresh()
             override fun addHashtag(value: String, onAdded: (FeedSource.Hashtag) -> Unit) = catalog.addHashtag(value, onAdded)
             override fun removeHashtag(tag: String, onRemoved: () -> Unit) = catalog.removeHashtag(tag, onRemoved)
+            override fun addHashtagGroup(name: String, values: List<String>, onAdded: (FeedSource.HashtagGroup) -> Unit) =
+                catalog.addHashtagGroup(name, values, onAdded)
+            override fun removeHashtagGroup(group: FeedSource.HashtagGroup, onRemoved: () -> Unit) =
+                catalog.removeHashtagGroup(group, onRemoved)
             override fun clearError() = catalog.clearError()
         }
     }

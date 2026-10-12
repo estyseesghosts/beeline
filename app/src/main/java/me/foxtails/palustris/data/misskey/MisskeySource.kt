@@ -92,6 +92,7 @@ internal const val MISSKEY_MAX_RESPONSE_BYTES = 4L * 1024 * 1024
 
 /** Extra inner arrays that one `notes/search-by-tag` request carries. */
 private const val MAX_COMBINED_HASHTAGS = 10
+private const val MAX_GROUP_HASHTAGS = 100
 
 class MisskeySource(
     private val origin: String,
@@ -251,6 +252,8 @@ class MisskeySource(
 
     override val maxCombinedHashtags: Int get() = MAX_COMBINED_HASHTAGS
 
+    override val maxGroupHashtags: Int get() = MAX_GROUP_HASHTAGS
+
     override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> =
         searchHashtags(HashtagQuery(tag), cursor)
 
@@ -260,7 +263,7 @@ class MisskeySource(
      */
     override suspend fun searchHashtags(query: HashtagQuery, cursor: String?): Page<Post> = request("search.hashtag") {
         val normalized = hashtagBody(query.primary)
-        val extras = query.extras(MAX_COMBINED_HASHTAGS)
+        val extras = query.extras(MAX_GROUP_HASHTAGS - 1)
         val body = JSONObject().put("i", token).put("limit", 30)
         if (extras.isEmpty()) {
             body.put("tag", normalized)

@@ -66,10 +66,11 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
-import me.foxtails.palustris.ui.chips.AddHashtagDialog
 import me.foxtails.palustris.ui.chips.HashtagChipBubble
 import me.foxtails.palustris.ui.chips.HashtagChipMenu
+import me.foxtails.palustris.ui.chips.HashtagEntryDialog
 import me.foxtails.palustris.ui.chips.feedExtraChipEntries
+import me.foxtails.palustris.ui.chips.removeChip
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
@@ -316,7 +317,7 @@ fun PhotoGridScreen(
                 keyPrefix = "photo_grid",
                 addTestTag = "photo_grid_add_hashtag",
                 onSelect = { onSelectFeed(PhotoGridFeed.Source(it)) },
-                onHashtagMenu = { hashtag, bounds -> hashtagMenu = HashtagChipMenu(hashtag, bounds) },
+                onHashtagMenu = { feed, bounds -> hashtagMenu = HashtagChipMenu(feed, bounds) },
                 onAddHashtag = {
                     chips.actions.clearError()
                     addHashtagDialog = true
@@ -450,16 +451,9 @@ fun PhotoGridScreen(
     }
 
     if (addHashtagDialog) {
-        AddHashtagDialog(
-            busy = chips.state.busy,
-            error = chips.state.error,
-            onAdd = { value, onDone ->
-                chips.actions.addHashtag(value) { added ->
-                    onSelectFeed(PhotoGridFeed.Source(added))
-                    onDone()
-                }
-            },
-            onClearError = chips.actions::clearError,
+        HashtagEntryDialog(
+            chips = chips,
+            onSelect = { onSelectFeed(PhotoGridFeed.Source(it)) },
             onDismiss = {
                 addHashtagDialog = false
                 chips.actions.clearError()
@@ -472,7 +466,7 @@ fun PhotoGridScreen(
             onDismiss = { hashtagMenu = null },
             onConfirm = {
                 hashtagMenu = null
-                chips.actions.removeHashtag(menu.hashtag.tag) {}
+                chips.actions.removeChip(menu.feed)
             },
         )
     }

@@ -642,6 +642,8 @@ class MastodonSource(
 
     override val maxCombinedHashtags: Int get() = MAX_COMBINED_HASHTAGS
 
+    override val maxGroupHashtags: Int get() = MAX_COMBINED_HASHTAGS + 1
+
     override suspend fun searchHashtag(tag: String, cursor: String?): Page<Post> =
         searchHashtags(HashtagQuery(tag), cursor)
 

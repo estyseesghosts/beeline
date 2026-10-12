@@ -135,6 +135,9 @@ interface SocialSource {
     /** How many extra hashtags one hashtag search accepts. Zero means the source cannot combine. */
     val maxCombinedHashtags: Int get() = 0
 
+    /** How many hashtags one local hashtag group may hold, the primary included. Zero means no groups. */
+    val maxGroupHashtags: Int get() = 0
+
     /**
      * Searches the primary hashtag together with [HashtagQuery.alsoMatching]. A query without extras
      * is the plain hashtag search. A source that cannot combine rejects extras.
@@ -150,6 +153,7 @@ interface SocialSource {
     suspend fun feed(feed: FeedSource, cursor: String? = null): Page<Post> = when (feed) {
         is FeedSource.Timeline -> timeline(feed.timeline, cursor)
         is FeedSource.Hashtag -> searchHashtags(HashtagQuery(feed.tag), cursor)
+        is FeedSource.HashtagGroup -> searchHashtags(HashtagQuery(feed.tags.first(), feed.tags.drop(1)), cursor)
         is FeedSource.UserList -> unsupported("lists")
         is FeedSource.Antenna -> unsupported("antennas")
     }

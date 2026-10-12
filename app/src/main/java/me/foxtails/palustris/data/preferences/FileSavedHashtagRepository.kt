@@ -21,6 +21,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.SavedHashtagGroup
 import me.foxtails.palustris.domain.SavedHashtagRepository
 import me.foxtails.palustris.domain.SavedHashtags
 import me.foxtails.palustris.domain.hashtagBody
@@ -79,8 +80,10 @@ class FileSavedHashtagRepository @Inject constructor(
             val accounts = JSONObject(file.readText(Charsets.UTF_8)).optJSONObject("accounts") ?: return@runCatching emptyMap()
             buildMap {
                 accounts.keys().forEach { key ->
-                    val tags = accounts.optJSONObject(key)?.optJSONArray("hashtags")?.let(::validHashtags).orEmpty()
-                    if (tags.isNotEmpty()) put(key, SavedHashtags(tags))
+                    val account = accounts.optJSONObject(key)
+                    val tags = account?.optJSONArray("hashtags")?.let(::validHashtags).orEmpty()
+                    val groups = account?.optJSONArray("hashtagGroups")?.let(::validGroups).orEmpty()
+                    if (tags.isNotEmpty() || groups.isNotEmpty()) put(key, SavedHashtags(tags, groups))
                 }
             }
         }.getOrDefault(emptyMap())
@@ -92,7 +95,17 @@ class FileSavedHashtagRepository @Inject constructor(
         file.parentFile?.mkdirs()
         val accounts = JSONObject()
         values.forEach { (key, preferences) ->
-            accounts.put(key, JSONObject().put("hashtags", JSONArray(preferences.tags)))
+            accounts.put(
+                key,
+                JSONObject()
+                    .put("hashtags", JSONArray(preferences.tags))
+                    .put(
+                        "hashtagGroups",
+                        JSONArray(
+                            preferences.groups.map { JSONObject().put("name", it.name).put("tags", JSONArray(it.tags)) },
+                        ),
+                    ),
+            )
         }
         val root = JSONObject().put("version", 1).put("accounts", accounts)
         val temporary = File("${file.path}.new")
@@ -125,7 +138,22 @@ private fun storedTag(value: String): String? = runCatching { hashtagBody(value)
 
 private fun normalize(preferences: SavedHashtags): SavedHashtags = SavedHashtags(
     preferences.tags.mapNotNull(::storedTag).distinctBy(::hashtagIdentity),
+    preferences.groups.mapNotNull { group -> savedGroup(group.name, group.tags.mapNotNull(::storedTag)) }
+        .distinctBy { group -> group.tags.map(::hashtagIdentity).sorted() },
 )
+
+private fun validGroups(values: JSONArray): List<SavedHashtagGroup> = (0 until values.length()).mapNotNull { index ->
+    val item = values.optJSONObject(index) ?: return@mapNotNull null
+    val tags = item.optJSONArray("tags")?.let(::validHashtags).orEmpty()
+    savedGroup(item.optString("name"), tags)
+}
+
+/** A group needs two distinct tags. A blank name becomes the first tag with its `#`. */
+private fun savedGroup(name: String, tags: List<String>): SavedHashtagGroup? {
+    val distinct = tags.distinctBy(::hashtagIdentity)
+    if (distinct.size < 2) return null
+    return SavedHashtagGroup(name.trim().ifEmpty { "#" + distinct.first() }, distinct)
+}
 
 private fun validHashtags(values: JSONArray): List<String> = (0 until values.length())
     .mapNotNull { index -> values.optString(index).takeIf(String::isNotBlank) }

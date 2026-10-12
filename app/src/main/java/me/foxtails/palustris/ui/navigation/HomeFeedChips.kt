@@ -8,10 +8,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.Timeline
-import me.foxtails.palustris.ui.chips.AddHashtagDialog
 import me.foxtails.palustris.ui.chips.HashtagChipBubble
 import me.foxtails.palustris.ui.chips.HashtagChipMenu
+import me.foxtails.palustris.ui.chips.HashtagEntryDialog
 import me.foxtails.palustris.ui.chips.feedExtraChipEntries
+import me.foxtails.palustris.ui.chips.removeChip
 import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.shell.FeedChipsContract
 
@@ -48,23 +49,16 @@ internal fun homeFeedChipEntries(
         keyPrefix = "home",
         addTestTag = "home_add_hashtag",
         onSelect = onSelect,
-        onHashtagMenu = { hashtag, bounds -> menu = HashtagChipMenu(hashtag, bounds) },
+        onHashtagMenu = { feed, bounds -> menu = HashtagChipMenu(feed, bounds) },
         onAddHashtag = {
             chips.actions.clearError()
             addDialog = true
         },
     )
     if (addDialog) {
-        AddHashtagDialog(
-            busy = chips.state.busy,
-            error = chips.state.error,
-            onAdd = { value, onDone ->
-                chips.actions.addHashtag(value) { added ->
-                    onSelect(added)
-                    onDone()
-                }
-            },
-            onClearError = chips.actions::clearError,
+        HashtagEntryDialog(
+            chips = chips,
+            onSelect = onSelect,
             onDismiss = {
                 addDialog = false
                 chips.actions.clearError()
@@ -77,7 +71,7 @@ internal fun homeFeedChipEntries(
             onDismiss = { menu = null },
             onConfirm = {
                 menu = null
-                chips.actions.removeHashtag(open.hashtag.tag) {}
+                chips.actions.removeChip(open.feed)
             },
         )
     }

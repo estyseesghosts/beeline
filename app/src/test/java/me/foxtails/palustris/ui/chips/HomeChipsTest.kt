@@ -58,6 +58,8 @@ class HomeChipsTest {
                 removed += tag
                 onRemoved()
             }
+            override fun addHashtagGroup(name: String, values: List<String>, onAdded: (FeedSource.HashtagGroup) -> Unit) = Unit
+            override fun removeHashtagGroup(group: FeedSource.HashtagGroup, onRemoved: () -> Unit) = Unit
             override fun clearError() = Unit
         },
     )

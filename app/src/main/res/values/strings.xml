@@ -348,6 +348,10 @@
     <string name="feed_chip_remove_tag">Remove %1$s</string>
     <string name="photo_grid_search_chip">Search results for %1$s</string>
     <string name="photo_grid_search_dismiss">Remove search results</string>
+    <string name="hashtag_group_create">Create hashtag group</string>
+    <string name="hashtag_group_add_more">Add more</string>
+    <string name="hashtag_group_name_hint">Group name (optional)</string>
+    <string name="hashtag_group_remove_tag">Remove this hashtag</string>
     <string name="photo_grid_add_hashtag">Add hashtag</string>
     <string name="photo_grid_add_hashtag_title">Add a Photo Grid hashtag</string>
     <string name="photo_grid_empty_subtitle">Posts with photos from your timeline will appear here.</string>

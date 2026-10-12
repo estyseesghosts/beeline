@@ -40,6 +40,8 @@ class FeedChipCatalogTest {
         val followCalls = mutableListOf<String>()
         val unfollowCalls = mutableListOf<String>()
 
+        override val maxGroupHashtags: Int get() = 4
+
         override suspend fun timeline(timeline: Timeline, cursor: String?) = Page<Post>(emptyList())
 
         override suspend fun userLists(): List<FeedSource.UserList> {
@@ -311,6 +313,66 @@ class FeedChipCatalogTest {
 
         assertTrue(!catalog.state.value.offers(cats))
         assertTrue(catalog.state.value.offers(FeedSource.Timeline(Timeline.Home)))
+        catalog.stop()
+    }
+
+    @Test
+    fun hashtagGroupIsSavedOnTheDeviceWithoutAServerCall() = runTest {
+        val source = FakeSource(mastodonCaps())
+        val catalog = catalog(this, source)
+        advanceUntilIdle()
+        var added: FeedSource.HashtagGroup? = null
+
+        catalog.addHashtagGroup("Birds", listOf("#Owls", "hawks")) { added = it }
+        advanceUntilIdle()
+
+        assertEquals(FeedSource.HashtagGroup("Birds", listOf("Owls", "hawks")), added)
+        assertEquals(listOf(FeedSource.HashtagGroup("Birds", listOf("Owls", "hawks"))), catalog.state.value.hashtagGroups)
+        assertTrue(catalog.state.value.extras.any { it == added })
+        assertTrue(source.followCalls.isEmpty())
+        catalog.stop()
+    }
+
+    @Test
+    fun blankGroupNameFallsBackToTheFirstTag() = runTest {
+        val catalog = catalog(this, FakeSource(mastodonCaps()))
+        advanceUntilIdle()
+
+        catalog.addHashtagGroup("  ", listOf("owls", "hawks"))
+        advanceUntilIdle()
+
+        assertEquals("#owls", catalog.state.value.hashtagGroups.single().name)
+        catalog.stop()
+    }
+
+    @Test
+    fun hashtagGroupRejectsTooFewTooManyOrInvalidTags() = runTest {
+        val catalog = catalog(this, FakeSource(mastodonCaps()))
+        advanceUntilIdle()
+
+        catalog.addHashtagGroup("", listOf("owls", "OWLS"))
+        assertEquals(FeedChipError.InvalidHashtag, catalog.state.value.error)
+        catalog.clearError()
+        catalog.addHashtagGroup("", listOf("a", "b", "c", "d", "e"))
+        assertEquals(FeedChipError.InvalidHashtag, catalog.state.value.error)
+        catalog.clearError()
+        catalog.addHashtagGroup("", listOf("owls", "not valid"))
+        assertEquals(FeedChipError.InvalidHashtag, catalog.state.value.error)
+        assertTrue(catalog.state.value.hashtagGroups.isEmpty())
+        catalog.stop()
+    }
+
+    @Test
+    fun removingAHashtagGroupDeletesIt() = runTest {
+        val catalog = catalog(this, FakeSource(mastodonCaps()))
+        advanceUntilIdle()
+        catalog.addHashtagGroup("Birds", listOf("owls", "hawks"))
+        advanceUntilIdle()
+
+        catalog.removeHashtagGroup(catalog.state.value.hashtagGroups.single())
+        advanceUntilIdle()
+
+        assertTrue(catalog.state.value.hashtagGroups.isEmpty())
         catalog.stop()
     }
 }

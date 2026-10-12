@@ -15,6 +15,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.HashtagOrigin
+import me.foxtails.palustris.domain.SavedHashtagGroup
 import me.foxtails.palustris.domain.SavedHashtagRepository
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.hashtagIdentity
@@ -43,6 +44,7 @@ internal class FeedChipCatalog(
     private var antennas: List<FeedSource.Antenna> = emptyList()
     private var serverTags: List<String> = emptyList()
     private var deviceTags: List<String> = emptyList()
+    private var deviceGroups: List<SavedHashtagGroup> = emptyList()
 
     /** Null until the first refresh decides. True reads followed tags from the server. */
     private var useServerTags: Boolean? = null
@@ -57,6 +59,7 @@ internal class FeedChipCatalog(
             saved.observe(accountId).collectLatest { preferences ->
                 if (stopped) return@collectLatest
                 deviceTags = preferences.tags
+                deviceGroups = preferences.groups
                 publish()
             }
         }
@@ -117,6 +120,44 @@ internal class FeedChipCatalog(
                 saved.update(accountId) { it.copy(tags = (it.tags + accepted).distinctBy(::hashtagIdentity)) }
             }
             onAdded(FeedSource.Hashtag(accepted, origin()))
+        }
+    }
+
+    /**
+     * Saves [raws] as a hashtag group on the device. Neither protocol stores such a list, so no server call
+     * happens. Each tag gets the same normalization as a single tag. A blank [name] becomes the first tag.
+     * A group with the same tags as an existing one is reported without a write.
+     */
+    fun addHashtagGroup(name: String, raws: List<String>, onAdded: (FeedSource.HashtagGroup) -> Unit = {}) {
+        if (stopped || _state.value.busy) return
+        val accepted = runCatching { raws.map { validateExactHashtag(stripHashtagMarks(it)) }.distinctBy(::hashtagIdentity) }
+            .getOrNull()
+            ?.takeIf { it.size >= 2 && it.size <= source.maxGroupHashtags }
+        if (accepted == null) {
+            publish(error = FeedChipError.InvalidHashtag)
+            return
+        }
+        val group = FeedSource.HashtagGroup(name.trim().ifEmpty { "#" + accepted.first() }, accepted)
+        val existing = _state.value.hashtagGroups.firstOrNull { it.key == group.key }
+        if (existing != null) {
+            publish(error = null)
+            onAdded(existing)
+            return
+        }
+        change {
+            saved.update(accountId) { it.copy(groups = it.groups + SavedHashtagGroup(group.name, group.tags)) }
+            onAdded(group)
+        }
+    }
+
+    /** Deletes [group] from the device. */
+    fun removeHashtagGroup(group: FeedSource.HashtagGroup, onRemoved: () -> Unit = {}) {
+        if (stopped || _state.value.busy) return
+        change {
+            saved.update(accountId) { preferences ->
+                preferences.copy(groups = preferences.groups.filterNot { FeedSource.HashtagGroup(it.name, it.tags).key == group.key })
+            }
+            onRemoved()
         }
     }
 
@@ -215,6 +256,8 @@ internal class FeedChipCatalog(
             lists = lists,
             hashtags = tags.map { FeedSource.Hashtag(it.removePrefix("#"), origin) },
             antennas = antennas,
+            hashtagGroups = deviceGroups.map { FeedSource.HashtagGroup(it.name, it.tags) },
+            maxGroupTags = source.maxGroupHashtags,
             loaded = loaded,
             busy = busy,
             error = error,

@@ -25,7 +25,7 @@ internal fun feedExtraChipEntries(
     keyPrefix: String,
     addTestTag: String,
     onSelect: (FeedSource) -> Unit,
-    onHashtagMenu: (FeedSource.Hashtag, Rect) -> Unit,
+    onHashtagMenu: (FeedSource, Rect) -> Unit,
     onAddHashtag: () -> Unit,
 ): List<FilterChipEntry> = buildList {
     extras.forEach { feed ->
@@ -65,6 +65,18 @@ internal fun feedExtraChipEntries(
                     ),
                 )
             }
+            is FeedSource.HashtagGroup -> add(
+                FilterChipEntry(
+                    label = feed.name,
+                    selected = selectedKey == feed.key,
+                    onClick = { onSelect(feed) },
+                    contentDescription = stringResource(R.string.feed_chip_hashtag, feed.name),
+                    testTag = "${keyPrefix}_hashtag_group_${feed.tags.first()}",
+                    key = "$keyPrefix-${feed.key}",
+                    onLongClick = { bounds -> onHashtagMenu(feed, bounds) },
+                    longClickLabel = stringResource(R.string.feed_chip_remove_tag, feed.name),
+                ),
+            )
             is FeedSource.Timeline -> Unit
         }
     }

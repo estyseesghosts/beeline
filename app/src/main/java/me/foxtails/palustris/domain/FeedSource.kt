@@ -23,6 +23,15 @@ sealed interface FeedSource {
         override val key: String get() = "hashtag:${hashtagIdentity(tag)}"
     }
 
+    /**
+     * Several hashtags searched together as one feed. A group lives on the device only, because neither
+     * protocol stores such a list. [name] is the chip label the user chose. [tags] are bodies without `#`,
+     * distinct by identity, in typed order. The key follows the tags, so a rename keeps the same feed.
+     */
+    data class HashtagGroup(val name: String, val tags: List<String>) : FeedSource {
+        override val key: String get() = "hashtag-group:" + tags.map(::hashtagIdentity).sorted().joinToString(",")
+    }
+
     data class Antenna(val id: String, val name: String) : FeedSource {
         override val key: String get() = "antenna:$id"
     }
