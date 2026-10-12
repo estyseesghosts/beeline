@@ -2,11 +2,17 @@
 
 Status: current  
 Owner: Maintainers  
-Last reviewed: 2026-10-10  
+Last reviewed: 2026-10-12  
 Stale when: A release ships without an entry here.
 
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
+
+## 0.2.16
+
+### New
+
+- Hashtag groups: in the add hashtag dialog, Create hashtag group adds more tag fields, an Add more button and a remove button on each field. A group searches its tags together as one chip. It has an optional name, which defaults to the first tag. Mastodon-compatible servers allow four tags in a group and Misskey-family servers allow 100. Groups are saved on this device. Long-press a group chip to remove it.
 
 ## 0.2.15
 
