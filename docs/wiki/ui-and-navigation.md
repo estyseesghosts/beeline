@@ -975,8 +975,14 @@ This section replaces the gradient of infdev 02 S8a. No tint gradient exists any
 constants are deleted). Two parts remain, and both only draw: they take no pointer input and add no semantics.
 
 **Blur.** `Modifier.floatingChromeBlur(backdrop, edge)` (`ui/components/FloatingChromeBlur.kt`, was `floatingChromeScrim`) draws a
-16 dp blurred copy (12 dp before) of the content under a stack of floating controls, faded in by an alpha mask that starts 32 dp
-beyond the node and is full at its edge, so the blur never starts with a hard edge. The host records its content into one `GraphicsLayer`
+16 dp blurred copy (12 dp before) of the content under a stack of floating controls, faded in by an alpha mask that is transparent 32 dp
+beyond the node and fully strong across the whole node (infdev 04 S1; before, one linear gradient over the whole band left the blur
+about one third strong behind the chips). A band that does not rest on the screen edge fades out past the node as well, so it has no hard
+edge. `chromeBandGeometry` (`ui/components/ChromeBandGeometry.kt`) owns the pure geometry: the drawn band, the recorded area and the mask
+stops. The band records the blur reach (two radii) beyond itself wherever the backdrop continues, clips the draw to the band and uses
+`TileMode.Mirror`, so at a screen edge the last pixel row no longer carries about half of the blur weight (the suspected cause of the
+bottom-edge flicker, not yet confirmed on a phone). One `BlurEffect` serves each band and density. `ChromeBackdrop.sourceSize` tells a band
+where the backdrop ends. `HomeFeedContent` records a backdrop only when it has a bottom dock. The host records its content into one `GraphicsLayer`
 (`chromeBackdropSource`) and the band, a sibling drawn above it, draws that layer into its own layer with a `BlurEffect`.
 `rememberChromeBackdrop()` returns null on API 29 and 30 and while battery saver is on. The band then draws nothing, and the
 shadows alone separate the controls. `Modifier.floatingChromeDock(insets, backdrop)` puts the band before the inset padding.
@@ -1000,7 +1006,10 @@ chips use `floatingFilterChipElevation()` and `floatingAssistChipElevation()`. N
 | Composer hashtag suggestions | `ComposerHashtags.kt` | none | `floatingAssistChipElevation()` |
 | Post action, hashtag, repost and follow bubbles | `PostActionBubbles.kt`, `HashtagBubble.kt`, `HashtagChipBubble.kt`, `PostRepostChoice.kt`, `FollowChoice.kt` | 8 dp | token |
 
-Tests: `FloatingChromeBlurTest` (token, blur radius, that the shadow changes no layout, that a row under the band stays tappable).
+Tests: `FloatingChromeBlurTest` (token, blur radius, that the shadow changes no layout, that a row under the band stays tappable) and
+`ChromeBandGeometryTest` (mask stops and recorded area for both edges, at and away from a screen edge, an empty node, no backdrop).
+The strip below the content on the compact-wide emulator (63 px, `[0,1785][1169,1848]`) is the launcher Taskbar: `dumpsys window` shows the
+Taskbar window owns the `navigationBars` inset at exactly that frame, and the Beeline window spans the whole display.
 Robolectric does not render shadows or `RenderEffect`. Device (emulator-5554, API 37, light theme, compact): no gradient shows, every control in the table
 shows one shadow, the blur band shows under the chips and under the composer bubbles. Not verified: a bright photo under the controls, Dark and Pure black
 (a shadow is hard to see on Pure black; the default is to accept that), 600 dp and 840 dp layouts, font scale 2.0, frame drops on the SM-G986W, API 29 and 30.

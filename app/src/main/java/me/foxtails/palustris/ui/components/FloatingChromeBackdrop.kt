@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntSize
 
 /**
  * The content that floating controls sit over, recorded once so a band can draw a blurred copy of the part under
@@ -33,6 +34,9 @@ import androidx.compose.ui.platform.LocalContext
 internal class ChromeBackdrop(val layer: GraphicsLayer) {
     /** Where the recorded content starts, in root coordinates. */
     var sourceOrigin by mutableStateOf(Offset.Zero)
+
+    /** The size of the recorded content, so a band can tell where the backdrop ends. */
+    var sourceSize by mutableStateOf(IntSize.Zero)
 }
 
 /** Blur needs the platform render effect (API 31) and is off while battery saver is on. */
@@ -70,7 +74,10 @@ private fun Context.powerManager(): PowerManager? = getSystemService(Context.POW
 internal fun Modifier.chromeBackdropSource(backdrop: ChromeBackdrop?): Modifier {
     if (backdrop == null) return this
     return this
-        .onGloballyPositioned { backdrop.sourceOrigin = it.positionInRoot() }
+        .onGloballyPositioned {
+            backdrop.sourceOrigin = it.positionInRoot()
+            backdrop.sourceSize = it.size
+        }
         .drawWithContent {
             val content: ContentDrawScope = this
             backdrop.layer.record { content.drawContent() }

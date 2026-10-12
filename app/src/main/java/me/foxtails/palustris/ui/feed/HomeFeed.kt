@@ -336,7 +336,8 @@ private fun HomeFeedContent(
     wideRightClearance: Dp,
     wideBottomClearance: Dp,
 ) {
-    val backdrop = rememberChromeBackdrop()
+    // Only a dock reads this layer. Compact Home has none: the shell records its own backdrop around the pane.
+    val backdrop = rememberChromeBackdrop().takeIf { bottomDock != null }
     Box(Modifier.fillMaxSize()) {
         PullToRefreshBox(
             isRefreshing = state.loading,
