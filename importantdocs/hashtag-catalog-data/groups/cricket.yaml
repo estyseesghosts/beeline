@@ -1,0 +1,29 @@
+id: cricket
+request: null
+members:
+  - tag: "cricket"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 36
+    ambiguous: true
+  - tag: "ipl"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "クリケット"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "板球"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "críquet"
+    langs: [es]
+    relation: syn
+    status: unseen
+    accounts7: 0

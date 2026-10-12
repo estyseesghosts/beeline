@@ -1,0 +1,99 @@
+id: newspaper
+request: "newspaper"
+members:
+  - tag: "newspaper"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 63
+  - tag: "newspapers"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "frontpages"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "news"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 1490
+  - tag: "journalism"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 139
+  - tag: "press"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 81
+  - tag: "journal"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 54
+    observed_other_lang: de
+  - tag: "journaux"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "presse"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 38
+  - tag: "periódico"
+    langs: [es]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "periodico"
+    langs: [es]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "periódicos"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "prensa"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "zeitung"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 9
+  - tag: "zeitungen"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "krant"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "kranten"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "新聞"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 36
+  - tag: "報紙"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

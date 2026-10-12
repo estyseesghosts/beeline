@@ -1,0 +1,28 @@
+id: manga
+request: null
+members:
+  - tag: "manga"
+    langs: [en, fr, es, de]
+    relation: head
+    status: seen
+    accounts7: 134
+  - tag: "anime"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 155
+  - tag: "マンガ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 24
+  - tag: "漫画"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 66
+  - tag: "漫畫"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

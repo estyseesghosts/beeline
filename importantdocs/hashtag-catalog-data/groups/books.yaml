@@ -1,0 +1,128 @@
+id: books
+request: null
+members:
+  - tag: "books"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 1100
+  - tag: "reading"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 279
+  - tag: "bookstodon"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 524
+  - tag: "bookreview"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 113
+  - tag: "amreading"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 59
+  - tag: "bookreviews"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 31
+  - tag: "fantasybooks"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "scifibooks"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "livres"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 36
+  - tag: "livre"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 36
+  - tag: "lecture"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 71
+  - tag: "libros"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 166
+  - tag: "libro"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 24
+  - tag: "lectura"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 36
+  - tag: "bücher"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 52
+  - tag: "buch"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 49
+  - tag: "lesen"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 61
+  - tag: "boeken"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 24
+  - tag: "boek"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "lezen"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 11
+  - tag: "本"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "読書"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 33
+  - tag: "書"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "閱讀"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "書籍"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 17

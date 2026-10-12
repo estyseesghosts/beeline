@@ -1,0 +1,68 @@
+id: article
+request: "article"
+members:
+  - tag: "article"
+    langs: [en, fr]
+    relation: head
+    status: seen
+    accounts7: 39
+  - tag: "articles"
+    langs: [en, fr]
+    relation: syn
+    status: seen
+    accounts7: 32
+  - tag: "longread"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "longreads"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "readinglist"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 4
+  - tag: "mustread"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 23
+  - tag: "artículo"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 2
+  - tag: "articulo"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 2
+  - tag: "artículos"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 9
+  - tag: "artikel"
+    langs: [de, nl]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "artikelen"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "記事"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 34
+  - tag: "文章"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 2

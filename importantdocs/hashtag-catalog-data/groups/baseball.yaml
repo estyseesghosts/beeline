@@ -1,0 +1,74 @@
+id: baseball
+request: "baseball"
+members:
+  - tag: "baseball"
+    langs: [en, fr, de]
+    relation: head
+    status: seen
+    accounts7: 105
+  - tag: "mlb"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 116
+  - tag: "worldseries"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 13
+  - tag: "softball"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 3
+  - tag: "béisbol"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "beisbol"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "honkbal"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "野球"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 61
+  - tag: "プロ野球"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 33
+  - tag: "npb"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 26
+  - tag: "棒球"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "中職"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "cpbl"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1
+    observed_other_lang: it
+  - tag: "職棒"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

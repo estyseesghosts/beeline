@@ -1,0 +1,81 @@
+id: eurovision
+request: "eurovision"
+note: "yearly tags like eurovision2026 follow a pattern. Consider a regex member in the app plan."
+members:
+  - tag: "eurovision"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 4
+  - tag: "eurovisionsongcontest"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "songcontest"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 2
+    observed_other_lang: de
+  - tag: "junioreurovision"
+    langs: [en]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "concourseurovisiondelachanson"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "festivaldeeurovisión"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "festivaldeeurovision"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "eurovisión"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 16
+  - tag: "esc"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 4
+    ambiguous: true
+  - tag: "songfestival"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "eurovisiesongfestival"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "ユーロビジョン"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "歐洲歌唱大賽"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "festivaldelacanción"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "ユーロビジョンソングコンテスト"
+    langs: [ja]
+    relation: syn
+    status: unseen
+    accounts7: 0

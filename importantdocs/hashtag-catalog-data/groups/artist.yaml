@@ -1,0 +1,138 @@
+id: artist
+request: "artist"
+members:
+  - tag: "artist"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 268
+  - tag: "artists"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 73
+  - tag: "artistsofmastodon"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "artistsonmastodon"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 69
+  - tag: "artistsoffediverse"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "commissionsopen"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 32
+  - tag: "commissions"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 21
+  - tag: "openforcommissions"
+    langs: [en]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "supportartists"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 9
+  - tag: "artiste"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "artistes"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "artista"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "artistas"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "künstler"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "künstlerin"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "künstlerinnen"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "kunstenaar"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "kunstenares"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "絵描き"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "イラストレーター"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "クリエイター"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "藝術家"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "畫家"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "繪師"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "插畫家"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "創作者"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "芸術家"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0

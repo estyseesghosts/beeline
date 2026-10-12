@@ -1,0 +1,53 @@
+id: hockey
+request: null
+members:
+  - tag: "hockey"
+    langs: [en, fr, es]
+    relation: head
+    status: seen
+    accounts7: 81
+  - tag: "nhl"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 202
+  - tag: "icehockey"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "eishockey"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 14
+  - tag: "ijshockey"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "ホッケー"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "アイスホッケー"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "冰球"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "hockeysurglace"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "hockeysobrehielo"
+    langs: [es]
+    relation: syn
+    status: unseen
+    accounts7: 0

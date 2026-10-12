@@ -1,0 +1,189 @@
+id: technology
+request: "technology"
+note: "tech is also a short form in many languages"
+members:
+  - tag: "technology"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 960
+  - tag: "tech"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 1058
+  - tag: "technews"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 202
+  - tag: "techtalk"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "gadgets"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 82
+  - tag: "computers"
+    langs: [en, nl]
+    relation: nar
+    status: seen
+    accounts7: 52
+  - tag: "computing"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 52
+  - tag: "software"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 298
+  - tag: "hardware"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 208
+  - tag: "smartphones"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 60
+  - tag: "consumertech"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "innovation"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 187
+  - tag: "startups"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 99
+  - tag: "technologie"
+    langs: [fr, de, nl]
+    relation: syn
+    status: seen
+    accounts7: 48
+  - tag: "technologies"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 20
+  - tag: "informatique"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 24
+  - tag: "ordinateurs"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "logiciel"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "tecnologia"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 86
+  - tag: "tecnología"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 86
+  - tag: "tecnologías"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "informatica"
+    langs: [es, nl]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "informática"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "ordenadores"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "technik"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 24
+  - tag: "computer"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 32
+  - tag: "informatik"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "techniek"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "テクノロジー"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 15
+  - tag: "ガジェット"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 37
+  - tag: "パソコン"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "技術"
+    langs: [ja, zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "科技"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "電腦"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "手機"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "3c"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "computadora"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 1

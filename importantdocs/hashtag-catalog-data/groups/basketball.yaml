@@ -1,0 +1,88 @@
+id: basketball
+request: "basketball"
+members:
+  - tag: "basketball"
+    langs: [en, de]
+    relation: head
+    status: seen
+    accounts7: 90
+  - tag: "hoops"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 16
+  - tag: "bball"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "nba"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 97
+  - tag: "wnba"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 84
+  - tag: "ncaabasketball"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "marchmadness"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "basket"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "baloncesto"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "básquet"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "basquetbol"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "basketbal"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "バスケ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 11
+  - tag: "バスケットボール"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 15
+  - tag: "bリーグ"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "籃球"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "職籃"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0

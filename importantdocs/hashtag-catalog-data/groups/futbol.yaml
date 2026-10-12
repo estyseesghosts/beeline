@@ -1,0 +1,105 @@
+id: futbol
+request: "futbol"
+excludes: [football]
+note: "Soccer. French uses football for soccer. It is left out so the football group stays clean. See the report."
+members:
+  - tag: "futbol"
+    langs: [es]
+    relation: head
+    status: seen
+    accounts7: 21
+  - tag: "soccer"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 83
+  - tag: "premierleague"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 41
+  - tag: "championsleague"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "mls"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 25
+  - tag: "worldcup"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 15
+  - tag: "fifa"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 58
+  - tag: "fútbol"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 20
+  - tag: "laliga"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "fußball"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 61
+  - tag: "fussball"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 48
+  - tag: "bundesliga"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 61
+  - tag: "voetbal"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 23
+  - tag: "eredivisie"
+    langs: [nl]
+    relation: nar
+    status: seen
+    accounts7: 13
+  - tag: "foot"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "ligue1"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "サッカー"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 39
+  - tag: "jリーグ"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 21
+  - tag: "足球"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "世界盃"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

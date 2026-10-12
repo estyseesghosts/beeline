@@ -1,0 +1,109 @@
+id: cycling
+request: null
+members:
+  - tag: "cycling"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 224
+  - tag: "bicycle"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 37
+  - tag: "bike"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 56
+  - tag: "bikes"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 18
+  - tag: "bikelife"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "bikecommute"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "mtb"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 24
+  - tag: "gravel"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 26
+    observed_other_lang: de
+  - tag: "vélo"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 63
+  - tag: "velo"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 63
+  - tag: "cyclisme"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 22
+  - tag: "ciclismo"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "bicicleta"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 9
+  - tag: "radfahren"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 45
+  - tag: "fahrrad"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 131
+  - tag: "fietsen"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "fiets"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "自転車"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "サイクリング"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "自行車"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "單車"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

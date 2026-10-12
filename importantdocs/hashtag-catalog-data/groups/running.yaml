@@ -1,0 +1,48 @@
+id: running
+request: null
+members:
+  - tag: "running"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 147
+  - tag: "run"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "marathon"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 26
+  - tag: "course"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "correr"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "laufen"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 33
+  - tag: "hardlopen"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "ランニング"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "跑步"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 1

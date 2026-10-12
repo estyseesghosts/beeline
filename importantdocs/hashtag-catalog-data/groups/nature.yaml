@@ -1,0 +1,43 @@
+id: nature
+request: null
+members:
+  - tag: "nature"
+    langs: [en, fr]
+    relation: head
+    status: seen
+    accounts7: 1657
+  - tag: "wildlife"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 489
+  - tag: "naturephotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 629
+  - tag: "wildflowers"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 31
+  - tag: "naturaleza"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 31
+  - tag: "natur"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 178
+  - tag: "natuur"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 63
+  - tag: "自然"
+    langs: [ja, zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 7

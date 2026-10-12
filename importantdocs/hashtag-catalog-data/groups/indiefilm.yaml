@@ -1,0 +1,194 @@
+id: indiefilm
+request: "indiefilm"
+note: "Child of indie."
+members:
+  - tag: "indiefilm"
+    langs: [und]
+    relation: head
+    status: low
+    accounts7: 2
+  - tag: "indiefilms"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "independentfilm"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "independentfilms"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "independentcinema"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "indiecinema"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "indiefilmmaker"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "indiefilmmakers"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "indiefilmmaking"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "microbudget"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "microbudgetfilm"
+    langs: [und]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "lowbudgetfilm"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "indiefeature"
+    langs: [und]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "shortfilm"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 3
+  - tag: "shortfilms"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 2
+  - tag: "filmmaking"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 33
+  - tag: "filmmaker"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 7
+  - tag: "filmfestival"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 17
+  - tag: "filmindépendant"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "filmindependant"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "cinémaindépendant"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "cinemaindependant"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "courtmétrage"
+    langs: [fr]
+    relation: rel
+    status: low
+    accounts7: 1
+  - tag: "cineindependiente"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "cineindie"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "cortometraje"
+    langs: [es]
+    relation: rel
+    status: low
+    accounts7: 1
+  - tag: "kurzfilm"
+    langs: [de]
+    relation: rel
+    status: low
+    accounts7: 1
+  - tag: "onafhankelijkefilm"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "kortfilm"
+    langs: [nl]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "インディペンデント映画"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "自主映画"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "自主制作映画"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "自主制作"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "短編映画"
+    langs: [ja]
+    relation: rel
+    status: seen
+    accounts7: 3
+  - tag: "獨立電影"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "獨立製片"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "微電影"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "短片"
+    langs: [zh-TW]
+    relation: rel
+    status: low
+    accounts7: 0

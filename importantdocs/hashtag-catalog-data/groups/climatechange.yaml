@@ -1,0 +1,183 @@
+id: climatechange
+request: "climatechange"
+members:
+  - tag: "climatechange"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 421
+  - tag: "climate"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 317
+  - tag: "climatecrisis"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 179
+  - tag: "climateemergency"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 30
+  - tag: "globalwarming"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 69
+  - tag: "climateaction"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 40
+  - tag: "climatejustice"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 24
+  - tag: "climatescience"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 19
+  - tag: "climatebreakdown"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "environment"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 429
+  - tag: "sustainability"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 126
+  - tag: "renewableenergy"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 59
+  - tag: "netzero"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 11
+  - tag: "changementclimatique"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 15
+  - tag: "climat"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 70
+  - tag: "criseclimatique"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "réchauffementclimatique"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "rechauffementclimatique"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "cambioclimático"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 36
+  - tag: "cambioclimatico"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 36
+  - tag: "crisisclimática"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "crisisclimatica"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "calentamientoglobal"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "klimawandel"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 106
+  - tag: "klimakrise"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 85
+  - tag: "klima"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 72
+  - tag: "klimaschutz"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 82
+  - tag: "klimaatverandering"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 17
+  - tag: "klimaat"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 15
+  - tag: "klimaatcrisis"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "気候変動"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "地球温暖化"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "気候危機"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "氣候變遷"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "全球暖化"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "氣候危機"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

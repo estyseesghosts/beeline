@@ -1,0 +1,196 @@
+id: publictransit
+request: "publictransit"
+members:
+  - tag: "publictransit"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 10
+  - tag: "publictransport"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 18
+  - tag: "transit"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 38
+  - tag: "buses"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "bus"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 35
+    observed_other_lang: de
+  - tag: "tram"
+    langs: [en, fr]
+    relation: nar
+    status: seen
+    accounts7: 17
+    observed_other_lang: de
+  - tag: "trams"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "subway"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 16
+  - tag: "metro"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 29
+  - tag: "lightrail"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "transitnerds"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "brt"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "trains"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 87
+  - tag: "transportsencommun"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "transportenommun"
+    langs: [fr]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "métro"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 24
+  - tag: "transportepúblico"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "transportepublico"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "autobús"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "tranvía"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "öpnv"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 67
+  - tag: "oepnv"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "nahverkehr"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "ubahn"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "sbahn"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "openbaarvervoer"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "ov"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "公共交通"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "バス"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "地下鉄"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "路面電車"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "大眾運輸"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "公共運輸"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "捷運"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "公車"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "transportencommun"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "öffentlicherverkehr"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 2
+    observed_other_lang: cs
+  - tag: "公共交通機関"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0

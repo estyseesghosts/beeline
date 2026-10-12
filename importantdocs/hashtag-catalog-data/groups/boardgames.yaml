@@ -1,0 +1,73 @@
+id: boardgames
+request: null
+members:
+  - tag: "boardgames"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 75
+  - tag: "boardgame"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "tabletopgames"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "boardgamegeek"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "jeuxdesociété"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "jeuxdesociete"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "juegosdemesa"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "brettspiele"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 38
+  - tag: "brettspiel"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "bordspellen"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "ボードゲーム"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "桌遊"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "bordspel"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "圖版遊戲"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0

@@ -1,0 +1,118 @@
+id: programming
+request: null
+members:
+  - tag: "programming"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 360
+  - tag: "coding"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 146
+  - tag: "softwaredevelopment"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 95
+  - tag: "python"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 276
+  - tag: "rust"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 209
+  - tag: "javascript"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 103
+  - tag: "typescript"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 31
+  - tag: "java"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 90
+  - tag: "kotlin"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "webdev"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 174
+  - tag: "golang"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 38
+  - tag: "programmation"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "développement"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "programación"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 20
+  - tag: "programacion"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 20
+  - tag: "desarrollo"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "programmierung"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 11
+  - tag: "softwareentwicklung"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 23
+  - tag: "programmeren"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "プログラミング"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "程式設計"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "寫程式"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "程式"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

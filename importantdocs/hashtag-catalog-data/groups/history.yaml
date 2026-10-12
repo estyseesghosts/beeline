@@ -1,0 +1,53 @@
+id: history
+request: null
+members:
+  - tag: "history"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 943
+  - tag: "ancienthistory"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 18
+  - tag: "medievalhistory"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "archaeology"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 107
+  - tag: "histoire"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 106
+  - tag: "historia"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 77
+  - tag: "geschichte"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 125
+  - tag: "geschiedenis"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "歴史"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 17
+  - tag: "歷史"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

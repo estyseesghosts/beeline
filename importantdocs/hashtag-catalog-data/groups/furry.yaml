@@ -1,0 +1,115 @@
+id: furry
+request: "furry"
+children: [fursuit, furryart]
+note: "Sub-niches fursuit and furryart are children. NSFW tags are deliberately not included."
+members:
+  - tag: "furry"
+    langs: [und]
+    relation: head
+    status: seen
+    accounts7: 484
+  - tag: "furries"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 28
+  - tag: "furryfandom"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 40
+  - tag: "furrycommunity"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "fursuit"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 100
+  - tag: "furryart"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 373
+  - tag: "fursona"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 24
+  - tag: "fursonas"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "anthro"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 67
+  - tag: "anthropomorphic"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "furrycon"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "furcon"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "anthrocon"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "furtherconfusion"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "eurofurence"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "midwestfurfest"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "ケモノ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 18
+  - tag: "ケモナー"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "獣人"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "獸圈"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "獸人"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "獸迷"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0

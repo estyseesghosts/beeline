@@ -1,0 +1,68 @@
+id: science
+request: null
+members:
+  - tag: "science"
+    langs: [en, fr]
+    relation: head
+    status: seen
+    accounts7: 820
+  - tag: "sciencemastodon"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "scicomm"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 30
+  - tag: "physics"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 154
+  - tag: "chemistry"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 61
+  - tag: "biology"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 103
+  - tag: "sciences"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 16
+  - tag: "ciencia"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 76
+  - tag: "wissenschaft"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 125
+  - tag: "wetenschap"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 22
+  - tag: "科学"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "科學"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "サイエンス"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 7

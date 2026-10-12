@@ -1,0 +1,109 @@
+id: furryart
+request: "furryart"
+note: "Child of furry. Sub-niche tags are furry art specific."
+members:
+  - tag: "furryart"
+    langs: [und]
+    relation: head
+    status: seen
+    accounts7: 373
+  - tag: "furryartist"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 44
+  - tag: "furryartwork"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 14
+  - tag: "furryillustration"
+    langs: [und]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "furrydrawing"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "anthroart"
+    langs: [und]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "fursonaart"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "furrycomic"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "furrycomics"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "furryfanart"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "furrypixelart"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "refsheet"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "furrycommissions"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "ych"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 18
+  - tag: "adoptables"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 1
+  - tag: "commissionsopen"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 32
+  - tag: "openforcommissions"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "ケモノイラスト"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "ケモノ絵"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "獣人イラスト"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "獸人插畫"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0

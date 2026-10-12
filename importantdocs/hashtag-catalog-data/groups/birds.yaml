@@ -1,0 +1,190 @@
+id: birds
+request: "birds"
+note: "birdsite means Twitter. Denylist."
+members:
+  - tag: "birds"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 597
+  - tag: "bird"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 166
+  - tag: "birding"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 134
+  - tag: "birdwatching"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 93
+  - tag: "birdsofmastodon"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 120
+  - tag: "ornithology"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 8
+    observed_other_lang: de
+  - tag: "owls"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "parrots"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "corvids"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "crows"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "ravens"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "hummingbirds"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "raptors"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "waterfowl"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "birdphotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 138
+  - tag: "oiseaux"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "oiseau"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 11
+  - tag: "ornithologie"
+    langs: [fr, de]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "aves"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 16
+  - tag: "pájaros"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "pajaros"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "ornitología"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "observacióndeaves"
+    langs: [es]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "vögel"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 67
+  - tag: "voegel"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "vogel"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 67
+  - tag: "vogelbeobachtung"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "vogels"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 14
+  - tag: "vogelen"
+    langs: [nl]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "vogelspotten"
+    langs: [nl]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "鳥"
+    langs: [ja, zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 9
+  - tag: "野鳥"
+    langs: [ja, zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 17
+  - tag: "バードウォッチング"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "野鳥観察"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "小鳥"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "鳥類"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "賞鳥"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

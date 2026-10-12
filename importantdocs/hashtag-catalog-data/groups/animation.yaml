@@ -1,0 +1,272 @@
+id: animation
+request: "animation"
+note: "Overlaps with the anime group (anime is related here). 動畫 is shared with anime."
+members:
+  - tag: "animation"
+    langs: [en, fr]
+    relation: head
+    status: seen
+    accounts7: 123
+  - tag: "animations"
+    langs: [en, fr]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "animated"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 14
+  - tag: "animator"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "animators"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "animationart"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "2danimation"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "3danimation"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "stopmotion"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "motiongraphics"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "motiondesign"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "gifanimation"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "animatedgif"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "animatic"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "handdrawnanimation"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "traditionalanimation"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "shortanimation"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "animatedshort"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "blenderanimation"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "indieanimation"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "anime"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 155
+  - tag: "cartoon"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 137
+  - tag: "cartoons"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 44
+  - tag: "aftereffects"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 2
+  - tag: "toonboom"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "storyboard"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 2
+  - tag: "blender"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 91
+    ambiguous: true
+  - tag: "cgi"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 9
+    ambiguous: true
+  - tag: "dessinanimé"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "dessinsanimés"
+    langs: [fr]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "animation3d"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "animation2d"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 1
+    observed_other_lang: pl
+  - tag: "animación"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "animacion"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "animaciones"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "dibujosanimados"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "trickfilm"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "zeichentrick"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "animationsfilm"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "animatie"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "tekenfilm"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "animaties"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "アニメーション"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "3dcg"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 89
+  - tag: "コマ撮り"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "モーショングラフィックス"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "アニメ"
+    langs: [ja]
+    relation: rel
+    status: seen
+    accounts7: 122
+  - tag: "動畫"
+    langs: [zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "動畫製作"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "定格動畫"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "動態圖形"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "3d動畫"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "2d動畫"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0

@@ -1,0 +1,89 @@
+id: travel
+request: null
+members:
+  - tag: "travel"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 769
+  - tag: "traveling"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 14
+    observed_other_lang: de
+  - tag: "travelling"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 11
+  - tag: "roadtrip"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 74
+  - tag: "hiking"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 203
+  - tag: "backpacking"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 11
+  - tag: "voyage"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 31
+  - tag: "voyages"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "viaje"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "viajes"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "reisen"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 30
+  - tag: "urlaub"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 33
+  - tag: "reizen"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "vakantie"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "旅行"
+    langs: [ja, zh-TW]
+    relation: syn
+    status: seen
+    accounts7: 12
+  - tag: "旅"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "旅遊"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

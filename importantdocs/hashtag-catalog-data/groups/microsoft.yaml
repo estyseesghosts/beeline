@@ -1,0 +1,236 @@
+id: microsoft
+request: "microsoft"
+note: "windows and other generic words are related-only and ambiguous. They never merge into a search."
+members:
+  - tag: "microsoft"
+    langs: [und]
+    relation: head
+    status: seen
+    accounts7: 284
+  - tag: "windows10"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "windows11"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 51
+  - tag: "windows7"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "windows8"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "windowsxp"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "windows95"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "windowsserver"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "windowsupdate"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "azure"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 31
+  - tag: "microsoft365"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 21
+  - tag: "office365"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "m365"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "microsoftoffice"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "msoffice"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "powerpoint"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "onedrive"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 19
+  - tag: "sharepoint"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "microsoftedge"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "microsoftteams"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "microsoftcopilot"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "bing"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "powershell"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "wsl"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 13
+  - tag: "vscode"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 20
+  - tag: "visualstudio"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "activedirectory"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "entra"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "intune"
+    langs: [und]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "surfacepro"
+    langs: [und]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "dotnet"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 59
+  - tag: "windows"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 218
+    ambiguous: true
+  - tag: "edge"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 9
+    ambiguous: true
+  - tag: "teams"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 19
+    ambiguous: true
+  - tag: "excel"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 6
+    ambiguous: true
+  - tag: "outlook"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 24
+    ambiguous: true
+  - tag: "copilot"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 35
+    ambiguous: true
+  - tag: "surface"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 24
+    ambiguous: true
+  - tag: "msft"
+    langs: [und]
+    relation: rel
+    status: low
+    accounts7: 0
+  - tag: "xbox"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 157
+  - tag: "github"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 180
+  - tag: "linkedin"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 44
+  - tag: "minecraft"
+    langs: [und]
+    relation: rel
+    status: seen
+    accounts7: 81
+  - tag: "マイクロソフト"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "微軟"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1

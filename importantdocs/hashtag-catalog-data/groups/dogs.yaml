@@ -1,0 +1,168 @@
+id: dogs
+request: "dogs"
+members:
+  - tag: "dogs"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 302
+  - tag: "dog"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 181
+  - tag: "doggo"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "puppy"
+    langs: [en, nl]
+    relation: nar
+    status: seen
+    accounts7: 21
+  - tag: "puppies"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "dogsofmastodon"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 363
+  - tag: "dogsoffediverse"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 16
+  - tag: "dogphotography"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "rescuedog"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 25
+  - tag: "chien"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "chiens"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 3
+  - tag: "chiot"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "chiots"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "perro"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "perros"
+    langs: [es]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "cachorro"
+    langs: [es]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "cachorros"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "hund"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 34
+  - tag: "hunde"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 23
+  - tag: "welpe"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "welpen"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "hond"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "honden"
+    langs: [nl]
+    relation: syn
+    status: seen
+    accounts7: 7
+  - tag: "犬"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 13
+  - tag: "いぬ"
+    langs: [ja]
+    relation: syn
+    status: seen
+    accounts7: 6
+  - tag: "イヌ"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "柴犬"
+    langs: [ja, zh-TW]
+    relation: nar
+    status: seen
+    accounts7: 14
+  - tag: "保護犬"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 8
+  - tag: "狗"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "狗狗"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "毛孩"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "haushund"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "汪星人"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0

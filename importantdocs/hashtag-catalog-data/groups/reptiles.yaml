@@ -1,0 +1,250 @@
+id: reptiles
+request: "reptiles"
+members:
+  - tag: "reptiles"
+    langs: [en, fr, es]
+    relation: head
+    status: seen
+    accounts7: 16
+  - tag: "reptile"
+    langs: [en, fr]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "herpetology"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 5
+  - tag: "herps"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "herpetoculture"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "reptilesofmastodon"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "snake"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 23
+  - tag: "snakes"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "lizard"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 13
+  - tag: "lizards"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "gecko"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 5
+    ambiguous: true
+  - tag: "geckos"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "turtle"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 10
+    ambiguous: true
+  - tag: "turtles"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 9
+  - tag: "tortoise"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 13
+  - tag: "tortoises"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 6
+  - tag: "chameleon"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "crocodile"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "alligator"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "beardeddragon"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "ballpython"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "leopardgecko"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "serpents"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "lézards"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "tortues"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "reptil"
+    langs: [es]
+    relation: syn
+    status: low
+    accounts7: 1
+  - tag: "serpientes"
+    langs: [es]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "lagartos"
+    langs: [es]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "tortugas"
+    langs: [es]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "reptilien"
+    langs: [de]
+    relation: syn
+    status: low
+    accounts7: 2
+  - tag: "schlangen"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "echsen"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "schildkröten"
+    langs: [de]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "reptielen"
+    langs: [nl]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "slangen"
+    langs: [nl]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "hagedissen"
+    langs: [nl]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "schildpadden"
+    langs: [nl]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "爬虫類"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "ヘビ"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "トカゲ"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "ヤモリ"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "カメ"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "爬蟲類"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "爬蟲"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "蛇"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 2
+  - tag: "蜥蜴"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "守宮"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "烏龜"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "爬行動物"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0

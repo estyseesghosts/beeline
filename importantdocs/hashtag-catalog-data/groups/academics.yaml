@@ -1,0 +1,209 @@
+id: academics
+request: "academics"
+members:
+  - tag: "academics"
+    langs: [en]
+    relation: head
+    status: seen
+    accounts7: 3
+  - tag: "academia"
+    langs: [en, es, nl]
+    relation: syn
+    status: seen
+    accounts7: 57
+  - tag: "academic"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 8
+  - tag: "academicchatter"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 42
+  - tag: "academicmastodon"
+    langs: [en]
+    relation: syn
+    status: seen
+    accounts7: 3
+    observed_other_lang: de
+  - tag: "scholar"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "scholars"
+    langs: [en]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "phd"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 34
+  - tag: "gradschool"
+    langs: [en]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "highered"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 33
+  - tag: "university"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 16
+  - tag: "openaccess"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 71
+  - tag: "peerreview"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 5
+  - tag: "scholarlypublishing"
+    langs: [en]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "research"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 199
+  - tag: "science"
+    langs: [en]
+    relation: rel
+    status: seen
+    accounts7: 820
+  - tag: "académie"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 4
+  - tag: "esr"
+    langs: [fr]
+    relation: syn
+    status: seen
+    accounts7: 16
+  - tag: "recherche"
+    langs: [fr]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "universitaire"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "enseignementsupérieur"
+    langs: [fr]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "investigación"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 10
+  - tag: "universidad"
+    langs: [es]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "hochschule"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 23
+  - tag: "uni"
+    langs: [de]
+    relation: syn
+    status: seen
+    accounts7: 10
+  - tag: "forschung"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 95
+  - tag: "universität"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 12
+  - tag: "studium"
+    langs: [de]
+    relation: nar
+    status: seen
+    accounts7: 34
+  - tag: "onderzoek"
+    langs: [nl]
+    relation: nar
+    status: seen
+    accounts7: 17
+  - tag: "universiteit"
+    langs: [nl]
+    relation: nar
+    status: seen
+    accounts7: 4
+  - tag: "アカデミア"
+    langs: [ja]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "大学"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 7
+  - tag: "研究"
+    langs: [ja, zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "研究者"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "院生"
+    langs: [ja]
+    relation: nar
+    status: low
+    accounts7: 0
+  - tag: "大学院"
+    langs: [ja]
+    relation: nar
+    status: seen
+    accounts7: 3
+  - tag: "學術"
+    langs: [zh-TW]
+    relation: syn
+    status: low
+    accounts7: 0
+  - tag: "學界"
+    langs: [zh-TW]
+    relation: syn
+    status: unseen
+    accounts7: 0
+  - tag: "大學"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 1
+  - tag: "博士班"
+    langs: [zh-TW]
+    relation: nar
+    status: unseen
+    accounts7: 0
+  - tag: "研究所"
+    langs: [zh-TW]
+    relation: nar
+    status: low
+    accounts7: 0
