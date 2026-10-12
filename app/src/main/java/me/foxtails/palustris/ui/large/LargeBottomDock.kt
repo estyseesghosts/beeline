@@ -1,6 +1,7 @@
 package me.foxtails.palustris.ui.large
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -37,12 +38,13 @@ internal fun LargeBottomDock(
     rightClearance: Dp = 0.dp,
     backdrop: ChromeBackdrop? = null,
 ) {
+    val bottomInset = LocalLargeBottomInset.current
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .floatingChromeBlur(backdrop = backdrop)
+            .floatingChromeBlur(backdrop = backdrop, edgeInsets = WindowInsets(bottom = bottomInset + LargeBottomDockEdgeGap))
             // The band reaches the screen edge. The controls rest above the navigation bar.
-            .padding(bottom = LocalLargeBottomInset.current)
+            .padding(bottom = bottomInset)
             .padding(vertical = LargeBottomDockEdgeGap),
         contentAlignment = Alignment.CenterStart,
     ) {

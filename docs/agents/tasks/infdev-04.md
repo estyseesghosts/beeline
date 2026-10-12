@@ -15,17 +15,19 @@ Complete `docs/04_infdev.md`: S1 blur band, S2 shadows and opaque pill, S3 edge 
 
 # Completed
 
-S1 `5ef55e75` blur band.
+S1 `5ef55e75` blur band. S2 `b71b5daa` shadows and opaque pill.
 
 # Current slice
 
-S2: `ExpandableContent` no longer clips at rest, opaque navigation pill, chip row collapse test.
+S3: edge veil in the band geometry and draw block; `edgeInsets` passed from the dock, compact shell and large dock.
 
 # Files involved
 
-`ui/motion/MotionContent.kt`, `ui/navigation/NavigationPresentation.kt`, `ChipRowCollapseTest.kt`, `docs/wiki/ui-and-navigation.md`.
+`ui/components/ChromeBandGeometry.kt`, `FloatingChromeBlur.kt`, `ui/large/LargeBottomDock.kt`, `ui/shell/ShellContent.kt`, `ChromeBandGeometryTest.kt`, wiki.
 
 # Verification
+
+S2 gate passed. S3 device (emulator-5554, compact-wide Home): the image under the chips fades into the background color toward the bottom edge; chips keep their contrast. Not checked: dark themes and Pure black, SM-G986W scroll shimmer (S3-D1 recording not run), API 29/30. Composer bands get no veil because they do not rest on the screen edge.
 
 S1 gate passed (tests, lint, ktlint, assembleDebug, assembleRelease); audit regressions identical to the base commit.
 S2 device (emulator-5554, compact-wide Home): chip shadows are soft with no straight cut; the pill is flat. Callers of `ExpandableContent`: chip row, composer warning field, notifications sync notice, post body behind a warning. None needs a clip at rest. Other parents were not found to clip. Not checked: 600/840 dp, font scale 2.0, dark themes, Search, Photo Grid, Notifications, Profile.
@@ -35,7 +37,7 @@ Not run: S1-D0 and the repeat recording (the emulator Taskbar hides the bottom e
 
 # Next
 
-Run the gate and commit S2, then S3.
+Run the gate and commit S3, then S4.
 
 # Blockers
 
@@ -43,4 +45,4 @@ None.
 
 # Last safe commit
 
-5ef55e75 Make the blur band full strength under the controls and fix its edges (infdev 04 S1)
+b71b5daa Show whole chip shadows and make the navigation pill opaque (infdev 04 S2)

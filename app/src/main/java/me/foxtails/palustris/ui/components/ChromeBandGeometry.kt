@@ -18,13 +18,22 @@ internal const val CHROME_BLUR_REACH_FACTOR = 2f
  * the backdrop still has content. At a screen edge the backdrop ends, so the recorded area ends there too.
  * @property opaqueTop where the mask reaches full strength coming from the top of the band
  * @property opaqueBottom where the mask starts to fade again toward the bottom of the band
+ * @property veil the edge veil over the node, or null when the band does not rest on the bottom screen edge
  */
 internal data class ChromeBandGeometry(
     val band: Rect,
     val recorded: Rect,
     val opaqueTop: Float,
     val opaqueBottom: Float,
+    val veil: ChromeVeil? = null,
 )
+
+/**
+ * The edge veil in node coordinates: alpha 0 at [startY], a low alpha at [controlY] (the bottom of the lowest
+ * control), and the highest alpha at [endY] (the screen edge). It hides the small frame-to-frame change of a
+ * blurred copy of moving text in the zone that holds no control.
+ */
+internal data class ChromeVeil(val startY: Float, val controlY: Float, val endY: Float)
 
 /**
  * The pure geometry of one blur band. The mask is transparent at the far end of the fade, fully strong across the
@@ -39,6 +48,8 @@ internal data class ChromeBandGeometry(
  * @param sourceBounds the recorded backdrop in root coordinates
  * @param fade length of the fade beyond the node
  * @param reach how far the blur reads beyond the band
+ * @param edgeZone height of the zone below the lowest control, down to the screen edge. A band that rests on the
+ * bottom screen edge gets a veil when this is above zero; any other band gets none.
  */
 internal fun chromeBandGeometry(
     nodeSize: Size,
@@ -47,6 +58,7 @@ internal fun chromeBandGeometry(
     fade: Float,
     reach: Float,
     edge: ChromeEdge,
+    edgeZone: Float = 0f,
 ): ChromeBandGeometry? {
     if (nodeSize.width <= 0f || nodeSize.height <= 0f) return null
     val source = sourceBounds.translate(-nodeOrigin.x, -nodeOrigin.y)
@@ -61,5 +73,10 @@ internal fun chromeBandGeometry(
     )
     val recorded = band.inflate(reach).intersect(source)
     if (recorded.width <= 0f || recorded.height <= 0f) return null
-    return ChromeBandGeometry(band = band, recorded = recorded, opaqueTop = 0f, opaqueBottom = nodeSize.height)
+    val veil = if (bottom && trailing <= 0f && edgeZone > 0f) {
+        ChromeVeil(startY = 0f, controlY = (nodeSize.height - edgeZone).coerceAtLeast(0f), endY = nodeSize.height)
+    } else {
+        null
+    }
+    return ChromeBandGeometry(band = band, recorded = recorded, opaqueTop = 0f, opaqueBottom = nodeSize.height, veil = veil)
 }

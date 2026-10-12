@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -113,7 +114,10 @@ private fun BoxScope.CompactShellNavigation(
     ) {
         Box(
             Modifier.fillMaxWidth()
-                .floatingChromeBlur(backdrop = backdrop)
+                .floatingChromeBlur(
+                    backdrop = backdrop,
+                    edgeInsets = compactGlobalNavigationPositioningInsets().add(WindowInsets(bottom = CompactOverlayVerticalPadding)),
+                )
                 .windowInsetsPadding(compactGlobalNavigationPositioningInsets())
                 .padding(vertical = CompactOverlayVerticalPadding),
             contentAlignment = Alignment.Center,

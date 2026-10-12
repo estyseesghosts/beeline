@@ -2,6 +2,7 @@ package me.foxtails.palustris.ui.components
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
@@ -34,13 +36,32 @@ import kotlin.math.roundToInt
 internal val FloatingChromeFadeDistance = 32.dp
 internal val FloatingChromeBlurRadius = 16.dp
 
+/** Veil alpha at the bottom of the lowest control. The veil is app background color, never a tint of the content. */
+internal const val CHROME_VEIL_CONTROL_ALPHA = 0.15f
+
+/** Veil alpha at the physical screen edge. Kept below full opacity so it never reads as a solid bar. */
+internal const val CHROME_VEIL_EDGE_ALPHA = 0.55f
+
 /**
  * One rule for every bottom dock: the band comes before the inset padding, so it reaches the physical screen
  * edge and the controls inside it stay clear of the navigation bar, the IME and the floating navigation.
  */
 @Composable
 internal fun Modifier.floatingChromeDock(insets: WindowInsets, backdrop: ChromeBackdrop?): Modifier =
-    floatingChromeBlur(backdrop = backdrop).windowInsetsPadding(insets)
+    floatingChromeBlur(backdrop = backdrop, edgeInsets = insets).windowInsetsPadding(insets)
+
+/** The veil gradient of [veil] in [color], from nothing at the node top to the strongest alpha at the screen edge. */
+private fun chromeVeilBrush(veil: ChromeVeil, color: Color): Brush {
+    val span = veil.endY - veil.startY
+    val control = (veil.controlY - veil.startY) / span
+    val atControl = color.copy(alpha = CHROME_VEIL_CONTROL_ALPHA)
+    val stops = buildList {
+        if (control > 0f) add(0f to color.copy(alpha = 0f))
+        add(control to atControl)
+        add(1f to color.copy(alpha = CHROME_VEIL_EDGE_ALPHA))
+    }
+    return Brush.verticalGradient(colorStops = stops.toTypedArray(), startY = veil.startY, endY = veil.endY)
+}
 
 /** The alpha mask of a band in recorded coordinates: transparent at both ends, full strength across the node. */
 private fun chromeMaskBrush(geometry: ChromeBandGeometry, recordedTop: Float): Brush {
@@ -63,7 +84,9 @@ private fun chromeMaskBrush(geometry: ChromeBandGeometry, recordedTop: Float): B
  * Draws the blur band behind a stack of floating controls: a blurred copy of the content under it, faded in by an
  * alpha mask that is transparent [fade] beyond the node and fully strong across the whole node, so every control of
  * the stack sits on a fully blurred backdrop. A band that does not rest on the screen edge also fades out past the
- * node where the backdrop continues, so it has no hard edge. The band has no tint. The controls separate
+ * node where the backdrop continues, so it has no hard edge. A band that rests on the bottom screen edge also draws a
+ * veil in the app background color over the zone below the lowest control ([edgeInsets] is that zone's height),
+ * strongest at the edge, to hide the small change of a blurred copy of moving text. The veil is not a tint. The band has no tint. The controls separate
  * from the content with their own drop shadow ([floatingControlShadow]).
  *
  * The band records more than it draws: the blur reads real content beyond the band wherever the backdrop continues,
@@ -79,8 +102,10 @@ internal fun Modifier.floatingChromeBlur(
     fade: Dp = FloatingChromeFadeDistance,
     backdrop: ChromeBackdrop? = null,
     edge: ChromeEdge = ChromeEdge.Bottom,
+    edgeInsets: WindowInsets? = null,
 ): Modifier {
     if (backdrop == null) return this
+    val veilColor = MaterialTheme.colorScheme.background
     val bandLayer = rememberGraphicsLayer()
     val blurPx = with(LocalDensity.current) { FloatingChromeBlurRadius.toPx() }
     // One effect for each band and density; the draw block never allocates it.
@@ -96,6 +121,7 @@ internal fun Modifier.floatingChromeBlur(
                 fade = fade.toPx(),
                 reach = blurPx * CHROME_BLUR_REACH_FACTOR,
                 edge = edge,
+                edgeZone = edgeInsets?.getBottom(this)?.toFloat() ?: 0f,
             ) ?: return@drawBehind
             val recorded = geometry.recorded
             if (bandLayer.renderEffect !== blurEffect) bandLayer.renderEffect = blurEffect
@@ -109,6 +135,13 @@ internal fun Modifier.floatingChromeBlur(
             val band = geometry.band
             clipRect(band.left, band.top, band.right, band.bottom) {
                 translate(recorded.left, recorded.top) { drawLayer(bandLayer) }
+                geometry.veil?.let { veil ->
+                    drawRect(
+                        brush = chromeVeilBrush(veil, veilColor),
+                        topLeft = Offset(band.left, veil.startY),
+                        size = Size(band.width, veil.endY - veil.startY),
+                    )
+                }
             }
         }
 }

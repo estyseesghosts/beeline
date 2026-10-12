@@ -1,4 +1,4 @@
-Infdev 04 (`docs/04_infdev.md`) is in progress. Read `docs/agents/tasks/infdev-04.md`. Slices: S1 blur band, S2 shadows and opaque pill, S3 edge veil, S4 composer attachment menu. S1 is `5ef55e75`; S2 follows it. The architecture audit exits 1 on findings that predate this work; do not edit the baseline.
+Infdev 04 (`docs/04_infdev.md`) is in progress. Read `docs/agents/tasks/infdev-04.md`. Slices: S1 blur band, S2 shadows and opaque pill, S3 edge veil, S4 composer attachment menu. S1 is `5ef55e75`, S2 `b71b5daa`; S3 follows. The architecture audit exits 1 on findings that predate this work; do not edit the baseline.
 
 Infdev 03 (`docs/03_infdev.md`) is complete in source. Read `docs/agents/tasks/infdev-03.md`. S1 `4b9871d6`, S2 `f5e477ce`, S3 `15828318`, S4 `4c40a1a9`, S5 `8850e47a`, S6 (Photo Grid tile states and one retry) follow `801044e6`. Device checks ran on `emulator-5554` only. Open: transparent bars on a phone and the API 29 emulator, dark themes, 600/840 dp layouts, font scale 2.0, live translation, dvd.chat after S6, and the SM-G986W frame check. The Taskbar of the AVD hides the navigation bar rendering.
 

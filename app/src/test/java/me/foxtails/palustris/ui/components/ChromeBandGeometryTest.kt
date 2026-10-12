@@ -72,4 +72,30 @@ class ChromeBandGeometryTest {
         assertNull(chromeBandGeometry(Size(1000f, 300f), Offset(0f, 1700f), elsewhere, 100f, 40f, ChromeEdge.Bottom))
         assertNull(chromeBandGeometry(Size(1000f, 300f), Offset(0f, 1700f), Rect.Zero, 100f, 40f, ChromeEdge.Bottom))
     }
+
+    @Test
+    fun aBandOnTheBottomScreenEdgeGetsAVeilOverTheZoneBelowTheControls() {
+        val geometry = chromeBandGeometry(Size(1000f, 300f), Offset(0f, 1700f), screen, 100f, 40f, ChromeEdge.Bottom, edgeZone = 120f)!!
+
+        // Nothing at the node top, a low alpha at the bottom of the lowest control, the strongest alpha at the edge.
+        assertEquals(ChromeVeil(startY = 0f, controlY = 180f, endY = 300f), geometry.veil)
+    }
+
+    @Test
+    fun theVeilNeverStartsAboveTheNode() {
+        val geometry = chromeBandGeometry(Size(1000f, 300f), Offset(0f, 1700f), screen, 100f, 40f, ChromeEdge.Bottom, edgeZone = 900f)!!
+
+        assertEquals(0f, geometry.veil!!.controlY, 0f)
+    }
+
+    @Test
+    fun noVeilWithoutAnEdgeZoneOrAwayFromTheScreenEdge() {
+        val noZone = chromeBandGeometry(Size(1000f, 300f), Offset(0f, 1700f), screen, 100f, 40f, ChromeEdge.Bottom)!!
+        val lifted = chromeBandGeometry(Size(1000f, 300f), Offset(0f, 1000f), screen, 100f, 40f, ChromeEdge.Bottom, edgeZone = 120f)!!
+        val top = chromeBandGeometry(Size(1000f, 300f), Offset.Zero, screen, 100f, 40f, ChromeEdge.Top, edgeZone = 120f)!!
+
+        assertNull(noZone.veil)
+        assertNull(lifted.veil)
+        assertNull(top.veil)
+    }
 }

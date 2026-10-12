@@ -1006,6 +1006,14 @@ chips use `floatingFilterChipElevation()` and `floatingAssistChipElevation()`. N
 | Composer hashtag suggestions | `ComposerHashtags.kt` | none | `floatingAssistChipElevation()` |
 | Post action, hashtag, repost and follow bubbles | `PostActionBubbles.kt`, `HashtagBubble.kt`, `HashtagChipBubble.kt`, `PostRepostChoice.kt`, `FollowChoice.kt` | 8 dp | token |
 
+**Edge veil (infdev 04 S3).** A band that rests on the bottom screen edge also draws a veil in `MaterialTheme.colorScheme.background` over the
+zone below its lowest control: alpha 0 at the node top, `CHROME_VEIL_CONTROL_ALPHA` (0.15) at the bottom of the lowest control and
+`CHROME_VEIL_EDGE_ALPHA` (0.55) at the screen edge. It hides the small change of a blurred copy of moving text. It is not a tint: it
+has the background color, never darkens content and stays below full opacity. The zone height comes from `edgeInsets`, read at draw time:
+`floatingChromeDock` passes its insets, `LargeBottomDock` and `CompactShellNavigation` pass their bottom inset and gap. A band that does
+not touch the screen edge (the composer stacks, a dock lifted by a clearance) and the top band get no veil. The veil draws only with a backdrop,
+so API 29, API 30 and battery saver stay without it. The default of the open decision was taken (a veil); the alternative is to pass no `edgeInsets`.
+
 Tests: `FloatingChromeBlurTest` (token, blur radius, that the shadow changes no layout, that a row under the band stays tappable) and
 `ChromeBandGeometryTest` (mask stops and recorded area for both edges, at and away from a screen edge, an empty node, no backdrop).
 The strip below the content on the compact-wide emulator (63 px, `[0,1785][1169,1848]`) is the launcher Taskbar: `dumpsys window` shows the
