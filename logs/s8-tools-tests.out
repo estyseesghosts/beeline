@@ -1,0 +1,14 @@
+....................................................
+----------------------------------------------------------------------
+Ran 52 tests in 1.092s
+
+OK
+warning: unretained-long-lived-map:app/src/main/java/me/foxtails/palustris/ui/feed/Example.kt:cache
+Architecture audit: 1 findings
+regression: unretained-long-lived-map:app/src/main/java/me/foxtails/palustris/ui/feed/Example.kt:cache
+Architecture audit: 1 findings
+existing-baseline: unretained-long-lived-map:app/src/main/java/me/foxtails/palustris/ui/feed/Example.kt:cache
+Architecture audit: 1 findings
+warning: ownership-class:app/src/main/java/me/foxtails/palustris/ui/feed/Warning.kt:SampleOwner
+Architecture audit: 1 findings
+Architecture audit: 0 findings

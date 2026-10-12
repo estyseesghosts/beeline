@@ -1,0 +1,272 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Reusing configuration cache.
+> Task :app:preBuild UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:loadKtlintReporters
+> Task :app:runKtlintCheckOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :app:ktlintAndroidTestDebugSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :app:ktlintAndroidTestReleaseSourceSetCheck SKIPPED
+> Task :app:extractProguardFiles
+> Task :app:runKtlintCheckOverDebugSourceSet NO-SOURCE
+> Task :app:ktlintDebugSourceSetCheck SKIPPED
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:generateDebugAndroidTestResValues
+> Task :app:runKtlintCheckOverReleaseSourceSet NO-SOURCE
+> Task :app:ktlintReleaseSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestDebugSourceSet NO-SOURCE
+> Task :app:ktlintTestDebugSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :app:ktlintTestFixturesDebugSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :app:ktlintTestFixturesReleaseSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestFixturesSourceSet NO-SOURCE
+> Task :app:ktlintTestFixturesSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestReleaseSourceSet NO-SOURCE
+> Task :app:ktlintTestReleaseSourceSetCheck SKIPPED
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:generateReleaseResValues
+> Task :app:generateReleaseBuildConfig
+> Task :app:processReleaseNavigationResources
+> Task :app:generateReleaseResources
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:compileReleaseNavigationResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:collectReleaseDependencies
+> Task :app:mergeReleaseNativeLibs
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:packageReleaseResources
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:sdkReleaseDependencyData
+> Task :app:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :app:processDebugUnitTestManifest UP-TO-DATE
+
+> Task :app:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libaom.so, libcoder.so, libdav1d.so, libde265.so, libheif.so, libx265.so. Run with --info option to learn more.
+
+> Task :app:processReleaseMainManifest
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:kaptGenerateStubsDebugKotlin UP-TO-DATE
+> Task :app:parseReleaseLocalResources
+> Task :app:generateReleaseRFile
+> Task :app:kaptDebugKotlin UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:generateDebugUnitTestConfig UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:hiltCollectClassesDebug UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:processReleaseManifest
+> Task :app:processReleaseManifestForPackage
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.jetbrains.kotlin.com.intellij.util.containers.Unsafe (file:/C:/Users/julie/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-compiler-embeddable/2.1.0/988bf980588bbbcfa1ba19c1ffd7aa869b335a31/kotlin-compiler-embeddable-2.1.0.jar)
+WARNING: Please consider reporting this to the maintainers of class org.jetbrains.kotlin.com.intellij.util.containers.Unsafe
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:hiltAggregateDepsDebug UP-TO-DATE
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.jetbrains.kotlin.com.intellij.util.containers.Unsafe (file:/C:/Users/julie/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-compiler-embeddable/2.1.0/988bf980588bbbcfa1ba19c1ffd7aa869b335a31/kotlin-compiler-embeddable-2.1.0.jar)
+WARNING: Please consider reporting this to the maintainers of class org.jetbrains.kotlin.com.intellij.util.containers.Unsafe
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+> Task :app:hiltJavaCompileDebug UP-TO-DATE
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.jetbrains.kotlin.com.intellij.util.containers.Unsafe (file:/C:/Users/julie/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-compiler-embeddable/2.1.0/988bf980588bbbcfa1ba19c1ffd7aa869b335a31/kotlin-compiler-embeddable-2.1.0.jar)
+WARNING: Please consider reporting this to the maintainers of class org.jetbrains.kotlin.com.intellij.util.containers.Unsafe
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:generateDebugLintReportModel
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.jetbrains.kotlin.com.intellij.util.containers.Unsafe (file:/C:/Users/julie/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-compiler-embeddable/2.1.0/988bf980588bbbcfa1ba19c1ffd7aa869b335a31/kotlin-compiler-embeddable-2.1.0.jar)
+WARNING: Please consider reporting this to the maintainers of class org.jetbrains.kotlin.com.intellij.util.containers.Unsafe
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+> Task :app:transformDebugClassesWithAsm UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:runKtlintCheckOverKotlinScripts
+> Task :app:ktlintKotlinScriptCheck
+> Task :app:runKtlintCheckOverAndroidTestSourceSet
+> Task :app:ktlintAndroidTestSourceSetCheck
+> Task :app:mergeReleaseResources
+> Task :app:kaptGenerateStubsDebugUnitTestKotlin UP-TO-DATE
+> Task :app:kaptDebugUnitTestKotlin UP-TO-DATE
+> Task :app:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :app:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :app:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :app:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :app:processReleaseResources
+> Task :app:dexBuilderDebug
+> Task :app:mergeProjectDexDebug
+> Task :app:packageDebug
+> Task :app:assembleDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:runKtlintCheckOverMainSourceSet
+> Task :app:ktlintMainSourceSetCheck
+> Task :app:runKtlintCheckOverTestSourceSet
+> Task :app:ktlintTestSourceSetCheck
+> Task :app:ktlintCheck
+> Task :app:kaptGenerateStubsReleaseKotlin
+> Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :app:testDebugUnitTest
+> Task :app:kaptReleaseKotlin
+> Task :app:compileReleaseKotlin
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/directmessages/DirectMessageMigrations.kt:16:26 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/directmessages/DirectMessageRepository.kt:30:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/notifications/db/NotificationMigrations.kt:8:26 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/notifications/push/PushMessageDecoder.kt:12:5 Redundant annotation target 'param'.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/notifications/work/NotificationWorkScheduler.kt:28:5 Redundant annotation target 'param'.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/preferences/FileAppPreferencesRepository.kt:41:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/preferences/PostPreferencesRepository.kt:35:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/transport/AuthenticatedHttpClient.kt:148:52 The corresponding parameter in the supertype 'Callback' is named 'e'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/SystemBars.kt:31:16 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/SystemBars.kt:32:16 'var navigationBarDividerColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/directmessages/DirectMessageViewModel.kt:38:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/display/RefreshRateController.kt:12:44 'val defaultDisplay: Display!' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationItem.kt:20:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:20:39 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:20:78 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:21:38 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:21:76 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:22:24 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:30:39 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:30:78 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:31:38 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:31:76 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:32:24 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/profile/ProfileCategory.kt:9:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/setup/SignInScreen.kt:65:61 'static field SOFT_INPUT_ADJUST_RESIZE: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/shell/AppShellState.kt:13:33 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:hiltCollectClassesRelease
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:processReleaseJavaRes
+> Task :app:hiltAggregateDepsRelease
+> Task :app:mergeReleaseJavaResource
+> Task :app:hiltJavaCompileRelease
+> Task :app:transformReleaseClassesWithAsm
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+
+> Task :app:testDebugUnitTest
+
+MediaViewerScreenTest > selectedAttachmentsRemainOnFullQualityAfterSwipingBack FAILED
+    androidx.compose.ui.test.ComposeTimeoutException at MediaViewerScreenTest.kt:260
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/build/reports/lint-results-debug.html
+Wrote SARIF report to file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/build/reports/lint-results-debug.sarif
+
+> Task :app:lintDebug
+> Task :app:compileReleaseArtProfile
+> Task :app:convertShrunkResourcesToBinaryRelease
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:assembleRelease
+> Task :app:createReleaseApkListingFileRedirect
+
+> Task :app:testDebugUnitTest
+
+1819 tests completed, 1 failed
+
+> Task :app:testDebugUnitTest FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 4m 44s
+131 actionable tasks: 76 executed, 55 up-to-date
+Configuration cache entry reused.

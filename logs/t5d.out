@@ -1,0 +1,240 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Reusing configuration cache.
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:loadKtlintReporters UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:runKtlintCheckOverDebugSourceSet NO-SOURCE
+> Task :app:runKtlintCheckOverAndroidTestDebugSourceSet NO-SOURCE
+> Task :app:ktlintDebugSourceSetCheck SKIPPED
+> Task :app:ktlintAndroidTestDebugSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverAndroidTestReleaseSourceSet NO-SOURCE
+> Task :app:ktlintAndroidTestReleaseSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestDebugSourceSet NO-SOURCE
+> Task :app:ktlintTestDebugSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestFixturesDebugSourceSet NO-SOURCE
+> Task :app:runKtlintCheckOverReleaseSourceSet NO-SOURCE
+> Task :app:ktlintTestFixturesDebugSourceSetCheck SKIPPED
+> Task :app:ktlintReleaseSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestFixturesReleaseSourceSet NO-SOURCE
+> Task :app:runKtlintCheckOverTestReleaseSourceSet NO-SOURCE
+> Task :app:ktlintTestFixturesReleaseSourceSetCheck SKIPPED
+> Task :app:ktlintTestReleaseSourceSetCheck SKIPPED
+> Task :app:runKtlintCheckOverTestFixturesSourceSet NO-SOURCE
+> Task :app:ktlintTestFixturesSourceSetCheck SKIPPED
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:runKtlintCheckOverAndroidTestSourceSet UP-TO-DATE
+> Task :app:runKtlintCheckOverKotlinScripts UP-TO-DATE
+> Task :app:ktlintAndroidTestSourceSetCheck UP-TO-DATE
+> Task :app:ktlintKotlinScriptCheck UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:runKtlintCheckOverTestSourceSet UP-TO-DATE
+> Task :app:ktlintTestSourceSetCheck UP-TO-DATE
+> Task :app:runKtlintCheckOverMainSourceSet UP-TO-DATE
+> Task :app:ktlintMainSourceSetCheck UP-TO-DATE
+> Task :app:ktlintCheck UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :app:processDebugUnitTestManifest UP-TO-DATE
+> Task :app:kaptGenerateStubsDebugKotlin UP-TO-DATE
+> Task :app:kaptDebugKotlin UP-TO-DATE
+> Task :app:processDebugResources
+> Task :app:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:generateDebugUnitTestConfig
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/directmessages/DirectMessageMigrations.kt:16:26 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/directmessages/DirectMessageRepository.kt:30:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/notifications/db/NotificationMigrations.kt:8:26 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/notifications/push/PushMessageDecoder.kt:12:5 Redundant annotation target 'param'.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/notifications/work/NotificationWorkScheduler.kt:28:5 Redundant annotation target 'param'.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/preferences/FileAppPreferencesRepository.kt:41:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/preferences/PostPreferencesRepository.kt:35:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/transport/AuthenticatedHttpClient.kt:148:52 The corresponding parameter in the supertype 'Callback' is named 'e'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/SystemBars.kt:31:16 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/SystemBars.kt:32:16 'var navigationBarDividerColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/directmessages/DirectMessageViewModel.kt:38:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/display/RefreshRateController.kt:12:44 'val defaultDisplay: Display!' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationItem.kt:20:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:20:39 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:20:78 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:21:38 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:21:76 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:22:24 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:30:39 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:30:78 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:31:38 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:31:76 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:32:24 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/profile/ProfileCategory.kt:9:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/setup/SignInScreen.kt:58:61 'static field SOFT_INPUT_ADJUST_RESIZE: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/shell/AppShellState.kt:13:33 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:hiltCollectClassesDebug
+> Task :app:processDebugJavaRes
+> Task :app:hiltAggregateDepsDebug
+> Task :app:hiltJavaCompileDebug
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:transformDebugClassesWithAsm
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:kaptGenerateStubsDebugUnitTestKotlin
+
+> Task :app:kaptDebugUnitTestKotlin
+warning: The following options were not recognized by any processor: '[dagger.fastInit, dagger.hilt.android.internal.disableAndroidSuperclassValidation, dagger.hilt.android.internal.projectType, dagger.hilt.internal.useAggregatingRootProcessor, room.schemaLocation, kapt.kotlin.generated]'
+
+> Task :app:compileDebugUnitTestKotlin
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ProtocolFixtureValidationTest.kt:19:9 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'ClassLoader?'.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:45:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:47:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:49:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:51:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:64:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:66:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:82:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:85:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:88:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:107:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:110:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:112:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:124:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:127:13 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:130:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:155:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:157:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:173:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:179:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:181:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:183:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:206:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:209:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/profile/ProfileTimelinePagerTest.kt:231:13 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:65:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:68:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:80:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:86:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:89:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:102:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:108:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:111:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:133:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:135:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:194:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:208:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:219:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchOwnerTest.kt:223:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:hiltCollectClassesDebugUnitTest
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:hiltAggregateDepsDebugUnitTest
+> Task :app:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :app:transformDebugUnitTestClassesWithAsm
+> Task :app:testDebugUnitTest
+
+Unexpected exception thrown.
+org.gradle.internal.remote.internal.MessageIOException: Could not write '/127.0.0.1:51324'.
+	at org.gradle.internal.remote.internal.inet.SocketConnection.flush(SocketConnection.java:142)
+	at org.gradle.internal.remote.internal.hub.MessageHub$ConnectionDispatch.run(MessageHub.java:333)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.io.IOException: Connection reset by peer
+	at java.base/sun.nio.ch.SocketDispatcher.write0(Native Method)
+	at java.base/sun.nio.ch.SocketDispatcher.write(SocketDispatcher.java:57)
+	at java.base/sun.nio.ch.IOUtil.writeFromNativeBuffer(IOUtil.java:137)
+	at java.base/sun.nio.ch.IOUtil.write(IOUtil.java:81)
+	at java.base/sun.nio.ch.IOUtil.write(IOUtil.java:58)
+	at java.base/sun.nio.ch.SocketChannelImpl.implWrite(SocketChannelImpl.java:562)
+	at java.base/sun.nio.ch.SocketChannelImpl.write(SocketChannelImpl.java:614)
+	at org.gradle.internal.remote.internal.inet.SocketConnection$SocketOutputStream.writeWithNonBlockingRetry(SocketConnection.java:282)
+	at org.gradle.internal.remote.internal.inet.SocketConnection$SocketOutputStream.writeBufferToChannel(SocketConnection.java:269)
+	at org.gradle.internal.remote.internal.inet.SocketConnection$SocketOutputStream.flush(SocketConnection.java:263)
+	at org.gradle.internal.remote.internal.inet.SocketConnection.flush(SocketConnection.java:140)
+	... 6 more
+The message received from the daemon indicates that the daemon has disappeared.
+Build request sent: Build{id=052d2429-377e-4c08-b7e9-9af93296bad9, currentDir=C:\Users\julie\Documents\newmisskeyclientprojectdirectory\misskeyclient}
+Attempting to read last messages from the daemon log...
+Daemon pid: 5296
+  log file: C:\Users\julie\.gradle\daemon\9.6.0\daemon-5296.out.log
+----- Last 20 lines from daemon log file - daemon-5296.out.log -----
+	at org.gradle.internal.remote.internal.inet.SocketConnection.flush(SocketConnection.java:142)
+	at org.gradle.internal.remote.internal.hub.MessageHub$ConnectionDispatch.run(MessageHub.java:333)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.io.IOException: Connection reset by peer
+	at java.base/sun.nio.ch.SocketDispatcher.write0(Native Method)
+	at java.base/sun.nio.ch.SocketDispatcher.write(SocketDispatcher.java:57)
+	at java.base/sun.nio.ch.IOUtil.writeFromNativeBuffer(IOUtil.java:137)
+	at java.base/sun.nio.ch.IOUtil.write(IOUtil.java:81)
+	at java.base/sun.nio.ch.IOUtil.write(IOUtil.java:58)
+	at java.base/sun.nio.ch.SocketChannelImpl.implWrite(SocketChannelImpl.java:562)
+	at java.base/sun.nio.ch.SocketChannelImpl.write(SocketChannelImpl.java:614)
+	at org.gradle.internal.remote.internal.inet.SocketConnection$SocketOutputStream.writeWithNonBlockingRetry(SocketConnection.java:282)
+	at org.gradle.internal.remote.internal.inet.SocketConnection$SocketOutputStream.writeBufferToChannel(SocketConnection.java:269)
+	at org.gradle.internal.remote.internal.inet.SocketConnection$SocketOutputStream.flush(SocketConnection.java:263)
+	at org.gradle.internal.remote.internal.inet.SocketConnection.flush(SocketConnection.java:140)
+	... 6 more----- End of the daemon log -----
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Gradle build daemon disappeared unexpectedly (it may have been killed or may have crashed)
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.

@@ -1,0 +1,87 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Reusing configuration cache.
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:kaptGenerateStubsDebugKotlin
+> Task :app:kaptDebugKotlin
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/directmessages/DirectMessageMigrations.kt:16:26 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/directmessages/DirectMessageRepository.kt:30:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/media/DraftThreadImagePreparer.kt:32:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/media/MeteredNetworkMonitor.kt:21:49 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/notifications/db/NotificationMigrations.kt:8:26 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/notifications/push/PushMessageDecoder.kt:12:5 Redundant annotation target 'param'.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/notifications/work/NotificationWorkScheduler.kt:28:5 Redundant annotation target 'param'.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/preferences/FileAppPreferencesRepository.kt:41:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/preferences/PostPreferencesRepository.kt:36:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/data/transport/AuthenticatedHttpClient.kt:165:52 The corresponding parameter in the supertype 'Callback' is named 'e'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/SystemBars.kt:31:16 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/SystemBars.kt:32:16 'var navigationBarDividerColor: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/composer/ComposerSurface.kt:213:16 'var isStatusBarContrastEnforced: Boolean' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/composer/DraftsScreen.kt:51:36 'fun TabRow(selectedTabIndex: Int, modifier: Modifier = ..., containerColor: Color = ..., contentColor: Color = ..., indicator: @Composable() ComposableFunction1<@ParameterName(...) List<TabPosition>, Unit> = ..., divider: @Composable() ComposableFunction0<Unit> = ..., tabs: @Composable() ComposableFunction0<Unit>): Unit' is deprecated. Replaced with PrimaryTabRow and SecondaryTabRow.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/directmessages/DirectMessageViewModel.kt:38:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to property.
+- To opt in to applying to both value parameter and property, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/display/RefreshRateController.kt:12:44 'val defaultDisplay: Display!' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/media/ZoomableMediaImage.kt:64:26 'fun rememberTransformableState(onTransformation: (@ParameterName(...) Float, @ParameterName(...) Offset, @ParameterName(...) Float) -> Unit): TransformableState' is deprecated. Prefer remembering a TransformableState with a onTransformation lambda that takes the centroid. This centroid (if specified) is the point at which zooming or rotation should happen around which allows for more natural transformations.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationItem.kt:20:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:20:39 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:20:78 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:21:38 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:21:76 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:22:24 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:30:39 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:30:78 'val systemGestureInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:31:38 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:31:76 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/navigation/NavigationModeObserver.kt:32:24 'val systemWindowInsets: Insets' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/profile/ProfileCategory.kt:9:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/setup/SignInScreen.kt:65:61 'static field SOFT_INPUT_ADJUST_RESIZE: Int' is deprecated. Deprecated in Java.
+w: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/main/java/me/foxtails/palustris/ui/shell/AppShellState.kt:13:33 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+
+BUILD SUCCESSFUL in 1m 17s
+10 actionable tasks: 3 executed, 7 up-to-date
+Configuration cache entry reused.

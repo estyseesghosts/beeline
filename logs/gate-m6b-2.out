@@ -1,0 +1,263 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: :app:compileDebugUnitTestKotlin
+
+> Configure project :app
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Add android.sync.suppressAgpWarnings=UNSUPPORTED_PROJECT_OPTION_USE to the gradle.properties file to suppress this warning.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Add android.sync.suppressAgpWarnings=UNSUPPORTED_PROJECT_OPTION_USE to the gradle.properties file to suppress this warning.
+WARNING: API 'applicationVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling applicationVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
+WARNING: API 'testVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling testVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
+WARNING: API 'unitTestVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling unitTestVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:kaptGenerateStubsDebugKotlin UP-TO-DATE
+> Task :app:kaptDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:mergeDebugResources
+> Task :app:processDebugResources
+> Task :app:compileDebugJavaWithJavac
+> Task :app:hiltCollectClassesDebug
+> Task :app:hiltAggregateDepsDebug UP-TO-DATE
+> Task :app:hiltJavaCompileDebug
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:kaptGenerateStubsDebugUnitTestKotlin
+
+> Task :app:kaptDebugUnitTestKotlin
+warning: The following options were not recognized by any processor: '[dagger.fastInit, dagger.hilt.android.internal.disableAndroidSuperclassValidation, dagger.hilt.android.internal.projectType, dagger.hilt.internal.useAggregatingRootProcessor, room.schemaLocation, kapt.kotlin.generated]'
+
+> Task :app:compileDebugUnitTestKotlin FAILED
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:47:40 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:181:29 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:354:30 No parameter with name 'onSearchAccounts' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:354:63 Unresolved reference 'it'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:547:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:547:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:549:21 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:603:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:603:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:604:21 No parameter with name 'onSearchAccounts' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:604:54 Unresolved reference 'it'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:684:45 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:693:45 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:757:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:757:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:781:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:781:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:825:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:825:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:1046:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/feed/HomeFeedTest.kt:1046:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationTest.kt:77:40 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/navigation/NavigationTest.kt:477:29 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:96:75 Unresolved reference 'search_categories_description'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:107:52 Unresolved reference 'search_categories_description'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:147:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:147:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:148:90 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:177:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:177:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:179:47 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:208:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:208:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:213:47 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:245:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:245:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:247:42 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:271:23 Unresolved reference 'SearchExploreState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:275:23 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:279:23 Unresolved reference 'SearchExploreState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:280:21 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:280:21 Not enough information to infer type argument for 'T'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:281:13 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:281:13 Not enough information to infer type argument for 'C'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:281:51 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:281:51 Not enough information to infer type argument for 'B'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:281:59 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:282:13 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:282:13 Not enough information to infer type argument for 'C'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:282:51 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:282:51 Not enough information to infer type argument for 'B'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:282:59 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:283:13 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:283:13 Not enough information to infer type argument for 'C'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:283:57 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:283:57 Not enough information to infer type argument for 'B'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:283:65 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:284:13 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:284:13 Not enough information to infer type argument for 'C'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:284:58 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:284:58 Not enough information to infer type argument for 'B'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:287:51 Function 'component1()' is ambiguous for this expression: 
+fun <T> Array<out T>.component1(): T
+fun ByteArray.component1(): Byte
+fun ShortArray.component1(): Short
+fun IntArray.component1(): Int
+fun LongArray.component1(): Long
+fun FloatArray.component1(): Float
+fun DoubleArray.component1(): Double
+fun BooleanArray.component1(): Boolean
+fun CharArray.component1(): Char
+fun <T> List<T>.component1(): T
+fun <K, V> Map.Entry<K, V>.component1(): K
+fun UIntArray.component1(): UInt
+fun ULongArray.component1(): ULong
+fun UByteArray.component1(): UByte
+fun UShortArray.component1(): UShort.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:287:51 Function 'component2()' is ambiguous for this expression: 
+fun <T> Array<out T>.component2(): T
+fun ByteArray.component2(): Byte
+fun ShortArray.component2(): Short
+fun IntArray.component2(): Int
+fun LongArray.component2(): Long
+fun FloatArray.component2(): Float
+fun DoubleArray.component2(): Double
+fun BooleanArray.component2(): Boolean
+fun CharArray.component2(): Char
+fun <T> List<T>.component2(): T
+fun <K, V> Map.Entry<K, V>.component2(): V
+fun UIntArray.component2(): UInt
+fun ULongArray.component2(): ULong
+fun UByteArray.component2(): UByte
+fun UShortArray.component2(): UShort.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:287:51 Function 'component3()' is ambiguous for this expression: 
+fun <T> Array<out T>.component3(): T
+fun ByteArray.component3(): Byte
+fun ShortArray.component3(): Short
+fun IntArray.component3(): Int
+fun LongArray.component3(): Long
+fun FloatArray.component3(): Float
+fun DoubleArray.component3(): Double
+fun BooleanArray.component3(): Boolean
+fun CharArray.component3(): Char
+fun <T> List<T>.component3(): T
+fun UIntArray.component3(): UInt
+fun ULongArray.component3(): ULong
+fun UByteArray.component3(): UByte
+fun UShortArray.component3(): UShort.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:290:25 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:290:53 Unresolved reference 'second'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:290:61 No parameter with name 'explore' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:290:87 Function invocation 'first()' expected.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:292:46 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:292:70 Function invocation 'first()' expected.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:324:39 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:326:21 No parameter with name 'onSharedTabChange' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:326:63 Unresolved reference 'it'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:346:64 Unresolved reference 'search_categories_description'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:347:46 Unresolved reference 'search_category_for_you'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:348:64 Unresolved reference 'search_categories_description'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:366:21 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:366:37 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:416:25 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:416:41 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:450:25 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:450:41 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:496:41 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:510:50 Unresolved reference 'search_category_hashtags'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:513:50 Unresolved reference 'search_category_profiles'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:529:17 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:529:33 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchClearanceTest.kt:531:43 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchCombinedHashtagsTest.kt:141:56 Unresolved reference 'accounts'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:39:36 Unresolved reference 'SearchExploreActions'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:40:9 'loadTrending' overrides nothing.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:41:9 'loadPopularAccounts' overrides nothing.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:42:9 'suggestHashtags' overrides nothing.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:48:24 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:48:45 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:49:18 Unresolved reference 'SearchExploreState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:49:39 Unresolved reference 'SearchExploreState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:55:25 No parameter with name 'accountSearch' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:56:25 No parameter with name 'explore' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:57:25 No parameter with name 'exploreActions' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:59:25 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:74:31 Unresolved reference 'SearchExploreState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:89:46 Unresolved reference 'search_explore_hashtags'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:96:35 Unresolved reference 'SearchExploreState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:110:46 Unresolved reference 'search_hashtag_ready'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:115:24 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:116:61 Unresolved reference 'SearchExploreState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:124:24 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:142:24 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:158:34 No parameter with name 'exploreActions' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:158:78 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:173:31 Unresolved reference 'SearchExploreState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:175:46 Unresolved reference 'search_popular_accounts'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:187:46 Unresolved reference 'search_find_account'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:197:29 Unresolved reference 'AccountSearchState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchDiscoveryTest.kt:198:23 Unresolved reference 'SearchExploreState'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchEntryStatesTest.kt:47:29 No parameter with name 'sharedTab' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchEntryStatesTest.kt:49:29 No parameter with name 'onSearchAccounts' found.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchEntryStatesTest.kt:49:63 Unresolved reference 'it'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchExploreControllerTest.kt:54:64 Unresolved reference 'SearchExploreController'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchExploreControllerTest.kt:78:80 Unresolved reference 'it'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchExploreControllerTest.kt:97:73 Unresolved reference 'it'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchExploreControllerTest.kt:114:82 Unresolved reference 'it'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchExploreControllerTest.kt:158:23 Unresolved reference 'SearchExploreController'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchExploreControllerTest.kt:191:76 Unresolved reference 'it'.
+e: file:///C:/Users/julie/Documents/newmisskeyclientprojectdirectory/misskeyclient/app/src/test/java/me/foxtails/palustris/ui/search/SearchExploreControllerTest.kt:238:23 Unresolved reference 'SearchExploreController'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugUnitTestKotlin' (registered by plugin 'org.jetbrains.kotlin.android').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 45s
+28 actionable tasks: 9 executed, 19 up-to-date
+Configuration cache entry stored.
