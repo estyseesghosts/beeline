@@ -1078,6 +1078,7 @@ The Settings main page is one flat list. Each row opens one page and shows a sho
 | Blocks and mutes | Account | Blocked users, muted users and muted hashtags for each account |
 | Privacy | Application | Tracking parameters |
 | Notifications | Account | Alerts, categories and delivery for each account |
+| About | Application | Product name, version, license, and the included open-source components (read only) |
 
 The Posting page edits the active account and names it at the top. It does not select another account.
 Image compression shows only when the server reports client compression. The favourite reaction shows only when
@@ -1094,6 +1095,9 @@ The Blocks and mutes page keeps the route name `SettingsRoute.PrivacyAccounts` a
 With exactly one account, the Notifications row opens that account at once and Back returns to the main page
 (`skippingSingleAccountPicker`, `parent(accounts)`). A removed account still falls back to the picker.
 
+The About page reads the name and version from `ProductIdentity`. `OpenSourceComponents` in `AboutSettingsScreen.kt` is the
+component list; add a component there when a dependency is added. The page has no link and no command.
+
 The Appearance page keeps the route name `SettingsRoute.Display` and the file `DisplaySettingsScreen.kt`.
 A switch row toggles as one control (`SettingsSwitchRow`), so a screen reader reads the title, the summary and the state together.
 Section headings carry heading semantics.
@@ -1101,5 +1105,5 @@ Section headings carry heading semantics.
 Sources: `ui/settings/SettingsScreen.kt`, `SettingsHost.kt`, `SettingsRoute.kt`, `SettingsComponents.kt`,
 `TimelineMediaSettingsScreen.kt`, `PostingSettingsScreen.kt`, `FavouriteEmojiSetting.kt`, `ContentWarningSettingsScreen.kt`,
 `ContentWarningRulesEditor.kt`, `SettingsRouteParents.kt`, `PrivacyAccountsScreen.kt`, `NotificationAccountsScreen.kt`,
-`ContentWarningSettingsTest`, `SettingsAccountPagesTest`, `SettingsMainPageTest`,
+`AboutSettingsScreen.kt`, `ContentWarningSettingsTest`, `SettingsAccountPagesTest`, `SettingsMainPageTest`,
 `SettingsDisplayTest`, `PostingSettingsScreenTest`. No device check ran for these pages. No live server check ran for the favourite reaction.

@@ -32,6 +32,7 @@ internal fun encodeSettingsRoute(route: SettingsRoute): List<String> = when (rou
     SettingsRoute.AccountContentWarnings -> listOf("AccountContentWarnings")
     SettingsRoute.Posting -> listOf("Posting")
     SettingsRoute.PrivacyAccounts -> listOf("PrivacyAccounts")
+    SettingsRoute.About -> listOf("About")
     is SettingsRoute.NotificationAccount -> listOf(
         "NotificationAccount",
         route.accountId.connection.origin,
@@ -60,6 +61,7 @@ internal fun decodeSettingsRoute(values: List<*>): SettingsRoute? {
         "AccountContentWarnings" -> SettingsRoute.AccountContentWarnings
         "Posting" -> SettingsRoute.Posting
         "PrivacyAccounts" -> SettingsRoute.PrivacyAccounts
+        "About" -> SettingsRoute.About
         "NotificationAccount" -> decodeAccount(values)?.let(SettingsRoute::NotificationAccount)
         "Moderation" -> {
             val accountId = decodeAccount(values) ?: return null

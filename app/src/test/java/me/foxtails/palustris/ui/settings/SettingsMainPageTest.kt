@@ -47,6 +47,7 @@ class SettingsMainPageTest {
         "settings_blocks_mutes" to SettingsRoute.PrivacyAccounts,
         "settings_privacy" to SettingsRoute.Privacy,
         "settings_notifications" to SettingsRoute.Notifications,
+        "settings_about" to SettingsRoute.About,
     )
 
     @Test
@@ -91,6 +92,16 @@ class SettingsMainPageTest {
         compose.activity.onBackPressedDispatcher.onBackPressed()
         compose.waitForIdle()
         assertEquals(SettingsRoute.Main, route)
+    }
+
+    @Test
+    fun theAboutPageShowsTheNameTheVersionTheLicenseAndTheComponents() {
+        compose.setContent { AboutSettingsScreen(name = "Beeline", version = "9.8.7") }
+
+        compose.onNodeWithText("Beeline").assertIsDisplayed()
+        compose.onNodeWithText("Version 9.8.7").assertIsDisplayed()
+        compose.onNodeWithText("GNU General Public License, version 3").assertIsDisplayed()
+        OpenSourceComponents.forEach { compose.onNodeWithText(it).performScrollTo().assertIsDisplayed() }
     }
 
     @Test

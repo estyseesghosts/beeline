@@ -2,6 +2,7 @@ package me.foxtails.palustris.ui.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import me.foxtails.palustris.ProductIdentity
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppPreferences
@@ -67,6 +68,12 @@ internal fun settingsMainRows(preferences: AppPreferences): List<SettingsMainRow
             "settings_notifications",
             stringResource(R.string.settings_notifications),
             stringResource(R.string.settings_notifications_summary),
+        ),
+        SettingsMainRow(
+            SettingsRoute.About,
+            "settings_about",
+            stringResource(R.string.settings_about),
+            stringResource(R.string.settings_about_version, ProductIdentity.version),
         ),
     )
 }

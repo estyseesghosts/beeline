@@ -101,6 +101,7 @@ fun SettingsHost(
         SettingsRoute.AccountContentWarnings -> stringResource(R.string.settings_content_warnings)
         SettingsRoute.Posting -> stringResource(R.string.settings_posting)
         SettingsRoute.PrivacyAccounts -> stringResource(R.string.settings_blocks_mutes)
+        SettingsRoute.About -> stringResource(R.string.settings_about)
         is SettingsRoute.Moderation -> when (route.kind) {
             ModerationKind.Blocked -> stringResource(R.string.settings_blocked_users)
             ModerationKind.Muted -> stringResource(R.string.settings_muted_users)
@@ -208,6 +209,7 @@ fun SettingsHost(
                     support = postingSupport,
                     accountLabel = postPreferencesAccountLabel,
                 )
+                SettingsRoute.About -> AboutSettingsScreen()
                 SettingsRoute.PrivacyAccounts -> PrivacyAccountsScreen(accounts) { accountId, kind ->
                     onModeration(accountId, kind)
                 }

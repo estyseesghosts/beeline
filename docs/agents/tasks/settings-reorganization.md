@@ -27,6 +27,8 @@ reaction emoji, and an About page.
 - `LocalBlurEffectsEnabled` is the one switch for blur. `ConnectedApp` provides it. `rememberChromeBackdrop`
   and `ProfileHeader` read it. A new blur site must read it too.
 - `SettingsRoute.parent()` is the one Back order. `safeParent()` delegates to it.
+- The About page lists component names only, and the license only for FFmpeg, which `docs/video.md` records. It has no
+  repository link, because the repository records no public address.
 - The blocked and muted lists page has the title "Blocks and mutes". Its route stays `SettingsRoute.PrivacyAccounts`,
   so a saved route still restores.
 - The account content warning page reuses the labels of the global page. The separate account labels are deleted.
@@ -38,10 +40,12 @@ reaction emoji, and an About page.
 - S3 Posting at the top level, favourite reaction, Privacy switch. Commit `15f0d85f`.
 - S4 Content warnings at the top level, account rules child page, Back order (`SettingsRoute.parent()`). Commit `3ad81590`.
 - S5 Blocks and mutes at the top level, Privacy with the tracking switch only, no notification picker for one account.
+  Commit `89bcd2b3`.
+- S6 About page.
 
 # Current slice
 
-S6 About page.
+None. All six slices are complete in source.
 
 # Files involved
 
@@ -54,14 +58,15 @@ S6 About page.
 
 # Verification
 
-- S1 to S5: the settings unit tests pass. The local CI-parity gate passes except for the architecture audit,
+- S1 to S6: the settings unit tests pass. The local CI-parity gate passes except for the architecture audit,
   which exits 1 at the base commit. No slice adds a regression line.
 - No device check ran. The blur setting has no check on a real screen.
 - No live server check ran for the favourite reaction.
 
 # Next
 
-S6 (About).
+Device checks: every page at font scale 2.0, TalkBack on the switch rows, the blur setting on a real screen, and the
+favourite reaction against a Misskey server. Translations of the new strings. A changelog entry by the owner.
 
 # Blockers
 
@@ -69,5 +74,5 @@ None.
 
 # Last safe commit
 
-`3ad81590` Move Content warnings to the Settings main page with an account rules page. S5 is the commit after it:
-"Move Blocks and mutes to the Settings main page and skip the one-account picker".
+`89bcd2b3` Move Blocks and mutes to the Settings main page and skip the one-account picker. S6 is the commit after it:
+"Add the About page to Settings".

@@ -35,6 +35,7 @@ class SettingsRouteRestorationTest {
             SettingsRoute.AccountContentWarnings,
             SettingsRoute.Posting,
             SettingsRoute.PrivacyAccounts,
+            SettingsRoute.About,
         ).forEach { route ->
             assertEquals(route, decodeSettingsRoute(encodeSettingsRoute(route)))
         }

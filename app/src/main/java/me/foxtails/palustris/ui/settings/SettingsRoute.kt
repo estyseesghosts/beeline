@@ -14,6 +14,7 @@ sealed interface SettingsRoute {
     data object AccountContentWarnings : SettingsRoute
     data object Posting : SettingsRoute
     data object PrivacyAccounts : SettingsRoute
+    data object About : SettingsRoute
     data class Moderation(val accountId: AccountId, val kind: ModerationKind) : SettingsRoute
 }
 

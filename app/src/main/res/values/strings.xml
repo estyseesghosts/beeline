@@ -915,4 +915,10 @@
     <string name="settings_content_warning_account_adds">These rules add to the rules for all accounts.</string>
     <string name="settings_blocks_mutes">Blocks and mutes</string>
     <string name="settings_blocks_mutes_summary">Blocked users, muted users, and muted hashtags for each account.</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_version">Version %1$s</string>
+    <string name="settings_about_license">License</string>
+    <string name="settings_about_license_summary">GNU General Public License, version 3</string>
+    <string name="settings_about_components">Open-source components</string>
+    <string name="settings_about_components_summary">%1$s includes these open-source components.</string>
 </resources>
