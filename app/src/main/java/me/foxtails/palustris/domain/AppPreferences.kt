@@ -76,7 +76,7 @@ enum class AppFont {
  * The font that a language uses when the user has made no font choice.
  * Latin-script languages use Inter. Mainland Chinese uses ZCOOL KuaiLe, Taiwanese Mandarin uses
  * Chocolate Classical Sans, Hong Kong Cantonese uses Chiron Hei HK, Japanese uses Kiwi Maru, and
- * Hindi uses Sarala. Generic Chinese, Korean, and Russian keep the system font because the
+ * Hindi uses Sarala. Generic Chinese, Korean, Russian, and Arabic keep the system font because the
  * Android Noto family covers every script, so no character renders as tofu. SystemDefault keeps
  * the system font. There is no Noto entry: Noto means the Android system family.
  */
@@ -100,6 +100,7 @@ fun defaultFontForLanguage(language: AppLanguage): AppFont = when (language) {
     AppLanguage.Chinese,
     AppLanguage.Korean,
     AppLanguage.Russian,
+    AppLanguage.Arabic,
     -> AppFont.Device
 }
 
@@ -122,6 +123,7 @@ enum class AppLanguage(val tag: String?) {
     ChineseTaiwan("zh-TW"),
     Russian("ru"),
     Indonesian("in-ID"),
+    Arabic("ar"),
     ;
 
     companion object {

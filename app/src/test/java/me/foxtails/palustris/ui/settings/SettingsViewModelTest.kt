@@ -141,6 +141,30 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun setLanguageAcrossTheArabicBoundaryClearsAForcedLayoutDirection() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = InMemoryAppPreferencesRepository(
+                AppPreferences(layoutDirection = AppLayoutDirection.ForceLtr),
+            )
+            val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
+
+            model.setLanguage(AppLanguage.Arabic)
+            advanceUntilIdle()
+            assertEquals(AppLayoutDirection.System, repository.observe().first().preferences.layoutDirection)
+
+            model.setLayoutDirection(AppLayoutDirection.ForceRtl)
+            model.setLanguage(AppLanguage.English)
+            advanceUntilIdle()
+            val preferences = repository.observe().first().preferences
+            assertEquals(AppLanguage.English, preferences.language)
+            assertEquals(AppLayoutDirection.System, preferences.layoutDirection)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
     fun postCommandsTransformOnlyTheirOwnFieldForTheCapturedAccount() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {

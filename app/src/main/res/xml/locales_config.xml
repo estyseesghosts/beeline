@@ -17,4 +17,5 @@
     <locale android:name="zh-TW" />
     <locale android:name="ru" />
     <locale android:name="in-ID" />
+    <locale android:name="ar" />
 </locale-config>

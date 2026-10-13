@@ -35,9 +35,12 @@ Both files in `docs/i18n` are glossaries of 33 terms. They are not tables of str
 ## Completed
 
 - S1 Hindi additions: the commit "Add Hindi strings for the glossary terms". The catalog holds 409 keys. Full gate green on the second run (2559 tests); the first run had one failure in `MastodonIntegrationTest`, a network cancellation test outside this slice.
+- S2 Arabic language: the commit "Add Arabic with a right-to-left layout". `AppLanguage.Arabic`, `values-ar` with 409 keys, `locales_config.xml`, the system font, the Arabic hashtag script, and `withLanguage` in `domain/LanguageDirection.kt`. Full gate green on the second run (2565 tests). The first run failed because `LocalizationResourceTest` did not list Arabic yet, and on the known lint crash.
 
 ## Limits
 
+- The Arabic locale formats a count with Arabic-Indic digits.
+- A notification that the application context builds does not use the stored language below Android 13. This limit is older than this task.
 - No native speaker reviewed the Hindi or the Arabic text.
 - The glossary marks many Arabic imperative forms as inferred.
 - No device check ran yet.

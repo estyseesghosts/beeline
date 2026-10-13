@@ -1123,3 +1123,18 @@ favourite reaction; the `:name@.:` form comes from Misskey behavior, not from a 
 Every string of the settings pages has a translation in each locale folder that has its own language: `de`, `es`, `fr`, `hi`, `ja`, `ko`,
 `pt-rBR`, `pt-rPT`, `zh`, `zh-rTW` and `yue-rHK`. `es-rES` and `b+es+419` inherit from `es`; `zh-rCN` inherits from `zh`.
 A font name, the license name and the `#%1$s` pattern stay untranslated. No native speaker reviewed the translations.
+
+### Arabic and layout direction
+
+Arabic (`AppLanguage.Arabic`, tag `ar`, folder `values-ar`) is Modern Standard Arabic. It is the only right-to-left language.
+The glossary `docs/i18n/arabic.csv` gives the terms. The catalog holds the same keys as the Hindi catalog.
+The Hindi catalog takes its terms from `docs/i18n/hindi.csv`. Hindi uses the polite imperative and has no gendered forms.
+
+The layout direction follows the locale. `AppLocaleController.localizedContext` sets the Arabic locale, and the platform then reports a
+right-to-left configuration. Every other language reports a left-to-right configuration. No code sets the direction for Arabic.
+The Appearance switch can still force the opposite direction. `AppPreferences.withLanguage` (`domain/LanguageDirection.kt`) returns that
+override to `System` when the language changes to or from Arabic. The settings command and the platform language import both use it.
+
+Arabic uses the system font. The Arabic locale formats a count with Arabic-Indic digits. An Arabic plural needs all six quantities.
+Tests: `LanguageDirectionTest`, `AppLocaleControllerTest`, `LocalizationResourceTest`, `SettingsViewModelTest`.
+No native speaker reviewed the Arabic text. Right-to-left rendering has no device check.

@@ -196,5 +196,9 @@ class HashtagExpanderTest {
         assertTrue(japanese.allowsUnknown("写真ー"))
         assertTrue(japanese.allowsUnknown("ねこ"))
         assertFalse(english.allowsUnknown("写真"))
+        val arabic = HashtagLanguagePolicy.forLanguage(AppLanguage.Arabic)
+        assertTrue(arabic.allowsUnknown("صور"))
+        assertTrue(arabic.allowsUnknown("foto"))
+        assertFalse(english.allowsUnknown("صور"))
     }
 }

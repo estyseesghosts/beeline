@@ -106,4 +106,5 @@ internal fun appLanguageLabel(language: AppLanguage): String = when (language) {
     AppLanguage.ChineseTaiwan -> stringResource(R.string.language_name_chinese_taiwan)
     AppLanguage.Russian -> stringResource(R.string.language_name_russian)
     AppLanguage.Indonesian -> stringResource(R.string.language_name_indonesian)
+    AppLanguage.Arabic -> stringResource(R.string.language_name_arabic)
 }

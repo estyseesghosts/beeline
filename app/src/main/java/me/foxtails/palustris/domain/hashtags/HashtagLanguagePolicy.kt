@@ -96,6 +96,7 @@ class HashtagLanguagePolicy private constructor(
                 AppLanguage.Korean -> setOf(Character.UnicodeScript.HANGUL, latin)
                 AppLanguage.Russian -> setOf(Character.UnicodeScript.CYRILLIC, latin)
                 AppLanguage.Hindi -> setOf(Character.UnicodeScript.DEVANAGARI, latin)
+                AppLanguage.Arabic -> setOf(Character.UnicodeScript.ARABIC, latin)
                 else -> setOf(latin)
             }
         }

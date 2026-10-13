@@ -1,10 +1,12 @@
 package me.foxtails.palustris.ui.localization
 
 import android.content.Context
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import java.io.File
 import java.util.Locale
 import javax.xml.parsers.DocumentBuilderFactory
+import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.ui.localization.AppLocaleController
 import me.foxtails.palustris.ui.localization.AppLocaleController.PlatformReconciliation.ExportToPlatform
@@ -75,6 +77,7 @@ class AppLocaleControllerTest {
             "zh-TW" to AppLanguage.ChineseTaiwan,
             "ru" to AppLanguage.Russian,
             "in-ID" to AppLanguage.Indonesian,
+            "ar" to AppLanguage.Arabic,
         )
         tags.forEach { (tag, language) ->
             assertEquals(tag, language.tag)
@@ -104,6 +107,9 @@ class AppLocaleControllerTest {
             "zh-SG" to AppLanguage.Chinese,
             // The platform reports Indonesian as id. The stored tag is in-ID.
             "id-ID" to AppLanguage.Indonesian,
+            // Arabic has one catalog for every region.
+            "ar-EG" to AppLanguage.Arabic,
+            "ar-SA" to AppLanguage.Arabic,
             // Portuguese has no bare entry, so another region has no supported language.
             "pt-AO" to AppLanguage.SystemDefault,
             "sv-SE" to AppLanguage.SystemDefault,
@@ -190,6 +196,29 @@ class AppLocaleControllerTest {
     }
 
     @Test
+    fun arabicIsTheOnlyLanguageWithARightToLeftLayout() {
+        AppLanguage.entries.filter { it.tag != null }.forEach { language ->
+            val localized = AppLocaleController.localizedContext(context, language)
+            val expected =
+                if (language == AppLanguage.Arabic) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            assertEquals(language.name, expected, localized.resources.configuration.layoutDirection)
+        }
+    }
+
+    @Test
+    fun arabicResolvesTheArabicCatalog() {
+        val localized = AppLocaleController.localizedContext(context, AppLanguage.Arabic)
+        assertEquals("الرئيسية", localized.resources.getString(R.string.nav_home))
+        assertEquals("احذف", localized.resources.getString(R.string.draft_delete))
+        // A count from 3 to 10 takes the plural form. The Arabic locale formats the count with
+        // Arabic-Indic digits.
+        assertEquals(
+            "#صور: ٥ منشورات",
+            localized.resources.getQuantityString(R.plurals.search_trending_tag_posts, 5, "#صور", 5),
+        )
+    }
+
+    @Test
     fun systemDefaultKeepsTheBaseContext() {
         val localized = AppLocaleController.localizedContext(context, AppLanguage.SystemDefault)
         assertEquals(
@@ -219,6 +248,7 @@ class AppLocaleControllerTest {
             "values-zh-rTW" to "zh-TW",
             "values-ru" to "ru",
             "values-in-rID" to "in-ID",
+            "values-ar" to "ar",
         )
         AppLanguage.entries.filter { it.tag != null }.forEach { language ->
             val localized = AppLocaleController.localizedContext(context, language)

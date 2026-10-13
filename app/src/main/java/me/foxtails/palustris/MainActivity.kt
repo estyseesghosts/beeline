@@ -30,6 +30,7 @@ import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.domain.SavedHashtagRepository
 import me.foxtails.palustris.domain.hashtags.HashtagExpander
+import me.foxtails.palustris.domain.withLanguage
 import me.foxtails.palustris.ui.ConnectedApp
 import me.foxtails.palustris.ui.display.RefreshRateController
 import me.foxtails.palustris.ui.localization.AppLocaleController
@@ -151,7 +152,7 @@ class MainActivity : ComponentActivity() {
             when (val action = localeOwner.resolve(platformTag, next)) {
                 is AppLocaleController.PlatformReconciliation.ImportToRepository -> {
                     try {
-                        appPreferencesRepository.update { it.copy(language = action.language) }
+                        appPreferencesRepository.update { it.withLanguage(action.language) }
                     } catch (error: CancellationException) {
                         throw error
                     } catch (_: Exception) {

@@ -50,6 +50,7 @@ class LanguageSettingsScreenTest {
         "繁體中文（臺灣）",
         "Русский",
         "Bahasa Indonesia",
+        "العربية",
     )
 
     @Test

@@ -30,6 +30,7 @@ import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.domain.UploadCompression
 import me.foxtails.palustris.domain.normalizeFavouriteEmoji
+import me.foxtails.palustris.domain.withLanguage
 
 /** Why a settings command failed. The shell resolves the user-visible message. */
 sealed interface SettingsCommandError {
@@ -109,11 +110,11 @@ class SettingsViewModel @Inject constructor(
         updateApp(retry = { setDisableBlurEffects(value) }) { it.copy(disableBlurEffects = value) }
 
     /**
-     * Stores the language only. A font without an explicit choice follows the new language through
-     * `effectiveFont`, and an explicit choice stays.
+     * Stores the language through `withLanguage`. A font without an explicit choice follows the new
+     * language through `effectiveFont`, and an explicit choice stays.
      */
     fun setLanguage(value: AppLanguage): Unit =
-        updateApp(retry = { setLanguage(value) }) { it.copy(language = value) }
+        updateApp(retry = { setLanguage(value) }) { it.withLanguage(value) }
 
     /**
      * Stores the layout direction override. The value is presentation only, so it never touches the

@@ -25,6 +25,7 @@ class SetupTypographyTest {
             AppLanguage.Chinese,
             AppLanguage.Korean,
             AppLanguage.Russian,
+            AppLanguage.Arabic,
         ).forEach { language ->
             assertEquals(FontFamily.Default, setupFontFamily(language))
         }

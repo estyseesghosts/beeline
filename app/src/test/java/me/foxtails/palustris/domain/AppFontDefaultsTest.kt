@@ -37,6 +37,7 @@ class AppFontDefaultsTest {
             AppLanguage.Chinese,
             AppLanguage.Korean,
             AppLanguage.Russian,
+            AppLanguage.Arabic,
         ).forEach { language ->
             assertEquals(AppFont.Device, defaultFontForLanguage(language))
         }
