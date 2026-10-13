@@ -1074,7 +1074,8 @@ The Settings main page is one flat list. Each row opens one page and shows a sho
 | Language | Application | Automatic translation and the application language |
 | Timeline and media | Application | Autoplay videos, Combine related hashtags |
 | Posting | Active account | Default audience, unlisted replies, image compression, favourite reaction |
-| Privacy | Application and account | Tracking parameters, content warnings, account privacy lists |
+| Content warnings | Application, then active account | Hide or expand rules for all accounts, hidden content presentation, and a child page with the rules of the active account |
+| Privacy | Application and account | Tracking parameters, account privacy lists |
 | Notifications | Account | Alerts, categories and delivery for each account |
 
 The Posting page edits the active account and names it at the top. It does not select another account.
@@ -1083,10 +1084,17 @@ Image compression shows only when the server reports client compression. The fav
 favourite button sends. The page offers eight preset emoji and one text field. The field accepts one Unicode emoji
 (`isFavouriteEmojiInput`); it rejects a custom server emoji shortcode, because no test covers the form that a server returns for one.
 
+The Content warnings page and its account page share one editor (`ContentWarningRulesEditor`). A switch writes at once.
+The four lists write on Save. Account rules add to the rules for all accounts (`ContentWarningRules.merge`).
+The account page (`SettingsRoute.AccountContentWarnings`) edits the active account and names it.
+
+Back opens the parent page of a child page (`SettingsRoute.parent()`), then the main page, then closes Settings.
+
 The Appearance page keeps the route name `SettingsRoute.Display` and the file `DisplaySettingsScreen.kt`.
 A switch row toggles as one control (`SettingsSwitchRow`), so a screen reader reads the title, the summary and the state together.
 Section headings carry heading semantics.
 
 Sources: `ui/settings/SettingsScreen.kt`, `SettingsHost.kt`, `SettingsRoute.kt`, `SettingsComponents.kt`,
-`TimelineMediaSettingsScreen.kt`, `PostingSettingsScreen.kt`, `FavouriteEmojiSetting.kt`, `SettingsMainPageTest`,
+`TimelineMediaSettingsScreen.kt`, `PostingSettingsScreen.kt`, `FavouriteEmojiSetting.kt`, `ContentWarningSettingsScreen.kt`,
+`ContentWarningRulesEditor.kt`, `SettingsRouteParents.kt`, `ContentWarningSettingsTest`, `SettingsMainPageTest`,
 `SettingsDisplayTest`, `PostingSettingsScreenTest`. No device check ran for these pages. No live server check ran for the favourite reaction.

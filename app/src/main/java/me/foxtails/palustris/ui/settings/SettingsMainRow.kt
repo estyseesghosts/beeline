@@ -45,6 +45,12 @@ internal fun settingsMainRows(preferences: AppPreferences): List<SettingsMainRow
             stringResource(R.string.settings_posting_summary),
         ),
         SettingsMainRow(
+            SettingsRoute.ContentWarnings,
+            "settings_content_warnings",
+            stringResource(R.string.settings_content_warnings),
+            stringResource(R.string.settings_content_warnings_summary),
+        ),
+        SettingsMainRow(
             SettingsRoute.Privacy,
             "settings_privacy",
             stringResource(R.string.settings_privacy),

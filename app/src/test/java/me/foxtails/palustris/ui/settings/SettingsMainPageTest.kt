@@ -43,6 +43,7 @@ class SettingsMainPageTest {
         "settings_language" to SettingsRoute.Language,
         "settings_timeline_media" to SettingsRoute.TimelineMedia,
         "settings_posting" to SettingsRoute.Posting,
+        "settings_content_warnings" to SettingsRoute.ContentWarnings,
         "settings_privacy" to SettingsRoute.Privacy,
         "settings_notifications" to SettingsRoute.Notifications,
     )
@@ -95,7 +96,7 @@ class SettingsMainPageTest {
     fun theTrackingParameterRowIsASwitchThatShowsItsState() {
         var clean by mutableStateOf(false)
         compose.setContent {
-            Column { PrivacySettingsScreen(clean, { clean = it }, onSelectAccount = {}, onContentWarnings = {}) }
+            Column { PrivacySettingsScreen(clean, { clean = it }, onSelectAccount = {}) }
         }
 
         compose.onNodeWithTag("tracking_cleanup").assertIsOff().performClick()

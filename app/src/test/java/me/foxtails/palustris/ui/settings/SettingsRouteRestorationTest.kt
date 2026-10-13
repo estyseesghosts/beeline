@@ -32,6 +32,7 @@ class SettingsRouteRestorationTest {
             SettingsRoute.Language,
             SettingsRoute.TimelineMedia,
             SettingsRoute.ContentWarnings,
+            SettingsRoute.AccountContentWarnings,
             SettingsRoute.Posting,
             SettingsRoute.PrivacyAccounts,
         ).forEach { route ->

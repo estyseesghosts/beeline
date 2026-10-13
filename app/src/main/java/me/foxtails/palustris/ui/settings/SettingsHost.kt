@@ -87,7 +87,7 @@ fun SettingsHost(
     onModerationAddLocalHashtag: (String) -> Unit = {},
     onModerationRemoveLocalHashtag: (String) -> Unit = {},
 ) {
-    val navigateBack: () -> Unit = if (route == SettingsRoute.Main) onBack else { { onRoute(SettingsRoute.Main) } }
+    val navigateBack: () -> Unit = if (route == SettingsRoute.Main) onBack else { { onRoute(route.parent()) } }
     BackHandler(onBack = navigateBack)
     val title = when (route) {
         SettingsRoute.Main -> stringResource(R.string.settings_title)
@@ -98,6 +98,7 @@ fun SettingsHost(
         SettingsRoute.Language -> stringResource(R.string.settings_language)
         SettingsRoute.TimelineMedia -> stringResource(R.string.settings_timeline_media)
         SettingsRoute.ContentWarnings -> stringResource(R.string.settings_content_warnings)
+        SettingsRoute.AccountContentWarnings -> stringResource(R.string.settings_content_warnings)
         SettingsRoute.Posting -> stringResource(R.string.settings_posting)
         SettingsRoute.PrivacyAccounts -> stringResource(R.string.settings_choose_account)
         is SettingsRoute.Moderation -> when (route.kind) {
@@ -191,16 +192,19 @@ fun SettingsHost(
                     state.preferences.cleanTrackingParameters,
                     onTrackingCleanup,
                     { onRoute(SettingsRoute.PrivacyAccounts) },
-                    { onRoute(SettingsRoute.ContentWarnings) },
                 )
                 SettingsRoute.ContentWarnings -> ContentWarningSettingsScreen(
                     rules = state.preferences.contentWarningRules,
                     onChanged = onContentWarningRules,
-                    localRules = postPreferences.contentWarningRules,
-                    onLocalChanged = onPostContentWarningRules,
                     hiddenPresentation = state.preferences.hiddenContentPresentation,
                     onHiddenPresentation = onHiddenContentPresentation,
-                    localAccountLabel = postPreferencesAccountLabel,
+                    accountLabel = postPreferencesAccountLabel,
+                    onAccountRules = { onRoute(SettingsRoute.AccountContentWarnings) },
+                )
+                SettingsRoute.AccountContentWarnings -> AccountContentWarningSettingsScreen(
+                    rules = postPreferences.contentWarningRules,
+                    onChanged = onPostContentWarningRules,
+                    accountLabel = postPreferencesAccountLabel.orEmpty(),
                 )
                 SettingsRoute.Posting -> PostingSettingsScreen(
                     preferences = postPreferences,

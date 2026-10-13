@@ -648,12 +648,6 @@
     <string name="settings_colour_style_system_monochrome">System monochrome</string>
     <string name="settings_connect_account_notifications">Connect an account to configure notifications.</string>
     <string name="settings_connect_account_privacy">Connect an account to manage server privacy lists.</string>
-    <string name="settings_content_warning_account_expand_all">Automatically expand warnings for this account</string>
-    <string name="settings_content_warning_account_expand_hashtags">Account expand hashtags</string>
-    <string name="settings_content_warning_account_expand_keywords">Account expand keywords</string>
-    <string name="settings_content_warning_account_hide_all">Hide every content warning for this account</string>
-    <string name="settings_content_warning_account_hide_hashtags">Account hide hashtags</string>
-    <string name="settings_content_warning_account_hide_keywords">Account hide keywords</string>
     <string name="settings_content_warning_account_rules">Rules for %1$s</string>
     <string name="settings_content_warning_comma_hint">Separate entries with commas</string>
     <string name="settings_content_warning_current_account">Current account</string>
@@ -672,7 +666,6 @@
     <string name="settings_content_warning_remove_entries">Remove hidden entries</string>
     <string name="settings_content_warning_rules_summary">Keyword and hashtag rules are local to this device and use literal matching.</string>
     <string name="settings_content_warning_save">Save rules</string>
-    <string name="settings_content_warning_save_account">Save account rules</string>
     <string name="settings_content_warnings">Content warnings</string>
     <string name="settings_content_warnings_summary">Hide or automatically expand content warnings locally.</string>
     <string name="settings_display">Appearance</string>
@@ -728,7 +721,7 @@
     <string name="settings_posting_summary">Defaults for new posts and replies of the current account.</string>
     <string name="settings_privacy">Privacy</string>
     <string name="settings_privacy_account_list_summary">Manage this account\'s server list</string>
-    <string name="settings_privacy_summary">Manage local privacy rules and account moderation lists.</string>
+    <string name="settings_privacy_summary">Clean links and manage account moderation lists.</string>
     <string name="settings_pure_black_warning">Pure black may show ghosting or smearing on some AMOLED displays.</string>
     <string name="settings_request_60hz">Request 60 Hz refresh rate</string>
     <string name="settings_request_60hz_summary">This is a display request; some panels cannot honor it.</string>
@@ -919,4 +912,8 @@
     <string name="settings_favourite_emoji_other">Other emoji</string>
     <string name="settings_favourite_emoji_other_hint">Enter one emoji. Custom server emoji are not supported.</string>
     <string name="settings_favourite_emoji_use">Use</string>
+    <string name="settings_content_warning_all_accounts">All accounts</string>
+    <string name="settings_content_warning_one_account">Account rules</string>
+    <string name="settings_content_warning_account_rules_summary">Add rules that apply to this account only.</string>
+    <string name="settings_content_warning_account_adds">These rules add to the rules for all accounts.</string>
 </resources>

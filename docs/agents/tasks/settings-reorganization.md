@@ -26,16 +26,19 @@ reaction emoji, and an About page.
   `myReaction` form first (Misskey can return `:name@.:`), and the emoji catalog is not available in Settings.
 - `LocalBlurEffectsEnabled` is the one switch for blur. `ConnectedApp` provides it. `rememberChromeBackdrop`
   and `ProfileHeader` read it. A new blur site must read it too.
+- `SettingsRoute.parent()` is the one Back order. `safeParent()` delegates to it.
+- The account content warning page reuses the labels of the global page. The separate account labels are deleted.
 
 # Completed
 
 - S1 Main page, Appearance sections, Timeline and media page. Commit `5dc86021`.
 - S2 "Disable blur effects" in Appearance, Screen and layout. Commit `eef0694d`.
-- S3 Posting at the top level, favourite reaction, Privacy switch.
+- S3 Posting at the top level, favourite reaction, Privacy switch. Commit `15f0d85f`.
+- S4 Content warnings at the top level, account rules child page, Back order (`SettingsRoute.parent()`).
 
 # Current slice
 
-S4 Content warnings at the top level: one global page and one account page.
+S5 Blocked and muted lists at the top level. Privacy keeps only the tracking switch.
 
 # Files involved
 
@@ -48,15 +51,14 @@ S4 Content warnings at the top level: one global page and one account page.
 
 # Verification
 
-- S1 to S3: the settings unit tests pass. The local CI-parity gate passes except for the architecture audit,
+- S1 to S4: the settings unit tests pass. The local CI-parity gate passes except for the architecture audit,
   which exits 1 at the base commit. No slice adds a regression line.
 - No device check ran. The blur setting has no check on a real screen.
 - No live server check ran for the favourite reaction.
 
 # Next
 
-S4 (content warning pages),
-S5 (blocked and muted lists at the top level, Back order, no account picker for one account), S6 (About).
+S5 (blocked and muted lists at the top level, no account picker for one account), S6 (About).
 
 # Blockers
 
@@ -64,5 +66,5 @@ None.
 
 # Last safe commit
 
-`eef0694d` Add a setting that disables blur effects. S3 is the commit after it:
-"Move Posting to the Settings main page and add the favourite reaction".
+`15f0d85f` Move Posting to the Settings main page and add the favourite reaction. S4 is the commit after it:
+"Move Content warnings to the Settings main page with an account rules page".

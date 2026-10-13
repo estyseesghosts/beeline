@@ -29,6 +29,7 @@ internal fun encodeSettingsRoute(route: SettingsRoute): List<String> = when (rou
     SettingsRoute.Language -> listOf("Language")
     SettingsRoute.TimelineMedia -> listOf("TimelineMedia")
     SettingsRoute.ContentWarnings -> listOf("ContentWarnings")
+    SettingsRoute.AccountContentWarnings -> listOf("AccountContentWarnings")
     SettingsRoute.Posting -> listOf("Posting")
     SettingsRoute.PrivacyAccounts -> listOf("PrivacyAccounts")
     is SettingsRoute.NotificationAccount -> listOf(
@@ -56,6 +57,7 @@ internal fun decodeSettingsRoute(values: List<*>): SettingsRoute? {
         "Language" -> SettingsRoute.Language
         "TimelineMedia" -> SettingsRoute.TimelineMedia
         "ContentWarnings" -> SettingsRoute.ContentWarnings
+        "AccountContentWarnings" -> SettingsRoute.AccountContentWarnings
         "Posting" -> SettingsRoute.Posting
         "PrivacyAccounts" -> SettingsRoute.PrivacyAccounts
         "NotificationAccount" -> decodeAccount(values)?.let(SettingsRoute::NotificationAccount)
@@ -82,8 +84,4 @@ private fun decodeAccount(values: List<*>): AccountId? {
 }
 
 /** The safe parent page for a route whose target account is unavailable. */
-internal fun SettingsRoute.safeParent(): SettingsRoute = when (this) {
-    is SettingsRoute.NotificationAccount -> SettingsRoute.Notifications
-    is SettingsRoute.Moderation -> SettingsRoute.PrivacyAccounts
-    else -> SettingsRoute.Main
-}
+internal fun SettingsRoute.safeParent(): SettingsRoute = parent()

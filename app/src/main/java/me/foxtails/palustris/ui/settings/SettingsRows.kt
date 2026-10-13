@@ -19,13 +19,20 @@ import me.foxtails.palustris.R
 
 /** One choice of a single-selection group. The whole row selects, and the radio button only shows the state. */
 @Composable
-internal fun SettingsChoiceRow(label: String, selected: Boolean, onClick: () -> Unit, testTag: String? = null) {
+internal fun SettingsChoiceRow(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    testTag: String? = null,
+    summary: String? = null,
+) {
     ListItem(
         modifier = Modifier
             .fillMaxWidth()
             .then(testTag?.let { Modifier.testTag(it) } ?: Modifier)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
         headlineContent = { Text(label) },
+        supportingContent = summary?.let { text -> { Text(text) } },
         leadingContent = { RadioButton(selected = selected, onClick = null) },
     )
 }
