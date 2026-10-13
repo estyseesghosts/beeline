@@ -17,6 +17,8 @@ import me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorScheme
+import me.foxtails.palustris.domain.AppFont
+import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferences
@@ -52,6 +54,60 @@ class SettingsViewModelTest {
             val preferences = repository.observe().first().preferences
             assertEquals(AppColorScheme.Palette, preferences.colorScheme)
             assertEquals(AppBackground.Dark, preferences.background)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun setLanguageMovesADeviceFontToTheNewLanguageDefault() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = InMemoryAppPreferencesRepository()
+            val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
+
+            model.setLanguage(AppLanguage.Japanese)
+            advanceUntilIdle()
+
+            val preferences = repository.observe().first().preferences
+            assertEquals(AppLanguage.Japanese, preferences.language)
+            assertEquals(AppFont.KiwiMaru, preferences.font)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun setLanguageKeepsAnExplicitFontChoice() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = InMemoryAppPreferencesRepository(AppPreferences(font = AppFont.OpenDyslexic))
+            val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
+
+            model.setLanguage(AppLanguage.Japanese)
+            advanceUntilIdle()
+
+            val preferences = repository.observe().first().preferences
+            assertEquals(AppLanguage.Japanese, preferences.language)
+            assertEquals(AppFont.OpenDyslexic, preferences.font)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun setLanguageToSystemDefaultKeepsTheSystemFont() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = InMemoryAppPreferencesRepository()
+            val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
+
+            model.setLanguage(AppLanguage.SystemDefault)
+            advanceUntilIdle()
+
+            val preferences = repository.observe().first().preferences
+            assertEquals(AppLanguage.SystemDefault, preferences.language)
+            assertEquals(AppFont.Device, preferences.font)
         } finally {
             Dispatchers.resetMain()
         }

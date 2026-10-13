@@ -29,6 +29,7 @@ import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.domain.UploadCompression
+import me.foxtails.palustris.domain.defaultFontForLanguage
 import me.foxtails.palustris.domain.normalizeFavouriteEmoji
 
 /** Why a settings command failed. The shell resolves the user-visible message. */
@@ -109,7 +110,16 @@ class SettingsViewModel @Inject constructor(
         updateApp(retry = { setDisableBlurEffects(value) }) { it.copy(disableBlurEffects = value) }
 
     fun setLanguage(value: AppLanguage): Unit =
-        updateApp(retry = { setLanguage(value) }) { it.copy(language = value) }
+        updateApp(retry = { setLanguage(value) }) { current ->
+            val withLanguage = current.copy(language = value)
+            // A still-Device font means the user made no explicit choice, so it follows the new
+            // language default (Device plus Japanese gives Kiwi Maru). An explicit choice stays.
+            if (current.font != AppFont.Device) withLanguage
+            else {
+                val default = defaultFontForLanguage(value)
+                if (default == AppFont.Device) withLanguage else withLanguage.copy(font = default)
+            }
+        }
 
     /**
      * Stores the layout direction override. The value is presentation only, so it never touches the

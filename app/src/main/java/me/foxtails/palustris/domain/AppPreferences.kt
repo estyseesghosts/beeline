@@ -71,6 +71,37 @@ enum class AppFont {
     Sarala,
 }
 
+/**
+ * The explicit bundled font that a language uses when the user has made no font choice.
+ * Latin-script languages use Inter. Mainland Chinese uses ZCOOL KuaiLe, Taiwanese Mandarin uses
+ * Chocolate Classical Sans, Hong Kong Cantonese uses Chiron Hei HK, Japanese uses Kiwi Maru, and
+ * Hindi uses Sarala. Generic Chinese, Korean, and Russian keep the system font because the
+ * Android Noto family covers every script, so no character renders as tofu. SystemDefault keeps
+ * the system font. There is no Noto entry: Noto means the Android system family.
+ */
+fun defaultFontForLanguage(language: AppLanguage): AppFont = when (language) {
+    AppLanguage.English,
+    AppLanguage.German,
+    AppLanguage.Spanish,
+    AppLanguage.SpanishSpain,
+    AppLanguage.SpanishLatinAmerica,
+    AppLanguage.French,
+    AppLanguage.PortugueseBrazil,
+    AppLanguage.PortuguesePortugal,
+    AppLanguage.Indonesian,
+    -> AppFont.Inter
+    AppLanguage.ChineseMainland -> AppFont.ZcoolKuaiLe
+    AppLanguage.ChineseTaiwan -> AppFont.ChocolateClassicalSans
+    AppLanguage.CantoneseHongKong -> AppFont.ChironHeiHk
+    AppLanguage.Japanese -> AppFont.KiwiMaru
+    AppLanguage.Hindi -> AppFont.Sarala
+    AppLanguage.SystemDefault,
+    AppLanguage.Chinese,
+    AppLanguage.Korean,
+    AppLanguage.Russian,
+    -> AppFont.Device
+}
+
 enum class AppLanguage(val tag: String?) {
     SystemDefault(null),
     English("en"),
