@@ -92,4 +92,5 @@
     <string name="composer_warning_remove">أزيلي تحذير المحتوى</string>
     <string name="composer_poll_add">أضيفي استطلاعًا</string>
     <string name="settings_favourite_emoji_choose">اختاري رمزًا تعبيريًا</string>
+    <string name="composer_placeholder">شو في بالِك؟</string>
 </resources>

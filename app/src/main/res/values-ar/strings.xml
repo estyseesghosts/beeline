@@ -16,6 +16,7 @@
     <string name="collection_likes">الإعجابات</string>
     <string name="collection_saved_posts">المنشورات المحفوظة</string>
     <string name="composer_no_post_text">لا يحتوي هذا المنشور على نص.</string>
+    <string name="composer_placeholder">شو في بالَك؟</string>
     <string name="composer_post_text">نص المنشور</string>
     <string name="composer_quoted_post">المنشور المقتبس</string>
     <string name="quote_muted_word_warning">كلمة مكتومة: %1$s</string>
@@ -37,6 +38,7 @@
     <string name="draft_delete">احذف</string>
     <string name="draft_delete_action">احذف المسودة</string>
     <string name="draft_delete_title">حذف المسودة؟</string>
+    <string name="drafts_page_title">مسودات</string>
     <string name="emoji_group_post_specific">رموز تعبيرية مخصصة لهذا المنشور</string>
     <string name="emoji_picker_title">اختر رمزًا تعبيريًا</string>
     <string name="error_no_app_share_post">لا يوجد تطبيق يستطيع مشاركة هذا المنشور.</string>
@@ -187,6 +189,7 @@
     <string name="post_view_full">اعرض المنشور كاملًا</string>
     <string name="post_view_quoted">اعرض المنشور المقتبس</string>
     <string name="profile_action_likes">الإعجابات</string>
+    <string name="profile_action_drafts">مسودات</string>
     <string name="profile_banner">غلاف الملف الشخصي</string>
     <string name="profile_cancel_request_action">إلغاء طلب المتابعة</string>
     <string name="profile_count_followers">%1$s متابِع</string>
@@ -332,6 +335,10 @@
     <string name="thread_refreshing">جارٍ تحديث الردود</string>
     <string name="thread_replies">الردود</string>
     <string name="thread_replies_could_not_load">تعذّر تحميل الردود</string>
+    <string name="timeline_federated">الكون_الاتحادي</string>
+    <string name="timeline_home">الرئيسي</string>
+    <string name="timeline_local">المحلي</string>
+    <string name="timeline_social">الاجتماعي</string>
     <string name="timeline_description_home">منشورات من الأشخاص الذين تتابعهم</string>
     <string name="timeline_description_local">منشورات من خادمك</string>
     <string name="settings_posting_compression">ضغط الصور</string>
@@ -340,6 +347,7 @@
     <string name="settings_posting_compression_never">عدم الضغط أبدًا</string>
     <string name="settings_posting_compression_ask">السؤال في كل مرة</string>
     <string name="composer_entry_text">نص المنشور %1$d</string>
+    <string name="composer_publish">نشر</string>
     <string name="composer_add_post">أضف منشورًا</string>
     <string name="composer_save">احفظ</string>
     <string name="composer_edit_loading">جارٍ تحميل المنشور…</string>
