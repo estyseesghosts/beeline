@@ -14,12 +14,45 @@ private val OpenDyslexicFont = FontFamily(
     Font(R.font.open_dyslexic3_bold, weight = FontWeight.Bold),
 )
 
+private val InterFont = FontFamily(
+    Font(R.font.inter_variable, weight = FontWeight.Normal),
+    Font(R.font.inter_variable, weight = FontWeight.Bold),
+)
+
+private val ZcoolKuaiLeFont = FontFamily(
+    Font(R.font.zcool_kuaile_regular, weight = FontWeight.Normal),
+)
+
+private val ChocolateClassicalSansFont = FontFamily(
+    Font(R.font.chocolate_classical_sans_regular, weight = FontWeight.Normal),
+)
+
+private val ChironHeiHkFont = FontFamily(
+    Font(R.font.chiron_hei_hk_variable, weight = FontWeight.Normal),
+    Font(R.font.chiron_hei_hk_variable, weight = FontWeight.Bold),
+)
+
+private val KiwiMaruFont = FontFamily(
+    Font(R.font.kiwi_maru_regular, weight = FontWeight.Normal),
+)
+
+private val SaralaFont = FontFamily(
+    Font(R.font.sarala_regular, weight = FontWeight.Normal),
+    Font(R.font.sarala_bold, weight = FontWeight.Bold),
+)
+
 fun appTypography(font: AppFont, textSize: AppTextSize): Typography {
     val family = when (font) {
         AppFont.Device -> FontFamily.Default
         AppFont.Serif -> FontFamily.Serif
         AppFont.Sans -> FontFamily.SansSerif
         AppFont.OpenDyslexic -> OpenDyslexicFont
+        AppFont.Inter -> InterFont
+        AppFont.ZcoolKuaiLe -> ZcoolKuaiLeFont
+        AppFont.ChocolateClassicalSans -> ChocolateClassicalSansFont
+        AppFont.ChironHeiHk -> ChironHeiHkFont
+        AppFont.KiwiMaru -> KiwiMaruFont
+        AppFont.Sarala -> SaralaFont
     }
     val scale = when (textSize) {
         AppTextSize.Device -> 1f

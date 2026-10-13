@@ -180,6 +180,12 @@ private fun TextChoices(
                     AppFont.Serif -> R.string.settings_font_serif
                     AppFont.Sans -> R.string.settings_font_device_sans
                     AppFont.OpenDyslexic -> R.string.settings_font_open_dyslexic
+                    AppFont.Inter -> R.string.settings_font_inter
+                    AppFont.ZcoolKuaiLe -> R.string.settings_font_zcool_kuaile
+                    AppFont.ChocolateClassicalSans -> R.string.settings_font_chocolate_classical_sans
+                    AppFont.ChironHeiHk -> R.string.settings_font_chiron_hei_hk
+                    AppFont.KiwiMaru -> R.string.settings_font_kiwi_maru
+                    AppFont.Sarala -> R.string.settings_font_sarala
                 },
             )
         }

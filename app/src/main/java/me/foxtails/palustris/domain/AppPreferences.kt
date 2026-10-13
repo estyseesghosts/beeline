@@ -63,6 +63,12 @@ enum class AppFont {
     Serif,
     Sans,
     OpenDyslexic,
+    Inter,
+    ZcoolKuaiLe,
+    ChocolateClassicalSans,
+    ChironHeiHk,
+    KiwiMaru,
+    Sarala,
 }
 
 enum class AppLanguage(val tag: String?) {

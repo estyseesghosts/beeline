@@ -33,4 +33,23 @@ class AppTypographyTest {
         assertNotEquals(FontFamily.Serif, openDyslexic)
         assertNotEquals(FontFamily.SansSerif, openDyslexic)
     }
+
+    @Test
+    fun newBundledFontsMapToTheirOwnFamilies() {
+        val bundled = listOf(
+            AppFont.Inter,
+            AppFont.ZcoolKuaiLe,
+            AppFont.ChocolateClassicalSans,
+            AppFont.ChironHeiHk,
+            AppFont.KiwiMaru,
+            AppFont.Sarala,
+        ).map { font -> appTypography(font, AppTextSize.Device).bodyLarge.fontFamily }
+
+        bundled.forEach { family ->
+            assertNotEquals(FontFamily.Default, family)
+            assertNotEquals(FontFamily.Serif, family)
+            assertNotEquals(FontFamily.SansSerif, family)
+        }
+        assertEquals(bundled.size, bundled.toSet().size)
+    }
 }

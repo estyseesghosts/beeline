@@ -204,7 +204,7 @@ class SettingsDisplayTest {
     }
 
     @Test
-    fun fontChoicesShowFourRenamedOptionsAndReportSelection() {
+    fun fontChoicesShowTenOptionsAndReportSelection() {
         var selected = AppFont.Device
         compose.activity.setContent {
             DisplaySettingsScreen(
@@ -220,18 +220,58 @@ class SettingsDisplayTest {
             )
         }
 
-        listOf("Device default", "Device serif", "Device sans", "OpenDyslexic").forEach { label ->
+        listOf(
+            "Device default",
+            "Device serif",
+            "Device sans",
+            "OpenDyslexic",
+            "Inter",
+            "ZCOOL KuaiLe",
+            "Chocolate Classical Sans",
+            "Chiron Hei HK",
+            "Kiwi Maru",
+            "Sarala",
+        ).forEach { label ->
             compose.onNodeWithText(label).performScrollTo().assertIsDisplayed()
         }
 
         // The font radios share one tagged container. The group order follows AppFont.entries,
         // so index 2 is Device sans. The radio button owns the click, not the label text.
         val fontRadios = compose.onAllNodes(hasAnyAncestor(hasTestTag("font_choices")) and isSelectable())
-        fontRadios.assertCountEquals(4)
+        fontRadios.assertCountEquals(10)
         fontRadios[2].performScrollTo()
         fontRadios[2].assertIsNotSelected()
         fontRadios[2].performClick()
         compose.runOnIdle { assertEquals(AppFont.Sans, selected) }
+    }
+
+    @Test
+    fun newFontChoicesReportTheirSelection() {
+        var selected = AppFont.Device
+        compose.activity.setContent {
+            DisplaySettingsScreen(
+                preferences = AppPreferences(),
+                onColorScheme = {},
+                onColorPalette = {},
+                onBackground = {},
+                onTextSize = {},
+                onFont = { selected = it },
+                onRequest60Hz = {},
+                layoutDirection = AppLayoutDirection.System,
+                onLayoutDirection = {},
+            )
+        }
+
+        // The group order follows AppFont.entries, so index 4 is Inter and index 9 is Sarala.
+        val fontRadios = compose.onAllNodes(hasAnyAncestor(hasTestTag("font_choices")) and isSelectable())
+        fontRadios.assertCountEquals(10)
+        fontRadios[4].performScrollTo()
+        fontRadios[4].performClick()
+        compose.runOnIdle { assertEquals(AppFont.Inter, selected) }
+
+        fontRadios[9].performScrollTo()
+        fontRadios[9].performClick()
+        compose.runOnIdle { assertEquals(AppFont.Sarala, selected) }
     }
 
     @Test

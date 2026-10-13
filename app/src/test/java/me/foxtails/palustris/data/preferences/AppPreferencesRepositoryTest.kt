@@ -164,6 +164,20 @@ class AppPreferencesRepositoryTest {
         file.writeText("""{"font":"OpenDyslexic"}""")
         val openDyslexic = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
         assertEquals(AppFont.OpenDyslexic, openDyslexic.font)
+
+        // Stored names for the new bundled fonts round-trip.
+        listOf(
+            AppFont.Inter,
+            AppFont.ZcoolKuaiLe,
+            AppFont.ChocolateClassicalSans,
+            AppFont.ChironHeiHk,
+            AppFont.KiwiMaru,
+            AppFont.Sarala,
+        ).forEach { font ->
+            FileAppPreferencesRepository(context).update { it.copy(font = font) }
+            val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+            assertEquals(font, restored.font)
+        }
     }
 
     @Test

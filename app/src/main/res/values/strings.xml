@@ -674,6 +674,12 @@
     <string name="settings_font_device_default">Device default</string>
     <string name="settings_font_device_sans">Device sans</string>
     <string name="settings_font_open_dyslexic">OpenDyslexic</string>
+    <string name="settings_font_inter">Inter</string>
+    <string name="settings_font_zcool_kuaile">ZCOOL KuaiLe</string>
+    <string name="settings_font_chocolate_classical_sans">Chocolate Classical Sans</string>
+    <string name="settings_font_chiron_hei_hk">Chiron Hei HK</string>
+    <string name="settings_font_kiwi_maru">Kiwi Maru</string>
+    <string name="settings_font_sarala">Sarala</string>
     <string name="settings_force_layout_direction_ltr">Force LTR Layout</string>
     <string name="settings_force_layout_direction_rtl">Force RTL Layout</string>
     <string name="settings_tablet_navigation_anchor">Tablet navigation position</string>

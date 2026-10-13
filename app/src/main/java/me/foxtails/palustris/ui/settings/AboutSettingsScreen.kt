@@ -30,6 +30,12 @@ internal val OpenSourceComponents = listOf(
     "Coil",
     "avif-coder",
     "OpenDyslexic",
+    "Inter",
+    "ZCOOL KuaiLe",
+    "Chocolate Classical Sans",
+    "Chiron Hei HK",
+    "Kiwi Maru",
+    "Sarala",
     "UnifiedPush connector",
     "FFmpeg (LGPL)",
 )
