@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.data.preferences.FileAppPreferencesRepository
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
+import me.foxtails.palustris.domain.AppGrammaticalGender
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import org.json.JSONObject
@@ -214,6 +215,30 @@ class AppPreferencesRepositoryTest {
         // An unknown stored name is no choice.
         file.writeText("""{"version":2,"font":"Papyrus"}""")
         assertNull(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.font)
+    }
+
+    @Test
+    fun grammaticalGenderDefaultsToMasculineAndRoundTrips() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val defaults = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppGrammaticalGender.Masculine, defaults.grammaticalGender)
+
+        // A file written by an earlier build has no key and keeps the masculine form.
+        file.parentFile?.mkdirs()
+        file.writeText("""{"language":"Arabic"}""")
+        val legacy = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppGrammaticalGender.Masculine, legacy.grammaticalGender)
+
+        listOf(AppGrammaticalGender.Feminine, AppGrammaticalGender.Neutral).forEach { gender ->
+            FileAppPreferencesRepository(context).update { it.copy(grammaticalGender = gender) }
+            val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+            assertEquals(gender, restored.grammaticalGender)
+            assertEquals(AppLanguage.Arabic, restored.language)
+        }
+
+        file.writeText("""{"grammaticalGender":"Unknown"}""")
+        val safe = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppGrammaticalGender.Masculine, safe.grammaticalGender)
     }
 
     @Test

@@ -50,6 +50,7 @@ fun SettingsHost(
     onTabletNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
     onCompactWideNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
     onLanguage: (me.foxtails.palustris.domain.AppLanguage) -> Unit = {},
+    onGrammaticalGender: (me.foxtails.palustris.domain.AppGrammaticalGender) -> Unit = {},
     onTrackingCleanup: (Boolean) -> Unit = {},
     onCombineRelatedHashtags: (Boolean) -> Unit = {},
     onAutoplayVideos: (Boolean) -> Unit = {},
@@ -173,6 +174,8 @@ fun SettingsHost(
                     onSelected = onLanguage,
                     alwaysTranslatePosts = state.preferences.alwaysTranslatePosts,
                     onAlwaysTranslatePosts = onAlwaysTranslatePosts,
+                    grammaticalGender = state.preferences.grammaticalGender,
+                    onGrammaticalGender = onGrammaticalGender,
                 )
                 SettingsRoute.Notifications -> NotificationAccountsScreen(accounts, onNotificationAccount)
                 is SettingsRoute.NotificationAccount -> NotificationSettingsScreen(

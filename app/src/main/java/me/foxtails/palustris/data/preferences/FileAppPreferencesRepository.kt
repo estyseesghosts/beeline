@@ -22,6 +22,7 @@ import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
+import me.foxtails.palustris.domain.AppGrammaticalGender
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppNavigationAnchor
@@ -109,6 +110,8 @@ class FileAppPreferencesRepository(
             // A missing key reads false, so a file from an earlier build keeps its blur.
             disableBlurEffects = json.optBoolean("disableBlurEffects", true),
             language = AppLanguage.fromNameOrDefault(json.optString("language")),
+            // A missing key keeps Masculine, the form of every base catalog.
+            grammaticalGender = enumOrDefault(json, "grammaticalGender", AppGrammaticalGender.Masculine),
             // A missing key keeps System, so the device direction survives an upgrade unchanged.
             layoutDirection = enumOrDefault(json, "layoutDirection", AppLayoutDirection.System),
             tabletNavigationAnchor = enumOrDefault(json, "tabletNavigationAnchor", AppNavigationAnchor.Left),
@@ -127,26 +130,7 @@ class FileAppPreferencesRepository(
 
     private fun persist(preferences: AppPreferences) {
         file.parentFile?.mkdirs()
-        val json = JSONObject()
-            .put("version", VERSION)
-            .put("colorScheme", preferences.colorScheme.name)
-            .put("colorPalette", preferences.colorPalette.name)
-            .put("background", preferences.background.name)
-            .put("textSize", preferences.textSize.name)
-            // No choice writes no key, so the font keeps following the language default.
-            .putOpt("font", preferences.font?.name)
-            .put("request60Hz", preferences.request60Hz)
-            .put("disableBlurEffects", preferences.disableBlurEffects)
-            .put("language", preferences.language.name)
-            .put("layoutDirection", preferences.layoutDirection.name)
-            .put("tabletNavigationAnchor", preferences.tabletNavigationAnchor.name)
-            .put("compactWideNavigationAnchor", preferences.compactWideNavigationAnchor.name)
-            .put("cleanTrackingParameters", preferences.cleanTrackingParameters)
-            .put("combineRelatedHashtags", preferences.combineRelatedHashtags)
-            .put("autoplayVideos", preferences.autoplayVideos)
-            .put("alwaysTranslatePosts", preferences.alwaysTranslatePosts)
-            .put("contentWarningRules", preferences.contentWarningRules.toJson())
-            .put("hiddenContentPresentation", preferences.hiddenContentPresentation.name)
+        val json = preferences.toJson()
         val temporary = File("${file.path}.new")
         FileOutputStream(temporary).use { stream ->
             stream.write(json.toString().toByteArray(Charsets.UTF_8))
@@ -158,11 +142,31 @@ class FileAppPreferencesRepository(
             Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
     }
-
-    private companion object {
-        const val VERSION = 2
-    }
 }
+
+private const val FILE_VERSION = 2
+
+/** The stored form of the preferences. A font without a choice writes no key. */
+private fun AppPreferences.toJson(): JSONObject = JSONObject()
+    .put("version", FILE_VERSION)
+    .put("colorScheme", colorScheme.name)
+    .put("colorPalette", colorPalette.name)
+    .put("background", background.name)
+    .put("textSize", textSize.name)
+    .putOpt("font", font?.name)
+    .put("request60Hz", request60Hz)
+    .put("disableBlurEffects", disableBlurEffects)
+    .put("language", language.name)
+    .put("grammaticalGender", grammaticalGender.name)
+    .put("layoutDirection", layoutDirection.name)
+    .put("tabletNavigationAnchor", tabletNavigationAnchor.name)
+    .put("compactWideNavigationAnchor", compactWideNavigationAnchor.name)
+    .put("cleanTrackingParameters", cleanTrackingParameters)
+    .put("combineRelatedHashtags", combineRelatedHashtags)
+    .put("autoplayVideos", autoplayVideos)
+    .put("alwaysTranslatePosts", alwaysTranslatePosts)
+    .put("contentWarningRules", contentWarningRules.toJson())
+    .put("hiddenContentPresentation", hiddenContentPresentation.name)
 
 /** The first file version in which a stored `Device` font is an explicit choice. */
 private const val EXPLICIT_DEVICE_FONT_VERSION = 2

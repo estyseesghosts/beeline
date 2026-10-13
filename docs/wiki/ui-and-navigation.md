@@ -1072,7 +1072,7 @@ The Settings main page is one flat list. Each row opens one page and shows a sho
 | Page | Scope | Settings |
 | --- | --- | --- |
 | Appearance | Application | Theme (colour style, accent colour, background), Text (size, font), Screen and layout (60 Hz request, Disable blur effects, forced layout direction, navigation positions) |
-| Language | Application | Automatic translation and the application language |
+| Language | Application | Automatic translation, the grammatical gender (Arabic only) and the application language |
 | Timeline and media | Application | Autoplay videos, Combine related hashtags |
 | Posting | Active account | Default audience, unlisted replies, image compression, favourite reaction |
 | Content warnings | Application, then active account | Hide or expand rules for all accounts, hidden content presentation, and a child page with the rules of the active account |
@@ -1136,5 +1136,15 @@ The Appearance switch can still force the opposite direction. `AppPreferences.wi
 override to `System` when the language changes to or from Arabic. The settings command and the platform language import both use it.
 
 Arabic uses the system font. The Arabic locale formats a count with Arabic-Indic digits. An Arabic plural needs all six quantities.
-Tests: `LanguageDirectionTest`, `AppLocaleControllerTest`, `LocalizationResourceTest`, `SettingsViewModelTest`.
+
+The Language page shows a Grammatical gender row for a language with gender catalogs. Only Arabic has them. The choices are
+Masculine, Feminine (when possible) and Neutral (when possible). `AppPreferences.grammaticalGender` stores the choice; the value
+for an older file is `Masculine`. The base catalog `values-ar` addresses the user with the masculine imperative. `values-ar-rQF`
+holds the feminine imperative and `values-ar-rQN` holds the verbal noun, each only for a command to the user. Every other string
+comes from `values-ar`. `GrammaticalGenderLocale` (`ui/localization/`) selects a catalog through a private-use region on the base
+context of the activity (`ar-QF`, `ar-QN`), so the selection works from Android 10. The region never reaches the stored language or
+the platform application locale. A new choice restarts the activity. A notification that the application context builds uses the
+masculine catalog.
+Tests: `LanguageDirectionTest`, `AppLocaleControllerTest`, `LocalizationResourceTest`, `SettingsViewModelTest`,
+`GrammaticalGenderLocaleTest`, `GrammaticalGenderSettingTest`, `AppPreferencesRepositoryTest`.
 No native speaker reviewed the Arabic text. Right-to-left rendering has no device check.

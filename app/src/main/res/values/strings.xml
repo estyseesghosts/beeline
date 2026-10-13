@@ -689,6 +689,11 @@
     <string name="settings_navigation_anchor_right">Physical right</string>
     <string name="settings_font_serif">Device serif</string>
     <string name="settings_language">Language</string>
+    <string name="settings_grammatical_gender">Grammatical gender</string>
+    <string name="settings_grammatical_gender_summary">The application addresses you in this form where the language has one.</string>
+    <string name="settings_grammatical_gender_masculine">Masculine</string>
+    <string name="settings_grammatical_gender_feminine">Feminine (when possible)</string>
+    <string name="settings_grammatical_gender_neutral">Neutral (when possible)</string>
     <string name="settings_moderation_add">Add</string>
     <string name="settings_moderation_confirm">Confirm</string>
     <string name="settings_moderation_hashtag">Hashtag</string>

@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.AppGrammaticalGender
 import me.foxtails.palustris.domain.AppLanguage
 
 /** Every catalog language stays reachable on compact screens. One row is selected. */
@@ -53,17 +54,23 @@ fun LanguageSettingsScreen(selected: AppLanguage, onSelected: (AppLanguage) -> U
     }
 }
 
-/** The Language page: the automatic translation switch, then the language list. */
+/**
+ * The Language page: the automatic translation switch, the grammatical gender for a language with
+ * gender catalogs, then the language list.
+ */
 @Composable
 fun LanguageSettingsPage(
     selected: AppLanguage,
     onSelected: (AppLanguage) -> Unit,
     alwaysTranslatePosts: Boolean,
     onAlwaysTranslatePosts: (Boolean) -> Unit,
+    grammaticalGender: AppGrammaticalGender = AppGrammaticalGender.Masculine,
+    onGrammaticalGender: (AppGrammaticalGender) -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize()) {
         // The setting is about reading, so it sits with the language. Its summary names the privacy cost.
         AlwaysTranslateRow(alwaysTranslatePosts, onAlwaysTranslatePosts)
+        if (showsGrammaticalGender(selected)) GrammaticalGenderRow(grammaticalGender, onGrammaticalGender)
         HorizontalDivider()
         LanguageSettingsScreen(selected, onSelected)
     }

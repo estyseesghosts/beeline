@@ -135,6 +135,7 @@ fun SettingsOverlayHost(
         onTabletNavigationAnchor = settingsModel::setTabletNavigationAnchor,
         onCompactWideNavigationAnchor = settingsModel::setCompactWideNavigationAnchor,
         onLanguage = settingsModel::setLanguage,
+        onGrammaticalGender = settingsModel::setGrammaticalGender,
         onTrackingCleanup = settingsModel::setTrackingCleanup,
         onCombineRelatedHashtags = settingsModel::setCombineRelatedHashtags,
         onAutoplayVideos = settingsModel::setAutoplayVideos,

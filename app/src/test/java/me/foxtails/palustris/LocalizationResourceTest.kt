@@ -191,6 +191,9 @@ class LocalizationResourceTest {
         "values-ru" -> "ru"
         "values-in-rID" -> "in-ID"
         "values-ar" -> "ar"
+        // The gender catalogs of Arabic select through a private-use region. They add no language.
+        "values-ar-rQF" -> "ar"
+        "values-ar-rQN" -> "ar"
         else -> null
     }
 

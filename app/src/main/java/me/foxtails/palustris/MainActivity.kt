@@ -14,6 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -25,6 +26,7 @@ import me.foxtails.palustris.data.auth.DraftWriteAuthority
 import me.foxtails.palustris.data.media.MeteredNetworkMonitor
 import me.foxtails.palustris.data.notifications.ForegroundNotificationStreamController
 import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
+import me.foxtails.palustris.domain.AppGrammaticalGender
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.PostPreferencesRepository
@@ -35,6 +37,7 @@ import me.foxtails.palustris.ui.ConnectedApp
 import me.foxtails.palustris.ui.display.RefreshRateController
 import me.foxtails.palustris.ui.localization.AppLocaleController
 import me.foxtails.palustris.ui.localization.AppLocaleOwner
+import me.foxtails.palustris.ui.localization.GrammaticalGenderLocale
 import me.foxtails.palustris.ui.session.AccountManager
 
 @AndroidEntryPoint
@@ -62,13 +65,34 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var meteredNetworkMonitor: MeteredNetworkMonitor
     private lateinit var refreshRateController: RefreshRateController
     private var appliedLanguage = AppLanguage.SystemDefault
+    private var appliedGender = AppGrammaticalGender.Masculine
     private val localeOwner = AppLocaleOwner()
     private val localeMutex = Mutex()
 
     override fun attachBaseContext(newBase: android.content.Context) {
         val language = readBaseLanguage(newBase)
         appliedLanguage = language
-        super.attachBaseContext(AppLocaleController.localizedContext(newBase, language))
+        appliedGender = GrammaticalGenderLocale.persistedGender(newBase)
+        val localized = AppLocaleController.localizedContext(newBase, language)
+        super.attachBaseContext(GrammaticalGenderLocale.genderedContext(localized, appliedGender))
+    }
+
+    /**
+     * A new grammatical gender selects another catalog through the base context, so the activity
+     * starts again. The stored value equals the applied value after that start, so this never loops.
+     */
+    private fun observeGrammaticalGender() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                appPreferencesRepository.observe()
+                    .filter { it.loaded }
+                    .map { it.preferences.grammaticalGender }
+                    .distinctUntilChanged()
+                    .collect { gender ->
+                        if (gender != appliedGender) recreate()
+                    }
+            }
+        }
     }
 
     /**
@@ -106,6 +130,7 @@ class MainActivity : ComponentActivity() {
                 meteredNetworkMonitor,
             )
         }
+        observeGrammaticalGender()
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 appPreferencesRepository.observe()

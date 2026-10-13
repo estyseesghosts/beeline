@@ -5,7 +5,7 @@ Owner: Orchestrator (single implementation owner for all slices).
 Last reviewed: 2026-10-13.
 Stale when: The supported language list, the grammatical gender setting, or the layout direction rule changes.
 
-Authority: `docs/i18n/hindi.csv`, `docs/i18n/arabic.csv`, `domain/AppPreferences.kt`, `ui/localization/AppLocaleController.kt`, `ui/settings/LanguageSettingsScreen.kt`, `app/src/main/res/values-hi/`, `app/src/main/res/values-ar/`.
+Authority: `docs/i18n/hindi.csv`, `docs/i18n/arabic.csv`, `domain/AppPreferences.kt`, `domain/GrammaticalGender.kt`, `domain/LanguageDirection.kt`, `ui/localization/AppLocaleController.kt`, `ui/localization/GrammaticalGenderLocale.kt`, `ui/settings/LanguageSettingsScreen.kt`, `app/src/main/res/values-hi/`, `app/src/main/res/values-ar/`.
 
 ## Objective
 
@@ -36,6 +36,15 @@ Both files in `docs/i18n` are glossaries of 33 terms. They are not tables of str
 
 - S1 Hindi additions: the commit "Add Hindi strings for the glossary terms". The catalog holds 409 keys. Full gate green on the second run (2559 tests); the first run had one failure in `MastodonIntegrationTest`, a network cancellation test outside this slice.
 - S2 Arabic language: the commit "Add Arabic with a right-to-left layout". `AppLanguage.Arabic`, `values-ar` with 409 keys, `locales_config.xml`, the system font, the Arabic hashtag script, and `withLanguage` in `domain/LanguageDirection.kt`. Full gate green on the second run (2565 tests). The first run failed because `LocalizationResourceTest` did not list Arabic yet, and on the known lint crash.
+
+- S3 Grammatical gender setting: the commit "Add a grammatical gender setting for Arabic". `AppGrammaticalGender`, the Language page row, `values-ar-rQF` (93 strings) and `values-ar-rQN` (92 strings), and `GrammaticalGenderLocale`. The default is `Masculine`. Full gate green in one run.
+
+## Mechanism of the gender catalogs
+
+- A private-use region selects a catalog: `ar-QF` for feminine and `ar-QN` for neutral. ISO 3166 reserves `QM` to `QZ`.
+- The first design used a locale variant (`values-b+ar+feminine`). The resource compiler rejects a variant without a region.
+- The platform grammatical gender qualifier needs Android 14, so it does not fit the minimum SDK 29.
+- `LocalizationResourceTest` maps both folders to `ar`. They add no selectable language.
 
 ## Limits
 

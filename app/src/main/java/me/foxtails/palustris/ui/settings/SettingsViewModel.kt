@@ -16,6 +16,7 @@ import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
+import me.foxtails.palustris.domain.AppGrammaticalGender
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppNavigationAnchor
@@ -115,6 +116,10 @@ class SettingsViewModel @Inject constructor(
      */
     fun setLanguage(value: AppLanguage): Unit =
         updateApp(retry = { setLanguage(value) }) { it.withLanguage(value) }
+
+    /** Stores the grammatical gender. The activity selects the matching catalog and starts again. */
+    fun setGrammaticalGender(value: AppGrammaticalGender): Unit =
+        updateApp(retry = { setGrammaticalGender(value) }) { it.copy(grammaticalGender = value) }
 
     /**
      * Stores the layout direction override. The value is presentation only, so it never touches the

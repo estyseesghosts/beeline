@@ -18,6 +18,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
+import me.foxtails.palustris.domain.AppGrammaticalGender
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppNavigationAnchor
@@ -159,6 +160,24 @@ class SettingsViewModelTest {
             val preferences = repository.observe().first().preferences
             assertEquals(AppLanguage.English, preferences.language)
             assertEquals(AppLayoutDirection.System, preferences.layoutDirection)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun setGrammaticalGenderStoresTheChoiceAndKeepsTheLanguage() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = InMemoryAppPreferencesRepository(AppPreferences(language = AppLanguage.Arabic))
+            val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
+
+            model.setGrammaticalGender(AppGrammaticalGender.Feminine)
+            advanceUntilIdle()
+
+            val preferences = repository.observe().first().preferences
+            assertEquals(AppGrammaticalGender.Feminine, preferences.grammaticalGender)
+            assertEquals(AppLanguage.Arabic, preferences.language)
         } finally {
             Dispatchers.resetMain()
         }

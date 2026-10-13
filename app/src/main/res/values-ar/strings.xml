@@ -422,4 +422,9 @@
     <string name="settings_about_components">مكوّنات مفتوحة المصدر</string>
     <string name="settings_about_components_summary">يتضمن %1$s هذه المكوّنات المفتوحة المصدر.</string>
     <string name="settings_favourite_emoji_choose">اختر رمزًا تعبيريًا</string>
+    <string name="settings_grammatical_gender">صيغة المخاطبة</string>
+    <string name="settings_grammatical_gender_summary">يخاطبك التطبيق بهذه الصيغة حيثما أمكن.</string>
+    <string name="settings_grammatical_gender_masculine">مذكر</string>
+    <string name="settings_grammatical_gender_feminine">مؤنث (عند الإمكان)</string>
+    <string name="settings_grammatical_gender_neutral">محايد (عند الإمكان)</string>
 </resources>

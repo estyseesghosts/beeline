@@ -15,6 +15,20 @@ class LanguageDirectionTest {
     }
 
     @Test
+    fun arabicIsTheOnlyLanguageWithGrammaticalGenderForms() {
+        assertTrue(AppLanguage.Arabic.hasGrammaticalGenderForms)
+        AppLanguage.entries.filter { it != AppLanguage.Arabic }.forEach { language ->
+            assertFalse(language.name, language.hasGrammaticalGenderForms)
+        }
+    }
+
+    @Test
+    fun aLanguageChangeKeepsTheGrammaticalGender() {
+        val feminine = AppPreferences(language = AppLanguage.Arabic, grammaticalGender = AppGrammaticalGender.Feminine)
+        assertEquals(AppGrammaticalGender.Feminine, feminine.withLanguage(AppLanguage.English).grammaticalGender)
+    }
+
+    @Test
     fun aChangeToOrFromArabicReturnsTheLayoutDirectionToSystem() {
         val forcedLtr = AppPreferences(language = AppLanguage.English, layoutDirection = AppLayoutDirection.ForceLtr)
         val arabic = forcedLtr.withLanguage(AppLanguage.Arabic)

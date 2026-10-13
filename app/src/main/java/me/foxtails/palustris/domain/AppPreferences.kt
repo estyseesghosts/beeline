@@ -12,6 +12,7 @@ data class AppPreferences(
     /** Turns off every blur effect in the application. Off by default, so blur shows where the device supports it. */
     val disableBlurEffects: Boolean = true,
     val language: AppLanguage = AppLanguage.SystemDefault,
+    val grammaticalGender: AppGrammaticalGender = AppGrammaticalGender.Masculine,
     val layoutDirection: AppLayoutDirection = AppLayoutDirection.System,
     val tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
     val compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
