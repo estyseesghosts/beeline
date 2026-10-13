@@ -8,6 +8,14 @@ Stale when: A release ships without an entry here.
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
 
+## 0.3.1
+
+### Improved
+
+- French, European Spanish, European Portuguese, Russian, German, Japanese and Indonesian carry the strings for the glossary terms.
+- Arabic has the strings for the feed, publishing, drafts and placeholders.
+- The README describes the current capabilities.
+
 ## 0.3.0
 
 ### New
