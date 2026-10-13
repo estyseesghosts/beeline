@@ -8,10 +8,14 @@ Stale when: A release ships without an entry here.
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
 
-## Unreleased
+## 0.3.0
 
 ### New
 
+- Arabic is an app language. Arabic uses a right-to-left layout.
+- Arabic has a grammatical gender setting.
+- Hindi strings for the glossary terms are added.
+- Appearance has a Font list: Device default, Device serif, Device sans, OpenDyslexic and the bundled fonts.
 - Settings is one list of pages: Appearance, Language, Timeline and media, Posting, Content warnings, Blocks and mutes, Privacy, Notifications and About.
 - Favourite reaction (Posting, Misskey-family servers): choose the emoji that the heart button sends. The emoji picker opens, so a custom server emoji works too.
 - Disable blur effects (Appearance): turns off the blur behind floating controls and on profile banners. It is on by default.
@@ -21,11 +25,17 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 ### Improved
 
 - Appearance has three sections: Theme, Text, and Screen and layout.
+- Appearance offers twelve accent palettes in two rows of six: six pastel and six vibrant. The colours are hand-picked.
+- A stored orange, yellow or violet palette loads as its gold or indigo replacement.
 - Back in Settings returns to the page before, not to the main page.
 - With one account, Notifications opens that account at once.
 - A switch row in Settings toggles as one control, so a screen reader reads the name and the state together.
 - Long settings pages scroll.
 - The settings pages are translated in every supported language.
+- Each language has a default display font. A clean install in English uses Inter.
+- A post uses one font for all of its text, chosen by the script of the text.
+- Inter for Latin characters, on by default, draws Latin letters in Inter in a non-Latin language.
+- Setup screens use the default font of the device language.
 
 ### Fixed
 
@@ -35,7 +45,40 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 
 ### New
 
-- Hashtag groups: in the add hashtag dialog, Create hashtag group adds more tag fields, an Add more button and a remove button on each field. A group searches its tags together as one chip. It has an optional name, which defaults to the first tag. Mastodon-compatible servers allow four tags in a group and Misskey-family servers allow 100. Groups are saved on this device. Long-press a group chip to remove it.
+- Hashtag groups: in the add hashtag dialog, select Create hashtag group and add tag fields.
+- A hashtag group searches its tags together as one chip. Its name defaults to the first tag.
+- Mastodon-compatible servers allow four tags in a group. Misskey-family servers allow 100.
+- Groups are saved on this device. Long-press a group chip to remove it.
+- Polls work on Misskey-family and Mastodon-compatible servers. Create a poll, vote and see the results.
+- You can edit your own posts on Mastodon and Sharkey servers.
+- Quote posts interoperate with other servers. Posts can be local-only or scheduled.
+- A video without a server-sent poster image uses its first frame as the poster.
+- Search has one field with suggestions, post search, lookups and Trends.
+- Search has Trending and News tabs.
+- Photo Grid starts with your Search results as a chip that you can dismiss.
+- Home shows a chip row with your lists, hashtags and antennas.
+- Mastodon-compatible servers follow the hashtags you follow.
+- Mentions appear as inline bubbles with the account name and avatar.
+- The attachment menu holds Photo, Poll and Content warning.
+- A new setting translates posts automatically. It is off by default.
+
+### Improved
+
+- The composer uses floating bubbles over scrolling cards.
+- A reply or quote uses the audience of the post it answers.
+- A post you reveal stays revealed in the feed, post detail, media viewer and Photo Grid.
+- The navigation bar is transparent, and content draws under it.
+- Floating controls share one shadow. The top blur band is stronger.
+- On Android 12 and later, content under the controls blurs. Android 10 and 11 show a gradient.
+- Photo Grid tiles show a loading indicator, or a failed state with a Retry button.
+- Beeline retries a media request once after a timeout, a server error or a rate limit.
+- The hashtag field removes the # sign and stores tags without it.
+
+### Fixed
+
+- Photo Grid tiles no longer stay empty after rate limit or server errors.
+- Mentions show complete handles on both server families.
+- A blank composer opens every time. Beeline never keeps an empty draft.
 
 ## 0.2.15
 
