@@ -908,6 +908,8 @@
     <string name="settings_appearance_theme">Theme</string>
     <string name="settings_appearance_text">Text</string>
     <string name="settings_appearance_screen">Screen and layout</string>
+    <string name="settings_disable_blur">Disable blur effects</string>
+    <string name="settings_disable_blur_summary">Removes the blur behind floating controls and at the top of profile banners.</string>
     <string name="settings_timeline_media">Timeline and media</string>
     <string name="settings_timeline_media_summary">Video autoplay and related hashtags.</string>
 </resources>

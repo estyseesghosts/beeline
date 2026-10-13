@@ -3,6 +3,7 @@ package me.foxtails.palustris.ui.profile
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -32,6 +33,7 @@ import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.ProfileTimelineTab
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.PalustrisTheme
+import me.foxtails.palustris.ui.components.LocalBlurEffectsEnabled
 import me.foxtails.palustris.ui.profile.ProfileCategory
 import me.foxtails.palustris.ui.profile.ProfileChipEntry
 import me.foxtails.palustris.ui.profile.ProfilePageState
@@ -940,6 +942,26 @@ class ProfileScreenTest {
         compose.waitForIdle()
         compose.onNodeWithTag("profile_categories_dock").assertIsDisplayed()
         compose.onNodeWithContentDescription("Show chips").assertIsDisplayed()
+    }
+
+    @Test
+    fun theBlurredStatusBarStripIsAbsentWhenBlurEffectsAreDisabled() {
+        val profile = account("profile", "Profile Name").copy(bannerUrl = "https://example.org/banner.jpg")
+
+        show {
+            CompositionLocalProvider(LocalBlurEffectsEnabled provides false) {
+                ProfileScreen(
+                    account = profile,
+                    profileState = profileState(profile, emptyList()),
+                    compactLayout = false,
+                    authenticatedAccountId = self.id,
+                )
+            }
+        }
+
+        // The banner stays; only the blurred copy over the status bar goes.
+        compose.onNodeWithTag("profile_banner").assertIsDisplayed()
+        compose.onNodeWithTag("profile_banner_status_bar_blur").assertDoesNotExist()
     }
 
     private fun show(content: @Composable () -> Unit) {

@@ -20,14 +20,17 @@ reaction emoji, and an About page.
 - Posting and account content warning rules apply to the active account. The page names that account.
   A per-page account picker is not part of this task.
 - `docs/wiki/changelog.md` has uncommitted owner changes, so this task does not edit it.
+- `LocalBlurEffectsEnabled` is the one switch for blur. `ConnectedApp` provides it. `rememberChromeBackdrop`
+  and `ProfileHeader` read it. A new blur site must read it too.
 
 # Completed
 
-- S1 Main page, Appearance sections, Timeline and media page.
+- S1 Main page, Appearance sections, Timeline and media page. Commit `5dc86021`.
+- S2 "Disable blur effects" in Appearance, Screen and layout.
 
 # Current slice
 
-S2 "Disable blur effects" in Appearance, Screen and layout.
+S3 Posting at the top level, favourite emoji, Privacy switch.
 
 # Files involved
 
@@ -40,13 +43,13 @@ S2 "Disable blur effects" in Appearance, Screen and layout.
 
 # Verification
 
-- S1: the settings unit tests pass. The local CI-parity gate passes except for the architecture audit,
-  which exits 1 at the base commit. S1 adds no regression line.
-- No device check ran.
+- S1 and S2: the settings unit tests pass. The local CI-parity gate passes except for the architecture audit,
+  which exits 1 at the base commit. Neither slice adds a regression line.
+- No device check ran. The blur setting has no check on a real screen.
 
 # Next
 
-S2, then S3 (Posting at the top level, favourite emoji, Privacy switch), S4 (content warning pages),
+S3 (Posting at the top level, favourite emoji, Privacy switch), S4 (content warning pages),
 S5 (blocked and muted lists at the top level, Back order, no account picker for one account), S6 (About).
 
 # Blockers
@@ -55,5 +58,5 @@ None.
 
 # Last safe commit
 
-`08f108c3` Add gate and audit logs for the 0.2.13 to 0.2.16 slices. S1 is the commit after it:
-"Flatten the Settings main page and add the Timeline and media page".
+`5dc86021` Flatten the Settings main page and add the Timeline and media page. S2 is the commit after it:
+"Add a setting that disables blur effects".

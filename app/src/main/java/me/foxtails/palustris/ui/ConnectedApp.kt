@@ -50,6 +50,7 @@ import me.foxtails.palustris.domain.hashtags.HashtagCatalog
 import me.foxtails.palustris.domain.hashtags.HashtagExpander
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.domain.hashtags.HashtagLanguagePolicy
+import me.foxtails.palustris.ui.components.LocalBlurEffectsEnabled
 import me.foxtails.palustris.ui.layout.deviceLayoutDirection
 import me.foxtails.palustris.ui.layout.resolveAgainst
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
@@ -160,6 +161,7 @@ fun ConnectedApp(
              LocalMutedHashtags provides postPreferences.localMutedHashtags.toSet(),
              LocalHiddenContentPresentation provides appPreferences.preferences.hiddenContentPresentation,
              LocalVideoPlaybackCoordinator provides videoCoordinator,
+             LocalBlurEffectsEnabled provides !appPreferences.preferences.disableBlurEffects,
         ) {
         // The connected shell sets its own bars (the media viewer is black there). Every other state gets them here.
         if (topLevelScreen != "app") SystemBars(mediaViewerOpen = false)

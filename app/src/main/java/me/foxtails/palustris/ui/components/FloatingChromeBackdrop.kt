@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -42,13 +43,20 @@ internal class ChromeBackdrop(val layer: GraphicsLayer) {
 /** Blur needs the platform render effect (API 31) and is off while battery saver is on. */
 internal fun chromeBlurAvailable(sdkInt: Int, batterySaver: Boolean): Boolean = sdkInt >= Build.VERSION_CODES.S && !batterySaver
 
+/**
+ * Whether the user allows blur effects. The composition root provides it from the "Disable blur effects"
+ * setting. Every blur site reads it, so one setting turns all blur off. The default is true for previews and tests.
+ */
+internal val LocalBlurEffectsEnabled = staticCompositionLocalOf { true }
+
 /** The backdrop for one host, or null where the band should draw its gradient alone. */
 @Composable
 internal fun rememberChromeBackdrop(): ChromeBackdrop? {
     val saver = rememberBatterySaverOn()
     val layer = rememberGraphicsLayer()
     val backdrop = remember(layer) { ChromeBackdrop(layer) }
-    return backdrop.takeIf { chromeBlurAvailable(Build.VERSION.SDK_INT, saver) }
+    val allowed = LocalBlurEffectsEnabled.current
+    return backdrop.takeIf { allowed && chromeBlurAvailable(Build.VERSION.SDK_INT, saver) }
 }
 
 @Composable

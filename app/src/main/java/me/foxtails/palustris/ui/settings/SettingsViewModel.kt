@@ -104,6 +104,9 @@ class SettingsViewModel @Inject constructor(
     fun setRequest60Hz(value: Boolean): Unit =
         updateApp(retry = { setRequest60Hz(value) }) { it.copy(request60Hz = value) }
 
+    fun setDisableBlurEffects(value: Boolean): Unit =
+        updateApp(retry = { setDisableBlurEffects(value) }) { it.copy(disableBlurEffects = value) }
+
     fun setLanguage(value: AppLanguage): Unit =
         updateApp(retry = { setLanguage(value) }) { it.copy(language = value) }
 

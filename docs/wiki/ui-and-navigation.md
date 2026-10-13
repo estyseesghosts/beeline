@@ -983,6 +983,12 @@ Verification: `SystemBarsPolicyTest` and `LargeBottomDockInsetTest` (JVM). Devic
 This section replaces the gradient of infdev 02 S8a. No tint gradient exists any more (`floatingChromeScrimAlpha` and its
 constants are deleted). Two parts remain, and both only draw: they take no pointer input and add no semantics.
 
+The setting "Disable blur effects" (Settings, Appearance, Screen and layout) turns off every blur in the application.
+`AppPreferences.disableBlurEffects` stores it; a stored file without the key reads false. `ConnectedApp` provides
+`LocalBlurEffectsEnabled` (`ui/components/FloatingChromeBackdrop.kt`). `rememberChromeBackdrop` returns null while it is false,
+so no band draws a blur. `ProfileHeader` reads the same value and omits the blurred banner strip under the status bar.
+A new blur site must read `LocalBlurEffectsEnabled`. Sources: `BlurEffectsSettingTest`, `ProfileScreenTest`. Not verified on a device.
+
 **Blur.** `Modifier.floatingChromeBlur(backdrop, edge)` (`ui/components/FloatingChromeBlur.kt`, was `floatingChromeScrim`) draws a
 16 dp blurred copy (12 dp before) of the content under a stack of floating controls, faded in by an alpha mask that is transparent 32 dp
 beyond the node and fully strong across the whole node (infdev 04 S1; before, one linear gradient over the whole band left the blur
@@ -1064,7 +1070,7 @@ The Settings main page is one flat list. Each row opens one page and shows a sho
 
 | Page | Scope | Settings |
 | --- | --- | --- |
-| Appearance | Application | Theme (colour style, accent colour, background), Text (size, font), Screen and layout (60 Hz request, forced layout direction, navigation positions) |
+| Appearance | Application | Theme (colour style, accent colour, background), Text (size, font), Screen and layout (60 Hz request, Disable blur effects, forced layout direction, navigation positions) |
 | Language | Application | Automatic translation and the application language |
 | Timeline and media | Application | Autoplay videos, Combine related hashtags |
 | Privacy | Application and account | Tracking parameters, content warnings, account privacy lists, posting defaults |

@@ -62,6 +62,7 @@ fun DisplaySettingsScreen(
     onTabletNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
     compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
     onCompactWideNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
+    onDisableBlurEffects: (Boolean) -> Unit = {},
 ) {
     // The page holds more items than fit a short viewport, so it scrolls. Without this the last
     // items are clipped and cannot be reached. The scroll state is local to this screen and is
@@ -88,6 +89,13 @@ fun DisplaySettingsScreen(
                 checked = preferences.request60Hz,
                 onCheckedChange = onRequest60Hz,
                 testTag = "request_60hz",
+            )
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_disable_blur),
+                summary = stringResource(R.string.settings_disable_blur_summary),
+                checked = preferences.disableBlurEffects,
+                onCheckedChange = onDisableBlurEffects,
+                testTag = "disable_blur_effects",
             )
             LayoutDirectionSwitch(layoutDirection, onLayoutDirection)
             NavigationAnchorChoiceGroup(

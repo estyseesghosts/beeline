@@ -36,6 +36,7 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.data.media.MediaImageLoader
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.ui.components.AccountAvatar
+import me.foxtails.palustris.ui.components.LocalBlurEffectsEnabled
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.motion.PopEffect
 
@@ -96,7 +97,8 @@ internal fun ProfileHeader(
                     modifier = Modifier.fillMaxWidth().height(152.dp),
                 )
             }
-            if (statusBarHeight > 0.dp) {
+            // The strip is only a blurred copy of the banner. With blur effects off, the banner itself shows there.
+            if (statusBarHeight > 0.dp && LocalBlurEffectsEnabled.current) {
                 Box(
                     Modifier
                         .fillMaxWidth()
