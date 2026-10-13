@@ -41,19 +41,22 @@ private val SaralaFont = FontFamily(
     Font(R.font.sarala_bold, weight = FontWeight.Bold),
 )
 
+/** The typeface for one font choice. Setup screens reuse this for the per-language default. */
+internal fun appFontFamily(font: AppFont): FontFamily = when (font) {
+    AppFont.Device -> FontFamily.Default
+    AppFont.Serif -> FontFamily.Serif
+    AppFont.Sans -> FontFamily.SansSerif
+    AppFont.OpenDyslexic -> OpenDyslexicFont
+    AppFont.Inter -> InterFont
+    AppFont.ZcoolKuaiLe -> ZcoolKuaiLeFont
+    AppFont.ChocolateClassicalSans -> ChocolateClassicalSansFont
+    AppFont.ChironHeiHk -> ChironHeiHkFont
+    AppFont.KiwiMaru -> KiwiMaruFont
+    AppFont.Sarala -> SaralaFont
+}
+
 fun appTypography(font: AppFont, textSize: AppTextSize): Typography {
-    val family = when (font) {
-        AppFont.Device -> FontFamily.Default
-        AppFont.Serif -> FontFamily.Serif
-        AppFont.Sans -> FontFamily.SansSerif
-        AppFont.OpenDyslexic -> OpenDyslexicFont
-        AppFont.Inter -> InterFont
-        AppFont.ZcoolKuaiLe -> ZcoolKuaiLeFont
-        AppFont.ChocolateClassicalSans -> ChocolateClassicalSansFont
-        AppFont.ChironHeiHk -> ChironHeiHkFont
-        AppFont.KiwiMaru -> KiwiMaruFont
-        AppFont.Sarala -> SaralaFont
-    }
+    val family = appFontFamily(font)
     val scale = when (textSize) {
         AppTextSize.Device -> 1f
         AppTextSize.Smaller -> 0.9f

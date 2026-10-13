@@ -33,11 +33,17 @@ Bundle six new fonts (Inter, ZCOOL KuaiLe, Chocolate Classical Sans, Chiron Hei 
 ## Completed
 
 - S1 (bundle six fonts as Appearance options) — commit 012eba3d.
-- S2 (per-language stored default plus propagation) — commit follows this record update.
+- S2 (per-language stored default plus propagation) — commit 32694a9d.
+- S3 (setup screens use the new defaults; `noto_sans.ttf` deleted) — commit follows this record update.
 
 ## Current slice
 
-S3: setup screens use the new defaults; delete `noto_sans.ttf`.
+None. The task is complete pending the S3 commit.
+
+## Files involved
+
+S3 production: `ui/setup/SetupTypography.kt`, `ui/theme/AppTypography.kt` (`appFontFamily` extraction), deleted `res/font/noto_sans.ttf`.
+S3 tests: new `ui/setup/SetupTypographyTest.kt`, extended `ui/SignInScreenTest.kt`.
 
 ## Files involved
 

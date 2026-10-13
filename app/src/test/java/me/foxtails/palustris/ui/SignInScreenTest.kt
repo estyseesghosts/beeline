@@ -1,10 +1,15 @@
 package me.foxtails.palustris.ui
 
+import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.activity.compose.setContent
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -20,12 +25,17 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.text.font.FontFamily
+import androidx.test.core.app.ApplicationProvider
 import java.io.File
+import java.util.Locale
 import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.AppFont
+import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityStatus
@@ -47,7 +57,10 @@ import me.foxtails.palustris.ui.session.SessionUi
 import me.foxtails.palustris.ui.setup.SetupInitialScreen
 import me.foxtails.palustris.ui.setup.SetupIntroductionPreview
 import me.foxtails.palustris.ui.setup.SetupServerScreen
+import me.foxtails.palustris.ui.setup.setupLanguage
+import me.foxtails.palustris.ui.setup.setupTypography
 import me.foxtails.palustris.ui.shell.AppShellFixtures
+import me.foxtails.palustris.ui.theme.appFontFamily
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -381,6 +394,42 @@ class SignInScreenTest {
         compose.onNodeWithText("welcome to").assertIsDisplayed()
         compose.onNodeWithText("the fediverse").assertIsDisplayed()
         compose.onNodeWithText("get started").assertIsDisplayed()
+    }
+
+    @Test fun setupTypographyUsesTheBundledFontOfTheConfigurationLocale() {
+        // The default Robolectric locale is region-qualified (en-US), so this also covers the
+        // bare-language fallback.
+        var family: FontFamily? = null
+        compose.activity.runOnUiThread { compose.activity.setContent {
+            family = setupTypography(MaterialTheme.typography).bodyLarge.fontFamily
+        } }
+
+        compose.runOnIdle { assertEquals(appFontFamily(AppFont.Inter), family) }
+    }
+
+    @Test fun setupLanguageFallsBackToTheBareLanguage() {
+        val base = ApplicationProvider.getApplicationContext<Context>()
+        assertEquals(AppLanguage.English, setupLanguage(base))
+
+        val configuration = Configuration(base.resources.configuration)
+        configuration.setLocale(Locale.JAPAN)
+        val japanese = base.createConfigurationContext(configuration)
+        assertEquals(AppLanguage.Japanese, setupLanguage(japanese))
+    }
+
+    @Test fun setupTypographyFollowsAJapaneseConfigurationLocale() {
+        val base = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = Configuration(base.resources.configuration)
+        configuration.setLocale(Locale.JAPAN)
+        val japanese = base.createConfigurationContext(configuration)
+        var family: FontFamily? = null
+        compose.activity.runOnUiThread { compose.activity.setContent {
+            CompositionLocalProvider(LocalContext provides japanese) {
+                family = setupTypography(MaterialTheme.typography).bodyLarge.fontFamily
+            }
+        } }
+
+        compose.runOnIdle { assertEquals(appFontFamily(AppFont.KiwiMaru), family) }
     }
 
     @Test fun serverFieldRejectsInternalWhitespaceWithoutChangingItsValue() {
