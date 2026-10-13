@@ -5,7 +5,7 @@ Owner: Orchestrator (single implementation owner for all slices).
 Last reviewed: 2026-10-13.
 Stale when: The post font rule, the script tables, or the Latin font override changes.
 
-Authority: `domain/PostScript.kt`, `domain/PostFont.kt`, `ui/theme/PostFont.kt`, `ui/emoji/InlineEmojiText.kt`, `ui/posts/PostRow.kt`, `ui/posts/SinglePostScreen.kt`.
+Authority: `domain/PostScript.kt`, `domain/PostFont.kt`, `domain/LatinFontOverride.kt`, `ui/theme/PostFont.kt`, `ui/theme/LatinOverrideFonts.kt`, `ui/theme/EffectiveAppFont.kt`, `ui/emoji/InlineEmojiText.kt`, `ui/posts/PostRow.kt`, `ui/posts/SinglePostScreen.kt`.
 
 ## Objective
 
@@ -38,7 +38,19 @@ Authority: `domain/PostScript.kt`, `domain/PostFont.kt`, `ui/theme/PostFont.kt`,
 
 - F1 One font for one post: the commit "Render a post in one font by its script". Full gate green (2597 tests). Two earlier runs stopped at ktlint on an unused import and on an import order.
 
+- F2 Latin font override: the commit "Draw Latin characters in Inter for non-Latin languages". `AppPreferences.latinFontOverride` (default on), `latinFontOverrideActive`, `LatinOverrideFonts`, and the Appearance switch. Full gate green in one run (2609 tests).
+
+## Decisions of the owner for F2
+
+- The override supports Hindi, Japanese, Korean, Cantonese, the Chinese variants, and Arabic.
+- Russian has no override. Inter holds Cyrillic, so it would replace the font of the whole language.
+- Device serif, Device sans, OpenDyslexic, and Inter never take the override. The user selected them for their Latin design.
+- A post with a known script keeps Inter for its Latin characters while the override applies. This is the one planned exception to the rule of one font for one post.
+- The setup screens do not use the override.
+
 ## Limits
+
+- The new English strings of the switch and of the gender setting have a translation only in Arabic or none. Other locales show English.
 
 - The script tables hold frequent characters only. A short post can miss its script.
 - Japanese text without kana classifies as Chinese or as no script.

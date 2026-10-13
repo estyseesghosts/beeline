@@ -688,6 +688,8 @@
     <string name="settings_navigation_anchor_left">Physical left</string>
     <string name="settings_navigation_anchor_right">Physical right</string>
     <string name="settings_font_serif">Device serif</string>
+    <string name="settings_latin_font_override">Inter for Latin characters</string>
+    <string name="settings_latin_font_override_summary">Latin letters and digits use Inter. All other characters use the selected font.</string>
     <string name="settings_language">Language</string>
     <string name="settings_grammatical_gender">Grammatical gender</string>
     <string name="settings_grammatical_gender_summary">The application addresses you in this form where the language has one.</string>

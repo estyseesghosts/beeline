@@ -46,7 +46,7 @@ internal fun PostScriptProvider(post: Post, content: @Composable () -> Unit) {
 internal fun TextStyle.forPostText(text: String): TextStyle {
     val scope = LocalPostScriptScope.current
     val script = if (scope != null) scope.script else remember(text) { PostScriptClassifier.classify(text) }
-    return withPostScript(script, LocalAppFont.current)
+    return withPostScript(script, LocalAppFont.current, LocalLatinOverrideFonts.current)
 }
 
 /**
@@ -55,12 +55,18 @@ internal fun TextStyle.forPostText(text: String): TextStyle {
  */
 @Composable
 internal fun TextStyle.forPostLabel(): TextStyle =
-    withPostScript(LocalPostScriptScope.current?.script, LocalAppFont.current)
+    withPostScript(LocalPostScriptScope.current?.script, LocalAppFont.current, LocalLatinOverrideFonts.current)
 
-/** Applies the one font of [script], with the locale that selects its regional glyph forms. */
-internal fun TextStyle.withPostScript(script: PostScript?, appFont: AppFont): TextStyle =
-    if (script == null) {
-        this
-    } else {
-        copy(fontFamily = appFontFamily(postFont(script, appFont)), localeList = LocaleList(script.systemLocaleTag))
-    }
+/**
+ * Applies the one font of [script], with the locale that selects its regional glyph forms. While
+ * the Latin override applies, [latinFonts] keeps Inter for the Latin characters, as in the rest
+ * of the application.
+ */
+internal fun TextStyle.withPostScript(script: PostScript?, appFont: AppFont, latinFonts: LatinOverrideFonts?): TextStyle {
+    if (script == null) return this
+    val font = postFont(script, appFont)
+    return copy(
+        fontFamily = latinFonts?.family(font) ?: appFontFamily(font),
+        localeList = LocaleList(script.systemLocaleTag),
+    )
+}

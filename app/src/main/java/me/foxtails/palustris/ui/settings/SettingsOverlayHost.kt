@@ -129,6 +129,7 @@ fun SettingsOverlayHost(
         onBackground = settingsModel::setBackground,
         onTextSize = settingsModel::setTextSize,
         onFont = settingsModel::setFont,
+        onLatinFontOverride = settingsModel::setLatinFontOverride,
         onRequest60Hz = settingsModel::setRequest60Hz,
         onDisableBlurEffects = settingsModel::setDisableBlurEffects,
         onLayoutDirection = settingsModel::setLayoutDirection,

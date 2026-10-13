@@ -106,6 +106,8 @@ class FileAppPreferencesRepository(
             background = enumOrDefault(json, "background", AppBackground.Default),
             textSize = enumOrDefault(json, "textSize", AppTextSize.Device),
             font = storedFontChoice(json),
+            // A missing key reads true, the default of the override.
+            latinFontOverride = json.optBoolean("latinFontOverride", true),
             request60Hz = json.optBoolean("request60Hz", false),
             // A missing key reads false, so a file from an earlier build keeps its blur.
             disableBlurEffects = json.optBoolean("disableBlurEffects", true),
@@ -154,6 +156,7 @@ private fun AppPreferences.toJson(): JSONObject = JSONObject()
     .put("background", background.name)
     .put("textSize", textSize.name)
     .putOpt("font", font?.name)
+    .put("latinFontOverride", latinFontOverride)
     .put("request60Hz", request60Hz)
     .put("disableBlurEffects", disableBlurEffects)
     .put("language", language.name)

@@ -184,6 +184,24 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun setLatinFontOverrideStoresTheSwitchAndKeepsTheFont() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = InMemoryAppPreferencesRepository(AppPreferences(font = AppFont.KiwiMaru))
+            val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
+
+            model.setLatinFontOverride(false)
+            advanceUntilIdle()
+
+            val preferences = repository.observe().first().preferences
+            assertFalse(preferences.latinFontOverride)
+            assertEquals(AppFont.KiwiMaru, preferences.font)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
     fun postCommandsTransformOnlyTheirOwnFieldForTheCapturedAccount() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {

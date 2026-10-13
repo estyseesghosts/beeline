@@ -242,6 +242,23 @@ class AppPreferencesRepositoryTest {
     }
 
     @Test
+    fun latinFontOverrideDefaultsToTrueAndRoundTripsFalse() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertEquals(true, FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.latinFontOverride)
+
+        // A file written by an earlier build has no key and takes the default.
+        file.parentFile?.mkdirs()
+        file.writeText("""{"language":"Japanese"}""")
+        val legacy = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(true, legacy.latinFontOverride)
+
+        FileAppPreferencesRepository(context).update { it.copy(latinFontOverride = false) }
+        val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(false, restored.latinFontOverride)
+        assertEquals(AppLanguage.Japanese, restored.language)
+    }
+
+    @Test
     fun successfulUpdateClearsTheLoadError() = runBlocking {
         file.parentFile?.mkdirs()
         file.writeText("not json")

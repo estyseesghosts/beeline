@@ -325,13 +325,13 @@ class SettingsDisplayTest {
         render(AppPreferences(), "en-US")
         assertEquals(appFontFamily(AppFont.Inter), family)
 
-        render(AppPreferences(), "hi-IN")
+        render(AppPreferences(latinFontOverride = false), "hi-IN")
         assertEquals(appFontFamily(AppFont.Sarala), family)
 
-        render(AppPreferences(), "zh-Hans-CN")
+        render(AppPreferences(latinFontOverride = false), "zh-Hans-CN")
         assertEquals(appFontFamily(AppFont.ZcoolKuaiLe), family)
 
-        render(AppPreferences(language = AppLanguage.ChineseTaiwan), "en-US")
+        render(AppPreferences(language = AppLanguage.ChineseTaiwan, latinFontOverride = false), "en-US")
         assertEquals(appFontFamily(AppFont.ChocolateClassicalSans), family)
 
         render(AppPreferences(font = AppFont.Device), "en-US")

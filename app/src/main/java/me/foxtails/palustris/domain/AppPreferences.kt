@@ -8,6 +8,8 @@ data class AppPreferences(
     val textSize: AppTextSize = AppTextSize.Device,
     /** The explicit font choice. Null means no choice, so the font follows the language default. */
     val font: AppFont? = null,
+    /** Draws Latin characters in Inter for a language that is not written in Latin script. */
+    val latinFontOverride: Boolean = true,
     val request60Hz: Boolean = false,
     /** Turns off every blur effect in the application. Off by default, so blur shows where the device supports it. */
     val disableBlurEffects: Boolean = true,

@@ -1071,7 +1071,7 @@ The Settings main page is one flat list. Each row opens one page and shows a sho
 
 | Page | Scope | Settings |
 | --- | --- | --- |
-| Appearance | Application | Theme (colour style, accent colour, background), Text (size, font), Screen and layout (60 Hz request, Disable blur effects, forced layout direction, navigation positions) |
+| Appearance | Application | Theme (colour style, accent colour, background), Text (size, font, Inter for Latin characters), Screen and layout (60 Hz request, Disable blur effects, forced layout direction, navigation positions) |
 | Language | Application | Automatic translation, the grammatical gender (Arabic only) and the application language |
 | Timeline and media | Application | Autoplay videos, Combine related hashtags |
 | Posting | Active account | Default audience, unlisted replies, image compression, favourite reaction |
@@ -1114,6 +1114,24 @@ pills of the hashtag bubble. The author name, the handle and the time keep the f
 `forPostText`. A label applies `forPostLabel`, which reads the scope only. A quoted post has its own scope. Text outside a post row,
 for example in a notification row, decides for itself; a hashtag bubble there keeps the font of the application.
 Tests: `PostScriptClassifierTest`, `PostFontTest`, `PostFontStyleTest`. No device check ran.
+
+### Inter for Latin characters
+
+The Appearance page has the switch "Inter for Latin characters" under Text. It is on by default (`AppPreferences.latinFontOverride`).
+The switch shows only for a language that supports the override: Hindi, Japanese, Korean, Cantonese, the Chinese variants and
+Arabic. A System default language uses the device language. A Latin-script language needs no override. Russian has none, because
+Inter also holds Cyrillic and would replace the font of the whole language.
+
+While the override applies, Inter draws Latin letters and digits, and the font in effect draws every other character. A font that
+the user selected for its Latin design keeps its Latin characters: Device serif, Device sans, OpenDyslexic and Inter never take the
+override (`latinFontOverrideActive` in `domain/LatinFontOverride.kt`).
+
+A Compose font list selects one font for a whole text, so `LatinOverrideFonts` (`ui/theme/`) builds a platform typeface with a
+fallback chain: Inter, then the base font, then the system font. `AppFontTheme` remembers one instance and applies the family to
+the whole typography. A post with a known script uses the same chain with the font of the post as the base font. Such a post then
+holds two fonts by design: Inter for its Latin characters and one font for its script. A failed build gives the plain font.
+The setup screens do not use the override.
+Tests: `LatinFontOverrideTest`, `LatinOverrideFontsTest`. No device check ran.
 
 The Posting page edits the active account and names it at the top. It does not select another account.
 Image compression shows only when the server reports client compression. The favourite reaction shows only when

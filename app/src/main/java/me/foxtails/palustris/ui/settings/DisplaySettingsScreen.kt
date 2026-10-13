@@ -64,6 +64,7 @@ fun DisplaySettingsScreen(
     compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
     onCompactWideNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
     onDisableBlurEffects: (Boolean) -> Unit = {},
+    onLatinFontOverride: (Boolean) -> Unit = {},
 ) {
     // The page holds more items than fit a short viewport, so it scrolls. Without this the last
     // items are clipped and cannot be reached. The scroll state is local to this screen and is
@@ -81,6 +82,7 @@ fun DisplaySettingsScreen(
         HorizontalDivider()
         SettingsSection(stringResource(R.string.settings_appearance_text)) {
             TextChoices(preferences, onTextSize, onFont)
+            LatinFontOverrideRow(preferences, onLatinFontOverride)
         }
         HorizontalDivider()
         SettingsSection(stringResource(R.string.settings_appearance_screen)) {

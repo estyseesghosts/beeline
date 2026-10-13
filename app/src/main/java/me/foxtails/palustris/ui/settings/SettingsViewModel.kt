@@ -104,6 +104,9 @@ class SettingsViewModel @Inject constructor(
     fun setFont(value: AppFont): Unit =
         updateApp(retry = { setFont(value) }) { it.copy(font = value) }
 
+    fun setLatinFontOverride(value: Boolean): Unit =
+        updateApp(retry = { setLatinFontOverride(value) }) { it.copy(latinFontOverride = value) }
+
     fun setRequest60Hz(value: Boolean): Unit =
         updateApp(retry = { setRequest60Hz(value) }) { it.copy(request60Hz = value) }
 
