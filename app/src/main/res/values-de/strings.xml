@@ -105,9 +105,6 @@
     <string name="timeline_local">Lokal</string>
     <string name="settings_title">Einstellungen</string>
     <string name="settings_error_dismiss">Verwerfen</string>
-    <string name="settings_section_notifications">Benachrichtigungen</string>
-    <string name="settings_section_privacy">Privatsphäre</string>
-    <string name="settings_section_language">Sprache</string>
     <string name="settings_display">Darstellung</string>
     <string name="settings_colour_style_system">System</string>
     <string name="settings_notifications">Benachrichtigungen</string>

@@ -102,9 +102,6 @@
     <string name="composer_remove_quote">Supprimer</string>
     <string name="timeline_local">Local</string>
     <string name="settings_title">Paramètres</string>
-    <string name="settings_section_notifications">Notifications</string>
-    <string name="settings_section_privacy">Confidentialité</string>
-    <string name="settings_section_language">Langue</string>
     <string name="settings_display">Affichage</string>
     <string name="settings_colour_style_system">Système</string>
     <string name="settings_notifications">Notifications</string>

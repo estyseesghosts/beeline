@@ -2,7 +2,7 @@
 
 Status: current, partial coverage
 Owner: UI maintainers
-Last reviewed: 2026-10-10
+Last reviewed: 2026-10-12
 Stale when: A destination, layout policy, restoration rule, or accessibility requirement changes.
 
 Sources: `AGENTS.md`, `ui/`, Compose tests, and instrumented tests.
@@ -245,7 +245,7 @@ Physical edges never reverse with layout direction. The viewport remains full si
 
 ## Forced layout direction
 
-The Display settings page has one switch that forces the layout direction. The label names the
+The Appearance settings page has one switch that forces the layout direction. The label names the
 direction that turning the switch on produces, so it reads `Force RTL Layout` in a left-to-right
 device and `Force LTR Layout` in a right-to-left device. The label changes after the user switches.
 The switch is on when a direction is stored. Turning it off returns to the device direction.
@@ -810,10 +810,10 @@ Focus return to the card is not implemented.
 
 ## Related hashtags setting
 
-Settings, Display holds a switch named "Combine related hashtags". It is on by default. The value lives in `AppPreferences.combineRelatedHashtags`. A stored file without the key reads on.
+Settings, Timeline and media holds a switch named "Combine related hashtags". It is on by default. The value lives in `AppPreferences.combineRelatedHashtags`. A stored file without the key reads on.
 The app bundles a catalog of 74 hashtag groups in `app/src/main/assets/hashtag-catalog.json`. The app never reads the catalog from the network. Nobody has reviewed the catalog yet.
 `HashtagExpander` decides which hashtags merge into a search. Search and Photo Grid use it (see below).
-Sources: `domain/hashtags/`, `data/hashtags/HashtagCatalogRepository.kt`, `DisplaySettingsScreen.kt`, `HashtagExpanderTest`. Device visuals are unverified.
+Sources: `domain/hashtags/`, `data/hashtags/HashtagCatalogRepository.kt`, `TimelineMediaSettingsScreen.kt`, `HashtagExpanderTest`. Device visuals are unverified.
 
 ## Combined hashtag results
 
@@ -877,7 +877,7 @@ extension, HTTP status, exception class, duration and whether the server sent a 
 URL. A release build does not install the listener. On 2026-10-11 the log showed that a Photo Grid tile whose preview
 request fails stays empty: the tile has no loading state, no failed state and no retry (`docs/agents/tasks/infdev-03.md`, S2).
 
-- Autoplay is on by default. Settings, Display, Autoplay videos turns it off. Videos start muted.
+- Autoplay is on by default. Settings, Timeline and media, Autoplay videos turns it off. Videos start muted.
 - A video autoplays only when all of these hold: the setting is on, the post content is visible, the network is not
   metered, reduced motion is off, and the app is in the foreground. An unknown network counts as metered.
 - One video plays at a time. A tile starts at 60 percent visible and keeps playing down to 40 percent. The tile with the
@@ -1057,3 +1057,22 @@ width is measured and capped at 14 em, and recomputed when the profile resolves.
 copied text is the complete handle. The S4 height rule applies. Only post bodies pass mentions (`PostBodyText`); other text surfaces keep
 their text. Sources: `MentionProfileOwnerTest`, `InlineEmojiTextTest`. Not verified on a device: avatars and names on mstdn.ca and dvd.chat,
 the request count in a busy feed, the one-reflow limit with the network off, and right-to-left isolation of the label.
+
+## Settings pages
+
+The Settings main page is one flat list. Each row opens one page and shows a short summary. The page scrolls.
+
+| Page | Scope | Settings |
+| --- | --- | --- |
+| Appearance | Application | Theme (colour style, accent colour, background), Text (size, font), Screen and layout (60 Hz request, forced layout direction, navigation positions) |
+| Language | Application | Automatic translation and the application language |
+| Timeline and media | Application | Autoplay videos, Combine related hashtags |
+| Privacy | Application and account | Tracking parameters, content warnings, account privacy lists, posting defaults |
+| Notifications | Account | Alerts, categories and delivery for each account |
+
+The Appearance page keeps the route name `SettingsRoute.Display` and the file `DisplaySettingsScreen.kt`.
+A switch row toggles as one control (`SettingsSwitchRow`), so a screen reader reads the title, the summary and the state together.
+Section headings carry heading semantics.
+
+Sources: `ui/settings/SettingsScreen.kt`, `SettingsHost.kt`, `SettingsRoute.kt`, `SettingsComponents.kt`,
+`TimelineMediaSettingsScreen.kt`, `SettingsMainPageTest`, `SettingsDisplayTest`. No device check ran for these pages.

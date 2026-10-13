@@ -212,8 +212,8 @@ names in `FeedViewModel`, `AccountManager`, and the feed tests).
   Android has no public API that sets layout direction independently of the locale, so the forcing is
   Compose-level. `LocaleManager.applicationLocales` stays with `AppLocaleController` and is unchanged.
   `System` is the default for an absent or unknown stored key, so an upgrade never flips an existing
-  user. The Display item carries a headline only; a supporting summary would need a third string.
-  `DisplaySettingsScreen` owns its own scroll state. The page holds more items than fit a short
+  user. The layout direction row carries a headline only; a supporting summary would need a third string.
+  `DisplaySettingsScreen` is the Appearance page. It owns its own scroll state. The page holds more items than fit a short
   viewport, so without `verticalScroll` the trailing items are clipped and unreachable. The scroll
   state lives for the composition and resets when the screen leaves.
   Physical `absolutePadding` clearance sites keep following physical left/right edges and must not be

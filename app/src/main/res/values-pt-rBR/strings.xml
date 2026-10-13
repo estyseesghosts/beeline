@@ -134,9 +134,6 @@
     <string name="settings_muted_users">Usuários silenciados</string>
     <string name="settings_notifications">Notificações</string>
     <string name="settings_privacy">Privacidade</string>
-    <string name="settings_section_language">Idioma</string>
-    <string name="settings_section_notifications">Notificações</string>
-    <string name="settings_section_privacy">Privacidade</string>
     <string name="settings_title">Configurações</string>
     <string name="setup_next">Próximo</string>
     <string name="setup_server_placeholder">Insira o endereço do servidor</string>

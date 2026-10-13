@@ -9,6 +9,7 @@ sealed interface SettingsRoute {
     data class NotificationAccount(val accountId: AccountId) : SettingsRoute
     data object Privacy : SettingsRoute
     data object Language : SettingsRoute
+    data object TimelineMedia : SettingsRoute
     data object ContentWarnings : SettingsRoute
     data object Posting : SettingsRoute
     data object PrivacyAccounts : SettingsRoute

@@ -133,9 +133,6 @@
     <string name="settings_muted_users">已隐藏的用户</string>
     <string name="settings_notifications">通知</string>
     <string name="settings_privacy">隐私</string>
-    <string name="settings_section_language">语言</string>
-    <string name="settings_section_notifications">通知</string>
-    <string name="settings_section_privacy">隐私</string>
     <string name="settings_title">设置</string>
     <string name="setup_heart">&lt;3</string>
     <string name="setup_next">下一步</string>

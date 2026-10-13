@@ -23,6 +23,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -74,18 +77,25 @@ class SettingsDisplayTest {
     }
 
     @Test
-    fun settingsRootHasOnlyOneDisplayEntry() {
+    fun settingsRootHasOnlyOneAppearanceEntry() {
         compose.activity.setContent {
-            SettingsScreen(
-                preferences = AppPreferences(),
-                onDisplay = {},
-                onNotifications = {},
-                onPrivacy = {},
-                onLanguage = {},
-            )
+            SettingsScreen(preferences = AppPreferences(), onRoute = {})
         }
 
-        compose.onAllNodesWithText("Display").assertCountEquals(1)
+        compose.onAllNodesWithText("Appearance").assertCountEquals(1)
+        compose.onAllNodesWithText("Display").assertCountEquals(0)
+    }
+
+    @Test
+    fun appearanceGroupsItsSettingsUnderThreeHeadings() {
+        setDisplayContent(AppLayoutDirection.System, LayoutDirection.Ltr)
+
+        listOf("Theme", "Text", "Screen and layout").forEach { heading ->
+            compose.onNode(hasText(heading) and isHeading()).performScrollTo().assertIsDisplayed()
+        }
+        // Feed behavior belongs to the Timeline and media page.
+        compose.onAllNodesWithText("Autoplay videos").assertCountEquals(0)
+        compose.onAllNodesWithText("Combine related hashtags").assertCountEquals(0)
     }
 
     @Test
@@ -399,18 +409,15 @@ class SettingsDisplayTest {
         }
 
     /**
-     * The Display page has exactly three switches, and the layout direction item follows the refresh
-     * rate and related hashtags items. Radio buttons on the page are selectable, not toggleable, so this selects the
-     * layout direction switch alone.
+     * The layout direction row carries its own tag, so a new switch on the page cannot change which
+     * row this selects. The row itself is the toggleable node; radio buttons are selectable instead.
      */
     private fun layoutDirectionSwitch(): SemanticsNodeInteraction {
-        val switches = compose.onAllNodes(isToggleable())
-        // Request 60 Hz, combine related hashtags, autoplay videos, then layout direction.
-        switches.assertCountEquals(4)
+        val row = compose.onNode(hasTestTag("force_layout_direction") and isToggleable())
         // The item scrolls, so it can sit outside the viewport on a short screen. A click needs the
         // node on screen, so scroll to it first.
-        switches[3].performScrollTo()
-        return switches[3]
+        row.performScrollTo()
+        return row
     }
 
     @Test

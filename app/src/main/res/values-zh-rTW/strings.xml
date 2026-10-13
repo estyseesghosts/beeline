@@ -133,9 +133,6 @@
     <string name="settings_muted_users">已靜音使用者</string>
     <string name="settings_notifications">通知</string>
     <string name="settings_privacy">隱私</string>
-    <string name="settings_section_language">語言</string>
-    <string name="settings_section_notifications">通知</string>
-    <string name="settings_section_privacy">隱私</string>
     <string name="settings_title">設定</string>
     <string name="setup_heart">&lt;3</string>
     <string name="setup_next">下一步</string>

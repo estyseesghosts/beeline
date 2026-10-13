@@ -85,9 +85,6 @@
     <string name="timeline_home">ホーム</string>
     <string name="timeline_local">ローカル</string>
     <string name="settings_title">設定</string>
-    <string name="settings_section_notifications">通知</string>
-    <string name="settings_section_privacy">プライバシー</string>
-    <string name="settings_section_language">言語</string>
     <string name="settings_display">表示</string>
     <string name="settings_colour_style_system">システム</string>
     <string name="settings_notifications">通知</string>

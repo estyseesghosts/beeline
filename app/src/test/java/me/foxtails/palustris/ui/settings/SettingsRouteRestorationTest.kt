@@ -30,6 +30,7 @@ class SettingsRouteRestorationTest {
             SettingsRoute.Notifications,
             SettingsRoute.Privacy,
             SettingsRoute.Language,
+            SettingsRoute.TimelineMedia,
             SettingsRoute.ContentWarnings,
             SettingsRoute.Posting,
             SettingsRoute.PrivacyAccounts,

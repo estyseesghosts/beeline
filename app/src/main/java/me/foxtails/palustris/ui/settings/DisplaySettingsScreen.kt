@@ -17,7 +17,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -44,6 +43,10 @@ import me.foxtails.palustris.ui.layout.deviceLayoutDirection
 import me.foxtails.palustris.ui.layout.forcingOppositeOf
 import me.foxtails.palustris.ui.theme.appPaletteColor
 
+/**
+ * The Appearance page. It groups its settings under three headings: Theme, Text, and Screen and layout.
+ * The route and this file keep the name Display.
+ */
 @Composable
 fun DisplaySettingsScreen(
     preferences: AppPreferences,
@@ -59,12 +62,7 @@ fun DisplaySettingsScreen(
     onTabletNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
     compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
     onCompactWideNavigationAnchor: (AppNavigationAnchor) -> Unit = {},
-    onCombineRelatedHashtags: (Boolean) -> Unit = {},
-    onAutoplayVideos: (Boolean) -> Unit = {},
 ) {
-    // The page sits below the composition root, where LocalLayoutDirection is the forced direction.
-    // The device direction names what turning the switch on produces, so it is the base here.
-    val baseDirection = deviceLayoutDirection()
     // The page holds more items than fit a short viewport, so it scrolls. Without this the last
     // items are clipped and cannot be reached. The scroll state is local to this screen and is
     // released when the composition leaves.
@@ -75,116 +73,136 @@ fun DisplaySettingsScreen(
             .verticalScroll(scrollState)
             .padding(bottom = 24.dp),
     ) {
-        ChoiceGroup(
-            stringResource(R.string.settings_colour_style),
-            AppColorScheme.entries,
-            preferences.colorScheme,
-            onColorScheme,
-        ) { scheme ->
-            stringResource(
-                when (scheme) {
-                    AppColorScheme.System -> R.string.settings_colour_style_system
-                    AppColorScheme.SystemMonochrome -> R.string.settings_colour_style_system_monochrome
-                    AppColorScheme.Palette -> R.string.settings_colour_style_palette
-                },
+        SettingsSection(stringResource(R.string.settings_appearance_theme)) {
+            ThemeChoices(preferences, onColorScheme, onColorPalette, onBackground)
+        }
+        HorizontalDivider()
+        SettingsSection(stringResource(R.string.settings_appearance_text)) {
+            TextChoices(preferences, onTextSize, onFont)
+        }
+        HorizontalDivider()
+        SettingsSection(stringResource(R.string.settings_appearance_screen)) {
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_request_60hz),
+                summary = stringResource(R.string.settings_request_60hz_summary),
+                checked = preferences.request60Hz,
+                onCheckedChange = onRequest60Hz,
+                testTag = "request_60hz",
+            )
+            LayoutDirectionSwitch(layoutDirection, onLayoutDirection)
+            NavigationAnchorChoiceGroup(
+                title = stringResource(R.string.settings_tablet_navigation_anchor),
+                tagPrefix = "tablet_navigation_anchor",
+                selected = tabletNavigationAnchor,
+                onSelected = onTabletNavigationAnchor,
+            )
+            NavigationAnchorChoiceGroup(
+                title = stringResource(R.string.settings_compact_wide_navigation_anchor),
+                tagPrefix = "compact_wide_navigation_anchor",
+                selected = compactWideNavigationAnchor,
+                onSelected = onCompactWideNavigationAnchor,
             )
         }
-        Text(stringResource(R.string.settings_colour_palette), Modifier.padding(horizontal = 20.dp, vertical = 12.dp), style = MaterialTheme.typography.titleMedium)
-        PaletteGrid(
-            selected = preferences.colorPalette.takeIf { preferences.colorScheme == AppColorScheme.Palette },
-            onSelected = { palette ->
-                onColorScheme(AppColorScheme.Palette)
-                onColorPalette(palette)
+    }
+}
+
+/** Colour style, accent colour and background. An accent colour choice also selects the palette style. */
+@Composable
+private fun ThemeChoices(
+    preferences: AppPreferences,
+    onColorScheme: (AppColorScheme) -> Unit,
+    onColorPalette: (AppColorPalette) -> Unit,
+    onBackground: (AppBackground) -> Unit,
+) {
+    ChoiceGroup(
+        stringResource(R.string.settings_colour_style),
+        AppColorScheme.entries,
+        preferences.colorScheme,
+        onColorScheme,
+    ) { scheme ->
+        stringResource(
+            when (scheme) {
+                AppColorScheme.System -> R.string.settings_colour_style_system
+                AppColorScheme.SystemMonochrome -> R.string.settings_colour_style_system_monochrome
+                AppColorScheme.Palette -> R.string.settings_colour_style_palette
             },
-        )
-        HorizontalDivider()
-        ChoiceGroup(stringResource(R.string.settings_background), AppBackground.entries, preferences.background, onBackground) { background ->
-            stringResource(
-                when (background) {
-                    AppBackground.Default -> R.string.settings_background_default
-                    AppBackground.Dark -> R.string.settings_background_dark
-                    AppBackground.PureBlack -> R.string.settings_background_pure_black
-                },
-            )
-        }
-        Text(stringResource(R.string.settings_pure_black_warning), Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
-        HorizontalDivider()
-        ChoiceGroup(stringResource(R.string.settings_text_size), AppTextSize.entries, preferences.textSize, onTextSize) { textSize ->
-            appTextSizeLabel(textSize)
-        }
-        HorizontalDivider()
-        ChoiceGroup(stringResource(R.string.settings_font), AppFont.entries, preferences.font, onFont) { font ->
-            stringResource(
-                when (font) {
-                    AppFont.Device -> R.string.settings_display_device
-                    AppFont.Serif -> R.string.settings_font_serif
-                    AppFont.OpenDyslexic -> R.string.settings_font_open_dyslexic
-                },
-            )
-        }
-        HorizontalDivider()
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_request_60hz)) },
-            supportingContent = { Text(stringResource(R.string.settings_request_60hz_summary)) },
-            trailingContent = { Switch(checked = preferences.request60Hz, onCheckedChange = onRequest60Hz) },
-        )
-        ListItem(
-            modifier = Modifier.testTag("combine_related_hashtags"),
-            headlineContent = { Text(stringResource(R.string.settings_combine_related_hashtags)) },
-            supportingContent = { Text(stringResource(R.string.settings_combine_related_hashtags_summary)) },
-            trailingContent = {
-                Switch(checked = preferences.combineRelatedHashtags, onCheckedChange = onCombineRelatedHashtags)
-            },
-        )
-        ListItem(
-            modifier = Modifier.testTag("autoplay_videos"),
-            headlineContent = { Text(stringResource(R.string.settings_autoplay_videos)) },
-            supportingContent = { Text(stringResource(R.string.settings_autoplay_videos_summary)) },
-            trailingContent = { Switch(checked = preferences.autoplayVideos, onCheckedChange = onAutoplayVideos) },
-        )
-        ListItem(
-            // The headline carries no supporting summary, because a summary needs a third string.
-            // The label always names the direction that turning the switch on produces, so it
-            // changes after the user switches.
-            headlineContent = {
-                Text(
-                    stringResource(
-                        if (baseDirection == LayoutDirection.Rtl) {
-                            R.string.settings_force_layout_direction_ltr
-                        } else {
-                            R.string.settings_force_layout_direction_rtl
-                        },
-                    ),
-                )
-            },
-            trailingContent = {
-                Switch(
-                    checked = layoutDirection != AppLayoutDirection.System,
-                    onCheckedChange = { enabled ->
-                        onLayoutDirection(
-                            if (enabled) {
-                                layoutDirection.forcingOppositeOf(baseDirection)
-                            } else {
-                                AppLayoutDirection.System
-                            },
-                        )
-                    },
-                )
-            },
-        )
-        NavigationAnchorChoiceGroup(
-            title = stringResource(R.string.settings_tablet_navigation_anchor),
-            tagPrefix = "tablet_navigation_anchor",
-            selected = tabletNavigationAnchor,
-            onSelected = onTabletNavigationAnchor,
-        )
-        NavigationAnchorChoiceGroup(
-            title = stringResource(R.string.settings_compact_wide_navigation_anchor),
-            tagPrefix = "compact_wide_navigation_anchor",
-            selected = compactWideNavigationAnchor,
-            onSelected = onCompactWideNavigationAnchor,
         )
     }
+    Text(stringResource(R.string.settings_colour_palette), Modifier.padding(horizontal = 20.dp, vertical = 12.dp))
+    PaletteGrid(
+        selected = preferences.colorPalette.takeIf { preferences.colorScheme == AppColorScheme.Palette },
+        onSelected = { palette ->
+            onColorScheme(AppColorScheme.Palette)
+            onColorPalette(palette)
+        },
+    )
+    ChoiceGroup(stringResource(R.string.settings_background), AppBackground.entries, preferences.background, onBackground) { background ->
+        stringResource(
+            when (background) {
+                AppBackground.Default -> R.string.settings_background_default
+                AppBackground.Dark -> R.string.settings_background_dark
+                AppBackground.PureBlack -> R.string.settings_background_pure_black
+            },
+        )
+    }
+    Text(
+        stringResource(R.string.settings_pure_black_warning),
+        Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun TextChoices(
+    preferences: AppPreferences,
+    onTextSize: (AppTextSize) -> Unit,
+    onFont: (AppFont) -> Unit,
+) {
+    ChoiceGroup(stringResource(R.string.settings_text_size), AppTextSize.entries, preferences.textSize, onTextSize) { textSize ->
+        appTextSizeLabel(textSize)
+    }
+    ChoiceGroup(stringResource(R.string.settings_font), AppFont.entries, preferences.font, onFont) { font ->
+        stringResource(
+            when (font) {
+                AppFont.Device -> R.string.settings_display_device
+                AppFont.Serif -> R.string.settings_font_serif
+                AppFont.OpenDyslexic -> R.string.settings_font_open_dyslexic
+            },
+        )
+    }
+}
+
+/**
+ * The switch that forces the layout direction. The row has no summary, because a summary needs a third
+ * string. The label always names the direction that turning the switch on produces, so it stays the same
+ * after the user switches.
+ */
+@Composable
+private fun LayoutDirectionSwitch(
+    layoutDirection: AppLayoutDirection,
+    onLayoutDirection: (AppLayoutDirection) -> Unit,
+) {
+    // The page sits below the composition root, where LocalLayoutDirection is the forced direction.
+    // The device direction names what turning the switch on produces, so it is the base here.
+    val baseDirection = deviceLayoutDirection()
+    SettingsSwitchRow(
+        title = stringResource(
+            if (baseDirection == LayoutDirection.Rtl) {
+                R.string.settings_force_layout_direction_ltr
+            } else {
+                R.string.settings_force_layout_direction_rtl
+            },
+        ),
+        summary = null,
+        checked = layoutDirection != AppLayoutDirection.System,
+        onCheckedChange = { enabled ->
+            onLayoutDirection(
+                if (enabled) layoutDirection.forcingOppositeOf(baseDirection) else AppLayoutDirection.System,
+            )
+        },
+        testTag = "force_layout_direction",
+    )
 }
 
 @Composable

@@ -1,3 +1,5 @@
+The Settings reorganization is in progress. Read `docs/agents/tasks/settings-reorganization.md`. S1 (flat main page, Appearance sections, Timeline and media page) follows `08f108c3`. S2 (disable blur effects) is next. No device check ran. New strings are English only.
+
 Infdev 04 (`docs/04_infdev.md`) is in progress. Read `docs/agents/tasks/infdev-04.md`. Slices: S1 blur band, S2 shadows and opaque pill, S3 edge veil, S4 composer attachment menu. S1 is `5ef55e75`, S2 `b71b5daa`, S3 `bd5f8f9d`; S4 (attachment menu) follows. The architecture audit exits 1 on findings that predate this work; do not edit the baseline.
 
 Infdev 03 (`docs/03_infdev.md`) is complete in source. Read `docs/agents/tasks/infdev-03.md`. S1 `4b9871d6`, S2 `f5e477ce`, S3 `15828318`, S4 `4c40a1a9`, S5 `8850e47a`, S6 (Photo Grid tile states and one retry) follow `801044e6`. Device checks ran on `emulator-5554` only. Open: transparent bars on a phone and the API 29 emulator, dark themes, 600/840 dp layouts, font scale 2.0, live translation, dvd.chat after S6, and the SM-G986W frame check. The Taskbar of the AVD hides the navigation bar rendering.

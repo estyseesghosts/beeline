@@ -27,6 +27,7 @@ internal fun encodeSettingsRoute(route: SettingsRoute): List<String> = when (rou
     SettingsRoute.Notifications -> listOf("Notifications")
     SettingsRoute.Privacy -> listOf("Privacy")
     SettingsRoute.Language -> listOf("Language")
+    SettingsRoute.TimelineMedia -> listOf("TimelineMedia")
     SettingsRoute.ContentWarnings -> listOf("ContentWarnings")
     SettingsRoute.Posting -> listOf("Posting")
     SettingsRoute.PrivacyAccounts -> listOf("PrivacyAccounts")
@@ -53,6 +54,7 @@ internal fun decodeSettingsRoute(values: List<*>): SettingsRoute? {
         "Notifications" -> SettingsRoute.Notifications
         "Privacy" -> SettingsRoute.Privacy
         "Language" -> SettingsRoute.Language
+        "TimelineMedia" -> SettingsRoute.TimelineMedia
         "ContentWarnings" -> SettingsRoute.ContentWarnings
         "Posting" -> SettingsRoute.Posting
         "PrivacyAccounts" -> SettingsRoute.PrivacyAccounts

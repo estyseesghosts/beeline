@@ -78,8 +78,6 @@
     <string name="settings_moderation_unmute_title">取消靜音帳號？</string>
     <string name="settings_muted_users">靜音名單</string>
     <string name="settings_notifications">通知</string>
-    <string name="settings_section_language">語言</string>
-    <string name="settings_section_notifications">通知</string>
     <string name="settings_title">設定</string>
     <string name="setup_heart">&lt;3</string>
     <string name="setup_server_placeholder">輸入伺服器</string>

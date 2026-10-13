@@ -157,9 +157,6 @@
     <string name="settings_muted_users">Usuarios silenciados</string>
     <string name="settings_notifications">Notificaciones</string>
     <string name="settings_privacy">Privacidad</string>
-    <string name="settings_section_language">Idioma</string>
-    <string name="settings_section_notifications">Notificaciones</string>
-    <string name="settings_section_privacy">Privacidad</string>
     <string name="settings_title">Ajustes</string>
     <string name="setup_heart">&lt;3</string>
     <string name="setup_next">Siguiente</string>

@@ -98,6 +98,7 @@ fun SettingsHost(
         is SettingsRoute.NotificationAccount -> stringResource(R.string.settings_notifications)
         SettingsRoute.Privacy -> stringResource(R.string.settings_privacy)
         SettingsRoute.Language -> stringResource(R.string.settings_language)
+        SettingsRoute.TimelineMedia -> stringResource(R.string.settings_timeline_media)
         SettingsRoute.ContentWarnings -> stringResource(R.string.settings_content_warnings)
         SettingsRoute.Posting -> stringResource(R.string.settings_posting)
         SettingsRoute.PrivacyAccounts -> stringResource(R.string.settings_choose_account)
@@ -143,13 +144,7 @@ fun SettingsHost(
                 }
             }
             when (route) {
-                SettingsRoute.Main -> SettingsScreen(
-                    state.preferences,
-                    onDisplay = { onRoute(SettingsRoute.Display) },
-                    onNotifications = { onRoute(SettingsRoute.Notifications) },
-                    onPrivacy = { onRoute(SettingsRoute.Privacy) },
-                    onLanguage = { onRoute(SettingsRoute.Language) },
-                )
+                SettingsRoute.Main -> SettingsScreen(state.preferences, onRoute)
                 SettingsRoute.Display -> DisplaySettingsScreen(
                     preferences = state.preferences,
                     onColorScheme = onColorScheme,
@@ -164,8 +159,11 @@ fun SettingsHost(
                     onTabletNavigationAnchor = onTabletNavigationAnchor,
                     compactWideNavigationAnchor = state.preferences.compactWideNavigationAnchor,
                     onCompactWideNavigationAnchor = onCompactWideNavigationAnchor,
-                    onCombineRelatedHashtags = onCombineRelatedHashtags,
+                )
+                SettingsRoute.TimelineMedia -> TimelineMediaSettingsScreen(
+                    preferences = state.preferences,
                     onAutoplayVideos = onAutoplayVideos,
+                    onCombineRelatedHashtags = onCombineRelatedHashtags,
                 )
                 SettingsRoute.Language -> LanguageSettingsPage(
                     selected = state.preferences.language,
