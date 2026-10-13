@@ -10,6 +10,7 @@ import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.palustrisMotionScheme
 import me.foxtails.palustris.ui.motion.rememberPalustrisHaptics
 import me.foxtails.palustris.ui.theme.appTypography
+import me.foxtails.palustris.ui.theme.effectiveAppFont
 import me.foxtails.palustris.ui.theme.resolvedAppColorScheme
 
 @Composable
@@ -26,7 +27,7 @@ fun PalustrisTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = appTypography(preferences.font, preferences.textSize),
+            typography = appTypography(effectiveAppFont(preferences), preferences.textSize),
             content = content,
         )
     }

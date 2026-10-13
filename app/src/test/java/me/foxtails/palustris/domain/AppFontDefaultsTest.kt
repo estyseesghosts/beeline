@@ -41,4 +41,38 @@ class AppFontDefaultsTest {
             assertEquals(AppFont.Device, defaultFontForLanguage(language))
         }
     }
+
+    @Test
+    fun noFontChoiceFollowsTheDeviceLanguageUnderSystemDefault() {
+        val preferences = AppPreferences()
+        assertEquals(AppFont.Inter, preferences.effectiveFont(AppLanguage.English))
+        assertEquals(AppFont.Sarala, preferences.effectiveFont(AppLanguage.Hindi))
+        assertEquals(AppFont.KiwiMaru, preferences.effectiveFont(AppLanguage.Japanese))
+        assertEquals(AppFont.ZcoolKuaiLe, preferences.effectiveFont(AppLanguage.ChineseMainland))
+        assertEquals(AppFont.ChocolateClassicalSans, preferences.effectiveFont(AppLanguage.ChineseTaiwan))
+        assertEquals(AppFont.ChironHeiHk, preferences.effectiveFont(AppLanguage.CantoneseHongKong))
+        // A device language without a bundled default keeps the system font.
+        assertEquals(AppFont.Device, preferences.effectiveFont(AppLanguage.Korean))
+        assertEquals(AppFont.Device, preferences.effectiveFont(AppLanguage.SystemDefault))
+    }
+
+    @Test
+    fun noFontChoiceFollowsAStoredLanguageOverTheDeviceLanguage() {
+        val japanese = AppPreferences(language = AppLanguage.Japanese)
+        assertEquals(AppFont.KiwiMaru, japanese.effectiveFont(AppLanguage.English))
+
+        // A stored language without a bundled default does not fall through to the device language.
+        val korean = AppPreferences(language = AppLanguage.Korean)
+        assertEquals(AppFont.Device, korean.effectiveFont(AppLanguage.English))
+    }
+
+    @Test
+    fun anExplicitFontChoiceWinsOverEveryLanguageDefault() {
+        val openDyslexic = AppPreferences(font = AppFont.OpenDyslexic, language = AppLanguage.Japanese)
+        assertEquals(AppFont.OpenDyslexic, openDyslexic.effectiveFont(AppLanguage.English))
+
+        // An explicit Device is a choice. It keeps the system font where the language has a default.
+        val device = AppPreferences(font = AppFont.Device)
+        assertEquals(AppFont.Device, device.effectiveFont(AppLanguage.English))
+    }
 }

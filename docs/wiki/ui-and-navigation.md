@@ -1081,6 +1081,13 @@ The Settings main page is one flat list. Each row opens one page and shows a sho
 | Notifications | Account | Alerts, categories and delivery for each account |
 | About | Application | Product name, version, license, and the included open-source components (read only) |
 
+The font has a default for each language. Latin-script languages use Inter. Mainland Chinese uses ZCOOL KuaiLe, Taiwanese Mandarin
+uses Chocolate Classical Sans, Hong Kong Cantonese uses Chiron Hei HK, Japanese uses Kiwi Maru, and Hindi uses Sarala. Other
+languages use the system font. `AppPreferences.font` stays null until the user selects a font. Until then `effectiveFont`
+(`domain/EffectiveFont.kt`) gives the default of the stored language, or of the device language while the language is System default.
+The theme (`PalustrisTheme`), the Appearance page, and the setup screens all show that font. A selected font, including Device
+default, replaces the language default in every language. Device rendering of the bundled fonts is unverified.
+
 The Posting page edits the active account and names it at the top. It does not select another account.
 Image compression shows only when the server reports client compression. The favourite reaction shows only when
 `primaryFavourite.mode` is `Reaction` (a Misskey-family server). It stores `PostPreferences.favouriteEmoji`, the emoji that the

@@ -10,8 +10,11 @@ import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppNavigationAnchor
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -143,14 +146,14 @@ class AppPreferencesRepositoryTest {
     }
 
     @Test
-    fun fontChoiceDefaultsToDeviceAndRoundTripsSans() = runBlocking {
+    fun fontChoiceDefaultsToNoChoiceAndRoundTripsSans() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assertEquals(AppFont.Device, FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.font)
+        assertNull(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.font)
 
-        // A file written by an earlier build has no key and keeps the device default.
+        // A file written by an earlier build has no key. No choice follows the language default.
         file.writeText("""{"colorScheme":"Palette"}""")
         val legacy = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
-        assertEquals(AppFont.Device, legacy.font)
+        assertNull(legacy.font)
 
         FileAppPreferencesRepository(context).update { it.copy(font = AppFont.Sans) }
         val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
@@ -178,6 +181,39 @@ class AppPreferencesRepositoryTest {
             val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
             assertEquals(font, restored.font)
         }
+    }
+
+    @Test
+    fun aVersionOneDeviceFontIsNoChoiceAndAnExplicitDeviceRoundTrips() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        file.parentFile?.mkdirs()
+
+        // Version 1 wrote Device on every save, also for a font the user never selected.
+        file.writeText("""{"version":1,"font":"Device","colorScheme":"Palette"}""")
+        val versionOne = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertNull(versionOne.font)
+        assertEquals(AppColorScheme.Palette, versionOne.colorScheme)
+
+        file.writeText("""{"font":"Device"}""")
+        assertNull(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.font)
+
+        // Every other version 1 name is an explicit choice.
+        file.writeText("""{"version":1,"font":"Inter"}""")
+        assertEquals(AppFont.Inter, FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.font)
+
+        // An unrelated save keeps no choice and writes no font key.
+        file.writeText("""{"version":1,"font":"Device"}""")
+        FileAppPreferencesRepository(context).update { it.copy(request60Hz = true) }
+        assertFalse(JSONObject(file.readText()).has("font"))
+        assertNull(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.font)
+
+        // The user selects Device default. The current version stores it as an explicit choice.
+        FileAppPreferencesRepository(context).update { it.copy(font = AppFont.Device) }
+        assertEquals(AppFont.Device, FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.font)
+
+        // An unknown stored name is no choice.
+        file.writeText("""{"version":2,"font":"Papyrus"}""")
+        assertNull(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.font)
     }
 
     @Test

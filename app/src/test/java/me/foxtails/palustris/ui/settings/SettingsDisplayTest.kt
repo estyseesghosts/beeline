@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.os.LocaleList
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -37,6 +38,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.core.app.ApplicationProvider
 import java.io.File
@@ -47,15 +49,18 @@ import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
+import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferences
 import me.foxtails.palustris.domain.AppPreferencesState
+import me.foxtails.palustris.ui.PalustrisTheme
 import me.foxtails.palustris.ui.layout.resolveAgainst
 import me.foxtails.palustris.ui.settings.DisplaySettingsScreen
 import me.foxtails.palustris.ui.settings.SettingsHost
 import me.foxtails.palustris.ui.settings.SettingsRoute
 import me.foxtails.palustris.ui.settings.SettingsScreen
+import me.foxtails.palustris.ui.theme.appFontFamily
 import me.foxtails.palustris.ui.theme.resolvedAppColorScheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -275,6 +280,65 @@ class SettingsDisplayTest {
     }
 
     @Test
+    fun theSelectedFontIsTheLanguageDefaultUntilTheUserChooses() {
+        // The group order follows AppFont.entries: 0 Device default, 4 Inter, 8 Kiwi Maru.
+        val fontRadios = compose.onAllNodes(hasAnyAncestor(hasTestTag("font_choices")) and isSelectable())
+
+        setFontContent(AppPreferences(), deviceLocale = "en-US")
+        fontRadios[4].performScrollTo().assertIsSelected()
+        fontRadios[0].assertIsNotSelected()
+
+        setFontContent(AppPreferences(), deviceLocale = "ja-JP")
+        fontRadios[8].performScrollTo().assertIsSelected()
+        fontRadios[4].assertIsNotSelected()
+
+        // A stored language wins over the device locale.
+        setFontContent(AppPreferences(language = AppLanguage.Japanese), deviceLocale = "en-US")
+        fontRadios[8].performScrollTo().assertIsSelected()
+
+        // A device language without a bundled default keeps Device default.
+        setFontContent(AppPreferences(), deviceLocale = "ko-KR")
+        fontRadios[0].performScrollTo().assertIsSelected()
+
+        // An explicit Device default is a choice. The language default does not replace it.
+        setFontContent(AppPreferences(font = AppFont.Device), deviceLocale = "en-US")
+        fontRadios[0].performScrollTo().assertIsSelected()
+        fontRadios[4].assertIsNotSelected()
+
+        setFontContent(AppPreferences(font = AppFont.OpenDyslexic), deviceLocale = "ja-JP")
+        fontRadios[3].performScrollTo().assertIsSelected()
+        fontRadios[8].assertIsNotSelected()
+    }
+
+    @Test
+    fun theThemeRendersTheFontThatTheAppearancePageSelects() {
+        var family: FontFamily? = null
+        fun render(preferences: AppPreferences, deviceLocale: String) {
+            compose.activity.setContent {
+                CompositionLocalProvider(LocalConfiguration provides configuration(deviceLocale)) {
+                    PalustrisTheme(preferences) { family = MaterialTheme.typography.bodyLarge.fontFamily }
+                }
+            }
+            compose.waitForIdle()
+        }
+
+        render(AppPreferences(), "en-US")
+        assertEquals(appFontFamily(AppFont.Inter), family)
+
+        render(AppPreferences(), "hi-IN")
+        assertEquals(appFontFamily(AppFont.Sarala), family)
+
+        render(AppPreferences(), "zh-Hans-CN")
+        assertEquals(appFontFamily(AppFont.ZcoolKuaiLe), family)
+
+        render(AppPreferences(language = AppLanguage.ChineseTaiwan), "en-US")
+        assertEquals(appFontFamily(AppFont.ChocolateClassicalSans), family)
+
+        render(AppPreferences(font = AppFont.Device), "en-US")
+        assertEquals(FontFamily.Default, family)
+    }
+
+    @Test
     fun filePreferencesRoundTripPaletteAndMigrateLegacyScheme() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val repository = FileAppPreferencesRepository(context)
@@ -451,6 +515,23 @@ class SettingsDisplayTest {
         }
     }
 
+    /** Renders the Display page for stored preferences over a device locale. */
+    private fun setFontContent(preferences: AppPreferences, deviceLocale: String) {
+        compose.activity.setContent {
+            CompositionLocalProvider(LocalConfiguration provides configuration(deviceLocale)) {
+                DisplaySettingsScreen(
+                    preferences = preferences,
+                    onColorScheme = {},
+                    onColorPalette = {},
+                    onBackground = {},
+                    onTextSize = {},
+                    onFont = {},
+                    onRequest60Hz = {},
+                )
+            }
+        }
+    }
+
     /**
      * Renders the Display page over a device direction, with the stored value owned by the test so
      * that a switch press can be observed.
@@ -498,6 +579,12 @@ class SettingsDisplayTest {
             setLocales(
                 LocaleList.forLanguageTags(if (direction == LayoutDirection.Rtl) "ar-SA" else "en-US"),
             )
+        }
+
+    /** A configuration whose first locale is [deviceLocale]. */
+    private fun configuration(deviceLocale: String): Configuration =
+        Configuration(compose.activity.resources.configuration).apply {
+            setLocales(LocaleList.forLanguageTags(deviceLocale))
         }
 
     /**

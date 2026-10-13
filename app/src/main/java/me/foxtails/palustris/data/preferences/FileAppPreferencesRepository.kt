@@ -104,7 +104,7 @@ class FileAppPreferencesRepository(
             },
             background = enumOrDefault(json, "background", AppBackground.Default),
             textSize = enumOrDefault(json, "textSize", AppTextSize.Device),
-            font = enumOrDefault(json, "font", AppFont.Device),
+            font = storedFontChoice(json),
             request60Hz = json.optBoolean("request60Hz", false),
             // A missing key reads false, so a file from an earlier build keeps its blur.
             disableBlurEffects = json.optBoolean("disableBlurEffects", true),
@@ -133,7 +133,8 @@ class FileAppPreferencesRepository(
             .put("colorPalette", preferences.colorPalette.name)
             .put("background", preferences.background.name)
             .put("textSize", preferences.textSize.name)
-            .put("font", preferences.font.name)
+            // No choice writes no key, so the font keeps following the language default.
+            .putOpt("font", preferences.font?.name)
             .put("request60Hz", preferences.request60Hz)
             .put("disableBlurEffects", preferences.disableBlurEffects)
             .put("language", preferences.language.name)
@@ -159,8 +160,23 @@ class FileAppPreferencesRepository(
     }
 
     private companion object {
-        const val VERSION = 1
+        const val VERSION = 2
     }
+}
+
+/** The first file version in which a stored `Device` font is an explicit choice. */
+private const val EXPLICIT_DEVICE_FONT_VERSION = 2
+
+/**
+ * The stored font choice, or null for no choice. A missing key or an unknown name is no choice.
+ * Version 1 wrote `Device` on every save, also for a font the user never selected. Therefore a
+ * version 1 `Device` is no choice, and the font follows the language default. Every other stored
+ * name is an explicit choice in each version.
+ */
+private fun storedFontChoice(json: JSONObject): AppFont? {
+    val font = runCatching { enumValueOf<AppFont>(json.optString("font")) }.getOrNull() ?: return null
+    val explicitDevice = json.optInt("version", 1) >= EXPLICIT_DEVICE_FONT_VERSION
+    return font.takeUnless { it == AppFont.Device && !explicitDevice }
 }
 
 /** Deterministic repository for previews and constructor-based tests. */

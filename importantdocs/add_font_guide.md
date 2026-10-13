@@ -5,7 +5,7 @@ Owner: Maintainers.
 Last reviewed: 2026-10-13.
 Stale when: The font preference contract, the Appearance page, or the font license policy changes.
 
-Authority: `app/src/main/java/me/foxtails/palustris/domain/AppPreferences.kt`, `app/src/main/java/me/foxtails/palustris/ui/theme/AppTypography.kt`, `app/src/main/java/me/foxtails/palustris/ui/settings/DisplaySettingsScreen.kt`, `app/src/main/res/values/strings.xml`, and `app/src/main/java/me/foxtails/palustris/ui/settings/AboutSettingsScreen.kt`.
+Authority: `app/src/main/java/me/foxtails/palustris/domain/AppPreferences.kt`, `app/src/main/java/me/foxtails/palustris/domain/EffectiveFont.kt`, `app/src/main/java/me/foxtails/palustris/ui/theme/AppTypography.kt`, `app/src/main/java/me/foxtails/palustris/ui/settings/DisplaySettingsScreen.kt`, `app/src/main/res/values/strings.xml`, and `app/src/main/java/me/foxtails/palustris/ui/settings/AboutSettingsScreen.kt`.
 Source example: commit `1b8ead69` added Device sans and the bundled OpenDyslexic font.
 
 ## Overview
@@ -52,8 +52,18 @@ Follow each step in order.
 - The UI order follows `AppFont.entries`. Place the entry where it must appear.
 - Never rename an existing entry. Stored files persist the enum name.
 - Never remove an existing entry without a migration.
-- `FileAppPreferencesRepository` reads the stored name with `enumOrDefault`. Unknown names fall back to `Device`.
+- `FileAppPreferencesRepository` reads the stored name with `storedFontChoice`. A missing key or an unknown name is no choice.
 - A renamed entry orphans existing users. Their stored name no longer matches.
+
+## Default Font
+
+- `AppPreferences.font` is null until the user selects a font. Null means no choice.
+- Without a choice, `effectiveFont` in `domain/EffectiveFont.kt` returns the default of the language.
+- `defaultFontForLanguage` in `domain/AppPreferences.kt` maps each language to its default.
+- The stored language decides the default. The device language decides it while the stored language is `SystemDefault`.
+- The theme, the Appearance page, and the setup screens all use this default.
+- An explicit `Device` is a choice. It keeps the system font in every language.
+- To make a new font the default of a language, change `defaultFontForLanguage` and extend `AppFontDefaultsTest`.
 
 ## Label Strings
 
@@ -78,7 +88,7 @@ Follow each step in order.
 
 - Map the new entry in `appTypography` in `ui/theme/AppTypography.kt`.
 - Define a private `FontFamily` with `Font(R.font.name, weight = FontWeight.Normal)` and Bold entries.
-- `SetupTypography.kt` shows the same pattern with `R.font.noto_sans`.
+- `OpenDyslexicFont` in the same file shows the pattern.
 - `Font()` construction needs no Android context. Unit tests can assert the mapping directly.
 - Missing weights fall back to platform synthesis. This is acceptable for italic when only Regular and Bold ship.
 - `unitTests.isIncludeAndroidResources` is true, so `R.font` resolves in JVM tests.
@@ -95,7 +105,7 @@ Extend three suites. Add cases only. Do not weaken existing cases.
 
 - `AppTypographyTest`: assert the new entry maps to its expected family. Assert a bundled family differs from `Default`, `Serif`, and `SansSerif`. The existing loop over `AppFont.entries` covers the new entry automatically.
 - `SettingsDisplayTest`: add the new label to the displayed-labels list. Select the radio through the `font_choices` container. Assert the reported selection.
-- `AppPreferencesRepositoryTest`: round-trip the new value through `FileAppPreferencesRepository`. Assert old stored names still load. Assert a file without the key keeps `Device`.
+- `AppPreferencesRepositoryTest`: round-trip the new value through `FileAppPreferencesRepository`. Assert old stored names still load. Assert a file without the key loads as no choice.
 
 ## Test Selection Pitfalls
 

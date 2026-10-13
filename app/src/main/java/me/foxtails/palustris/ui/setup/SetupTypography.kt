@@ -17,8 +17,8 @@ import me.foxtails.palustris.ui.theme.appFontFamily
 
 /**
  * The first-launch typeface. It follows the per-language display default, so setup text renders
- * in the same font the language uses after sign-in. Languages without a bundled default use the
- * system font, whose Noto family covers every script.
+ * in the font the application uses after sign-in when the user has made no font choice.
+ * Languages without a bundled default use the system font, whose Noto family covers every script.
  */
 internal fun setupFontFamily(language: AppLanguage): FontFamily =
     when (val default = defaultFontForLanguage(language)) {
@@ -29,16 +29,11 @@ internal fun setupFontFamily(language: AppLanguage): FontFamily =
 /**
  * The effective application language for first-launch screens, read from the current
  * configuration locale. The activity already applies the stored or platform language to its base
- * context, so this matches the language the application actually renders. A region-qualified
- * device locale (en-US, ja-JP) falls back to its bare language.
+ * context, so this matches the language the application actually renders.
+ * [AppLocaleController.languageForLocale] owns the fallback for qualified device locales.
  */
-internal fun setupLanguage(context: Context): AppLanguage {
-    val tag = context.resources.configuration.getLocales().get(0)?.toLanguageTag()
-    val exact = AppLocaleController.languageForTag(tag)
-    if (exact != AppLanguage.SystemDefault || tag.isNullOrBlank()) return exact
-    return AppLanguage.entries.firstOrNull { it.tag == tag.substringBefore('-') }
-        ?: AppLanguage.SystemDefault
-}
+internal fun setupLanguage(context: Context): AppLanguage =
+    AppLocaleController.languageForLocale(context.resources.configuration.getLocales().get(0))
 
 /** Applies one family to every first-launch text style. */
 internal fun withSetupFamily(base: Typography, family: FontFamily): Typography = base.copy(

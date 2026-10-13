@@ -3,6 +3,7 @@ package me.foxtails.palustris.ui.localization
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import java.io.File
+import java.util.Locale
 import javax.xml.parsers.DocumentBuilderFactory
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.ui.localization.AppLocaleController
@@ -82,6 +83,36 @@ class AppLocaleControllerTest {
         assertEquals(AppLanguage.SystemDefault, AppLocaleController.languageForTag(null))
         assertEquals(AppLanguage.SystemDefault, AppLocaleController.languageForTag(""))
         assertEquals(AppLanguage.SystemDefault, AppLocaleController.languageForTag("klingon"))
+    }
+
+    @Test
+    fun localeLookupFallsBackFromQualifiedDeviceLocales() {
+        val locales = mapOf(
+            "ja" to AppLanguage.Japanese,
+            "zh-CN" to AppLanguage.ChineseMainland,
+            // A region-qualified locale falls back to its bare language.
+            "en-US" to AppLanguage.English,
+            "ja-JP" to AppLanguage.Japanese,
+            "hi-IN" to AppLanguage.Hindi,
+            "es-MX" to AppLanguage.Spanish,
+            // A script subtag does not hide the region.
+            "zh-Hans-CN" to AppLanguage.ChineseMainland,
+            "zh-Hant-TW" to AppLanguage.ChineseTaiwan,
+            "yue-Hant-HK" to AppLanguage.CantoneseHongKong,
+            // A Chinese region without its own entry is generic Chinese.
+            "zh-Hant-HK" to AppLanguage.Chinese,
+            "zh-SG" to AppLanguage.Chinese,
+            // The platform reports Indonesian as id. The stored tag is in-ID.
+            "id-ID" to AppLanguage.Indonesian,
+            // Portuguese has no bare entry, so another region has no supported language.
+            "pt-AO" to AppLanguage.SystemDefault,
+            "sv-SE" to AppLanguage.SystemDefault,
+        )
+        locales.forEach { (tag, language) ->
+            assertEquals(tag, language, AppLocaleController.languageForLocale(Locale.forLanguageTag(tag)))
+        }
+        assertEquals(AppLanguage.SystemDefault, AppLocaleController.languageForLocale(null))
+        assertEquals(AppLanguage.SystemDefault, AppLocaleController.languageForLocale(Locale.ROOT))
     }
 
     @Test

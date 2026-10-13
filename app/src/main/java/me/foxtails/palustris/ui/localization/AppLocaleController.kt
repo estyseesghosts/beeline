@@ -24,6 +24,25 @@ object AppLocaleController {
         else AppLanguage.entries.firstOrNull { it.tag == tag } ?: AppLanguage.SystemDefault
 
     /**
+     * The supported language closest to a device or configuration locale. An exact tag wins. Next
+     * comes the same language and region with the script ignored, so zh-Hans-CN is ChineseMainland.
+     * Last comes the bare language, so en-US is English. [Locale] normalizes legacy language codes,
+     * so id-ID matches the stored in-ID. A locale with no supported language is SystemDefault.
+     */
+    fun languageForLocale(locale: Locale?): AppLanguage {
+        if (locale == null) return AppLanguage.SystemDefault
+        val exact = languageForTag(locale.toLanguageTag())
+        if (exact != AppLanguage.SystemDefault) return exact
+        val sameLanguage = AppLanguage.entries
+            .mapNotNull { entry -> entry.tag?.let { entry to Locale.forLanguageTag(it) } }
+            .filter { (_, supported) -> supported.language == locale.language }
+        val match = sameLanguage.firstOrNull { (_, supported) ->
+            supported.country.isNotEmpty() && supported.country == locale.country
+        } ?: sameLanguage.firstOrNull { (_, supported) -> supported.country.isEmpty() }
+        return match?.first ?: AppLanguage.SystemDefault
+    }
+
+    /**
      * Returns the stored language once loaded. Null while unloaded so callers never apply
      * an unloaded System default over a persisted explicit language.
      */

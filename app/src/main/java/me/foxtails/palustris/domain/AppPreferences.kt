@@ -6,7 +6,8 @@ data class AppPreferences(
     val colorPalette: AppColorPalette = AppColorPalette.PastelIndigo,
     val background: AppBackground = AppBackground.Default,
     val textSize: AppTextSize = AppTextSize.Device,
-    val font: AppFont = AppFont.Device,
+    /** The explicit font choice. Null means no choice, so the font follows the language default. */
+    val font: AppFont? = null,
     val request60Hz: Boolean = false,
     /** Turns off every blur effect in the application. Off by default, so blur shows where the device supports it. */
     val disableBlurEffects: Boolean = true,
@@ -72,7 +73,7 @@ enum class AppFont {
 }
 
 /**
- * The explicit bundled font that a language uses when the user has made no font choice.
+ * The font that a language uses when the user has made no font choice.
  * Latin-script languages use Inter. Mainland Chinese uses ZCOOL KuaiLe, Taiwanese Mandarin uses
  * Chocolate Classical Sans, Hong Kong Cantonese uses Chiron Hei HK, Japanese uses Kiwi Maru, and
  * Hindi uses Sarala. Generic Chinese, Korean, and Russian keep the system font because the

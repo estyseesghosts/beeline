@@ -42,6 +42,7 @@ import me.foxtails.palustris.domain.AppTextSize
 import me.foxtails.palustris.ui.layout.deviceLayoutDirection
 import me.foxtails.palustris.ui.layout.forcingOppositeOf
 import me.foxtails.palustris.ui.theme.appPaletteColor
+import me.foxtails.palustris.ui.theme.effectiveAppFont
 
 /**
  * The Appearance page. It groups its settings under three headings: Theme, Text, and Screen and layout.
@@ -172,8 +173,9 @@ private fun TextChoices(
     }
     // The font radios share one tagged container, so tests can select the group without depending
     // on the order of the other groups. The container adds no spacing and changes no layout.
+    // Without an explicit choice the selected option is the language default that the theme renders.
     Column(Modifier.testTag("font_choices")) {
-        ChoiceGroup(stringResource(R.string.settings_font), AppFont.entries, preferences.font, onFont) { font ->
+        ChoiceGroup(stringResource(R.string.settings_font), AppFont.entries, effectiveAppFont(preferences), onFont) { font ->
             stringResource(
                 when (font) {
                     AppFont.Device -> R.string.settings_font_device_default

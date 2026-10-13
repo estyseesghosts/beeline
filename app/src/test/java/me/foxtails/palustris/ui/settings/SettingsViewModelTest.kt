@@ -27,6 +27,7 @@ import me.foxtails.palustris.domain.AppPreferencesState
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.effectiveFont
 import me.foxtails.palustris.ui.settings.SettingsViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -60,7 +61,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun setLanguageMovesADeviceFontToTheNewLanguageDefault() = runTest {
+    fun setLanguageMovesAnUnchosenFontToTheNewLanguageDefault() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
             val repository = InMemoryAppPreferencesRepository()
@@ -71,7 +72,9 @@ class SettingsViewModelTest {
 
             val preferences = repository.observe().first().preferences
             assertEquals(AppLanguage.Japanese, preferences.language)
-            assertEquals(AppFont.KiwiMaru, preferences.font)
+            // The command stores no font. The effective font follows the new language.
+            assertNull(preferences.font)
+            assertEquals(AppFont.KiwiMaru, preferences.effectiveFont(AppLanguage.English))
         } finally {
             Dispatchers.resetMain()
         }
@@ -90,16 +93,37 @@ class SettingsViewModelTest {
             val preferences = repository.observe().first().preferences
             assertEquals(AppLanguage.Japanese, preferences.language)
             assertEquals(AppFont.OpenDyslexic, preferences.font)
+            assertEquals(AppFont.OpenDyslexic, preferences.effectiveFont(AppLanguage.English))
         } finally {
             Dispatchers.resetMain()
         }
     }
 
     @Test
-    fun setLanguageToSystemDefaultKeepsTheSystemFont() = runTest {
+    fun setLanguageKeepsAnExplicitDeviceFontChoice() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
             val repository = InMemoryAppPreferencesRepository()
+            val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
+
+            model.setFont(AppFont.Device)
+            model.setLanguage(AppLanguage.Japanese)
+            advanceUntilIdle()
+
+            val preferences = repository.observe().first().preferences
+            assertEquals(AppLanguage.Japanese, preferences.language)
+            assertEquals(AppFont.Device, preferences.font)
+            assertEquals(AppFont.Device, preferences.effectiveFont(AppLanguage.English))
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun setLanguageToSystemDefaultFollowsTheDeviceLanguage() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val repository = InMemoryAppPreferencesRepository(AppPreferences(language = AppLanguage.Japanese))
             val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
 
             model.setLanguage(AppLanguage.SystemDefault)
@@ -107,7 +131,10 @@ class SettingsViewModelTest {
 
             val preferences = repository.observe().first().preferences
             assertEquals(AppLanguage.SystemDefault, preferences.language)
-            assertEquals(AppFont.Device, preferences.font)
+            assertNull(preferences.font)
+            assertEquals(AppFont.Inter, preferences.effectiveFont(AppLanguage.English))
+            // A device language without a bundled default keeps the system font.
+            assertEquals(AppFont.Device, preferences.effectiveFont(AppLanguage.SystemDefault))
         } finally {
             Dispatchers.resetMain()
         }
