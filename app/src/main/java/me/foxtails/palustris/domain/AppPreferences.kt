@@ -63,6 +63,7 @@ enum class AppTextSize {
 enum class AppFont {
     Device,
     Serif,
+    Sans,
     OpenDyslexic,
 }
 

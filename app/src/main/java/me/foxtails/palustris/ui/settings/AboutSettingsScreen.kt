@@ -29,6 +29,7 @@ internal val OpenSourceComponents = listOf(
     "OkHttp",
     "Coil",
     "avif-coder",
+    "OpenDyslexic",
     "UnifiedPush connector",
     "FFmpeg (LGPL)",
 )

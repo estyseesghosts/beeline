@@ -1,8 +1,10 @@
 package me.foxtails.palustris.ui.theme
 
+import androidx.compose.ui.text.font.FontFamily
 import me.foxtails.palustris.domain.AppFont
 import me.foxtails.palustris.domain.AppTextSize
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class AppTypographyTest {
@@ -18,5 +20,17 @@ class AppTypographyTest {
                 assertEquals(typography.bodyLarge, typography.tab)
             }
         }
+    }
+
+    @Test
+    fun fontChoicesMapToTheirDeviceOrBundledFamily() {
+        assertEquals(FontFamily.Default, appTypography(AppFont.Device, AppTextSize.Device).bodyLarge.fontFamily)
+        assertEquals(FontFamily.Serif, appTypography(AppFont.Serif, AppTextSize.Device).bodyLarge.fontFamily)
+        assertEquals(FontFamily.SansSerif, appTypography(AppFont.Sans, AppTextSize.Device).bodyLarge.fontFamily)
+
+        val openDyslexic = appTypography(AppFont.OpenDyslexic, AppTextSize.Device).bodyLarge.fontFamily
+        assertNotEquals(FontFamily.Default, openDyslexic)
+        assertNotEquals(FontFamily.Serif, openDyslexic)
+        assertNotEquals(FontFamily.SansSerif, openDyslexic)
     }
 }

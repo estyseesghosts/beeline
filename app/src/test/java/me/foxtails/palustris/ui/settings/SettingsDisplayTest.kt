@@ -20,12 +20,15 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
+import androidx.compose.ui.test.isSelectable
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -43,6 +46,7 @@ import me.foxtails.palustris.data.preferences.FileAppPreferencesRepository
 import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
+import me.foxtails.palustris.domain.AppFont
 import me.foxtails.palustris.domain.AppLayoutDirection
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferences
@@ -197,6 +201,37 @@ class SettingsDisplayTest {
             assertEquals(AppColorPalette.VibrantGreen, selected)
             assertEquals(AppColorScheme.Palette, selectedScheme)
         }
+    }
+
+    @Test
+    fun fontChoicesShowFourRenamedOptionsAndReportSelection() {
+        var selected = AppFont.Device
+        compose.activity.setContent {
+            DisplaySettingsScreen(
+                preferences = AppPreferences(),
+                onColorScheme = {},
+                onColorPalette = {},
+                onBackground = {},
+                onTextSize = {},
+                onFont = { selected = it },
+                onRequest60Hz = {},
+                layoutDirection = AppLayoutDirection.System,
+                onLayoutDirection = {},
+            )
+        }
+
+        listOf("Device default", "Device serif", "Device sans", "OpenDyslexic").forEach { label ->
+            compose.onNodeWithText(label).performScrollTo().assertIsDisplayed()
+        }
+
+        // The font radios share one tagged container. The group order follows AppFont.entries,
+        // so index 2 is Device sans. The radio button owns the click, not the label text.
+        val fontRadios = compose.onAllNodes(hasAnyAncestor(hasTestTag("font_choices")) and isSelectable())
+        fontRadios.assertCountEquals(4)
+        fontRadios[2].performScrollTo()
+        fontRadios[2].assertIsNotSelected()
+        fontRadios[2].performClick()
+        compose.runOnIdle { assertEquals(AppFont.Sans, selected) }
     }
 
     @Test

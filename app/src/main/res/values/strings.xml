@@ -671,6 +671,8 @@
     <string name="settings_error_retry">Retry</string>
     <string name="settings_error_save_failed">Settings could not be saved.</string>
     <string name="settings_font">Font</string>
+    <string name="settings_font_device_default">Device default</string>
+    <string name="settings_font_device_sans">Device sans</string>
     <string name="settings_font_open_dyslexic">OpenDyslexic</string>
     <string name="settings_force_layout_direction_ltr">Force LTR Layout</string>
     <string name="settings_force_layout_direction_rtl">Force RTL Layout</string>
@@ -678,7 +680,7 @@
     <string name="settings_compact_wide_navigation_anchor">Compact-wide navigation position</string>
     <string name="settings_navigation_anchor_left">Physical left</string>
     <string name="settings_navigation_anchor_right">Physical right</string>
-    <string name="settings_font_serif">Serif</string>
+    <string name="settings_font_serif">Device serif</string>
     <string name="settings_language">Language</string>
     <string name="settings_moderation_add">Add</string>
     <string name="settings_moderation_confirm">Confirm</string>

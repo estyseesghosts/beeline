@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.data.preferences.FileAppPreferencesRepository
 import me.foxtails.palustris.domain.AppColorScheme
+import me.foxtails.palustris.domain.AppFont
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import org.junit.Assert.assertEquals
@@ -139,6 +140,30 @@ class AppPreferencesRepositoryTest {
         FileAppPreferencesRepository(context).update { it.copy(combineRelatedHashtags = false) }
         val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
         assertEquals(false, restored.combineRelatedHashtags)
+    }
+
+    @Test
+    fun fontChoiceDefaultsToDeviceAndRoundTripsSans() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertEquals(AppFont.Device, FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.font)
+
+        // A file written by an earlier build has no key and keeps the device default.
+        file.writeText("""{"colorScheme":"Palette"}""")
+        val legacy = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppFont.Device, legacy.font)
+
+        FileAppPreferencesRepository(context).update { it.copy(font = AppFont.Sans) }
+        val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppFont.Sans, restored.font)
+
+        // Stored names from earlier builds still load under the renamed labels.
+        file.writeText("""{"font":"Serif"}""")
+        val serif = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppFont.Serif, serif.font)
+
+        file.writeText("""{"font":"OpenDyslexic"}""")
+        val openDyslexic = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AppFont.OpenDyslexic, openDyslexic.font)
     }
 
     @Test

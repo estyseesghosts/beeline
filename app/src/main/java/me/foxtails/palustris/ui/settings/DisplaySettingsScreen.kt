@@ -170,14 +170,19 @@ private fun TextChoices(
     ChoiceGroup(stringResource(R.string.settings_text_size), AppTextSize.entries, preferences.textSize, onTextSize) { textSize ->
         appTextSizeLabel(textSize)
     }
-    ChoiceGroup(stringResource(R.string.settings_font), AppFont.entries, preferences.font, onFont) { font ->
-        stringResource(
-            when (font) {
-                AppFont.Device -> R.string.settings_display_device
-                AppFont.Serif -> R.string.settings_font_serif
-                AppFont.OpenDyslexic -> R.string.settings_font_open_dyslexic
-            },
-        )
+    // The font radios share one tagged container, so tests can select the group without depending
+    // on the order of the other groups. The container adds no spacing and changes no layout.
+    Column(Modifier.testTag("font_choices")) {
+        ChoiceGroup(stringResource(R.string.settings_font), AppFont.entries, preferences.font, onFont) { font ->
+            stringResource(
+                when (font) {
+                    AppFont.Device -> R.string.settings_font_device_default
+                    AppFont.Serif -> R.string.settings_font_serif
+                    AppFont.Sans -> R.string.settings_font_device_sans
+                    AppFont.OpenDyslexic -> R.string.settings_font_open_dyslexic
+                },
+            )
+        }
     }
 }
 

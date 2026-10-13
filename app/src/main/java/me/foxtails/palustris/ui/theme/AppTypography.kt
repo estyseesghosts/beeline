@@ -2,17 +2,24 @@ package me.foxtails.palustris.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.AppFont
 import me.foxtails.palustris.domain.AppTextSize
+
+private val OpenDyslexicFont = FontFamily(
+    Font(R.font.open_dyslexic3_regular, weight = FontWeight.Normal),
+    Font(R.font.open_dyslexic3_bold, weight = FontWeight.Bold),
+)
 
 fun appTypography(font: AppFont, textSize: AppTextSize): Typography {
     val family = when (font) {
         AppFont.Device -> FontFamily.Default
         AppFont.Serif -> FontFamily.Serif
-        // The bundled font can be added without changing this public preference contract.
-        // SansSerif is the safe fallback when a platform cannot load the optional font.
-        AppFont.OpenDyslexic -> FontFamily.SansSerif
+        AppFont.Sans -> FontFamily.SansSerif
+        AppFont.OpenDyslexic -> OpenDyslexicFont
     }
     val scale = when (textSize) {
         AppTextSize.Device -> 1f
