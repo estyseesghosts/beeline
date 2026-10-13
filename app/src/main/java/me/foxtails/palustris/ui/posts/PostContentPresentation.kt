@@ -56,6 +56,7 @@ import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.emoji.LocalMentionProfiles
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.springPress
+import me.foxtails.palustris.ui.theme.forPostLabel
 import me.foxtails.palustris.ui.theme.postAuthor
 import me.foxtails.palustris.ui.theme.postBody
 import me.foxtails.palustris.ui.theme.postMetadata
@@ -253,7 +254,7 @@ private fun FilteredHashtagSummary(hashtags: List<String>, onOpen: (Rect) -> Uni
             color = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ) {
-            Text(label, Modifier.padding(horizontal = 10.dp, vertical = 7.dp), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label, Modifier.padding(horizontal = 10.dp, vertical = 7.dp), style = MaterialTheme.typography.labelMedium.forPostLabel(), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

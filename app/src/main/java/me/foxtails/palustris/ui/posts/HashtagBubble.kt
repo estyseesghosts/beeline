@@ -44,6 +44,7 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.components.BeelineBubbleShape
 import me.foxtails.palustris.ui.components.FloatingControlElevation
 import me.foxtails.palustris.ui.components.PillAction
+import me.foxtails.palustris.ui.theme.forPostLabel
 
 private const val COMPACT_HASHTAG_LIMIT = 5
 
@@ -100,7 +101,7 @@ private fun CompactHashtags(
     onSelected: (String) -> Unit,
 ) {
     val textMeasurer = rememberTextMeasurer()
-    val textStyle = MaterialTheme.typography.labelLarge
+    val textStyle = MaterialTheme.typography.labelLarge.forPostLabel()
     val visibleHashtags = remember(hashtags, maxHeight, density, textMeasurer, textStyle) {
         measuredCompactPrefix(
             hashtags = hashtags,

@@ -13,6 +13,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.PostScriptClassifier
 import me.foxtails.palustris.ui.emoji.ComposerField
 import me.foxtails.palustris.ui.emoji.EmojiPickerTarget
 import me.foxtails.palustris.ui.media.ImageViewerContent
@@ -78,6 +79,7 @@ internal class ShellOverlayPresenter internal constructor() {
             postId = ownedPost.post.id,
             hashtags = hashtags,
             anchorBounds = bounds,
+            script = PostScriptClassifier.classify(ownedPost.post.text),
         )
     }
 

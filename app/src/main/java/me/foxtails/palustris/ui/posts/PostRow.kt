@@ -39,6 +39,7 @@ import me.foxtails.palustris.ui.media.PostMediaCarousel
 import me.foxtails.palustris.ui.motion.ExpandableContent
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
 import me.foxtails.palustris.ui.posts.LocalPostRepostConfirmationState
+import me.foxtails.palustris.ui.theme.PostScriptProvider
 
 private val PostMetadataVerticalPadding = 2.dp * 1.06f
 private val PostChromeHeight = 44.dp + (PostMetadataVerticalPadding * 2f)
@@ -52,7 +53,7 @@ internal fun PostRow(
     modifier: Modifier = Modifier,
 ) {
     val shown = LocalPostEdits.current?.applied(ownedPost) ?: ownedPost
-    PostRowContent(shown, presentation, events, modifier)
+    PostScriptProvider(shown.post) { PostRowContent(shown, presentation, events, modifier) }
 }
 
 @Composable

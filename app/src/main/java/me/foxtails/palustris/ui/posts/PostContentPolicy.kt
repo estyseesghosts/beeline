@@ -16,6 +16,7 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.QuoteUnavailable
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
 import me.foxtails.palustris.ui.links.rememberQuoteOpener
+import me.foxtails.palustris.ui.theme.PostScriptProvider
 
 /**
  * The one decision for whether post body, media, poll, and quote show. The row and every detail presentation call it.
@@ -58,16 +59,19 @@ internal fun PostQuoteSection(
     val post = ownedPost.post
     val openQuote = rememberQuoteOpener()
     post.quote?.let { quote ->
-        QuotePreviewCard(
-            quote,
-            contentWarningRules,
-            LocalMutedHashtags.current,
-            "${ownedPost.sessionRevision}:${post.id.connection}:${post.id.value}",
-            ownedPost.fetchedBy.toString(),
-            labelResource,
-        ) {
-            // A loaded quote opens in the app. Without a shell the quote's own address opens in the browser.
-            openQuote(OwnedPost(ownedPost.fetchedBy, quote, ownedPost.sessionRevision), null, null, quote.url)
+        // A quoted post has its own script, so it does not take the font of the post around it.
+        PostScriptProvider(quote) {
+            QuotePreviewCard(
+                quote,
+                contentWarningRules,
+                LocalMutedHashtags.current,
+                "${ownedPost.sessionRevision}:${post.id.connection}:${post.id.value}",
+                ownedPost.fetchedBy.toString(),
+                labelResource,
+            ) {
+                // A loaded quote opens in the app. Without a shell the quote's own address opens in the browser.
+                openQuote(OwnedPost(ownedPost.fetchedBy, quote, ownedPost.sessionRevision), null, null, quote.url)
+            }
         }
         return
     }

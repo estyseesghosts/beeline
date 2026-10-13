@@ -63,6 +63,8 @@ import me.foxtails.palustris.ui.media.PostMediaCarousel
 import me.foxtails.palustris.ui.photogrid.resolveSharedPhotoPagerHeight
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.posts.LocalPostPopupOwner
+import me.foxtails.palustris.ui.theme.LocalPostScriptScope
+import me.foxtails.palustris.ui.theme.rememberPostScriptScope
 import me.foxtails.palustris.ui.thread.PostThreadPhase
 import me.foxtails.palustris.ui.thread.PostThreadUiState
 import me.foxtails.palustris.ui.thread.ThreadedReplyRow
@@ -110,7 +112,10 @@ internal fun SinglePostScreen(
     val photos = post.attachments.filter { it.kind == MediaKind.Image || it.kind == MediaKind.AnimatedImage }
 
     key(ownedPost.fetchedBy, post.id.connection, post.id.value, presentation) {
-        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+        CompositionLocalProvider(
+            LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+            LocalPostScriptScope provides rememberPostScriptScope(post),
+        ) {
             BoxWithConstraints(modifier.fillMaxSize()) {
                 val detailViewportHeight = maxHeight
                 val listState = rememberLazyListState()

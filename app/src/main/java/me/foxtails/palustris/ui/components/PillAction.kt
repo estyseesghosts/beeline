@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import me.foxtails.palustris.ui.theme.forPostLabel
 
 private const val DISABLED_CONTENT_ALPHA = 0.38f
 
@@ -71,7 +72,7 @@ internal fun PillAction(
             Text(
                 text = label,
                 modifier = Modifier.then(if (fillContent) Modifier.fillMaxWidth() else Modifier),
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelLarge.forPostLabel(),
                 textAlign = textAlign,
                 maxLines = maxLines,
                 overflow = if (maxLines == 1) TextOverflow.Ellipsis else TextOverflow.Clip,

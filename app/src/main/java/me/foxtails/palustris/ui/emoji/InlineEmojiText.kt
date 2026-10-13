@@ -62,6 +62,8 @@ import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.links.rememberLinkOpener
 import me.foxtails.palustris.ui.motion.springClickable
+import me.foxtails.palustris.ui.theme.forPostLabel
+import me.foxtails.palustris.ui.theme.forPostText
 
 /**
  * One annotated rich-text renderer for emoji-aware text. Post callers can opt into inline
@@ -85,7 +87,7 @@ fun InlineEmojiText(
     onOpenProfile: ((Account) -> Unit)? = null,
 ) {
     val context = LocalContext.current
-    val resolvedStyle = style.copy(
+    val resolvedStyle = style.forPostText(text).copy(
         color = if (style.color == Color.Unspecified) LocalContentColor.current else style.color,
     )
     val linkStyle = SpanStyle(
@@ -100,7 +102,7 @@ fun InlineEmojiText(
     // A row asks for a profile only while it shows the mention. Reading the state here recomposes the row when it resolves.
     LaunchedEffect(mentionsShown, mentionProfiles) { mentionsShown.forEach(mentionProfiles::request) }
     val mentionStates = mentionsShown.associate { it.handle to mentionProfiles.profile(it) }
-    val bubbleTextStyle = MaterialTheme.typography.labelMedium
+    val bubbleTextStyle = MaterialTheme.typography.labelMedium.forPostLabel()
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val linkOpener = rememberLinkOpener()
@@ -490,7 +492,7 @@ private fun entityContent(
             androidx.compose.material3.Text(
                 text = isolateDisplayDirection(label, isolation),
                 modifier = Modifier.testTag("entity_label"),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelMedium.forPostLabel(),
                 maxLines = 1,
                 softWrap = false,
                 overflow = TextOverflow.Ellipsis,

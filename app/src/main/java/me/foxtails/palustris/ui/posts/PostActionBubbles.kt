@@ -49,6 +49,7 @@ import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.PostScript
 import me.foxtails.palustris.ui.components.FloatingControlElevation
 import me.foxtails.palustris.ui.emoji.EmojiCatalogState
 import me.foxtails.palustris.ui.emoji.EmojiChoiceGrid
@@ -71,6 +72,8 @@ sealed interface PostActionBubbleTarget {
         override val postId: EntityId,
         val hashtags: List<String>,
         override val anchorBounds: Rect,
+        /** The script of the post, so the bubble renders in the font of the post. */
+        val script: PostScript? = null,
     ) : PostActionBubbleTarget
 
     data class Reaction(
@@ -151,7 +154,8 @@ fun PostActionBubbleHost(
         onDismiss = dismiss,
     ) {
         when (current) {
-            is PostActionBubbleTarget.HashtagList -> HashtagBubble(
+            is PostActionBubbleTarget.HashtagList -> PostHashtagBubble(
+                script = current.script,
                 hashtags = current.hashtags,
                 maxHeight = hashtagBubbleMaxHeight(current.anchorBounds, hashtagBottomClearance, hashtagSide ?: BubblePlacement.Below),
                 openingKey = hashtagOpeningKey,

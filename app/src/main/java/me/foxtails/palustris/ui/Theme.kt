@@ -1,6 +1,5 @@
 package me.foxtails.palustris.ui
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
@@ -9,8 +8,7 @@ import me.foxtails.palustris.ui.motion.LocalPalustrisHaptics
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.palustrisMotionScheme
 import me.foxtails.palustris.ui.motion.rememberPalustrisHaptics
-import me.foxtails.palustris.ui.theme.appTypography
-import me.foxtails.palustris.ui.theme.effectiveAppFont
+import me.foxtails.palustris.ui.theme.AppFontTheme
 import me.foxtails.palustris.ui.theme.resolvedAppColorScheme
 
 @Composable
@@ -25,11 +23,7 @@ fun PalustrisTheme(
         LocalPalustrisMotionScheme provides motionScheme,
         LocalPalustrisHaptics provides rememberPalustrisHaptics(),
     ) {
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = appTypography(effectiveAppFont(preferences), preferences.textSize),
-            content = content,
-        )
+        AppFontTheme(preferences, colorScheme, content)
     }
 }
 

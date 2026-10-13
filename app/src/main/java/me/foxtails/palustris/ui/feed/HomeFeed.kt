@@ -50,6 +50,7 @@ import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.PostScriptClassifier
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.chromeBackdropSource
@@ -126,7 +127,7 @@ fun HomeFeed(
     var fallbackBubbleTarget by remember { mutableStateOf<PostActionBubbleTarget?>(null) }
     val openHashtagBubble: (OwnedPost, List<String>, Rect) -> Unit = { ownedPost, hashtags, bounds ->
         if (onOpenHashtagBubble != null) onOpenHashtagBubble(ownedPost, hashtags, bounds)
-        else fallbackBubbleTarget = PostActionBubbleTarget.HashtagList(ownedPost.post.id, hashtags, bounds)
+        else fallbackBubbleTarget = PostActionBubbleTarget.HashtagList(ownedPost.post.id, hashtags, bounds, PostScriptClassifier.classify(ownedPost.post.text))
     }
     val openReactionBubble: (OwnedPost, Rect) -> Unit = { ownedPost, bounds ->
         onOpenReactionBubble?.invoke(ownedPost, bounds)

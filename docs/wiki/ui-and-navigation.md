@@ -1088,6 +1088,33 @@ languages use the system font. `AppPreferences.font` stays null until the user s
 The theme (`PalustrisTheme`), the Appearance page, and the setup screens all show that font. A selected font, including Device
 default, replaces the language default in every language. Device rendering of the bundled fonts is unverified.
 
+### One font for one post
+
+A post with a known script renders in one font. `PostScriptClassifier` (`domain/PostScript.kt`) reads the characters of the post:
+
+| Evidence in the text | Script | Bundled font | System glyph forms |
+| --- | --- | --- | --- |
+| Hiragana, katakana, or Japan-only punctuation (`ー〜〆〒〽`) | Japanese | Kiwi Maru | `ja-JP` |
+| A Cantonese-only character (for example 嘅, 咗, 喺, 佢, 冇) | Cantonese | Chiron Hei HK | `zh-Hant-HK` |
+| A traditional form that simplified Chinese replaced | Traditional Chinese | Chocolate Classical Sans | `zh-Hant-TW` |
+| A simplified form that no other system uses | Simplified Chinese | ZCOOL KuaiLe | `zh-Hans-CN` |
+
+The rules apply in this order, so kana decides beside Chinese characters. A post with none of this evidence has no script and keeps
+the font of the application. Text of shared characters only (你好) has no script. The comma `、`, the full stop `。` and the corner
+brackets prove nothing, because Chinese uses them too. The tables hold frequent characters only.
+
+`postFont` (`domain/PostFont.kt`) selects the font. The post uses the bundled font of its script only when that font is the font of
+the application. Every other application font gives the system font with the locale of the script, so the system draws the regional
+glyph forms. An Inter user therefore reads a Japanese post in the system font, Latin letters included. A glyph that the font lacks
+falls back to the system font.
+
+The scope of the rule is the body, the content warning, the hashtag bubbles in the body, the hashtag chip under the post, and the
+pills of the hashtag bubble. The author name, the handle and the time keep the font of the application. `PostRow` and
+`SinglePostScreen` provide `LocalPostScriptScope` (`ui/theme/PostFont.kt`) for their post, and `InlineEmojiText` applies
+`forPostText`. A label applies `forPostLabel`, which reads the scope only. A quoted post has its own scope. Text outside a post row,
+for example in a notification row, decides for itself; a hashtag bubble there keeps the font of the application.
+Tests: `PostScriptClassifierTest`, `PostFontTest`, `PostFontStyleTest`. No device check ran.
+
 The Posting page edits the active account and names it at the top. It does not select another account.
 Image compression shows only when the server reports client compression. The favourite reaction shows only when
 `primaryFavourite.mode` is `Reaction` (a Misskey-family server). It stores `PostPreferences.favouriteEmoji`, the emoji that the
