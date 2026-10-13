@@ -278,6 +278,7 @@ internal fun ShellOverlayHost(
                 when (target) {
                     is EmojiPickerTarget.Reaction -> Unit
                     is EmojiPickerTarget.Composer -> overlay.pendingEmojiInsertion = choice to target.field
+                    EmojiPickerTarget.Favourite -> Unit
                     null -> Unit
                 }
                 overlay.emojiPickerTarget = null

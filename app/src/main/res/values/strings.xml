@@ -905,10 +905,6 @@
     <string name="settings_posting_default_audience">Default audience for new posts</string>
     <string name="settings_favourite_emoji">Favourite reaction</string>
     <string name="settings_favourite_emoji_summary">The favourite button reacts with this emoji.</string>
-    <string name="settings_favourite_emoji_choice">React with %1$s</string>
-    <string name="settings_favourite_emoji_other">Other emoji</string>
-    <string name="settings_favourite_emoji_other_hint">Enter one emoji. Custom server emoji are not supported.</string>
-    <string name="settings_favourite_emoji_use">Use</string>
     <string name="settings_content_warning_all_accounts">All accounts</string>
     <string name="settings_content_warning_one_account">Account rules</string>
     <string name="settings_content_warning_account_rules_summary">Add rules that apply to this account only.</string>
@@ -921,4 +917,5 @@
     <string name="settings_about_license_summary">GNU General Public License, version 3</string>
     <string name="settings_about_components">Open-source components</string>
     <string name="settings_about_components_summary">%1$s includes these open-source components.</string>
+    <string name="settings_favourite_emoji_choose">Choose emoji</string>
 </resources>

@@ -107,7 +107,7 @@ class FileAppPreferencesRepository(
             font = enumOrDefault(json, "font", AppFont.Device),
             request60Hz = json.optBoolean("request60Hz", false),
             // A missing key reads false, so a file from an earlier build keeps its blur.
-            disableBlurEffects = json.optBoolean("disableBlurEffects", false),
+            disableBlurEffects = json.optBoolean("disableBlurEffects", true),
             language = AppLanguage.fromNameOrDefault(json.optString("language")),
             // A missing key keeps System, so the device direction survives an upgrade unchanged.
             layoutDirection = enumOrDefault(json, "layoutDirection", AppLayoutDirection.System),

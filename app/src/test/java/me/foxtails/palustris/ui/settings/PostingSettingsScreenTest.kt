@@ -4,25 +4,26 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performTextInput
 import me.foxtails.palustris.domain.Audience
+import me.foxtails.palustris.domain.CustomEmoji
+import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostingCapabilities
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.UploadCompression
+import me.foxtails.palustris.ui.emoji.EmojiCatalogState
+import me.foxtails.palustris.ui.shell.EmojiPresentation
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -99,58 +100,66 @@ class PostingSettingsScreenTest {
         }
 
         compose.onNodeWithText("Favourite reaction").assertDoesNotExist()
-        compose.onNodeWithTag("favourite_emoji_input").assertDoesNotExist()
+        compose.onNodeWithTag("favourite_emoji_row").assertDoesNotExist()
     }
 
     @Test
-    fun aPresetBecomesTheFavouriteReaction() {
+    fun theRowShowsTheStoredReactionAndThePickerStoresAUnicodeEmoji() {
         var preferences by mutableStateOf(PostPreferences())
         showFavourite({ preferences }) { preferences = preferences.copy(favouriteEmoji = it) }
 
-        compose.onNodeWithTag("favourite_emoji_❤️").performScrollTo().assertIsSelected()
-        compose.onNodeWithTag("favourite_emoji_⭐").performScrollTo().assertIsNotSelected().performClick()
+        compose.onNodeWithTag("favourite_emoji_current", useUnmergedTree = true).assertTextEquals("❤️")
+        compose.onNodeWithTag("emoji_picker_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("favourite_emoji_row").performScrollTo().performClick()
+        compose.onNodeWithTag("emoji_picker_sheet").assertExists()
+        compose.onNodeWithTag("emoji_picker_cell_👍").performClick()
+        compose.waitForIdle()
 
-        assertEquals("⭐", preferences.favouriteEmoji)
-        compose.onNodeWithTag("favourite_emoji_⭐").assertIsSelected()
-        compose.onNodeWithTag("favourite_emoji_❤️").assertIsNotSelected()
+        assertEquals("👍", preferences.favouriteEmoji)
+        compose.onNodeWithTag("emoji_picker_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("favourite_emoji_current", useUnmergedTree = true).assertTextEquals("👍")
     }
 
     @Test
-    fun aTypedEmojiBecomesTheFavouriteReactionAndShowsAsASelectedChoice() {
+    fun thePickerStoresTheSubmissionIdentityOfACustomServerEmoji() {
         var preferences by mutableStateOf(PostPreferences())
-        showFavourite({ preferences }) { preferences = preferences.copy(favouriteEmoji = it) }
+        var loads = 0
+        val custom = CustomEmoji("blobcat", animatedUrl = null, staticUrl = null, submissionValue = ":blobcat:")
+        val emoji = EmojiPresentation(
+            catalog = EmojiCatalogState(items = listOf(custom), hasSnapshot = true),
+            capabilities = EmojiCapabilities(),
+            actions = object : EmojiPresentation.Actions {
+                override fun loadCatalog() { loads++ }
+                override fun retryCatalog() = Unit
+                override fun toggleGroupCollapsed(groupId: String) = Unit
+                override fun toggleGroupPinned(groupId: String) = Unit
+                override fun togglePinnedEmoji(identity: String) = Unit
+            },
+        )
+        showFavourite({ preferences }, emoji) { preferences = preferences.copy(favouriteEmoji = it) }
 
-        compose.onNodeWithTag("favourite_emoji_use").performScrollTo().assertIsNotEnabled()
-        compose.onNodeWithTag("favourite_emoji_input").performTextInput(" 🦊 ")
-        compose.onNodeWithTag("favourite_emoji_use").assertIsEnabled().performClick()
+        compose.onNodeWithTag("favourite_emoji_row").performScrollTo().performClick()
+        compose.onNodeWithTag("emoji_picker_cell_:blobcat:").performClick()
+        compose.waitForIdle()
 
-        assertEquals("🦊", preferences.favouriteEmoji)
-        compose.onNodeWithTag("favourite_emoji_🦊").performScrollTo().assertIsSelected()
+        assertEquals(":blobcat:", preferences.favouriteEmoji)
+        // The catalog owner is asked to load, so the image of a stored custom emoji can show.
+        assertTrue(loads > 0)
+        // The stored custom emoji shows as its image, not as its text.
+        compose.onNodeWithTag("favourite_emoji_current", useUnmergedTree = true).assertDoesNotExist()
     }
 
-    @Test
-    fun textThatIsNotAUnicodeEmojiCannotBecomeTheFavouriteReaction() {
-        val chosen = mutableListOf<String>()
-        showFavourite({ PostPreferences() }) { chosen += it }
-
-        compose.onNodeWithTag("favourite_emoji_input").performScrollTo().performTextInput(":blobcat:")
-        compose.onNodeWithTag("favourite_emoji_use").assertIsNotEnabled()
-
-        assertTrue(chosen.isEmpty())
-        assertFalse(isFavouriteEmojiInput(""))
-        assertFalse(isFavouriteEmojiInput("like"))
-        assertFalse(isFavouriteEmojiInput("👍 👍"))
-        assertFalse(isFavouriteEmojiInput("👍".repeat(20)))
-        assertTrue(isFavouriteEmojiInput("❤️"))
-        assertTrue(isFavouriteEmojiInput("👨‍👩‍👧"))
-    }
-
-    private fun showFavourite(preferences: () -> PostPreferences, onFavouriteEmoji: (String) -> Unit) {
+    private fun showFavourite(
+        preferences: () -> PostPreferences,
+        emoji: EmojiPresentation = EmojiPresentation.Empty,
+        onFavouriteEmoji: (String) -> Unit,
+    ) {
         compose.setContent {
             PostingSettingsScreen(
                 preferences = preferences(),
                 actions = PostingSettingsActions(onFavouriteEmoji = onFavouriteEmoji),
                 support = PostingSettingsSupport(favouriteEmoji = true),
+                emoji = emoji,
             )
         }
     }

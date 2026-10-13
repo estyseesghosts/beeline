@@ -51,21 +51,22 @@ class BlurEffectsSettingTest {
     }
 
     @Test
-    fun theSettingDefaultsToOffAndAFileWithoutTheKeyKeepsBlur() = runBlocking {
+    fun theSettingDefaultsToOnAndAFileWithoutTheKeyDisablesBlur() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assertFalse(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.disableBlurEffects)
+        assertTrue(AppPreferences().disableBlurEffects)
+        assertTrue(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.disableBlurEffects)
 
         file.parentFile?.mkdirs()
         file.writeText("""{"colorScheme":"Palette"}""")
-        assertFalse(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.disableBlurEffects)
+        assertTrue(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.disableBlurEffects)
     }
 
     @Test
     fun theSettingPersistsAcrossRepositoryInstances() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        FileAppPreferencesRepository(context).update { it.copy(disableBlurEffects = true) }
+        FileAppPreferencesRepository(context).update { it.copy(disableBlurEffects = false) }
 
-        assertTrue(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.disableBlurEffects)
+        assertFalse(FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.disableBlurEffects)
     }
 
     @Test
@@ -73,11 +74,11 @@ class BlurEffectsSettingTest {
         val repository = InMemoryAppPreferencesRepository(AppPreferences(background = AppBackground.Dark))
         val model = SettingsViewModel(repository, InMemoryPostPreferencesRepository())
 
-        model.setDisableBlurEffects(true)
+        model.setDisableBlurEffects(false)
         compose.waitForIdle()
 
         val preferences = runBlocking { repository.observe().first().preferences }
-        assertTrue(preferences.disableBlurEffects)
+        assertFalse(preferences.disableBlurEffects)
         assertEquals(AppBackground.Dark, preferences.background)
     }
 

@@ -14,6 +14,7 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.UploadCompression
+import me.foxtails.palustris.ui.shell.EmojiPresentation
 
 /** What the server of the active account supports on the Posting page. An unsupported setting is not shown. */
 data class PostingSettingsSupport(
@@ -31,7 +32,8 @@ class PostingSettingsActions(
 
 /**
  * The Posting page: defaults for new posts of one account. [accountLabel] names that account, because the
- * values are stored for each account and the page does not select one.
+ * values are stored for each account and the page does not select one. [emoji] is the emoji catalog of that
+ * account for the favourite reaction picker.
  */
 @Composable
 fun PostingSettingsScreen(
@@ -39,6 +41,7 @@ fun PostingSettingsScreen(
     actions: PostingSettingsActions,
     support: PostingSettingsSupport = PostingSettingsSupport(),
     accountLabel: String? = null,
+    emoji: EmojiPresentation = EmojiPresentation.Empty,
 ) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
         accountLabel?.let { SettingsAccountScope(it) }
@@ -61,7 +64,7 @@ fun PostingSettingsScreen(
         if (support.favouriteEmoji) {
             HorizontalDivider()
             SettingsSection(stringResource(R.string.settings_favourite_emoji)) {
-                FavouriteEmojiSetting(preferences.favouriteEmoji, actions.onFavouriteEmoji)
+                FavouriteEmojiSetting(preferences.favouriteEmoji, emoji, actions.onFavouriteEmoji)
             }
         }
     }

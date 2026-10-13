@@ -29,6 +29,7 @@ import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.notifications.NotificationSettingsScreen
 import me.foxtails.palustris.ui.notifications.NotificationSettingsUiState
+import me.foxtails.palustris.ui.shell.EmojiPresentation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +60,7 @@ fun SettingsHost(
     postPreferencesAccountLabel: String? = null,
     postingSupport: PostingSettingsSupport = PostingSettingsSupport(),
     postingActions: PostingSettingsActions = PostingSettingsActions(),
+    postingEmoji: EmojiPresentation = EmojiPresentation.Empty,
     onPostContentWarningRules: (ContentWarningRules) -> Unit = {},
     error: String? = null,
     canRetryError: Boolean = false,
@@ -208,6 +210,7 @@ fun SettingsHost(
                     actions = postingActions,
                     support = postingSupport,
                     accountLabel = postPreferencesAccountLabel,
+                    emoji = postingEmoji,
                 )
                 SettingsRoute.About -> AboutSettingsScreen()
                 SettingsRoute.PrivacyAccounts -> PrivacyAccountsScreen(accounts) { accountId, kind ->

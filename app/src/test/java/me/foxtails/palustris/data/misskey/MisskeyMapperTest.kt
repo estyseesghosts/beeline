@@ -122,6 +122,33 @@ class MisskeyMapperTest {
     }
 
     @Test
+    fun aLocalCustomReactionTakesTheCatalogIdentityAndARemoteOneKeepsItsHost() {
+        val note = JSONObject()
+            .put("id", "note-local-reaction")
+            .put("createdAt", "2026-09-06T10:00:00Z")
+            .put("text", "reactions")
+            .put("user", JSONObject().put("id", "u").put("username", "u").put("name", "U"))
+            .put("reactions", JSONObject()
+                .put(":blob_cat@.:", 2)
+                .put(":blob_cat@remote.example:", 1)
+                .put("❤️", 4))
+            .put("myReaction", ":blob_cat@.:")
+
+        val post = MisskeyMapper.post(note, origin)
+
+        val byIdentity = post.reactions.associateBy { it.emoji }
+        assertEquals(setOf(":blob_cat:", ":blob_cat@remote.example:", "❤️"), byIdentity.keys)
+        assertEquals(2, byIdentity.getValue(":blob_cat:").count)
+        assertTrue(byIdentity.getValue(":blob_cat:").selected)
+        assertEquals("blob_cat", byIdentity.getValue(":blob_cat:").emojiMetadata?.shortcode)
+        // The stored favourite reaction is the catalog identity, so the heart shows as selected.
+        assertEquals(":blob_cat:", post.myReaction)
+        assertEquals(listOf(":blob_cat:"), post.selectedReactions.map { it.submissionValue })
+        assertEquals("@.:", MisskeyMapper.localReactionIdentity("@.:"))
+        assertEquals("👍", MisskeyMapper.localReactionIdentity("👍"))
+    }
+
+    @Test
     fun nestedRenotesKeepIndependentEmojiMaps() {
         val user = JSONObject().put("id", "u").put("username", "u").put("name", "U").put("host", JSONObject.NULL)
         val inner = JSONObject()

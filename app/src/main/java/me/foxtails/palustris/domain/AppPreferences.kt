@@ -9,7 +9,7 @@ data class AppPreferences(
     val font: AppFont = AppFont.Device,
     val request60Hz: Boolean = false,
     /** Turns off every blur effect in the application. Off by default, so blur shows where the device supports it. */
-    val disableBlurEffects: Boolean = false,
+    val disableBlurEffects: Boolean = true,
     val language: AppLanguage = AppLanguage.SystemDefault,
     val layoutDirection: AppLayoutDirection = AppLayoutDirection.System,
     val tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,

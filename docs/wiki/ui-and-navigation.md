@@ -984,6 +984,7 @@ This section replaces the gradient of infdev 02 S8a. No tint gradient exists any
 constants are deleted). Two parts remain, and both only draw: they take no pointer input and add no semantics.
 
 The setting "Disable blur effects" (Settings, Appearance, Screen and layout) turns off every blur in the application.
+It is on by default, also for a stored file without the key, so blur shows only after the user turns the setting off.
 `AppPreferences.disableBlurEffects` stores it; a stored file without the key reads false. `ConnectedApp` provides
 `LocalBlurEffectsEnabled` (`ui/components/FloatingChromeBackdrop.kt`). `rememberChromeBackdrop` returns null while it is false,
 so no band draws a blur. `ProfileHeader` reads the same value and omits the blurred banner strip under the status bar.
@@ -1083,8 +1084,11 @@ The Settings main page is one flat list. Each row opens one page and shows a sho
 The Posting page edits the active account and names it at the top. It does not select another account.
 Image compression shows only when the server reports client compression. The favourite reaction shows only when
 `primaryFavourite.mode` is `Reaction` (a Misskey-family server). It stores `PostPreferences.favouriteEmoji`, the emoji that the
-favourite button sends. The page offers eight preset emoji and one text field. The field accepts one Unicode emoji
-(`isFavouriteEmojiInput`); it rejects a custom server emoji shortcode, because no test covers the form that a server returns for one.
+favourite button sends. The row shows the stored emoji and opens the shared emoji picker (`EmojiPickerHost`, target
+`EmojiPickerTarget.Favourite`), so a Unicode emoji and a custom server emoji are both possible. The stored value is the submission
+identity of the choice. The picker uses the emoji catalog owner of the account (`EmojiHost`, bound in `postingEmojiPresentation`).
+Misskey names a custom emoji of the own server `:name@.:` in a note and `:name:` in the catalog. `MisskeyMapper.localReactionIdentity`
+maps the note form to the catalog form, so the heart shows as selected for a custom favourite. A remote emoji keeps its host.
 
 The Content warnings page and its account page share one editor (`ContentWarningRulesEditor`). A switch writes at once.
 The four lists write on Save. Account rules add to the rules for all accounts (`ContentWarningRules.merge`).
@@ -1106,4 +1110,9 @@ Sources: `ui/settings/SettingsScreen.kt`, `SettingsHost.kt`, `SettingsRoute.kt`,
 `TimelineMediaSettingsScreen.kt`, `PostingSettingsScreen.kt`, `FavouriteEmojiSetting.kt`, `ContentWarningSettingsScreen.kt`,
 `ContentWarningRulesEditor.kt`, `SettingsRouteParents.kt`, `PrivacyAccountsScreen.kt`, `NotificationAccountsScreen.kt`,
 `AboutSettingsScreen.kt`, `ContentWarningSettingsTest`, `SettingsAccountPagesTest`, `SettingsMainPageTest`,
-`SettingsDisplayTest`, `PostingSettingsScreenTest`. No device check ran for these pages. No live server check ran for the favourite reaction.
+`SettingsDisplayTest`, `PostingSettingsScreenTest`, `MisskeyMapperTest`. No device check ran for these pages. No live server check ran for the
+favourite reaction; the `:name@.:` form comes from Misskey behavior, not from a recorded response.
+
+Every string of the settings pages has a translation in each locale folder that has its own language: `de`, `es`, `fr`, `hi`, `ja`, `ko`,
+`pt-rBR`, `pt-rPT`, `zh`, `zh-rTW` and `yue-rHK`. `es-rES` and `b+es+419` inherit from `es`; `zh-rCN` inherits from `zh`.
+A font name, the license name and the `#%1$s` pattern stay untranslated. No native speaker reviewed the translations.

@@ -73,6 +73,7 @@ data class ComposerField(val kind: Kind, val entryId: String? = null) { enum cla
 sealed interface EmojiPickerTarget {
     data class Reaction(val post: OwnedPost) : EmojiPickerTarget
     data class Composer(val field: ComposerField) : EmojiPickerTarget
+    data object Favourite : EmojiPickerTarget // Settings: the caller stores the chosen emoji as the favourite reaction.
 }
 
 private data class PendingEmojiPin(

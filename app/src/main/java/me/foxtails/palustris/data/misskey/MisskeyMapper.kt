@@ -112,7 +112,7 @@ object MisskeyMapper {
         val emojiMetadata = MisskeyEmojiMapper.parseEmojis(
             json.optJSONObject("reactionEmojis") ?: JSONObject(), origin,
         ) + MisskeyEmojiMapper.parseEmojis(json.optJSONObject("emojis") ?: JSONObject(), origin)
-        val myReaction = json.nullableString("myReaction")
+        val myReaction = json.nullableString("myReaction")?.let(::localReactionIdentity)
         val replyToAuthorId = json.nullableString("replyUserId")
             ?: json.optJSONObject("reply")?.nullableString("userId")
             ?: json.optJSONObject("reply")?.optJSONObject("user")?.nullableString("id")
@@ -138,10 +138,11 @@ object MisskeyMapper {
             editedAtEpochMillis = json.nullableString("updatedAt")?.let { runCatching { Instant.parse(it).toEpochMilli() }.getOrNull() },
             replyTo = json.nullableString("replyId")?.let { EntityId(origin, it) },
             replyToAuthorId = replyToAuthorId?.let { AccountId(Connection(origin, Protocol.MISSKEY), it) },
-            reactions = if (hidden || reactionJson == null) emptyList() else reactionJson.keys().asSequence().map { emoji ->
+            reactions = if (hidden || reactionJson == null) emptyList() else reactionJson.keys().asSequence().map { key ->
+                val emoji = localReactionIdentity(key)
                 Reaction(
                     emoji,
-                    reactionJson.optInt(emoji).coerceAtLeast(0),
+                    reactionJson.optInt(key).coerceAtLeast(0),
                     myReaction == emoji,
                     reactionMetadata(emoji, emojiMetadata),
                 )
@@ -195,6 +196,20 @@ object MisskeyMapper {
             voted = options.any(PollOption::picked),
         )
     }
+
+    /**
+     * Misskey names a custom emoji of the own server `:name@.:` in a note, but `:name:` in the emoji catalog, and it
+     * accepts both when a reaction is sent. The catalog form is the one identity, so a reaction of a note compares
+     * equal to the same emoji from the picker and to the stored favourite reaction. A remote emoji keeps its host.
+     */
+    fun localReactionIdentity(identity: String): String =
+        if (identity.length > LOCAL_REACTION_SUFFIX.length && identity.startsWith(":") && identity.endsWith(LOCAL_REACTION_SUFFIX)) {
+            identity.removeSuffix(LOCAL_REACTION_SUFFIX) + ":"
+        } else {
+            identity
+        }
+
+    private const val LOCAL_REACTION_SUFFIX = "@.:"
 
     private fun reactionMetadata(identity: String, emoji: Map<String, CustomEmoji>): CustomEmoji? =
         emoji[identity] ?: emoji[identity.trim(':')] ?: identity.takeIf { it.startsWith(":") }?.let {

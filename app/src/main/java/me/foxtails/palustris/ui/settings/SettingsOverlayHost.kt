@@ -114,6 +114,7 @@ fun SettingsOverlayHost(
     val activeSource = activeAccountId?.let { sourceRegistry.sourceFor(it) }
     val postingSupport = rememberPostingSupport(activeSource)
     val postingActions = remember(activeAccountId, settingsModel) { postingActions(activeAccountId, settingsModel) }
+    val postingEmoji = postingEmojiPresentation(route, activeAccountId, activeSource, sessionGeneration, entryStore)
     val accountLabel = accounts.firstOrNull { it.accountId == activeAccountId }?.handle
         ?: activeAccountId?.localId
         ?: stringResource(R.string.settings_content_warning_current_account)
@@ -144,6 +145,7 @@ fun SettingsOverlayHost(
         postPreferencesAccountLabel = accountLabel,
         postingSupport = postingSupport,
         postingActions = postingActions,
+        postingEmoji = postingEmoji,
         onPostContentWarningRules = { value ->
             activeAccountId?.let { settingsModel.setPostContentWarningRules(it, value) }
         },

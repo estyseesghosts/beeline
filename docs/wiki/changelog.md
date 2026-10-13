@@ -8,6 +8,29 @@ Stale when: A release ships without an entry here.
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
 
+## Unreleased
+
+### New
+
+- Settings is one list of pages: Appearance, Language, Timeline and media, Posting, Content warnings, Blocks and mutes, Privacy, Notifications and About.
+- Favourite reaction (Posting, Misskey-family servers): choose the emoji that the heart button sends. The emoji picker opens, so a custom server emoji works too.
+- Disable blur effects (Appearance): turns off the blur behind floating controls and on profile banners. It is on by default.
+- The About page shows the version, the license and the open-source components.
+- Content warnings has a page for all accounts and a page for the rules of the current account.
+
+### Improved
+
+- Appearance has three sections: Theme, Text, and Screen and layout.
+- Back in Settings returns to the page before, not to the main page.
+- With one account, Notifications opens that account at once.
+- A switch row in Settings toggles as one control, so a screen reader reads the name and the state together.
+- Long settings pages scroll.
+- The settings pages are translated in every supported language.
+
+### Fixed
+
+- A reaction with a custom emoji of your own server now shows as yours after a refresh on Misskey-family servers.
+
 ## 0.2.16
 
 ### New
