@@ -632,15 +632,12 @@
     <string name="session_callback_invalid">This sign-in callback is invalid or expired. Please try again.</string>
     <string name="session_no_browser">No browser could be opened. Install or enable a browser and try again.</string>
     <string name="session_restore_failed">Saved sign-in could not be restored. Please sign in again.</string>
-    <string name="settings_account_privacy">Account privacy lists</string>
-    <string name="settings_account_privacy_summary">Choose an account to view blocked, muted, and hashtag rules.</string>
     <string name="settings_account_unavailable">That account is no longer available on this device.</string>
     <string name="settings_background">Background</string>
     <string name="settings_background_dark">Dark</string>
     <string name="settings_background_default">Default</string>
     <string name="settings_background_pure_black">Pure black</string>
     <string name="settings_blocked_users">Blocked users</string>
-    <string name="settings_choose_account">Choose account</string>
     <string name="settings_colour_palette">Accent colour</string>
     <string name="settings_colour_style">Colour style</string>
     <string name="settings_colour_style_palette">Colour palette</string>
@@ -721,7 +718,7 @@
     <string name="settings_posting_summary">Defaults for new posts and replies of the current account.</string>
     <string name="settings_privacy">Privacy</string>
     <string name="settings_privacy_account_list_summary">Manage this account\'s server list</string>
-    <string name="settings_privacy_summary">Clean links and manage account moderation lists.</string>
+    <string name="settings_privacy_summary">Remove tracking parameters from links.</string>
     <string name="settings_pure_black_warning">Pure black may show ghosting or smearing on some AMOLED displays.</string>
     <string name="settings_request_60hz">Request 60 Hz refresh rate</string>
     <string name="settings_request_60hz_summary">This is a display request; some panels cannot honor it.</string>
@@ -916,4 +913,6 @@
     <string name="settings_content_warning_one_account">Account rules</string>
     <string name="settings_content_warning_account_rules_summary">Add rules that apply to this account only.</string>
     <string name="settings_content_warning_account_adds">These rules add to the rules for all accounts.</string>
+    <string name="settings_blocks_mutes">Blocks and mutes</string>
+    <string name="settings_blocks_mutes_summary">Blocked users, muted users, and muted hashtags for each account.</string>
 </resources>

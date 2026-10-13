@@ -90,7 +90,6 @@
     <string name="settings_notifications">通知</string>
     <string name="settings_privacy">プライバシー</string>
     <string name="settings_language">言語</string>
-    <string name="settings_choose_account">アカウントを選択</string>
     <string name="settings_blocked_users">ブロックしたユーザー</string>
     <string name="settings_muted_users">ミュートしたユーザー</string>
     <string name="settings_moderation_load_more">もっと見る</string>

@@ -87,7 +87,7 @@ fun SettingsHost(
     onModerationAddLocalHashtag: (String) -> Unit = {},
     onModerationRemoveLocalHashtag: (String) -> Unit = {},
 ) {
-    val navigateBack: () -> Unit = if (route == SettingsRoute.Main) onBack else { { onRoute(route.parent()) } }
+    val navigateBack: () -> Unit = if (route == SettingsRoute.Main) onBack else { { onRoute(route.parent(accounts)) } }
     BackHandler(onBack = navigateBack)
     val title = when (route) {
         SettingsRoute.Main -> stringResource(R.string.settings_title)
@@ -100,7 +100,7 @@ fun SettingsHost(
         SettingsRoute.ContentWarnings -> stringResource(R.string.settings_content_warnings)
         SettingsRoute.AccountContentWarnings -> stringResource(R.string.settings_content_warnings)
         SettingsRoute.Posting -> stringResource(R.string.settings_posting)
-        SettingsRoute.PrivacyAccounts -> stringResource(R.string.settings_choose_account)
+        SettingsRoute.PrivacyAccounts -> stringResource(R.string.settings_blocks_mutes)
         is SettingsRoute.Moderation -> when (route.kind) {
             ModerationKind.Blocked -> stringResource(R.string.settings_blocked_users)
             ModerationKind.Muted -> stringResource(R.string.settings_muted_users)
@@ -143,7 +143,7 @@ fun SettingsHost(
                 }
             }
             when (route) {
-                SettingsRoute.Main -> SettingsScreen(state.preferences, onRoute)
+                SettingsRoute.Main -> SettingsScreen(state.preferences) { onRoute(it.skippingSingleAccountPicker(accounts)) }
                 SettingsRoute.Display -> DisplaySettingsScreen(
                     preferences = state.preferences,
                     onColorScheme = onColorScheme,
@@ -188,11 +188,7 @@ fun SettingsHost(
                     onRunPushConnectionTest = onNotificationPushConnectionTest,
                     onPermissionChanged = onNotificationPermissionChanged,
                 )
-                SettingsRoute.Privacy -> PrivacySettingsScreen(
-                    state.preferences.cleanTrackingParameters,
-                    onTrackingCleanup,
-                    { onRoute(SettingsRoute.PrivacyAccounts) },
-                )
+                SettingsRoute.Privacy -> PrivacySettingsScreen(state.preferences.cleanTrackingParameters, onTrackingCleanup)
                 SettingsRoute.ContentWarnings -> ContentWarningSettingsScreen(
                     rules = state.preferences.contentWarningRules,
                     onChanged = onContentWarningRules,

@@ -51,6 +51,12 @@ internal fun settingsMainRows(preferences: AppPreferences): List<SettingsMainRow
             stringResource(R.string.settings_content_warnings_summary),
         ),
         SettingsMainRow(
+            SettingsRoute.PrivacyAccounts,
+            "settings_blocks_mutes",
+            stringResource(R.string.settings_blocks_mutes),
+            stringResource(R.string.settings_blocks_mutes_summary),
+        ),
+        SettingsMainRow(
             SettingsRoute.Privacy,
             "settings_privacy",
             stringResource(R.string.settings_privacy),

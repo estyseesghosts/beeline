@@ -141,7 +141,6 @@
     <string name="profile_unfollow_confirm">¿Dejar de seguir?</string>
     <string name="profile_follow_confirm">¿Seguir?</string>
     <string name="settings_blocked_users">Usuarios bloqueados</string>
-    <string name="settings_choose_account">Elegir cuenta</string>
     <string name="settings_colour_style_system">Sistema</string>
     <string name="settings_content_warnings">Advertencias de contenido</string>
     <string name="settings_display">Visualización</string>

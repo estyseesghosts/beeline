@@ -44,6 +44,7 @@ class SettingsMainPageTest {
         "settings_timeline_media" to SettingsRoute.TimelineMedia,
         "settings_posting" to SettingsRoute.Posting,
         "settings_content_warnings" to SettingsRoute.ContentWarnings,
+        "settings_blocks_mutes" to SettingsRoute.PrivacyAccounts,
         "settings_privacy" to SettingsRoute.Privacy,
         "settings_notifications" to SettingsRoute.Notifications,
     )
@@ -96,7 +97,7 @@ class SettingsMainPageTest {
     fun theTrackingParameterRowIsASwitchThatShowsItsState() {
         var clean by mutableStateOf(false)
         compose.setContent {
-            Column { PrivacySettingsScreen(clean, { clean = it }, onSelectAccount = {}) }
+            Column { PrivacySettingsScreen(clean, { clean = it }) }
         }
 
         compose.onNodeWithTag("tracking_cleanup").assertIsOff().performClick()

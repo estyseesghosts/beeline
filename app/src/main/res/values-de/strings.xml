@@ -110,7 +110,6 @@
     <string name="settings_notifications">Benachrichtigungen</string>
     <string name="settings_privacy">Privatsphäre</string>
     <string name="settings_language">Sprache</string>
-    <string name="settings_choose_account">Konto auswählen</string>
     <string name="settings_blocked_users">Blockierte Benutzer</string>
     <string name="settings_muted_users">Stummgeschaltete Benutzer</string>
     <string name="settings_moderation_load_more">Mehr laden</string>

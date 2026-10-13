@@ -27,6 +27,8 @@ reaction emoji, and an About page.
 - `LocalBlurEffectsEnabled` is the one switch for blur. `ConnectedApp` provides it. `rememberChromeBackdrop`
   and `ProfileHeader` read it. A new blur site must read it too.
 - `SettingsRoute.parent()` is the one Back order. `safeParent()` delegates to it.
+- The blocked and muted lists page has the title "Blocks and mutes". Its route stays `SettingsRoute.PrivacyAccounts`,
+  so a saved route still restores.
 - The account content warning page reuses the labels of the global page. The separate account labels are deleted.
 
 # Completed
@@ -34,11 +36,12 @@ reaction emoji, and an About page.
 - S1 Main page, Appearance sections, Timeline and media page. Commit `5dc86021`.
 - S2 "Disable blur effects" in Appearance, Screen and layout. Commit `eef0694d`.
 - S3 Posting at the top level, favourite reaction, Privacy switch. Commit `15f0d85f`.
-- S4 Content warnings at the top level, account rules child page, Back order (`SettingsRoute.parent()`).
+- S4 Content warnings at the top level, account rules child page, Back order (`SettingsRoute.parent()`). Commit `3ad81590`.
+- S5 Blocks and mutes at the top level, Privacy with the tracking switch only, no notification picker for one account.
 
 # Current slice
 
-S5 Blocked and muted lists at the top level. Privacy keeps only the tracking switch.
+S6 About page.
 
 # Files involved
 
@@ -51,14 +54,14 @@ S5 Blocked and muted lists at the top level. Privacy keeps only the tracking swi
 
 # Verification
 
-- S1 to S4: the settings unit tests pass. The local CI-parity gate passes except for the architecture audit,
+- S1 to S5: the settings unit tests pass. The local CI-parity gate passes except for the architecture audit,
   which exits 1 at the base commit. No slice adds a regression line.
 - No device check ran. The blur setting has no check on a real screen.
 - No live server check ran for the favourite reaction.
 
 # Next
 
-S5 (blocked and muted lists at the top level, no account picker for one account), S6 (About).
+S6 (About).
 
 # Blockers
 
@@ -66,5 +69,5 @@ None.
 
 # Last safe commit
 
-`15f0d85f` Move Posting to the Settings main page and add the favourite reaction. S4 is the commit after it:
-"Move Content warnings to the Settings main page with an account rules page".
+`3ad81590` Move Content warnings to the Settings main page with an account rules page. S5 is the commit after it:
+"Move Blocks and mutes to the Settings main page and skip the one-account picker".

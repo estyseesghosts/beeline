@@ -1075,7 +1075,8 @@ The Settings main page is one flat list. Each row opens one page and shows a sho
 | Timeline and media | Application | Autoplay videos, Combine related hashtags |
 | Posting | Active account | Default audience, unlisted replies, image compression, favourite reaction |
 | Content warnings | Application, then active account | Hide or expand rules for all accounts, hidden content presentation, and a child page with the rules of the active account |
-| Privacy | Application and account | Tracking parameters, account privacy lists |
+| Blocks and mutes | Account | Blocked users, muted users and muted hashtags for each account |
+| Privacy | Application | Tracking parameters |
 | Notifications | Account | Alerts, categories and delivery for each account |
 
 The Posting page edits the active account and names it at the top. It does not select another account.
@@ -1089,6 +1090,9 @@ The four lists write on Save. Account rules add to the rules for all accounts (`
 The account page (`SettingsRoute.AccountContentWarnings`) edits the active account and names it.
 
 Back opens the parent page of a child page (`SettingsRoute.parent()`), then the main page, then closes Settings.
+The Blocks and mutes page keeps the route name `SettingsRoute.PrivacyAccounts` and the file `PrivacyAccountsScreen.kt`.
+With exactly one account, the Notifications row opens that account at once and Back returns to the main page
+(`skippingSingleAccountPicker`, `parent(accounts)`). A removed account still falls back to the picker.
 
 The Appearance page keeps the route name `SettingsRoute.Display` and the file `DisplaySettingsScreen.kt`.
 A switch row toggles as one control (`SettingsSwitchRow`), so a screen reader reads the title, the summary and the state together.
@@ -1096,5 +1100,6 @@ Section headings carry heading semantics.
 
 Sources: `ui/settings/SettingsScreen.kt`, `SettingsHost.kt`, `SettingsRoute.kt`, `SettingsComponents.kt`,
 `TimelineMediaSettingsScreen.kt`, `PostingSettingsScreen.kt`, `FavouriteEmojiSetting.kt`, `ContentWarningSettingsScreen.kt`,
-`ContentWarningRulesEditor.kt`, `SettingsRouteParents.kt`, `ContentWarningSettingsTest`, `SettingsMainPageTest`,
+`ContentWarningRulesEditor.kt`, `SettingsRouteParents.kt`, `PrivacyAccountsScreen.kt`, `NotificationAccountsScreen.kt`,
+`ContentWarningSettingsTest`, `SettingsAccountPagesTest`, `SettingsMainPageTest`,
 `SettingsDisplayTest`, `PostingSettingsScreenTest`. No device check ran for these pages. No live server check ran for the favourite reaction.

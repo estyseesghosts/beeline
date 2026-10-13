@@ -107,7 +107,6 @@
     <string name="settings_notifications">Notifications</string>
     <string name="settings_privacy">Confidentialité</string>
     <string name="settings_language">Langue</string>
-    <string name="settings_choose_account">Choisir un compte</string>
     <string name="settings_blocked_users">Utilisateur·rice·s bloqué·e·s</string>
     <string name="settings_muted_users">Utilisateur·rice·s en sourdine</string>
     <string name="settings_moderation_load_more">Afficher plus …</string>

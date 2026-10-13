@@ -8,7 +8,6 @@ import me.foxtails.palustris.R
 fun PrivacySettingsScreen(
     cleanTrackingParameters: Boolean,
     onTrackingCleanup: (Boolean) -> Unit,
-    onSelectAccount: () -> Unit,
 ) {
     SettingsSwitchRow(
         title = stringResource(R.string.settings_tracking_cleanup),
@@ -16,10 +15,5 @@ fun PrivacySettingsScreen(
         checked = cleanTrackingParameters,
         onCheckedChange = onTrackingCleanup,
         testTag = "tracking_cleanup",
-    )
-    SettingsRow(
-        stringResource(R.string.settings_account_privacy),
-        stringResource(R.string.settings_account_privacy_summary),
-        onSelectAccount,
     )
 }
