@@ -287,17 +287,11 @@
     <string name="settings_palette_pastel_blue">Bleu pastel</string>
     <string name="settings_palette_pastel_green">Vert pastel</string>
     <string name="settings_palette_pastel_indigo">Indigo pastel</string>
-    <string name="settings_palette_pastel_orange">Orange pastel</string>
     <string name="settings_palette_pastel_red">Rouge pastel</string>
-    <string name="settings_palette_pastel_violet">Violet pastel</string>
-    <string name="settings_palette_pastel_yellow">Jaune pastel</string>
     <string name="settings_palette_vibrant_blue">Bleu vif</string>
     <string name="settings_palette_vibrant_green">Vert vif</string>
     <string name="settings_palette_vibrant_indigo">Indigo vif</string>
-    <string name="settings_palette_vibrant_orange">Orange vif</string>
     <string name="settings_palette_vibrant_red">Rouge vif</string>
-    <string name="settings_palette_vibrant_violet">Violet vif</string>
-    <string name="settings_palette_vibrant_yellow">Jaune vif</string>
     <string name="settings_posting">Publication</string>
     <string name="settings_posting_replies_unlisted">Réponses toujours hors des fils</string>
     <string name="settings_posting_replies_unlisted_summary">Simple réglage de départ. Vous pouvez le changer à chaque réponse.</string>

@@ -42,36 +42,50 @@ fun resolvedAppColorScheme(
     }
 }
 
-fun appPaletteColor(palette: AppColorPalette): Color = when (palette) {
-    AppColorPalette.PastelRed -> Color(0xFFF28B82)
-    AppColorPalette.PastelOrange -> Color(0xFFF6B26B)
-    AppColorPalette.PastelYellow -> Color(0xFFF9E27D)
-    AppColorPalette.PastelGreen -> Color(0xFFA8D5BA)
-    AppColorPalette.PastelBlue -> Color(0xFF9FC5E8)
-    AppColorPalette.PastelIndigo -> Color(0xFFA9A7E8)
-    AppColorPalette.PastelViolet -> Color(0xFFD7A7E8)
-    AppColorPalette.VibrantRed -> Color(0xFFE53935)
-    AppColorPalette.VibrantOrange -> Color(0xFFF57C00)
-    AppColorPalette.VibrantYellow -> Color(0xFFFBC02D)
-    AppColorPalette.VibrantGreen -> Color(0xFF43A047)
-    AppColorPalette.VibrantBlue -> Color(0xFF1E88E5)
-    AppColorPalette.VibrantIndigo -> Color(0xFF3949AB)
-    AppColorPalette.VibrantViolet -> Color(0xFF8E24AA)
+fun appPaletteColor(palette: AppColorPalette): Color = paletteColors(palette).primary
+
+/** The four hand-picked colours of one palette, lightest to darkest by luminance. */
+internal data class PaletteColors(
+    val lighter: Color,
+    val primary: Color,
+    val darker: Color,
+    val darkest: Color,
+)
+
+internal fun paletteColors(palette: AppColorPalette): PaletteColors = when (palette) {
+    AppColorPalette.PastelGold -> PaletteColors(Color(0xFFFFC768), Color(0xFFF88200), Color(0xFFD37329), Color(0xFF594834))
+    AppColorPalette.PastelRed -> PaletteColors(Color(0xFFFFAA92), Color(0xFFFF594F), Color(0xFFE85762), Color(0xFF5C3F3C))
+    AppColorPalette.PastelPink -> PaletteColors(Color(0xFFFFB4EB), Color(0xFFFA6AAC), Color(0xFFFA93C0), Color(0xFF711544))
+    AppColorPalette.PastelIndigo -> PaletteColors(Color(0xFFEDD2FF), Color(0xFFB189F2), Color(0xFF745EAE), Color(0xFF493E76))
+    AppColorPalette.PastelBlue -> PaletteColors(Color(0xFFC7D1FF), Color(0xFF627BE9), Color(0xFF425091), Color(0xFF2B3873))
+    AppColorPalette.PastelGreen -> PaletteColors(Color(0xFFB4FBA6), Color(0xFF88DA78), Color(0xFF6FC15E), Color(0xFF2D5126))
+    AppColorPalette.VibrantGold -> PaletteColors(Color(0xFFFFC711), Color(0xFFEE8711), Color(0xFFD16F10), Color(0xFF6C380B))
+    AppColorPalette.VibrantRed -> PaletteColors(Color(0xFFFF706A), Color(0xFFF11E16), Color(0xFFB63832), Color(0xFF270807))
+    AppColorPalette.VibrantPink -> PaletteColors(Color(0xFFFF80C3), Color(0xFFF62B8F), Color(0xFFC24883), Color(0xFF3B1D2C))
+    AppColorPalette.VibrantIndigo -> PaletteColors(Color(0xFFCEA2FF), Color(0xFF9453FF), Color(0xFF664FA4), Color(0xFF3F3661))
+    AppColorPalette.VibrantBlue -> PaletteColors(Color(0xFF92A1FB), Color(0xFF3364FE), Color(0xFF2B5094), Color(0xFF182E4E))
+    AppColorPalette.VibrantGreen -> PaletteColors(Color(0xFF53CF45), Color(0xFF00AA00), Color(0xFF1E8C12), Color(0xFF021C00))
 }
 
 fun selectedAppColorScheme(
     palette: AppColorPalette,
     darkTheme: Boolean,
 ): ColorScheme {
-    val seed = paletteSeed(palette)
-    val primary = tone(seed, if (darkTheme) 0.78f else 0.42f, 1f)
-    val primaryContainer = tone(seed, if (darkTheme) 0.32f else 0.86f, 1f)
-    val secondarySeed = seed.copy(hue = (seed.hue + 36f) % 360f)
-    val tertiarySeed = seed.copy(hue = (seed.hue + 72f) % 360f)
-    val secondary = tone(secondarySeed, if (darkTheme) 0.68f else 0.42f, 0.8f)
-    val secondaryContainer = tone(secondarySeed, if (darkTheme) 0.28f else 0.84f, 0.8f)
-    val tertiary = tone(tertiarySeed, if (darkTheme) 0.68f else 0.42f, 0.8f)
-    val tertiaryContainer = tone(tertiarySeed, if (darkTheme) 0.28f else 0.84f, 0.8f)
+    val picked = paletteColors(palette)
+    val seed = seedFromPrimary(picked.primary)
+    val primary = if (darkTheme) picked.lighter else picked.primary
+    val onPrimary = if (darkTheme) picked.darkest else contrasting(picked.primary)
+    val primaryContainer = if (darkTheme) picked.darkest else picked.lighter
+    val onPrimaryContainer = if (darkTheme) picked.lighter else picked.darkest
+    val secondary = if (darkTheme) picked.primary else picked.darker
+    val onSecondary = contrasting(secondary)
+    val secondaryContainer = if (darkTheme) picked.darker else picked.lighter
+    val onSecondaryContainer = if (darkTheme) contrasting(secondaryContainer) else picked.darkest
+    val tertiary = secondary
+    val onTertiary = onSecondary
+    val tertiaryContainer = secondaryContainer
+    val onTertiaryContainer = onSecondaryContainer
+    val inversePrimary = if (darkTheme) picked.primary else picked.lighter
     val neutralSurface = tone(seed, if (darkTheme) 0.16f else 0.98f, if (darkTheme) 0.07f else 0.10f)
     val neutralVariant = tone(seed, if (darkTheme) 0.24f else 0.91f, if (darkTheme) 0.18f else 0.14f)
     val onSurface = tone(seed, if (darkTheme) 0.94f else 0.18f, if (darkTheme) 0.10f else 0.12f)
@@ -82,18 +96,18 @@ fun selectedAppColorScheme(
     val base = if (darkTheme) darkColorScheme() else lightColorScheme()
     return base.copy(
         primary = primary,
-        onPrimary = contrasting(primary),
+        onPrimary = onPrimary,
         primaryContainer = primaryContainer,
-        onPrimaryContainer = contrasting(primaryContainer),
-        inversePrimary = tone(seed, if (darkTheme) 0.42f else 0.78f, 1f),
+        onPrimaryContainer = onPrimaryContainer,
+        inversePrimary = inversePrimary,
         secondary = secondary,
-        onSecondary = contrasting(secondary),
+        onSecondary = onSecondary,
         secondaryContainer = secondaryContainer,
-        onSecondaryContainer = contrasting(secondaryContainer),
+        onSecondaryContainer = onSecondaryContainer,
         tertiary = tertiary,
-        onTertiary = contrasting(tertiary),
+        onTertiary = onTertiary,
         tertiaryContainer = tertiaryContainer,
-        onTertiaryContainer = contrasting(tertiaryContainer),
+        onTertiaryContainer = onTertiaryContainer,
         background = neutralSurface,
         onBackground = onSurface,
         surface = neutralSurface,
@@ -122,18 +136,27 @@ fun selectedAppColorScheme(
 
 private data class PaletteSeed(val hue: Float, val saturation: Float)
 
-private fun paletteSeed(palette: AppColorPalette): PaletteSeed = PaletteSeed(
-    hue = when (palette) {
-        AppColorPalette.PastelRed, AppColorPalette.VibrantRed -> 0f
-        AppColorPalette.PastelOrange, AppColorPalette.VibrantOrange -> 30f
-        AppColorPalette.PastelYellow, AppColorPalette.VibrantYellow -> 60f
-        AppColorPalette.PastelGreen, AppColorPalette.VibrantGreen -> 120f
-        AppColorPalette.PastelBlue, AppColorPalette.VibrantBlue -> 210f
-        AppColorPalette.PastelIndigo, AppColorPalette.VibrantIndigo -> 240f
-        AppColorPalette.PastelViolet, AppColorPalette.VibrantViolet -> 280f
-    },
-    saturation = if (palette.name.startsWith("Pastel")) 0.55f else 0.85f,
-)
+/**
+ * The neutral seed for surfaces and outlines, taken from the palette's Primary.
+ * Neutral roles are not part of the picked colours, so they stay derived.
+ */
+private fun seedFromPrimary(primary: Color): PaletteSeed {
+    val r = primary.red
+    val g = primary.green
+    val b = primary.blue
+    val max = maxOf(r, g, b)
+    val min = minOf(r, g, b)
+    val lightness = (max + min) / 2f
+    if (max == min) return PaletteSeed(hue = 0f, saturation = 0f)
+    val delta = max - min
+    val saturation = if (lightness > 0.5f) delta / (2f - max - min) else delta / (max + min)
+    val hue = when (max) {
+        r -> ((g - b) / delta + (if (g < b) 6f else 0f)) * 60f
+        g -> ((b - r) / delta + 2f) * 60f
+        else -> ((r - g) / delta + 4f) * 60f
+    }
+    return PaletteSeed(hue = hue, saturation = saturation.coerceIn(0f, 1f))
+}
 
 private fun tone(seed: PaletteSeed, lightness: Float, saturationScale: Float): Color = Color.hsl(
     hue = seed.hue,
@@ -165,9 +188,9 @@ internal fun contrastRatio(a: Color, b: Color): Float {
     return (maxOf(la, lb) + 0.05f) / (minOf(la, lb) + 0.05f)
 }
 
-private fun contrasting(color: Color): Color {
-    val brightness = color.red * 0.2126f + color.green * 0.7152f + color.blue * 0.0722f
-    return if (brightness > 0.58f) Color(0xFF151515) else Color.White
+internal fun contrasting(color: Color): Color {
+    val dark = Color(0xFF151515)
+    return if (contrastRatio(color, dark) >= contrastRatio(color, Color.White)) dark else Color.White
 }
 
 private fun grayscale(scheme: ColorScheme): ColorScheme = scheme.copy(

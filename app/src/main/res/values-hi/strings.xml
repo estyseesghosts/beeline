@@ -181,17 +181,11 @@
     <string name="settings_palette_pastel_blue">हल्का नीला</string>
     <string name="settings_palette_pastel_green">हल्का हरा</string>
     <string name="settings_palette_pastel_indigo">हल्का जामुनी-नीला</string>
-    <string name="settings_palette_pastel_orange">हल्का नारंगी</string>
     <string name="settings_palette_pastel_red">हल्का लाल</string>
-    <string name="settings_palette_pastel_violet">हल्का बैंगनी</string>
-    <string name="settings_palette_pastel_yellow">हल्का पीला</string>
     <string name="settings_palette_vibrant_blue">चटक नीला</string>
     <string name="settings_palette_vibrant_green">चटक हरा</string>
     <string name="settings_palette_vibrant_indigo">चटक जामुनी-नीला</string>
-    <string name="settings_palette_vibrant_orange">चटक नारंगी</string>
     <string name="settings_palette_vibrant_red">चटक लाल</string>
-    <string name="settings_palette_vibrant_violet">चटक बैंगनी</string>
-    <string name="settings_palette_vibrant_yellow">चटक पीला</string>
     <string name="settings_posting">पोस्ट करना</string>
     <string name="settings_posting_replies_unlisted">जवाब हमेशा फ़ीड से बाहर रखें</string>
     <string name="settings_posting_replies_unlisted_summary">यह सिर्फ़ शुरुआती सेटिंग है। हर जवाब में बदल सकते हैं।</string>

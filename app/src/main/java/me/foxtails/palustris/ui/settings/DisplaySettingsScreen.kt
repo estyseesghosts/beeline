@@ -254,7 +254,7 @@ private fun NavigationAnchorChoiceGroup(
 @Composable
 private fun PaletteGrid(selected: AppColorPalette?, onSelected: (AppColorPalette) -> Unit) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        AppColorPalette.entries.chunked(7).forEach { row ->
+        AppColorPalette.entries.chunked(6).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 row.forEach { palette ->
                     val label = paletteLabel(palette)
@@ -284,20 +284,18 @@ private fun PaletteGrid(selected: AppColorPalette?, onSelected: (AppColorPalette
 @Composable
 private fun paletteLabel(palette: AppColorPalette): String = stringResource(
     when (palette) {
+        AppColorPalette.PastelGold -> R.string.settings_palette_pastel_gold
         AppColorPalette.PastelRed -> R.string.settings_palette_pastel_red
-        AppColorPalette.PastelOrange -> R.string.settings_palette_pastel_orange
-        AppColorPalette.PastelYellow -> R.string.settings_palette_pastel_yellow
-        AppColorPalette.PastelGreen -> R.string.settings_palette_pastel_green
-        AppColorPalette.PastelBlue -> R.string.settings_palette_pastel_blue
+        AppColorPalette.PastelPink -> R.string.settings_palette_pastel_pink
         AppColorPalette.PastelIndigo -> R.string.settings_palette_pastel_indigo
-        AppColorPalette.PastelViolet -> R.string.settings_palette_pastel_violet
+        AppColorPalette.PastelBlue -> R.string.settings_palette_pastel_blue
+        AppColorPalette.PastelGreen -> R.string.settings_palette_pastel_green
+        AppColorPalette.VibrantGold -> R.string.settings_palette_vibrant_gold
         AppColorPalette.VibrantRed -> R.string.settings_palette_vibrant_red
-        AppColorPalette.VibrantOrange -> R.string.settings_palette_vibrant_orange
-        AppColorPalette.VibrantYellow -> R.string.settings_palette_vibrant_yellow
-        AppColorPalette.VibrantGreen -> R.string.settings_palette_vibrant_green
-        AppColorPalette.VibrantBlue -> R.string.settings_palette_vibrant_blue
+        AppColorPalette.VibrantPink -> R.string.settings_palette_vibrant_pink
         AppColorPalette.VibrantIndigo -> R.string.settings_palette_vibrant_indigo
-        AppColorPalette.VibrantViolet -> R.string.settings_palette_vibrant_violet
+        AppColorPalette.VibrantBlue -> R.string.settings_palette_vibrant_blue
+        AppColorPalette.VibrantGreen -> R.string.settings_palette_vibrant_green
     },
 )
 

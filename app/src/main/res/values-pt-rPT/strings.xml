@@ -291,17 +291,11 @@
     <string name="settings_palette_pastel_blue">Azul pastel</string>
     <string name="settings_palette_pastel_green">Verde pastel</string>
     <string name="settings_palette_pastel_indigo">Índigo pastel</string>
-    <string name="settings_palette_pastel_orange">Laranja pastel</string>
     <string name="settings_palette_pastel_red">Vermelho pastel</string>
-    <string name="settings_palette_pastel_violet">Violeta pastel</string>
-    <string name="settings_palette_pastel_yellow">Amarelo pastel</string>
     <string name="settings_palette_vibrant_blue">Azul vivo</string>
     <string name="settings_palette_vibrant_green">Verde vivo</string>
     <string name="settings_palette_vibrant_indigo">Índigo vivo</string>
-    <string name="settings_palette_vibrant_orange">Laranja vivo</string>
     <string name="settings_palette_vibrant_red">Vermelho vivo</string>
-    <string name="settings_palette_vibrant_violet">Violeta vivo</string>
-    <string name="settings_palette_vibrant_yellow">Amarelo vivo</string>
     <string name="settings_posting">Publicação</string>
     <string name="settings_posting_replies_unlisted">Respostas sempre fora dos feeds</string>
     <string name="settings_posting_replies_unlisted_summary">É só o valor inicial. Pode mudar em cada resposta.</string>

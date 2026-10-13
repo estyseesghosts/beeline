@@ -236,17 +236,11 @@
     <string name="settings_palette_pastel_blue">パステルブルー</string>
     <string name="settings_palette_pastel_green">パステルグリーン</string>
     <string name="settings_palette_pastel_indigo">パステルインディゴ</string>
-    <string name="settings_palette_pastel_orange">パステルオレンジ</string>
     <string name="settings_palette_pastel_red">パステルレッド</string>
-    <string name="settings_palette_pastel_violet">パステルバイオレット</string>
-    <string name="settings_palette_pastel_yellow">パステルイエロー</string>
     <string name="settings_palette_vibrant_blue">鮮やかなブルー</string>
     <string name="settings_palette_vibrant_green">鮮やかなグリーン</string>
     <string name="settings_palette_vibrant_indigo">鮮やかなインディゴ</string>
-    <string name="settings_palette_vibrant_orange">鮮やかなオレンジ</string>
     <string name="settings_palette_vibrant_red">鮮やかなレッド</string>
-    <string name="settings_palette_vibrant_violet">鮮やかなバイオレット</string>
-    <string name="settings_palette_vibrant_yellow">鮮やかなイエロー</string>
     <string name="settings_posting">投稿</string>
     <string name="settings_posting_replies_unlisted">返信は常にフィードに出さない</string>
     <string name="settings_posting_replies_unlisted_summary">初期値です。返信ごとに変えられます。</string>

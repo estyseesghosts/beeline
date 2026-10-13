@@ -253,17 +253,11 @@
     <string name="settings_palette_pastel_blue">柔和蓝</string>
     <string name="settings_palette_pastel_green">柔和绿</string>
     <string name="settings_palette_pastel_indigo">柔和靛蓝</string>
-    <string name="settings_palette_pastel_orange">柔和橙</string>
     <string name="settings_palette_pastel_red">柔和红</string>
-    <string name="settings_palette_pastel_violet">柔和紫</string>
-    <string name="settings_palette_pastel_yellow">柔和黄</string>
     <string name="settings_palette_vibrant_blue">鲜艳蓝</string>
     <string name="settings_palette_vibrant_green">鲜艳绿</string>
     <string name="settings_palette_vibrant_indigo">鲜艳靛蓝</string>
-    <string name="settings_palette_vibrant_orange">鲜艳橙</string>
     <string name="settings_palette_vibrant_red">鲜艳红</string>
-    <string name="settings_palette_vibrant_violet">鲜艳紫</string>
-    <string name="settings_palette_vibrant_yellow">鲜艳黄</string>
     <string name="settings_posting">发帖</string>
     <string name="settings_posting_replies_unlisted">回复总是悄悄公开</string>
     <string name="settings_posting_replies_unlisted_summary">只是默认值，每次回复时都可以改。</string>

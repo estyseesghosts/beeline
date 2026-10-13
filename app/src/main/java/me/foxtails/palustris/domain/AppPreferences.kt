@@ -30,20 +30,18 @@ enum class AppColorScheme {
 }
 
 enum class AppColorPalette {
+    PastelGold,
     PastelRed,
-    PastelOrange,
-    PastelYellow,
-    PastelGreen,
-    PastelBlue,
+    PastelPink,
     PastelIndigo,
-    PastelViolet,
+    PastelBlue,
+    PastelGreen,
+    VibrantGold,
     VibrantRed,
-    VibrantOrange,
-    VibrantYellow,
-    VibrantGreen,
-    VibrantBlue,
+    VibrantPink,
     VibrantIndigo,
-    VibrantViolet,
+    VibrantBlue,
+    VibrantGreen,
 }
 
 enum class HiddenContentPresentation { Remove, Placeholder }

@@ -279,17 +279,11 @@
     <string name="settings_palette_pastel_blue">柔和藍</string>
     <string name="settings_palette_pastel_green">柔和綠</string>
     <string name="settings_palette_pastel_indigo">柔和靛藍</string>
-    <string name="settings_palette_pastel_orange">柔和橘</string>
     <string name="settings_palette_pastel_red">柔和紅</string>
-    <string name="settings_palette_pastel_violet">柔和紫</string>
-    <string name="settings_palette_pastel_yellow">柔和黃</string>
     <string name="settings_palette_vibrant_blue">鮮豔藍</string>
     <string name="settings_palette_vibrant_green">鮮豔綠</string>
     <string name="settings_palette_vibrant_indigo">鮮豔靛藍</string>
-    <string name="settings_palette_vibrant_orange">鮮豔橘</string>
     <string name="settings_palette_vibrant_red">鮮豔紅</string>
-    <string name="settings_palette_vibrant_violet">鮮豔紫</string>
-    <string name="settings_palette_vibrant_yellow">鮮豔黃</string>
     <string name="settings_posting">發文</string>
     <string name="settings_posting_replies_unlisted">回覆一律不公開</string>
     <string name="settings_posting_replies_unlisted_summary">只是預設值，每次回覆時都可以改。</string>

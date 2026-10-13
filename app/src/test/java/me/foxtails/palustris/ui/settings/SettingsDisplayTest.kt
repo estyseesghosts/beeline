@@ -132,7 +132,7 @@ class SettingsDisplayTest {
     }
 
     @Test
-    fun displayScreenShowsThreeExclusiveStylesAndFourteenPaletteChoices() {
+    fun displayScreenShowsThreeExclusiveStylesAndTwelvePaletteChoices() {
         compose.activity.setContent {
             DisplaySettingsScreen(
                 preferences = AppPreferences(),
@@ -151,8 +151,8 @@ class SettingsDisplayTest {
         compose.onNodeWithText("System monochrome").assertIsDisplayed()
         compose.onNodeWithText("Colour palette").assertIsDisplayed()
         listOf(
-            "Pastel red", "Pastel orange", "Pastel yellow", "Pastel green", "Pastel blue", "Pastel indigo", "Pastel violet",
-            "Vibrant red", "Vibrant orange", "Vibrant yellow", "Vibrant green", "Vibrant blue", "Vibrant indigo", "Vibrant violet",
+            "Pastel gold", "Pastel red", "Pastel pink", "Pastel indigo", "Pastel blue", "Pastel green",
+            "Vibrant gold", "Vibrant red", "Vibrant pink", "Vibrant indigo", "Vibrant blue", "Vibrant green",
         ).forEach { compose.onNodeWithContentDescription(it).assertIsDisplayed() }
     }
 
@@ -238,9 +238,9 @@ class SettingsDisplayTest {
     fun filePreferencesRoundTripPaletteAndMigrateLegacyScheme() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val repository = FileAppPreferencesRepository(context)
-        repository.update { it.copy(colorPalette = AppColorPalette.VibrantViolet, colorScheme = AppColorScheme.System) }
+        repository.update { it.copy(colorPalette = AppColorPalette.VibrantPink, colorScheme = AppColorScheme.System) }
         val reloaded = FileAppPreferencesRepository(context)
-        assertEquals(AppColorPalette.VibrantViolet, reloaded.observe().first { it.loaded }.preferences.colorPalette)
+        assertEquals(AppColorPalette.VibrantPink, reloaded.observe().first { it.loaded }.preferences.colorPalette)
 
         File(context.noBackupFilesDir, "app-preferences.json").writeText("{\"colorScheme\":\"Monochrome\"}")
         val legacy = FileAppPreferencesRepository(context)
@@ -249,6 +249,23 @@ class SettingsDisplayTest {
         File(context.noBackupFilesDir, "app-preferences.json").writeText("{\"colorScheme\":\"Palette\"}")
         val palette = FileAppPreferencesRepository(context)
         assertEquals(AppColorScheme.Palette, palette.observe().first { it.loaded }.preferences.colorScheme)
+    }
+
+    @Test
+    fun filePreferencesMigrateRemovedPaletteNames() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        File(context.noBackupFilesDir, "app-preferences.json").writeText("{\"colorPalette\":\"PastelViolet\"}")
+        assertEquals(
+            AppColorPalette.PastelIndigo,
+            FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.colorPalette,
+        )
+
+        File(context.noBackupFilesDir, "app-preferences.json").writeText("{\"colorPalette\":\"VibrantOrange\"}")
+        assertEquals(
+            AppColorPalette.VibrantGold,
+            FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences.colorPalette,
+        )
     }
 
     // These tests deliberately use the default short viewport. The Display page scrolls, so the last

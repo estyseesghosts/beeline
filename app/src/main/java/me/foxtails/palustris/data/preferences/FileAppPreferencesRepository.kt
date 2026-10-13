@@ -98,7 +98,7 @@ class FileAppPreferencesRepository(
                 else -> AppColorScheme.System
             },
             colorPalette = when {
-                json.has("colorPalette") -> enumOrDefault(json, "colorPalette", AppColorPalette.PastelIndigo)
+                json.has("colorPalette") -> paletteOrDefault(json, "colorPalette", AppColorPalette.PastelIndigo)
                 storedColorScheme == "Vibrant" -> AppColorPalette.VibrantBlue
                 else -> AppColorPalette.PastelIndigo
             },
@@ -178,6 +178,21 @@ class InMemoryAppPreferencesRepository(
 
 private inline fun <reified T : Enum<T>> enumOrDefault(json: JSONObject, key: String, default: T): T =
     runCatching { enumValueOf<T>(json.optString(key)) }.getOrDefault(default)
+
+/**
+ * A stored palette name, with removed names mapped to their replacement.
+ * Removed names must not silently reset to the default.
+ */
+internal fun migratedPaletteName(stored: String): String = when (stored) {
+    "PastelOrange", "PastelYellow" -> AppColorPalette.PastelGold.name
+    "VibrantOrange", "VibrantYellow" -> AppColorPalette.VibrantGold.name
+    "PastelViolet" -> AppColorPalette.PastelIndigo.name
+    "VibrantViolet" -> AppColorPalette.VibrantIndigo.name
+    else -> stored
+}
+
+private fun paletteOrDefault(json: JSONObject, key: String, default: AppColorPalette): AppColorPalette =
+    runCatching { enumValueOf<AppColorPalette>(migratedPaletteName(json.optString(key))) }.getOrDefault(default)
 
 private fun ContentWarningRules.toJson(): JSONObject = JSONObject()
     .put("hideAll", hideAll)

@@ -289,17 +289,11 @@
     <string name="settings_palette_pastel_blue">Pastellblau</string>
     <string name="settings_palette_pastel_green">Pastellgrün</string>
     <string name="settings_palette_pastel_indigo">Pastellindigo</string>
-    <string name="settings_palette_pastel_orange">Pastellorange</string>
     <string name="settings_palette_pastel_red">Pastellrot</string>
-    <string name="settings_palette_pastel_violet">Pastellviolett</string>
-    <string name="settings_palette_pastel_yellow">Pastellgelb</string>
     <string name="settings_palette_vibrant_blue">Kräftiges Blau</string>
     <string name="settings_palette_vibrant_green">Kräftiges Grün</string>
     <string name="settings_palette_vibrant_indigo">Kräftiges Indigo</string>
-    <string name="settings_palette_vibrant_orange">Kräftiges Orange</string>
     <string name="settings_palette_vibrant_red">Kräftiges Rot</string>
-    <string name="settings_palette_vibrant_violet">Kräftiges Violett</string>
-    <string name="settings_palette_vibrant_yellow">Kräftiges Gelb</string>
     <string name="settings_posting">Beiträge</string>
     <string name="settings_posting_replies_unlisted">Antworten nie in Feeds zeigen</string>
     <string name="settings_posting_replies_unlisted_summary">Nur die Vorgabe. Du kannst sie bei jeder Antwort ändern.</string>
