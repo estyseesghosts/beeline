@@ -10,12 +10,13 @@ fun PrivacySettingsScreen(
     onTrackingCleanup: (Boolean) -> Unit,
     onSelectAccount: () -> Unit,
     onContentWarnings: () -> Unit,
-    onPosting: () -> Unit,
 ) {
-    SettingsRow(
-        stringResource(R.string.settings_tracking_cleanup),
-        stringResource(R.string.settings_tracking_cleanup_summary),
-        { onTrackingCleanup(!cleanTrackingParameters) },
+    SettingsSwitchRow(
+        title = stringResource(R.string.settings_tracking_cleanup),
+        summary = stringResource(R.string.settings_tracking_cleanup_summary),
+        checked = cleanTrackingParameters,
+        onCheckedChange = onTrackingCleanup,
+        testTag = "tracking_cleanup",
     )
     SettingsRow(
         stringResource(R.string.settings_content_warnings),
@@ -26,10 +27,5 @@ fun PrivacySettingsScreen(
         stringResource(R.string.settings_account_privacy),
         stringResource(R.string.settings_account_privacy_summary),
         onSelectAccount,
-    )
-    SettingsRow(
-        stringResource(R.string.settings_posting),
-        stringResource(R.string.settings_posting_summary),
-        onPosting,
     )
 }

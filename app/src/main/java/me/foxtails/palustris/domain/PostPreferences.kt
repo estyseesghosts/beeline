@@ -17,9 +17,14 @@ data class PostPreferences(
     val uploadCompression: UploadCompression = UploadCompression.Always,
 )
 
+/** Whether [value] can be stored as the favourite reaction: not blank, bounded, and without control characters. */
+fun isValidFavouriteEmoji(value: String): Boolean = value.trim().let {
+    it.isNotEmpty() && it.length <= MAX_FAVOURITE_EMOJI_LENGTH && it.none(Char::isISOControl)
+}
+
 fun normalizeFavouriteEmoji(value: String?): String = value
     ?.trim()
-    ?.takeIf { it.isNotEmpty() && it.length <= MAX_FAVOURITE_EMOJI_LENGTH && it.none(Char::isISOControl) }
+    ?.takeIf(::isValidFavouriteEmoji)
     ?: DEFAULT_FAVOURITE_EMOJI
 
 fun normalizeLocalMutedHashtags(values: List<String>): List<String> = values

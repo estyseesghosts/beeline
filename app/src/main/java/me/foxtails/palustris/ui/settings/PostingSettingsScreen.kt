@@ -2,71 +2,77 @@ package me.foxtails.palustris.ui.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import me.foxtails.palustris.R
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.UploadCompression
 
+/** What the server of the active account supports on the Posting page. An unsupported setting is not shown. */
+data class PostingSettingsSupport(
+    val uploadCompression: Boolean = false,
+    val favouriteEmoji: Boolean = false,
+)
+
+/** Commands of the Posting page. The owner binds each one to the active account. */
+class PostingSettingsActions(
+    val onDefaultAudience: (Audience) -> Unit = {},
+    val onRepliesUnlisted: (Boolean) -> Unit = {},
+    val onUploadCompression: (UploadCompression) -> Unit = {},
+    val onFavouriteEmoji: (String) -> Unit = {},
+)
+
+/**
+ * The Posting page: defaults for new posts of one account. [accountLabel] names that account, because the
+ * values are stored for each account and the page does not select one.
+ */
 @Composable
 fun PostingSettingsScreen(
     preferences: PostPreferences,
-    onDefaultAudience: (Audience) -> Unit,
-    onRepliesUnlisted: (Boolean) -> Unit,
-    showUploadCompression: Boolean = false,
-    onUploadCompression: (UploadCompression) -> Unit = {},
+    actions: PostingSettingsActions,
+    support: PostingSettingsSupport = PostingSettingsSupport(),
+    accountLabel: String? = null,
 ) {
-    val options = Audience.entries.filter { it != Audience.Direct }
-    Column(Modifier.fillMaxWidth()) {
-        options.forEach { audience ->
-            ListItem(
-                headlineContent = { Text(audience.label()) },
-                supportingContent = { Text(stringResource(R.string.settings_posting_audience_summary)) },
-                trailingContent = {
-                    androidx.compose.material3.RadioButton(
-                        selected = preferences.defaultAudience == audience,
-                        onClick = { onDefaultAudience(audience) },
-                    )
-                },
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+        accountLabel?.let { SettingsAccountScope(it) }
+        SettingsSection(stringResource(R.string.settings_posting_default_audience)) {
+            Audience.entries.filter { it != Audience.Direct }.forEach { audience ->
+                SettingsChoiceRow(audience.label(), preferences.defaultAudience == audience, { actions.onDefaultAudience(audience) })
+            }
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_posting_replies_unlisted),
+                summary = stringResource(R.string.settings_posting_replies_unlisted_summary),
+                checked = preferences.repliesUnlisted,
+                onCheckedChange = actions.onRepliesUnlisted,
+                testTag = "posting_replies_unlisted",
             )
         }
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_posting_replies_unlisted)) },
-            supportingContent = { Text(stringResource(R.string.settings_posting_replies_unlisted_summary)) },
-            trailingContent = {
-                Switch(
-                    checked = preferences.repliesUnlisted,
-                    onCheckedChange = onRepliesUnlisted,
-                )
-            },
-        )
-        if (showUploadCompression) {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_posting_compression)) },
-                supportingContent = { Text(stringResource(R.string.settings_posting_compression_summary)) },
-            )
-            UploadCompression.entries.forEach { option ->
-                ListItem(
-                    modifier = Modifier.selectable(
-                        selected = preferences.uploadCompression == option,
-                        role = androidx.compose.ui.semantics.Role.RadioButton,
-                        onClick = { onUploadCompression(option) },
-                    ),
-                    headlineContent = { Text(option.label()) },
-                    trailingContent = {
-                        androidx.compose.material3.RadioButton(
-                            selected = preferences.uploadCompression == option,
-                            onClick = null,
-                        )
-                    },
-                )
+        if (support.uploadCompression) {
+            HorizontalDivider()
+            UploadCompressionSection(preferences.uploadCompression, actions.onUploadCompression)
+        }
+        if (support.favouriteEmoji) {
+            HorizontalDivider()
+            SettingsSection(stringResource(R.string.settings_favourite_emoji)) {
+                FavouriteEmojiSetting(preferences.favouriteEmoji, actions.onFavouriteEmoji)
             }
+        }
+    }
+}
+
+@Composable
+private fun UploadCompressionSection(selected: UploadCompression, onSelected: (UploadCompression) -> Unit) {
+    SettingsSection(stringResource(R.string.settings_posting_compression)) {
+        SettingsNote(stringResource(R.string.settings_posting_compression_summary))
+        UploadCompression.entries.forEach { option ->
+            SettingsChoiceRow(option.label(), selected == option, { onSelected(option) })
         }
     }
 }

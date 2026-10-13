@@ -4,15 +4,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -47,28 +44,5 @@ internal fun SettingsRow(
         modifier = Modifier.fillMaxWidth().then(testTag?.let { Modifier.testTag(it) } ?: Modifier).clickable(onClick = onClick),
         headlineContent = { Text(title) },
         supportingContent = { Text(summary) },
-    )
-}
-
-/**
- * One on/off setting. The whole row toggles, and the switch only shows the state, so TalkBack reads one
- * control with the title, the summary and the state.
- */
-@Composable
-internal fun SettingsSwitchRow(
-    title: String,
-    summary: String?,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    testTag: String? = null,
-) {
-    ListItem(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(testTag?.let { Modifier.testTag(it) } ?: Modifier)
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
-        headlineContent = { Text(title) },
-        supportingContent = summary?.let { text -> { Text(text) } },
-        trailingContent = { Switch(checked = checked, onCheckedChange = null) },
     )
 }

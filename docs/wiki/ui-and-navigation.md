@@ -1073,12 +1073,20 @@ The Settings main page is one flat list. Each row opens one page and shows a sho
 | Appearance | Application | Theme (colour style, accent colour, background), Text (size, font), Screen and layout (60 Hz request, Disable blur effects, forced layout direction, navigation positions) |
 | Language | Application | Automatic translation and the application language |
 | Timeline and media | Application | Autoplay videos, Combine related hashtags |
-| Privacy | Application and account | Tracking parameters, content warnings, account privacy lists, posting defaults |
+| Posting | Active account | Default audience, unlisted replies, image compression, favourite reaction |
+| Privacy | Application and account | Tracking parameters, content warnings, account privacy lists |
 | Notifications | Account | Alerts, categories and delivery for each account |
+
+The Posting page edits the active account and names it at the top. It does not select another account.
+Image compression shows only when the server reports client compression. The favourite reaction shows only when
+`primaryFavourite.mode` is `Reaction` (a Misskey-family server). It stores `PostPreferences.favouriteEmoji`, the emoji that the
+favourite button sends. The page offers eight preset emoji and one text field. The field accepts one Unicode emoji
+(`isFavouriteEmojiInput`); it rejects a custom server emoji shortcode, because no test covers the form that a server returns for one.
 
 The Appearance page keeps the route name `SettingsRoute.Display` and the file `DisplaySettingsScreen.kt`.
 A switch row toggles as one control (`SettingsSwitchRow`), so a screen reader reads the title, the summary and the state together.
 Section headings carry heading semantics.
 
 Sources: `ui/settings/SettingsScreen.kt`, `SettingsHost.kt`, `SettingsRoute.kt`, `SettingsComponents.kt`,
-`TimelineMediaSettingsScreen.kt`, `SettingsMainPageTest`, `SettingsDisplayTest`. No device check ran for these pages.
+`TimelineMediaSettingsScreen.kt`, `PostingSettingsScreen.kt`, `FavouriteEmojiSetting.kt`, `SettingsMainPageTest`,
+`SettingsDisplayTest`, `PostingSettingsScreenTest`. No device check ran for these pages. No live server check ran for the favourite reaction.

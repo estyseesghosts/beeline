@@ -24,7 +24,6 @@ import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferencesState
-import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.ui.AppIcons
@@ -58,10 +57,8 @@ fun SettingsHost(
     onHiddenContentPresentation: (me.foxtails.palustris.domain.HiddenContentPresentation) -> Unit = {},
     postPreferences: PostPreferences = PostPreferences(),
     postPreferencesAccountLabel: String? = null,
-    onPostDefaultAudience: (Audience) -> Unit = {},
-    onPostRepliesUnlisted: (Boolean) -> Unit = {},
-    showUploadCompression: Boolean = false,
-    onPostUploadCompression: (me.foxtails.palustris.domain.UploadCompression) -> Unit = {},
+    postingSupport: PostingSettingsSupport = PostingSettingsSupport(),
+    postingActions: PostingSettingsActions = PostingSettingsActions(),
     onPostContentWarningRules: (ContentWarningRules) -> Unit = {},
     error: String? = null,
     canRetryError: Boolean = false,
@@ -195,7 +192,6 @@ fun SettingsHost(
                     onTrackingCleanup,
                     { onRoute(SettingsRoute.PrivacyAccounts) },
                     { onRoute(SettingsRoute.ContentWarnings) },
-                    { onRoute(SettingsRoute.Posting) },
                 )
                 SettingsRoute.ContentWarnings -> ContentWarningSettingsScreen(
                     rules = state.preferences.contentWarningRules,
@@ -208,10 +204,9 @@ fun SettingsHost(
                 )
                 SettingsRoute.Posting -> PostingSettingsScreen(
                     preferences = postPreferences,
-                    onDefaultAudience = onPostDefaultAudience,
-                    onRepliesUnlisted = onPostRepliesUnlisted,
-                    showUploadCompression = showUploadCompression,
-                    onUploadCompression = onPostUploadCompression,
+                    actions = postingActions,
+                    support = postingSupport,
+                    accountLabel = postPreferencesAccountLabel,
                 )
                 SettingsRoute.PrivacyAccounts -> PrivacyAccountsScreen(accounts) { accountId, kind ->
                     onModeration(accountId, kind)

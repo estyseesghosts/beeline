@@ -723,10 +723,9 @@
     <string name="settings_palette_vibrant_violet">Vibrant violet</string>
     <string name="settings_palette_vibrant_yellow">Vibrant yellow</string>
     <string name="settings_posting">Posting</string>
-    <string name="settings_posting_audience_summary">Default for new posts</string>
     <string name="settings_posting_replies_unlisted">Always make replies unlisted</string>
     <string name="settings_posting_replies_unlisted_summary">This is a default and does not override an explicit composer choice.</string>
-    <string name="settings_posting_summary">Choose defaults for new posts and replies.</string>
+    <string name="settings_posting_summary">Defaults for new posts and replies of the current account.</string>
     <string name="settings_privacy">Privacy</string>
     <string name="settings_privacy_account_list_summary">Manage this account\'s server list</string>
     <string name="settings_privacy_summary">Manage local privacy rules and account moderation lists.</string>
@@ -912,4 +911,12 @@
     <string name="settings_disable_blur_summary">Removes the blur behind floating controls and at the top of profile banners.</string>
     <string name="settings_timeline_media">Timeline and media</string>
     <string name="settings_timeline_media_summary">Video autoplay and related hashtags.</string>
+    <string name="settings_account_scope">These settings apply to %1$s.</string>
+    <string name="settings_posting_default_audience">Default audience for new posts</string>
+    <string name="settings_favourite_emoji">Favourite reaction</string>
+    <string name="settings_favourite_emoji_summary">The favourite button reacts with this emoji.</string>
+    <string name="settings_favourite_emoji_choice">React with %1$s</string>
+    <string name="settings_favourite_emoji_other">Other emoji</string>
+    <string name="settings_favourite_emoji_other_hint">Enter one emoji. Custom server emoji are not supported.</string>
+    <string name="settings_favourite_emoji_use">Use</string>
 </resources>
