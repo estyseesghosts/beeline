@@ -11,7 +11,7 @@ it was made from the start to work with multiple applications, that work in diff
 
 to abstract away the instances and the software they run to make the fediverse feel like one thing you can interact with and observe, whichever way you want to. 
 
-this is nowhere near the end. i would still call this app an unfinished prototype, but basic reading functionality works. i plan to add pixelfed support soon. the ui has quirks which i still have to document (mostly by design, although i think i squashed the bugs...)
+this is nowhere near the end. i would still call this app an unfinished prototype, but basic reading and posting work. i plan to add pixelfed support soon. the ui has quirks which i still have to document (mostly by design, although i think i squashed the bugs...)
 
 this app supports 
 - the mastodon api, and compatible servers 
@@ -23,7 +23,7 @@ this app supports
 - i personally use (and tested this app with) sharkey.
 - if there are bugs with vanilla misskey, open an issue! 
 
-native misskey chats are not implemented and are currently not planned - private message posts from mastodon are reimplemented here for misskey. native misskey chats are bound only to the local instance, and are not globally interoperable. private messages are NOT secure or encrypted at this point in time, in any way. you should only use them for sharing memes. will rename them to 'direct messages' but there is a ui disclaimer that they are not secure. (need to make that more prominent too)
+native misskey chats are not implemented and are currently not planned - private message posts from mastodon are reimplemented here for misskey. native misskey chats are bound only to the local instance, and are not globally interoperable. private messages are NOT secure or encrypted at this point in time, in any way. you should only use them for sharing memes. they are called 'direct messages' in the app, and there is a ui disclaimer that they are not secure. (need to make that more prominent too)
 
 this project is open source and licenced under the gpl v3. see license.md. please take inspiration from it. the fediverse is already something beautiful. it feels like the last safe space away from corporate social media. reddit, twitter, instagram and tiktok, facebook, using them anymore just feels like rotting. i think we as a society deserve better than that. 
 
@@ -44,17 +44,30 @@ as of now?
 - load your misskey and mastodon timelines & profiles & notifications
 - folds hashtags and links into nice little bubbles
 - federated direct messaging
-- load a grid of photos from your timeline (todo: photo grid by lists of hashtags/users && photo grid by misskey antennae)
+- load a grid of photos from your timeline, your lists, your followed hashtags, or your misskey antennae
+- post text, photos, and videos, with content warnings, polls, replies, quotes, and threads of posts
+- edit, delete, and schedule your posts, and post local-only, where your server supports each one
+- like, repost, react with emoji (including custom server emoji on misskey), and bookmark
+- search posts, people, and hashtags, and see trends
+- see mastodon lists and followed hashtags, and misskey lists and antennae, as chips on home and photo grid
+- group several hashtags into one chip
+- translate posts, automatically or by hand, where your server offers translation (off by default)
+- block, mute, and report, with moderation lists for accounts and hashtags
+- use the interface in english, arabic (right-to-left), chinese, hindi, japanese, korean, and more, with a choice of fonts and accent palettes
 
 
 ## todo
 
-uploading media attachments is not yet supported. additionally, for misskey, we should support drive in a basic way. 
+the photo grid works by lists, hashtags, and antennae, but not yet by users. 
 
-content warnings are not fully implemented. reporting, blocking, and muting are implemented through the moderation lists. 
+misskey drive: you can upload photos and videos to it, but you cannot browse it yet. 
 
-comments are missing entirely. 
+uploads to mastodon servers are not yet verified on a live server. 
 
-misskey antennas are not yet supported. viewing your followed hashtags or lists on mastodon is not supported yet either. 
+video uploads as webm need an arm64 phone. other phones upload h.264 mp4. 
+
+content warnings are not fully implemented. 
+
+search for posts on mastodon needs a search backend on the server. 
 
 possibly a hell of a lot more. i haven't fully thoroughly tested this.
