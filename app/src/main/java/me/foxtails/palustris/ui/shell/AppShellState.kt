@@ -56,6 +56,7 @@ internal fun timelineLabelRes(timeline: Timeline): Int = when (timeline) {
     Timeline.Home -> R.string.timeline_home
     Timeline.Local -> R.string.timeline_local
     Timeline.Social -> R.string.timeline_social
+    Timeline.Recommended -> R.string.timeline_recommended
     Timeline.Bubble -> R.string.timeline_bubble
     Timeline.Federated -> R.string.timeline_federated
 }
@@ -65,6 +66,7 @@ internal fun timelineDescriptionRes(timeline: Timeline): Int = when (timeline) {
     Timeline.Home -> R.string.timeline_description_home
     Timeline.Local -> R.string.timeline_description_local
     Timeline.Social -> R.string.timeline_description_social
+    Timeline.Recommended -> R.string.timeline_description_recommended
     Timeline.Bubble -> R.string.timeline_description_bubble
     Timeline.Federated -> R.string.timeline_description_federated
 }

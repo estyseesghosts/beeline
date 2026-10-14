@@ -111,7 +111,8 @@ fun PalustrisApp(
         val photoGridScrollState = androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState()
         val profileListState = androidx.compose.foundation.lazy.rememberLazyListState()
         val motionScheme = me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme.current
-        val availableTimelines = if (account == null) Timeline.entries.toSet() else home?.state?.availableTimelines ?: setOf(Timeline.Home)
+        // Recommendations are signed-in only, so anonymous sessions never list them.
+        val availableTimelines = if (account == null) Timeline.entries.filterNot { it == Timeline.Recommended }.toSet() else home?.state?.availableTimelines ?: setOf(Timeline.Home)
         val navigator = rememberShellNavigator(
             accountId = account?.id,
             sessionRevision = sessionRevision,

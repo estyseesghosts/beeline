@@ -1,3 +1,5 @@
+DVD Slice 1 (domain + capability, schema 14->15, persistence + review repairs) is this commit; Planorma Slice 8 is `2566ef41`. Verification: 2827 tests 0 failures, lint, ktlint, both assembles green; review REQUIRED R1 + O1 repaired by owner. Slice 2 contract: Recommended stays OUT of timelines set; Home via recommendations capability + timelines() override; Photo Grid never offers it. No device or live-server check ran. Next slice: DVD Slice 2 (probe + feed transport). Preceding safe commit: `2566ef41`.
+
 Planorma Slice 8 (paging relax + demotion + fixtures) is this commit; Slice 7 is `20cb0083`. Verification: 2820 tests 0 failures, lint, ktlint, both assembles green; review PASS. No device or live-server check ran. Next slice: DVD Slice 1 (domain + capability, schema 14->15). Preceding safe commit: `20cb0083`.
 
 Planorma Slice 7 (composer/discovery/edit gating + Bubble route) is this commit; Slice 6 is `21c2ec18`. Verification: 2803 tests 0 failures, lint, ktlint, both assembles green; review PASS (gaps recorded). No device or live-server check ran. Next slice: Planorma Slice 8 (paging/demotion/fixtures). Preceding safe commit: `21c2ec18`.

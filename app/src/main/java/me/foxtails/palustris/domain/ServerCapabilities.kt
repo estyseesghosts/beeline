@@ -55,6 +55,11 @@ data class ServerCapabilities(
     val reactionRoute: ReactionRoute = ReactionRoute.Unknown,
     /** Which bubble-timeline path the probe identified. Only Akkoma serves one. */
     val bubbleRoute: BubbleRoute = BubbleRoute.None,
+    /**
+     * DVD recommendations feed availability. Null when no probe has reported it; a null
+     * never reads as supported. Slice 2 owns the probe that fills it in.
+     */
+    val recommendations: RecommendationCapability? = null,
 ) {
     companion object {
         /**
@@ -64,8 +69,9 @@ data class ServerCapabilities(
          * invalidates snapshots that predate the quote-with-media rule. Revision 9
          * invalidates snapshots that predate own-post actions and translation. Revision 14
          * invalidates snapshots that predate server-flavor detection and the per-flavor table.
+         * Revision 15 invalidates snapshots that predate the recommendations capability.
          */
-        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 14
+        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 15
     }
 }
 
@@ -223,6 +229,7 @@ val timelineDisplayOrder: List<Timeline> = listOf(
     Timeline.Home,
     Timeline.Local,
     Timeline.Social,
+    Timeline.Recommended,
     Timeline.Bubble,
     Timeline.Federated,
 )

@@ -792,10 +792,12 @@
     <string name="timeline_description_federated">Posts from across the fediverse</string>
     <string name="timeline_description_home">Posts from people you follow</string>
     <string name="timeline_description_local">Posts from your server</string>
+    <string name="timeline_description_recommended">Posts picked for you</string>
     <string name="timeline_description_social">Posts from your server and people it follows</string>
     <string name="timeline_federated">Federated</string>
     <string name="timeline_home">Home</string>
     <string name="timeline_local">Local</string>
+    <string name="timeline_recommended">Recommended</string>
     <string name="timeline_social">Social</string>
     <string name="settings_posting_compression">Image compression</string>
     <string name="settings_posting_compression_summary">Shrink photos on this device before upload.</string>

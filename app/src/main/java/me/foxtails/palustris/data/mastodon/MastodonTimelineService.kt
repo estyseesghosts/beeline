@@ -38,5 +38,7 @@ internal class MastodonTimelineService(
             // remote-timeline mapping is proven, so Social stays unsupported as probed.
             Timeline.Bubble -> MastodonPageRoute("timeline:Bubble", "v1/timelines/bubble", "/api/v1/timelines/bubble", timeline.name, "timeline")
             Timeline.Social -> throw SourceError.Unsupported("timeline:$timeline")
+            // Mastodon has no recommendations feed, so Recommended stays unsupported here.
+            Timeline.Recommended -> throw SourceError.Unsupported("timeline:$timeline")
         }
 }

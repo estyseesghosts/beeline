@@ -30,6 +30,8 @@ internal class MisskeyTimelineService(
             Timeline.Home -> "notes/timeline"
             Timeline.Local -> "notes/local-timeline"
             Timeline.Social -> "notes/hybrid-timeline"
+            // DVD recommendations have a dedicated service; this generic path never serves them.
+            Timeline.Recommended -> throw SourceError.Unsupported("timeline:$timeline")
             Timeline.Bubble -> "notes/bubble-timeline"
             Timeline.Federated -> "notes/global-timeline"
         }

@@ -24,11 +24,12 @@ Implement docs/planorma.md (Pleroma/Akkoma/Pixelfed, 8 slices) and docs/dvd-recs
 - Planorma Slice 5 — reaction notifications + push. Commit `30167f53` "Add-reaction-notifications-S5".
 - Planorma Slice 6 — Pixelfed notification/push/streaming/report gates. Commit `21c2ec18` "Gate-Pixelfed-routes-S6".
 - Planorma Slice 7 — Pixelfed composer/discovery/edit/timeline gating + Bubble route. Commit `20cb0083` "Gate-composer-timelines-S7".
-- Planorma Slice 8 — paging relax + 404/405 demotion + fixtures/contract tests. Commit: (this checkpoint).
+- Planorma Slice 8 — paging relax + 404/405 demotion + fixtures/contract tests. Commit `2566ef41` "Add-paging-demotion-fixtures-S8".
+- DVD Slice 1 — domain + capability (amended scope), schema 14->15. Commit: (this checkpoint).
 
 # Current slice
 
-DVD Slice 1 — domain and capability (amended scope). Owner: TBD at dispatch.
+DVD Slice 2 — probe and feed transport. Owner: TBD at dispatch.
 
 # Files involved
 

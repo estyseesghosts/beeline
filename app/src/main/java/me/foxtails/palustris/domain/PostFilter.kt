@@ -42,7 +42,8 @@ object PostFilterPolicy {
 
 /** Home and lists take Home filters. Every other feed is public: local, federated, hashtags, and antennas. */
 fun FeedSource.filterContext(): FilterContext = when (this) {
-    is FeedSource.Timeline -> if (timeline == Timeline.Home) FilterContext.Home else FilterContext.Public
+    // Recommended is a personalized account-scoped feed like Home, so Home filters apply to it.
+    is FeedSource.Timeline -> if (timeline == Timeline.Home || timeline == Timeline.Recommended) FilterContext.Home else FilterContext.Public
     is FeedSource.UserList -> FilterContext.Home
     else -> FilterContext.Public
 }

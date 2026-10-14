@@ -184,7 +184,8 @@ class PhotoGridClearanceTest {
         error: String? = null,
     ) = PhotoGridFeedState(
         selectedFeed = PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Home)),
-        availableTimelines = timelineDisplayOrder,
+        // Photo Grid never offers Recommended, a Home-only timeline; production derives from capabilities.timelines.
+        availableTimelines = timelineDisplayOrder.filterNot { it == Timeline.Recommended },
         posts = posts(count, label),
         initialLoadComplete = true,
         nextCursor = nextCursor,
@@ -363,7 +364,8 @@ class PhotoGridClearanceTest {
                 PhotoGridScreen(
                     state = PhotoGridFeedState(
                         selectedFeed = PhotoGridFeed.Source(FeedSource.Timeline(Timeline.Home)),
-                        availableTimelines = timelineDisplayOrder,
+                        // Photo Grid never offers Recommended, a Home-only timeline.
+                        availableTimelines = timelineDisplayOrder.filterNot { it == Timeline.Recommended },
                     ),
                     chips = FeedChipsContract(
                         FeedChipState(hashtags = listOf(FeedSource.Hashtag("fixture", HashtagOrigin.Device)), loaded = true),
@@ -500,7 +502,7 @@ class PhotoGridClearanceTest {
             profileListState = rememberLazyListState(), largePresentation = true,
             rightObstructionClearance = right, bottomObstructionClearance = bottom,
             account = author, displayedProfile = author, savedTitle = R.string.app_name,
-            notificationAccountIdentity = "fixture", availableTimelines = timelineDisplayOrder.toSet(),
+            notificationAccountIdentity = "fixture", availableTimelines = timelineDisplayOrder.filterNot { it == Timeline.Recommended }.toSet(),
             sessionRevision = 0L, home = null, photoGrid = photoGrid(selected, selectedLabel),
             profile = AppShellFixtures.profile(), search = AppShellFixtures.search(FeedState()),
             bookmarks = AppShellFixtures.bookmarks(), notifications = AppShellFixtures.notifications(),
@@ -517,7 +519,8 @@ class PhotoGridClearanceTest {
     ) = PhotoGridContract(
         state = PhotoGridFeedState(
             selectedFeed = selected.value,
-            availableTimelines = timelineDisplayOrder,
+            // Photo Grid never offers Recommended, a Home-only timeline.
+            availableTimelines = timelineDisplayOrder.filterNot { it == Timeline.Recommended },
             posts = posts(10, "branch"),
             initialLoadComplete = true,
         ),

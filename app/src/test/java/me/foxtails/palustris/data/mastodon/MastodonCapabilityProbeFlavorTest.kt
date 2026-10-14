@@ -2,6 +2,7 @@ package me.foxtails.palustris.data.mastodon
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import java.io.File
 import javax.crypto.spec.SecretKeySpec
 import me.foxtails.palustris.data.auth.AccountFileStore
 import me.foxtails.palustris.domain.AccountId
@@ -12,6 +13,8 @@ import me.foxtails.palustris.domain.LocalOnlyRoute
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ReactionRoute
+import me.foxtails.palustris.domain.RecommendationCapability
+import me.foxtails.palustris.domain.RecommendationFlavor
 import me.foxtails.palustris.domain.ReportRoute
 import me.foxtails.palustris.domain.ScheduleRoute
 import me.foxtails.palustris.domain.SchedulingCapability
@@ -67,7 +70,7 @@ class MastodonCapabilityProbeFlavorTest {
         val capabilities = MastodonCapabilityProbe.parseCapabilities(instance("3.5.3 (compatible; Pixelfed 0.12.5)"))
 
         assertEquals(ServerFlavor.Pixelfed, capabilities.flavor)
-        assertEquals(14, capabilities.capabilitySchemaVersion)
+        assertEquals(15, capabilities.capabilitySchemaVersion)
         assertEquals(CapabilityStatus.Unsupported, capabilities.notifications.webPush)
         assertEquals(CapabilityStatus.Unsupported, capabilities.notifications.streaming)
         assertEquals(CapabilityStatus.Unsupported, capabilities.notifications.dismissal)
@@ -192,13 +195,13 @@ class MastodonCapabilityProbeFlavorTest {
     }
 
     @Test
-    fun schemaThirteenSnapshotForcesAFreshProbe() {
+    fun schemaFourteenSnapshotForcesAFreshProbe() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val store = AccountFileStore(context, SecretKeySpec(ByteArray(16) { 22 }, "AES"))
         store.clear()
         val accountId = AccountId(Connection("https://stale.example", Protocol.MASTODON), "account")
         val stale = MastodonCapabilityProbe.parseCapabilities(pleromaInstance()).copy(
-            capabilitySchemaVersion = 13,
+            capabilitySchemaVersion = 14,
             capabilitiesLastUpdated = 123L,
         )
         store.write(accountId, Session(accountId, "session-token", stale))
@@ -207,6 +210,35 @@ class MastodonCapabilityProbeFlavorTest {
 
         assertEquals(ServerCapabilities(), restored.capabilities)
         assertEquals(ServerFlavor.Unknown, restored.capabilities.flavor)
+    }
+
+    @Test
+    fun recommendationsCapabilitySurvivesEncryptedSessionRoundTrip() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val store = AccountFileStore(context, SecretKeySpec(ByteArray(16) { 23 }, "AES"))
+        store.clear()
+        val accountId = AccountId(Connection("https://dvd.chat", Protocol.MASTODON), "account")
+        val dvd = RecommendationCapability(
+            flavor = RecommendationFlavor.DVD_SHARKEY,
+            status = CapabilityStatus.Supported,
+            origin = "https://dvd.chat",
+        )
+        store.write(accountId, Session(accountId, "session-token", ServerCapabilities(recommendations = dvd)))
+
+        assertEquals(dvd, (store.read(accountId) ?: error("Session was not restored")).capabilities.recommendations)
+
+        store.write(accountId, Session(accountId, "session-token", ServerCapabilities(recommendations = null)))
+        assertNull((store.read(accountId) ?: error("Session was not restored")).capabilities.recommendations)
+
+        val file = File(context.noBackupFilesDir, "accounts").listFiles()
+            ?.single { it.extension == "enc" } ?: error("Session file was not written")
+        val tampered = store.readJson(file)
+        tampered.getJSONObject("capabilities").put(
+            "recommendations",
+            JSONObject().put("flavor", "FUTURE_FORK").put("status", "Supported").put("origin", "https://dvd.chat"),
+        )
+        store.writeJson(file, tampered)
+        assertNull((store.read(accountId) ?: error("Session was not restored")).capabilities.recommendations)
     }
 
     private fun instance(version: String): JSONObject {

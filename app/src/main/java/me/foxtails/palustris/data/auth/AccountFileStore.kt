@@ -40,6 +40,8 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.PushSessionState
 import me.foxtails.palustris.domain.ReactionRoute
 import me.foxtails.palustris.domain.ReactionSelectionMode
+import me.foxtails.palustris.domain.RecommendationCapability
+import me.foxtails.palustris.domain.RecommendationFlavor
 import me.foxtails.palustris.domain.ReportRoute
 import me.foxtails.palustris.domain.SavedPostsCapability
 import me.foxtails.palustris.domain.SavedPostsKind
@@ -278,6 +280,9 @@ private fun ServerCapabilities.toJson(): JSONObject = JSONObject()
     .put("reportRoute", reportRoute.name)
     .put("reactionRoute", reactionRoute.name)
     .put("bubbleRoute", bubbleRoute.name)
+    .put("recommendations", recommendations?.let {
+        JSONObject().put("flavor", it.flavor.name).put("status", it.status.name).put("origin", it.origin)
+    })
 
 private fun JSONObject.toCapabilities(): ServerCapabilities = ServerCapabilities(
     timelines = enumSet<Timeline>("timelines"),
@@ -342,6 +347,17 @@ private fun JSONObject.toCapabilities(): ServerCapabilities = ServerCapabilities
     reportRoute = enumOrDefault("reportRoute", ReportRoute.V1Reports),
     reactionRoute = enumOrDefault("reactionRoute", ReactionRoute.Unknown),
     bubbleRoute = enumOrDefault("bubbleRoute", BubbleRoute.None),
+    // Nullable like scheduling: missing or unparseable (unknown flavor, missing origin) drops to null,
+    // while an unknown status string keeps sibling convention and falls back to Unknown.
+    recommendations = optJSONObject("recommendations")?.let { json ->
+        runCatching {
+            RecommendationCapability(
+                flavor = RecommendationFlavor.valueOf(json.getString("flavor")),
+                status = json.enumOrDefault("status", CapabilityStatus.Unknown),
+                origin = json.getString("origin"),
+            )
+        }.getOrNull()
+    },
 )
 
 private fun PostingCapabilities.toJson(): JSONObject = JSONObject()
