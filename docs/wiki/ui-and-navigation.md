@@ -702,6 +702,19 @@ A server filter can match a post. A collapsing filter replaces the body with "Fi
 
 Sources: `domain/PostFilter.kt`, `ui/posts/PostFilterPresentation.kt`, `data/mastodon/MastodonFilterMapper.kt`, `PostRowFilterTest`, `MastodonFilterResultTest`.
 
+### Filter settings
+
+Settings > Blocks and mutes > Filters lists the filters of one account. The page can add, edit, and delete a filter. Status: source verified and test verified. No live check ran.
+
+- A filter has keywords, "Whole word only" for each keyword, an action (collapse or remove), the places where it applies, and an expiry.
+- Mastodon 4.0 and later uses v2 filters. One filter has a title and several keywords. The server matches them, so a change applies to posts that load after the save.
+- Pleroma, Akkoma, and older servers answer v2 with 404. Beeline then uses v1 filters: one word or phrase each. Beeline matches them on the device. "Remove" saves the filter as irreversible.
+- Beeline matches a v1 filter against the content warning, the text, poll options, media descriptions, and the quoted post. Case does not matter. Your own posts never match.
+- A saved filter applies to the feeds at once. Delete asks for confirmation first.
+- Misskey servers show "This server does not support filters" until word mutes arrive.
+
+Sources: `ui/filters/`, `domain/ClientFilterMatcher.kt`, `data/mastodon/MastodonFilterService.kt`, `ContentFilterSettingsScreenTest`, `MastodonFilterServiceTest`, `ClientFilterMatcherTest`.
+
 ## Inline entity bubbles and hashtag bubble
 
 Inline link, username, and hashtag bubbles in `InlineEmojiText` lay out the logogram, a 4 dp icon-to-text gap, and the label in one row. The measured placeholder width reserves the icon, the gap, and 6 dp edge padding, so the icon never overlaps the text at any font scale. The label gets invisible direction isolates for display only (left-to-right for domains, first-strong for names and tags); the tap target and copied text keep the exact original string. Bubbles share the `springClickable` press response. The compact hashtag bubble shows at most five tags that fit the measured height; `See all` lists every tag and `See less` returns.
@@ -1140,7 +1153,7 @@ The Settings main page is one flat list. Each row opens one page and shows a sho
 | Timeline and media | Application | Autoplay videos, Combine related hashtags |
 | Posting | Active account | Default audience, unlisted replies, image compression, favourite reaction |
 | Content warnings | Application, then active account | Hide or expand rules for all accounts, hidden content presentation, and a child page with the rules of the active account |
-| Blocks and mutes | Account | Blocked users, muted users and muted hashtags for each account |
+| Blocks and mutes | Account | Blocked users, muted users, muted hashtags and filters for each account |
 | Privacy | Application | Tracking parameters |
 | Notifications | Account | Alerts, categories and delivery for each account |
 | About | Application | Product name, version, license, and the included open-source components (read only) |

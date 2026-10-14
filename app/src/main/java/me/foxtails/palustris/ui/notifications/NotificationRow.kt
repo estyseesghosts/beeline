@@ -55,6 +55,7 @@ import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.domain.PostFilterPolicy
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.Avatar
+import me.foxtails.palustris.ui.filters.LocalClientFilters
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
@@ -205,7 +206,7 @@ fun NotificationRow(
                         post.contentVisibility,
                         post.text,
                     )
-                    val filterVerdict = PostFilterPolicy.evaluate(post, FilterContext.Notifications)
+                    val filterVerdict = PostFilterPolicy.evaluate(post, FilterContext.Notifications, LocalClientFilters.current)
                     if (filterVerdict != null && !locallyMuted) {
                         Text(filteredPostLabel(filterVerdict), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     } else if (locallyMuted) {

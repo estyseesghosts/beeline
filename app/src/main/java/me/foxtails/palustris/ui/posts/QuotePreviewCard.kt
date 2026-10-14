@@ -26,6 +26,7 @@ import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
 import me.foxtails.palustris.ui.emoji.InlineEmojiText
+import me.foxtails.palustris.ui.filters.LocalClientFilters
 
 /** Keeps hidden quote text out of composition while preserving the quote card and its action. */
 @Composable
@@ -48,7 +49,7 @@ internal fun QuotePreviewCard(
     )
     val matchedTag = if (decision == ContentWarningDecision.Hidden) null else
         ContentWarningPolicy.firstMatchingMutedHashtag(hashtags, mutedHashtags)
-    val filterVerdict = if (decision == ContentWarningDecision.Hidden) null else quoteFilterVerdict(quote)
+    val filterVerdict = if (decision == ContentWarningDecision.Hidden) null else quoteFilterVerdict(quote, LocalClientFilters.current)
     // Reveal is card-local and must not cross quote, parent, account, session, or matched-tag changes.
     var revealed by rememberSaveable(quote.id.connection, quote.id.value, parentIdentity, accountIdentity, matchedTag) {
         mutableStateOf(false)

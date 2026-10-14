@@ -11,15 +11,19 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.ClientFilterMatcher
 import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostFilterPolicy
 import me.foxtails.palustris.domain.PostFilterVerdict
+import me.foxtails.palustris.ui.filters.LocalClientFilters
 
-/** The filter decision for [post] on the surface [context], or null when no filter matched. */
+/** The filter decision for [post] on the surface [context], or null when no filter matched. Client filters come from [LocalClientFilters]. */
 @Composable
-internal fun rememberPostFilterVerdict(post: Post, context: FilterContext): PostFilterVerdict? =
-    remember(post, context) { PostFilterPolicy.evaluate(post, context) }
+internal fun rememberPostFilterVerdict(post: Post, context: FilterContext): PostFilterVerdict? {
+    val client = LocalClientFilters.current
+    return remember(post, context, client) { PostFilterPolicy.evaluate(post, context, client) }
+}
 
 /** The text that names why a post is collapsed. Shared by the row, notifications, quotes, and Photo Grid detail. */
 @Composable
@@ -41,7 +45,7 @@ internal fun FilteredPostNotice(verdict: PostFilterVerdict, onShow: () -> Unit) 
 }
 
 /** A quote has no surface of its own, so Home filters decide. A quote never leaves its post; a removing filter collapses it. */
-internal fun quoteFilterVerdict(quote: Post): PostFilterVerdict? = PostFilterPolicy.evaluate(quote, FilterContext.Home)
+internal fun quoteFilterVerdict(quote: Post, client: ClientFilterMatcher): PostFilterVerdict? = PostFilterPolicy.evaluate(quote, FilterContext.Home, client)
 
 /** The notice inside a quote card. The card owns its reveal state. */
 @Composable

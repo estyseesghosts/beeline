@@ -274,7 +274,7 @@ class PhotoGridScreenTest {
         assertEquals("Spoilers", photoGridItems(listOf(warned)).single().collapsedWarning)
         assertEquals(
             null,
-            photoGridItems(listOf(warned), me.foxtails.palustris.domain.ContentWarningRules(expandAll = true)).single().collapsedWarning,
+            photoGridItems(listOf(warned), PhotoGridItemRules(me.foxtails.palustris.domain.ContentWarningRules(expandAll = true))).single().collapsedWarning,
         )
         assertEquals(null, photoGridItems(listOf(OwnedPost(account.id, post("plain", listOf(image("plain")))))).single().collapsedWarning)
     }

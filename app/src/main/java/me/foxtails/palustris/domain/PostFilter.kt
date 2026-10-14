@@ -24,11 +24,12 @@ data class PostFilterVerdict(val reason: String, val action: PostFilterAction)
 
 /**
  * The one decision for whether a filter collapses or removes a post. Every surface calls it with
- * its own [FilterContext], so a filter for Home only does not touch a thread.
+ * its own [FilterContext], so a filter for Home only does not touch a thread. [client] adds the filters that
+ * the server does not match itself, such as Mastodon v1 filters on Pleroma and Akkoma.
  */
 object PostFilterPolicy {
-    fun evaluate(post: Post, context: FilterContext): PostFilterVerdict? =
-        verdict(post.serverFilters.filter { context in it.contexts }.map { it.title to it.action })
+    fun evaluate(post: Post, context: FilterContext, client: ClientFilterMatcher = ClientFilterMatcher.Empty): PostFilterVerdict? =
+        verdict(post.serverFilters.filter { context in it.contexts }.map { it.title to it.action } + client.matches(post, context))
 
     /** Remove wins over Collapse. The notice names every match of the winning action. */
     internal fun verdict(matches: List<Pair<String, PostFilterAction>>): PostFilterVerdict? {

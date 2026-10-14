@@ -43,6 +43,7 @@ import me.foxtails.palustris.data.notifications.NotificationLaunchRouter
 import me.foxtails.palustris.data.notifications.NotificationStreamController
 import me.foxtails.palustris.domain.AppPreferencesRepository
 import me.foxtails.palustris.domain.AppPreferencesState
+import me.foxtails.palustris.domain.ClientFilterMatcher
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.domain.SavedHashtagRepository
@@ -51,6 +52,9 @@ import me.foxtails.palustris.domain.hashtags.HashtagExpander
 import me.foxtails.palustris.domain.hashtags.HashtagExpansionInput
 import me.foxtails.palustris.domain.hashtags.HashtagLanguagePolicy
 import me.foxtails.palustris.ui.components.LocalBlurEffectsEnabled
+import me.foxtails.palustris.ui.filters.LocalClientFilters
+import me.foxtails.palustris.ui.filters.LocalContentFilterOwner
+import me.foxtails.palustris.ui.filters.rememberContentFilterOwner
 import me.foxtails.palustris.ui.layout.deviceLayoutDirection
 import me.foxtails.palustris.ui.layout.resolveAgainst
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
@@ -110,6 +114,7 @@ fun ConnectedApp(
         val generation = activeContext?.presentationGeneration
         if (generation == null) entryStore.retireAll() else entryStore.beginEntry(generation)
     }
+    val contentFilters = rememberContentFilterOwner(activeContext, entryStore)
     val postPreferences by if (activeContext != null) {
         postPreferencesRepository.observe(activeContext.accountId).collectAsStateWithLifecycle(PostPreferences())
     } else {
@@ -162,6 +167,8 @@ fun ConnectedApp(
              LocalHiddenContentPresentation provides appPreferences.preferences.hiddenContentPresentation,
              LocalVideoPlaybackCoordinator provides videoCoordinator,
              LocalBlurEffectsEnabled provides !appPreferences.preferences.disableBlurEffects,
+             LocalClientFilters provides (contentFilters?.matcher ?: ClientFilterMatcher.Empty),
+             LocalContentFilterOwner provides contentFilters,
         ) {
         // The connected shell sets its own bars (the media viewer is black there). Every other state gets them here.
         if (topLevelScreen != "app") SystemBars(mediaViewerOpen = false)

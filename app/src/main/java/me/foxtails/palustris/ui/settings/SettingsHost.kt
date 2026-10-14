@@ -27,6 +27,7 @@ import me.foxtails.palustris.domain.AppPreferencesState
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.ui.AppIcons
+import me.foxtails.palustris.ui.filters.ContentFilterSettingsRoute
 import me.foxtails.palustris.ui.notifications.NotificationSettingsScreen
 import me.foxtails.palustris.ui.notifications.NotificationSettingsUiState
 import me.foxtails.palustris.ui.shell.EmojiPresentation
@@ -106,11 +107,7 @@ fun SettingsHost(
         SettingsRoute.Posting -> stringResource(R.string.settings_posting)
         SettingsRoute.PrivacyAccounts -> stringResource(R.string.settings_blocks_mutes)
         SettingsRoute.About -> stringResource(R.string.settings_about)
-        is SettingsRoute.Moderation -> when (route.kind) {
-            ModerationKind.Blocked -> stringResource(R.string.settings_blocked_users)
-            ModerationKind.Muted -> stringResource(R.string.settings_muted_users)
-            ModerationKind.Hashtags -> stringResource(R.string.settings_muted_hashtags)
-        }
+        is SettingsRoute.Moderation -> route.kind.label()
     }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -221,7 +218,9 @@ fun SettingsHost(
                 SettingsRoute.PrivacyAccounts -> PrivacyAccountsScreen(accounts) { accountId, kind ->
                     onModeration(accountId, kind)
                 }
-                is SettingsRoute.Moderation -> if (route.kind == ModerationKind.Hashtags) {
+                is SettingsRoute.Moderation -> if (route.kind == ModerationKind.Filters) {
+                    ContentFilterSettingsRoute(route.accountId)
+                } else if (route.kind == ModerationKind.Hashtags) {
                      MutedHashtagsScreen(
                          moderationState,
                          onModerationRetry,

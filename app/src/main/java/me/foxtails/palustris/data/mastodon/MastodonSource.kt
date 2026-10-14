@@ -18,6 +18,8 @@ import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.ContentFilterDraft
+import me.foxtails.palustris.domain.ContentFilterSet
 import me.foxtails.palustris.domain.ConversationId
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.CustomEmoji
@@ -124,6 +126,7 @@ class MastodonSource(
     private val notificationService = MastodonNotificationService(origin, token, api, accountId, clock)
     private val sourceInstance = UUID.randomUUID().toString()
     private val moderationService = MastodonModerationService(origin, token, api, accountId, sessionRevision, sourceInstance)
+    private val filterService = MastodonFilterService(origin, token, api)
     private val pushService = MastodonPushService(origin, token, api, accountId)
     private val streamService = MastodonStreamService(origin, token, api, accountId)
     private val threadService = MastodonThreadService(origin, token, api, accountId, sessionRevision)
@@ -579,6 +582,13 @@ class MastodonSource(
     override suspend fun removeBlockedAccount(entry: ModerationAccount) = request("moderation.removeBlocked") { moderationService.removeBlocked(entry) }
 
     override suspend fun removeMutedAccount(entry: ModerationAccount) = request("moderation.removeMuted") { moderationService.removeMuted(entry) }
+
+    override suspend fun contentFilters(): ContentFilterSet = request("moderation.filters") { filterService.filters() }
+
+    override suspend fun saveContentFilter(id: String?, draft: ContentFilterDraft): ContentFilterSet =
+        request("moderation.filters.save") { filterService.save(id, draft) }
+
+    override suspend fun deleteContentFilter(id: String): ContentFilterSet = request("moderation.filters.delete") { filterService.delete(id) }
 
     override suspend fun report(request: ReportRequest) = request("moderation.report") { moderationService.report(request) }
 

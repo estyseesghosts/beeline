@@ -14,15 +14,19 @@ import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
+import me.foxtails.palustris.domain.ClientFilterMatcher
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.ContentFilter
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.FilterContext
+import me.foxtails.palustris.domain.FilterPattern
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostFilterAction
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerFilterMatch
 import me.foxtails.palustris.ui.PalustrisTheme
+import me.foxtails.palustris.ui.filters.LocalClientFilters
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,12 +45,12 @@ class PostRowFilterTest {
     private fun post(vararg matches: ServerFilterMatch) =
         Post(EntityId(connection.origin, "p1"), account, "finale spoilers here", 0, Audience.Public, serverFilters = matches.toList())
 
-    private fun show(post: Post, context: FilterContext = FilterContext.Home, removable: Boolean = true) {
+    private fun show(post: Post, context: FilterContext = FilterContext.Home, removable: Boolean = true, client: ClientFilterMatcher = ClientFilterMatcher.Empty) {
         val reveals = PostRevealOwner()
         compose.activity.runOnUiThread {
             compose.activity.setContent {
                 PalustrisTheme {
-                    CompositionLocalProvider(LocalPostReveals provides reveals) {
+                    CompositionLocalProvider(LocalPostReveals provides reveals, LocalClientFilters provides client) {
                         PostRow(
                             OwnedPost(account.id, post),
                             PostRowPresentation(availableActions = emptySet(), filterContext = context, removable = removable),
@@ -86,6 +90,16 @@ class PostRowFilterTest {
 
         compose.onNodeWithText("finale spoilers here").assertIsDisplayed()
         compose.onAllNodesWithTag("post_filter_show").assertCountEquals(0)
+    }
+
+    @Test
+    fun clientFilterCollapsesAPostThatTheServerDidNotMark() {
+        val v1 = ContentFilter("7", "finale", listOf(FilterPattern.Words(listOf("finale"))), PostFilterAction.Collapse, setOf(FilterContext.Home))
+
+        show(post(), client = ClientFilterMatcher(AccountId(connection, "viewer"), listOf(v1)))
+
+        compose.onNodeWithText("Filtered: finale").assertIsDisplayed()
+        compose.onAllNodesWithText("finale spoilers here").assertCountEquals(0)
     }
 
     @Test

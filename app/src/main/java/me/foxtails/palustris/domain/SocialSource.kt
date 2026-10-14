@@ -226,6 +226,13 @@ interface SocialSource {
         unsupported("moderation.hashtags")
     suspend fun removeBlockedAccount(entry: ModerationAccount) = unsupported<Unit>("moderation.blocked.remove")
     suspend fun removeMutedAccount(entry: ModerationAccount) = unsupported<Unit>("moderation.muted.remove")
+
+    /** The account's content filters. A source without filter support throws [SourceError.Unsupported]. */
+    suspend fun contentFilters(): ContentFilterSet = unsupported("moderation.filters")
+
+    /** Creates a filter when [id] is null, or replaces the filter [id]. Returns the fresh set. */
+    suspend fun saveContentFilter(id: String?, draft: ContentFilterDraft): ContentFilterSet = unsupported("moderation.filters.save")
+    suspend fun deleteContentFilter(id: String): ContentFilterSet = unsupported("moderation.filters.delete")
     fun streamEvents(): kotlinx.coroutines.flow.Flow<Event> = kotlinx.coroutines.flow.emptyFlow()
 }
 

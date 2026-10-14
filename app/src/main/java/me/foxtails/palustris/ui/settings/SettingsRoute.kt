@@ -18,4 +18,5 @@ sealed interface SettingsRoute {
     data class Moderation(val accountId: AccountId, val kind: ModerationKind) : SettingsRoute
 }
 
-enum class ModerationKind { Blocked, Muted, Hashtags }
+/** The lists of one account on the Blocks and mutes page. [Filters] opens the filter editor instead of a list. */
+enum class ModerationKind { Blocked, Muted, Hashtags, Filters }

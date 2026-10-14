@@ -18,12 +18,23 @@ Authority: [task state](tasks/server-filters.md) and the source below.
 | Persisted matches of notification posts | `NotificationJsonCodec` key `serverFilters` | Notification store |
 | "Show anyway" state | `PostRevealOwner.filterRevealed` | One connected session |
 | Notice, label, quote notice | `ui/posts/PostFilterPresentation.kt` | Stateless composables |
+| Filter list values and drafts | `domain/ContentFilters.kt` (`ContentFilter`, `ContentFilterDraft`, `ContentFilterSet`, `ContentFilterKind`) | Stateless |
+| Client matching of filters the server does not match | `domain/ClientFilterMatcher.kt` | One filter set |
+| Mastodon v2 and v1 filter reads and writes | `data/mastodon/MastodonFilterService`, called by `MastodonSource` | One source; the v2 or v1 choice lasts as long as the source |
+| Filter snapshot of the connected account | `ui/filters/ContentFilterOwner`, created in `ConnectedApp`, read through `LocalClientFilters` | One connected entry; retires through `ConnectedEntryStore` |
+| Settings list and editor | `ui/filters/ContentFilterViewModel`, `ContentFilterSettingsScreen`, `ContentFilterEditorFields` | The settings page (activity ViewModel store) |
 
 ## Invariants
 
 - A filtered Mastodon post keeps its body. The UI gates it through `PostFilterPolicy`. Every surface that shows post text must call the policy.
 - Each surface passes its own `FilterContext`: Home feed and lists use Home, other feeds use Public (`FeedSource.filterContext`). Threads and the photo detail use Thread. Profiles use Account. Search and Photo Grid use Public. Notifications use Notifications. A quote uses Home.
 - Mastodon sends every matching filter, whatever the context. The client applies the context. Source: `StatusRelationshipsPresenter` in Mastodon.
+- `PostFilterPolicy.evaluate` joins the server matches with the client matches. A surface passes `LocalClientFilters.current`, or a parameter where the code is not composable (`photoGridItems`).
+- `ClientFilterMatcher.forSet` gives `Empty` for v2 (`Titled`) sets, because the server marks those posts already.
+- The settings page publishes every loaded or saved set to the session owner. The owner ignores a set of another account.
+- The service selects v1 only after a v2 404. Any other v2 failure stays a failure and selects nothing.
+- A v2 update reads the filter again. It keeps the IDs of kept keywords and sends `_destroy` for removed ones. Keyword fields use indexed keys.
+- A v1 save without expiry sends no `expires_in`, because Pleroma's schema rejects an empty value.
 - `Remove` wins over `Collapse`. `hide` removes. `warn`, `blur`, and unknown actions collapse.
 - A removing filter never removes the post that a screen opened. The standard detail sets `PostRowPresentation.removable = false`; the photo detail and quotes collapse the post themselves.
 - An Android notification never previews a post with a server filter match.
@@ -33,9 +44,14 @@ Authority: [task state](tasks/server-filters.md) and the source below.
 
 ## Tests
 
-`MastodonFilterResultTest`, `PostRowFilterTest`, `PostRevealOwnerTest`, `NotificationJsonCodecTest`, `NotificationDeliveryPlannerTest`.
+`MastodonFilterResultTest`, `PostRowFilterTest`, `PostRevealOwnerTest`, `NotificationJsonCodecTest`, `NotificationDeliveryPlannerTest`, `ClientFilterMatcherTest`, `MastodonFilterServiceTest`, `ContentFilterEditorTest`, `ContentFilterViewModelTest`, `ContentFilterSettingsScreenTest`, `SettingsRouteRestorationTest`.
 
 ## Limits
 
 - No live check ran against a Mastodon server with filters.
 - The detail screen has no "hide again" control. A new session covers the post again.
+- Android notifications run without the session owner. A v1 filter that only collapses does not stop a notification preview. Irreversible v1 filters drop the notification on the server.
+- The profile media grid shares `photoGridItems` and uses Public filters, not Account filters.
+- After a v2 edit, posts already loaded keep the old server matches until they load again.
+- On Pleroma, changing an expiring v1 filter to "Never" may keep the old expiry, because Beeline sends no `expires_in`.
+- A v2 filter with only status entries and no keywords cannot be saved from Beeline. The editor asks for a keyword.

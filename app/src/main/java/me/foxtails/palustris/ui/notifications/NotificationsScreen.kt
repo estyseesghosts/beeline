@@ -60,6 +60,7 @@ import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.components.chromeBackdropSource
 import me.foxtails.palustris.ui.components.rememberChromeBackdrop
+import me.foxtails.palustris.ui.filters.LocalClientFilters
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
@@ -166,6 +167,7 @@ fun NotificationsScreen(
     }
 
     val mutedHashtags = me.foxtails.palustris.ui.posts.LocalMutedHashtags.current
+    val clientFilters = LocalClientFilters.current
     val visibleItems = notificationState.items.filter { notification ->
         val matchesFilter = selectedFilter?.matches(notification) ?: true
         val post = notification.post
@@ -184,7 +186,7 @@ fun NotificationsScreen(
                 mutedHashtags,
             )
         } == true
-        val removedByFilter = post?.let { PostFilterPolicy.evaluate(it, FilterContext.Notifications)?.action == PostFilterAction.Remove } == true
+        val removedByFilter = post?.let { PostFilterPolicy.evaluate(it, FilterContext.Notifications, clientFilters)?.action == PostFilterAction.Remove } == true
         matchesFilter && !locallyMuted && !removedByFilter && (!hidden || me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation.current == HiddenContentPresentation.Placeholder)
     }
     val controlsPositioningInsets = compactContextualControlsPositioningInsets(navigationVisible = compactLayout)

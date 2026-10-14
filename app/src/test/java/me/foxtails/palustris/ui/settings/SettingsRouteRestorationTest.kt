@@ -54,6 +54,15 @@ class SettingsRouteRestorationTest {
     }
 
     @Test
+    fun filterPageRestoresAndReturnsToBlocksAndMutes() {
+        val filters = SettingsRoute.Moderation(account, ModerationKind.Filters)
+
+        assertEquals(filters, decodeSettingsRoute(encodeSettingsRoute(filters)))
+        assertEquals(SettingsRoute.PrivacyAccounts, filters.parent())
+        assertEquals(SettingsRoute.PrivacyAccounts, resolveAccountRoute(filters, listOf(ref(other)), accountsReady = true))
+    }
+
+    @Test
     fun malformedAndUnknownValuesAreRejected() {
         assertNull(decodeSettingsRoute(emptyList<String>()))
         assertNull(decodeSettingsRoute(listOf("Unknown")))

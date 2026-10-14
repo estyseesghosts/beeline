@@ -54,6 +54,8 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.feed.ClientReadyPostActions
 import me.foxtails.palustris.ui.EmptyState
+import me.foxtails.palustris.ui.filters.LocalClientFilters
+import me.foxtails.palustris.ui.photogrid.PhotoGridItemRules
 import me.foxtails.palustris.ui.posts.PostRow
 import me.foxtails.palustris.ui.posts.PostRowEvents
 import me.foxtails.palustris.ui.posts.PostRowPresentation
@@ -345,8 +347,9 @@ private fun rememberProfileMediaGrid(posts: List<OwnedPost>, columns: Int): Prof
     val rules = LocalContentWarningRules.current
     val hiddenPresentation = LocalHiddenContentPresentation.current
     val mutedHashtags = LocalMutedHashtags.current
-    return remember(posts, columns, rules, hiddenPresentation, mutedHashtags) {
-        profileMediaGrid(photoGridItems(posts, rules, hiddenPresentation, mutedHashtags), columns)
+    val clientFilters = LocalClientFilters.current
+    return remember(posts, columns, rules, hiddenPresentation, mutedHashtags, clientFilters) {
+        profileMediaGrid(photoGridItems(posts, PhotoGridItemRules(rules, hiddenPresentation, mutedHashtags, clientFilters)), columns)
     }
 }
 

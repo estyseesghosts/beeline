@@ -34,7 +34,7 @@ private fun PrivacyAccountSections(accounts: List<AccountRef>, onSelect: (Accoun
             ModerationKind.entries.forEach { kind ->
                 SettingsRow(
                     title = kind.label(),
-                    summary = stringResource(R.string.settings_privacy_account_list_summary),
+                    summary = stringResource(if (kind == ModerationKind.Filters) R.string.settings_filters_row_summary else R.string.settings_privacy_account_list_summary),
                     onClick = { onSelect(account.accountId, kind) },
                     testTag = "moderation_${account.accountId.localId}_${kind.name}",
                 )
@@ -43,9 +43,11 @@ private fun PrivacyAccountSections(accounts: List<AccountRef>, onSelect: (Accoun
     }
 }
 
+/** The row label and the page title of each list. */
 @Composable
-private fun ModerationKind.label(): String = when (this) {
+internal fun ModerationKind.label(): String = when (this) {
     ModerationKind.Blocked -> stringResource(R.string.settings_blocked_users)
     ModerationKind.Muted -> stringResource(R.string.settings_muted_users)
     ModerationKind.Hashtags -> stringResource(R.string.settings_muted_hashtags)
+    ModerationKind.Filters -> stringResource(R.string.settings_filters)
 }

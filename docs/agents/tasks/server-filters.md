@@ -19,23 +19,25 @@ Support server-side content filters, word mutes, account mutes, account blocks, 
 
 # Completed
 
-- S1 filter model and presentation: commit "Collapse or remove posts that a server filter matches".
+- S1 filter model and presentation: commit "Collapse or remove posts that a server filter matches" (`58704740`).
+- S2 Mastodon filter management: commit "Manage Mastodon filters in Settings". Settings > Blocks and mutes > Filters, v2 on Mastodon 4.0 and later, v1 after a v2 404, and client matching through `ClientFilterMatcher` and `ContentFilterOwner`.
 
 # Current slice
 
-S2: Mastodon filter management (v2 CRUD, v1 for Pleroma and Akkoma) and client matching of v1 filters.
+S3: Misskey word mutes. Drafts of the expression pattern (`FilterPattern.Expression`, `FilterExpressions`) and the word-mute editor mode exist only in a session scratchpad (`s2/domain`, `s2/ui`). Treat them as notes, not as source.
 
 # Files involved
 
-`domain/PostFilter.kt`, `data/mastodon/MastodonFilterMapper.kt`, `ui/posts/PostFilterPresentation.kt`, `ui/settings/`.
+`domain/PostFilter.kt`, `domain/ContentFilters.kt`, `domain/ClientFilterMatcher.kt`, `data/mastodon/MastodonFilterMapper.kt`, `data/mastodon/MastodonFilterService.kt`, `ui/posts/PostFilterPresentation.kt`, `ui/filters/`, `ui/settings/`.
 
 # Verification
 
 S1: focused tests (`MastodonFilterResultTest`, `PostRowFilterTest`, `PostRevealOwnerTest`, `NotificationJsonCodecTest`, `NotificationDeliveryPlannerTest`) and the full gate.
+S2: focused tests (`ClientFilterMatcherTest`, `MastodonFilterServiceTest`, `ContentFilterEditorTest`, `ContentFilterViewModelTest`, `ContentFilterSettingsScreenTest`, `PostRowFilterTest`, `SettingsRouteRestorationTest`, `PhotoGridScreenTest`) and the full gate. No live check against Mastodon, Pleroma, or Akkoma. No device check.
 
 # Next
 
-S2, then S3 Misskey word mutes, S4 account mutes and blocks, S5 boost mutes.
+S3 Misskey word mutes (add a `WordMute` kind to the same page), S4 account mutes and blocks, S5 boost mutes.
 
 # Blockers
 
@@ -43,4 +45,4 @@ None.
 
 # Last safe commit
 
-4eac6fb0 Page through the images of a post inside a grid tile
+58704740 Collapse or remove posts that a server filter matches

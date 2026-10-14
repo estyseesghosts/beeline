@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Attachment
+import me.foxtails.palustris.domain.ClientFilterMatcher
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.ContentWarningRules
@@ -80,6 +81,7 @@ import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.components.chromeBackdropSource
 import me.foxtails.palustris.ui.components.floatingChromeDock
 import me.foxtails.palustris.ui.components.rememberChromeBackdrop
+import me.foxtails.palustris.ui.filters.LocalClientFilters
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
@@ -111,20 +113,28 @@ internal data class PhotoGridItem(
     val pages: List<IndexedValue<Attachment>> = listOf(IndexedValue(attachmentIndex, attachment)),
 )
 
-internal fun photoGridItems(posts: List<OwnedPost>, rules: ContentWarningRules = ContentWarningRules(), hiddenPresentation: me.foxtails.palustris.domain.HiddenContentPresentation = me.foxtails.palustris.domain.HiddenContentPresentation.Placeholder, mutedHashtags: Set<String> = emptySet()): List<PhotoGridItem> = posts.mapNotNull { ownedPost ->
+/** The rules that decide which posts give a tile and which tiles show collapsed. Photo Grid and the profile grid share them. */
+internal data class PhotoGridItemRules(
+    val warnings: ContentWarningRules = ContentWarningRules(),
+    val hiddenPresentation: me.foxtails.palustris.domain.HiddenContentPresentation = me.foxtails.palustris.domain.HiddenContentPresentation.Placeholder,
+    val mutedHashtags: Set<String> = emptySet(),
+    val clientFilters: ClientFilterMatcher = ClientFilterMatcher.Empty,
+)
+
+internal fun photoGridItems(posts: List<OwnedPost>, rules: PhotoGridItemRules = PhotoGridItemRules()): List<PhotoGridItem> = posts.mapNotNull { ownedPost ->
     val post = ownedPost.post
     val hashtags = postHashtags(post.text, post.emoji)
-    if (ContentWarningPolicy.matchesHashtagMute(hashtags, mutedHashtags)) return@mapNotNull null
+    if (ContentWarningPolicy.matchesHashtagMute(hashtags, rules.mutedHashtags)) return@mapNotNull null
     val decision = ContentWarningPolicy.decide(
         post.contentWarning,
         hashtags,
-        rules,
+        rules.warnings,
         post.contentVisibility,
         bodyText = post.text,
     )
     val hidden = decision == ContentWarningDecision.Hidden
-    if (hidden && hiddenPresentation == me.foxtails.palustris.domain.HiddenContentPresentation.Remove) return@mapNotNull null
-    val filterVerdict = PostFilterPolicy.evaluate(post, FilterContext.Public)
+    if (hidden && rules.hiddenPresentation == me.foxtails.palustris.domain.HiddenContentPresentation.Remove) return@mapNotNull null
+    val filterVerdict = PostFilterPolicy.evaluate(post, FilterContext.Public, rules.clientFilters)
     if (filterVerdict?.action == PostFilterAction.Remove) return@mapNotNull null
     val pages = post.attachments.withIndex().filter { (_, attachment) -> attachment.isPhotoGridDisplayable() }
     pages.firstOrNull()?.let { (index, attachment) ->
@@ -209,8 +219,9 @@ fun PhotoGridScreen(
     val rows = state.posts
     val hiddenPresentation = LocalHiddenContentPresentation.current
     val mutedHashtags = LocalMutedHashtags.current
-    val mediaItems = remember(rows, contentWarningRules, hiddenPresentation, mutedHashtags) {
-        photoGridItems(rows, contentWarningRules, hiddenPresentation, mutedHashtags)
+    val clientFilters = LocalClientFilters.current
+    val mediaItems = remember(rows, contentWarningRules, hiddenPresentation, mutedHashtags, clientFilters) {
+        photoGridItems(rows, PhotoGridItemRules(contentWarningRules, hiddenPresentation, mutedHashtags, clientFilters))
     }
     val list = gridState ?: rememberLazyStaggeredGridState()
     val loadMore by rememberUpdatedState(onLoadMore)

@@ -46,12 +46,9 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
-import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.domain.PostFilterAction
-import me.foxtails.palustris.domain.PostFilterPolicy
 import me.foxtails.palustris.domain.PostScriptClassifier
 import me.foxtails.palustris.domain.filterContext
 import me.foxtails.palustris.ui.AppIcons
@@ -73,7 +70,6 @@ import me.foxtails.palustris.ui.posts.PostActionBubbleTarget
 import me.foxtails.palustris.ui.posts.PostRow
 import me.foxtails.palustris.ui.posts.PostRowEvents
 import me.foxtails.palustris.ui.posts.PostRowPresentation
-import me.foxtails.palustris.ui.posts.postHashtags
 import me.foxtails.palustris.ui.shell.HomeFeedUiState
 
 /**
@@ -145,8 +141,7 @@ fun HomeFeed(
     val ownedPosts = state.ownedPosts
     val hasOwnership = ownedPosts.isNotEmpty()
     val rows = if (hasOwnership) ownedPosts else state.posts.map { OwnedPost(it.author.id, it) }
-    val visibleRows = rows.filterNot { ownedPost -> ContentWarningPolicy.matchesHashtagMute(postHashtags(ownedPost.post.text, ownedPost.post.emoji), mutedHashtags) }
-        .filterNot { ownedPost -> PostFilterPolicy.evaluate(ownedPost.post, state.selectedFeed.filterContext())?.action == PostFilterAction.Remove }
+    val visibleRows = rememberVisibleHomeRows(rows, mutedHashtags, state.selectedFeed)
     val currentVisibleRows by rememberUpdatedState(visibleRows)
     val pagingDemand = remember { HomePagingDemand() }
     HomePagingEffects(

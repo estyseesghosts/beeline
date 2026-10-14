@@ -86,7 +86,8 @@ fun SettingsOverlayHost(
             "settings-notification-settings-$accountId-$sessionGeneration",
         ) { model.stop() }
     }
-    val moderationRoute = moderationRouteFor(route, accounts, accountsReady)
+    // The filter page owns its own model; only the lists use the moderation model.
+    val moderationRoute = moderationRouteFor(route, accounts, accountsReady)?.takeUnless { it.kind == ModerationKind.Filters }
     val moderationModel = moderationRoute?.let { target ->
         sourceRegistry.sourceFor(target.accountId)?.let { source ->
             hiltViewModel<ModerationViewModel, ModerationViewModel.Factory>(
@@ -184,4 +185,5 @@ private fun ModerationKind.toModerationListKind() = when (this) {
     ModerationKind.Blocked -> ModerationListKind.Blocked
     ModerationKind.Muted -> ModerationListKind.Muted
     ModerationKind.Hashtags -> ModerationListKind.Hashtags
+    ModerationKind.Filters -> error("The filter page has no moderation list")
 }

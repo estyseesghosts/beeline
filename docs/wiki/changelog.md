@@ -13,6 +13,7 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 ### New
 
 - Posts that match a Mastodon filter now follow the filter. A warning filter collapses the post behind "Filtered: title" with a "Show anyway" button. A hiding filter removes the post. Before, every filtered post showed only a short notice and could not be opened.
+- Settings > Blocks and mutes > Filters lists, adds, edits, and deletes the filters of a Mastodon-compatible account. On Pleroma and Akkoma, Beeline matches the filters on the device.
 
 ## 0.3.2
 
