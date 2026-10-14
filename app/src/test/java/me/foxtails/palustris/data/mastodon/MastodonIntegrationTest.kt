@@ -353,6 +353,24 @@ class MastodonIntegrationTest {
     }
 
     @Test
+    fun timelineBubbleServesTheAkkomaRouteAndStaysGatedWhenUnsupported() = runBlocking {
+        val akkoma = MastodonCapabilityProbe.parseCapabilities(JSONObject().put("version", "2.9.0 (compatible; Akkoma 3.13.0)"))
+        val source = sourceWith(akkoma)
+        server.enqueue(MockResponse().setBody("[${status("bubble-one")}]"))
+
+        val bubble = source.timeline(me.foxtails.palustris.domain.Timeline.Bubble)
+
+        assertEquals(listOf("bubble-one"), bubble.items.map { it.id.value })
+        assertEquals("/api/v1/timelines/bubble", server.takeRequest().path)
+
+        val count = server.requestCount
+        assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source().timeline(me.foxtails.palustris.domain.Timeline.Bubble) }
+        }
+        assertEquals(count, server.requestCount)
+    }
+
+    @Test
     fun timelineRejectsRawAndCrossRouteCursorsBeforeAnotherRequest() = runBlocking {
         server.enqueue(MockResponse().setBody("[]").addHeader(
             "Link", "<$origin/api/v1/timelines/public?local=true&max_id=x>; rel=\"next\"",

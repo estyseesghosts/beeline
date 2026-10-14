@@ -15,7 +15,9 @@ import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.PollLimits
 import me.foxtails.palustris.domain.PollRequest
+import me.foxtails.palustris.domain.PostingCapabilities
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SourceError
@@ -57,7 +59,13 @@ class PollAdapterTest {
         token = "t",
         api = mastodonTestClient(),
         accountId = AccountId(Connection(origin, Protocol.MASTODON), "me"),
-        initialCapabilities = ServerCapabilities(timelines = setOf(Timeline.Home), canPublish = true),
+        initialCapabilities = ServerCapabilities(
+            timelines = setOf(Timeline.Home),
+            canPublish = true,
+            // The poll routes under test need the server's poll limits; a server without them
+            // throws before the network (see MastodonPixelfedComposerGatesTest).
+            posting = PostingCapabilities(poll = PollLimits(4, 50, 300L, 2_629_746L)),
+        ),
     )
 
     private fun misskey() = MisskeySource(

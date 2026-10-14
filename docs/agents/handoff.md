@@ -1,3 +1,5 @@
+Planorma Slice 7 (composer/discovery/edit gating + Bubble route) is this commit; Slice 6 is `21c2ec18`. Verification: 2803 tests 0 failures, lint, ktlint, both assembles green; review PASS (gaps recorded). No device or live-server check ran. Next slice: Planorma Slice 8 (paging/demotion/fixtures). Preceding safe commit: `21c2ec18`.
+
 Planorma Slice 6 (Pixelfed gates: unread/dismiss/push/streaming/report + UI hiding) is this commit; Slice 5 is `30167f53`. Verification: full gate green (2790 tests 0 failures, lint, ktlint, both assembles); review PASS. No device or live-server check ran. Next slice: Planorma Slice 7 (composer/discovery/edit/timelines). Preceding safe commit: `30167f53`.
 
 Planorma Slice 5 (reaction notifications + push gating + wiring) is this commit; Slice 4 is `813c99ae`. Verification: full gate green (2769+ tests 0 failures, lint, ktlint, both assembles); review PASS. No device or live-server check ran. Next slice: Planorma Slice 6 (Pixelfed gates). Preceding safe commit: `813c99ae`.

@@ -37,6 +37,7 @@ class FeedChipCatalogTest {
         var followed = mutableListOf<String>()
         var failFollow = setOf<String>()
         var failLists = false
+        var listCalls = 0
         val followCalls = mutableListOf<String>()
         val unfollowCalls = mutableListOf<String>()
 
@@ -45,6 +46,7 @@ class FeedChipCatalogTest {
         override suspend fun timeline(timeline: Timeline, cursor: String?) = Page<Post>(emptyList())
 
         override suspend fun userLists(): List<FeedSource.UserList> {
+            listCalls += 1
             if (failLists) throw SourceError.Unsupported("lists")
             return lists
         }
@@ -71,6 +73,11 @@ class FeedChipCatalogTest {
 
     private fun misskeyCaps() = ServerCapabilities(
         feedChips = FeedChipCapabilities(CapabilityStatus.Supported, CapabilityStatus.Unsupported, CapabilityStatus.Supported),
+    )
+
+    /** Pixelfed lists have no timeline route, so the chip stays hidden and unread. */
+    private fun pixelfedCaps() = ServerCapabilities(
+        feedChips = FeedChipCapabilities(CapabilityStatus.Unsupported, CapabilityStatus.Unknown, CapabilityStatus.Unsupported),
     )
 
     private suspend fun InMemorySavedHashtagRepository.snapshot(): List<String> = observe(accountId).first().tags
@@ -134,6 +141,19 @@ class FeedChipCatalogTest {
 
         assertTrue(catalog.state.value.lists.isEmpty())
         assertEquals(listOf("cats"), catalog.state.value.hashtags.map { it.tag })
+        catalog.stop()
+    }
+
+    @Test
+    fun unsupportedListsNeverReachTheServer() = runTest {
+        val source = FakeSource(pixelfedCaps()).apply {
+            lists = listOf(FeedSource.UserList("7", "Friends"))
+        }
+        val catalog = catalog(this, source)
+        advanceUntilIdle()
+
+        assertTrue(catalog.state.value.lists.isEmpty())
+        assertEquals(0, source.listCalls)
         catalog.stop()
     }
 

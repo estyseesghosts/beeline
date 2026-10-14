@@ -149,7 +149,8 @@ class LocalOnlyAndScheduleTest {
             ),
         )
 
-        val item = mastodon(PostingCapabilities()).schedule(CreatePostRequest("later", audience = Audience.Followers, scheduledAtEpochMillis = at))
+        val item = mastodon(PostingCapabilities(scheduling = SchedulingCapability(ScheduleRoute.Mastodon, 300L)))
+            .schedule(CreatePostRequest("later", audience = Audience.Followers, scheduledAtEpochMillis = at))
 
         val request = server.takeRequest()
         assertEquals("/api/v1/statuses", request.path)
@@ -166,7 +167,7 @@ class LocalOnlyAndScheduleTest {
             .put(JSONObject().put("id", "b").put("scheduled_at", "2030-03-18T00:00:00.000Z").put("params", JSONObject().put("text", "second")))
             .put(JSONObject().put("id", "a").put("scheduled_at", "2030-03-17T00:00:00.000Z").put("params", JSONObject().put("text", "first")))
         server.enqueue(MockResponse().setBody(items.toString()))
-        val source = mastodon(PostingCapabilities())
+        val source = mastodon(PostingCapabilities(scheduling = SchedulingCapability(ScheduleRoute.Mastodon, 300L)))
 
         val listed = source.scheduledPosts()
         assertEquals("/api/v1/scheduled_statuses?limit=40", server.takeRequest().path)

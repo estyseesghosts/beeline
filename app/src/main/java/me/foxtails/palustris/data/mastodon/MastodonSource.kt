@@ -257,6 +257,9 @@ class MastodonSource(
             throw SourceError.Unsupported("quote.attachments")
         }
         if (post.poll != null && post.attachments.isNotEmpty()) throw SourceError.Unsupported("create.poll-with-media")
+        // Pixelfed takes no `poll[...]`: the probe leaves `poll` null, so a poll throws before
+        // the network instead of gambling on whether the server rejects or ignores it.
+        if (post.poll != null && capabilities.posting.poll == null) throw SourceError.Unsupported("create.poll")
         val mediaIds = post.attachments.map { it.id ?: throw SourceError.Unsupported("create.attachment-id") }
         val localRoute = capabilities.posting.localOnly.takeIf { post.localOnly }
         return buildList {
@@ -294,22 +297,26 @@ class MastodonSource(
     }
 
     override suspend fun schedule(request: CreatePostRequest): ScheduledPost = this.request("schedule") {
+        requireScheduling()
         val at = request.scheduledAtEpochMillis ?: throw SourceError.Unsupported("schedule.time")
         val fields = statusFields(request) + ("scheduled_at" to java.time.Instant.ofEpochMilli(at).toString())
         MastodonMapper.scheduled(api.postForm(origin, "api/v1/statuses", fields, token, MASTODON_MAX_RESPONSE_BYTES).body.toJson())
     }
 
     override suspend fun scheduledPosts(): List<ScheduledPost> = request("schedule.list") {
+        requireScheduling()
         val items = JSONArray(api.get(origin, "api/v1/scheduled_statuses?limit=40", token, MASTODON_MAX_RESPONSE_BYTES).body)
         (0 until items.length()).map { MastodonMapper.scheduled(items.getJSONObject(it)) }.sortedBy(ScheduledPost::scheduledAtEpochMillis)
     }
 
     override suspend fun cancelScheduled(id: String): Unit = request("schedule.cancel") {
+        requireScheduling()
         api.delete(origin, "api/v1/scheduled_statuses/${URLEncoder.encode(id, Charsets.UTF_8.name())}", token, MASTODON_MAX_RESPONSE_BYTES)
         Unit
     }
 
     override suspend fun reschedule(item: ScheduledPost, atEpochMillis: Long): ScheduledPost = request("schedule.update") {
+        requireScheduling()
         val fields = listOf("scheduled_at" to java.time.Instant.ofEpochMilli(atEpochMillis).toString())
         MastodonMapper.scheduled(
             api.putForm(origin, "api/v1/scheduled_statuses/${URLEncoder.encode(item.id, Charsets.UTF_8.name())}", fields, token, MASTODON_MAX_RESPONSE_BYTES).body.toJson(),
@@ -360,8 +367,20 @@ class MastodonSource(
         if (capabilities.ownPosts.edit != CapabilityStatus.Supported) throw SourceError.Unsupported("edit")
     }
 
+    /**
+     * Throws when the server cannot hold a post for later. The probe leaves `scheduling` null on
+     * Pixelfed, so every scheduled-status route throws before the network; a `scheduled_at` the
+     * server would silently ignore can never publish immediately.
+     */
+    private fun requireScheduling() {
+        if (capabilities.posting.scheduling == null) throw SourceError.Unsupported("schedule")
+    }
+
     override suspend fun votePoll(postId: EntityId, pollId: String, choices: List<Int>): Poll = request("poll.vote") {
         validatePostId(postId, "poll.vote")
+        // Pixelfed serves no poll routes: the probe leaves `poll` null, so voting throws before
+        // the network instead of answering a 404 at runtime.
+        if (capabilities.posting.poll == null) throw SourceError.Unsupported("poll.vote")
         if (pollId.isBlank() || choices.isEmpty()) throw SourceError.Unsupported("poll.vote.choices")
         val fields = choices.map { "choices[]" to it.toString() }
         MastodonMapper.poll(
@@ -707,7 +726,12 @@ class MastodonSource(
     }
 
     override suspend fun feed(feed: FeedSource, cursor: String?): Page<Post> = when (feed) {
-        is FeedSource.UserList -> request("list") { feedService.listTimeline(feed.id, cursor) }
+        is FeedSource.UserList -> request("list") {
+            // Pixelfed lists have no timeline route: the probe marks the chip Unsupported, so the
+            // timeline throws before the network while `userLists()` keeps reading the list itself.
+            if (capabilities.feedChips.lists == CapabilityStatus.Unsupported) throw SourceError.Unsupported("list")
+            feedService.listTimeline(feed.id, cursor)
+        }
         is FeedSource.Antenna -> throw SourceError.Unsupported("antennas")
         else -> super.feed(feed, cursor)
     }

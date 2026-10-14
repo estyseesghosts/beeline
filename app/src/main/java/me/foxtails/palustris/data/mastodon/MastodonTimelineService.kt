@@ -34,6 +34,9 @@ internal class MastodonTimelineService(
             Timeline.Home -> MastodonPageRoute("timeline:Home", "v1/timelines/home", "/api/v1/timelines/home", timeline.name, "timeline")
             Timeline.Local -> MastodonPageRoute("timeline:Local", "v1/timelines/public?local=true", "/api/v1/timelines/public", timeline.name, "timeline")
             Timeline.Federated -> MastodonPageRoute("timeline:Federated", "v1/timelines/public", "/api/v1/timelines/public", timeline.name, "timeline")
-            Timeline.Social, Timeline.Bubble -> throw SourceError.Unsupported("timeline:$timeline")
+            // Akkoma serves a bubble timeline on the same paging contract. No Pleroma
+            // remote-timeline mapping is proven, so Social stays unsupported as probed.
+            Timeline.Bubble -> MastodonPageRoute("timeline:Bubble", "v1/timelines/bubble", "/api/v1/timelines/bubble", timeline.name, "timeline")
+            Timeline.Social -> throw SourceError.Unsupported("timeline:$timeline")
         }
 }

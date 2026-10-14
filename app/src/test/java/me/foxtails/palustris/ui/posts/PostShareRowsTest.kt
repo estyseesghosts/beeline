@@ -62,6 +62,13 @@ class PostShareRowsTest {
     }
 
     @Test
+    fun editUnsupportedHidesTheEditRow() {
+        val rows = postShareRows(post(me), me, capabilities(edit = CapabilityStatus.Unsupported), "en")
+
+        assertEquals(false, rows.edit)
+    }
+
+    @Test
     fun someoneElsesPostNeverOffersOwnPostRows() {
         val rows = postShareRows(
             post(other),

@@ -22,11 +22,12 @@ Implement docs/planorma.md (Pleroma/Akkoma/Pixelfed, 8 slices) and docs/dvd-recs
 - Planorma Slice 3 — Pleroma limits + content_type composer. Commit `78b796d2` "Add-content-type-composer-S3".
 - Planorma Slice 4 — emoji reactions (mapper/probe/mutation/row/picker + wiring + review repairs). Commit `813c99ae` "Add-pleroma-reactions-S4".
 - Planorma Slice 5 — reaction notifications + push. Commit `30167f53` "Add-reaction-notifications-S5".
-- Planorma Slice 6 — Pixelfed notification/push/streaming/report gates. Commit: (this checkpoint).
+- Planorma Slice 6 — Pixelfed notification/push/streaming/report gates. Commit `21c2ec18` "Gate-Pixelfed-routes-S6".
+- Planorma Slice 7 — Pixelfed composer/discovery/edit/timeline gating + Bubble route. Commit: (this checkpoint).
 
 # Current slice
 
-Planorma Slice 7 — Pixelfed composer/discovery/edit/timelines. Owner: TBD at dispatch.
+Planorma Slice 8 — paging/demotion/fixtures/contract tests. Owner: TBD at dispatch.
 
 # Files involved
 
