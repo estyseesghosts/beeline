@@ -23,7 +23,7 @@ Fix Pleroma home timeline load failure. The timeline page must return good statu
 
 # Current slice
 
-- None. Slice 2 committed. Next: user live test on Pleroma server with testsigned APK.
+- None. Slices 1+2 committed and live-verified. Next slice candidate: hashtag-timeline strict mapping (#news failure) + bare-?local presence hardening.
 
 # Files involved
 
@@ -49,7 +49,7 @@ Fix Pleroma home timeline load failure. The timeline page must return good statu
 - Arch audit exits 1 on pre-existing findings (baseline untouched).
 - problem_solver review: no blocking findings; R1 comment + R2 records repaired by owner. O1 skipped (shared branch already covered); O2 bare-?local presence check recorded as follow-up.
 - Docs: no wiki update (bug fixes only, no documented behavior change).
-- Live verification on social.paladyn.org pending new testsigned APK.
+- Live verified on SM-G986W against social.paladyn.org (Pleroma 2.7.2) with testsigned APK from slice 2: Home renders real posts, Notifications shows clean empty state, search suggestions/post results/hashtag lookup work, trends legitimately empty on 228-status server. Open: hashtag TIMELINE search (#news) fails — likely same strict-mapping mode in searchHashtags; needs diag cycle as slice 3.
 
 # Next
 
