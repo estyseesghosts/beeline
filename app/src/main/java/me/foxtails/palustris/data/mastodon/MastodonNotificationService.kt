@@ -55,6 +55,10 @@ internal class MastodonNotificationService(
     }
 
     suspend fun unreadState(): NotificationUnreadState {
+        // Pixelfed serves no unread_count route, so a probed Unsupported result returns Unknown
+        // without network. Unknown, denied, and temporarily-unavailable states still read the
+        // route; only a verified absence skips it.
+        if (capabilities().notifications.unread == CapabilityStatus.Unsupported) return NotificationUnreadState.Unknown
         val count = JSONObject(api.get(origin, "api/v1/notifications/unread_count", token, MASTODON_MAX_RESPONSE_BYTES).body).optInt("count", -1)
         return if (count < 0) NotificationUnreadState.Unknown else NotificationUnreadState.AtLeast(count)
     }
@@ -76,6 +80,9 @@ internal class MastodonNotificationService(
     }
 
     suspend fun dismiss(id: EntityId) {
+        // Pixelfed serves no per-notification dismissal route. A probed Unsupported result
+        // throws before network so the caller falls back to its local tombstone.
+        if (capabilities().notifications.dismissal == CapabilityStatus.Unsupported) throw SourceError.Unsupported("notifications.dismiss")
         api.postForm(origin, "api/v1/notifications/${id.value.encodeMastodonPathSegment()}/dismiss", emptyList(), token, MASTODON_MAX_RESPONSE_BYTES)
     }
 

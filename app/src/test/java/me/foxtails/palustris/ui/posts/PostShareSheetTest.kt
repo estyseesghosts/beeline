@@ -19,6 +19,8 @@ import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.ReportRoute
+import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.ui.PalustrisTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -162,5 +164,44 @@ class PostShareSheetTest {
         compose.onNodeWithTag("post_share_copy").performClick()
 
         compose.onNodeWithTag("post_share_private").assertIsDisplayed()
+    }
+
+    @Test
+    fun reportRowHidesUntilTheV11ReportMappingIsProven() {
+        val connection = Connection("https://example.org", Protocol.MASTODON)
+        val owner = Account(AccountId(connection, "owner"), "Owner", "@owner@example.org")
+        val author = Account(AccountId(connection, "author"), "Author", "@author@example.org")
+        fun show(reportRoute: ReportRoute, key: String) {
+            // Each call uses its own post id, so the remembered section state starts closed.
+            val keyed = Post(EntityId(connection.origin, "post-$key"), author, "Post", 0, Audience.Public, url = "https://example.org/post")
+            val target = PostActionTarget(OwnedPost(owner.id, keyed), Rect.Zero, owner.id, 0L)
+            val relationship = PostRelationshipState(target = author.id, relationship = ProfileRelationship(author.id))
+            compose.activity.runOnUiThread {
+                compose.activity.setContent {
+                    PalustrisTheme {
+                        PostShareSheet(
+                            target = target,
+                            relationship = relationship,
+                            rows = postShareRows(keyed, owner.id, ServerCapabilities(reportRoute = reportRoute), "en"),
+                            onDismiss = {},
+                            onRelationshipAction = {},
+                            onSubmitReport = {},
+                            onOpenDirectMessage = {},
+                            onCopyLink = {},
+                            onShare = {},
+                        )
+                    }
+                }
+            }
+            compose.onNodeWithTag("post_share_problem_heading").performClick()
+        }
+
+        show(ReportRoute.V1Reports, "v1")
+        compose.onNodeWithTag("post_share_report").assertIsDisplayed()
+
+        show(ReportRoute.V11Report, "v11")
+        compose.onNodeWithTag("post_share_report").assertDoesNotExist()
+        compose.onNodeWithTag("post_share_block").assertIsDisplayed()
+        compose.onNodeWithTag("post_share_mute").assertIsDisplayed()
     }
 }

@@ -19,6 +19,7 @@ import me.foxtails.palustris.data.notifications.NotificationSyncIntents
 import me.foxtails.palustris.data.notifications.NotificationSynchronizer
 import me.foxtails.palustris.data.notifications.SourceBackedNotificationSyncIntents
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActionState
@@ -44,6 +45,10 @@ data class NotificationsUiState(
     val refreshing: Boolean = false,
     val loadingMore: Boolean = false,
     val syncDelayed: Boolean = false,
+    /** False when the server has no dismissal route, so rows offer no dismiss action. */
+    val dismissEnabled: Boolean = true,
+    /** True when the server has no live stream, so the inbox updates by polling. */
+    val pollingForLiveUpdates: Boolean = false,
     val error: String? = null,
     /** True while stored notification state is corrupt or unreadable. Writes and alerts stay blocked. */
     val storageUnavailable: Boolean = false,
@@ -80,6 +85,7 @@ class NotificationsViewModel @AssistedInject constructor(
     val state = _state.asStateFlow()
     private val actionJobs = ConcurrentHashMap<EntityId, Job>()
     private var observeJob: Job? = null
+    private var capabilitiesJob: Job? = null
     private var storageJob: Job? = null
     private var refreshJob: Job? = null
     private var olderJob: Job? = null
@@ -95,6 +101,17 @@ class NotificationsViewModel @AssistedInject constructor(
     private var requestEpoch = 0L
 
     init {
+        capabilitiesJob = viewModelScope.launch {
+            // Capability flags drive row visibility. Only a verified Unsupported hides the
+            // dismiss action or marks the inbox polling; Unknown, denied, and
+            // temporarily-unavailable states keep the live affordances.
+            source.observeCapabilities().collectLatest { capabilities ->
+                _state.value = _state.value.copy(
+                    dismissEnabled = capabilities.notifications.dismissal != CapabilityStatus.Unsupported,
+                    pollingForLiveUpdates = capabilities.notifications.streaming == CapabilityStatus.Unsupported,
+                )
+            }
+        }
         observeJob = viewModelScope.launch {
             query.collectLatest { selectedQuery ->
                 repository.observeInbox(accountId, selectedQuery).collectLatest { snapshot ->
@@ -319,6 +336,7 @@ class NotificationsViewModel @AssistedInject constructor(
         if (stopped) return
         stopped = true
         observeJob?.cancel()
+        capabilitiesJob?.cancel()
         storageJob?.cancel()
         refreshJob?.cancel()
         olderJob?.cancel()

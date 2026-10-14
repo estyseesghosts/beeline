@@ -151,69 +151,73 @@ fun NotificationSettingsScreen(
             )
         }
         HorizontalDivider(Modifier.padding(vertical = 12.dp))
-        Text(stringResource(R.string.notifications_settings_delivery), style = MaterialTheme.typography.titleMedium)
-        Text(stringResource(R.string.notifications_push_provider), style = MaterialTheme.typography.titleMedium)
-        when {
-            state.distributorLoading -> Text(stringResource(R.string.notifications_push_registering_distributor))
-            state.availableDistributors.isEmpty() -> Text(stringResource(R.string.notifications_push_no_provider))
-            else -> state.availableDistributors.forEach { distributor ->
-                val interactionSource = androidx.compose.runtime.remember(distributor.packageName) { MutableInteractionSource() }
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .springPress(interactionSource)
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = LocalIndication.current,
-                        ) { onSelectDistributor(distributor.packageName) },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(
-                        selected = state.selectedDistributor == distributor.packageName,
-                        onClick = { onSelectDistributor(distributor.packageName) },
-                        enabled = !state.saving && !state.storageUnavailable,
-                    )
-                    Text(distributor.label)
+        // The server push section applies only when the server takes push subscriptions.
+        // Local Android presentation tests stay available on every server.
+        if (state.pushAvailable) {
+            Text(stringResource(R.string.notifications_settings_delivery), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.notifications_push_provider), style = MaterialTheme.typography.titleMedium)
+            when {
+                state.distributorLoading -> Text(stringResource(R.string.notifications_push_registering_distributor))
+                state.availableDistributors.isEmpty() -> Text(stringResource(R.string.notifications_push_no_provider))
+                else -> state.availableDistributors.forEach { distributor ->
+                    val interactionSource = androidx.compose.runtime.remember(distributor.packageName) { MutableInteractionSource() }
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .springPress(interactionSource)
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = LocalIndication.current,
+                            ) { onSelectDistributor(distributor.packageName) },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(
+                            selected = state.selectedDistributor == distributor.packageName,
+                            onClick = { onSelectDistributor(distributor.packageName) },
+                            enabled = !state.saving && !state.storageUnavailable,
+                        )
+                        Text(distributor.label)
+                    }
                 }
             }
-        }
-        TextButton(onClick = onRefreshDistributors, enabled = !state.distributorLoading) {
-            Text(stringResource(R.string.notifications_push_select_provider))
-        }
-        AnimatedStatePane(stateKey = state.permissionGranted, modifier = Modifier.fillMaxWidth()) {
-            Text(
-                if (state.permissionGranted) stringResource(R.string.notifications_settings_permission_granted)
-                else stringResource(R.string.notifications_settings_permission_missing),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        if (!state.permissionGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            TextButton(onClick = { permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }) {
-                Text(stringResource(R.string.notifications_settings_grant_permission))
+            TextButton(onClick = onRefreshDistributors, enabled = !state.distributorLoading) {
+                Text(stringResource(R.string.notifications_push_select_provider))
             }
-        }
-        AnimatedStatePane(
-            stateKey = state.registrationState to state.failureReason,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(
-                registrationText(state.registrationState, state.failureReason),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        if (state.registrationState != NotificationPushRegistrationState.Connected &&
-            state.registrationState != NotificationPushRegistrationState.Off
-        ) {
-            TextButton(
-                onClick = onRetryRegistration,
-                enabled = !state.saving && !state.storageUnavailable,
-            ) { Text(stringResource(R.string.notifications_settings_retry_registration)) }
+            AnimatedStatePane(stateKey = state.permissionGranted, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    if (state.permissionGranted) stringResource(R.string.notifications_settings_permission_granted)
+                    else stringResource(R.string.notifications_settings_permission_missing),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (!state.permissionGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                TextButton(onClick = { permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }) {
+                    Text(stringResource(R.string.notifications_settings_grant_permission))
+                }
+            }
+            AnimatedStatePane(
+                stateKey = state.registrationState to state.failureReason,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    registrationText(state.registrationState, state.failureReason),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (state.registrationState != NotificationPushRegistrationState.Connected &&
+                state.registrationState != NotificationPushRegistrationState.Off
+            ) {
+                TextButton(
+                    onClick = onRetryRegistration,
+                    enabled = !state.saving && !state.storageUnavailable,
+                ) { Text(stringResource(R.string.notifications_settings_retry_registration)) }
+            }
+            TextButton(onClick = onRunPushConnectionTest, enabled = !state.saving) {
+                Text(stringResource(R.string.notifications_push_connection_test))
+            }
         }
         TextButton(onClick = onRunLocalTest, enabled = !state.saving) {
             Text(stringResource(R.string.notifications_push_test))
-        }
-        TextButton(onClick = onRunPushConnectionTest, enabled = !state.saving) {
-            Text(stringResource(R.string.notifications_push_connection_test))
         }
         AnimatedStatePane(stateKey = state.localTestMessage != null, modifier = Modifier.fillMaxWidth()) {
             state.localTestMessage?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }

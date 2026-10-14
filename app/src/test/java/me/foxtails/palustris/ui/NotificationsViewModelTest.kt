@@ -12,10 +12,12 @@ import me.foxtails.palustris.data.notifications.InMemoryNotificationStore
 import me.foxtails.palustris.data.notifications.NotificationRepository
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActivity
+import me.foxtails.palustris.domain.NotificationCapabilities
 import me.foxtails.palustris.domain.NotificationCheckpoint
 import me.foxtails.palustris.domain.NotificationPage
 import me.foxtails.palustris.domain.NotificationQuery
@@ -30,6 +32,7 @@ import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.ui.notifications.NotificationsViewModel
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -193,6 +196,62 @@ class NotificationsViewModelTest {
         olderCursor = me.foxtails.palustris.domain.NotificationCursor("older-1"),
         checkpoint = NotificationCheckpoint(account, NotificationQuery()),
     )
+
+    @Test
+    fun pixelfedCapabilitiesHideDismissAndMarkInboxPolling() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repository = NotificationRepository(
+            InMemoryNotificationStore(),
+            StandardTestDispatcher(testScheduler),
+        )
+        repository.activate(NotificationSyncToken(account, 1))
+        val viewModel = NotificationsViewModel(account, PixelfedCapabilitySource(), repository)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.dismissEnabled)
+        assertTrue(viewModel.state.value.pollingForLiveUpdates)
+    }
+
+    @Test
+    fun unprobedCapabilitiesKeepDismissAndLiveUpdates() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repository = NotificationRepository(
+            InMemoryNotificationStore(),
+            StandardTestDispatcher(testScheduler),
+        )
+        repository.activate(NotificationSyncToken(account, 1))
+        val viewModel = NotificationsViewModel(account, ScriptedNotificationSource(), repository)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.state.value.dismissEnabled)
+        assertFalse(viewModel.state.value.pollingForLiveUpdates)
+    }
+
+    private class PixelfedCapabilitySource : SocialSource {
+        override val capabilities = ServerCapabilities(
+            timelines = setOf(Timeline.Home),
+            notifications = NotificationCapabilities(
+                dismissal = CapabilityStatus.Unsupported,
+                streaming = CapabilityStatus.Unsupported,
+                webPush = CapabilityStatus.Unsupported,
+                unread = CapabilityStatus.Unsupported,
+            ),
+        )
+
+        override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = Page(emptyList())
+
+        override suspend fun notifications(query: NotificationQuery, cursor: me.foxtails.palustris.domain.NotificationCursor?): NotificationPage =
+            NotificationPage(
+                items = emptyList(),
+                checkpoint = NotificationCheckpoint(account, query),
+            )
+
+        override suspend fun dismissNotification(id: EntityId): Unit = throw SourceError.Unsupported("dismiss")
+
+        private companion object {
+            private val account = AccountId(Connection("https://example.org", Protocol.MISSKEY), "receiver")
+        }
+    }
 
     private class ScriptedNotificationSource : SocialSource {
         override val capabilities = ServerCapabilities(timelines = setOf(Timeline.Home))

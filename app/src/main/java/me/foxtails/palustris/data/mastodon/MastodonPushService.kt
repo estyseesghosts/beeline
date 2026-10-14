@@ -20,9 +20,26 @@ internal class MastodonPushService(
     private val accountId: AccountId,
     private val capabilities: () -> ServerCapabilities = { ServerCapabilities() },
 ) {
-    suspend fun providerInfo() = PushProviderInfo(status = CapabilityStatus.Supported)
+    /**
+     * Server push availability from the probed capability. Pixelfed serves no v1 push
+     * subscription routes, so a probed Unsupported result reports Unsupported without network
+     * and the registration manager stays off. Denied stays Denied so the caller keeps its
+     * reauthorization path. Unknown and temporarily-unavailable states keep the optimistic
+     * Supported answer; only a verified absence or denial changes it. There is no v1.1 push
+     * client in this slice.
+     */
+    suspend fun providerInfo(): PushProviderInfo {
+        val probed = capabilities().notifications.webPush
+        val status = when (probed) {
+            CapabilityStatus.Unsupported, CapabilityStatus.Denied -> probed
+            else -> CapabilityStatus.Supported
+        }
+        return PushProviderInfo(status = status)
+    }
 
     suspend fun query(knownEndpoint: ValidatedUrl?): PushSubscription? {
+        // With no v1 subscription route there is no server subscription to read.
+        if (capabilities().notifications.webPush == CapabilityStatus.Unsupported) return null
         val subscription = readOwned()
         if (knownEndpoint != null && subscription != null && subscription.endpoint != knownEndpoint) throw SourceError.ServerError("notifications.push.identity-changed")
         return subscription
@@ -30,11 +47,13 @@ internal class MastodonPushService(
 
     suspend fun createOrReplace(spec: PushSubscriptionSpec, previous: PushSubscription?): PushSubscription {
         validateSpec(spec); previous?.let(::validateSubscription)
+        requirePush("notifications.push.create")
         return confirmed(api.postForm(origin, "api/v1/push/subscription", createFields(spec), token, MASTODON_MAX_RESPONSE_BYTES).body, spec.endpoint)
     }
 
     suspend fun updatePolicy(subscription: PushSubscription, alerts: Set<NotificationCategory>): PushSubscription {
         validateSubscription(subscription)
+        requirePush("notifications.push.update")
         val confirmed = confirmed(api.putForm(origin, "api/v1/push/subscription", alertFields(alerts, includeReactions = capabilities().supportsReactionNotifications()), token, MASTODON_MAX_RESPONSE_BYTES).body, subscription.endpoint)
         if (!sameIdentity(confirmed, subscription)) throw SourceError.ServerError("notifications.push.identity-changed")
         return confirmed
@@ -42,9 +61,15 @@ internal class MastodonPushService(
 
     suspend fun remove(subscription: PushSubscription) {
         validateSubscription(subscription)
+        requirePush("notifications.push.remove")
         val current = readOwned() ?: return
         if (!sameIdentity(current, subscription)) throw SourceError.ServerError("notifications.push.identity-changed")
         api.delete(origin, "api/v1/push/subscription", token, MASTODON_MAX_RESPONSE_BYTES)
+    }
+
+    /** Throws before network when the probe verified the v1 push routes absent. */
+    private fun requirePush(operation: String) {
+        if (capabilities().notifications.webPush == CapabilityStatus.Unsupported) throw SourceError.Unsupported(operation)
     }
 
     private fun validateSpec(spec: PushSubscriptionSpec) {

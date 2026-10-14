@@ -134,10 +134,10 @@ class MastodonSource(
     private val directMessageService = MastodonDirectMessageService(origin, token, api, accountId, profileService)
     private val notificationService = MastodonNotificationService(origin, token, api, accountId, clock) { _capabilities.value }
     private val sourceInstance = UUID.randomUUID().toString()
-    private val moderationService = MastodonModerationService(origin, token, api, accountId, sessionRevision, sourceInstance)
+    private val moderationService = MastodonModerationService(origin, token, api, accountId, sessionRevision, sourceInstance) { _capabilities.value }
     private val filterService = MastodonFilterService(origin, token, api)
     private val pushService = MastodonPushService(origin, token, api, accountId) { _capabilities.value }
-    private val streamService = MastodonStreamService(origin, token, api, accountId)
+    private val streamService = MastodonStreamService(origin, token, api, accountId) { _capabilities.value }
     private val threadService = MastodonThreadService(origin, token, api, accountId, sessionRevision)
     private val mediaService = MastodonMediaService(origin, token, api)
     private val discoveryService = MastodonDiscoveryService(origin, token, api)

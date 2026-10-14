@@ -15,6 +15,8 @@ import me.foxtails.palustris.domain.MutedHashtag
 import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ReportRequest
+import me.foxtails.palustris.domain.ReportRoute
+import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SourceError
 import org.json.JSONObject
 
@@ -25,6 +27,7 @@ class MastodonModerationService(
     private val accountId: AccountId,
     private val sessionRevision: Long,
     private val sourceInstance: String,
+    private val capabilities: () -> ServerCapabilities = { ServerCapabilities() },
 ) {
     suspend fun blocked(cursor: ModerationCursor? = null): ModerationPage<ModerationAccount> = list(ModerationListKind.Blocked, cursor)
     suspend fun muted(cursor: ModerationCursor? = null): ModerationPage<ModerationAccount> = list(ModerationListKind.Muted, cursor)
@@ -63,12 +66,20 @@ class MastodonModerationService(
             .getOrElse { profileRelationship(target) }
     }
 
+    /**
+     * Reports an account through the probed report route. Origin validation runs first, so a
+     * foreign target or post never reaches the route choice. `V1Reports` posts the Mastodon
+     * fields to `/api/v1/reports`. `V11Report` (Pixelfed) throws Unsupported before network:
+     * Pixelfed serves only `POST /api/v1.1/report` and its field mapping is unproven without a
+     * live server, so the row stays hidden until proven rather than sending guessed fields.
+     */
     suspend fun report(request: ReportRequest) {
         validateTarget(request.targetAccountId, "moderation.report")
         request.postId?.let {
             validateOrigin(it.connection, "moderation.report")
             if (it.value.isBlank()) throw SourceError.Unsupported("moderation.report")
         }
+        if (capabilities().reportRoute == ReportRoute.V11Report) throw SourceError.Unsupported("moderation.report")
         val fields = buildList {
             add("account_id" to request.targetAccountId.localId)
             request.postId?.let { add("status_ids[]" to it.value) }

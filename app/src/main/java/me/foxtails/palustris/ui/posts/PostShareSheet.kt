@@ -292,14 +292,16 @@ private fun ShareActionCard(
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        RelationshipAction(
-                            tag = "post_share_report",
-                            label = stringResource(R.string.post_share_report_with_handle, handle),
-                            handle = handle,
-                            modifier = Modifier.weight(1f),
-                            enabled = !self && !relationshipLoading,
-                            onClick = { reportOpen = true },
-                        )
+                        if (rows.report) {
+                            RelationshipAction(
+                                tag = "post_share_report",
+                                label = stringResource(R.string.post_share_report_with_handle, handle),
+                                handle = handle,
+                                modifier = Modifier.weight(1f),
+                                enabled = !self && !relationshipLoading,
+                                onClick = { reportOpen = true },
+                            )
+                        }
                         RelationshipAction(
                             tag = "post_share_problem_cancel",
                             label = stringResource(R.string.post_share_problem_cancel),

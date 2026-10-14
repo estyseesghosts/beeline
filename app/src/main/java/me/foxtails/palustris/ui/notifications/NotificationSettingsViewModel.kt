@@ -26,6 +26,7 @@ import me.foxtails.palustris.data.notifications.push.UnifiedPushConnector
 import me.foxtails.palustris.data.notifications.work.NotificationWorkScheduler
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Account
+import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActivity
@@ -44,6 +45,8 @@ data class NotificationSettingsUiState(
     /** True while stored notification state is corrupt or unreadable. Defaults are not confirmed settings. */
     val storageUnavailable: Boolean = false,
     val permissionGranted: Boolean = false,
+    /** False when the server has no push subscription route, so the delivery section stays hidden. */
+    val pushAvailable: Boolean = true,
     val registrationState: NotificationPushRegistrationState = NotificationPushRegistrationState.Off,
     val failureStage: me.foxtails.palustris.domain.PushRegistrationFailureStage? = null,
     val failureReason: me.foxtails.palustris.domain.PushRegistrationFailureReason? = null,
@@ -76,6 +79,10 @@ class NotificationSettingsViewModel @AssistedInject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow(NotificationSettingsUiState(
         permissionGranted = permissionController.isGranted(),
+        // The settings surface opens per navigation, so the stored capability snapshot is
+        // current enough to decide whether the server push section applies. Only a verified
+        // Unsupported hides it; Unknown, denied, and temporarily-unavailable states keep it.
+        pushAvailable = sessionStore.read(accountId)?.capabilities?.notifications?.webPush != CapabilityStatus.Unsupported,
     ))
     val state = _state.asStateFlow()
     private val saveMutex = Mutex()

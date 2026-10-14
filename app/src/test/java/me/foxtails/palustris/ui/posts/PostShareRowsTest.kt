@@ -9,6 +9,7 @@ import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.OwnPostCapabilities
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
+import me.foxtails.palustris.domain.ReportRoute
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.TranslationCapability
 import org.junit.Assert.assertEquals
@@ -32,9 +33,11 @@ class PostShareRowsTest {
         delete: CapabilityStatus = CapabilityStatus.Supported,
         edit: CapabilityStatus = CapabilityStatus.Unknown,
         translation: CapabilityStatus = CapabilityStatus.Unknown,
+        reportRoute: ReportRoute = ReportRoute.V1Reports,
     ) = ServerCapabilities(
         ownPosts = OwnPostCapabilities(delete = delete, edit = edit),
         translation = TranslationCapability(translation),
+        reportRoute = reportRoute,
     )
 
     @Test
@@ -75,5 +78,19 @@ class PostShareRowsTest {
         val rows = postShareRows(post(other, language = "en"), me, capabilities(translation = CapabilityStatus.Supported), "en")
 
         assertEquals(false, rows.translate)
+    }
+
+    @Test
+    fun reportShowsOnTheV1ReportsRoute() {
+        val rows = postShareRows(post(other), me, capabilities(), "en")
+
+        assertEquals(true, rows.report)
+    }
+
+    @Test
+    fun reportHidesUntilTheV11ReportMappingIsProven() {
+        val rows = postShareRows(post(other), me, capabilities(reportRoute = ReportRoute.V11Report), "en")
+
+        assertEquals(false, rows.report)
     }
 }

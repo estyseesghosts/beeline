@@ -330,6 +330,7 @@
     <string name="notifications_storage_reset_failed">Local notification data could not be reset. Try again.</string>
     <string name="notifications_storage_unavailable">Stored notifications could not be read. New alerts are paused until recovery succeeds.</string>
     <string name="notifications_sync_delayed">Some notifications may be delayed. Pull to refresh.</string>
+    <string name="notifications_polling">Live updates are unavailable on this server. Pull to refresh for new notifications.</string>
     <string name="notifications_target_unavailable">This notification target is not available in the current app.</string>
     <string name="notifications_test_distributor_mismatch">The selected notification distributor is not connected.</string>
     <string name="notifications_test_no_distributor">No notification distributor is installed.</string>

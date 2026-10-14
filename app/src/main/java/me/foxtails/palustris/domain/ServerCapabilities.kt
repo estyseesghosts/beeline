@@ -45,7 +45,7 @@ data class ServerCapabilities(
     val supportsCustomReactions: CapabilityStatus = CapabilityStatus.Unknown,
     /**
      * Which report route the probe identified. Pixelfed serves `v1.1/report`; every other
-     * family takes `v1/reports`. The value records the send path; it never hides the row.
+     * family takes `v1/reports`. `V11Report` hides the row until the v1.1 field mapping is proven.
      */
     val reportRoute: ReportRoute = ReportRoute.V1Reports,
     /**

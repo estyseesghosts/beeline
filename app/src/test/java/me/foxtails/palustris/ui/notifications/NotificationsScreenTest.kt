@@ -344,6 +344,42 @@ class NotificationsScreenTest {
         compose.onNodeWithText("All caught up").assertIsDisplayed()
     }
 
+    @Test fun pixelfedInboxHidesDismissAndShowsThePollingIndicator() {
+        val connection = Connection("https://example.org", Protocol.MASTODON)
+        val account = Account(AccountId(connection, "receiver"), "Receiver", "@receiver@example.org")
+        val actor = Account(AccountId(connection, "actor"), "Actor", "@actor@example.org")
+        val notification = Notification(
+            id = EntityId(connection.origin, "pixelfed-row"),
+            accountId = account.id,
+            createdAtEpochMillis = 0,
+            activity = NotificationActivity.FollowRequest,
+            actors = listOf(actor),
+            rawType = "followRequest",
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                NotificationsScreen(
+                    connected = true,
+                    compactLayout = true,
+                    notificationState = NotificationsUiState(
+                        items = listOf(notification),
+                        dismissEnabled = false,
+                        pollingForLiveUpdates = true,
+                    ),
+                    onDismissNotification = {},
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("notification_row_pixelfed-row", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText("Dismiss").assertDoesNotExist()
+        compose.onNodeWithText("Accept").assertIsDisplayed()
+        compose.onNodeWithText("Reject").assertIsDisplayed()
+        compose.onNodeWithText("Live updates are unavailable on this server. Pull to refresh for new notifications.")
+            .assertIsDisplayed()
+    }
+
     @Test fun followersFilterShowsOnlyFollowActivity() {
         val connection = Connection("https://example.org", Protocol.MISSKEY)
         val accountId = AccountId(connection, "receiver")

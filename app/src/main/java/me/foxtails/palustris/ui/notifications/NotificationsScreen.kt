@@ -229,7 +229,7 @@ fun NotificationsScreen(
                 onRefresh = onRefreshNotifications,
                 onLoadMore = onLoadMoreNotifications,
                 onMarkSeen = onMarkNotificationSeen,
-                onDismiss = onDismissNotification,
+                onDismiss = onDismissNotification.takeIf { notificationState.dismissEnabled },
                 onFollowRequest = onFollowRequest,
                 onOpen = onOpenNotification,
                 modifier = Modifier.fillMaxSize(),
@@ -270,7 +270,7 @@ fun NotificationsScreen(
                 onRefresh = onRefreshNotifications,
                 onLoadMore = onLoadMoreNotifications,
                 onMarkSeen = onMarkNotificationSeen,
-                onDismiss = onDismissNotification,
+                onDismiss = onDismissNotification.takeIf { notificationState.dismissEnabled },
                 onFollowRequest = onFollowRequest,
                 onOpen = onOpenNotification,
                 modifier = Modifier.fillMaxSize().chromeBackdropSource(backdrop),
@@ -339,7 +339,7 @@ private fun NotificationContent(
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     onMarkSeen: (Notification?) -> Unit,
-    onDismiss: (Notification) -> Unit,
+    onDismiss: ((Notification) -> Unit)?,
     onFollowRequest: (Notification, Boolean) -> Unit,
     onOpen: (Notification) -> Unit,
     modifier: Modifier,
@@ -409,6 +409,15 @@ private fun NotificationContent(
                     }
                 }
             } else {
+                if (state.pollingForLiveUpdates) item {
+                    ExpandableContent(visible = state.pollingForLiveUpdates) {
+                        Text(
+                            stringResource(R.string.notifications_polling),
+                            modifier = Modifier.absolutePadding(left = leftClearance, right = rightClearance),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 if (state.syncDelayed) item {
                     ExpandableContent(visible = state.syncDelayed) {
                         Text(
@@ -424,7 +433,7 @@ private fun NotificationContent(
                         actionState = state.actionStates[notification.id] ?: NotificationActionState.Idle,
                         actionError = state.actionErrors[notification.id],
                         onOpen = { onMarkSeen(notification); onOpen(notification) },
-                        onDismiss = { onDismiss(notification) },
+                        onDismiss = onDismiss?.let { dismiss -> { dismiss(notification) } },
                         onFollowRequest = { accept -> onFollowRequest(notification, accept) },
                         contentWarningRules = contentWarningRules,
                         rightObstructionClearance = rightClearance,
