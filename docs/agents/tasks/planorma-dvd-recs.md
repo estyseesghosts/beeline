@@ -17,11 +17,12 @@ Implement docs/planorma.md (Pleroma/Akkoma/Pixelfed, 8 slices) and docs/dvd-recs
 
 # Completed
 
-- Planorma Slice 1 — server flavor detection + capability table, schema 13->14. Commit: (pending — this checkpoint).
+- Planorma Slice 1 — server flavor detection + capability table, schema 13->14. Commit `d90c9eca` "Detect-server-flavor-S1".
+- Planorma Slice 2 — PKCE detection path fix. Commit: (this checkpoint).
 
 # Current slice
 
-Planorma Slice 2 — PKCE detection path fix (docs/planorma.md Slice 2). Owner: TBD at dispatch.
+Planorma Slice 3 — Pleroma limits and content_type composer. Owner: TBD at dispatch.
 
 # Files involved
 

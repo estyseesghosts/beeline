@@ -190,7 +190,7 @@ class MastodonAuth(
         Log.i(TAG, "oauth_stage capability-start")
         val version = runCatching {
             MastodonCapabilityProbe.parseLeadingVersion(
-                JSONObject(api.get(origin, "v2/instance").body).optString("version"),
+                JSONObject(api.get(origin, "api/v2/instance").body).optString("version"),
             )
         }.getOrElse {
             logStageFailure("capability", it)
