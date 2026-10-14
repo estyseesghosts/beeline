@@ -86,6 +86,7 @@ import me.foxtails.palustris.domain.normalizeFavouriteEmoji
 import me.foxtails.palustris.domain.search.SearchQuery
 import me.foxtails.palustris.domain.search.SearchSuggestions
 import me.foxtails.palustris.domain.search.Trends
+import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.domain.unsupported
 import org.json.JSONArray
 import org.json.JSONObject
@@ -136,6 +137,7 @@ class MisskeySource(
     private val searchService = MisskeySearchService(origin, token, api, discoveryService)
     private val feedService = MisskeyFeedService(origin, token, api)
     private val timelineService = MisskeyTimelineService(origin, token, api, MISSKEY_MAX_RESPONSE_BYTES)
+    private val dvdRecommendationService = MisskeyDvdSharkeyRecommendationService(origin, token.takeIf { accountId != null }, api, accountId, MISSKEY_MAX_RESPONSE_BYTES)
     private val threadService = MisskeyThreadService(
         origin = origin,
         token = token,
@@ -152,7 +154,16 @@ class MisskeySource(
 
     override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = request("timeline", invalidateCapabilitiesOnNotFound = true) {
             refreshCapabilities()
-            timelineService.timeline(timeline, cursor, capabilities)
+            if (timeline == Timeline.Recommended) dvdRecommendationService.page(cursor).posts else timelineService.timeline(timeline, cursor, capabilities)
+    }
+
+    /**
+     * Recommended never enters [ServerCapabilities.timelines] — the Photo Grid must never offer
+     * it (Slice 1 contract) — and surfaces here only while the DVD probe reports Supported. This
+     * mirrors the [SocialSource.timelines] default order with that one additional gate.
+     */
+    override suspend fun timelines(): List<Timeline> = timelineDisplayOrder.filter {
+        it in capabilities.timelines || (it == Timeline.Recommended && capabilities.recommendations?.status == CapabilityStatus.Supported)
     }
 
     override suspend fun post(id: EntityId): Post = request("post") {

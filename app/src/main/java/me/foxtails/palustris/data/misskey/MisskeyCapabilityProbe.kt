@@ -1,5 +1,6 @@
 package me.foxtails.palustris.data.misskey
 
+import kotlinx.coroutines.CancellationException
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
@@ -19,6 +20,8 @@ import me.foxtails.palustris.domain.PrimaryFavouriteCapability
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.ProfileCapabilities
 import me.foxtails.palustris.domain.ReactionSelectionMode
+import me.foxtails.palustris.domain.RecommendationCapability
+import me.foxtails.palustris.domain.RecommendationFlavor
 import me.foxtails.palustris.domain.SavedPostsCapability
 import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.ScheduleRoute
@@ -40,10 +43,10 @@ class MisskeyCapabilityProbe(
         // Misskey's HTTP API is POST-based, including the unauthenticated meta endpoint.
         val meta = JSONObject(api.post(connection.origin, "meta", maxResponseBytes = maxResponseBytes).body)
         require(meta.optString("version").isNotBlank()) { "This server did not return Misskey-compatible information." }
-        val policies = token?.takeIf(String::isNotBlank)?.let { credential ->
+        val iResponse = token?.takeIf(String::isNotBlank)?.let { credential ->
             JSONObject(api.post(connection.origin, "i", JSONObject().put("i", credential), maxResponseBytes).body)
-                .optJSONObject("policies")
         }
+        val policies = iResponse?.optJSONObject("policies")
         val localFallback = if (meta.has("disableLocalTimeline")) {
             if (meta.optBoolean("disableLocalTimeline")) CapabilityStatus.Unsupported else CapabilityStatus.Supported
         } else {
@@ -64,7 +67,9 @@ class MisskeyCapabilityProbe(
             statuses[Timeline.Bubble] = probeBubble(connection.origin, token, policies)
         }
         // One list answers both questions: which edit route exists and which schedule routes exist.
-        val endpoints = if (token.isNullOrBlank()) null else endpointNames(connection)
+        // The DVD recommendations gate reads the richer endpointList result beside it.
+        val endpointResult = if (token.isNullOrBlank()) null else endpointList(connection)
+        val endpoints = (endpointResult as? EndpointList.Available)?.names
         return ServerCapabilities(
             timelineStatuses = statuses,
             audiences = setOf(Audience.Public, Audience.Unlisted, Audience.Followers, Audience.Direct),
@@ -103,6 +108,7 @@ class MisskeyCapabilityProbe(
                     ?: CapabilityStatus.Unsupported,
             ),
             moderation = moderationCapabilities(token),
+            recommendations = recommendationCapability(connection, iResponse, endpointResult, hasToken = !token.isNullOrBlank()),
             capabilitiesLastUpdated = System.currentTimeMillis(),
             capabilitySchemaVersion = ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION,
         ).withTimelineStatuses(statuses)
@@ -111,12 +117,73 @@ class MisskeyCapabilityProbe(
     /**
      * Sharkey serves `notes/edit`; Misskey has no edit route. The endpoint list says which. A failed
      * or unreadable list leaves the status unknown, which hides the row instead of guessing.
+     * Legacy callers keep the set-or-null view: any failure reads as null (Unknown). The DVD
+     * recommendations gate uses [endpointList] directly so network and rate-limit failures can
+     * read as TemporarilyUnavailable instead.
      */
-    private suspend fun endpointNames(connection: Connection): Set<String>? = runCatching {
+    private suspend fun endpointList(connection: Connection): EndpointList = try {
         val body = api.post(connection.origin, "endpoints", maxResponseBytes = maxResponseBytes).body
         val names = if (body.trimStart().startsWith("[")) JSONArray(body) else JSONObject(body).optJSONArray("endpoints")
-        names?.let { list -> (0 until list.length()).map(list::optString).toSet() }
-    }.getOrNull()
+        val parsed = names?.let { list -> (0 until list.length()).map(list::optString).toSet() }
+        if (parsed == null) EndpointList.Unreadable else EndpointList.Available(parsed)
+    } catch (e: ApiFailure) {
+        if (e.status >= 500 || e.status == 429) EndpointList.TemporarilyUnavailable else EndpointList.Unreadable
+    } catch (_: java.io.IOException) {
+        EndpointList.TemporarilyUnavailable
+    } catch (e: Exception) {
+        // A garbage body reads as unreadable, exactly like the old set-or-null fetch. Cancellation still propagates.
+        if (e is CancellationException) throw e
+        EndpointList.Unreadable
+    }
+
+    private sealed interface EndpointList {
+        data class Available(val names: Set<String>) : EndpointList
+        data object Unreadable : EndpointList
+        data object TemporarilyUnavailable : EndpointList
+    }
+
+    /**
+     * DVD Sharkey recommendations gate: the `dvd.chat` host plus a signed-in token plus all four
+     * recommendation endpoints, with `recommendationSettings.enabled` read from the existing `i`
+     * response when present. Host mismatch or a missing endpoint is Unsupported; a user who
+     * disabled recommendations is Denied; an unreadable endpoint list is Unknown; a network or
+     * rate-limit failure while reading the list is TemporarilyUnavailable. A single failed feed
+     * call never feeds back into this status; only the probe writes it.
+     */
+    private fun recommendationCapability(
+        connection: Connection,
+        iResponse: JSONObject?,
+        endpoints: EndpointList?,
+        hasToken: Boolean,
+    ): RecommendationCapability {
+        val origin = connection.origin
+        if (!isDvdSharkeyHost(origin)) {
+            return RecommendationCapability(RecommendationFlavor.DVD_SHARKEY, CapabilityStatus.Unsupported, origin)
+        }
+        if (!hasToken) {
+            return RecommendationCapability(RecommendationFlavor.DVD_SHARKEY, CapabilityStatus.Denied, origin)
+        }
+        return when (endpoints) {
+            is EndpointList.Available -> when {
+                !DVD_RECOMMENDATION_ENDPOINTS.all(endpoints.names::contains) ->
+                    RecommendationCapability(RecommendationFlavor.DVD_SHARKEY, CapabilityStatus.Unsupported, origin)
+                recommendationsDisabled(iResponse) ->
+                    RecommendationCapability(RecommendationFlavor.DVD_SHARKEY, CapabilityStatus.Denied, origin)
+                else ->
+                    RecommendationCapability(RecommendationFlavor.DVD_SHARKEY, CapabilityStatus.Supported, origin)
+            }
+            EndpointList.TemporarilyUnavailable ->
+                RecommendationCapability(RecommendationFlavor.DVD_SHARKEY, CapabilityStatus.TemporarilyUnavailable, origin)
+            else ->
+                RecommendationCapability(RecommendationFlavor.DVD_SHARKEY, CapabilityStatus.Unknown, origin)
+        }
+    }
+
+    /** True when the `i` response carries `recommendationSettings.enabled: false`. Absent settings never disable. */
+    private fun recommendationsDisabled(iResponse: JSONObject?): Boolean =
+        iResponse?.optJSONObject("recommendationSettings")?.let { settings ->
+            settings.has("enabled") && !settings.optBoolean("enabled", true)
+        } == true
 
     /** Lists and antennas follow the endpoint list. Saved hashtags stay on the device, so followed tags are Unsupported. */
     private fun feedChips(token: String?, endpoints: Set<String>?) = FeedChipCapabilities(
@@ -237,6 +304,14 @@ class MisskeyCapabilityProbe(
         const val MAX_ATTACHMENTS = 16
         const val BYTES_PER_MEGABYTE = 1024L * 1024
         const val EDIT_ENDPOINT = "notes/edit"
+
+        /** All four recommendation routes the DVD gate requires before reporting Supported. */
+        val DVD_RECOMMENDATION_ENDPOINTS = setOf(
+            "notes/recommendations",
+            "notes/recommendations/dwell",
+            "notes/recommendations/not-interested",
+            "i/recommendation-interests",
+        )
         const val SHARKEY_SCHEDULE_ENDPOINT = "notes/schedule/create"
         const val MISSKEY_DRAFT_ENDPOINT = "notes/drafts/create"
         const val MISSKEY_SCHEDULE_LEAD_SECONDS = 60L

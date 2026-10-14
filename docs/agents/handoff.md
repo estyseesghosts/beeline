@@ -1,3 +1,5 @@
+DVD Slice 2 (probe + offset feed transport) is this commit; DVD Slice 1 is `28b91071`. Verification: 2849 tests 0 failures, lint, ktlint, both assembles green; review PASS (diff-scope confirmation below). Live dvd.chat check blocked (needs approval + test accounts). Next slice: DVD Slice 3 (Home timeline entry). Preceding safe commit: `28b91071`.
+
 DVD Slice 1 (domain + capability, schema 14->15, persistence + review repairs) is this commit; Planorma Slice 8 is `2566ef41`. Verification: 2827 tests 0 failures, lint, ktlint, both assembles green; review REQUIRED R1 + O1 repaired by owner. Slice 2 contract: Recommended stays OUT of timelines set; Home via recommendations capability + timelines() override; Photo Grid never offers it. No device or live-server check ran. Next slice: DVD Slice 2 (probe + feed transport). Preceding safe commit: `2566ef41`.
 
 Planorma Slice 8 (paging relax + demotion + fixtures) is this commit; Slice 7 is `20cb0083`. Verification: 2820 tests 0 failures, lint, ktlint, both assembles green; review PASS. No device or live-server check ran. Next slice: DVD Slice 1 (domain + capability, schema 14->15). Preceding safe commit: `20cb0083`.
