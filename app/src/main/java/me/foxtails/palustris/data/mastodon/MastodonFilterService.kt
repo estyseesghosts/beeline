@@ -5,10 +5,12 @@ import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.data.transport.HttpStatusFailure
 import me.foxtails.palustris.domain.ContentFilter
 import me.foxtails.palustris.domain.ContentFilterDraft
+import me.foxtails.palustris.domain.ContentFilterInput
 import me.foxtails.palustris.domain.ContentFilterKind
 import me.foxtails.palustris.domain.ContentFilterSet
 import me.foxtails.palustris.domain.FilterPattern
 import me.foxtails.palustris.domain.PostFilterAction
+import me.foxtails.palustris.domain.SourceError
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONArray
 import org.json.JSONObject
@@ -30,7 +32,8 @@ class MastodonFilterService(
     suspend fun filters(): ContentFilterSet = when (kind) {
         ContentFilterKind.Titled -> ContentFilterSet(ContentFilterKind.Titled, v2Filters(fetchV2()))
         ContentFilterKind.Phrase -> ContentFilterSet(ContentFilterKind.Phrase, v1Filters())
-        null -> try {
+        // The service only ever selects Titled or Phrase.
+        null, ContentFilterKind.WordMute -> try {
             val body = fetchV2()
             kind = ContentFilterKind.Titled
             ContentFilterSet(ContentFilterKind.Titled, v2Filters(body))
@@ -50,6 +53,7 @@ class MastodonFilterService(
                 if (id == null) api.postForm(origin, "api/v1/filters", fields, token, MASTODON_MAX_RESPONSE_BYTES)
                 else api.putForm(origin, path("api/v1/filters", id), fields, token, MASTODON_MAX_RESPONSE_BYTES)
             }
+            ContentFilterKind.WordMute -> throw SourceError.Unsupported("moderation.filters.save")
             ContentFilterKind.Titled -> if (id == null) {
                 api.postForm(origin, "api/v2/filters", v2Fields(draft, current = null), token, MASTODON_MAX_RESPONSE_BYTES)
             } else {
@@ -127,7 +131,7 @@ class MastodonFilterService(
 
         /** A filter without expiry sends no `expires_in`: Pleroma's schema rejects an empty value. */
         fun v1Fields(draft: ContentFilterDraft): List<Pair<String, String>> {
-            val pattern = draft.patterns.single() as FilterPattern.Words
+            val pattern = draft.patterns.single() as? FilterPattern.Words ?: throw SourceError.InvalidInput(ContentFilterInput.EXPRESSION)
             return buildList {
                 add("phrase" to pattern.words.single())
                 add("whole_word" to pattern.wholeWord.toString())

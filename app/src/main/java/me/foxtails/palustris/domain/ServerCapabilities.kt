@@ -133,6 +133,7 @@ fun capabilityStatus(error: SourceError): CapabilityStatus = when (error) {
     is SourceError.AccessDenied, is SourceError.UnsupportedCredential, SourceError.Unauthorized -> CapabilityStatus.Denied
     SourceError.NetworkUnavailable, SourceError.RateLimited, is SourceError.ServerError,
     is SourceError.ResourceLimit -> CapabilityStatus.TemporarilyUnavailable
+    is SourceError.InvalidInput -> CapabilityStatus.Unknown
 }
 
 enum class ProfileCapability { LikedPosts }

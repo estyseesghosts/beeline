@@ -12,4 +12,7 @@ sealed class SourceError : Exception() {
     data class ForeignOrigin(val feature: String) : SourceError()
     object NetworkUnavailable : SourceError()
     data class ServerError(val detail: String?) : SourceError()
+
+    /** The server refused the value the user entered, such as an invalid expression or a list over its limit. */
+    data class InvalidInput(val feature: String) : SourceError()
 }

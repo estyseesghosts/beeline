@@ -22,6 +22,8 @@ Authority: [task state](tasks/server-filters.md) and the source below.
 | Client matching of filters the server does not match | `domain/ClientFilterMatcher.kt` | One filter set |
 | Mastodon v2 and v1 filter reads and writes | `data/mastodon/MastodonFilterService`, called by `MastodonSource` | One source; the v2 or v1 choice lasts as long as the source |
 | Filter snapshot of the connected account | `ui/filters/ContentFilterOwner`, created in `ConnectedApp`, read through `LocalClientFilters` | One connected entry; retires through `ConnectedEntryStore` |
+| Misskey word mute reads and writes | `data/misskey/MisskeyWordMuteService`, called by `MisskeySource` | Stateless; each write reads `i` first |
+| JavaScript-form expressions | `domain/FilterExpressions` | Stateless |
 | Settings list and editor | `ui/filters/ContentFilterViewModel`, `ContentFilterSettingsScreen`, `ContentFilterEditorFields` | The settings page (activity ViewModel store) |
 
 ## Invariants
@@ -35,6 +37,10 @@ Authority: [task state](tasks/server-filters.md) and the source below.
 - The service selects v1 only after a v2 404. Any other v2 failure stays a failure and selects nothing.
 - A v2 update reads the filter again. It keeps the IDs of kept keywords and sends `_destroy` for removed ones. Keyword fields use indexed keys.
 - A v1 save without expiry sends no `expires_in`, because Pleroma's schema rejects an empty value.
+- A word mute ID is its list (`s:` or `h:`) and its stored JSON. A write reads `i`, replaces that one entry, and sends both lists. Entries that Beeline cannot read stay unchanged.
+- Case-insensitive simple words are stored as `/escaped/i`. Beeline reads a `/literal/i` entry back as a simple word.
+- Misskey array entries match with capitalization and need every word, as `checkWordMute` in Misskey does.
+- `INVALID_REGEXP` and `TOO_MANY_MUTED_WORDS` become `SourceError.InvalidInput` with a `ContentFilterInput` feature. The editor shows them next to the field.
 - `Remove` wins over `Collapse`. `hide` removes. `warn`, `blur`, and unknown actions collapse.
 - A removing filter never removes the post that a screen opened. The standard detail sets `PostRowPresentation.removable = false`; the photo detail and quotes collapse the post themselves.
 - An Android notification never previews a post with a server filter match.
@@ -44,7 +50,7 @@ Authority: [task state](tasks/server-filters.md) and the source below.
 
 ## Tests
 
-`MastodonFilterResultTest`, `PostRowFilterTest`, `PostRevealOwnerTest`, `NotificationJsonCodecTest`, `NotificationDeliveryPlannerTest`, `ClientFilterMatcherTest`, `MastodonFilterServiceTest`, `ContentFilterEditorTest`, `ContentFilterViewModelTest`, `ContentFilterSettingsScreenTest`, `SettingsRouteRestorationTest`.
+`MastodonFilterResultTest`, `PostRowFilterTest`, `PostRevealOwnerTest`, `NotificationJsonCodecTest`, `NotificationDeliveryPlannerTest`, `ClientFilterMatcherTest`, `MastodonFilterServiceTest`, `ContentFilterEditorTest`, `ContentFilterViewModelTest`, `ContentFilterSettingsScreenTest`, `SettingsRouteRestorationTest`, `MisskeyWordMuteServiceTest`.
 
 ## Limits
 
@@ -54,4 +60,6 @@ Authority: [task state](tasks/server-filters.md) and the source below.
 - The profile media grid shares `photoGridItems` and uses Public filters, not Account filters.
 - After a v2 edit, posts already loaded keep the old server matches until they load again.
 - On Pleroma, changing an expiring v1 filter to "Never" may keep the old expiry, because Beeline sends no `expires_in`.
+- Beeline matches word mutes against more text than Misskey web: poll options, media descriptions, and the quoted post too.
+- Java accepts some expressions that RE2 refuses. The server then refuses the save, and Beeline shows that message.
 - A v2 filter with only status entries and no keywords cannot be saved from Beeline. The editor asks for a keyword.

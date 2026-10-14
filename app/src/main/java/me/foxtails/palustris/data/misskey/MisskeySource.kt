@@ -16,6 +16,8 @@ import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.ContentFilterDraft
+import me.foxtails.palustris.domain.ContentFilterSet
 import me.foxtails.palustris.domain.ConversationId
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.CustomEmoji
@@ -125,6 +127,7 @@ class MisskeySource(
     private val directMessageService = MisskeyDirectMessageService(origin, token, api, accountId, sessionRevision, sourceInstance, MISSKEY_MAX_RESPONSE_BYTES) { id -> post(id) }
     private val notificationService = MisskeyNotificationService(origin, token, api, accountId, clock, MISSKEY_MAX_RESPONSE_BYTES)
     private val moderationService = accountId?.let { MisskeyModerationService(origin, token, api, it, MISSKEY_MAX_RESPONSE_BYTES) }
+    private val wordMuteService = accountId?.let { MisskeyWordMuteService(origin, token, api, MISSKEY_MAX_RESPONSE_BYTES) }
     private val pushService = MisskeyPushService(origin, token, api, accountId, MISSKEY_MAX_RESPONSE_BYTES)
     private val streamService = MisskeyStreamService(origin, token, api, accountId)
     private val mediaService = MisskeyMediaService(origin, token, api)
@@ -670,6 +673,18 @@ class MisskeySource(
 
     override suspend fun removeMutedAccount(entry: ModerationAccount) = request("moderation.muted.remove") {
         moderationService?.removeMuted(entry) ?: unsupported<Unit>("moderation.muted.remove")
+    }
+
+    override suspend fun contentFilters(): ContentFilterSet = request("moderation.filters") {
+        wordMuteService?.filters() ?: unsupported("moderation.filters")
+    }
+
+    override suspend fun saveContentFilter(id: String?, draft: ContentFilterDraft): ContentFilterSet = request("moderation.filters.save") {
+        wordMuteService?.save(id, draft) ?: unsupported("moderation.filters.save")
+    }
+
+    override suspend fun deleteContentFilter(id: String): ContentFilterSet = request("moderation.filters.delete") {
+        wordMuteService?.delete(id) ?: unsupported("moderation.filters.delete")
     }
 
     override suspend fun report(request: ReportRequest) = request("moderation.report") {

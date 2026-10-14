@@ -349,4 +349,22 @@
     <string name="settings_filters_error_title">请输入标题。</string>
     <string name="settings_filters_error_keyword">请输入词语或短语。</string>
     <string name="settings_filters_error_context">请至少选择一个适用范围。</string>
+    <string name="settings_filters_summary_word_mute">你的服务器保存这些屏蔽词。Beeline 像 Misskey 一样在此设备上匹配它们。</string>
+    <string name="settings_filters_add_word">添加屏蔽词</string>
+    <string name="settings_filters_soft_section">折叠</string>
+    <string name="settings_filters_hard_section">移除</string>
+    <string name="settings_filters_mode_section">类型</string>
+    <string name="settings_filters_mode_simple">词语或短语</string>
+    <string name="settings_filters_mode_advanced">正则表达式</string>
+    <string name="settings_filters_ignore_case">忽略大小写</string>
+    <string name="settings_filters_expression">正则表达式</string>
+    <string name="settings_filters_expression_hint">格式为 /模式/标志，例如 /spoilers?/i。</string>
+    <string name="settings_filters_word_case_sensitive">区分大小写</string>
+    <string name="settings_filters_word_case_insensitive">忽略大小写</string>
+    <string name="settings_filters_word_all">包含所有这些词</string>
+    <string name="settings_filters_error_expression">此正则表达式无效。</string>
+    <string name="settings_filters_error_expression_server">服务器无法使用此正则表达式。请尝试更简单的表达式。</string>
+    <string name="settings_filters_error_limit">服务器不允许再添加屏蔽词。请先删除一个屏蔽词。</string>
+    <string name="settings_filters_error_read_only">Beeline 无法编辑包含多个词的屏蔽词。你可以删除它。</string>
+    <string name="error_source_invalid_input">服务器拒绝了此更改。</string>
 </resources>

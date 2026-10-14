@@ -14,6 +14,7 @@ import me.foxtails.palustris.domain.ClientFilterMatcher
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.ContentFilter
 import me.foxtails.palustris.domain.ContentFilterDraft
+import me.foxtails.palustris.domain.ContentFilterInput
 import me.foxtails.palustris.domain.ContentFilterKind
 import me.foxtails.palustris.domain.ContentFilterSet
 import me.foxtails.palustris.domain.FilterPattern
@@ -199,6 +200,24 @@ class ContentFilterViewModelTest {
         assertFalse(model.state.value.saving)
         assertNotNull(model.state.value.editor)
         assertEquals(titled, model.state.value.set)
+    }
+
+    @Test
+    fun refusedExpressionShowsNextToTheField() = runTest(dispatcher) {
+        val source = FilterSource(ContentFilterSet(ContentFilterKind.WordMute))
+        val model = model(source)
+        model.load()
+        advanceUntilIdle()
+        model.startNew()
+        model.updateEditor { it.copy(mode = WordMuteMode.Advanced, expression = "/(?=x)/") }
+
+        source.failure = SourceError.InvalidInput(ContentFilterInput.EXPRESSION)
+        model.save()
+        advanceUntilIdle()
+
+        assertEquals(FilterEditorError.ExpressionRejected, model.state.value.editorError)
+        assertNull(model.state.value.error)
+        assertNotNull(model.state.value.editor)
     }
 
     @Test

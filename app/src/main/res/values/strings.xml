@@ -983,4 +983,22 @@
     <string name="settings_filters_error_title">Enter a title.</string>
     <string name="settings_filters_error_keyword">Enter a word or phrase.</string>
     <string name="settings_filters_error_context">Choose at least one place.</string>
+    <string name="settings_filters_summary_word_mute">Your server stores these word mutes. Beeline matches them on this device, as Misskey does.</string>
+    <string name="settings_filters_add_word">Add word mute</string>
+    <string name="settings_filters_soft_section">Collapse</string>
+    <string name="settings_filters_hard_section">Remove</string>
+    <string name="settings_filters_mode_section">Type</string>
+    <string name="settings_filters_mode_simple">Word or phrase</string>
+    <string name="settings_filters_mode_advanced">Regular expression</string>
+    <string name="settings_filters_ignore_case">Ignore capitalization</string>
+    <string name="settings_filters_expression">Regular expression</string>
+    <string name="settings_filters_expression_hint">Write /pattern/flags, for example /spoilers?/i.</string>
+    <string name="settings_filters_word_case_sensitive">Matches capitalization</string>
+    <string name="settings_filters_word_case_insensitive">Ignores capitalization</string>
+    <string name="settings_filters_word_all">All of these words</string>
+    <string name="settings_filters_error_expression">This regular expression is not valid.</string>
+    <string name="settings_filters_error_expression_server">The server cannot use this regular expression. Try a simpler one.</string>
+    <string name="settings_filters_error_limit">The server allows no more word mutes. Delete a word mute first.</string>
+    <string name="settings_filters_error_read_only">Beeline cannot edit a word mute with several words. You can delete it.</string>
+    <string name="error_source_invalid_input">The server rejected this change.</string>
 </resources>

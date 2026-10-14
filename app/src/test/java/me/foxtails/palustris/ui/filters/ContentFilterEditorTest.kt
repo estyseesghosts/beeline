@@ -69,6 +69,41 @@ class ContentFilterEditorTest {
     }
 
     @Test
+    fun simpleWordMuteKeepsTheCaseChoice() {
+        val base = ContentFilterEditor.new(ContentFilterKind.WordMute).copy(phrase = " Finale ")
+
+        assertEquals(FilterPattern.Words(listOf("Finale"), ignoreCase = true), valid(base).patterns.single())
+        assertEquals(FilterPattern.Words(listOf("Finale"), ignoreCase = false), valid(base.copy(ignoreCase = false)).patterns.single())
+        assertEquals(FilterEditorError.MissingKeyword, error(base.copy(phrase = "")))
+    }
+
+    @Test
+    fun advancedWordMuteChecksTheExpression() {
+        val base = ContentFilterEditor.new(ContentFilterKind.WordMute).copy(mode = WordMuteMode.Advanced)
+
+        assertEquals(FilterPattern.Expression("sp(oi)+ler", "i"), valid(base.copy(expression = "/sp(oi)+ler/i")).patterns.single())
+        assertEquals(FilterPattern.Expression("spoiler"), valid(base.copy(expression = "spoiler")).patterns.single())
+        assertEquals(FilterEditorError.InvalidExpression, error(base.copy(expression = "/(/")))
+        assertEquals(FilterEditorError.MissingKeyword, error(base))
+    }
+
+    @Test
+    fun editingAWordMuteChoosesTheMode() {
+        fun edit(pattern: FilterPattern) = ContentFilterEditor.edit(
+            ContentFilterKind.WordMute,
+            ContentFilter("s", "t", listOf(pattern), PostFilterAction.Collapse),
+            nowEpochMillis = 0,
+        )
+
+        val literal = edit(FilterPattern.Expression("fin\\.ale", "i"))
+        assertEquals(WordMuteMode.Simple, literal.mode)
+        assertEquals("fin.ale", literal.phrase)
+        assertEquals(true, literal.ignoreCase)
+        assertEquals(WordMuteMode.Advanced, edit(FilterPattern.Expression("fin.ale", "i")).mode)
+        assertEquals(FilterEditorError.NotEditable, error(edit(FilterPattern.Words(listOf("a", "b"), ignoreCase = false))))
+    }
+
+    @Test
     fun keywordRowsAndContextsEditInPlace() {
         val editor = ContentFilterEditor.new(ContentFilterKind.Titled).addKeyword().keyword(1, KeywordDraft("season"))
 

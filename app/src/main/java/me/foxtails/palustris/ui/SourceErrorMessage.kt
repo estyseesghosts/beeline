@@ -17,6 +17,7 @@ internal fun sourceErrorMessage(context: Context, error: Exception): String = wh
     is SourceError.ResourceLimit -> context.getString(R.string.error_source_resource_limit, featureLabel(context, error.feature))
     is SourceError.ForeignOrigin -> context.getString(R.string.error_source_foreign_origin)
     is SourceError.NetworkUnavailable -> context.getString(R.string.error_source_network)
+    is SourceError.InvalidInput -> context.getString(R.string.error_source_invalid_input)
     // A blank detail must not silence the message.
     is SourceError.ServerError -> error.detail?.takeIf(String::isNotBlank) ?: context.getString(R.string.error_source_server)
     else -> context.getString(R.string.error_source_server)

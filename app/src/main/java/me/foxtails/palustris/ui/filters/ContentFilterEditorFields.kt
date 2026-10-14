@@ -26,10 +26,12 @@ import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.ContentFilter
 import me.foxtails.palustris.domain.ContentFilterKind
 import me.foxtails.palustris.domain.FilterContext
+import me.foxtails.palustris.domain.FilterExpressions
 import me.foxtails.palustris.domain.FilterPattern
 import me.foxtails.palustris.domain.PostFilterAction
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.settings.SettingsChoiceRow
+import me.foxtails.palustris.ui.settings.SettingsNote
 import me.foxtails.palustris.ui.settings.SettingsSection
 
 /** One editor change. The screen hands it to the model, which applies it to the current editor. */
@@ -86,6 +88,52 @@ private fun KeywordRow(index: Int, keyword: KeywordDraft, removable: Boolean, on
     )
 }
 
+/**
+ * A Misskey word mute: a word or phrase with a capitalization choice, or a regular expression. An entry of several
+ * words opens read-only with a note.
+ */
+@Composable
+internal fun WordMuteFields(editor: ContentFilterEditor, onChange: EditorChange) {
+    if (editor.readOnly) SettingsNote(stringResource(R.string.settings_filters_error_read_only))
+    SettingsSection(stringResource(R.string.settings_filters_mode_section)) {
+        WordMuteMode.entries.forEach { mode ->
+            SettingsChoiceRow(
+                label = stringResource(if (mode == WordMuteMode.Simple) R.string.settings_filters_mode_simple else R.string.settings_filters_mode_advanced),
+                selected = editor.mode == mode,
+                onClick = { if (!editor.readOnly) onChange { it.copy(mode = mode) } },
+                testTag = "filter_mode_${mode.name}",
+            )
+        }
+    }
+    when (editor.mode) {
+        WordMuteMode.Simple -> {
+            OutlinedTextField(
+                value = editor.phrase,
+                onValueChange = { value -> onChange { it.copy(phrase = value) } },
+                label = { Text(stringResource(R.string.settings_filters_keyword)) },
+                singleLine = true,
+                readOnly = editor.readOnly,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp).testTag("filter_phrase"),
+            )
+            CheckboxRow(
+                label = stringResource(R.string.settings_filters_ignore_case),
+                checked = editor.ignoreCase,
+                onCheckedChange = { checked -> if (!editor.readOnly) onChange { it.copy(ignoreCase = checked) } },
+                testTag = "filter_ignore_case",
+            )
+        }
+        WordMuteMode.Advanced -> OutlinedTextField(
+            value = editor.expression,
+            onValueChange = { value -> onChange { it.copy(expression = value) } },
+            label = { Text(stringResource(R.string.settings_filters_expression)) },
+            supportingText = { Text(stringResource(R.string.settings_filters_expression_hint)) },
+            singleLine = true,
+            isError = editor.expression.isNotBlank() && ContentFilterEditor.parseExpression(editor.expression) == null,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp).testTag("filter_expression"),
+        )
+    }
+}
+
 /** Collapse behind a notice, or remove from the list. */
 @Composable
 internal fun FilterActionFields(editor: ContentFilterEditor, onChange: EditorChange) {
@@ -139,6 +187,7 @@ internal fun FilterExpiryFields(editor: ContentFilterEditor, onChange: EditorCha
 @Composable
 internal fun filterSummary(kind: ContentFilterKind, filter: ContentFilter): String {
     val context = LocalContext.current
+    if (kind == ContentFilterKind.WordMute) return stringResource(wordMuteSummary(filter))
     val parts = buildList {
         if (kind == ContentFilterKind.Titled) {
             filter.patterns.filterIsInstance<FilterPattern.Words>().joinToString(", ") { it.words.joinToString(" ") }.takeIf(String::isNotBlank)?.let(::add)
@@ -162,6 +211,21 @@ private fun CheckboxRow(label: String, checked: Boolean, onCheckedChange: (Boole
         headlineContent = { Text(label) },
         leadingContent = { Checkbox(checked = checked, onCheckedChange = null) },
     )
+}
+
+/** What kind of word mute an entry is. Its section already says whether it collapses or removes. */
+private fun wordMuteSummary(filter: ContentFilter): Int = when (val pattern = filter.patterns.singleOrNull()) {
+    is FilterPattern.Words -> when {
+        pattern.words.size > 1 -> R.string.settings_filters_word_all
+        pattern.ignoreCase -> R.string.settings_filters_word_case_insensitive
+        else -> R.string.settings_filters_word_case_sensitive
+    }
+    is FilterPattern.Expression -> if (pattern.flags == "i" && FilterExpressions.literalOrNull(pattern.source) != null) {
+        R.string.settings_filters_word_case_insensitive
+    } else {
+        R.string.settings_filters_mode_advanced
+    }
+    null -> R.string.settings_filters_mode_advanced
 }
 
 private fun FilterContext.label(): Int = when (this) {

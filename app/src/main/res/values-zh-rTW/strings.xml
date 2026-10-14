@@ -374,4 +374,22 @@
     <string name="settings_filters_error_title">請輸入標題。</string>
     <string name="settings_filters_error_keyword">請輸入字詞或片語。</string>
     <string name="settings_filters_error_context">請至少選擇一個適用範圍。</string>
+    <string name="settings_filters_summary_word_mute">你的伺服器儲存這些靜音字詞。Beeline 像 Misskey 一樣在此裝置上比對它們。</string>
+    <string name="settings_filters_add_word">新增靜音字詞</string>
+    <string name="settings_filters_soft_section">摺疊</string>
+    <string name="settings_filters_hard_section">移除</string>
+    <string name="settings_filters_mode_section">類型</string>
+    <string name="settings_filters_mode_simple">字詞或片語</string>
+    <string name="settings_filters_mode_advanced">正規表示式</string>
+    <string name="settings_filters_ignore_case">忽略大小寫</string>
+    <string name="settings_filters_expression">正規表示式</string>
+    <string name="settings_filters_expression_hint">格式為 /模式/旗標，例如 /spoilers?/i。</string>
+    <string name="settings_filters_word_case_sensitive">區分大小寫</string>
+    <string name="settings_filters_word_case_insensitive">忽略大小寫</string>
+    <string name="settings_filters_word_all">包含所有這些字詞</string>
+    <string name="settings_filters_error_expression">此正規表示式無效。</string>
+    <string name="settings_filters_error_expression_server">伺服器無法使用此正規表示式。請嘗試較簡單的表示式。</string>
+    <string name="settings_filters_error_limit">伺服器不允許再新增靜音字詞。請先刪除一個靜音字詞。</string>
+    <string name="settings_filters_error_read_only">Beeline 無法編輯包含多個字詞的靜音字詞。你可以刪除它。</string>
+    <string name="error_source_invalid_input">伺服器拒絕了此變更。</string>
 </resources>

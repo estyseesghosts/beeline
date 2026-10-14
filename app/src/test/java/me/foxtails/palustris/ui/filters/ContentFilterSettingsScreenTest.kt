@@ -91,6 +91,40 @@ class ContentFilterSettingsScreenTest {
     }
 
     @Test
+    fun wordMutesListInTwoSectionsAndEditInTwoModes() {
+        val soft = ContentFilter("s", "finale", listOf(FilterPattern.Words(listOf("finale"), ignoreCase = false)), PostFilterAction.Collapse)
+        val hard = ContentFilter("h", "/sp(oi)+ler/", listOf(FilterPattern.Expression("sp(oi)+ler")), PostFilterAction.Remove)
+        compose.setContent {
+            ContentFilterSettingsScreen(ContentFilterUiState(set = ContentFilterSet(ContentFilterKind.WordMute, listOf(soft, hard))), ContentFilterSettingsActions())
+        }
+
+        compose.onNodeWithText("Add word mute").assertIsDisplayed()
+        compose.onNodeWithText("Collapse").assertIsDisplayed()
+        compose.onNodeWithText("Remove").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Matches capitalization").assertIsDisplayed()
+        compose.onNodeWithText("Regular expression").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun advancedWordMuteEditorShowsTheExpressionField() {
+        compose.setContent {
+            ContentFilterSettingsScreen(
+                ContentFilterUiState(
+                    set = ContentFilterSet(ContentFilterKind.WordMute),
+                    editor = ContentFilterEditor.new(ContentFilterKind.WordMute).copy(mode = WordMuteMode.Advanced),
+                    editorError = FilterEditorError.ExpressionRejected,
+                ),
+                ContentFilterSettingsActions(),
+            )
+        }
+
+        compose.onNodeWithTag("filter_expression").assertIsDisplayed()
+        compose.onAllNodesWithTag("filter_phrase").assertCountEquals(0)
+        compose.onAllNodesWithTag("filter_context_Home").assertCountEquals(0)
+        compose.onNodeWithText("The server cannot use this regular expression. Try a simpler one.").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
     fun editorErrorNamesTheMissingField() {
         compose.setContent {
             ContentFilterSettingsScreen(

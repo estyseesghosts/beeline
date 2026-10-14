@@ -450,4 +450,22 @@
     <string name="settings_filters_error_title">Gib einen Titel ein.</string>
     <string name="settings_filters_error_keyword">Gib ein Wort oder einen Ausdruck ein.</string>
     <string name="settings_filters_error_context">Wähle mindestens einen Ort.</string>
+    <string name="settings_filters_summary_word_mute">Dein Server speichert diese Wortstummschaltungen. Beeline wendet sie auf diesem Gerät an, wie Misskey.</string>
+    <string name="settings_filters_add_word">Wortstummschaltung hinzufügen</string>
+    <string name="settings_filters_soft_section">Einklappen</string>
+    <string name="settings_filters_hard_section">Entfernen</string>
+    <string name="settings_filters_mode_section">Art</string>
+    <string name="settings_filters_mode_simple">Wort oder Ausdruck</string>
+    <string name="settings_filters_mode_advanced">Regulärer Ausdruck</string>
+    <string name="settings_filters_ignore_case">Groß- und Kleinschreibung ignorieren</string>
+    <string name="settings_filters_expression">Regulärer Ausdruck</string>
+    <string name="settings_filters_expression_hint">Schreibe /Muster/Flags, zum Beispiel /spoilers?/i.</string>
+    <string name="settings_filters_word_case_sensitive">Beachtet Groß- und Kleinschreibung</string>
+    <string name="settings_filters_word_case_insensitive">Ignoriert Groß- und Kleinschreibung</string>
+    <string name="settings_filters_word_all">Alle diese Wörter</string>
+    <string name="settings_filters_error_expression">Dieser reguläre Ausdruck ist ungültig.</string>
+    <string name="settings_filters_error_expression_server">Der Server kann diesen regulären Ausdruck nicht verwenden. Versuche einen einfacheren.</string>
+    <string name="settings_filters_error_limit">Der Server erlaubt keine weiteren Wortstummschaltungen. Lösche zuerst eine.</string>
+    <string name="settings_filters_error_read_only">Beeline kann eine Wortstummschaltung mit mehreren Wörtern nicht bearbeiten. Du kannst sie löschen.</string>
+    <string name="error_source_invalid_input">Der Server hat diese Änderung abgelehnt.</string>
 </resources>

@@ -87,6 +87,39 @@ class ClientFilterMatcherTest {
     }
 
     @Test
+    fun misskeyWordsMatchCapitalizationAndNeedEveryWord() {
+        val entry = ContentFilter("s", "spoiler season", listOf(FilterPattern.Words(listOf("spoiler", "season"), ignoreCase = false)), PostFilterAction.Collapse)
+        val m = matcher(entry)
+
+        assertEquals(1, m.matches(post("a season of spoiler talk"), FilterContext.Thread).size)
+        assertTrue(m.matches(post("a Season of Spoiler talk"), FilterContext.Thread).isEmpty())
+        assertTrue(m.matches(post("spoiler only"), FilterContext.Thread).isEmpty())
+    }
+
+    @Test
+    fun expressionsFollowJavaScriptFlags() {
+        fun expression(source: String, flags: String) = ContentFilter("e", "e", listOf(FilterPattern.Expression(source, flags)), PostFilterAction.Remove)
+
+        assertEquals(1, matcher(expression("sp(oi)+ler", "i")).matches(post("SPOIOILER"), FilterContext.Home).size)
+        assertTrue(matcher(expression("sp(oi)+ler", "")).matches(post("SPOILER"), FilterContext.Home).isEmpty())
+        assertEquals(1, matcher(expression("été", "i")).matches(post("ÉTÉ"), FilterContext.Home).size)
+        // A bad flag or bad syntax never matches.
+        assertTrue(matcher(expression("x", "q")).matches(post("x"), FilterContext.Home).isEmpty())
+        assertTrue(matcher(expression("(", "")).matches(post("("), FilterContext.Home).isEmpty())
+    }
+
+    @Test
+    fun storedExpressionsRoundTripAndLiteralsEscape() {
+        assertEquals(FilterPattern.Expression("a/b", "gi"), FilterExpressions.parse("/a/b/gi"))
+        assertNull(FilterExpressions.parse("plain"))
+        assertEquals("/a/b/gi", FilterExpressions.format(FilterPattern.Expression("a/b", "gi")))
+        val escaped = FilterExpressions.escapeLiteral("1+1=2? (yes) a/b")
+        assertEquals("1+1=2? (yes) a/b", FilterExpressions.literalOrNull(escaped))
+        assertTrue(FilterExpressions.compile(escaped, "i")!!.containsMatchIn("so 1+1=2? (YES) a/b"))
+        assertNull(FilterExpressions.literalOrNull("sp(oi)+ler"))
+    }
+
+    @Test
     fun serverMatchedSetsNeedNoClientMatcher() {
         val filters = listOf(filter("finale"))
 

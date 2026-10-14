@@ -37,7 +37,9 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.ContentFilter
 import me.foxtails.palustris.domain.ContentFilterKind
 import me.foxtails.palustris.domain.ContentFilterSet
+import me.foxtails.palustris.domain.PostFilterAction
 import me.foxtails.palustris.ui.settings.SettingsNote
+import me.foxtails.palustris.ui.settings.SettingsSection
 
 /**
  * The filters page of one account. It reads the filters each time it opens, and publishes each loaded or
@@ -106,13 +108,14 @@ private fun ContentFilterList(set: ContentFilterSet, state: ContentFilterUiState
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
         SettingsNote(stringResource(set.kind.summary()))
         Button(onClick = actions.onAdd, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp).testTag("filters_add")) {
-            Text(stringResource(R.string.settings_filters_add))
+            Text(stringResource(if (set.kind == ContentFilterKind.WordMute) R.string.settings_filters_add_word else R.string.settings_filters_add))
         }
         state.error?.let { Text(it, Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.error) }
         if (set.filters.isEmpty()) SettingsNote(stringResource(R.string.settings_filters_empty))
-        set.filters.forEach { filter ->
+        val row: @Composable (ContentFilter) -> Unit = { filter ->
             ContentFilterRow(set.kind, filter, deleting = filter.id in state.deleting, onEdit = actions.onEdit, onDelete = { confirmDelete = it })
         }
+        if (set.kind == ContentFilterKind.WordMute) WordMuteSections(set.filters, row) else set.filters.forEach { row(it) }
     }
     confirmDelete?.let { filter ->
         DeleteFilterDialog(
@@ -161,25 +164,44 @@ private fun DeleteFilterDialog(filter: ContentFilter, onConfirm: () -> Unit, onD
     )
 }
 
+/** Word mutes in two sections: the list that collapses and the list that removes. */
+@Composable
+private fun WordMuteSections(filters: List<ContentFilter>, row: @Composable (ContentFilter) -> Unit) {
+    PostFilterAction.entries.forEach { action ->
+        val entries = filters.filter { it.action == action }
+        if (entries.isNotEmpty()) {
+            SettingsSection(stringResource(if (action == PostFilterAction.Collapse) R.string.settings_filters_soft_section else R.string.settings_filters_hard_section)) {
+                entries.forEach { row(it) }
+            }
+        }
+    }
+}
+
 private fun ContentFilterKind.summary(): Int = when (this) {
     ContentFilterKind.Titled -> R.string.settings_filters_summary_titled
     ContentFilterKind.Phrase -> R.string.settings_filters_summary_phrase
+    ContentFilterKind.WordMute -> R.string.settings_filters_summary_word_mute
 }
 
 @Composable
 private fun ContentFilterEditorPage(editor: ContentFilterEditor, state: ContentFilterUiState, actions: ContentFilterSettingsActions) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-        FilterKeywordFields(editor, actions.onEditor)
-        FilterActionFields(editor, actions.onEditor)
-        FilterContextFields(editor, actions.onEditor)
-        FilterExpiryFields(editor, actions.onEditor)
+        if (editor.kind == ContentFilterKind.WordMute) {
+            WordMuteFields(editor, actions.onEditor)
+            FilterActionFields(editor, actions.onEditor)
+        } else {
+            FilterKeywordFields(editor, actions.onEditor)
+            FilterActionFields(editor, actions.onEditor)
+            FilterContextFields(editor, actions.onEditor)
+            FilterExpiryFields(editor, actions.onEditor)
+        }
         state.editorError?.let { error ->
             Text(stringResource(error.message()), Modifier.padding(horizontal = 20.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.error)
         }
         state.error?.let { Text(it, Modifier.padding(horizontal = 20.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.error) }
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = actions.onCancel, enabled = !state.saving) { Text(stringResource(R.string.settings_filters_cancel)) }
-            Button(onClick = actions.onSave, enabled = !state.saving, modifier = Modifier.testTag("filters_save")) {
+            Button(onClick = actions.onSave, enabled = !state.saving && !editor.readOnly, modifier = Modifier.testTag("filters_save")) {
                 if (state.saving) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Text(stringResource(R.string.settings_filters_save))
             }
         }
@@ -190,4 +212,8 @@ private fun FilterEditorError.message(): Int = when (this) {
     FilterEditorError.MissingTitle -> R.string.settings_filters_error_title
     FilterEditorError.MissingKeyword -> R.string.settings_filters_error_keyword
     FilterEditorError.MissingContext -> R.string.settings_filters_error_context
+    FilterEditorError.InvalidExpression -> R.string.settings_filters_error_expression
+    FilterEditorError.NotEditable -> R.string.settings_filters_error_read_only
+    FilterEditorError.ExpressionRejected -> R.string.settings_filters_error_expression_server
+    FilterEditorError.LimitReached -> R.string.settings_filters_error_limit
 }

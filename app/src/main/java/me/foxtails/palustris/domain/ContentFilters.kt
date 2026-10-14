@@ -6,9 +6,12 @@ package me.foxtails.palustris.domain
 sealed interface FilterPattern {
     /**
      * Every word in [words] must appear in the post. [wholeWord] requires word boundaries at the ends of each word.
-     * [ignoreCase] is true for Mastodon keywords.
+     * [ignoreCase] is true for Mastodon keywords. Misskey word mutes match capitalization.
      */
     data class Words(val words: List<String>, val wholeWord: Boolean = false, val ignoreCase: Boolean = true) : FilterPattern
+
+    /** A regular expression in the JavaScript form that Misskey stores: [source] without slashes, and [flags]. */
+    data class Expression(val source: String, val flags: String = "") : FilterPattern
 }
 
 /** How the account's server stores filters. The settings editor follows this shape. */
@@ -18,6 +21,9 @@ enum class ContentFilterKind {
 
     /** One phrase per filter, with contexts, expiry, and "irreversible". The client matches them. Mastodon v1 filters: Pleroma, Akkoma, and older servers. */
     Phrase,
+
+    /** Two word lists: one collapses and one removes. Each entry is words or an expression. The client matches them. Misskey family. */
+    WordMute,
 }
 
 /**
@@ -42,6 +48,15 @@ data class ContentFilterDraft(
     val contexts: Set<FilterContext> = FilterContext.entries.toSet(),
     val expiresInSeconds: Long? = null,
 )
+
+/** The features that [SourceError.InvalidInput] names when a server refuses a filter. */
+object ContentFilterInput {
+    /** The server cannot use the expression, such as Misskey's RE2 rejecting a lookahead. */
+    const val EXPRESSION = "moderation.filters.expression"
+
+    /** The server holds no more filters or words for this account. */
+    const val LIMIT = "moderation.filters.limit"
+}
 
 /** All filters of one account, as one snapshot. [kind] shapes the editor and says who matches them. */
 data class ContentFilterSet(

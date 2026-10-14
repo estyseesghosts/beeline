@@ -1,12 +1,13 @@
 package me.foxtails.palustris.domain
 
 /**
- * The client-side matcher for one account's filters. Mastodon v1 filters need it, because those servers do not
- * mark matching posts. Build it once per [ContentFilterSet]; it compiles every pattern at construction, so a feed
+ * The client-side matcher for one account's filters. Mastodon v1 filters and Misskey word mutes need it, because
+ * those servers do not mark matching posts. Build it once per [ContentFilterSet]; it compiles every pattern at construction, so a feed
  * never compiles per post. It holds no mutable state.
  *
  * Matching reads the content warning, the body, poll options, media descriptions, and the same fields of the
- * quoted post, as one text. The account's own posts never match. A filter past its expiry never matches.
+ * quoted post, as one text. The account's own posts never match, as in Misskey web. A filter past its expiry never
+ * matches. An expression that does not compile never matches.
  */
 class ClientFilterMatcher(
     private val owner: AccountId?,
@@ -54,6 +55,7 @@ class ClientFilterMatcher(
                 val tests = pattern.words.filter(String::isNotEmpty).map { word -> wordTest(word, pattern.wholeWord, pattern.ignoreCase) }
                 if (tests.isEmpty()) null else { text -> tests.all { it(text) } }
             }
+            is FilterPattern.Expression -> FilterExpressions.compile(pattern.source, pattern.flags)?.let { regex -> { text -> regex.containsMatchIn(text) } }
         }
 
         /**

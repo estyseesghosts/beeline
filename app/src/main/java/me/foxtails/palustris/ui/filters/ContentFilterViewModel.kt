@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import me.foxtails.palustris.data.AccountSourceRegistry
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.ContentFilter
+import me.foxtails.palustris.domain.ContentFilterInput
 import me.foxtails.palustris.domain.ContentFilterSet
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
@@ -118,11 +119,23 @@ class ContentFilterViewModel @AssistedInject constructor(
             throw cancelled
         } catch (error: Exception) {
             onFailure()
+            val editorError = (error as? SourceError.InvalidInput)?.let { editorErrorFor(it) }
+            if (editorError != null && _state.value.editor != null) {
+                _state.value = _state.value.copy(editorError = editorError)
+                return
+            }
             _state.value = _state.value.copy(
                 error = if (error is SessionUnavailable) uiStrings.accountSessionUnavailable() else uiStrings.sourceError(error),
                 unsupported = error is SourceError.Unsupported && _state.value.set == null,
             )
         }
+    }
+
+    /** A refused expression or a full list belongs next to the field, not in the general error line. */
+    private fun editorErrorFor(error: SourceError.InvalidInput): FilterEditorError? = when (error.feature) {
+        ContentFilterInput.EXPRESSION -> FilterEditorError.ExpressionRejected
+        ContentFilterInput.LIMIT -> FilterEditorError.LimitReached
+        else -> null
     }
 
     private class SessionUnavailable : Exception()

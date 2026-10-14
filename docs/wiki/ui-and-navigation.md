@@ -711,7 +711,12 @@ Settings > Blocks and mutes > Filters lists the filters of one account. The page
 - Pleroma, Akkoma, and older servers answer v2 with 404. Beeline then uses v1 filters: one word or phrase each. Beeline matches them on the device. "Remove" saves the filter as irreversible.
 - Beeline matches a v1 filter against the content warning, the text, poll options, media descriptions, and the quoted post. Case does not matter. Your own posts never match.
 - A saved filter applies to the feeds at once. Delete asks for confirmation first.
-- Misskey servers show "This server does not support filters" until word mutes arrive.
+- On Misskey-family servers the page edits word mutes. `mutedWords` collapse and `hardMutedWords` remove. The page lists them in a Collapse section and a Remove section.
+- A simple word mute is a word or phrase with "Ignore capitalization". With the option on, Beeline stores `/escaped phrase/i`. With it off, Beeline stores the phrase as it is.
+- An advanced word mute is a regular expression, `/pattern/flags`. Beeline checks the expression before saving. The server checks it again with RE2. A refused expression or a full list shows a message next to the field.
+- A Misskey entry with several words (all must appear) can be deleted, but not edited.
+
+Sources: `data/misskey/MisskeyWordMuteService.kt`, `domain/FilterExpressions.kt`, `MisskeyWordMuteServiceTest`.
 
 Sources: `ui/filters/`, `domain/ClientFilterMatcher.kt`, `data/mastodon/MastodonFilterService.kt`, `ContentFilterSettingsScreenTest`, `MastodonFilterServiceTest`, `ClientFilterMatcherTest`.
 

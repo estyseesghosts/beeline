@@ -641,6 +641,7 @@ class UnifiedPushRegistrationManager @Inject constructor(
         is SourceError.ResourceLimit -> "server_push_resource_limit"
         is SourceError.ForeignOrigin -> "server_push_foreign_origin"
         is SourceError.ServerError -> "server_push_server_error"
+        is SourceError.InvalidInput -> "server_push_invalid_input"
         SourceError.AccountMismatch -> "server_push_account_mismatch"
     }
 
@@ -655,6 +656,7 @@ class UnifiedPushRegistrationManager @Inject constructor(
         is SourceError.ResourceLimit -> PushRegistrationFailureReason.Server
         is SourceError.ForeignOrigin -> PushRegistrationFailureReason.Server
         is SourceError.ServerError -> PushRegistrationFailureReason.Server
+        is SourceError.InvalidInput -> PushRegistrationFailureReason.Server
     }
 
     private fun nextRetryAt(attempt: Int): Long = System.currentTimeMillis() +
