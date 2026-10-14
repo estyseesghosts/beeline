@@ -13,16 +13,49 @@ import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.AccountPostActions
+import me.foxtails.palustris.domain.PostFilterAction
 
-/** The Blocks and mutes page: one section for each account, with one row for each list of that account. */
+/** What happens to posts of muted and blocked accounts, with the callbacks that change it. App-wide. */
+data class AccountPostChoices(
+    val actions: AccountPostActions = AccountPostActions(),
+    val onMuted: (PostFilterAction) -> Unit = {},
+    val onBlocked: (PostFilterAction) -> Unit = {},
+)
+
+/**
+ * The Blocks and mutes page: the choices for posts of muted and blocked accounts, then one section for each
+ * account, with one row for each list of that account.
+ */
 @Composable
-fun PrivacyAccountsScreen(accounts: List<AccountRef>, onSelect: (AccountId, ModerationKind) -> Unit) {
-    if (accounts.isEmpty()) {
-        SettingsNote(stringResource(R.string.settings_connect_account_privacy))
-        return
-    }
+fun BlocksAndMutesScreen(
+    accounts: List<AccountRef>,
+    accountPosts: AccountPostChoices = AccountPostChoices(),
+    onSelect: (AccountId, ModerationKind) -> Unit,
+) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-        PrivacyAccountSections(accounts, onSelect)
+        AccountPostSection(R.string.settings_muted_account_posts, accountPosts.actions.muted, accountPosts.onMuted, "muted_account_posts")
+        AccountPostSection(R.string.settings_blocked_account_posts, accountPosts.actions.blocked, accountPosts.onBlocked, "blocked_account_posts")
+        if (accounts.isEmpty()) {
+            SettingsNote(stringResource(R.string.settings_connect_account_privacy))
+        } else {
+            PrivacyAccountSections(accounts, onSelect)
+        }
+    }
+}
+
+/** Collapse or remove the posts of one kind of account that the server still sends. */
+@Composable
+private fun AccountPostSection(title: Int, selected: PostFilterAction, onSelect: (PostFilterAction) -> Unit, tag: String) {
+    SettingsSection(stringResource(title)) {
+        PostFilterAction.entries.forEach { action ->
+            SettingsChoiceRow(
+                label = stringResource(if (action == PostFilterAction.Collapse) R.string.settings_filters_action_collapse else R.string.settings_filters_action_remove),
+                selected = selected == action,
+                onClick = { onSelect(action) },
+                testTag = "${tag}_${action.name}",
+            )
+        }
     }
 }
 

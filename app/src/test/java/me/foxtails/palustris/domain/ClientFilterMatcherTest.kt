@@ -120,6 +120,21 @@ class ClientFilterMatcherTest {
     }
 
     @Test
+    fun accountListsMatchAuthorAndBoosterOutsideProfiles() {
+        val muted = Account(AccountId(connection, "muted"), "Muted", "@muted@example.org")
+        val blocked = Account(AccountId(connection, "blocked"), "Blocked", "@blocked@example.org")
+        val accounts = AccountFilter(setOf(muted.id), setOf(blocked.id), PostFilterAction.Collapse, PostFilterAction.Remove, "muted account", "blocked account")
+        val m = matcher(filter("finale")).withAccounts(accounts)
+
+        assertEquals(PostFilterVerdict("muted account", PostFilterAction.Collapse), PostFilterPolicy.evaluate(post("hello", by = muted), FilterContext.Thread, m))
+        assertEquals(PostFilterVerdict("blocked account", PostFilterAction.Remove), PostFilterPolicy.evaluate(post("hello").copy(resharedBy = blocked), FilterContext.Home, m))
+        assertNull(PostFilterPolicy.evaluate(post("hello", by = muted), FilterContext.Account, m))
+        // The word filters survive the account change.
+        assertEquals(PostFilterVerdict("finale", PostFilterAction.Collapse), PostFilterPolicy.evaluate(post("finale"), FilterContext.Home, m))
+        assertSame(accounts, m.accounts)
+    }
+
+    @Test
     fun serverMatchedSetsNeedNoClientMatcher() {
         val filters = listOf(filter("finale"))
 

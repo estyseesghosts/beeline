@@ -25,6 +25,7 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.AppPreferencesState
 import me.foxtails.palustris.domain.ContentWarningRules
+import me.foxtails.palustris.domain.PostFilterAction
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.filters.ContentFilterSettingsRoute
@@ -59,6 +60,8 @@ fun SettingsHost(
     onAlwaysTranslatePosts: (Boolean) -> Unit = {},
     onContentWarningRules: (me.foxtails.palustris.domain.ContentWarningRules) -> Unit = {},
     onHiddenContentPresentation: (me.foxtails.palustris.domain.HiddenContentPresentation) -> Unit = {},
+    onMutedAccountAction: (PostFilterAction) -> Unit = {},
+    onBlockedAccountAction: (PostFilterAction) -> Unit = {},
     postPreferences: PostPreferences = PostPreferences(),
     postPreferencesAccountLabel: String? = null,
     postingSupport: PostingSettingsSupport = PostingSettingsSupport(),
@@ -215,9 +218,11 @@ fun SettingsHost(
                     emoji = postingEmoji,
                 )
                 SettingsRoute.About -> AboutSettingsScreen()
-                SettingsRoute.PrivacyAccounts -> PrivacyAccountsScreen(accounts) { accountId, kind ->
-                    onModeration(accountId, kind)
-                }
+                SettingsRoute.PrivacyAccounts -> BlocksAndMutesScreen(
+                    accounts = accounts,
+                    accountPosts = AccountPostChoices(state.preferences.accountPostActions, onMutedAccountAction, onBlockedAccountAction),
+                    onSelect = onModeration,
+                )
                 is SettingsRoute.Moderation -> if (route.kind == ModerationKind.Filters) {
                     ContentFilterSettingsRoute(route.accountId)
                 } else if (route.kind == ModerationKind.Hashtags) {

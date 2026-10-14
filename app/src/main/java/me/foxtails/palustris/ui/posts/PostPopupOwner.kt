@@ -89,7 +89,7 @@ class PostPopupOwner(
     private val sessionRevision: Long,
     private val source: SocialSource?,
     private val scope: CoroutineScope,
-    private val onRelationshipChanged: () -> Unit = {},
+    private val onRelationshipChanged: (ProfileRelationship) -> Unit = {},
     private val onPostDeleted: (OwnedPost) -> Unit = {},
     private val uiStrings: UiStrings,
 ) : PostPopupPresentation {
@@ -215,7 +215,7 @@ class PostPopupOwner(
                 }
                 if (isCurrent(generation, authorId)) {
                     relationship = PostRelationshipState(target = value.profileId, relationship = value)
-                    onRelationshipChanged()
+                    onRelationshipChanged(value)
                 }
             } catch (error: CancellationException) {
                 throw error

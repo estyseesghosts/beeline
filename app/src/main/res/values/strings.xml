@@ -1001,4 +1001,8 @@
     <string name="settings_filters_error_limit">The server allows no more word mutes. Delete a word mute first.</string>
     <string name="settings_filters_error_read_only">Beeline cannot edit a word mute with several words. You can delete it.</string>
     <string name="error_source_invalid_input">The server rejected this change.</string>
+    <string name="settings_muted_account_posts">Posts by muted accounts</string>
+    <string name="settings_blocked_account_posts">Posts by blocked accounts</string>
+    <string name="post_filtered_muted_account">muted account</string>
+    <string name="post_filtered_blocked_account">blocked account</string>
 </resources>

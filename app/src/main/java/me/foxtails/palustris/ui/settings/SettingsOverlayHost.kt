@@ -144,6 +144,8 @@ fun SettingsOverlayHost(
         onAlwaysTranslatePosts = settingsModel::setAlwaysTranslatePosts,
         onContentWarningRules = settingsModel::setContentWarningRules,
         onHiddenContentPresentation = settingsModel::setHiddenContentPresentation,
+        onMutedAccountAction = settingsModel::setMutedAccountAction,
+        onBlockedAccountAction = settingsModel::setBlockedAccountAction,
         postPreferences = postPreferences,
         postPreferencesAccountLabel = accountLabel,
         postingSupport = postingSupport,

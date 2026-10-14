@@ -6,11 +6,13 @@ import java.io.File
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import me.foxtails.palustris.data.preferences.FileAppPreferencesRepository
+import me.foxtails.palustris.domain.AccountPostActions
 import me.foxtails.palustris.domain.AppColorScheme
 import me.foxtails.palustris.domain.AppFont
 import me.foxtails.palustris.domain.AppGrammaticalGender
 import me.foxtails.palustris.domain.AppLanguage
 import me.foxtails.palustris.domain.AppNavigationAnchor
+import me.foxtails.palustris.domain.PostFilterAction
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -60,6 +62,22 @@ class AppPreferencesRepositoryTest {
             assertEquals(language, restored.preferences.language)
             assertEquals(language.tag, restored.preferences.language.tag)
         }
+    }
+
+    @Test
+    fun accountPostActionsDefaultAndPersist() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        file.parentFile?.mkdirs()
+        file.writeText("""{"colorScheme":"Palette"}""")
+        val legacy = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+        assertEquals(AccountPostActions(PostFilterAction.Collapse, PostFilterAction.Remove), legacy.accountPostActions)
+
+        val repository = FileAppPreferencesRepository(context)
+        repository.observe().first { it.loaded }
+        repository.update { it.copy(accountPostActions = AccountPostActions(PostFilterAction.Remove, PostFilterAction.Collapse)) }
+        val restored = FileAppPreferencesRepository(context).observe().first { it.loaded }.preferences
+
+        assertEquals(AccountPostActions(PostFilterAction.Remove, PostFilterAction.Collapse), restored.accountPostActions)
     }
 
     @Test

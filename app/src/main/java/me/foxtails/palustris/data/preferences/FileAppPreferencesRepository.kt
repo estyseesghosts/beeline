@@ -18,6 +18,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import me.foxtails.palustris.data.AppMessages
+import me.foxtails.palustris.domain.AccountPostActions
 import me.foxtails.palustris.domain.AppBackground
 import me.foxtails.palustris.domain.AppColorPalette
 import me.foxtails.palustris.domain.AppColorScheme
@@ -33,6 +34,7 @@ import me.foxtails.palustris.domain.AppTextSize
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.di.IoDispatcher
+import me.foxtails.palustris.domain.PostFilterAction
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -127,6 +129,7 @@ class FileAppPreferencesRepository(
             alwaysTranslatePosts = json.optBoolean("alwaysTranslatePosts", false),
             contentWarningRules = warning?.toContentWarningRules() ?: ContentWarningRules(),
             hiddenContentPresentation = enumOrDefault(json, "hiddenContentPresentation", HiddenContentPresentation.Placeholder),
+            accountPostActions = accountPostActions(json),
         )
     }
 
@@ -170,6 +173,8 @@ private fun AppPreferences.toJson(): JSONObject = JSONObject()
     .put("alwaysTranslatePosts", alwaysTranslatePosts)
     .put("contentWarningRules", contentWarningRules.toJson())
     .put("hiddenContentPresentation", hiddenContentPresentation.name)
+    .put("mutedAccountAction", accountPostActions.muted.name)
+    .put("blockedAccountAction", accountPostActions.blocked.name)
 
 /** The first file version in which a stored `Device` font is an explicit choice. */
 private const val EXPLICIT_DEVICE_FONT_VERSION = 2
@@ -198,6 +203,8 @@ class InMemoryAppPreferencesRepository(
         values.value = values.value.copy(preferences = transform(values.value.preferences), error = null)
     }
 }
+
+private fun accountPostActions(json: JSONObject) = AccountPostActions(enumOrDefault(json, "mutedAccountAction", PostFilterAction.Collapse), enumOrDefault(json, "blockedAccountAction", PostFilterAction.Remove))
 
 private inline fun <reified T : Enum<T>> enumOrDefault(json: JSONObject, key: String, default: T): T =
     runCatching { enumValueOf<T>(json.optString(key)) }.getOrDefault(default)

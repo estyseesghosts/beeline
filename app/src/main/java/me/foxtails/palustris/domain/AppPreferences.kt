@@ -25,6 +25,7 @@ data class AppPreferences(
     val alwaysTranslatePosts: Boolean = false,
     val contentWarningRules: ContentWarningRules = ContentWarningRules(),
     val hiddenContentPresentation: HiddenContentPresentation = HiddenContentPresentation.Placeholder,
+    val accountPostActions: AccountPostActions = AccountPostActions(),
 )
 
 enum class AppColorScheme {

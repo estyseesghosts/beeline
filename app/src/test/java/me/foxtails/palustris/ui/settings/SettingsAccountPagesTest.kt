@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -12,6 +13,7 @@ import me.foxtails.palustris.data.auth.AccountRef
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.AppPreferencesState
 import me.foxtails.palustris.domain.Connection
+import me.foxtails.palustris.domain.PostFilterAction
 import me.foxtails.palustris.domain.Protocol
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -50,6 +52,23 @@ class SettingsAccountPagesTest {
     private fun back() {
         compose.activity.onBackPressedDispatcher.onBackPressed()
         compose.waitForIdle()
+    }
+
+    @Test
+    fun blocksAndMutesShowsTheAccountPostChoices() {
+        var muted: PostFilterAction? = null
+        compose.setContent {
+            BlocksAndMutesScreen(
+                accounts = listOf(ref(first)),
+                accountPosts = AccountPostChoices(onMuted = { muted = it }),
+                onSelect = { _, _ -> },
+            )
+        }
+
+        compose.onNodeWithTag("muted_account_posts_Remove").performScrollTo().performClick()
+        compose.onNodeWithTag("blocked_account_posts_Remove").performScrollTo().assertIsSelected()
+        compose.onNodeWithTag("moderation_first_Filters").performScrollTo()
+        assertEquals(PostFilterAction.Remove, muted)
     }
 
     @Test

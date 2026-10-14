@@ -21,11 +21,12 @@ Support server-side content filters, word mutes, account mutes, account blocks, 
 
 - S1 filter model and presentation: commit "Collapse or remove posts that a server filter matches" (`58704740`).
 - S2 Mastodon filter management: commit "Manage Mastodon filters in Settings". Settings > Blocks and mutes > Filters, v2 on Mastodon 4.0 and later, v1 after a v2 404, and client matching through `ClientFilterMatcher` and `ContentFilterOwner`.
-- S3 Misskey word mutes: commit "Edit Misskey word mutes in Settings". `MisskeyWordMuteService`, `FilterPattern.Expression`, `FilterExpressions`, the simple and advanced editor modes, and `SourceError.InvalidInput`.
+- S3 Misskey word mutes: commit "Edit Misskey word mutes in Settings" (`acbf1e2b`). `MisskeyWordMuteService`, `FilterPattern.Expression`, `FilterExpressions`, the simple and advanced editor modes, and `SourceError.InvalidInput`.
+- S4 account mutes and blocks: commit "Hide posts of muted and blocked accounts". `AccountFilter`, account lists in `ContentFilterOwner`, the two settings on Blocks and mutes.
 
 # Current slice
 
-S4: account mutes and blocks.
+S5: boost mutes. Not started.
 
 # Files involved
 
@@ -38,7 +39,7 @@ S2: focused tests (`ClientFilterMatcherTest`, `MastodonFilterServiceTest`, `Cont
 
 # Next
 
-S4 account mutes and blocks, S5 boost mutes.
+S5 boost mutes.
 
 # Blockers
 

@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import me.foxtails.palustris.data.AccountSourceRegistry
+import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.ClientFilterMatcher
 import me.foxtails.palustris.domain.Connection
@@ -18,10 +19,16 @@ import me.foxtails.palustris.domain.ContentFilterInput
 import me.foxtails.palustris.domain.ContentFilterKind
 import me.foxtails.palustris.domain.ContentFilterSet
 import me.foxtails.palustris.domain.FilterPattern
+import me.foxtails.palustris.domain.ModerationAccount
+import me.foxtails.palustris.domain.ModerationCursor
+import me.foxtails.palustris.domain.ModerationListKind
+import me.foxtails.palustris.domain.ModerationListQuery
+import me.foxtails.palustris.domain.ModerationPage
 import me.foxtails.palustris.domain.NotificationSyncToken
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostFilterAction
+import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
@@ -250,6 +257,34 @@ class ContentFilterViewModelTest {
         assertSame(ClientFilterMatcher.Empty, owner.matcher)
         owner.replace(accountId, phrase)
         assertSame(ClientFilterMatcher.Empty, owner.matcher)
+    }
+
+    @Test
+    fun ownerLoadsEveryAccountPageAndFollowsRelationships() = runTest(dispatcher) {
+        val first = AccountId(accountId.connection, "first")
+        val second = AccountId(accountId.connection, "second")
+        val third = AccountId(accountId.connection, "third")
+        fun entry(id: AccountId) = ModerationAccount(Account(id, id.localId, "@${id.localId}"))
+        val next = ModerationCursor(accountId, ModerationListQuery(ModerationListKind.Muted), "test", "page2")
+        val source = object : SocialSource by FilterSource(titled) {
+            override suspend fun mutedAccounts(cursor: ModerationCursor?) =
+                if (cursor == null) ModerationPage(listOf(entry(first)), next) else ModerationPage(listOf(entry(second)))
+            override suspend fun blockedAccounts(cursor: ModerationCursor?): ModerationPage<ModerationAccount> = throw SourceError.NetworkUnavailable
+        }
+        val owner = ContentFilterOwner(accountId, source, this)
+
+        owner.load()
+        advanceUntilIdle()
+        assertEquals(setOf(first, second), owner.muted)
+        assertTrue(owner.blocked.isEmpty())
+
+        owner.applyRelationship(ProfileRelationship(third, blocking = true))
+        owner.applyRelationship(ProfileRelationship(first, muting = false))
+        assertEquals(setOf(second), owner.muted)
+        assertEquals(setOf(third), owner.blocked)
+
+        owner.retire()
+        assertTrue(owner.muted.isEmpty() && owner.blocked.isEmpty())
     }
 
     @Test

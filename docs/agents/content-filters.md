@@ -23,6 +23,10 @@ Authority: [task state](tasks/server-filters.md) and the source below.
 | Mastodon v2 and v1 filter reads and writes | `data/mastodon/MastodonFilterService`, called by `MastodonSource` | One source; the v2 or v1 choice lasts as long as the source |
 | Filter snapshot of the connected account | `ui/filters/ContentFilterOwner`, created in `ConnectedApp`, read through `LocalClientFilters` | One connected entry; retires through `ConnectedEntryStore` |
 | Misskey word mute reads and writes | `data/misskey/MisskeyWordMuteService`, called by `MisskeySource` | Stateless; each write reads `i` first |
+| Muted and blocked account match | `domain/AccountFilter`, carried by `ClientFilterMatcher.withAccounts` | Stateless value |
+| Muted and blocked account lists of the session | `ContentFilterOwner.muted` and `.blocked`; `applyRelationship` from `PostPopupOwner` through `ConnectedSessionHost` | One connected entry |
+| Collapse or remove for muted and blocked accounts | `AppPreferences.accountPostActions` (`AccountPostActions`), stored as the keys `mutedAccountAction` and `blockedAccountAction`, edited in `BlocksAndMutesScreen` | App-wide preference file |
+| The provided matcher | `rememberClientFilters` in `ConnectedApp` | Composition |
 | JavaScript-form expressions | `domain/FilterExpressions` | Stateless |
 | Settings list and editor | `ui/filters/ContentFilterViewModel`, `ContentFilterSettingsScreen`, `ContentFilterEditorFields` | The settings page (activity ViewModel store) |
 
@@ -40,6 +44,8 @@ Authority: [task state](tasks/server-filters.md) and the source below.
 - A word mute ID is its list (`s:` or `h:`) and its stored JSON. A write reads `i`, replaces that one entry, and sends both lists. Entries that Beeline cannot read stay unchanged.
 - Case-insensitive simple words are stored as `/escaped/i`. Beeline reads a `/literal/i` entry back as a simple word.
 - Misskey array entries match with capitalization and need every word, as `checkWordMute` in Misskey does.
+- The account match checks the author and the booster. It never applies to `FilterContext.Account`. It applies to the account's own posts too, which cannot be muted.
+- The owner pages each list up to 25 pages. A failed first page keeps the old list. `ReloadAccountFiltersAfterSettings` reads the lists again when Settings closes.
 - `INVALID_REGEXP` and `TOO_MANY_MUTED_WORDS` become `SourceError.InvalidInput` with a `ContentFilterInput` feature. The editor shows them next to the field.
 - `Remove` wins over `Collapse`. `hide` removes. `warn`, `blur`, and unknown actions collapse.
 - A removing filter never removes the post that a screen opened. The standard detail sets `PostRowPresentation.removable = false`; the photo detail and quotes collapse the post themselves.
@@ -62,4 +68,6 @@ Authority: [task state](tasks/server-filters.md) and the source below.
 - On Pleroma, changing an expiring v1 filter to "Never" may keep the old expiry, because Beeline sends no `expires_in`.
 - Beeline matches word mutes against more text than Misskey web: poll options, media descriptions, and the quoted post too.
 - Java accepts some expressions that RE2 refuses. The server then refuses the save, and Beeline shows that message.
+- An account past the 25-page limit is matched only after a mute or block from the post menu in this session.
+- Notifications whose actor is muted or blocked (follows, reactions) are not filtered; only notification posts are.
 - A v2 filter with only status entries and no keywords cannot be saved from Beeline. The editor asks for a keyword.

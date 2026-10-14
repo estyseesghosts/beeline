@@ -27,6 +27,7 @@ import me.foxtails.palustris.domain.AppTextSize
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.HiddenContentPresentation
+import me.foxtails.palustris.domain.PostFilterAction
 import me.foxtails.palustris.domain.PostPreferences
 import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.domain.UploadCompression
@@ -158,6 +159,12 @@ class SettingsViewModel @Inject constructor(
         updateApp(retry = { setHiddenContentPresentation(value) }) {
             it.copy(hiddenContentPresentation = value)
         }
+
+    fun setMutedAccountAction(value: PostFilterAction): Unit =
+        updateApp(retry = { setMutedAccountAction(value) }) { it.copy(accountPostActions = it.accountPostActions.copy(muted = value)) }
+
+    fun setBlockedAccountAction(value: PostFilterAction): Unit =
+        updateApp(retry = { setBlockedAccountAction(value) }) { it.copy(accountPostActions = it.accountPostActions.copy(blocked = value)) }
 
     fun setPostDefaultAudience(accountId: AccountId, value: Audience): Unit =
         updatePost(accountId, retry = { setPostDefaultAudience(accountId, value) }) {

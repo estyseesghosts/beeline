@@ -40,6 +40,7 @@ import me.foxtails.palustris.ui.directmessages.DirectMessagesHost
 import me.foxtails.palustris.ui.emoji.EmojiHost
 import me.foxtails.palustris.ui.emoji.LocalMentionProfiles
 import me.foxtails.palustris.ui.feed.FeedHost
+import me.foxtails.palustris.ui.filters.LocalContentFilterOwner
 import me.foxtails.palustris.ui.links.ExternalLinkHandler
 import me.foxtails.palustris.ui.links.LocalPostLinkResolver
 import me.foxtails.palustris.ui.links.SessionPostLinkResolver
@@ -262,13 +263,17 @@ fun ConnectedSessionHost(
     // profile actions without recreating the owner. The owner retires with the connected entry,
     // so a retired popup has no authority.
     val latestProfileActions by rememberUpdatedState(profile.actions)
+    val latestContentFilters by rememberUpdatedState(LocalContentFilterOwner.current)
     val postActionOwner = remember(accountId, sessionRevision, sharedSource) {
         PostPopupOwner(
             accountId = accountId,
             sessionRevision = sessionRevision,
             source = sharedSource,
             scope = settingsScope,
-            onRelationshipChanged = { latestProfileActions.refresh() },
+            onRelationshipChanged = { relationship ->
+                latestProfileActions.refresh()
+                latestContentFilters?.applyRelationship(relationship)
+            },
             onPostDeleted = projectionCoordinator::forwardDeletedPost,
             uiStrings = UiStrings.from(context),
         )

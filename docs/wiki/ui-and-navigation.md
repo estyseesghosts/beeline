@@ -720,6 +720,17 @@ Sources: `data/misskey/MisskeyWordMuteService.kt`, `domain/FilterExpressions.kt`
 
 Sources: `ui/filters/`, `domain/ClientFilterMatcher.kt`, `data/mastodon/MastodonFilterService.kt`, `ContentFilterSettingsScreenTest`, `MastodonFilterServiceTest`, `ClientFilterMatcherTest`.
 
+### Muted and blocked accounts
+
+Servers still send some posts of muted and blocked accounts: in threads, quotes, search, and notifications. Beeline hides them there too. Status: source verified and test verified. No live check ran.
+
+- Settings > Blocks and mutes has "Posts by muted accounts" and "Posts by blocked accounts". Each one collapses the post behind a notice or removes it. Muted accounts collapse and blocked accounts are removed by default.
+- A post matches when its author or the account that boosted it is muted or blocked. The notice reads "Filtered: muted account" or "Filtered: blocked account".
+- A mute or block from the post menu applies to the loaded feeds at once. The lists load again when Settings closes, so an unmute or unblock there applies too.
+- Profiles show the posts of the profile account without this filter. A post that a screen opened collapses instead of leaving.
+
+Sources: `domain/AccountFilter.kt`, `ui/filters/ContentFilterOwner.kt`, `ui/filters/ClientFiltersComposition.kt`, `ClientFilterMatcherTest`, `ContentFilterViewModelTest`.
+
 ## Inline entity bubbles and hashtag bubble
 
 Inline link, username, and hashtag bubbles in `InlineEmojiText` lay out the logogram, a 4 dp icon-to-text gap, and the label in one row. The measured placeholder width reserves the icon, the gap, and 6 dp edge padding, so the icon never overlaps the text at any font scale. The label gets invisible direction isolates for display only (left-to-right for domains, first-strong for names and tags); the tap target and copied text keep the exact original string. Bubbles share the `springClickable` press response. The compact hashtag bubble shows at most five tags that fit the measured height; `See all` lists every tag and `See less` returns.
@@ -1229,7 +1240,7 @@ The four lists write on Save. Account rules add to the rules for all accounts (`
 The account page (`SettingsRoute.AccountContentWarnings`) edits the active account and names it.
 
 Back opens the parent page of a child page (`SettingsRoute.parent()`), then the main page, then closes Settings.
-The Blocks and mutes page keeps the route name `SettingsRoute.PrivacyAccounts` and the file `PrivacyAccountsScreen.kt`.
+The Blocks and mutes page keeps the route name `SettingsRoute.PrivacyAccounts` and the file `PrivacyAccountsScreen.kt`. Its composable is `BlocksAndMutesScreen`.
 With exactly one account, the Notifications row opens that account at once and Back returns to the main page
 (`skippingSingleAccountPicker`, `parent(accounts)`). A removed account still falls back to the picker.
 

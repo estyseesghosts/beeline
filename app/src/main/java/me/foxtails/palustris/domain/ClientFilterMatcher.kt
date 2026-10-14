@@ -2,22 +2,31 @@ package me.foxtails.palustris.domain
 
 /**
  * The client-side matcher for one account's filters. Mastodon v1 filters and Misskey word mutes need it, because
- * those servers do not mark matching posts. Build it once per [ContentFilterSet]; it compiles every pattern at construction, so a feed
- * never compiles per post. It holds no mutable state.
+ * those servers do not mark matching posts. Build it once per [ContentFilterSet]; it compiles every pattern at
+ * construction, so a feed never compiles per post. [withAccounts] adds the account lists without compiling again.
+ * It holds no mutable state.
  *
  * Matching reads the content warning, the body, poll options, media descriptions, and the same fields of the
  * quoted post, as one text. The account's own posts never match, as in Misskey web. A filter past its expiry never
  * matches. An expression that does not compile never matches.
  */
-class ClientFilterMatcher(
+class ClientFilterMatcher private constructor(
     private val owner: AccountId?,
-    filters: List<ContentFilter>,
-    private val clock: () -> Long = System::currentTimeMillis,
+    private val compiled: List<CompiledFilter>,
+    val accounts: AccountFilter,
+    private val clock: () -> Long,
 ) {
-    private val compiled: List<CompiledFilter> = filters.map { filter -> CompiledFilter(filter, filter.patterns.mapNotNull(::compile)) }
+    constructor(owner: AccountId?, filters: List<ContentFilter>, clock: () -> Long = System::currentTimeMillis) :
+        this(owner, filters.map { filter -> CompiledFilter(filter, filter.patterns.mapNotNull(::compile)) }, AccountFilter.None, clock)
 
-    /** The title and action of every filter that matches [post] on [context]. */
-    fun matches(post: Post, context: FilterContext): List<Pair<String, PostFilterAction>> {
+    /** The same word filters with [accounts] in place of the current account lists. */
+    fun withAccounts(accounts: AccountFilter): ClientFilterMatcher = ClientFilterMatcher(owner, compiled, accounts, clock)
+
+    /** The title and action of every filter and account list that matches [post] on [context]. */
+    fun matches(post: Post, context: FilterContext): List<Pair<String, PostFilterAction>> =
+        wordMatches(post, context) + accounts.matches(post, context)
+
+    private fun wordMatches(post: Post, context: FilterContext): List<Pair<String, PostFilterAction>> {
         if (compiled.isEmpty() || (owner != null && post.author.id == owner)) return emptyList()
         val now = clock()
         val active = compiled.filter { entry ->

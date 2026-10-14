@@ -392,4 +392,8 @@
     <string name="settings_filters_error_limit">伺服器不允許再新增靜音字詞。請先刪除一個靜音字詞。</string>
     <string name="settings_filters_error_read_only">Beeline 無法編輯包含多個字詞的靜音字詞。你可以刪除它。</string>
     <string name="error_source_invalid_input">伺服器拒絕了此變更。</string>
+    <string name="settings_muted_account_posts">已靜音帳號的貼文</string>
+    <string name="settings_blocked_account_posts">已封鎖帳號的貼文</string>
+    <string name="post_filtered_muted_account">已靜音的帳號</string>
+    <string name="post_filtered_blocked_account">已封鎖的帳號</string>
 </resources>
