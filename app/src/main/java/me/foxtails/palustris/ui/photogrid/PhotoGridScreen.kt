@@ -101,6 +101,11 @@ internal data class PhotoGridItem(
     val hiddenByRules: Boolean = false,
     /** Non-null while a collapsed content warning covers the tile; the text is the warning itself. */
     val collapsedWarning: String? = null,
+    /**
+     * Every image and video of the post that a tile can show, with its index in the post. The first
+     * entry is [attachment]. A tile with more than one entry pages through them.
+     */
+    val pages: List<IndexedValue<Attachment>> = listOf(IndexedValue(attachmentIndex, attachment)),
 )
 
 internal fun photoGridItems(posts: List<OwnedPost>, rules: ContentWarningRules = ContentWarningRules(), hiddenPresentation: me.foxtails.palustris.domain.HiddenContentPresentation = me.foxtails.palustris.domain.HiddenContentPresentation.Placeholder, mutedHashtags: Set<String> = emptySet()): List<PhotoGridItem> = posts.mapNotNull { ownedPost ->
@@ -116,18 +121,18 @@ internal fun photoGridItems(posts: List<OwnedPost>, rules: ContentWarningRules =
     )
     val hidden = decision == ContentWarningDecision.Hidden
     if (hidden && hiddenPresentation == me.foxtails.palustris.domain.HiddenContentPresentation.Remove) return@mapNotNull null
-    post.attachments.withIndex()
-        .firstOrNull { (_, attachment) -> attachment.isPhotoGridDisplayable() }
-        ?.let { (index, attachment) ->
-            val coveredByWarning = !hidden && !isPostContentVisible(decision, post.contentWarning != null, expanded = false)
-            PhotoGridItem(
-                ownedPost,
-                index,
-                attachment,
-                hidden,
-                collapsedWarning = if (coveredByWarning) post.contentWarning.orEmpty() else null,
-            )
-        }
+    val pages = post.attachments.withIndex().filter { (_, attachment) -> attachment.isPhotoGridDisplayable() }
+    pages.firstOrNull()?.let { (index, attachment) ->
+        val coveredByWarning = !hidden && !isPostContentVisible(decision, post.contentWarning != null, expanded = false)
+        PhotoGridItem(
+            ownedPost,
+            index,
+            attachment,
+            hidden,
+            collapsedWarning = if (coveredByWarning) post.contentWarning.orEmpty() else null,
+            pages = pages,
+        )
+    }
 }
 
 /** Images and videos. A video without a server poster shows its first frame. */

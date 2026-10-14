@@ -14,6 +14,7 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 
 - The Media tab of a profile opens as a grid of square tiles. One post gives one tile. A tap on a tile opens the post.
 - A floating control on the Media tab switches between the grid and the list. The grid is the default.
+- A tile for a post with several images or videos shows dots over the photo: two dots for two, three dots for three or more. Swipe the tile sideways to see the next one. This applies to Photo Grid and to the profile grid.
 
 ## 0.3.1
 

@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.media.MediaImageLoader
+import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.MediaRequestDecision
@@ -97,6 +100,10 @@ internal fun PhotoGridTile(
  * The media area of one grid entry: the hidden placeholder, the collapsed warning, the sensitive cover,
  * or the image or video with its loading and failed states. Photo Grid cards and the profile media grid
  * share it. The caller sets the [aspectRatio] and the [shape]; a tap opens the post.
+ *
+ * A post with several images or videos pages horizontally inside the one frame, under [PhotoGridPageDots].
+ * The frame never changes size, so a later page crops to the frame of the first. A post with one image or
+ * one video has no pager. Only the page in view is composed, so a video page leaves playback when it leaves.
  */
 @Composable
 internal fun PhotoGridTileMedia(
@@ -126,48 +133,88 @@ internal fun PhotoGridTileMedia(
         }
         return
     }
+    val tileKey = photoGridItemKey(item)
+    var bounds by remember { mutableStateOf(Rect.Zero) }
+    val pages = item.pages
+    // Every page crops to this one frame, which takes its ratio from the first image.
+    Box(
+        modifier
+            .fillMaxWidth()
+            .aspectRatio(aspectRatio)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .onGloballyPositioned { bounds = it.boundsInRoot() },
+    ) {
+        if (pages.size == 1) {
+            PhotoGridTilePage(item, pages.first(), tileKey, { bounds }, onOpenPost, onQuickView)
+        } else {
+            val pagerState = rememberPagerState { pages.size }
+            HorizontalPager(pagerState, Modifier.fillMaxSize(), key = { pages[it].index }) { page ->
+                PhotoGridTilePage(item, pages[page], photoGridPageKey(tileKey, page), { bounds }, onOpenPost, onQuickView)
+            }
+            PhotoGridPageDots(
+                pageCount = pages.size,
+                currentPage = pagerState.currentPage,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp).testTag("photo_grid_dots_$tileKey"),
+            )
+        }
+    }
+}
+
+/** The first page keeps the key of its tile. A later page adds its position. */
+internal fun photoGridPageKey(tileKey: String, page: Int): String = if (page == 0) tileKey else "$tileKey#$page"
+
+/**
+ * One image or video of a tile, at the full size of the tile frame: the sensitive cover, the media,
+ * and its loading and failed states. [tileBounds] is the frame in the root, for quick view and video order.
+ */
+@Composable
+private fun PhotoGridTilePage(
+    item: PhotoGridItem,
+    page: IndexedValue<Attachment>,
+    pageKey: String,
+    tileBounds: () -> Rect,
+    onOpenPost: (OwnedPost) -> Unit,
+    onQuickView: ((PhotoQuickViewTarget) -> Unit)?,
+) {
+    val attachment = page.value
+    val reveals = currentPostReveals()
     val context = LocalContext.current
     val mediaImageLoader = remember(context) { MediaImageLoader.get(context) }
-    val revealed = !item.attachment.sensitive || reveals.mediaRevealed(item.ownedPost)
-    val decision = remember(item.attachment, revealed) {
+    val revealed = !attachment.sensitive || reveals.mediaRevealed(item.ownedPost)
+    val decision = remember(attachment, revealed) {
         MediaRequestPolicy.resolve(
-            attachment = item.attachment,
+            attachment = attachment,
             role = MediaRequestRole.Preview,
             revealed = revealed,
             explicitlyOpened = false,
             videoFrame = true,
         )
     }
-    val tileKey = photoGridItemKey(item)
     val tileDescription = if (revealed) {
         stringResource(R.string.post_open)
     } else {
-        stringResource(R.string.a11y_sensitive_media, item.attachmentIndex + 1)
+        stringResource(R.string.a11y_sensitive_media, page.index + 1)
     }
-    var bounds by remember { mutableStateOf(Rect.Zero) }
     // A tap on a failed tile raises this counter, which makes the tile ask for its image again.
-    var attempt by remember(item.attachment) { mutableIntStateOf(0) }
+    var attempt by remember(attachment) { mutableIntStateOf(0) }
     val haptics = LocalHapticFeedback.current
     val quickViewLabel = stringResource(R.string.photo_quick_view_open)
-    val isVideo = item.attachment.kind == MediaKind.Video
-    // Quick view is an image pager, so a video tile keeps tap-to-open only.
+    val isVideo = attachment.kind == MediaKind.Video
+    // Quick view is an image pager, so a video page keeps tap-to-open only.
     val openQuickView: ((PhotoQuickViewDrag?) -> Unit)? = onQuickView?.takeUnless { isVideo }?.let { open ->
         { drag ->
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-            open(PhotoQuickViewTarget(item.ownedPost, item.attachmentIndex, bounds, drag))
+            open(PhotoQuickViewTarget(item.ownedPost, page.index, tileBounds(), drag))
         }
     }
     BoxWithConstraints(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(aspectRatio)
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .onGloballyPositioned { bounds = it.boundsInRoot() }
+        modifier = Modifier
+            .fillMaxSize()
             .then(
                 if (revealed) {
                     Modifier
-                        .photoQuickViewGesture(enabled = openQuickView != null, origin = { bounds.topLeft }) {
+                        .photoQuickViewGesture(enabled = openQuickView != null, origin = { tileBounds().topLeft }) {
                             openQuickView?.invoke(it)
                         }
                         .clickable { onOpenPost(item.ownedPost) }
@@ -175,7 +222,7 @@ internal fun PhotoGridTileMedia(
                     Modifier
                 },
             )
-            .testTag("photo_grid_tile_$tileKey")
+            .testTag("photo_grid_tile_$pageKey")
             .semantics {
                 contentDescription = tileDescription
                 role = Role.Button
@@ -190,15 +237,15 @@ internal fun PhotoGridTileMedia(
         // The decode size follows the width the tile actually received.
         val decodeWidthPx = constraints.maxWidth.coerceAtLeast(1)
         val decodeHeightPx = constraints.maxHeight.coerceAtLeast(1)
-        val imageRequest = remember(item, decision, decodeWidthPx, decodeHeightPx, attempt) {
+        val imageRequest = remember(item, attachment, decision, decodeWidthPx, decodeHeightPx, attempt) {
             (decision as? MediaRequestDecision.Request)?.let { request ->
                 mediaImageLoader.request(
                     context = context,
                     decision = request,
                     accountIdentity = item.ownedPost.fetchedBy.toString(),
                     postIdentity = "${item.ownedPost.post.id.connection}/${item.ownedPost.post.id.value}",
-                    attachment = item.attachment,
-                    attachmentIndex = item.attachmentIndex,
+                    attachment = attachment,
+                    attachmentIndex = page.index,
                     decodeWidthPx = decodeWidthPx,
                     decodeHeightPx = decodeHeightPx,
                 ).newBuilder().setParameter("retry", attempt, memoryCacheKey = null).build()
@@ -209,13 +256,13 @@ internal fun PhotoGridTileMedia(
             SensitiveMediaTile(onReveal = { reveals.revealMedia(item.ownedPost) })
         } else if (isVideo) {
             VideoTileContent(
-                tileKey = tileKey,
-                attachment = item.attachment,
+                tileKey = pageKey,
+                attachment = attachment,
                 poster = painter,
-                posterDescription = item.attachment.description.orEmpty(),
+                posterDescription = attachment.description.orEmpty(),
                 contentVisible = revealed,
                 decodeWidthPx = decodeWidthPx,
-                order = { bounds.top.toInt() },
+                order = { tileBounds().top.toInt() },
                 modifier = Modifier.fillMaxSize(),
                 placeholder = {},
             )

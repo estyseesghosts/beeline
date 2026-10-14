@@ -4,11 +4,17 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
@@ -112,6 +118,117 @@ class PhotoGridScreenTest {
         compose.onNodeWithContentDescription("Open post").performClick()
         assertEquals("clip-post", opened)
     }
+
+    @Test
+    fun anItemCarriesEveryDisplayableAttachmentWithItsIndexInThePost() {
+        val mixed = post(
+            "mixed",
+            listOf(
+                image("animated").copy(kind = MediaKind.AnimatedImage, mimeType = "image/gif"),
+                image("photo"),
+                video("clip"),
+                image("last"),
+            ),
+        )
+
+        val item = photoGridItems(listOf(OwnedPost(account.id, mixed))).single()
+
+        // The animated image has no page. Each page keeps its index in the post for the image request.
+        assertEquals(listOf(1, 2, 3), item.pages.map { it.index })
+        assertEquals(listOf("photo", "clip", "last"), item.pages.map { it.value.id })
+        assertEquals("photo", item.attachment.id)
+        assertEquals(1, item.attachmentIndex)
+    }
+
+    @Test
+    fun pageDotsShowTwoForTwoPagesAndThreeForMore() {
+        assertEquals(listOf(2, 3, 3), listOf(2, 3, 8).map(::photoGridDotCount))
+        assertEquals(listOf(0, 1), (0..1).map { photoGridActiveDot(it, 2) })
+        assertEquals(listOf(0, 1, 2), (0..2).map { photoGridActiveDot(it, 3) })
+        // With more than three pages the middle dot covers every inner page.
+        assertEquals(listOf(0, 1, 1, 1, 2), (0..4).map { photoGridActiveDot(it, 5) })
+    }
+
+    @Test
+    fun aPostWithOneImageOrOneVideoHasNoDots() {
+        show(
+            PhotoGridFeedState(
+                posts = listOf(
+                    OwnedPost(account.id, post("one-image", listOf(image("solo")))),
+                    OwnedPost(account.id, post("one-video", listOf(video("clip")))),
+                ),
+            ),
+        )
+
+        compose.onNodeWithTag(tileTag("one-image", "solo"), useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag(tileTag("one-video", "clip"), useUnmergedTree = true).assertExists()
+        compose.onAllNodesWithTag(PHOTO_GRID_ACTIVE_DOT_TAG, useUnmergedTree = true).assertCountEquals(0)
+        compose.onNodeWithContentDescription("Play video").assertIsDisplayed()
+    }
+
+    @Test
+    fun aMixedPostPagesFromThePhotoToTheVideoInsideOneFrame() {
+        var opened: String? = null
+        show(
+            PhotoGridFeedState(
+                posts = listOf(OwnedPost(account.id, post("mixed", listOf(image("photo"), video("clip").copy(width = 400, height = 900))))),
+            ),
+            onOpenPost = { opened = it.post.id.value },
+        )
+        val photoTag = tileTag("mixed", "photo")
+        val frame = compose.onNodeWithTag(photoTag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+
+        // Two pages give two dots, and the photo page shows no video control.
+        compose.onAllNodesWithTag(PHOTO_GRID_ACTIVE_DOT_TAG, useUnmergedTree = true).assertCountEquals(1)
+        compose.onAllNodesWithTag(PHOTO_GRID_DOT_TAG, useUnmergedTree = true).assertCountEquals(1)
+        compose.onNodeWithContentDescription("Play video").assertDoesNotExist()
+
+        compose.onNodeWithTag(photoTag, useUnmergedTree = true).performTouchInput { swipeLeft() }
+        compose.waitForIdle()
+
+        // The video page takes the frame of the first image, although the video is much taller.
+        val videoTag = "$photoTag#1"
+        compose.onNodeWithTag(photoTag, useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithContentDescription("Play video").assertIsDisplayed()
+        assertEquals(frame, compose.onNodeWithTag(videoTag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot)
+        compose.onAllNodesWithTag(PHOTO_GRID_ACTIVE_DOT_TAG, useUnmergedTree = true).assertCountEquals(1)
+
+        // A tap on the video page still opens the post, and a swipe back returns the photo.
+        compose.onNodeWithTag(videoTag, useUnmergedTree = true).performClick()
+        assertEquals("mixed", opened)
+        compose.onNodeWithTag(videoTag, useUnmergedTree = true).performTouchInput { swipeRight() }
+        compose.waitForIdle()
+        compose.onNodeWithTag(photoTag, useUnmergedTree = true).assertExists()
+        compose.onNodeWithContentDescription("Play video").assertDoesNotExist()
+    }
+
+    @Test
+    fun aVideoFirstPostKeepsItsVideoPageAndPagesToTheImage() {
+        show(
+            PhotoGridFeedState(posts = listOf(OwnedPost(account.id, post("video-first", listOf(video("clip"), image("photo")))))),
+        )
+        val videoTag = tileTag("video-first", "clip")
+
+        compose.onNodeWithContentDescription("Play video").assertIsDisplayed()
+        compose.onNodeWithTag(videoTag, useUnmergedTree = true).performTouchInput { swipeLeft() }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("$videoTag#1", useUnmergedTree = true).assertExists()
+        compose.onNodeWithContentDescription("Play video").assertDoesNotExist()
+    }
+
+    private fun tileTag(postId: String, attachmentId: String) =
+        "photo_grid_tile_${account.id.connection.origin}/${account.id.connection.origin}/$postId/$attachmentId"
+
+    private fun video(id: String) = Attachment(
+        id = id,
+        url = "https://cdn.example/$id.mp4",
+        previewUrl = "https://cdn.example/$id.jpg",
+        mimeType = "video/mp4",
+        kind = MediaKind.Video,
+        width = 640,
+        height = 480,
+    )
 
     @Test
     fun mediaFilterExcludesAnimatedImages() {
