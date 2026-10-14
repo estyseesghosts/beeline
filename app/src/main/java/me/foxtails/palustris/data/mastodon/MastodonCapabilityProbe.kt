@@ -5,6 +5,7 @@ import kotlinx.coroutines.CancellationException
 import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.data.transport.HttpStatusFailure
 import me.foxtails.palustris.domain.Audience
+import me.foxtails.palustris.domain.BubbleRoute
 import me.foxtails.palustris.domain.CapabilityProbe
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
@@ -13,6 +14,7 @@ import me.foxtails.palustris.domain.EmojiCapabilities
 import me.foxtails.palustris.domain.FeedChipCapabilities
 import me.foxtails.palustris.domain.LocalOnlyRoute
 import me.foxtails.palustris.domain.ModerationCapabilities
+import me.foxtails.palustris.domain.NotificationCapabilities
 import me.foxtails.palustris.domain.OwnPostCapabilities
 import me.foxtails.palustris.domain.PollLimits
 import me.foxtails.palustris.domain.PostAction
@@ -21,12 +23,15 @@ import me.foxtails.palustris.domain.PostingCapabilities
 import me.foxtails.palustris.domain.PrimaryFavouriteCapability
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.ProfileCapabilities
+import me.foxtails.palustris.domain.ReactionRoute
 import me.foxtails.palustris.domain.ReactionSelectionMode
+import me.foxtails.palustris.domain.ReportRoute
 import me.foxtails.palustris.domain.SavedPostsCapability
 import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.ScheduleRoute
 import me.foxtails.palustris.domain.SchedulingCapability
 import me.foxtails.palustris.domain.ServerCapabilities
+import me.foxtails.palustris.domain.ServerFlavor
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.TranslationCapability
 import me.foxtails.palustris.domain.withTimelineStatuses
@@ -34,6 +39,9 @@ import org.json.JSONObject
 
 /**
  * Probes Mastodon instance metadata without making protocol details visible to the UI.
+ *
+ * Flavor detection reads the version compatibility marker once, then a per-flavor table
+ * supplies the defaults; the leading compatibility number never proves a fork feature.
  *
  * Reaction capability comes from a recognized extension advertisement, never from a
  * mutation request. An arbitrary probe request cannot prove mutation support: the
@@ -151,7 +159,28 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 }
                 ?: false
 
+        /**
+         * Identifies the server family from the instance document. Forks announce themselves in
+         * the version compatibility marker, so that marker is read before anything else; the
+         * leading number is only the compatibility version and never a feature signal.
+         * Glitch-soc reports `api_versions.glitch` and Hometown puts `+hometown-` in its
+         * version. A document with no version and no machine signal proves nothing, so the
+         * flavor stays Unknown instead of guessing Mastodon.
+         */
+        fun parseFlavor(instance: JSONObject): ServerFlavor {
+            val version = instance.optString("version")
+            if (version.contains("(compatible; Pleroma")) return ServerFlavor.Pleroma
+            if (version.contains("(compatible; Akkoma")) return ServerFlavor.Akkoma
+            if (version.contains("(compatible; Pixelfed")) return ServerFlavor.Pixelfed
+            if (instance.optJSONObject("api_versions")?.has("glitch") == true) return ServerFlavor.Glitch
+            if (version.contains("+hometown-")) return ServerFlavor.Hometown
+            val machineVersion = instance.optJSONObject("api_versions")?.opt("mastodon")
+            if (version.isBlank() && machineVersion == null) return ServerFlavor.Unknown
+            return ServerFlavor.Mastodon
+        }
+
         fun parseCapabilities(instance: JSONObject, nodeInfoAdvertisesReactions: Boolean = false): ServerCapabilities {
+            val flavor = parseFlavor(instance)
             val machineVersion = instance.optJSONObject("api_versions")?.opt("mastodon")?.let { value ->
                 when (value) {
                     is Number -> value.toInt().takeIf { it >= 0 }
@@ -185,7 +214,7 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
             }
             val emoji = emojiCapabilities(instance, nodeInfoAdvertisesReactions)
             val posting = postingLimits(instance, quotes, quotePolicy = (machineVersion != null && machineVersion >= 7) ||
-                (machineVersion == null && releaseVersion != null && releaseVersion.atLeast(4, 5, 0)))
+                (machineVersion == null && releaseVersion != null && releaseVersion.atLeast(4, 5, 0)), flavor)
             val actions = setOf(
                 PostAction.Reply,
                 PostAction.Reshare,
@@ -196,22 +225,14 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 audiences = setOf(Audience.Public, Audience.Unlisted, Audience.Followers, Audience.Direct),
                 actions = actions,
                 maxPostLength = posting.maxPostLength,
-                posting = posting.capabilities,
+                posting = posting.capabilities.copy(postFormats = postFormats(instance)),
                 canPublish = true,
                 profile = ProfileCapabilities(editable = editable.copy(imageDeletion = imageDeletion)),
                 emoji = emoji,
                 quotes = quotes,
-                ownPosts = OwnPostCapabilities(delete = CapabilityStatus.Supported, edit = editCapability(instance, releaseVersion)),
+                ownPosts = OwnPostCapabilities(delete = CapabilityStatus.Supported, edit = editCapability(instance, releaseVersion, flavor)),
                 translation = translationCapability(instance),
-                feedChips = FeedChipCapabilities(
-                    lists = CapabilityStatus.Supported,
-                    followedTags = when {
-                        machineVersion != null -> CapabilityStatus.Supported
-                        releaseVersion != null -> if (releaseVersion.atLeast(4, 0, 0)) CapabilityStatus.Supported else CapabilityStatus.Unsupported
-                        else -> CapabilityStatus.Unknown
-                    },
-                    antennas = CapabilityStatus.Unsupported,
-                ),
+                feedChips = feedChipCapabilities(machineVersion, releaseVersion, flavor),
                 primaryFavourite = PrimaryFavouriteCapability(CapabilityStatus.Supported, PrimaryFavouriteMode.Native),
                 savedPosts = SavedPostsCapability(CapabilityStatus.Supported, SavedPostsKind.Bookmarks),
                 likedPosts = CapabilityStatus.Supported,
@@ -223,17 +244,92 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                     muted = CapabilityStatus.Supported,
                     hashtags = CapabilityStatus.Unsupported,
                 ),
+                notifications = notificationCapabilities(flavor),
                 capabilitiesLastUpdated = System.currentTimeMillis(),
                 capabilitySchemaVersion = ServerCapabilities.CURRENT_CAPABILITY_SCHEMA_VERSION,
-            ).withTimelineStatuses(
-                mapOf(
-                    Timeline.Home to CapabilityStatus.Supported,
-                    Timeline.Local to CapabilityStatus.Supported,
-                    Timeline.Social to CapabilityStatus.Unsupported,
-                    Timeline.Bubble to CapabilityStatus.Unsupported,
-                    Timeline.Federated to CapabilityStatus.Supported,
-                ),
-            )
+                flavor = flavor,
+                supportsReactions = emoji.reactionMutation,
+                supportsCustomReactions = customReactionCapability(instance),
+                reportRoute = if (flavor == ServerFlavor.Pixelfed) ReportRoute.V11Report else ReportRoute.V1Reports,
+                reactionRoute = reactionRoute(flavor, emoji),
+                bubbleRoute = if (flavor == ServerFlavor.Akkoma) BubbleRoute.Akkoma else BubbleRoute.None,
+            ).withTimelineStatuses(timelineStatusesFor(flavor))
+        }
+
+        /**
+         * Per-flavor timeline table. Only Akkoma serves a bubble timeline; Social stays
+         * unsupported on every Mastodon-family server until a probe proves otherwise.
+         */
+        private fun timelineStatusesFor(flavor: ServerFlavor): Map<Timeline, CapabilityStatus> = mapOf(
+            Timeline.Home to CapabilityStatus.Supported,
+            Timeline.Local to CapabilityStatus.Supported,
+            Timeline.Social to CapabilityStatus.Unsupported,
+            Timeline.Bubble to if (flavor == ServerFlavor.Akkoma) CapabilityStatus.Supported else CapabilityStatus.Unsupported,
+            Timeline.Federated to CapabilityStatus.Supported,
+        )
+
+        /**
+         * Per-flavor feed-chip table. Pixelfed has lists but no list timeline, so the chip
+         * stays hidden. The leading number on a fork is the compatibility version, never a
+         * followed-tags signal, so forks stay Unknown pending a runtime probe.
+         */
+        private fun feedChipCapabilities(
+            machineVersion: Int?,
+            releaseVersion: VersionTriple?,
+            flavor: ServerFlavor,
+        ): FeedChipCapabilities = FeedChipCapabilities(
+            lists = if (flavor == ServerFlavor.Pixelfed) CapabilityStatus.Unsupported else CapabilityStatus.Supported,
+            followedTags = if (flavor == ServerFlavor.Pleroma || flavor == ServerFlavor.Akkoma || flavor == ServerFlavor.Pixelfed) {
+                CapabilityStatus.Unknown
+            } else {
+                when {
+                    machineVersion != null -> CapabilityStatus.Supported
+                    releaseVersion != null -> if (releaseVersion.atLeast(4, 0, 0)) CapabilityStatus.Supported else CapabilityStatus.Unsupported
+                    else -> CapabilityStatus.Unknown
+                }
+            },
+            antennas = CapabilityStatus.Unsupported,
+        )
+
+        /**
+         * Per-flavor notification table. Pixelfed has no `unread_count`, no notification
+         * dismissal, no push subscription and no streaming endpoint, so those stay
+         * Unsupported instead of failing at runtime. Trends, suggestions and directory stay
+         * Unknown on every flavor pending a runtime probe.
+         */
+        private fun notificationCapabilities(flavor: ServerFlavor): NotificationCapabilities =
+            if (flavor == ServerFlavor.Pixelfed) {
+                NotificationCapabilities(
+                    dismissal = CapabilityStatus.Unsupported,
+                    streaming = CapabilityStatus.Unsupported,
+                    webPush = CapabilityStatus.Unsupported,
+                    unread = CapabilityStatus.Unsupported,
+                )
+            } else {
+                NotificationCapabilities()
+            }
+
+        /**
+         * Which reaction mutation path the probe identified. Pleroma and Akkoma mutate
+         * through the `pleroma` path once they advertise reactions; other families have no
+         * such path, and an unprobed server stays Unknown. The source reuses this after it
+         * merges emoji state, so the route can never drift from the merged advertisement.
+         */
+        fun reactionRoute(flavor: ServerFlavor, emoji: EmojiCapabilities): ReactionRoute = when {
+            emoji.reactionMutation == CapabilityStatus.Supported &&
+                (flavor == ServerFlavor.Pleroma || flavor == ServerFlavor.Akkoma) -> ReactionRoute.Pleroma
+            flavor == ServerFlavor.Unknown -> ReactionRoute.Unknown
+            else -> ReactionRoute.None
+        }
+
+        /**
+         * Content types the server accepts at creation. Pleroma-family servers list them in
+         * `pleroma.metadata.post_formats`. Null when the server lists none.
+         */
+        private fun postFormats(instance: JSONObject): List<String>? {
+            val array = instance.optJSONObject("pleroma")?.optJSONObject("metadata")?.optJSONArray("post_formats")
+                ?: instance.optJSONArray("post_formats") ?: return null
+            return (0 until array.length()).map { array.optString(it) }.filter(String::isNotBlank).takeIf { it.isNotEmpty() }
         }
 
         /**
@@ -258,15 +354,19 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
         /**
          * Mastodon 3.5 and later edit by `PUT /statuses/:id`. Pleroma-family servers advertise
          * `editing` in their feature list, and their version string says nothing about it, so a
-         * server with a `pleroma` block is judged by that list alone.
+         * server with a `pleroma` block is judged by that list alone. Pixelfed has no source
+         * route, so editing stays Unsupported instead of trusting the compatibility number.
+         * A Pleroma-family server without metadata stays Unknown: the number proves nothing.
          */
-        private fun editCapability(instance: JSONObject, releaseVersion: VersionTriple?): CapabilityStatus {
+        private fun editCapability(instance: JSONObject, releaseVersion: VersionTriple?, flavor: ServerFlavor): CapabilityStatus {
+            if (flavor == ServerFlavor.Pixelfed) return CapabilityStatus.Unsupported
             val pleroma = instance.optJSONObject("pleroma")
             if (pleroma != null) {
                 val features = pleroma.optJSONObject("metadata")?.optJSONArray("features")
                 val editing = features != null && (0 until features.length()).any { features.optString(it) == PLEROMA_EDITING_FEATURE }
                 return if (editing) CapabilityStatus.Supported else CapabilityStatus.Unsupported
             }
+            if (flavor == ServerFlavor.Pleroma || flavor == ServerFlavor.Akkoma) return CapabilityStatus.Unknown
             return when {
                 releaseVersion == null -> CapabilityStatus.Unknown
                 releaseVersion.atLeast(3, 5, 0) -> CapabilityStatus.Supported
@@ -275,6 +375,7 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
         }
 
         private const val PLEROMA_EDITING_FEATURE = "editing"
+        private const val PLEROMA_CUSTOM_REACTION_FEATURE = "pleroma_custom_emoji_reactions"
         private const val AKKOMA_TRANSLATION_FEATURE = "akkoma:machine_translation"
 
         private class PostingLimits(val maxPostLength: Int, val capabilities: PostingCapabilities)
@@ -298,17 +399,19 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
         private const val MASTODON_SCHEDULE_LEAD_SECONDS = 300L
 
         /**
-         * Local-only needs a fork that offers it. glitch-soc reports `api_versions.glitch`, Hometown puts
-         * `+hometown-` in its version, and Pleroma-family servers take `visibility=local`. Vanilla Mastodon has none.
+         * Local-only route from the detected flavor, so there is one derivation path. Glitch-soc
+         * and Hometown take the flag; Pleroma-family servers take `visibility=local` when they
+         * send a `pleroma` block. Other families have no route. The block is only evidence where
+         * the flavor allows it (Pleroma, Akkoma, or still Unknown).
          */
-        fun localOnlyRoute(instance: JSONObject): LocalOnlyRoute = when {
-            instance.optJSONObject("api_versions")?.has("glitch") == true -> LocalOnlyRoute.MastodonFlag
-            instance.optString("version").contains("+hometown-") -> LocalOnlyRoute.MastodonFlag
-            instance.optJSONObject("pleroma") != null -> LocalOnlyRoute.PleromaVisibility
-            else -> LocalOnlyRoute.None
+        fun localOnlyRoute(flavor: ServerFlavor, instance: JSONObject): LocalOnlyRoute = when (flavor) {
+            ServerFlavor.Glitch, ServerFlavor.Hometown -> LocalOnlyRoute.MastodonFlag
+            ServerFlavor.Pleroma, ServerFlavor.Akkoma, ServerFlavor.Unknown ->
+                if (instance.optJSONObject("pleroma") != null) LocalOnlyRoute.PleromaVisibility else LocalOnlyRoute.None
+            ServerFlavor.Mastodon, ServerFlavor.Pixelfed -> LocalOnlyRoute.None
         }
 
-        private fun postingLimits(instance: JSONObject, quotes: CapabilityStatus, quotePolicy: Boolean): PostingLimits {
+        private fun postingLimits(instance: JSONObject, quotes: CapabilityStatus, quotePolicy: Boolean, flavor: ServerFlavor): PostingLimits {
             val configuration = instance.optJSONObject("configuration")
             val statuses = configuration?.optJSONObject("statuses")
             val media = configuration?.optJSONObject("media_attachments")
@@ -323,7 +426,10 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 capabilities = PostingCapabilities(
                     lengthRule = PostLengthRule.MastodonCombined,
                     maxWarningLength = null,
-                    maxAttachments = statuses.positiveInt("max_media_attachments") ?: DEFAULT_MAX_ATTACHMENTS,
+                    // Pleroma-family servers report the attachment cap at the top level.
+                    maxAttachments = statuses.positiveInt("max_media_attachments")
+                        ?: instance.positiveInt("max_media_attachments")
+                        ?: DEFAULT_MAX_ATTACHMENTS,
                     maxAltTextLength = media.positiveInt("description_limit") ?: DEFAULT_ALT_TEXT_LENGTH,
                     maxImageBytes = media.positiveLong("image_size_limit") ?: DEFAULT_IMAGE_BYTES,
                     maxImagePixels = media.positiveLong("image_matrix_limit") ?: DEFAULT_IMAGE_PIXELS,
@@ -336,10 +442,15 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                     // Mastodon limits a poll with media, not a quote with media.
                     quoteWithMedia = quotes == CapabilityStatus.Supported,
                     quoteApprovalPolicy = quotePolicy,
-                    localOnly = localOnlyRoute(instance),
-                    // Every Mastodon-API server takes `scheduled_at`, and holds a post at least five minutes ahead.
-                    scheduling = SchedulingCapability(ScheduleRoute.Mastodon, MASTODON_SCHEDULE_LEAD_SECONDS),
-                    poll = pollLimits(instance, configuration),
+                    localOnly = localOnlyRoute(flavor, instance),
+                    // Pixelfed takes neither `scheduled_at` nor `poll[...]`, so both stay absent
+                    // and the composer never sends them. Every other family takes `scheduled_at`.
+                    scheduling = if (flavor == ServerFlavor.Pixelfed) {
+                        null
+                    } else {
+                        SchedulingCapability(ScheduleRoute.Mastodon, MASTODON_SCHEDULE_LEAD_SECONDS)
+                    },
+                    poll = if (flavor == ServerFlavor.Pixelfed) null else pollLimits(instance, configuration),
                 ),
             )
         }
@@ -422,6 +533,20 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 reactionMutation = if (advertised) CapabilityStatus.Supported else CapabilityStatus.Unknown,
                 selectionMode = if (advertised) ReactionSelectionMode.Independent else ReactionSelectionMode.Unknown,
             )
+        }
+
+        /**
+         * Custom-emoji reactions need their own advertisement: `pleroma_custom_emoji_reactions`
+         * in the instance feature list. A missing advertisement stays Unknown, never a guess
+         * from the server version.
+         */
+        private fun customReactionCapability(instance: JSONObject): CapabilityStatus {
+            val features = instance.optJSONObject("pleroma")?.optJSONObject("metadata")?.optJSONArray("features") ?: return CapabilityStatus.Unknown
+            return if ((0 until features.length()).any { features.optString(it) == PLEROMA_CUSTOM_REACTION_FEATURE }) {
+                CapabilityStatus.Supported
+            } else {
+                CapabilityStatus.Unknown
+            }
         }
 
         /**

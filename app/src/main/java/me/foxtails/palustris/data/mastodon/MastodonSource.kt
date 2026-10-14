@@ -36,10 +36,12 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Event
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.FeedChipCapabilities
 import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.LocalOnlyRoute
 import me.foxtails.palustris.domain.MediaUploadRequest
 import me.foxtails.palustris.domain.ModerationAccount
+import me.foxtails.palustris.domain.ModerationCapabilities
 import me.foxtails.palustris.domain.ModerationCursor
 import me.foxtails.palustris.domain.ModerationPage
 import me.foxtails.palustris.domain.MutedHashtag
@@ -51,12 +53,16 @@ import me.foxtails.palustris.domain.NotificationCursor
 import me.foxtails.palustris.domain.NotificationPage
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.NotificationUnreadState
+import me.foxtails.palustris.domain.OwnPostCapabilities
 import me.foxtails.palustris.domain.Page
 import me.foxtails.palustris.domain.Poll
+import me.foxtails.palustris.domain.PollLimits
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostActionResult
 import me.foxtails.palustris.domain.PostEditSource
+import me.foxtails.palustris.domain.PostLengthRule
+import me.foxtails.palustris.domain.PostingCapabilities
 import me.foxtails.palustris.domain.ProfileCapabilities
 import me.foxtails.palustris.domain.ProfileCapability
 import me.foxtails.palustris.domain.ProfileCapabilityQuery
@@ -68,7 +74,9 @@ import me.foxtails.palustris.domain.PushProviderInfo
 import me.foxtails.palustris.domain.PushSubscription
 import me.foxtails.palustris.domain.PushSubscriptionSpec
 import me.foxtails.palustris.domain.ReportRequest
+import me.foxtails.palustris.domain.ScheduleRoute
 import me.foxtails.palustris.domain.ScheduledPost
+import me.foxtails.palustris.domain.SchedulingCapability
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.SourceError
@@ -77,6 +85,7 @@ import me.foxtails.palustris.domain.ThreadContinuation
 import me.foxtails.palustris.domain.ThreadSessionKey
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.Translation
+import me.foxtails.palustris.domain.TranslationCapability
 import me.foxtails.palustris.domain.ValidatedUrl
 import me.foxtails.palustris.domain.capabilityStatus
 import me.foxtails.palustris.domain.carriesQuote
@@ -713,11 +722,17 @@ class MastodonSource(
         if (schemaCurrent && now - capabilities.capabilitiesLastUpdated < CAPABILITIES_TTL_MILLIS) return
         try {
             val probed = probe.probeCapabilities(Connection(origin, Protocol.MASTODON))
-            val updated = probed.copy(
+            val merged = probed.copy(
                 canPublish = probed.canPublish || capabilities.canPublish,
                 notifications = probed.notifications.takeVerifiedOr(capabilities.notifications),
                 profile = probed.profile.takeVerifiedOr(capabilities.profile),
                 emoji = probed.emoji.takeVerifiedOr(capabilities.emoji),
+            )
+            // supportsReactions mirrors the merged emoji advertisement, and the reaction route
+            // follows the merged flavor, so an emoji fallback can never desync them.
+            val updated = merged.copy(
+                supportsReactions = merged.emoji.reactionMutation,
+                reactionRoute = MastodonCapabilityProbe.reactionRoute(merged.flavor, merged.emoji),
             )
             _capabilities.value = updated
             capabilitiesRetryNotBefore = 0L
@@ -753,11 +768,56 @@ class MastodonSource(
 
         /** Minimum delay before a failed capability probe retries. Bounds outage traffic. */
         const val CAPABILITIES_RETRY_MILLIS = 30 * 1000L
+
+        /**
+         * Pre-probe optimistic state. It matches what the probe reports for an Unknown flavor,
+         * so the first paint and the first probe agree; the probe replaces it on refresh.
+         */
         val DEFAULT_CAPABILITIES = ServerCapabilities(
             timelines = setOf(Timeline.Home, Timeline.Local, Timeline.Federated),
+            timelineStatuses = mapOf(
+                Timeline.Home to CapabilityStatus.Supported,
+                Timeline.Local to CapabilityStatus.Supported,
+                Timeline.Social to CapabilityStatus.Unsupported,
+                Timeline.Bubble to CapabilityStatus.Unsupported,
+                Timeline.Federated to CapabilityStatus.Supported,
+            ),
             audiences = setOf(Audience.Public, Audience.Unlisted, Audience.Followers, Audience.Direct),
             actions = setOf(PostAction.Reply, PostAction.Reshare, PostAction.Favorite, PostAction.Bookmark),
+            maxPostLength = 500,
+            posting = PostingCapabilities(
+                lengthRule = PostLengthRule.MastodonCombined,
+                maxAttachments = 4,
+                maxAltTextLength = 1500,
+                maxImageBytes = 16L * 1024 * 1024,
+                maxImagePixels = 33_177_600L,
+                maxVideoBytes = 99L * 1024 * 1024,
+                uploadTypes = setOf("image/jpeg", "image/png", "image/gif", "image/webp"),
+                mediaUpload = CapabilityStatus.Supported,
+                quoteWithMedia = false,
+                scheduling = SchedulingCapability(ScheduleRoute.Mastodon, 300L),
+                // Matches the probe's documented poll defaults for an Unknown flavor.
+                poll = PollLimits(4, 50, 300L, 2_629_746L, hideTotals = true),
+            ),
+            canPublish = true,
             emoji = EmojiCapabilities(catalog = CapabilityStatus.Supported),
+            ownPosts = OwnPostCapabilities(
+                delete = CapabilityStatus.Supported,
+                edit = CapabilityStatus.Unknown,
+            ),
+            translation = TranslationCapability(CapabilityStatus.Unsupported),
+            feedChips = FeedChipCapabilities(
+                lists = CapabilityStatus.Supported,
+                followedTags = CapabilityStatus.Unknown,
+                antennas = CapabilityStatus.Unsupported,
+            ),
+            moderation = ModerationCapabilities(
+                read = CapabilityStatus.Supported,
+                write = CapabilityStatus.Supported,
+                blocked = CapabilityStatus.Supported,
+                muted = CapabilityStatus.Supported,
+                hashtags = CapabilityStatus.Unsupported,
+            ),
             primaryFavourite = me.foxtails.palustris.domain.PrimaryFavouriteCapability(
                 me.foxtails.palustris.domain.CapabilityStatus.Supported,
                 me.foxtails.palustris.domain.PrimaryFavouriteMode.Native,

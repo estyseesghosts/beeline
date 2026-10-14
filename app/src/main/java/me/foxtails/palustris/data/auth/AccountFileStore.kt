@@ -17,6 +17,7 @@ import me.foxtails.palustris.domain.AccessScope
 import me.foxtails.palustris.domain.AccessStatus
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
+import me.foxtails.palustris.domain.BubbleRoute
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EditableProfileCapabilities
@@ -37,12 +38,15 @@ import me.foxtails.palustris.domain.PrimaryFavouriteMode
 import me.foxtails.palustris.domain.ProfileCapabilities
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.PushSessionState
+import me.foxtails.palustris.domain.ReactionRoute
 import me.foxtails.palustris.domain.ReactionSelectionMode
+import me.foxtails.palustris.domain.ReportRoute
 import me.foxtails.palustris.domain.SavedPostsCapability
 import me.foxtails.palustris.domain.SavedPostsKind
 import me.foxtails.palustris.domain.ScheduleRoute
 import me.foxtails.palustris.domain.SchedulingCapability
 import me.foxtails.palustris.domain.ServerCapabilities
+import me.foxtails.palustris.domain.ServerFlavor
 import me.foxtails.palustris.domain.Session
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.TranslationCapability
@@ -268,6 +272,12 @@ private fun ServerCapabilities.toJson(): JSONObject = JSONObject()
     )
     .put("capabilitiesLastUpdated", capabilitiesLastUpdated)
     .put("capabilitySchemaVersion", capabilitySchemaVersion)
+    .put("flavor", flavor.name)
+    .put("supportsReactions", supportsReactions.name)
+    .put("supportsCustomReactions", supportsCustomReactions.name)
+    .put("reportRoute", reportRoute.name)
+    .put("reactionRoute", reactionRoute.name)
+    .put("bubbleRoute", bubbleRoute.name)
 
 private fun JSONObject.toCapabilities(): ServerCapabilities = ServerCapabilities(
     timelines = enumSet<Timeline>("timelines"),
@@ -326,6 +336,12 @@ private fun JSONObject.toCapabilities(): ServerCapabilities = ServerCapabilities
      } ?: FeedChipCapabilities(),
      capabilitiesLastUpdated = optLong("capabilitiesLastUpdated"),
     capabilitySchemaVersion = optInt("capabilitySchemaVersion", 0),
+    flavor = enumOrDefault("flavor", ServerFlavor.Unknown),
+    supportsReactions = enumOrDefault("supportsReactions", CapabilityStatus.Unknown),
+    supportsCustomReactions = enumOrDefault("supportsCustomReactions", CapabilityStatus.Unknown),
+    reportRoute = enumOrDefault("reportRoute", ReportRoute.V1Reports),
+    reactionRoute = enumOrDefault("reactionRoute", ReactionRoute.Unknown),
+    bubbleRoute = enumOrDefault("bubbleRoute", BubbleRoute.None),
 )
 
 private fun PostingCapabilities.toJson(): JSONObject = JSONObject()
@@ -354,6 +370,7 @@ private fun PostingCapabilities.toJson(): JSONObject = JSONObject()
             .put("maxExpirySeconds", it.maxExpirySeconds)
             .put("hideTotals", it.hideTotals)
     })
+    .put("postFormats", postFormats?.let { JSONArray(it.toList()) })
 
 private fun JSONObject.toPostingCapabilities(): PostingCapabilities = PostingCapabilities(
     lengthRule = enumOrDefault("lengthRule", PostLengthRule.Utf16TextOnly),
@@ -389,6 +406,9 @@ private fun JSONObject.toPostingCapabilities(): PostingCapabilities = PostingCap
             maxExpirySeconds = it.optLongOrNull("maxExpirySeconds"),
             hideTotals = it.optBoolean("hideTotals"),
         )
+    },
+    postFormats = optJSONArray("postFormats")?.let { array ->
+        (0 until array.length()).map { array.optString(it) }
     },
 )
 
@@ -469,6 +489,7 @@ private fun NotificationCapabilities.toJson(): JSONObject = JSONObject()
     .put("followRequestActions", followRequestActions.name)
     .put("streaming", streaming.name)
     .put("webPush", webPush.name)
+    .put("unread", unread.name)
 
 private fun JSONObject.toNotificationCapabilities(): NotificationCapabilities = NotificationCapabilities(
     listing = enumOrDefault("listing", CapabilityStatus.Unknown),
@@ -481,6 +502,7 @@ private fun JSONObject.toNotificationCapabilities(): NotificationCapabilities = 
     followRequestActions = enumOrDefault("followRequestActions", CapabilityStatus.Unknown),
     streaming = enumOrDefault("streaming", CapabilityStatus.Unknown),
     webPush = enumOrDefault("webPush", CapabilityStatus.Unknown),
+    unread = enumOrDefault("unread", CapabilityStatus.Unknown),
 )
 
 private fun AccessGrant.toJson(): JSONObject = JSONObject()

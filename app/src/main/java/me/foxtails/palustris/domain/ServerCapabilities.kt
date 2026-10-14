@@ -31,6 +31,30 @@ data class ServerCapabilities(
     val feedChips: FeedChipCapabilities = FeedChipCapabilities(),
     /** Bumps when capability shapes change; older snapshots force a fresh probe. */
     val capabilitySchemaVersion: Int = CURRENT_CAPABILITY_SCHEMA_VERSION,
+    /** Server family from the capability probe. Unknown before the first probe. */
+    val flavor: ServerFlavor = ServerFlavor.Unknown,
+    /**
+     * Mirrors [EmojiCapabilities.reactionMutation]: Supported when the probe found a recognized
+     * reaction advertisement. Unknown means the probe has no evidence either way.
+     */
+    val supportsReactions: CapabilityStatus = CapabilityStatus.Unknown,
+    /**
+     * Supported when the probe found the custom-emoji reaction advertisement. Unknown means the
+     * probe has no evidence either way; never infer it from the server version.
+     */
+    val supportsCustomReactions: CapabilityStatus = CapabilityStatus.Unknown,
+    /**
+     * Which report route the probe identified. Pixelfed serves `v1.1/report`; every other
+     * family takes `v1/reports`. The value records the send path; it never hides the row.
+     */
+    val reportRoute: ReportRoute = ReportRoute.V1Reports,
+    /**
+     * Which emoji-reaction mutation path the probe identified. Unknown before a probe finds
+     * evidence or rules the family out.
+     */
+    val reactionRoute: ReactionRoute = ReactionRoute.Unknown,
+    /** Which bubble-timeline path the probe identified. Only Akkoma serves one. */
+    val bubbleRoute: BubbleRoute = BubbleRoute.None,
 ) {
     companion object {
         /**
@@ -38,10 +62,55 @@ data class ServerCapabilities(
          * recorded reaction support from the removed sentinel mutation probe. Revision 6
          * invalidates snapshots that predate posting limits and upload capabilities. Revision 7
          * invalidates snapshots that predate the quote-with-media rule. Revision 9
-         * invalidates snapshots that predate own-post actions and translation.
+         * invalidates snapshots that predate own-post actions and translation. Revision 14
+         * invalidates snapshots that predate server-flavor detection and the per-flavor table.
          */
-        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 13
+        const val CURRENT_CAPABILITY_SCHEMA_VERSION = 14
     }
+}
+
+/**
+ * Which server family answered the Mastodon-family probe. The probe reads the instance
+ * version compatibility marker once; adapters never re-derive it from hostnames.
+ * Unknown means no probe has identified the family yet.
+ */
+enum class ServerFlavor {
+    Mastodon,
+    Glitch,
+    Hometown,
+    Pleroma,
+    Akkoma,
+    Pixelfed,
+    Unknown,
+}
+
+/** Which report route the probe identified for this account's server. */
+enum class ReportRoute {
+    /** `POST /api/v1/reports`. Mastodon, Glitch, Hometown, Pleroma and Akkoma. */
+    V1Reports,
+
+    /** `POST /api/v1.1/report`. Pixelfed. */
+    V11Report,
+}
+
+/** Which emoji-reaction mutation path the probe identified. */
+enum class ReactionRoute {
+    /** No reaction mutation path: Mastodon-family servers without the extension, and Pixelfed. */
+    None,
+
+    /** `PUT /api/v1/pleroma/statuses/:id/reactions/:emoji`. Pleroma and Akkoma. */
+    Pleroma,
+
+    /** No probe has identified the path yet. */
+    Unknown,
+}
+
+/** Which bubble-timeline path the probe identified. Only Akkoma serves one. */
+enum class BubbleRoute {
+    None,
+
+    /** `GET /api/v1/timelines/bubble`. Akkoma. */
+    Akkoma,
 }
 
 /** Delete and edit support for the account's own posts. */
@@ -116,6 +185,11 @@ data class PostingCapabilities(
     val scheduling: SchedulingCapability? = null,
     /** Null when the server takes no poll at creation. */
     val poll: PollLimits? = null,
+    /**
+     * Content types the server accepts at creation, such as `text/plain` and `text/markdown`.
+     * Null when the server lists none, in which case the composer sends no `content_type`.
+     */
+    val postFormats: List<String>? = null,
 ) {
     /** True when the server may take a video: it lists no types, or lists at least one video type. */
     val acceptsVideo: Boolean get() = uploadTypes == null || uploadTypes.any { it.startsWith("video/") }
@@ -205,6 +279,11 @@ data class NotificationCapabilities(
     val followRequestActions: CapabilityStatus = CapabilityStatus.Unknown,
     val streaming: CapabilityStatus = CapabilityStatus.Unknown,
     val webPush: CapabilityStatus = CapabilityStatus.Unknown,
+    /**
+     * Whether the account can read the server-side unread state. Unsupported when the server
+     * has no unread route (Pixelfed has no `unread_count`); Unknown pending a probe or load.
+     */
+    val unread: CapabilityStatus = CapabilityStatus.Unknown,
 )
 
 data class PushProviderInfo(
