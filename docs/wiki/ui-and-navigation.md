@@ -606,6 +606,33 @@ Sources: `ui/profile/ProfileCategory.kt`, `ui/profile/ProfileTimelineList.kt`,
 `ui/profile/ProfileViewModel.kt`, `data/mastodon/MastodonProfileService.kt`,
 `data/misskey/MisskeyProfileService.kt`, `ProfileScreenTest`.
 
+### Profile media grid
+
+The Media tab has two layouts: a grid and the list. The grid is the default.
+No other tab has a layout choice. `ProfileScreen` owns the choice as saveable
+state, so it survives a tab change and a placement change. The application
+does not store the choice; a new profile screen opens the grid again.
+
+The grid renders as rows of square tiles inside the profile list. It shares
+the scroll position, the header, the paging, and the loading, error, and
+footer rows of the list. A row holds three tiles. A wide list adds one tile
+for each further 128 dp. A layout change returns a scrolled list to the first
+row, because a list position has no meaning in the other layout.
+
+One post gives one tile: its first image or video. A post without an image or
+a video has no tile. The grid applies the content warning rules, the hidden
+content setting, and the muted hashtags through `photoGridItems`. A tile
+renders through `PhotoGridTileMedia`, which Photo Grid cards also use. A tap
+on a tile opens the post. The grid has no quick view.
+
+`ProfileMediaLayoutToggle` floats over the list at the bottom end, above the
+category row. It clears the physical edges like the other interactive list
+content. The list adds the toggle height to its end padding on the Media tab.
+
+Sources: `ui/profile/ProfileMediaGrid.kt`, `ui/profile/ProfileTimelineList.kt`,
+`ui/profile/ProfileScreen.kt`, `ui/photogrid/PhotoGridCard.kt`,
+`ProfileScreenTest`. No device check ran.
+
 ## Photo Grid Detail Media
 
 Photo Grid detail sizes the photo pager from known attachment dimensions

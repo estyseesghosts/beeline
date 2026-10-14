@@ -595,6 +595,9 @@
     <string name="profile_saved_details">Showing saved profile details. %1$s</string>
     <string name="profile_tab_featured">Featured</string>
     <string name="profile_tab_media">Media</string>
+    <string name="profile_media_layout_description">Media layout</string>
+    <string name="profile_media_layout_grid">Grid view</string>
+    <string name="profile_media_layout_list">List view</string>
     <string name="profile_tab_posts">Posts</string>
     <string name="profile_tab_replies">Replies</string>
     <string name="profile_tab_reposts">Reposts</string>

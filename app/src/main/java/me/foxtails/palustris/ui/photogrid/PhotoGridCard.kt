@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInRoot
@@ -78,28 +79,50 @@ internal fun PhotoGridTile(
     modifier: Modifier = Modifier,
     chrome: PhotoGridCardChrome = PhotoGridCardChrome(),
 ) {
-    val favourite = chrome.favourite
-    val leftRailInset = chrome.leftRailInset
-    val rightRailInset = chrome.rightRailInset
-    val onQuickView = chrome.onQuickView
+    // A card hidden by the rules shows no author and no favorite button. A warned card has no caption.
+    PhotoGridCard(
+        item = item,
+        modifier = modifier,
+        favourite = chrome.favourite.takeUnless { item.hiddenByRules },
+        leftRailInset = chrome.leftRailInset,
+        rightRailInset = chrome.rightRailInset,
+        caption = photoGridCaption(item),
+        showMeta = !item.hiddenByRules,
+    ) {
+        PhotoGridTileMedia(item = item, onOpenPost = onOpenPost, onQuickView = chrome.onQuickView)
+    }
+}
+
+/**
+ * The media area of one grid entry: the hidden placeholder, the collapsed warning, the sensitive cover,
+ * or the image or video with its loading and failed states. Photo Grid cards and the profile media grid
+ * share it. The caller sets the [aspectRatio] and the [shape]; a tap opens the post.
+ */
+@Composable
+internal fun PhotoGridTileMedia(
+    item: PhotoGridItem,
+    onOpenPost: (OwnedPost) -> Unit,
+    modifier: Modifier = Modifier,
+    aspectRatio: Float = photoGridAspectRatio(item.attachment),
+    shape: Shape = PhotoGridImageShape,
+    onQuickView: ((PhotoQuickViewTarget) -> Unit)? = null,
+) {
     if (item.hiddenByRules) {
         val hiddenMessage = stringResource(R.string.content_hidden_settings)
-        PhotoGridCard(item, modifier, null, leftRailInset, rightRailInset, caption = null, showMeta = false) {
-            Box(
-                Modifier.fillMaxWidth().aspectRatio(photoGridAspectRatio(item.attachment))
-                    .clip(PhotoGridImageShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .semantics { contentDescription = hiddenMessage },
-                contentAlignment = Alignment.Center,
-            ) { Text(hiddenMessage, Modifier.padding(12.dp)) }
-        }
+        Box(
+            modifier.fillMaxWidth().aspectRatio(aspectRatio)
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .semantics { contentDescription = hiddenMessage },
+            contentAlignment = Alignment.Center,
+        ) { Text(hiddenMessage, Modifier.padding(12.dp)) }
         return
     }
     val reveals = currentPostReveals()
-    // One tap on the warning tile reveals the post in place. The card then shows the image.
+    // One tap on the warning tile reveals the post in place. The tile then shows the image.
     if (item.collapsedWarning != null && !reveals.warningExpanded(item.ownedPost)) {
-        PhotoGridCard(item, modifier, favourite, leftRailInset, rightRailInset, caption = null, showMeta = true) {
-            PhotoGridWarningTile(item, item.collapsedWarning) { reveals.setWarningExpanded(item.ownedPost, true) }
+        PhotoGridWarningTile(item, item.collapsedWarning, modifier.fillMaxWidth().aspectRatio(aspectRatio).clip(shape)) {
+            reveals.setWarningExpanded(item.ownedPost, true)
         }
         return
     }
@@ -134,81 +157,79 @@ internal fun PhotoGridTile(
             open(PhotoQuickViewTarget(item.ownedPost, item.attachmentIndex, bounds, drag))
         }
     }
-    PhotoGridCard(item, modifier, favourite, leftRailInset, rightRailInset, caption = photoGridCaption(item), showMeta = true) {
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(photoGridAspectRatio(item.attachment))
-                .clip(PhotoGridImageShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .onGloballyPositioned { bounds = it.boundsInRoot() }
-                .then(
-                    if (revealed) {
-                        Modifier
-                            .photoQuickViewGesture(enabled = openQuickView != null, origin = { bounds.topLeft }) {
-                                openQuickView?.invoke(it)
-                            }
-                            .clickable { onOpenPost(item.ownedPost) }
-                    } else {
-                        Modifier
-                    },
-                )
-                .testTag("photo_grid_tile_$tileKey")
-                .semantics {
-                    contentDescription = tileDescription
-                    role = Role.Button
-                    if (revealed && openQuickView != null) {
-                        customActions = listOf(
-                            CustomAccessibilityAction(quickViewLabel) { openQuickView(null); true },
-                        )
-                    }
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(aspectRatio)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .onGloballyPositioned { bounds = it.boundsInRoot() }
+            .then(
+                if (revealed) {
+                    Modifier
+                        .photoQuickViewGesture(enabled = openQuickView != null, origin = { bounds.topLeft }) {
+                            openQuickView?.invoke(it)
+                        }
+                        .clickable { onOpenPost(item.ownedPost) }
+                } else {
+                    Modifier
                 },
-            contentAlignment = Alignment.Center,
-        ) {
-            // The decode size follows the lane width the card actually received.
-            val decodeWidthPx = constraints.maxWidth.coerceAtLeast(1)
-            val decodeHeightPx = constraints.maxHeight.coerceAtLeast(1)
-            val imageRequest = remember(item, decision, decodeWidthPx, decodeHeightPx, attempt) {
-                (decision as? MediaRequestDecision.Request)?.let { request ->
-                    mediaImageLoader.request(
-                        context = context,
-                        decision = request,
-                        accountIdentity = item.ownedPost.fetchedBy.toString(),
-                        postIdentity = "${item.ownedPost.post.id.connection}/${item.ownedPost.post.id.value}",
-                        attachment = item.attachment,
-                        attachmentIndex = item.attachmentIndex,
-                        decodeWidthPx = decodeWidthPx,
-                        decodeHeightPx = decodeHeightPx,
-                    ).newBuilder().setParameter("retry", attempt, memoryCacheKey = null).build()
+            )
+            .testTag("photo_grid_tile_$tileKey")
+            .semantics {
+                contentDescription = tileDescription
+                role = Role.Button
+                if (revealed && openQuickView != null) {
+                    customActions = listOf(
+                        CustomAccessibilityAction(quickViewLabel) { openQuickView(null); true },
+                    )
                 }
-            }
-            val painter = imageRequest?.let { rememberAsyncImagePainter(it, mediaImageLoader.imageLoader) }
-            if (!revealed) {
-                SensitiveMediaTile(onReveal = { reveals.revealMedia(item.ownedPost) })
-            } else if (isVideo) {
-                VideoTileContent(
-                    tileKey = tileKey,
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        // The decode size follows the width the tile actually received.
+        val decodeWidthPx = constraints.maxWidth.coerceAtLeast(1)
+        val decodeHeightPx = constraints.maxHeight.coerceAtLeast(1)
+        val imageRequest = remember(item, decision, decodeWidthPx, decodeHeightPx, attempt) {
+            (decision as? MediaRequestDecision.Request)?.let { request ->
+                mediaImageLoader.request(
+                    context = context,
+                    decision = request,
+                    accountIdentity = item.ownedPost.fetchedBy.toString(),
+                    postIdentity = "${item.ownedPost.post.id.connection}/${item.ownedPost.post.id.value}",
                     attachment = item.attachment,
-                    poster = painter,
-                    posterDescription = item.attachment.description.orEmpty(),
-                    contentVisible = revealed,
+                    attachmentIndex = item.attachmentIndex,
                     decodeWidthPx = decodeWidthPx,
-                    order = { bounds.top.toInt() },
-                    modifier = Modifier.fillMaxSize(),
-                    placeholder = {},
-                )
-            } else if (painter != null) {
-                Image(
-                    painter = painter,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
+                    decodeHeightPx = decodeHeightPx,
+                ).newBuilder().setParameter("retry", attempt, memoryCacheKey = null).build()
             }
-            // Over the neutral surface: a quiet indicator while loading, a retry control after a failure.
-            if (revealed && painter != null) {
-                PhotoGridTileStateLayer(phase = tilePhase(painter.state), onRetry = { attempt++ })
-            }
+        }
+        val painter = imageRequest?.let { rememberAsyncImagePainter(it, mediaImageLoader.imageLoader) }
+        if (!revealed) {
+            SensitiveMediaTile(onReveal = { reveals.revealMedia(item.ownedPost) })
+        } else if (isVideo) {
+            VideoTileContent(
+                tileKey = tileKey,
+                attachment = item.attachment,
+                poster = painter,
+                posterDescription = item.attachment.description.orEmpty(),
+                contentVisible = revealed,
+                decodeWidthPx = decodeWidthPx,
+                order = { bounds.top.toInt() },
+                modifier = Modifier.fillMaxSize(),
+                placeholder = {},
+            )
+        } else if (painter != null) {
+            Image(
+                painter = painter,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+        }
+        // Over the neutral surface: a quiet indicator while loading, a retry control after a failure.
+        if (revealed && painter != null) {
+            PhotoGridTileStateLayer(phase = tilePhase(painter.state), onRetry = { attempt++ })
         }
     }
 }
@@ -336,13 +357,13 @@ private fun PhotoGridCard(
 private fun PhotoGridWarningTile(
     item: PhotoGridItem,
     warningText: String,
+    modifier: Modifier,
     onReveal: () -> Unit,
 ) {
     val warning = warningText.ifBlank { stringResource(R.string.content_warning) }
     val description = stringResource(R.string.a11y_content_warning_tile, warning)
     Box(
-        Modifier.fillMaxWidth().aspectRatio(photoGridAspectRatio(item.attachment))
-            .clip(PhotoGridImageShape)
+        modifier
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable(onClick = onReveal)
             .testTag("photo_grid_tile_${photoGridItemKey(item)}")

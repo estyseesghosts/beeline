@@ -27,6 +27,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -35,6 +36,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -58,6 +61,10 @@ import me.foxtails.palustris.ui.components.FilterChipEntry
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
+import me.foxtails.palustris.ui.photogrid.photoGridItems
+import me.foxtails.palustris.ui.posts.LocalContentWarningRules
+import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
+import me.foxtails.palustris.ui.posts.LocalMutedHashtags
 
 @Composable
 internal fun ProfileTimelineList(
@@ -99,6 +106,8 @@ internal fun ProfileTimelineList(
     showHeader: Boolean = true,
     showInlineCategories: Boolean = !compactLayout,
     largeLayout: Boolean = false,
+    mediaLayout: ProfileMediaLayout = ProfileMediaLayout.Grid,
+    onMediaLayoutSelected: (ProfileMediaLayout) -> Unit = {},
 ) {
     // A profile row is a transparent column with separate state and footer items, so only the
     // interactive content clears physical edges. Item dividers keep the full width for underlay.
@@ -112,6 +121,28 @@ internal fun ProfileTimelineList(
     val firstPostId = page?.posts?.firstOrNull()?.post?.id
     var previousTab by remember { mutableStateOf(selectedTab) }
     var pendingTabReset by remember { mutableStateOf<ProfileTimelineTab?>(null) }
+    // Only the Media tab has a layout choice. Every other tab renders the list.
+    val mediaSelected = selectedTab == ProfileTimelineTab.Media
+    var listWidthPx by remember { mutableIntStateOf(0) }
+    val mediaGrid = if (mediaSelected && mediaLayout == ProfileMediaLayout.Grid) {
+        val listWidth = with(LocalDensity.current) { listWidthPx.toDp() }
+        rememberProfileMediaGrid(
+            posts = page?.posts.orEmpty(),
+            columns = profileMediaGridColumns(listWidth - leftObstructionClearance - rightObstructionClearance),
+        )
+    } else {
+        null
+    }
+    var previousMediaLayout by remember { mutableStateOf(mediaLayout) }
+
+    LaunchedEffect(mediaLayout) {
+        // A grid row holds several posts, so a list position has no meaning in the other layout.
+        val firstItem = firstTimelineItemIndex(showHeader, showInlineCategories, pinnedRowCount = 0, pinnedError = false, hasFirstPost = true)
+        if (previousMediaLayout != mediaLayout && mediaSelected && list.firstVisibleItemIndex > firstItem) {
+            list.scrollToItem(firstItem)
+        }
+        previousMediaLayout = mediaLayout
+    }
 
     LaunchedEffect(selectedTab) {
         if (previousTab != selectedTab) {
@@ -158,7 +189,7 @@ internal fun ProfileTimelineList(
         isRefreshing = page?.refreshing == true,
         onRefresh = onRefresh,
         state = pullToRefreshState,
-        modifier = Modifier.fillMaxSize().testTag("profile_content"),
+        modifier = Modifier.fillMaxSize().onSizeChanged { listWidthPx = it.width }.testTag("profile_content"),
         indicator = {
             PullToRefreshDefaults.Indicator(
                 state = pullToRefreshState,
@@ -170,7 +201,11 @@ internal fun ProfileTimelineList(
         LazyColumn(
             state = list,
             modifier = Modifier.fillMaxSize().testTag("profile_timeline_list"),
-            contentPadding = PaddingValues(bottom = endContentClearance + 24.dp),
+            // The Media tab keeps its final rows above the floating layout toggle.
+            contentPadding = PaddingValues(
+                bottom = endContentClearance + 24.dp +
+                    if (mediaSelected) ProfileMediaLayoutToggleHeight + ProfileMediaLayoutToggleGap else 0.dp,
+            ),
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             if (showHeader) item(key = "profile-header") { header() }
@@ -264,6 +299,7 @@ internal fun ProfileTimelineList(
                     }
                     profilePageItems(
                         page = page,
+                        mediaGrid = mediaGrid,
                         quoteEnabled = quoteEnabled,
                         onQuote = onQuote,
                         onRefresh = onRefresh,
@@ -289,6 +325,27 @@ internal fun ProfileTimelineList(
                 }
             }
         }
+        if (mediaSelected) {
+            // The toggle floats over the list, above the category row and clear of the physical edges.
+            ProfileMediaLayoutToggle(
+                layout = mediaLayout,
+                onLayoutSelected = onMediaLayoutSelected,
+                modifier = Modifier.align(Alignment.BottomEnd)
+                    .then(interactionModifier)
+                    .padding(end = 16.dp, bottom = endContentClearance + ProfileMediaLayoutToggleGap),
+            )
+        }
+    }
+}
+
+/** Builds the media grid of [posts] under the content warning and mute rules that Photo Grid applies. */
+@Composable
+private fun rememberProfileMediaGrid(posts: List<OwnedPost>, columns: Int): ProfileMediaGrid {
+    val rules = LocalContentWarningRules.current
+    val hiddenPresentation = LocalHiddenContentPresentation.current
+    val mutedHashtags = LocalMutedHashtags.current
+    return remember(posts, columns, rules, hiddenPresentation, mutedHashtags) {
+        profileMediaGrid(photoGridItems(posts, rules, hiddenPresentation, mutedHashtags), columns)
     }
 }
 
@@ -427,6 +484,7 @@ private fun LazyListScope.profilePinnedItems(
 
 private fun LazyListScope.profilePageItems(
     page: ProfilePageState?,
+    mediaGrid: ProfileMediaGrid?,
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     availableActions: Set<PostAction>,
@@ -471,14 +529,19 @@ private fun LazyListScope.profilePageItems(
             }
         }
     }
-    if (page.posts.isEmpty() && page.error == null && !page.refreshing) {
+    // The grid can be empty while the page holds posts: a post without an image or video has no tile.
+    val nothingToShow = if (mediaGrid != null) mediaGrid.rows.isEmpty() else page.posts.isEmpty()
+    if (nothingToShow && page.error == null && !page.refreshing) {
         item(key = "profile-timeline-empty") {
             AnimatedStatePane(stateKey = "empty", modifier = Modifier.fillMaxWidth().then(interactionModifier)) {
                 EmptyState(AppIcons.DefaultUser, stringResource(R.string.profile_no_posts_title), stringResource(R.string.profile_no_posts_subtitle))
             }
         }
     }
-    items(page.posts, key = { "timeline/${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
+    // The grid replaces the post rows. The states and footers around them stay the same.
+    if (mediaGrid != null) profileMediaGridItems(mediaGrid, onOpenPost, interactionModifier)
+    val rowPosts = if (mediaGrid == null) page.posts else emptyList()
+    items(rowPosts, key = { "timeline/${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
         PostRow(
             ownedPost = ownedPost,
             presentation = PostRowPresentation(availableActions = availableActions, quoteEnabled = quoteEnabled, largeLayout = largeLayout),

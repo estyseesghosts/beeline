@@ -140,6 +140,8 @@ fun ProfileScreen(
     }
     var categoryRowVisible by rememberSaveable(categoryOwnerKey) { mutableStateOf(true) }
     val categoryChipListState = rememberLazyListState()
+    // The Media tab opens as a grid. The choice survives a placement change and a tab change.
+    var mediaLayout by rememberSaveable { mutableStateOf(ProfileMediaLayout.Grid) }
     val isSelf = displayedAccount.id == authenticatedAccountId
     val expandedProfile = largeLayout && !compactWidePresentation
     val endContentClearance = if (expandedProfile || compactWidePresentation) {
@@ -196,6 +198,8 @@ fun ProfileScreen(
             onOpenUsername = onOpenUsername,
             quoteEnabled = quoteEnabled,
             onQuote = onQuote,
+            mediaLayout = mediaLayout,
+            onMediaLayoutSelected = { mediaLayout = it },
         )
         return
     }
@@ -243,6 +247,8 @@ fun ProfileScreen(
         onOpenUsername = onOpenUsername,
         quoteEnabled = quoteEnabled,
         onQuote = onQuote,
+        mediaLayout = mediaLayout,
+        onMediaLayoutSelected = { mediaLayout = it },
     )
 }
 

@@ -74,6 +74,8 @@ internal fun ProfileLargePresentation(
     quoteEnabled: Boolean = false,
     onQuote: (OwnedPost) -> Unit = {},
     onEditProfile: (() -> Unit)?,
+    mediaLayout: ProfileMediaLayout,
+    onMediaLayoutSelected: (ProfileMediaLayout) -> Unit,
 ) {
     // The two-column Row mirrors in RTL, so the column that reaches a physical edge changes with
     // the layout direction. Each column takes only the clearance for the edges it reaches, so the
@@ -126,6 +128,8 @@ internal fun ProfileLargePresentation(
             showHeader = false,
             showInlineCategories = false,
             largeLayout = true,
+            mediaLayout = mediaLayout,
+            onMediaLayoutSelected = onMediaLayoutSelected,
         )
     }
 

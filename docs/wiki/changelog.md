@@ -2,11 +2,18 @@
 
 Status: current  
 Owner: Maintainers  
-Last reviewed: 2026-10-12  
+Last reviewed: 2026-10-13  
 Stale when: A release ships without an entry here.
 
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
+
+## 0.3.2
+
+### New
+
+- The Media tab of a profile opens as a grid of square tiles. One post gives one tile. A tap on a tile opens the post.
+- A floating control on the Media tab switches between the grid and the list. The grid is the default.
 
 ## 0.3.1
 

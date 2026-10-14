@@ -23,9 +23,11 @@ import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.MainActivity
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.ProfileField
@@ -865,7 +867,8 @@ class ProfileScreenTest {
     fun changingProfileTimelineResetsTheListWithTheSelectedFeedFirstPostAtTheTop() {
         val profile = account("timeline-reset", "Timeline reset")
         val posts = (0..10).map { index -> post("posts-$index", profile, "Posts $index") }
-        val mediaPosts = (0..10).map { index -> post("media-$index", profile, "Media $index") }
+        // Three tiles share a grid row, so the grid needs enough rows to fill the list and scroll.
+        val mediaPosts = (0..35).map { index -> mediaPost("media-$index", profile) }
         val state = mutableStateOf(
             profileState(profile, posts).copy(
                 pages = mapOf(
@@ -895,10 +898,95 @@ class ProfileScreenTest {
 
         val listTop = compose.onNodeWithTag("profile_timeline_list", useUnmergedTree = true)
             .fetchSemanticsNode().boundsInRoot.top
-        val firstMediaTop = compose.onNodeWithTag("post_row_media-0", useUnmergedTree = true)
+        // The Media tab opens as a grid, so its first tile takes the top of the list.
+        val firstMediaTop = compose.onNodeWithTag(mediaTileTag("media-0"), useUnmergedTree = true)
             .fetchSemanticsNode().boundsInRoot.top
         assertEquals(listTop, firstMediaTop, 1f)
-        compose.onNodeWithText("Media 0").assertIsDisplayed()
+    }
+
+    @Test
+    fun mediaTabOpensAsAGridAndTheToggleSwitchesToTheList() {
+        val profile = account("media-grid", "Media grid")
+        val mediaPosts = (0..6).map { index -> mediaPost("media-$index", profile) }
+        val opened = mutableListOf<String>()
+        val state = mutableStateOf(
+            profileState(profile, listOf(post("text-post", profile))).copy(
+                pages = mapOf(
+                    ProfileTimelineTab.Posts to ProfilePageState(listOf(OwnedPost(self.id, post("text-post", profile)))),
+                    ProfileTimelineTab.Media to ProfilePageState(mediaPosts.map { OwnedPost(self.id, it) }),
+                ),
+            ),
+        )
+
+        show {
+            ProfileScreen(
+                account = profile,
+                profileState = state.value,
+                authenticatedAccountId = self.id,
+                onCategorySelected = { category -> state.value = state.value.copy(selectedTab = category) },
+                onOpenPost = { opened += it.post.id.value },
+            )
+        }
+
+        // The Posts tab keeps the list and offers no layout choice.
+        compose.onNodeWithTag("post_row_text-post", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("profile_media_layout_toggle").assertDoesNotExist()
+
+        compose.runOnIdle { state.value = state.value.copy(selectedTab = ProfileCategory.Media) }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("profile_media_layout_toggle").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Grid view").assertIsSelected()
+        compose.onNodeWithTag("post_row_media-0", useUnmergedTree = true).assertDoesNotExist()
+        // Three tiles share the first row at phone width.
+        val first = compose.onNodeWithTag(mediaTileTag("media-0"), useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val third = compose.onNodeWithTag(mediaTileTag("media-2"), useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val fourth = compose.onNodeWithTag(mediaTileTag("media-3"), useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(first.top, third.top, 1f)
+        assertEquals(first.width, first.height, 1f)
+        assertTrue("the fourth tile starts the second row", fourth.top >= first.bottom)
+        assertEquals(first.left, fourth.left, 1f)
+
+        compose.onNodeWithTag(mediaTileTag("media-1"), useUnmergedTree = true).performClick()
+        compose.runOnIdle { assertEquals(listOf("media-1"), opened) }
+
+        compose.onNodeWithContentDescription("List view").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("List view").assertIsSelected()
+        compose.onNodeWithTag("post_row_media-0", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag(mediaTileTag("media-0"), useUnmergedTree = true).assertDoesNotExist()
+
+        // The choice holds while the user visits another tab.
+        compose.runOnIdle { state.value = state.value.copy(selectedTab = ProfileCategory.Posts) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("profile_media_layout_toggle").assertDoesNotExist()
+        compose.runOnIdle { state.value = state.value.copy(selectedTab = ProfileCategory.Media) }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("List view").assertIsSelected()
+    }
+
+    @Test
+    fun mediaGridWithoutDisplayableMediaShowsTheEmptyState() {
+        val profile = account("media-empty", "Media empty")
+        val state = profileState(profile, emptyList()).copy(
+            selectedTab = ProfileCategory.Media,
+            pages = mapOf(
+                ProfileTimelineTab.Media to ProfilePageState(listOf(OwnedPost(self.id, post("no-media", profile)))),
+            ),
+        )
+
+        show { ProfileScreen(account = profile, profileState = state, authenticatedAccountId = self.id) }
+
+        compose.onNodeWithText("No posts in this view").assertExists()
+        compose.onNodeWithTag("profile_media_layout_toggle").assertIsDisplayed()
+    }
+
+    @Test
+    fun mediaGridAddsColumnsOnlyWhenTheListIsWide() {
+        assertEquals(3, profileMediaGridColumns(0.dp))
+        assertEquals(3, profileMediaGridColumns(411.dp))
+        assertEquals(4, profileMediaGridColumns(600.dp))
+        assertEquals(6, profileMediaGridColumns(840.dp))
     }
 
     @Test
@@ -989,6 +1077,23 @@ class ProfileScreenTest {
         displayName = name,
         handle = "@$id@example.org",
     )
+
+    private fun mediaPost(id: String, author: Account): Post = post(id, author).copy(
+        attachments = listOf(
+            Attachment(
+                id = "image-$id",
+                url = "https://cdn.example/$id.jpg",
+                previewUrl = "https://cdn.example/$id-preview.jpg",
+                mimeType = "image/jpeg",
+                kind = MediaKind.Image,
+                width = 640,
+                height = 480,
+            ),
+        ),
+    )
+
+    private fun mediaTileTag(postId: String): String =
+        "photo_grid_tile_${connection.origin}/${connection.origin}/$postId/image-$postId"
 
     private fun post(id: String, author: Account, text: String = id): Post = Post(
         id = EntityId(connection.origin, id),

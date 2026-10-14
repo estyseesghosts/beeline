@@ -110,6 +110,8 @@ object AppIcons {
     val Heart = tracedIcon("Heart", SvgIconPaths.Heart)
     val Share = tracedIcon("Share", SvgIconPaths.Share)
     val Image = tracedIcon("Image", SvgIconPaths.Image)
+    val GridLayout = icon("GridLayout", "M4,4h7v5H4z M4,11h7v9H4z M13,4h7v9h-7z M13,15h7v5h-7z")
+    val ListLayout = icon("ListLayout", "M4,5h16v3H4z M4,10.5h16v3H4z M4,16h16v3H4z")
     val Tag = icon("Tag", "M9,3 8,8H3v2h4.6l-.8,4H2v2h4.4l-1,5h2l1,-5h6l-1,5h2l1,-5H21v-2h-4.2l.8,-4H22V8h-4l1,-5h-2l-1,5h-6l1,-5z M10,10h5.6l-.8,4H9.2z")
 
     // Supplied appsvg artwork. These are the canonical icons for the destinations and actions below.

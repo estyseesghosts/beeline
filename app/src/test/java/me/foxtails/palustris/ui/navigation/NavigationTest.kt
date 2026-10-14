@@ -684,6 +684,8 @@ class NavigationTest {
         compose.onNodeWithText("Posts").assertIsSelected()
         compose.onNodeWithText("Media").performClick()
         compose.onNodeWithText("Media").assertIsSelected()
+        // The Media tab opens as a grid. The list view shows the post text.
+        compose.onNodeWithContentDescription("List view").performClick()
         compose.onNodeWithText("Alice's media post").assertIsDisplayed()
 
         compose.onNodeWithContentDescription("Home").performClick()

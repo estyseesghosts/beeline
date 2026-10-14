@@ -85,6 +85,8 @@ internal fun ProfileTimelinePresentation(
     onOpenUsername: ((String) -> Unit)?,
     quoteEnabled: Boolean,
     onQuote: (OwnedPost) -> Unit,
+    mediaLayout: ProfileMediaLayout,
+    onMediaLayoutSelected: (ProfileMediaLayout) -> Unit,
 ) {
     val compactCategoryEntries = profileCategoryChipEntries(
         isSelf = isSelf,
@@ -175,6 +177,8 @@ internal fun ProfileTimelinePresentation(
                 categoryChipListState = categoryChipListState,
                 categoryRowVisible = categoryRowVisible,
                 onToggleCategoryRow = onToggleCategoryRow,
+                mediaLayout = mediaLayout,
+                onMediaLayoutSelected = onMediaLayoutSelected,
             )
         }
 
