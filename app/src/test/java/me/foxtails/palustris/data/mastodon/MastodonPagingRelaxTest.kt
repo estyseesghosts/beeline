@@ -112,6 +112,42 @@ class MastodonPagingRelaxTest {
     }
 
     @Test
+    fun pleromaHashtagLinkWithDuplicatedLocalFalseParses() = runBlocking {
+        // Live Pleroma 2.7 tag Links repeat the echoed default: `local=false` twice.
+        // The entries themselves are clean; only the Link shape failed before the fix.
+        server.enqueue(MockResponse().setBody(load("fixtures/pleroma/home.json")).addHeader(
+            "Link", "<$origin/api/v1/timelines/tag/news?limit=40&local=false&max_id=pleroma-home-older&only_media=false&local=false>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody(JSONArray().toString()))
+        val source = source()
+
+        val first = source.searchHashtag("news")
+
+        assertEquals(listOf("pleroma-home-newest", "pleroma-home-older"), first.items.map { it.id.value })
+        assertNotNull(first.nextCursor)
+        source.searchHashtag("news", first.nextCursor)
+        server.takeRequest()
+        assertEquals(
+            "/api/v1/timelines/tag/news?limit=40&local=false&max_id=pleroma-home-older&only_media=false&local=false",
+            server.takeRequest().path,
+        )
+    }
+
+    @Test
+    fun homeLinkWithDuplicatedLocalFalseParses() = runBlocking {
+        server.enqueue(MockResponse().setBody(load("fixtures/pleroma/home.json")).addHeader(
+            "Link", "<$origin/api/v1/timelines/home?limit=20&local=false&max_id=pleroma-home-older&local=false>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody(JSONArray().toString()))
+        val source = source()
+
+        val first = source.timeline(Timeline.Home)
+
+        assertEquals(listOf("pleroma-home-newest", "pleroma-home-older"), first.items.map { it.id.value })
+        assertNotNull(first.nextCursor)
+    }
+
+    @Test
     fun representativePixelfedLinkParsesAndReplaysExtrasInOrder() = runBlocking {
         server.enqueue(MockResponse().setBody(load("fixtures/pixelfed/home.json"))
             .addHeader("Link", fixtureLink("fixtures/pixelfed/link.txt", "https://pixelfed.example")))

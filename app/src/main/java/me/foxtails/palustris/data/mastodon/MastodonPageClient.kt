@@ -94,21 +94,17 @@ internal class MastodonPageClient(
         // route's page size, and the locality flag are validated. Origin, credentials, fragment,
         // path, and the opaque cursor binding above stay strict.
         if (pagination.size != 1 ||
-            allowedNames.any { page.queryParameterValues(it).size > 1 } ||
-            page.queryParameterValues("local").size > 1 ||
+            allowedNames.any { it != "local" && page.queryParameterValues(it).size > 1 } ||
             route.name in setOf("bookmarks", "hashtag", "list") &&
                 (page.queryParameter("limit")?.let { it != "40" } == true) ||
             route.name == "followed_tags" && (page.queryParameter("limit")?.let { it != "200" } == true) ||
             when (route.name) {
-                "timeline:Local" -> page.queryParameter("local") != "true"
-                // Pleroma echoes its OpenAPI defaults on every Link URL, so Home and Federated
-                // continuations carry a `local=false` the client never sent. Absent or that echoed
-                // `false` passes; blank, truthy, duplicated, or unexpected values still fail.
-                "timeline:Federated", "timeline:Home" -> when (page.queryParameter("local")?.lowercase()) {
-                    null, "false" -> false
-                    else -> true
-                }
-                else -> false
+                // Local keeps its exact single value: only one `local=true` passes.
+                "timeline:Local" -> page.queryParameterValues("local").map { it.orEmpty() } != listOf("true")
+                // Pleroma echoes its OpenAPI defaults on every Link URL and can repeat them,
+                // so a continuation may carry `local=false` twice. Absent or echoed `false`
+                // keeps the requested scope; blank, bare, truthy, or unexpected values fail.
+                else -> page.queryParameterValues("local").any { it?.equals("false", ignoreCase = true) != true }
             }
         ) throw SourceError.Unsupported("pagination.cursor")
         return page
