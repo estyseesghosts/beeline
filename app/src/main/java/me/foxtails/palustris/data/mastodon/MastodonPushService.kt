@@ -8,6 +8,7 @@ import me.foxtails.palustris.domain.NotificationCategory
 import me.foxtails.palustris.domain.PushProviderInfo
 import me.foxtails.palustris.domain.PushSubscription
 import me.foxtails.palustris.domain.PushSubscriptionSpec
+import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.ValidatedUrl
 import org.json.JSONObject
@@ -17,6 +18,7 @@ internal class MastodonPushService(
     private val token: String,
     private val api: AuthenticatedHttpClient,
     private val accountId: AccountId,
+    private val capabilities: () -> ServerCapabilities = { ServerCapabilities() },
 ) {
     suspend fun providerInfo() = PushProviderInfo(status = CapabilityStatus.Supported)
 
@@ -33,7 +35,7 @@ internal class MastodonPushService(
 
     suspend fun updatePolicy(subscription: PushSubscription, alerts: Set<NotificationCategory>): PushSubscription {
         validateSubscription(subscription)
-        val confirmed = confirmed(api.putForm(origin, "api/v1/push/subscription", alertFields(alerts), token, MASTODON_MAX_RESPONSE_BYTES).body, subscription.endpoint)
+        val confirmed = confirmed(api.putForm(origin, "api/v1/push/subscription", alertFields(alerts, includeReactions = capabilities().supportsReactionNotifications()), token, MASTODON_MAX_RESPONSE_BYTES).body, subscription.endpoint)
         if (!sameIdentity(confirmed, subscription)) throw SourceError.ServerError("notifications.push.identity-changed")
         return confirmed
     }
@@ -63,14 +65,22 @@ internal class MastodonPushService(
     private fun sameIdentity(first: PushSubscription, second: PushSubscription) = first.accountId == second.accountId && first.endpoint == second.endpoint && first.remoteId == second.remoteId
     private fun createFields(spec: PushSubscriptionSpec) = buildList {
         add("subscription[endpoint]" to spec.endpoint.value); add("subscription[keys][p256dh]" to spec.publicKey); add("subscription[keys][auth]" to spec.authSecret)
-        add("subscription[standard]" to spec.standardWebPush.toString()); addAll(alertFields(spec.alerts))
+        add("subscription[standard]" to spec.standardWebPush.toString()); addAll(alertFields(spec.alerts, includeReactions = capabilities().supportsReactionNotifications()))
     }
-    private fun alertFields(alerts: Set<NotificationCategory>): List<Pair<String, String>> {
+    internal fun alertFields(alerts: Set<NotificationCategory>, includeReactions: Boolean = false): List<Pair<String, String>> {
         val all = NotificationCategory.All in alerts; fun enabled(category: NotificationCategory) = (all || category in alerts).toString()
-        return listOf("data[alerts][mention]" to enabled(NotificationCategory.Mentions), "data[alerts][quote]" to enabled(NotificationCategory.Quotes),
-            "data[alerts][reblog]" to enabled(NotificationCategory.Social), "data[alerts][follow]" to enabled(NotificationCategory.Social),
-            "data[alerts][follow_request]" to enabled(NotificationCategory.Social), "data[alerts][favourite]" to enabled(NotificationCategory.Social),
-            "data[alerts][poll]" to enabled(NotificationCategory.Polls), "data[alerts][status]" to enabled(NotificationCategory.Social),
-            "data[alerts][update]" to enabled(NotificationCategory.Social), "data[alerts][quoted_update]" to enabled(NotificationCategory.Quotes))
+        return buildList {
+            add("data[alerts][mention]" to enabled(NotificationCategory.Mentions))
+            add("data[alerts][quote]" to enabled(NotificationCategory.Quotes))
+            add("data[alerts][reblog]" to enabled(NotificationCategory.Social))
+            add("data[alerts][follow]" to enabled(NotificationCategory.Social))
+            add("data[alerts][follow_request]" to enabled(NotificationCategory.Social))
+            add("data[alerts][favourite]" to enabled(NotificationCategory.Social))
+            add("data[alerts][poll]" to enabled(NotificationCategory.Polls))
+            add("data[alerts][status]" to enabled(NotificationCategory.Social))
+            add("data[alerts][update]" to enabled(NotificationCategory.Social))
+            add("data[alerts][quoted_update]" to enabled(NotificationCategory.Quotes))
+            if (includeReactions) add("data[alerts][pleroma:emoji_reaction]" to enabled(NotificationCategory.Social))
+        }
     }
 }

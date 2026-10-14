@@ -20,11 +20,12 @@ Implement docs/planorma.md (Pleroma/Akkoma/Pixelfed, 8 slices) and docs/dvd-recs
 - Planorma Slice 1 — server flavor detection + capability table, schema 13->14. Commit `d90c9eca` "Detect-server-flavor-S1".
 - Planorma Slice 2 — PKCE detection path fix. Commit `25806db2` "Fix-PKCE-probe-path-S2".
 - Planorma Slice 3 — Pleroma limits + content_type composer. Commit `78b796d2` "Add-content-type-composer-S3".
-- Planorma Slice 4 — emoji reactions (mapper/probe/mutation/row/picker + wiring + review repairs). Commit: (this checkpoint).
+- Planorma Slice 4 — emoji reactions (mapper/probe/mutation/row/picker + wiring + review repairs). Commit `813c99ae` "Add-pleroma-reactions-S4".
+- Planorma Slice 5 — reaction notifications + push. Commit: (this checkpoint).
 
 # Current slice
 
-Planorma Slice 5 — reaction notifications and push. Owner: TBD at dispatch.
+Planorma Slice 6 — Pixelfed notification/push/streaming/report gates. Owner: TBD at dispatch.
 
 # Files involved
 

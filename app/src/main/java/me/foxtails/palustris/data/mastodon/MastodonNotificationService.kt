@@ -4,9 +4,9 @@ import me.foxtails.palustris.data.transport.HttpResponse
 import me.foxtails.palustris.data.transport.AuthenticatedHttpClient
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AccountId
+import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationAcknowledgement
-import me.foxtails.palustris.domain.NotificationCapabilities
 import me.foxtails.palustris.domain.NotificationCategory
 import me.foxtails.palustris.domain.NotificationCheckpoint
 import me.foxtails.palustris.domain.NotificationCursor
@@ -14,6 +14,8 @@ import me.foxtails.palustris.domain.NotificationPage
 import me.foxtails.palustris.domain.NotificationPageDirection
 import me.foxtails.palustris.domain.NotificationQuery
 import me.foxtails.palustris.domain.NotificationUnreadState
+import me.foxtails.palustris.domain.ReactionRoute
+import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SourceError
 import me.foxtails.palustris.domain.EntityId
 import okhttp3.HttpUrl
@@ -28,6 +30,7 @@ internal class MastodonNotificationService(
     private val api: AuthenticatedHttpClient,
     private val accountId: AccountId,
     private val clock: () -> Long,
+    private val capabilities: () -> ServerCapabilities = { ServerCapabilities() },
 ) {
     suspend fun notifications(cursor: String?): me.foxtails.palustris.domain.Page<Notification> {
         val page = notifications(NotificationQuery(), cursor?.let(::NotificationCursor))
@@ -146,7 +149,7 @@ internal class MastodonNotificationService(
             if (variant == MastodonNotificationApiVariant.V2 || query.limit != DEFAULT_NOTIFICATION_LIMIT) addQueryParameter("limit", query.limit.toString())
             minId?.let { addQueryParameter("min_id", it) }
             maxId?.let { addQueryParameter("max_id", it) }
-            query.mastodonTypes().forEach { addQueryParameter("types[]", it) }
+            query.mastodonTypes(includeReactions = capabilities().supportsReactionNotifications()).forEach { addQueryParameter("types[]", it) }
             if (variant == MastodonNotificationApiVariant.V2) listOf("favourite", "follow", "reblog", "admin.sign_up").forEach { addQueryParameter("grouped_types[]", it) }
         }.build()
 
@@ -180,13 +183,24 @@ internal class MastodonNotificationService(
     private companion object { const val DEFAULT_NOTIFICATION_LIMIT = 30 }
 }
 
-private fun NotificationQuery.mastodonTypes(): List<String> {
+/**
+ * True when the server advertises emoji reactions: the probe found reaction support, or it
+ * identified the Pleroma reaction route. Unknown, denied, and temporarily-unavailable states
+ * never enable the filter, and the unfiltered view still sends no `types[]`.
+ */
+internal fun ServerCapabilities.supportsReactionNotifications(): Boolean =
+    supportsReactions == CapabilityStatus.Supported || reactionRoute == ReactionRoute.Pleroma
+
+internal fun NotificationQuery.mastodonTypes(includeReactions: Boolean = false): List<String> {
     if (isAll) return emptyList()
     return categories.flatMap { when (it) {
         NotificationCategory.All -> emptyList()
         NotificationCategory.Mentions, NotificationCategory.Replies -> listOf("mention")
         NotificationCategory.Quotes -> listOf("quote", "quoted_update")
-        NotificationCategory.Social -> listOf("reblog", "follow", "follow_request", "favourite", "status")
+        NotificationCategory.Social -> buildList {
+            addAll(listOf("reblog", "follow", "follow_request", "favourite", "status"))
+            if (includeReactions) add("pleroma:emoji_reaction")
+        }
         NotificationCategory.Polls -> listOf("poll")
         NotificationCategory.System -> listOf("update", "admin.sign_up", "admin.report", "severed_relationships", "added_to_collection", "collection_update")
     } }.distinct().sorted()
