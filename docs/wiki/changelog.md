@@ -22,6 +22,11 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 - On Misskey-family servers the same page edits word mutes. A word mute can collapse or remove posts. A simple word mute can ignore capitalization. An advanced word mute is a regular expression.
 - Posts of muted and blocked accounts that the server still sends, such as replies in threads, quotes, and search results, now collapse or leave the list. Settings > Blocks and mutes chooses which. A new mute or block applies to the loaded feeds at once.
 - The post menu and the profile hide the boosts of one account without muting it. A hidden boost leaves the list.
+- Beeline detects Pleroma, Akkoma, and Pixelfed servers and adapts the app to each one.
+- Posts on Pleroma and Akkoma servers show emoji reactions. A picker chooses the emoji.
+- The composer offers the post format on servers that list formats, such as Pleroma.
+- A Recommended feed appears on Home for servers that offer recommendations. The post menu marks one as not interested and gives a reason.
+- Pixelfed servers get an adapted app. The composer has no polls, no scheduled posts, and no post editing. The lists feed chip and push notification settings stay hidden. Without live updates, a notice asks to pull to refresh.
 
 ### Fixed
 
