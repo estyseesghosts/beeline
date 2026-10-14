@@ -25,7 +25,7 @@ Fix Pleroma home timeline load failure. The timeline page must return good statu
 
 # Current slice
 
-- Slice 3 — hashtag search: Pleroma repeats echoed local=false twice on tag Links, which the validator rejected. Unified local rule (absent or all-false passes everywhere except Local, which keeps exact true). Tests: dup-local hashtag + Home parse cases. Commit pending review.
+- None. Slices 1-3 committed and live-verified (Home/Local/hashtag timelines + notifications on social.paladyn.org).
 
 # Files involved
 
@@ -44,7 +44,7 @@ Fix Pleroma home timeline load failure. The timeline page must return good statu
 
 # Next
 
-- Commit slice 3, cut testsigned APK, verify #news live. Follow-ups (separate): list/bookmark/profile strictness, search offset/resolve gaps, byte-identical live-shape + Home replay test strengthening.
+- Done. Follow-ups (separate): list/bookmark/profile strictness, search offset/resolve gaps, byte-identical live-shape + Home replay test strengthening.
 
 # Blockers
 
