@@ -13,6 +13,7 @@ import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.CreatePostRequest
 import me.foxtails.palustris.domain.EmojiChoice
+import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostLimits
@@ -82,12 +83,13 @@ fun FeedHost(
     val feed by feedModel.feed.collectAsStateWithLifecycle()
     val latestChips by rememberUpdatedState(chips)
     val homeActions = remember(feedModel) {
-        object : HomeContract.Actions {
+        object : HomeContract.Actions, RecommendationDwellSink {
             override fun refresh(feed: FeedSource) {
                 feedModel.refresh(feed)
                 latestChips.actions.refresh()
             }
             override fun loadMore(feed: FeedSource) { feedModel.loadMore(feed) }
+            override fun reportDwell(chunk: Map<EntityId, Long>) = feedModel.reportRecommendationDwell(chunk)
         }
     }
     val home = remember(feed, homeActions, chips) {

@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.ProfileRelationship
+import me.foxtails.palustris.domain.RecommendationExplanation
+import me.foxtails.palustris.domain.RecommendationFeedbackSource
 import me.foxtails.palustris.domain.ReportRequest
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.SocialSource
@@ -73,6 +75,15 @@ interface PostPopupPresentation {
 
     /** Deletes the open post. Only the author's own post is accepted. */
     fun deleteOwnPost()
+
+    /**
+     * Reports the open row as not-interested. Offered on recommended rows only; the caller gates
+     * the entry, this only acts. Defaults to nothing so sources without feedback stay silent.
+     */
+    fun markRecommendationNotInterested() = Unit
+
+    /** The ranking rationale behind the open row, or null when the page carried none. */
+    fun recommendationExplanation(): RecommendationExplanation? = null
 }
 
 internal val LocalPostPopupOwner = staticCompositionLocalOf<PostPopupPresentation?> { null }
@@ -258,4 +269,30 @@ class PostPopupOwner(
     private fun isCurrent(generation: Long, authorId: AccountId): Boolean =
         generation == requestGeneration && target?.author?.id == authorId &&
             target?.ownerAccountId == accountId && target?.sessionRevision == sessionRevision
+
+    /**
+     * Reports the open row as not-interested and removes it locally immediately. The sheet
+     * dismisses and the row forwards as deleted before the network call, so the result never
+     * gates the UI. The server call fails silently: a denied call stays denied without demoting
+     * the feature, and anything else is dropped without retry. No-ops without an open target,
+     * after retirement, or when the session source has no feedback contract.
+     */
+    override fun markRecommendationNotInterested() {
+        if (retired) return
+        val currentTarget = target ?: return
+        val feedback = source as? RecommendationFeedbackSource ?: return
+        val removed = currentTarget.ownedPost
+        val noteId = removed.post.id
+        dismiss()
+        onPostDeleted(removed)
+        scope.launch {
+            runCatching { feedback.markRecommendationNotInterested(noteId) }
+        }
+    }
+
+    override fun recommendationExplanation(): RecommendationExplanation? {
+        if (retired) return null
+        val currentTarget = target ?: return null
+        return (source as? RecommendationFeedbackSource)?.recommendationExplanation(currentTarget.post.id)
+    }
 }

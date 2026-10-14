@@ -34,6 +34,28 @@ internal class MisskeyDvdSharkeyRecommendationService(
     )
 
     /**
+     * Ranking rationales from served pages, keyed by post ID. Bounded to the most recent pages
+     * so the reason dialog can render without protocol JSON in Compose; evicted entries read as
+     * null. Guarded because pages arrive on background dispatchers.
+     */
+    private val explanationRegistry = LinkedHashMap<EntityId, RecommendationExplanation>()
+
+    /** The rationale behind one served note, or null when no served page carried it. */
+    @Synchronized
+    fun explanationFor(id: EntityId): RecommendationExplanation? = explanationRegistry[id]
+
+    @Synchronized
+    private fun retainExplanations(explanations: Map<EntityId, RecommendationExplanation>) {
+        explanations.forEach { (id, explanation) ->
+            explanationRegistry.remove(id)
+            explanationRegistry[id] = explanation
+        }
+        while (explanationRegistry.size > EXPLANATION_REGISTRY_MAX) {
+            explanationRegistry.entries.iterator().apply { next(); remove() }
+        }
+    }
+
+    /**
      * Serves one page by decimal offset. A null cursor starts at 0; a returned cursor continues
      * where the previous page ended; [refresh] re-ranks from 0. Malformed notes are skipped so one
      * bad note never fails the page. Logs carry no secrets or bodies; the token travels only in
@@ -67,6 +89,7 @@ internal class MisskeyDvdSharkeyRecommendationService(
             explanations[post.id] = mapExplanation(note)
         }
         val nextCursor = if (items.isEmpty()) null else (offset + items.size).toString()
+        retainExplanations(explanations)
         return RecommendationFeedPage(Page(items, nextCursor), explanations)
     }
 
@@ -149,6 +172,9 @@ internal class MisskeyDvdSharkeyRecommendationService(
         const val RECOMMENDATIONS_ENDPOINT = "notes/recommendations"
         const val FACTORS_KEY = "_recommendationFactors_"
         const val PAGE_SIZE = 30
+
+        /** How many served rationales the registry keeps before evicting the oldest. */
+        const val EXPLANATION_REGISTRY_MAX = 300
     }
 }
 

@@ -73,6 +73,14 @@ internal fun PostShareSheet(
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {},
     onTranslate: () -> Unit = {},
+    /**
+     * True only for recommended rows on a supported recommendations feed. The caller gates this:
+     * the sheet never decides recommendation state itself, so the entries cannot leak onto other
+     * timelines.
+     */
+    showRecommendationActions: Boolean = false,
+    onWhyRecommended: () -> Unit = {},
+    onNotInterested: () -> Unit = {},
 ) {
     ShareSurface(target.anchorBounds, onDismiss) {
         ShareActionCard(
@@ -90,6 +98,9 @@ internal fun PostShareSheet(
             onOpenDirectMessage = onOpenDirectMessage,
             onCopyLink = onCopyLink,
             onShare = onShare,
+            showRecommendationActions = showRecommendationActions,
+            onWhyRecommended = onWhyRecommended,
+            onNotInterested = onNotInterested,
         )
     }
 }
@@ -162,6 +173,9 @@ private fun ShareActionCard(
     onOpenDirectMessage: () -> Unit,
     onCopyLink: () -> Unit,
     onShare: () -> Unit,
+    showRecommendationActions: Boolean,
+    onWhyRecommended: () -> Unit,
+    onNotInterested: () -> Unit,
 ) {
     var reportOpen by remember(target.post.id, target.ownerAccountId, target.sessionRevision) { mutableStateOf(false) }
     var problemOpen by remember(target.post.id, target.ownerAccountId, target.sessionRevision) { mutableStateOf(false) }
@@ -355,6 +369,29 @@ private fun ShareActionCard(
                             enabled = true,
                             onClick = onOpenDirectMessage,
                         )
+                    }
+                    // Recommended rows only: the ranker rationale and the not-interested signal.
+                    // The caller passes showRecommendationActions only while the Recommended feed
+                    // is selected on a supported account, so other timelines never offer these.
+                    if (showRecommendationActions && !rows.own) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            RelationshipAction(
+                                tag = "post_share_why_recommended",
+                                label = stringResource(R.string.recommendation_why),
+                                handle = handle,
+                                modifier = Modifier.weight(1f),
+                                enabled = true,
+                                onClick = onWhyRecommended,
+                            )
+                            RelationshipAction(
+                                tag = "post_share_not_interested",
+                                label = stringResource(R.string.recommendation_not_interested),
+                                handle = handle,
+                                modifier = Modifier.weight(1f),
+                                enabled = true,
+                                onClick = onNotInterested,
+                            )
+                        }
                     }
                     if (rows.translate) {
                         RelationshipAction(

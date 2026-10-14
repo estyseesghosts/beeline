@@ -268,4 +268,23 @@ interface SocialSource {
     fun streamEvents(): kotlinx.coroutines.flow.Flow<Event> = kotlinx.coroutines.flow.emptyFlow()
 }
 
+/**
+ * Narrow feedback contract for recommendation feeds. Only adapters whose probe reports a
+ * supported recommendations capability implement it; generic UI downcasts the session's
+ * [SocialSource] instead of branching on protocol. Dwell is best-effort and silent, and a
+ * denied feedback call stays [SourceError.AccessDenied] without demoting the feed itself.
+ * Responsibility: dwell, not-interested, and ranking-rationale access for one session.
+ * Lifetime: bound to its source session; holds no feed state.
+ */
+interface RecommendationFeedbackSource {
+    /** Reports accumulated visible milliseconds per served note, in chunks of at most 50. */
+    suspend fun reportRecommendationDwell(dwellMillis: Map<EntityId, Long>)
+
+    /** Tells the ranker the served note holds no interest. The caller removes the row first. */
+    suspend fun markRecommendationNotInterested(noteId: EntityId)
+
+    /** The ranking rationale behind one served note, or null when the page carried none. */
+    fun recommendationExplanation(noteId: EntityId): RecommendationExplanation?
+}
+
 internal suspend fun <T> unsupported(feature: String): T = throw SourceError.Unsupported(feature)

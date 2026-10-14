@@ -5,12 +5,19 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.CapabilityStatus
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
+import me.foxtails.palustris.domain.RecommendationExplanation
+import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.composer.ComposerOverlayHost
 import me.foxtails.palustris.ui.composer.ComposerOwner
 import me.foxtails.palustris.ui.emoji.EmojiPickerHost
@@ -34,6 +41,7 @@ import me.foxtails.palustris.ui.posts.postShareRows
 import me.foxtails.palustris.ui.posts.rememberTranslationTargetLanguage
 import me.foxtails.palustris.ui.posts.sharePost
 import me.foxtails.palustris.ui.profile.EditProfileSheet
+import me.foxtails.palustris.ui.recommendations.RecommendationReasonDialog
 import me.foxtails.palustris.ui.shell.AppDialogs
 import me.foxtails.palustris.ui.shell.AppSelectionSheet
 import me.foxtails.palustris.ui.shell.Destination
@@ -142,6 +150,21 @@ internal fun ShellBubbleHost(
     val translations = LocalPostTranslations.current
     val editRequest = LocalPostEditRequest.current
     val targetLanguage = rememberTranslationTargetLanguage()
+    // Recommendation entries live on recommended rows only: the Recommended feed must be selected
+    // while the probe reports Supported. No protocol check enters Compose; the capability gate
+    // already encodes the dvd.chat plus signed-in rule. The snapshot cannot go stale across
+    // sign-out or account switch: the navigator binds the session synchronously and clears the
+    // feed override on owner mismatch (ShellNavigator.bindSession), the timeline clamps back to
+    // Home whenever the adapter-gated set loses Recommended (rememberShellNavigator clamp effect),
+    // and the anonymous set never offers Recommended. The popup owner is per-session and retires
+    // with its entry, dismissing any open sheet (PostPopupOwner.retire), open() rejects rows from
+    // another account or revision, and capabilities are read live from the current session source —
+    // so a lingering Supported can never meet a signed-out sheet. No adapter-gated alignment needed.
+    val showRecommendationActions = navigator.homeFeed == FeedSource.Timeline(Timeline.Recommended) &&
+        postActionOwner?.capabilities?.recommendations?.status == CapabilityStatus.Supported
+    var reasonExplanation by remember(postActionOwner?.target?.post?.id) {
+        mutableStateOf<RecommendationExplanation?>(null)
+    }
     postActionOwner?.target?.let { target ->
         PostShareSheet(
             target = target,
@@ -171,6 +194,15 @@ internal fun ShellBubbleHost(
                 sharePost(context, target.post)
                 postActionOwner.dismiss()
             },
+            showRecommendationActions = showRecommendationActions,
+            onWhyRecommended = { reasonExplanation = postActionOwner.recommendationExplanation() },
+            onNotInterested = postActionOwner::markRecommendationNotInterested,
+        )
+    }
+    reasonExplanation?.let { explanation ->
+        RecommendationReasonDialog(
+            explanation = explanation,
+            onDismiss = { reasonExplanation = null },
         )
     }
 }

@@ -28,6 +28,7 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostLimits
 import me.foxtails.palustris.domain.PostPreferencesRepository
 import me.foxtails.palustris.domain.PrimaryFavouriteMode
+import me.foxtails.palustris.domain.RecommendationFeedbackSource
 import me.foxtails.palustris.domain.SocialSource
 import me.foxtails.palustris.domain.ThreadImagePreparer
 import me.foxtails.palustris.domain.ThreadPublication
@@ -330,6 +331,19 @@ class FeedViewModel @AssistedInject constructor(
 
     fun bookmark(ownedPost: OwnedPost) {
         interactionMutations.bookmark(ownedPost)
+    }
+
+    /**
+     * Fire-and-forget sink for recommended-row dwell chunks. The recommendations host calls this
+     * from composition with already-chunked dues; transport runs here in [viewModelScope], never
+     * in composition, and every failure stays silent without retry. Sources without a feedback
+     * contract are skipped quietly. No-ops after [stop] so a retired session never reports.
+     */
+    fun reportRecommendationDwell(chunk: Map<EntityId, Long>) {
+        if (stopped || chunk.isEmpty()) return
+        viewModelScope.launch {
+            runCatching { (source as? RecommendationFeedbackSource)?.reportRecommendationDwell(chunk) }
+        }
     }
 
     /** Applies confirmed action fields to existing collections without inserting thread-only posts. */

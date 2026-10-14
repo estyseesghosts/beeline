@@ -27,11 +27,12 @@ Implement docs/planorma.md (Pleroma/Akkoma/Pixelfed, 8 slices) and docs/dvd-recs
 - Planorma Slice 8 — paging relax + 404/405 demotion + fixtures/contract tests. Commit `2566ef41` "Add-paging-demotion-fixtures-S8".
 - DVD Slice 1 — domain + capability (amended scope), schema 14->15. Commit `28b91071` "Add-DVD-recommendation-contract-D1".
 - DVD Slice 2 — probe + feed transport. Commit `f04d66db` "Add-DVD-probe-feed-D2".
-- DVD Slice 3 — Home timeline entry (refreshFeed + tab gating + B1/R1 repairs). Commit: (this checkpoint).
+- DVD Slice 3 — Home timeline entry (refreshFeed + tab gating + B1/R1 repairs). Commit `8e0a503b` "Add-Recommended-Home-entry-D3".
+- DVD Slice 4 — v1 feedback (dwell + not-interested + reason dialog + wiring + B-1/R-1 repairs). Commit: (this checkpoint).
 
 # Current slice
 
-DVD Slice 4 — v1 feedback (dwell, not-interested, reason dialog). Owner: TBD at dispatch.
+Done — both plans complete (Planorma 8/8, DVD 4/4). No further slices.
 
 # Files involved
 

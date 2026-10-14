@@ -620,6 +620,17 @@
     </plurals>
     <string name="reaction_reactors_title">Reactions to %1$s</string>
     <string name="reaction_add_symbol">+</string>
+    <string name="recommendation_not_interested">Not interested</string>
+    <string name="recommendation_why">Why recommended</string>
+    <string name="recommendation_reason_title">Why recommended</string>
+    <string name="recommendation_reason_score">Final score: %1$s</string>
+    <string name="recommendation_reason_topic">Topic: %1$s</string>
+    <string name="recommendation_reason_type">Type: %1$s</string>
+    <string name="recommendation_reason_following">Recommended because you follow this account.</string>
+    <string name="recommendation_reason_factors">What added to the score</string>
+    <string name="recommendation_reason_learned">Learned ranker signals</string>
+    <string name="recommendation_reason_empty">The server did not share why this post was recommended.</string>
+    <string name="recommendation_reason_close">Close</string>
     <string name="reply_sent">reply sent</string>
     <string name="saved_posts_empty_bookmarks">No bookmarks yet</string>
     <string name="saved_posts_empty_favourites">No favourites yet</string>

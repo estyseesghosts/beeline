@@ -47,10 +47,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.ContentWarningRules
+import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostScriptClassifier
 import me.foxtails.palustris.domain.Reaction
+import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.filterContext
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
@@ -71,6 +74,7 @@ import me.foxtails.palustris.ui.posts.PostActionBubbleTarget
 import me.foxtails.palustris.ui.posts.PostRow
 import me.foxtails.palustris.ui.posts.PostRowEvents
 import me.foxtails.palustris.ui.posts.PostRowPresentation
+import me.foxtails.palustris.ui.recommendations.RecommendationDwellHost
 import me.foxtails.palustris.ui.shell.HomeFeedUiState
 
 /**
@@ -114,6 +118,17 @@ fun HomeFeed(
     rightObstructionClearance: Dp = 0.dp,
     leftObstructionClearance: Dp = 0.dp,
     bottomObstructionClearance: Dp = 0.dp,
+    /**
+     * True only while the Recommended feed is selected on a supported signed-in DVD account.
+     * The caller derives it from timeline plus capability state; see [recommendationDwellEnabled].
+     */
+    recommendationDwellEnabled: Boolean = false,
+    /**
+     * Fire-and-forget dwell sink owned by the feed owner. Null disables reporting. Non-suspend
+     * by construction, so dwell transport can never run in composition: the owner launches it
+     * in its own scope and swallows every failure.
+     */
+    onRecommendationDwellFlush: ((Map<EntityId, Long>) -> Unit)? = null,
 ) {
     // Clear interaction content, not the viewport or full-width row underlay.
     // Physical left and physical right do not reverse with the layout direction.
@@ -158,6 +173,18 @@ fun HomeFeed(
         list = list,
         onScrollDirectionChanged = scrollDirectionChanged,
     )
+    // Dwell ties to feed visibility, never to the screen lifetime: the host observes this list's
+    // visible rows and the feed owner behind onRecommendationDwellFlush reports them. Without a
+    // sink the host stays inert.
+    val dwellFlush = onRecommendationDwellFlush
+    if (recommendationDwellEnabled && dwellFlush != null) {
+        RecommendationDwellHost(
+            listState = list,
+            posts = recommendationDwellRows(state.selectedFeed, visibleRows),
+            enabled = recommendationDwellEnabled,
+            onFlushChunk = { chunk -> dwellFlush(chunk) },
+        )
+    }
     val statePaneKey = when {
         state.error != null -> "error"
         state.posts.isEmpty() && state.loading -> "loading"
@@ -208,6 +235,33 @@ fun HomeFeed(
     }
     if (onOpenHashtagBubble == null) PostActionBubbleHost(target = fallbackBubbleTarget, emojiCatalog = EmojiCatalogState(), emojiCapabilities = me.foxtails.palustris.domain.EmojiCapabilities(), customReactionsAllowed = true, onDismiss = { fallbackBubbleTarget = null }, onHashtagSelected = onSearchHashtag, onReactionSelected = { _, _ -> }, hashtagBottomClearance = if (compactLayout) compactHomeScrollEndClearance() else 0.dp)
 }
+
+/**
+ * Fire-and-forget dwell sink for recommended rows. The feed owner's Home actions implement this
+ * and delegate to the session ViewModel, which reports in its own scope; the host in [HomeFeed]
+ * only enqueues through it. Until an actions owner implements it the host stays inert, so this
+ * introduces no reporting path by itself.
+ * Responsibility: dwell handoff from composition to the feed owner. Lifetime: the Home actions.
+ */
+internal interface RecommendationDwellSink {
+    fun reportDwell(chunk: Map<EntityId, Long>)
+}
+
+/**
+ * True only for the dwell case: the Recommended feed selected while the adapter gate offers it.
+ * [availableTimelines] comes from the adapter's `timelines()`, where Recommended appears only
+ * for a signed-in DVD session with a Supported probe, so no protocol, host, or account check
+ * enters Compose beyond this timeline-plus-capability state.
+ */
+internal fun recommendationDwellEnabled(selectedFeed: FeedSource, availableTimelines: Set<Timeline>): Boolean =
+    selectedFeed == FeedSource.Timeline(Timeline.Recommended) && Timeline.Recommended in availableTimelines
+
+/**
+ * Rows the dwell host may observe: the visible rows while Recommended is selected, nothing on
+ * any other feed, so dwell never attributes to non-recommended notes.
+ */
+internal fun recommendationDwellRows(selectedFeed: FeedSource, visibleRows: List<OwnedPost>): List<OwnedPost> =
+    if (selectedFeed == FeedSource.Timeline(Timeline.Recommended)) visibleRows else emptyList()
 
 /**
  * Observes Home paging state and requests the next page when the visible rows approach

@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.FeedSource
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.ui.AppIcons
@@ -19,6 +20,8 @@ import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
 import me.foxtails.palustris.ui.components.DestinationChipRow
 import me.foxtails.palustris.ui.feed.HomeFeed
+import me.foxtails.palustris.ui.feed.RecommendationDwellSink
+import me.foxtails.palustris.ui.feed.recommendationDwellEnabled
 import me.foxtails.palustris.ui.large.CompactWideTabCaretHost
 import me.foxtails.palustris.ui.large.CompactWideTabCaretRegistration
 import me.foxtails.palustris.ui.large.LargeBottomDock
@@ -90,6 +93,14 @@ internal fun ShellHomeDestination(
         bottomObstructionClearance = bottomObstructionClearance,
         onRefresh = { home.actions.refresh(navigator.homeFeed) },
         onLoadMore = { home.actions.loadMore(navigator.homeFeed) },
+        // Dwell reports only for recommended rows of a supported signed-in DVD session; the rule
+        // reads timeline plus capability state only. The sink arrives once the Home actions owner
+        // implements RecommendationDwellSink and delegates to the feed ViewModel; until then the
+        // host stays inert and nothing reports.
+        recommendationDwellEnabled = recommendationDwellEnabled(navigator.homeFeed, availableTimelines),
+        onRecommendationDwellFlush = (home.actions as? RecommendationDwellSink)?.let { sink ->
+            { chunk: Map<EntityId, Long> -> sink.reportDwell(chunk) }
+        },
         onSignIn = accountSwitcher.actions::signOut,
         availableActions = postCallbacks.availableActions,
         quoteEnabled = postCallbacks.quoteEnabled,

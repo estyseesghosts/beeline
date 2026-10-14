@@ -66,6 +66,8 @@ import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.PushProviderInfo
 import me.foxtails.palustris.domain.PushSubscription
 import me.foxtails.palustris.domain.PushSubscriptionSpec
+import me.foxtails.palustris.domain.RecommendationExplanation
+import me.foxtails.palustris.domain.RecommendationFeedbackSource
 import me.foxtails.palustris.domain.ReportRequest
 import me.foxtails.palustris.domain.ScheduleRoute
 import me.foxtails.palustris.domain.ScheduledPost
@@ -114,7 +116,7 @@ class MisskeySource(
     private val onCapabilitiesUpdated: ((ServerCapabilities) -> Unit)? = null,
     private val appMessages: AppMessages = AppMessages.Default,
     private val monotonicClock: () -> Long = System::nanoTime,
-) : SocialSource, DirectMessageSource {
+) : SocialSource, DirectMessageSource, RecommendationFeedbackSource {
     override val favouriteArtworkStyle: FavouriteArtworkStyle = FavouriteArtworkStyle.Heart
     private val sourceInstance = UUID.randomUUID().toString()
     private val cacheKey = CapabilityCacheKey(
@@ -138,6 +140,7 @@ class MisskeySource(
     private val feedService = MisskeyFeedService(origin, token, api)
     private val timelineService = MisskeyTimelineService(origin, token, api, MISSKEY_MAX_RESPONSE_BYTES)
     private val dvdRecommendationService = MisskeyDvdSharkeyRecommendationService(origin, token.takeIf { accountId != null }, api, accountId, MISSKEY_MAX_RESPONSE_BYTES)
+    private val recommendationFeedbackService = MisskeyRecommendationFeedbackService(origin, token.takeIf { accountId != null }, api, accountId, MISSKEY_MAX_RESPONSE_BYTES)
     private val threadService = MisskeyThreadService(
         origin = origin,
         token = token,
@@ -277,6 +280,24 @@ class MisskeySource(
         } else {
             super.refreshFeed(feed)
         }
+
+    /**
+     * Recommendation feedback routing. Deliberately outside [request]: a failed dwell or
+     * not-interested call must never invalidate the capability snapshot or read as an
+     * unsupported feature. The feedback service owns the DVD gate and the Denied mapping.
+     */
+    override suspend fun reportRecommendationDwell(dwellMillis: Map<EntityId, Long>) {
+        recommendationFeedbackService.reportDwell(dwellMillis)
+    }
+
+    override suspend fun markRecommendationNotInterested(noteId: EntityId) {
+        if (noteId.connection != origin) throw SourceError.ForeignOrigin("recommendations.not-interested")
+        if (noteId.value.isBlank()) throw SourceError.Unsupported("recommendations.not-interested")
+        recommendationFeedbackService.markNotInterested(noteId)
+    }
+
+    override fun recommendationExplanation(noteId: EntityId): RecommendationExplanation? =
+        dvdRecommendationService.explanationFor(noteId)
 
     override suspend fun userLists(): List<FeedSource.UserList> = request("lists") { feedService.lists() }
 
