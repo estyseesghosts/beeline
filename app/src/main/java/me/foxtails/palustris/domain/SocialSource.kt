@@ -175,6 +175,16 @@ interface SocialSource {
         is FeedSource.Antenna -> unsupported("antennas")
     }
 
+    /**
+     * Reloads the first page of [feed] as an explicit refresh. The default replays a first-page
+     * [feed] load, so adapters without a refresh-sensitive endpoint ignore it. The domain carries
+     * this generic refresh concept (rather than a recommendations flag) because pull-to-refresh is
+     * a protocol-neutral user signal; only adapters whose endpoints distinguish a re-rank, such as
+     * the DVD recommendations feed with its `refresh` flag, override it. Load-more always goes
+     * through [feed] with the opaque cursor and never refreshes.
+     */
+    suspend fun refreshFeed(feed: FeedSource): Page<Post> = feed(feed)
+
     /** The account's lists, in server order. */
     suspend fun userLists(): List<FeedSource.UserList> = emptyList()
 

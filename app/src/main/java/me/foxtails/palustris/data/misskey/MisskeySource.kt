@@ -160,10 +160,19 @@ class MisskeySource(
     /**
      * Recommended never enters [ServerCapabilities.timelines] — the Photo Grid must never offer
      * it (Slice 1 contract) — and surfaces here only while the DVD probe reports Supported. This
-     * mirrors the [SocialSource.timelines] default order with that one additional gate.
+     * mirrors the [SocialSource.timelines] default order with that one additional gate. The status
+     * alone cannot gate the tab: a stale snapshot could still say Supported after sign-out, so the
+     * account and host bindings are required too, matching the feed transport's own guards.
      */
     override suspend fun timelines(): List<Timeline> = timelineDisplayOrder.filter {
-        it in capabilities.timelines || (it == Timeline.Recommended && capabilities.recommendations?.status == CapabilityStatus.Supported)
+        it in capabilities.timelines || (it == Timeline.Recommended && isRecommendedGated())
+    }
+
+    /** Recommended needs a signed-in DVD session plus a Supported probe: status alone is not enough. */
+    private fun isRecommendedGated(): Boolean {
+        if (accountId == null) return false
+        if (!isDvdSharkeyHost(origin)) return false
+        return capabilities.recommendations?.status == CapabilityStatus.Supported
     }
 
     override suspend fun post(id: EntityId): Post = request("post") {
@@ -253,6 +262,21 @@ class MisskeySource(
         is FeedSource.Antenna -> request("antenna") { feedService.antennaTimeline(feed.id, cursor) }
         else -> super.feed(feed, cursor)
     }
+
+    /**
+     * Forwards an explicit refresh to the DVD recommendations endpoint as offset 0 plus
+     * `refresh=true` so it re-ranks. Every other feed replays a first-page load through the
+     * default, which keeps load-more (offset by opaque cursor) and refresh paths apart.
+     */
+    override suspend fun refreshFeed(feed: FeedSource): Page<Post> =
+        if (feed == FeedSource.Timeline(Timeline.Recommended)) {
+            request("timeline", invalidateCapabilitiesOnNotFound = true) {
+                refreshCapabilities()
+                dvdRecommendationService.page(null, refresh = true).posts
+            }
+        } else {
+            super.refreshFeed(feed)
+        }
 
     override suspend fun userLists(): List<FeedSource.UserList> = request("lists") { feedService.lists() }
 

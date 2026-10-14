@@ -116,6 +116,8 @@ class FeedViewModel @AssistedInject constructor(
     /**
      * Reloads the timeline from the first page. Each call advances the feed epoch.
      * A superseded launch drops its page instead of writing stale rows.
+     * The load goes through [SocialSource.refreshFeed] so an explicit refresh can re-rank
+     * where the endpoint supports it; paging still uses [SocialSource.feed] with the cursor.
      */
     fun refresh(timeline: Timeline) = refresh(FeedSource.Timeline(timeline))
 
@@ -141,16 +143,21 @@ class FeedViewModel @AssistedInject constructor(
         )
         feedJob = viewModelScope.launch {
             try {
-                val page = source.feed(feed)
+                val page = source.refreshFeed(feed)
                 if (epoch != feedEpoch || stopped) return@launch
                 val posts = page.items.distinctBy { it.id }.map(::applyFavouritePreference)
                 page.nextCursor?.let(acceptedCursors::add)
+                // Tabs come from the adapter gate, not the raw capability set: Recommended never
+                // enters capabilities.timelines, so only source.timelines() can surface it while
+                // the probe reports Supported. A gate failure keeps the last capabilities snapshot.
+                val availableTimelines = runCatching { source.timelines().toSet() }
+                    .getOrDefault(source.capabilities.timelines)
                 _feed.value = FeedState(
                     posts = posts,
                     ownedPosts = posts.map { OwnedPost(accountId, it, sessionRevision) },
                     timeline = timeline,
                     feedSource = feed,
-                    timelines = source.capabilities.timelines,
+                    timelines = availableTimelines,
                     canPublish = source.capabilities.canPublish,
                     audiences = source.capabilities.audiences,
                     limits = PostLimits(source.capabilities.maxPostLength, source.capabilities.posting),
