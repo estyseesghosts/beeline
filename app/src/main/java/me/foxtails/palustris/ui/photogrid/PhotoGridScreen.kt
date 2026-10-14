@@ -57,12 +57,15 @@ import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.FeedSource
+import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.MediaRequestDecision
 import me.foxtails.palustris.domain.MediaRequestPolicy
 import me.foxtails.palustris.domain.MediaRequestRole
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.PostFilterAction
+import me.foxtails.palustris.domain.PostFilterPolicy
 import me.foxtails.palustris.domain.timelineDisplayOrder
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
@@ -121,6 +124,8 @@ internal fun photoGridItems(posts: List<OwnedPost>, rules: ContentWarningRules =
     )
     val hidden = decision == ContentWarningDecision.Hidden
     if (hidden && hiddenPresentation == me.foxtails.palustris.domain.HiddenContentPresentation.Remove) return@mapNotNull null
+    val filterVerdict = PostFilterPolicy.evaluate(post, FilterContext.Public)
+    if (filterVerdict?.action == PostFilterAction.Remove) return@mapNotNull null
     val pages = post.attachments.withIndex().filter { (_, attachment) -> attachment.isPhotoGridDisplayable() }
     pages.firstOrNull()?.let { (index, attachment) ->
         val coveredByWarning = !hidden && !isPostContentVisible(decision, post.contentWarning != null, expanded = false)
@@ -129,7 +134,7 @@ internal fun photoGridItems(posts: List<OwnedPost>, rules: ContentWarningRules =
             index,
             attachment,
             hidden,
-            collapsedWarning = if (coveredByWarning) post.contentWarning.orEmpty() else null,
+            collapsedWarning = filterVerdict?.reason?.takeUnless { hidden } ?: if (coveredByWarning) post.contentWarning.orEmpty() else null,
             pages = pages,
         )
     }

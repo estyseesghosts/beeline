@@ -15,6 +15,7 @@ import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActivity
 import me.foxtails.palustris.domain.NotificationCategory
@@ -35,10 +36,12 @@ import me.foxtails.palustris.domain.NotificationUnreadState
 import me.foxtails.palustris.domain.PollOption
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostContentVisibility
+import me.foxtails.palustris.domain.PostFilterAction
 import me.foxtails.palustris.domain.ProfileField
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.PushRegistrationFailureReason
 import me.foxtails.palustris.domain.PushRegistrationFailureStage
+import me.foxtails.palustris.domain.ServerFilterMatch
 import me.foxtails.palustris.domain.ValidatedUrl
 import org.json.JSONArray
 import org.json.JSONException
@@ -987,5 +990,22 @@ class NotificationJsonCodecTest {
         assertEquals("https://remote.example/@far", mention.url)
         assertEquals(mention, decode(encode(decode(withMentions))).items[index].post!!.mentions.single())
         assertTrue(decode(fixture("posts_and_accounts.json")).items[index].post!!.mentions.isEmpty())
+    }
+
+    @Test
+    fun serverFilterMatchesSurviveARoundTripAndUnknownValuesFailClosed() {
+        val state = decode(fixture("post_visibility.json"))
+        val item = state.items.first { it.id.value == "v-visible" }
+        val match = ServerFilterMatch("Spoilers", PostFilterAction.Collapse, setOf(FilterContext.Home, FilterContext.Thread))
+        val filtered = state.copy(items = listOf(item.copy(post = item.post!!.copy(serverFilters = listOf(match)))))
+
+        assertEquals(listOf(match), decode(encode(filtered)).items.single().post?.serverFilters)
+
+        val json = encode(filtered)
+        val stored = json.getJSONArray("items").getJSONObject(0).getJSONObject("post").getJSONArray("serverFilters").getJSONObject(0)
+        stored.put("action", "Quarantine").put("contexts", org.json.JSONArray().put("Elsewhere"))
+        val decoded = decode(json).items.single().post!!.serverFilters.single()
+        assertEquals(PostFilterAction.Remove, decoded.action)
+        assertEquals(FilterContext.entries.toSet(), decoded.contexts)
     }
 }

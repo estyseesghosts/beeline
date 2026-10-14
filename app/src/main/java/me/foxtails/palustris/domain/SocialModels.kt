@@ -193,6 +193,8 @@ data class Post(
     val localOnly: Boolean = false,
     /** The accounts this post mentions, with complete handles. Empty when the server named none. */
     val mentions: List<PostMention> = emptyList(),
+    /** Filters the server matched against this post. [PostFilterPolicy] decides what they do on each surface. */
+    val serverFilters: List<ServerFilterMatch> = emptyList(),
 )
 
 /**

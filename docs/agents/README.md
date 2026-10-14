@@ -88,6 +88,7 @@ Keep the
 
 - [Acceptance matrix](decomposition-01-02-acceptance-matrix.md)
 - [Related hashtags ownership](related-hashtags.md)
+- [Content filters ownership](content-filters.md)
 - [App shell ownership](app-shell-ownership.md)
 - [Protocol and session ownership](protocol-and-session-ownership.md)
 - [Retention inventory](retention-inventory.md)

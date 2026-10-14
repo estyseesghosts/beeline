@@ -32,6 +32,7 @@ import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.PostFilterAction
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.emoji.AccountDisplayName
@@ -110,9 +111,12 @@ private fun PostRowContent(
     }
     val contentVisible = isPostContentVisible(warningDecision, post.contentWarning != null, expanded)
     if (warningDecision == ContentWarningDecision.Hidden && LocalHiddenContentPresentation.current == me.foxtails.palustris.domain.HiddenContentPresentation.Remove) return
+    val filterVerdict = rememberPostFilterVerdict(post, presentation.filterContext)
+    if (filterVerdict?.action == PostFilterAction.Remove && presentation.removable) return
+    val filterCollapsed = filterVerdict != null && !reveals.filterRevealed(ownedPost)
     // With the setting on, a post that shows its text asks the owner for a translation. The owner holds every rule.
     val targetLanguage = rememberTranslationTargetLanguage()
-    if (translations?.automatic == true && contentVisible && warningDecision != ContentWarningDecision.Hidden &&
+    if (translations?.automatic == true && contentVisible && !filterCollapsed && warningDecision != ContentWarningDecision.Hidden &&
         post.contentVisibility == me.foxtails.palustris.domain.PostContentVisibility.Visible
     ) {
         LaunchedEffect(ownedPost.fetchedBy, translationId, ownedPost.sessionRevision, targetLanguage) {
@@ -132,12 +136,16 @@ private fun PostRowContent(
         }
         PostMetadataRow(
             post = post,
-            filteredHashtags = displayPresentation.filteredHashtags.takeIf { contentVisible }.orEmpty(),
+            filteredHashtags = displayPresentation.filteredHashtags.takeIf { contentVisible && !filterCollapsed }.orEmpty(),
             onOpenProfile = onOpenProfile?.let { callback -> { callback(post.author) } },
             onSearchHashtag = onSearchHashtag,
             onOpenHashtagBubble = onOpenHashtagBubble,
             postOwned = ownedPost,
         )
+        filterVerdict?.takeIf { filterCollapsed }?.let { verdict ->
+            FilteredPostNotice(verdict) { reveals.revealFilter(ownedPost) }
+            return@Column
+        }
         if (warningDecision == ContentWarningDecision.Hidden) {
              Text(stringResource(R.string.content_hidden_local_rule), Modifier.padding(horizontal = 16.dp, vertical = 12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             return@Column

@@ -44,12 +44,15 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
+import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActionState
 import me.foxtails.palustris.domain.NotificationActivity
 import me.foxtails.palustris.domain.NotificationCategory
 import me.foxtails.palustris.domain.NotificationQuery
+import me.foxtails.palustris.domain.PostFilterAction
+import me.foxtails.palustris.domain.PostFilterPolicy
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.ChipCaretPresentation
@@ -181,7 +184,8 @@ fun NotificationsScreen(
                 mutedHashtags,
             )
         } == true
-        matchesFilter && !locallyMuted && (!hidden || me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation.current == HiddenContentPresentation.Placeholder)
+        val removedByFilter = post?.let { PostFilterPolicy.evaluate(it, FilterContext.Notifications)?.action == PostFilterAction.Remove } == true
+        matchesFilter && !locallyMuted && !removedByFilter && (!hidden || me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation.current == HiddenContentPresentation.Placeholder)
     }
     val controlsPositioningInsets = compactContextualControlsPositioningInsets(navigationVisible = compactLayout)
     val notificationEndClearance = if (compactLayout) {

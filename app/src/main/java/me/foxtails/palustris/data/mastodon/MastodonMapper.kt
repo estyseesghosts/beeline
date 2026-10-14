@@ -22,7 +22,6 @@ import me.foxtails.palustris.domain.Poll
 import me.foxtails.palustris.domain.PollOption
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.PostAction
-import me.foxtails.palustris.domain.PostContentVisibility
 import me.foxtails.palustris.domain.PostInteractionCounts
 import me.foxtails.palustris.domain.PostMention
 import me.foxtails.palustris.domain.ProfileField
@@ -270,8 +269,6 @@ object MastodonMapper {
         val poll = json.optJSONObject("poll")
         val quoted = quoteReference(json)
         val statusSensitive = json.optBoolean("sensitive")
-        val filtered = json.optJSONArray("filtered")?.length()?.let { it > 0 } == true
-        val contentVisibility = if (filtered) PostContentVisibility.Filtered else PostContentVisibility.Visible
         val emoji = MastodonEmojiMapper.parseEmojis(json.optJSONArray("emojis"), origin)
         val extensionReactions = MastodonReactionExtensionMapper.reactions(json, emoji)
         val interactionCounts = PostInteractionCounts(
@@ -291,8 +288,8 @@ object MastodonMapper {
         return Post(
             id = id,
             author = account(json.getJSONObject("account"), origin),
-            mentions = if (filtered) emptyList() else mentions,
-            text = if (filtered) "" else quoted.contentWithoutFallback(json.optString("content")).htmlToMarkdown(emoji, mentions),
+            mentions = mentions,
+            text = quoted.contentWithoutFallback(json.optString("content")).htmlToMarkdown(emoji, mentions),
             publishedAtEpochMillis = parseInstant(json.optString("created_at")),
             audience = when (json.optString("visibility")) {
                 "unlisted" -> Audience.Unlisted
@@ -300,24 +297,24 @@ object MastodonMapper {
                 "direct" -> Audience.Direct
                 else -> Audience.Public
             },
-            attachments = if (filtered) emptyList() else json.optJSONArray("media_attachments")?.let { media ->
+            attachments = json.optJSONArray("media_attachments")?.let { media ->
                 (0 until media.length()).map { attachment(media.getJSONObject(it), statusSensitive) }
             }.orEmpty(),
-            contentWarning = json.nullableString("spoiler_text").takeUnless { filtered },
+            contentWarning = json.nullableString("spoiler_text"),
             language = json.nullableString("language"),
             localOnly = json.optBoolean("local_only") || (json.optString("visibility") == "local"),
             editedAtEpochMillis = json.nullableString("edited_at")?.let(::parseInstant),
             replyTo = json.nullableString("in_reply_to_id")?.let { EntityId(origin, it) },
             replyToAuthorId = json.nullableString("in_reply_to_account_id")
                 ?.let { AccountId(Connection(origin, Protocol.MASTODON), it) },
-            availableActions = if (filtered) emptySet() else MASTODON_ACTIONS,
+            availableActions = MASTODON_ACTIONS,
             url = json.nullableString("url") ?: json.nullableString("uri"),
             interactionCounts = interactionCounts,
-            quote = if (filtered) null else quoted.status?.takeIf { depth < MAX_NESTING_DEPTH }?.let { post(it, origin, depth + 1) },
-            quoteUnavailable = if (filtered) null else quoted.unavailable
+            quote = quoted.status?.takeIf { depth < MAX_NESTING_DEPTH }?.let { post(it, origin, depth + 1) },
+            quoteUnavailable = quoted.unavailable
                 ?: QuoteUnavailable.Unloaded.takeIf { quoted.status != null && depth >= MAX_NESTING_DEPTH },
-            quoteId = if (filtered || quoted.status != null) null else quoted.id?.let { EntityId(origin, it) },
-            quoteUrl = if (filtered || quoted.status != null) null else quoted.url,
+            quoteId = if (quoted.status != null) null else quoted.id?.let { EntityId(origin, it) },
+            quoteUrl = if (quoted.status != null) null else quoted.url,
             quoteApproval = quoteApproval(json),
             poll = poll?.let(::poll),
             reposted = json.optBoolean("reblogged"),
@@ -327,7 +324,7 @@ object MastodonMapper {
             selectedReactions = selectedReactions,
             myReaction = selectedReactions.singleOrNull()?.submissionValue,
             emoji = emoji,
-            contentVisibility = contentVisibility,
+            serverFilters = MastodonFilterMapper.matches(json.optJSONArray("filtered")),
         )
     }
 

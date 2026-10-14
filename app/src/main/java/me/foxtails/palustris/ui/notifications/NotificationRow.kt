@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
+import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.NotificationActionState
 import me.foxtails.palustris.domain.NotificationActivity
@@ -51,6 +52,7 @@ import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.HiddenContentPresentation
+import me.foxtails.palustris.domain.PostFilterPolicy
 import me.foxtails.palustris.ui.components.AccountAvatar
 import me.foxtails.palustris.ui.Avatar
 import me.foxtails.palustris.ui.posts.LocalContentWarningRules
@@ -58,6 +60,7 @@ import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.motion.AnimatedStatePane
 import me.foxtails.palustris.ui.motion.LocalPalustrisMotionScheme
 import me.foxtails.palustris.ui.motion.springPress
+import me.foxtails.palustris.ui.posts.filteredPostLabel
 
 @Composable
 fun NotificationRow(
@@ -202,7 +205,10 @@ fun NotificationRow(
                         post.contentVisibility,
                         post.text,
                     )
-                    if (locallyMuted) {
+                    val filterVerdict = PostFilterPolicy.evaluate(post, FilterContext.Notifications)
+                    if (filterVerdict != null && !locallyMuted) {
+                        Text(filteredPostLabel(filterVerdict), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    } else if (locallyMuted) {
                         Text(
                             stringResource(me.foxtails.palustris.R.string.content_hidden_local_hashtag),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -227,7 +233,7 @@ fun NotificationRow(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    if (post.text.isNotBlank() && post.contentWarning.isNullOrBlank() &&
+                    if (post.text.isNotBlank() && post.contentWarning.isNullOrBlank() && filterVerdict == null &&
                         warningDecision != ContentWarningDecision.Hidden
                     ) {
                         me.foxtails.palustris.ui.emoji.PostText(

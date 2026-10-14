@@ -66,7 +66,8 @@ class NotificationDeliveryPlanner @Inject constructor() {
             decision = decision,
             // Hidden and filtered bodies never appear in Android previews, even for public posts.
             showPreview = settings.showPreviews && notification.post?.audience == Audience.Public &&
-                notification.post?.contentVisibility == me.foxtails.palustris.domain.PostContentVisibility.Visible,
+                notification.post?.contentVisibility == me.foxtails.palustris.domain.PostContentVisibility.Visible &&
+                notification.post?.serverFilters.isNullOrEmpty(),
             channel = channel,
         )
     }

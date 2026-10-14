@@ -402,4 +402,7 @@
     <string name="a11y_profile_avatar">Profil-Avatar</string>
     <string name="composer_schedule_clear">Jetzt veröffentlichen</string>
     <string name="post_share_unblock_with_handle">%1$s entblocken?</string>
+    <string name="post_filtered_named">Gefiltert: %1$s</string>
+    <string name="post_filtered_untitled">Gefiltert</string>
+    <string name="post_filtered_show">Trotzdem anzeigen</string>
 </resources>

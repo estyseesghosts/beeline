@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
+import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.ProfileTimelineTab
@@ -450,7 +451,7 @@ private fun LazyListScope.profilePinnedItems(
         items(posts, key = { "pinned/${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
             PostRow(
                 ownedPost = ownedPost,
-                presentation = PostRowPresentation(availableActions = availableActions, quoteEnabled = quoteEnabled, largeLayout = largeLayout),
+                presentation = PostRowPresentation(availableActions = availableActions, quoteEnabled = quoteEnabled, largeLayout = largeLayout, filterContext = FilterContext.Account),
                 events = PostRowEvents(
                     onFavourite = onReact,
                     onReply = onReply,
@@ -544,7 +545,7 @@ private fun LazyListScope.profilePageItems(
     items(rowPosts, key = { "timeline/${it.post.id.connection}/${it.post.id.value}" }) { ownedPost ->
         PostRow(
             ownedPost = ownedPost,
-            presentation = PostRowPresentation(availableActions = availableActions, quoteEnabled = quoteEnabled, largeLayout = largeLayout),
+            presentation = PostRowPresentation(availableActions = availableActions, quoteEnabled = quoteEnabled, largeLayout = largeLayout, filterContext = FilterContext.Account),
             events = PostRowEvents(
                 onFavourite = onReact,
                 onReply = onReply,

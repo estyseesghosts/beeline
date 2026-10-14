@@ -27,6 +27,12 @@ interface PostRevealPresentation {
 
     /** Reveals every sensitive image of [ownedPost]. */
     fun revealMedia(ownedPost: OwnedPost)
+
+    /** True when the viewer chose to show [ownedPost] although a filter collapsed it. */
+    fun filterRevealed(ownedPost: OwnedPost): Boolean = false
+
+    /** Shows [ownedPost] past the filter that collapsed it. Its own content warning still applies. */
+    fun revealFilter(ownedPost: OwnedPost) = Unit
 }
 
 internal val LocalPostReveals = staticCompositionLocalOf<PostRevealPresentation?> { null }
@@ -37,7 +43,7 @@ internal fun currentPostReveals(): PostRevealPresentation = LocalPostReveals.cur
 
 private data class RevealKey(val account: AccountId, val post: EntityId)
 
-private data class Reveal(val expanded: Boolean, val mediaRevealed: Boolean)
+private data class Reveal(val expanded: Boolean, val mediaRevealed: Boolean, val filterRevealed: Boolean = false)
 
 /**
  * Owns the reveal state of the posts of one connected session and releases it with the session.
@@ -57,7 +63,15 @@ class PostRevealOwner(private val limit: Int = DEFAULT_LIMIT) : PostRevealPresen
     override fun mediaRevealed(ownedPost: OwnedPost): Boolean = entries[key(ownedPost)]?.mediaRevealed == true
 
     override fun setWarningExpanded(ownedPost: OwnedPost, expanded: Boolean) {
-        put(key(ownedPost), Reveal(expanded = expanded, mediaRevealed = expanded))
+        val key = key(ownedPost)
+        put(key, Reveal(expanded = expanded, mediaRevealed = expanded, filterRevealed = entries[key]?.filterRevealed == true))
+    }
+
+    override fun filterRevealed(ownedPost: OwnedPost): Boolean = entries[key(ownedPost)]?.filterRevealed == true
+
+    override fun revealFilter(ownedPost: OwnedPost) {
+        val key = key(ownedPost)
+        put(key, (entries[key] ?: Reveal(expanded = false, mediaRevealed = false)).copy(filterRevealed = true))
     }
 
     override fun revealMedia(ownedPost: OwnedPost) {

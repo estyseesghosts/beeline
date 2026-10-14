@@ -50,7 +50,10 @@ import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.PostFilterAction
+import me.foxtails.palustris.domain.PostFilterPolicy
 import me.foxtails.palustris.domain.PostScriptClassifier
+import me.foxtails.palustris.domain.filterContext
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
 import me.foxtails.palustris.ui.components.chromeBackdropSource
@@ -143,6 +146,7 @@ fun HomeFeed(
     val hasOwnership = ownedPosts.isNotEmpty()
     val rows = if (hasOwnership) ownedPosts else state.posts.map { OwnedPost(it.author.id, it) }
     val visibleRows = rows.filterNot { ownedPost -> ContentWarningPolicy.matchesHashtagMute(postHashtags(ownedPost.post.text, ownedPost.post.emoji), mutedHashtags) }
+        .filterNot { ownedPost -> PostFilterPolicy.evaluate(ownedPost.post, state.selectedFeed.filterContext())?.action == PostFilterAction.Remove }
     val currentVisibleRows by rememberUpdatedState(visibleRows)
     val pagingDemand = remember { HomePagingDemand() }
     HomePagingEffects(
@@ -378,6 +382,7 @@ private fun HomeFeedContent(
                                 quoteEnabled = quoteEnabled,
                                 largeLayout = !compactLayout,
                                 contentWarningRules = contentWarningRules,
+                                filterContext = state.selectedFeed.filterContext(),
                             ),
                             events = PostRowEvents(
                                 onFavourite = onReact,

@@ -48,6 +48,7 @@ internal fun QuotePreviewCard(
     )
     val matchedTag = if (decision == ContentWarningDecision.Hidden) null else
         ContentWarningPolicy.firstMatchingMutedHashtag(hashtags, mutedHashtags)
+    val filterVerdict = if (decision == ContentWarningDecision.Hidden) null else quoteFilterVerdict(quote)
     // Reveal is card-local and must not cross quote, parent, account, session, or matched-tag changes.
     var revealed by rememberSaveable(quote.id.connection, quote.id.value, parentIdentity, accountIdentity, matchedTag) {
         mutableStateOf(false)
@@ -58,6 +59,8 @@ internal fun QuotePreviewCard(
             Spacer(Modifier.height(8.dp))
             if (decision == ContentWarningDecision.Hidden) {
                 Text(stringResource(R.string.content_hidden_quoted), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else if (filterVerdict != null && !revealed) {
+                FilteredQuoteNotice(filterVerdict) { revealed = true }
             } else if (matchedTag != null && !revealed) {
                 Text(
                     stringResource(R.string.quote_muted_word_warning, "#${matchedTag.removePrefix("#")}"),

@@ -935,4 +935,7 @@
     <string name="settings_about_components">Open-source components</string>
     <string name="settings_about_components_summary">%1$s includes these open-source components.</string>
     <string name="settings_favourite_emoji_choose">Choose emoji</string>
+    <string name="post_filtered_named">Filtered: %1$s</string>
+    <string name="post_filtered_untitled">Filtered</string>
+    <string name="post_filtered_show">Show anyway</string>
 </resources>

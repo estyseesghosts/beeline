@@ -121,6 +121,18 @@ class NotificationDeliveryPlannerTest {
                 foreground = false,
             ).showPreview,
         )
+        assertFalse(
+            planner.plan(
+                notification.copy(
+                    post = publicPost.copy(
+                        serverFilters = listOf(me.foxtails.palustris.domain.ServerFilterMatch("Spoilers", me.foxtails.palustris.domain.PostFilterAction.Collapse)),
+                    ),
+                ),
+                publicSettings,
+                permissionGranted = true,
+                foreground = false,
+            ).showPreview,
+        )
     }
 
     @Test

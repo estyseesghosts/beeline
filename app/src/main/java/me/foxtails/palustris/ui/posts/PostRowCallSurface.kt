@@ -5,6 +5,7 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.FavouriteArtworkStyle
+import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.media.MediaOpenRequest
@@ -37,4 +38,8 @@ internal data class PostRowPresentation(
     val largeLayout: Boolean = false,
     val contentWarningRules: ContentWarningRules = ContentWarningRules(),
     val interactionPresentation: PostInteractionPresentation = PostInteractionPresentation.Feed,
+    /** The surface the row sits on. Filters that name other surfaces do not touch it. */
+    val filterContext: FilterContext = FilterContext.Home,
+    /** False for the post a screen opened. A removing filter then collapses it instead. */
+    val removable: Boolean = true,
 )

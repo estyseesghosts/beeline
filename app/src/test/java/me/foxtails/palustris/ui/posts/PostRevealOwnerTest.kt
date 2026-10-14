@@ -93,4 +93,18 @@ class PostRevealOwnerTest {
         assertFalse(owner.mediaRevealed(owned("a")))
         assertEquals(0, owner.size)
     }
+
+    @Test
+    fun filterRevealIsSeparateFromTheWarningAndSurvivesWarningChanges() {
+        val owner = PostRevealOwner()
+        val post = owned("a")
+        assertFalse(owner.filterRevealed(post))
+        owner.revealFilter(post)
+        assertTrue(owner.filterRevealed(post))
+        assertFalse(owner.warningExpanded(post))
+        owner.setWarningExpanded(post, true)
+        owner.setWarningExpanded(post, false)
+        assertTrue(owner.filterRevealed(post))
+        assertFalse(owner.filterRevealed(owned("b")))
+    }
 }

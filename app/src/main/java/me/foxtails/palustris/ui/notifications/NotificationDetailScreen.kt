@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
+import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.Notification
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.NotificationTarget
@@ -144,6 +145,7 @@ fun NotificationDetailScreen(
                                 quoteEnabled = quoteEnabled,
                                 largeLayout = largeLayout,
                                 contentWarningRules = contentWarningRules,
+                                filterContext = FilterContext.Notifications,
                             ),
                             events = PostRowEvents(
                                 onFavourite = onReact,

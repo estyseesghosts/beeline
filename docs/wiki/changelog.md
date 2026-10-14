@@ -8,6 +8,12 @@ Stale when: A release ships without an entry here.
 Each entry lists the user-visible changes in one release.
 The GitHub release notes do not repeat this list. Source: [release workflow](../../.github/workflows/release.yml).
 
+## Unreleased
+
+### New
+
+- Posts that match a Mastodon filter now follow the filter. A warning filter collapses the post behind "Filtered: title" with a "Show anyway" button. A hiding filter removes the post. Before, every filtered post showed only a short notice and could not be opened.
+
 ## 0.3.2
 
 ### New

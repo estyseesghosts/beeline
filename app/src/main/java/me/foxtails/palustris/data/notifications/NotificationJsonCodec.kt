@@ -381,6 +381,27 @@ private fun encodePost(post: me.foxtails.palustris.domain.Post): JSONObject = JS
     post.ownRepostId?.let { put("ownRepostId", encodeEntity(it)) }
     post.actionTargetId?.let { put("actionTargetId", encodeEntity(it)) }
     if (post.mentions.isNotEmpty()) put("mentions", JSONArray(post.mentions.map(::encodeMention)))
+    if (post.serverFilters.isNotEmpty()) put("serverFilters", JSONArray(post.serverFilters.map(::encodeServerFilter)))
+}
+
+private fun encodeServerFilter(match: me.foxtails.palustris.domain.ServerFilterMatch): JSONObject = JSONObject()
+    .put("title", match.title)
+    .put("action", match.action.name)
+    .put("contexts", JSONArray(match.contexts.map { it.name }))
+
+/** An unknown action fails closed to Remove; unknown contexts drop, and none left means every context. */
+private fun decodeServerFilter(json: JSONObject): me.foxtails.palustris.domain.ServerFilterMatch {
+    val contexts = json.optJSONArray("contexts")?.let { values ->
+        (0 until values.length()).mapNotNull { index ->
+            runCatching { me.foxtails.palustris.domain.FilterContext.valueOf(values.getString(index)) }.getOrNull()
+        }
+    }.orEmpty().toSet()
+    return me.foxtails.palustris.domain.ServerFilterMatch(
+        title = json.optString("title"),
+        action = runCatching { me.foxtails.palustris.domain.PostFilterAction.valueOf(json.getString("action")) }
+            .getOrDefault(me.foxtails.palustris.domain.PostFilterAction.Remove),
+        contexts = contexts.ifEmpty { me.foxtails.palustris.domain.FilterContext.entries.toSet() },
+    )
 }
 
 private fun encodeMention(mention: me.foxtails.palustris.domain.PostMention): JSONObject = JSONObject()
@@ -455,6 +476,11 @@ private fun decodePost(json: JSONObject): me.foxtails.palustris.domain.Post =
         mentions = json.optJSONArray("mentions")?.let { values ->
             (0 until values.length()).mapNotNull { index ->
                 runCatching { decodeMention(values.getJSONObject(index)) }.getOrNull()
+            }
+        }.orEmpty(),
+        serverFilters = json.optJSONArray("serverFilters")?.let { values ->
+            (0 until values.length()).mapNotNull { index ->
+                runCatching { decodeServerFilter(values.getJSONObject(index)) }.getOrNull()
             }
         }.orEmpty(),
     )

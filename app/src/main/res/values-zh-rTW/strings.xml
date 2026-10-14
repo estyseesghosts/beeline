@@ -326,4 +326,7 @@
     <string name="settings_about_components">開放原始碼元件</string>
     <string name="settings_about_components_summary">%1$s 包含這些開放原始碼元件。</string>
     <string name="settings_favourite_emoji_choose">選擇表情符號</string>
+    <string name="post_filtered_named">已過濾：%1$s</string>
+    <string name="post_filtered_untitled">已過濾</string>
+    <string name="post_filtered_show">仍要顯示</string>
 </resources>

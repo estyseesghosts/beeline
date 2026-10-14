@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import me.foxtails.palustris.R
 import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
+import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.ui.media.MediaOpenRequest
@@ -73,6 +74,7 @@ internal fun ThreadedReplyRow(
                 availableActions = actionsForPost(availableActions, row.post),
                 truncateBody = false,
                 quoteEnabled = quoteEnabled,
+                filterContext = FilterContext.Thread,
             ),
             events = PostRowEvents(
                 onFavourite = onReact,

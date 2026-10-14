@@ -690,6 +690,18 @@ The row and Photo Grid detail share one content policy in `ui/posts/PostContentP
 
 Sources: `ui/posts/PostContentPolicy.kt`, `PostContentPolicyTest`, `SinglePostScreenTest`.
 
+## Filters and mutes
+
+A server filter can match a post. A collapsing filter replaces the body with "Filtered: title" and a "Show anyway" button. A removing filter takes the post out of the list. Status: source verified and test verified. No live check ran.
+
+- Mastodon 4.0 and later sends the matching filters on each post. `hide` removes the post. `warn` and `blur` collapse it.
+- A filter applies only to the places it names: Home (Home and lists), Public (other feeds, Search, Photo Grid), Thread, Account (profiles), and Notifications.
+- A post that a screen opened never disappears. A removing filter collapses it there. A quote also collapses.
+- "Show anyway" lasts for the session. It does not expand the content warning of the post.
+- An Android notification never previews a filtered post.
+
+Sources: `domain/PostFilter.kt`, `ui/posts/PostFilterPresentation.kt`, `data/mastodon/MastodonFilterMapper.kt`, `PostRowFilterTest`, `MastodonFilterResultTest`.
+
 ## Inline entity bubbles and hashtag bubble
 
 Inline link, username, and hashtag bubbles in `InlineEmojiText` lay out the logogram, a 4 dp icon-to-text gap, and the label in one row. The measured placeholder width reserves the icon, the gap, and 6 dp edge padding, so the icon never overlaps the text at any font scale. The label gets invisible direction isolates for display only (left-to-right for domains, first-strong for names and tags); the tap target and copied text keep the exact original string. Bubbles share the `springClickable` press response. The compact hashtag bubble shows at most five tags that fit the measured height; `See all` lists every tag and `See less` returns.

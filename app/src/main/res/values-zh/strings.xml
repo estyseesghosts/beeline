@@ -301,4 +301,7 @@
     <string name="settings_about_components">开源组件</string>
     <string name="settings_about_components_summary">%1$s 包含这些开源组件。</string>
     <string name="settings_favourite_emoji_choose">选择表情</string>
+    <string name="post_filtered_named">已过滤：%1$s</string>
+    <string name="post_filtered_untitled">已过滤</string>
+    <string name="post_filtered_show">仍然显示</string>
 </resources>

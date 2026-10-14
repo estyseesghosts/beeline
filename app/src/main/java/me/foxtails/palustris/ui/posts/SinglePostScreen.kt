@@ -50,6 +50,7 @@ import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.ContentWarningDecision
 import me.foxtails.palustris.domain.ContentWarningPolicy
 import me.foxtails.palustris.domain.EmojiChoice
+import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.OwnedPost
@@ -150,6 +151,7 @@ internal fun SinglePostScreen(
                                  truncateBody = false,
                                  quoteEnabled = quoteEnabled,
                                  contentWarningRules = contentWarningRules,
+                                 filterContext = FilterContext.Thread,
                              ),
                              events = PostRowEvents(
                                  onFavourite = onReact,
@@ -180,6 +182,8 @@ internal fun SinglePostScreen(
                              quoteEnabled = quoteEnabled,
                              contentWarningRules = contentWarningRules,
                              interactionPresentation = PostInteractionPresentation.Detailed,
+                             filterContext = FilterContext.Thread,
+                             removable = false,
                          ),
                          events = PostRowEvents(
                              onFavourite = onReact,
@@ -207,6 +211,8 @@ internal fun SinglePostScreen(
                  ContentWarningPolicy.decide(post.contentWarning, hashtags, contentWarningRules, post.contentVisibility, post.text)
             }
              val contentVisible = isPostContentVisible(warningDecision, post.contentWarning != null, expanded)
+             // The opened post itself never leaves the screen. A removing filter collapses it here.
+             val filterVerdict = rememberPostFilterVerdict(post, FilterContext.Thread)
              val locallyMuted = ContentWarningPolicy.matchesHashtagMute(
                  hashtags,
                  LocalMutedHashtags.current,
@@ -218,6 +224,8 @@ internal fun SinglePostScreen(
                 if (LocalHiddenContentPresentation.current == HiddenContentPresentation.Placeholder) {
                      Text(stringResource(R.string.content_hidden_settings), Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+             } else if (filterVerdict != null && !reveals.filterRevealed(ownedPost)) {
+                 FilteredPostNotice(filterVerdict) { reveals.revealFilter(ownedPost) }
              } else {
              PostMetadataRow(
                 post = post,
