@@ -701,6 +701,25 @@ class ProfileViewModelTest {
         assertTrue(unsupported.relationshipCalls.isEmpty())
     }
 
+    @Test fun boostToggleReportsTheFreshRelationship() = runProfileTest {
+        val source = FakeSource()
+        val model = model(source)
+        model.open(remote)
+        advanceUntilIdle()
+
+        var reported: me.foxtails.palustris.domain.ProfileRelationship? = null
+        model.setBoostsHidden(true) { reported = it }
+        advanceUntilIdle()
+        assertTrue(source.boostCalls.contains(remote.id to true))
+        assertEquals(true, model.state.value.relationship?.boostsHidden)
+        assertEquals(true, reported?.boostsHidden)
+
+        model.setBoostsHidden(false)
+        advanceUntilIdle()
+        assertTrue(source.boostCalls.contains(remote.id to false))
+        assertEquals(false, model.state.value.relationship?.boostsHidden)
+    }
+
     @Test fun stopPreventsLateDetailPublicationAndIsIdempotent() = runProfileTest {
         val gate = CompletableDeferred<Unit>()
         val source = FakeSource().apply {
@@ -767,6 +786,7 @@ class ProfileViewModelTest {
         val timelineCalls = mutableListOf<Pair<ProfileTimelineQuery, String?>>()
         val followCalls = mutableListOf<AccountId>()
         val unfollowCalls = mutableListOf<AccountId>()
+        val boostCalls = mutableListOf<Pair<AccountId, Boolean>>()
         val profileGates = mutableMapOf<AccountId, CompletableDeferred<Unit>>()
         val detailResults = mutableMapOf<AccountId, Account>()
         val pinnedResults = mutableMapOf<AccountId, List<Post>>()
@@ -831,6 +851,11 @@ class ProfileViewModelTest {
         override suspend fun unfollowProfile(id: AccountId): ProfileRelationship {
             unfollowCalls += id
             return ProfileRelationship(id)
+        }
+
+        override suspend fun setBoostsHidden(id: AccountId, hidden: Boolean): ProfileRelationship {
+            boostCalls += id to hidden
+            return ProfileRelationship(id, following = true, boostsHidden = hidden)
         }
 
         override suspend fun pinnedPosts(id: AccountId): List<Post> = pinnedResults[id].orEmpty()

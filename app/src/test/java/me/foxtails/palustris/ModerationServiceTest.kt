@@ -20,6 +20,8 @@ import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -62,6 +64,117 @@ class ModerationServiceTest {
             assertEquals("/api/blocking", listRequest.path)
             assertEquals("/api/blocking/delete", removeRequest.path)
             assertEquals("block-1", JSONObject(removeRequest.body.readUtf8()).getString("blockId"))
+        }
+    }
+
+    @Test
+    fun misskeyHidesAndShowsBoostsWithRenoteMute() {
+        runBlocking {
+            val origin = server.url("/").toString().removeSuffix("/")
+            val accountId = AccountId(Connection(origin, Protocol.MISSKEY), "viewer")
+            val target = AccountId(Connection(origin, Protocol.MISSKEY), "target")
+            val service = MisskeyModerationService(origin, "token", MisskeyApi(), accountId)
+            val relation = JSONObject().put("isFollowing", true).put("isFollowed", false)
+                .put("hasPendingFollowRequest", false).put("isMuted", false).put("isBlocking", false)
+            server.enqueue(MockResponse().setBody("{}"))
+            server.enqueue(MockResponse().setBody(relation.put("isRenoteMuted", true).toString()))
+            server.enqueue(MockResponse().setBody("{}"))
+            server.enqueue(MockResponse().setBody(relation.put("isRenoteMuted", false).toString()))
+
+            val hidden = service.setBoostsHidden(target, true)
+            val shown = service.setBoostsHidden(target, false)
+
+            assertEquals(true, hidden.boostsHidden)
+            assertEquals(false, shown.boostsHidden)
+            val create = server.takeRequest()
+            assertEquals("/api/renote-mute/create", create.path)
+            assertEquals("target", JSONObject(create.body.readUtf8()).getString("userId"))
+            assertEquals("/api/users/relation", server.takeRequest().path)
+            val delete = server.takeRequest()
+            assertEquals("/api/renote-mute/delete", delete.path)
+            assertEquals("target", JSONObject(delete.body.readUtf8()).getString("userId"))
+            assertEquals("/api/users/relation", server.takeRequest().path)
+        }
+    }
+
+    @Test
+    fun misskeyListsHiddenBoostsWithPaging() {
+        runBlocking {
+            val origin = server.url("/").toString().removeSuffix("/")
+            val accountId = AccountId(Connection(origin, Protocol.MISSKEY), "viewer")
+            val service = MisskeyModerationService(origin, "token", MisskeyApi(), accountId)
+            fun entry(id: String, user: String) = JSONObject().put("id", id).put("user", misskeyUser(user))
+            server.enqueue(MockResponse().setBody("[${entry("m1", "first")},${entry("m2", "second")}]"))
+            server.enqueue(MockResponse().setBody("[${entry("m3", "third")}]"))
+            server.enqueue(MockResponse().setBody("[]"))
+
+            val ids = service.boostMuted()
+
+            assertEquals(
+                setOf("first", "second", "third").map { AccountId(Connection(origin, Protocol.MISSKEY), it) }.toSet(),
+                ids,
+            )
+            val firstRequest = server.takeRequest()
+            assertEquals("/api/renote-mute/list", firstRequest.path)
+            assertFalse(JSONObject(firstRequest.body.readUtf8()).has("untilId"))
+            val secondRequest = server.takeRequest()
+            assertEquals("m2", JSONObject(secondRequest.body.readUtf8()).getString("untilId"))
+            val thirdRequest = server.takeRequest()
+            assertEquals("m3", JSONObject(thirdRequest.body.readUtf8()).getString("untilId"))
+        }
+    }
+
+    @Test
+    fun mastodonHidesBoostsThroughFollowWithReblogsFlag() {
+        runBlocking {
+            val origin = server.url("/").toString().removeSuffix("/")
+            val accountId = AccountId(Connection(origin, Protocol.MASTODON), "viewer")
+            val target = AccountId(Connection(origin, Protocol.MASTODON), "target")
+            val service = MastodonModerationService(origin, "token", mastodonTestClient(), accountId, 1L, "source-1")
+            fun relationship(reblogs: Boolean) = JSONObject().put("following", true).put("followed_by", false)
+                .put("requested", false).put("muting", false).put("blocking", false).put("showing_reblogs", reblogs)
+            server.enqueue(MockResponse().setBody(relationship(false).toString()))
+            server.enqueue(MockResponse().setBody(relationship(true).toString()))
+
+            val hidden = service.setBoostsHidden(target, true)
+            val shown = service.setBoostsHidden(target, false)
+
+            assertEquals(true, hidden.boostsHidden)
+            assertEquals(false, shown.boostsHidden)
+            val hide = server.takeRequest()
+            assertEquals("/api/v1/accounts/target/follow", hide.path)
+            assertEquals("reblogs=false", hide.body.readUtf8())
+            val show = server.takeRequest()
+            assertEquals("/api/v1/accounts/target/follow", show.path)
+            assertEquals("reblogs=true", show.body.readUtf8())
+        }
+    }
+
+    @Test
+    fun boostFlagStaysUnknownWhenTheServerDoesNotReportIt() {
+        runBlocking {
+            val misskeyOrigin = server.url("/").toString().removeSuffix("/")
+            val misskeyAccount = AccountId(Connection(misskeyOrigin, Protocol.MISSKEY), "viewer")
+            val misskeyTarget = AccountId(Connection(misskeyOrigin, Protocol.MISSKEY), "target")
+            val misskey = MisskeyModerationService(misskeyOrigin, "token", MisskeyApi(), misskeyAccount)
+            server.enqueue(MockResponse().setBody("{}"))
+            server.enqueue(MockResponse().setBody(JSONObject().put("isFollowing", true).put("isMuted", true).toString()))
+
+            val muted = misskey.setMuted(misskeyTarget, true)
+
+            assertEquals(true, muted.muting)
+            assertNull(muted.boostsHidden)
+
+            val mastodonOrigin = server.url("/").toString().removeSuffix("/")
+            val mastodonAccount = AccountId(Connection(mastodonOrigin, Protocol.MASTODON), "viewer")
+            val mastodonTarget = AccountId(Connection(mastodonOrigin, Protocol.MASTODON), "target")
+            val mastodon = MastodonModerationService(mastodonOrigin, "token", mastodonTestClient(), mastodonAccount, 1L, "source-1")
+            server.enqueue(MockResponse().setBody(JSONObject().put("following", false).put("muting", true).toString()))
+
+            val relationship = mastodon.setMuted(mastodonTarget, true)
+
+            assertEquals(true, relationship.muting)
+            assertNull(relationship.boostsHidden)
         }
     }
 

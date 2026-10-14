@@ -273,11 +273,18 @@ class ProfileViewModel @AssistedInject constructor(
     }
 
     fun follow() {
-        mutateRelationship { source.followProfile(it) }
+        mutateRelationship(RelationshipChange(mutate = { source.followProfile(it) }))
     }
 
     fun unfollow() {
-        mutateRelationship { source.unfollowProfile(it) }
+        mutateRelationship(RelationshipChange(mutate = { source.unfollowProfile(it) }))
+    }
+
+    /** Hides or shows the target's boosts, then reports the fresh relationship for the session filters. */
+    fun setBoostsHidden(hidden: Boolean, onChanged: (me.foxtails.palustris.domain.ProfileRelationship) -> Unit = {}) {
+        mutateRelationship(
+            RelationshipChange(mutate = { source.setBoostsHidden(it, hidden) }, onChanged = onChanged),
+        )
     }
 
     fun stop() {
@@ -466,7 +473,13 @@ class ProfileViewModel @AssistedInject constructor(
         }
     }
 
-    private fun mutateRelationship(operation: suspend (AccountId) -> me.foxtails.palustris.domain.ProfileRelationship) {
+    /** One relationship mutation with its success report for the session filters. */
+    private data class RelationshipChange(
+        val mutate: suspend (AccountId) -> me.foxtails.palustris.domain.ProfileRelationship,
+        val onChanged: (me.foxtails.palustris.domain.ProfileRelationship) -> Unit = {},
+    )
+
+    private fun mutateRelationship(change: RelationshipChange) {
         if (stopped) return
         val current = _state.value
         val target = current.targetId ?: return
@@ -477,13 +490,14 @@ class ProfileViewModel @AssistedInject constructor(
         relationshipJob?.cancel()
         relationshipJob = viewModelScope.launch {
             try {
-                val updated = operation(target)
+                val updated = change.mutate(target)
                 if (isCurrent(targetGeneration, target)) {
                     _state.value = _state.value.copy(
                         relationship = updated,
                         relationshipMutation = false,
                         relationshipError = null,
                     )
+                    change.onChanged(updated)
                 }
             } catch (error: CancellationException) {
                 throw error

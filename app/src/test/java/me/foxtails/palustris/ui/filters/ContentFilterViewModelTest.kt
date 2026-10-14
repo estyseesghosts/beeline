@@ -288,6 +288,38 @@ class ContentFilterViewModelTest {
     }
 
     @Test
+    fun ownerLoadsHiddenBoostsAndKeepsSessionTogglesWithoutServerList() = runTest(dispatcher) {
+        val listed = AccountId(accountId.connection, "listed")
+        val toggled = AccountId(accountId.connection, "toggled")
+        val misskey = object : SocialSource by FilterSource(titled) {
+            override suspend fun boostMutedAccounts(): Set<AccountId> = setOf(listed)
+        }
+        val owner = ContentFilterOwner(accountId, misskey, this)
+        owner.load()
+        advanceUntilIdle()
+        assertEquals(setOf(listed), owner.boostMuted)
+
+        // An unknown flag never clears the session set.
+        owner.applyRelationship(ProfileRelationship(toggled, following = true))
+        assertEquals(setOf(listed), owner.boostMuted)
+        owner.applyRelationship(ProfileRelationship(toggled, following = true, boostsHidden = true))
+        assertEquals(setOf(listed, toggled), owner.boostMuted)
+        owner.applyRelationship(ProfileRelationship(listed, following = true, boostsHidden = false))
+        assertEquals(setOf(toggled), owner.boostMuted)
+
+        owner.retire()
+        assertTrue(owner.boostMuted.isEmpty())
+
+        val mastodon = FilterSource(titled)
+        val sessionOnly = ContentFilterOwner(accountId, mastodon, this)
+        sessionOnly.load()
+        advanceUntilIdle()
+        assertTrue(sessionOnly.boostMuted.isEmpty())
+        sessionOnly.applyRelationship(ProfileRelationship(toggled, following = true, boostsHidden = true))
+        assertEquals(setOf(toggled), sessionOnly.boostMuted)
+    }
+
+    @Test
     fun ownerKeepsItsSnapshotWhenALoadFails() = runTest(dispatcher) {
         val source = FilterSource(ContentFilterSet(ContentFilterKind.Phrase, listOf(filter)))
         val owner = ContentFilterOwner(accountId, source, this)

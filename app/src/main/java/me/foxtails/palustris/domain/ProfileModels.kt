@@ -90,4 +90,9 @@ data class ProfileRelationship(
     val requested: Boolean = false,
     val muting: Boolean = false,
     val blocking: Boolean = false,
+    /**
+     * Whether boosts of the profile stay hidden. Null when the server does not report it, for
+     * example on Mastodon while the viewer does not follow the profile.
+     */
+    val boostsHidden: Boolean? = null,
 )

@@ -21,12 +21,16 @@ fun rememberClientFilters(owner: ContentFilterOwner?, preferences: AppPreference
     owner ?: return ClientFilterMatcher.Empty
     val mutedLabel = stringResource(R.string.post_filtered_muted_account)
     val blockedLabel = stringResource(R.string.post_filtered_blocked_account)
+    val boostMutedLabel = stringResource(R.string.post_filtered_hidden_boost)
     val matcher = owner.matcher
     val muted = owner.muted
     val blocked = owner.blocked
+    val boostMuted = owner.boostMuted
     val actions = preferences.accountPostActions
-    return remember(matcher, muted, blocked, actions, mutedLabel, blockedLabel) {
-        matcher.withAccounts(AccountFilter(muted, blocked, actions.muted, actions.blocked, mutedLabel, blockedLabel))
+    return remember(matcher, muted, blocked, boostMuted, actions, mutedLabel, blockedLabel, boostMutedLabel) {
+        matcher.withAccounts(
+            AccountFilter(muted, blocked, actions.muted, actions.blocked, mutedLabel, blockedLabel, boostMuted, boostMutedLabel),
+        )
     }
 }
 

@@ -396,4 +396,9 @@
     <string name="settings_blocked_account_posts">已封鎖帳號的貼文</string>
     <string name="post_filtered_muted_account">已靜音的帳號</string>
     <string name="post_filtered_blocked_account">已封鎖的帳號</string>
+    <string name="post_share_hide_boosts_with_handle">隱藏 %1$s 的轉發？</string>
+    <string name="post_share_show_boosts_with_handle">顯示 %1$s 的轉發？</string>
+    <string name="profile_hide_boosts">隱藏轉發</string>
+    <string name="profile_show_boosts">顯示轉發</string>
+    <string name="post_filtered_hidden_boost">已隱藏的轉發</string>
 </resources>

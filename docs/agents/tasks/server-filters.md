@@ -20,26 +20,28 @@ Support server-side content filters, word mutes, account mutes, account blocks, 
 # Completed
 
 - S1 filter model and presentation: commit "Collapse or remove posts that a server filter matches" (`58704740`).
-- S2 Mastodon filter management: commit "Manage Mastodon filters in Settings". Settings > Blocks and mutes > Filters, v2 on Mastodon 4.0 and later, v1 after a v2 404, and client matching through `ClientFilterMatcher` and `ContentFilterOwner`.
+- S2 Mastodon filter management: commit "Manage Mastodon filters in Settings" (`a008b159`). Settings > Blocks and mutes > Filters, v2 on Mastodon 4.0 and later, v1 after a v2 404, and client matching through `ClientFilterMatcher` and `ContentFilterOwner`.
 - S3 Misskey word mutes: commit "Edit Misskey word mutes in Settings" (`acbf1e2b`). `MisskeyWordMuteService`, `FilterPattern.Expression`, `FilterExpressions`, the simple and advanced editor modes, and `SourceError.InvalidInput`.
-- S4 account mutes and blocks: commit "Hide posts of muted and blocked accounts". `AccountFilter`, account lists in `ContentFilterOwner`, the two settings on Blocks and mutes.
+- S4 account mutes and blocks: commit "Hide posts of muted and blocked accounts" (`b234f8db`). `AccountFilter`, account lists in `ContentFilterOwner`, the two settings on Blocks and mutes.
+- S5 boost mutes: commit "Hide boosts from chosen accounts". `ProfileRelationship.boostsHidden`, `SocialSource.setBoostsHidden` (Misskey `renote-mute`, Mastodon follow with `reblogs`), `ContentFilterOwner.boostMuted`, the post menu row and the profile pill.
 
 # Current slice
 
-S5: boost mutes. Not started.
+None. The task is complete.
 
 # Files involved
 
-`domain/PostFilter.kt`, `domain/ContentFilters.kt`, `domain/ClientFilterMatcher.kt`, `data/mastodon/MastodonFilterMapper.kt`, `data/mastodon/MastodonFilterService.kt`, `ui/posts/PostFilterPresentation.kt`, `ui/filters/`, `ui/settings/`.
+`domain/PostFilter.kt`, `domain/ContentFilters.kt`, `domain/ClientFilterMatcher.kt`, `domain/AccountFilter.kt`, `domain/ProfileModels.kt`, `domain/SocialSource.kt`, `data/mastodon/MastodonFilterMapper.kt`, `data/mastodon/MastodonFilterService.kt`, `data/mastodon/MastodonModerationService.kt`, `data/misskey/MisskeyModerationService.kt`, `ui/posts/PostFilterPresentation.kt`, `ui/posts/PostShareSheet.kt`, `ui/posts/PostPopupOwner.kt`, `ui/profile/`, `ui/filters/`, `ui/settings/`.
 
 # Verification
 
 S1: focused tests (`MastodonFilterResultTest`, `PostRowFilterTest`, `PostRevealOwnerTest`, `NotificationJsonCodecTest`, `NotificationDeliveryPlannerTest`) and the full gate.
 S2: focused tests (`ClientFilterMatcherTest`, `MastodonFilterServiceTest`, `ContentFilterEditorTest`, `ContentFilterViewModelTest`, `ContentFilterSettingsScreenTest`, `PostRowFilterTest`, `SettingsRouteRestorationTest`, `PhotoGridScreenTest`) and the full gate. No live check against Mastodon, Pleroma, or Akkoma. No device check.
+S5: focused tests (`ModerationServiceTest`, `ClientFilterMatcherTest`, `ContentFilterViewModelTest`, `PostShareSheetTest`, `ProfileViewModelTest`, `ProfileScreenTest`) and the full gate. An independent `problem_solver` review ran with no blocking findings; it asked for mapper unknown-flag tests, which `ModerationServiceTest.boostFlagStaysUnknownWhenTheServerDoesNotReportIt` covers. No live check against a Misskey-family or Mastodon server. No device check (the profile pill row width is uneyeballed). No native-speaker check for the German and Chinese strings.
 
 # Next
 
-S5 boost mutes.
+None. Follow-ups outside this task: live-server checks, device checks for the post menu row and the profile pill, native-speaker review.
 
 # Blockers
 
@@ -47,4 +49,4 @@ None.
 
 # Last safe commit
 
-58704740 Collapse or remove posts that a server filter matches
+b234f8db Hide posts of muted and blocked accounts

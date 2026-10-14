@@ -217,11 +217,16 @@ interface SocialSource {
         unsupported("profile.mute")
     suspend fun setBlocked(id: AccountId, blocked: Boolean): ProfileRelationship =
         unsupported("profile.block")
+    suspend fun setBoostsHidden(id: AccountId, hidden: Boolean): ProfileRelationship =
+        unsupported("profile.boosts")
     suspend fun report(request: ReportRequest) = unsupported<Unit>("moderation.report")
     suspend fun blockedAccounts(cursor: ModerationCursor? = null): ModerationPage<ModerationAccount> =
         unsupported("moderation.blocked")
     suspend fun mutedAccounts(cursor: ModerationCursor? = null): ModerationPage<ModerationAccount> =
         unsupported("moderation.muted")
+
+    /** Accounts whose boosts stay hidden. Only Misskey-family servers list them; others throw [SourceError.Unsupported]. */
+    suspend fun boostMutedAccounts(): Set<AccountId> = unsupported("moderation.boostmutes")
     suspend fun mutedHashtags(cursor: ModerationCursor? = null): ModerationPage<MutedHashtag> =
         unsupported("moderation.hashtags")
     suspend fun removeBlockedAccount(entry: ModerationAccount) = unsupported<Unit>("moderation.blocked.remove")

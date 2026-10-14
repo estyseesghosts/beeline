@@ -418,6 +418,7 @@ internal object AppShellFixtures {
                 override fun loadMore() = onLoadMore()
                 override fun follow() = onFollow()
                 override fun unfollow() = onUnfollow()
+                override fun setBoostsHidden(hidden: Boolean) = Unit
                 override fun react(post: OwnedPost, choice: EmojiChoice) = onReact(post, choice)
                 override fun saveEditor(patch: EditableProfilePatch, onSuccess: () -> Unit) {
                     onSaveEditor(patch, onSuccess)
@@ -454,6 +455,7 @@ internal object AppShellFixtures {
             override fun loadMore() = Unit
             override fun follow() = Unit
             override fun unfollow() = Unit
+            override fun setBoostsHidden(hidden: Boolean) = Unit
             override fun react(post: OwnedPost, choice: EmojiChoice) = onReact(post, choice)
             override fun saveEditor(patch: EditableProfilePatch, onSuccess: () -> Unit) = Unit
             override fun openEditor() = Unit

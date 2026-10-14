@@ -29,7 +29,7 @@ data class PostActionTarget(
     val author get() = ownedPost.post.author
 }
 
-enum class RelationshipMutation { Follow, Unfollow, Block, Unblock, Mute, Unmute }
+enum class RelationshipMutation { Follow, Unfollow, Block, Unblock, Mute, Unmute, HideBoosts, ShowBoosts }
 
 data class PostRelationshipState(
     val target: AccountId? = null,
@@ -212,6 +212,8 @@ class PostPopupOwner(
                     RelationshipMutation.Unblock -> relationshipSource.setBlocked(authorId, false)
                     RelationshipMutation.Mute -> relationshipSource.setMuted(authorId, true)
                     RelationshipMutation.Unmute -> relationshipSource.setMuted(authorId, false)
+                    RelationshipMutation.HideBoosts -> relationshipSource.setBoostsHidden(authorId, true)
+                    RelationshipMutation.ShowBoosts -> relationshipSource.setBoostsHidden(authorId, false)
                 }
                 if (isCurrent(generation, authorId)) {
                     relationship = PostRelationshipState(target = value.profileId, relationship = value)

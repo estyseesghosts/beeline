@@ -61,6 +61,7 @@ internal fun ShellProfileDestination(
         onLoadMore = profile.actions::loadMore,
         onFollow = profile.actions::follow,
         onUnfollow = profile.actions::unfollow,
+        onSetBoostsHidden = profile.actions::setBoostsHidden,
         onMessage = navigator::openDirectMessage,
         onOpenProfileImage = { url -> overlay.openProfileImage(url, navigator.viewedProfile?.id ?: account?.id) },
         onEditProfile = navigationCallbacks.onEditProfile,

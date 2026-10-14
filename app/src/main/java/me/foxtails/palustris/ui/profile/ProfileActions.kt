@@ -59,6 +59,7 @@ internal fun ProfileActions(
     canMessage: Boolean,
     onFollow: () -> Unit,
     onUnfollow: () -> Unit,
+    onSetBoostsHidden: (Boolean) -> Unit,
     onMessage: () -> Unit,
     onEditProfile: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -88,7 +89,34 @@ internal fun ProfileActions(
         }
         val relationship = state.relationship
         if (state.relationshipSupported == true && relationship != null) {
+            relationship.boostsHidden?.let { hidden ->
+                BoostToggle(
+                    hidden = hidden,
+                    mutating = state.relationshipMutation,
+                    onSetBoostsHidden = onSetBoostsHidden,
+                )
+            }
             FollowAction(accountId, relationship, state.relationshipMutation, onFollow, onUnfollow)
+        }
+    }
+}
+
+@Composable
+private fun BoostToggle(
+    hidden: Boolean,
+    mutating: Boolean,
+    onSetBoostsHidden: (Boolean) -> Unit,
+) {
+    OutlinedButton(
+        onClick = { onSetBoostsHidden(!hidden) },
+        enabled = !mutating,
+        modifier = Modifier.height(ProfileActionHeight).testTag("profile_hide_boosts_action"),
+        contentPadding = ProfileActionPadding,
+    ) {
+        if (mutating) {
+            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+        } else {
+            Text(stringResource(if (hidden) R.string.profile_show_boosts else R.string.profile_hide_boosts))
         }
     }
 }

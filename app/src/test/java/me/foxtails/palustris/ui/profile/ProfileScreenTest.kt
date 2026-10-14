@@ -378,6 +378,54 @@ class ProfileScreenTest {
     }
 
     @Test
+    fun boostPillShowsOnlyWhenTheServerReportsTheFlag() {
+        val profile = account("remote", "Remote")
+        val state = mutableStateOf(
+            profileState(profile, emptyList()).copy(
+                relationshipSupported = true,
+                relationship = ProfileRelationship(profile.id, following = true, boostsHidden = false),
+            ),
+        )
+        var toggles = 0
+        var lastHidden: Boolean? = null
+
+        show {
+            ProfileScreen(
+                account = profile,
+                profileState = state.value,
+                compactLayout = false,
+                authenticatedAccountId = self.id,
+                onSetBoostsHidden = { hidden ->
+                    toggles++
+                    lastHidden = hidden
+                },
+            )
+        }
+
+        compose.onNodeWithTag("profile_hide_boosts_action").assertIsDisplayed()
+        compose.onNodeWithText("Hide boosts").assertIsDisplayed().performClick()
+        assertEquals(1, toggles)
+        assertEquals(true, lastHidden)
+
+        compose.runOnIdle {
+            state.value = state.value.copy(
+                relationship = ProfileRelationship(profile.id, following = true, boostsHidden = true),
+            )
+        }
+        compose.onNodeWithText("Show boosts").assertIsDisplayed().performClick()
+        assertEquals(2, toggles)
+        assertEquals(false, lastHidden)
+
+        compose.runOnIdle {
+            state.value = state.value.copy(
+                relationship = ProfileRelationship(profile.id, following = true),
+            )
+        }
+        compose.onNodeWithTag("profile_hide_boosts_action").assertDoesNotExist()
+        compose.onNodeWithTag("profile_follow_action").assertIsDisplayed()
+    }
+
+    @Test
     fun longHandleSplitsAtTheDomainAndLongNameStaysOnOneLine() {
         val profile = account("remote", "A long display name").copy(
             handle = "@averyveryverylongusername@averyveryverylongdomain.example",
@@ -392,6 +440,7 @@ class ProfileScreenTest {
                     onRefresh = {},
                     onFollow = {},
                     onUnfollow = {},
+                    onSetBoostsHidden = {},
                 )
             }
         }

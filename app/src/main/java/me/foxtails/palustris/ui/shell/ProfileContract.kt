@@ -26,6 +26,7 @@ data class ProfileContract(
         fun loadMore()
         fun follow()
         fun unfollow()
+        fun setBoostsHidden(hidden: Boolean)
         fun react(post: OwnedPost, choice: EmojiChoice)
         fun saveEditor(patch: EditableProfilePatch, onSuccess: () -> Unit)
         fun openEditor()
@@ -45,6 +46,7 @@ private object ProfileEmptyActions : ProfileContract.Actions {
     override fun loadMore() = Unit
     override fun follow() = Unit
     override fun unfollow() = Unit
+    override fun setBoostsHidden(hidden: Boolean) = Unit
     override fun react(post: OwnedPost, choice: EmojiChoice) = Unit
     override fun saveEditor(patch: EditableProfilePatch, onSuccess: () -> Unit) = Unit
     override fun openEditor() = Unit

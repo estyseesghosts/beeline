@@ -87,6 +87,8 @@ object MisskeyMapper {
         ),
         muting = json.optBoolean("isMuted", json.optBoolean("muting")),
         blocking = json.optBoolean("isBlocking", json.optBoolean("blocking")),
+        // `users/relation` reports the renote mute; other Misskey responses leave it unknown.
+        boostsHidden = if (json.has("isRenoteMuted")) json.optBoolean("isRenoteMuted") else null,
     )
 
     fun post(json: JSONObject, origin: String, depth: Int = 0): Post {

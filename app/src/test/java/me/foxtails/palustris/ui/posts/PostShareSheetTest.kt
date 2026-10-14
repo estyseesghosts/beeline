@@ -1,6 +1,7 @@
 package me.foxtails.palustris.ui.posts
 
 import androidx.activity.compose.setContent
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
@@ -14,7 +15,9 @@ import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.EntityId
+import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.Post
+import me.foxtails.palustris.domain.ProfileRelationship
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.ui.PalustrisTheme
 import org.junit.Assert.assertEquals
@@ -64,6 +67,50 @@ class PostShareSheetTest {
         compose.onNodeWithText("Copy link").assertDoesNotExist()
         compose.onNodeWithText("Share with another app").assertDoesNotExist()
         compose.onAllNodesWithText("Share post").assertCountEquals(0)
+    }
+
+    @Test
+    fun boostRowTogglesOnlyWhenTheServerReportsTheFlag() {
+        val connection = Connection("https://example.org", Protocol.MISSKEY)
+        val owner = Account(AccountId(connection, "owner"), "Owner", "@owner@example.org")
+        val author = Account(AccountId(connection, "author"), "Author", "@author@example.org")
+        var mutation: RelationshipMutation? = null
+        fun show(hidden: Boolean?, key: String) {
+            // Each call uses its own post id, so the remembered section state starts closed.
+            val keyed = Post(EntityId(connection.origin, "post-$key"), author, "Post", 0, Audience.Public, url = "https://example.org/post")
+            val target = PostActionTarget(OwnedPost(owner.id, keyed), Rect.Zero, owner.id, 0L)
+            val relationship = PostRelationshipState(target = author.id, relationship = ProfileRelationship(author.id, boostsHidden = hidden))
+            mutation = null
+            compose.activity.runOnUiThread {
+                compose.activity.setContent {
+                    PalustrisTheme {
+                        PostShareSheet(
+                            target = target,
+                            relationship = relationship,
+                            onDismiss = {},
+                            onRelationshipAction = { mutation = it },
+                            onSubmitReport = {},
+                            onOpenDirectMessage = {},
+                            onCopyLink = {},
+                            onShare = {},
+                        )
+                    }
+                }
+            }
+            compose.onNodeWithTag("post_share_problem_heading").performClick()
+        }
+
+        show(false, "hide")
+        compose.onNodeWithTag("post_share_hide_boosts").assertIsDisplayed().performClick()
+        assertEquals(RelationshipMutation.HideBoosts, mutation)
+
+        show(true, "show")
+        compose.onNodeWithTag("post_share_hide_boosts").assertIsDisplayed().performClick()
+        assertEquals(RelationshipMutation.ShowBoosts, mutation)
+
+        show(null, "unknown")
+        compose.onNodeWithTag("post_share_hide_boosts").assertDoesNotExist()
+        compose.onNodeWithTag("post_share_mute").assertIsDisplayed()
     }
 
     private fun shareFixture(audience: Audience, onShare: () -> Unit) {

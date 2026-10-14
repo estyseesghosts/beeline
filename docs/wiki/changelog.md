@@ -16,6 +16,7 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 - Settings > Blocks and mutes > Filters lists, adds, edits, and deletes the filters of a Mastodon-compatible account. On Pleroma and Akkoma, Beeline matches the filters on the device.
 - On Misskey-family servers the same page edits word mutes. A word mute can collapse or remove posts. A simple word mute can ignore capitalization. An advanced word mute is a regular expression.
 - Posts of muted and blocked accounts that the server still sends, such as replies in threads, quotes, and search results, now collapse or leave the list. Settings > Blocks and mutes chooses which. A new mute or block applies to the loaded feeds at once.
+- The post menu and the profile hide the boosts of one account without muting it. A hidden boost leaves the list.
 
 ## 0.3.2
 

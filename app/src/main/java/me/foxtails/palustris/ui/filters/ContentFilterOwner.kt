@@ -24,11 +24,12 @@ import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.session.ConnectedSessionContext
 
 /**
- * Owns the filter snapshot of the connected account for one session: the word filters in [matcher] and the
- * muted and blocked accounts in [muted] and [blocked]. Every post surface reads them through [LocalClientFilters].
- * A load failure keeps the previous snapshot; an unsupported source gives none. The settings page hands a saved
- * set to [replace], and the post menu hands each relationship change to [applyRelationship], so the feeds follow
- * without a reload. It retires with the connected entry and then holds nothing.
+ * Owns the filter snapshot of the connected account for one session: the word filters in [matcher], the
+ * muted and blocked accounts in [muted] and [blocked], and the accounts with hidden boosts in [boostMuted].
+ * Every post surface reads them through [LocalClientFilters]. A load failure keeps the previous snapshot; an
+ * unsupported source gives none. The settings page hands a saved set to [replace], and the post menu hands each
+ * relationship change to [applyRelationship], so the feeds follow without a reload. It retires with the
+ * connected entry and then holds nothing.
  */
 class ContentFilterOwner(
     private val accountId: AccountId,
@@ -41,11 +42,13 @@ class ContentFilterOwner(
         private set
     var blocked: Set<AccountId> by mutableStateOf(emptySet())
         private set
+    var boostMuted: Set<AccountId> by mutableStateOf(emptySet())
+        private set
     private var loadJob: Job? = null
     private var accountsJob: Job? = null
     private var retired = false
 
-    /** Loads the word filters and both account lists. Each part keeps its last value when it fails. */
+    /** Loads the word filters and every account list. Each part keeps its last value when it fails. */
     fun load() {
         if (retired) return
         loadJob?.cancel()
@@ -61,22 +64,28 @@ class ContentFilterOwner(
         loadAccounts()
     }
 
-    /** Reads both account lists again, for example after the Blocks and mutes pages changed them. */
+    /** Reads every account list again, for example after the Blocks and mutes pages changed them. */
     fun loadAccounts() {
         if (retired) return
         accountsJob?.cancel()
         accountsJob = scope.launch {
             allAccounts { cursor -> source.mutedAccounts(cursor) }?.let { if (!retired) muted = it }
             allAccounts { cursor -> source.blockedAccounts(cursor) }?.let { if (!retired) blocked = it }
+            // Only Misskey-family servers list hidden boosts. Other sources keep the session toggles.
+            boostMutedAccounts()?.let { if (!retired) boostMuted = it }
         }
     }
 
-    /** Follows a mute or block change from the post menu at once, before the next load. */
+    /** Follows a mute, block, or boost change from the post menu at once, before the next load. */
     fun applyRelationship(relationship: ProfileRelationship) {
         if (retired || relationship.profileId.connection != accountId.connection) return
         val id = relationship.profileId
         muted = if (relationship.muting) muted + id else muted - id
         blocked = if (relationship.blocking) blocked + id else blocked - id
+        // An unknown flag leaves the session set alone, so a Mastodon profile read never clears a toggle.
+        relationship.boostsHidden?.let { hidden ->
+            boostMuted = if (hidden) boostMuted + id else boostMuted - id
+        }
     }
 
     /** Applies [set] when it belongs to this session's account. A set of another account is ignored. */
@@ -94,6 +103,7 @@ class ContentFilterOwner(
         matcher = ClientFilterMatcher.Empty
         muted = emptySet()
         blocked = emptySet()
+        boostMuted = emptySet()
     }
 
     private fun apply(set: ContentFilterSet) {
@@ -116,6 +126,15 @@ class ContentFilterOwner(
             cursor = result.nextCursor ?: return ids
         }
         return ids
+    }
+
+    /** The hidden-boost list, or null when the source has none, so the session toggles stay. */
+    private suspend fun boostMutedAccounts(): Set<AccountId>? = try {
+        source.boostMutedAccounts()
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (_: Exception) {
+        null
     }
 
     private companion object {

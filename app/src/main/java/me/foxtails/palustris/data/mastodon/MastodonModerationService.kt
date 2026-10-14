@@ -44,6 +44,25 @@ class MastodonModerationService(
         return relationship(target, if (muted) "mute" else "unmute")
     }
 
+    /**
+     * Hides or shows boosts through `POST /api/v1/accounts/:id/follow` with the `reblogs` flag.
+     * The server only honors it while the viewer follows the account; otherwise it fails and the
+     * caller keeps its snapshot. The server already drops hidden boosts from Home, so the client
+     * match covers the other surfaces.
+     */
+    suspend fun setBoostsHidden(target: AccountId, hidden: Boolean): ProfileRelationship {
+        validateTarget(target, "profile.boosts")
+        val response = api.postForm(
+            origin,
+            accountPath(target, "follow"),
+            listOf("reblogs" to if (hidden) "false" else "true"),
+            token,
+            MASTODON_MAX_RESPONSE_BYTES,
+        )
+        return runCatching { parseRelationship(response.body, target) }
+            .getOrElse { profileRelationship(target) }
+    }
+
     suspend fun report(request: ReportRequest) {
         validateTarget(request.targetAccountId, "moderation.report")
         request.postId?.let {

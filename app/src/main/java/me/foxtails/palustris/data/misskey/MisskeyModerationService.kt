@@ -48,6 +48,34 @@ class MisskeyModerationService(
         return relationship(target)
     }
 
+    suspend fun setBoostsHidden(target: AccountId, hidden: Boolean): ProfileRelationship {
+        validateTarget(target, "profile.boosts")
+        val body = JSONObject().put("i", token).put("userId", target.localId)
+        api.post(origin, if (hidden) "renote-mute/create" else "renote-mute/delete", body, maxResponseBytes)
+        return relationship(target)
+    }
+
+    /**
+     * Every account with hidden boosts, paged through `renote-mute/list` up to [MAX_BOOST_MUTE_PAGES].
+     * Each entry nests the account under `user`. A first-page failure throws, so the owner keeps its list.
+     */
+    suspend fun boostMuted(): Set<AccountId> = withContext(Dispatchers.IO) {
+        val ids = mutableSetOf<AccountId>()
+        var untilId: String? = null
+        repeat(MAX_BOOST_MUTE_PAGES) {
+            val body = JSONObject().put("i", token).put("limit", PAGE_LIMIT)
+            untilId?.let { body.put("untilId", it) }
+            val values = JSONArray(api.post(origin, "renote-mute/list", body, maxResponseBytes).body)
+            (0 until values.length()).mapNotNullTo(ids) { index ->
+                val nested = values.optJSONObject(index)?.optJSONObject("user") ?: return@mapNotNullTo null
+                runCatching { MisskeyMapper.account(nested, origin).id }.getOrNull()
+            }
+            untilId = values.optJSONObject(values.length() - 1)?.optString("id")?.takeIf(String::isNotBlank)
+                ?: return@withContext ids
+        }
+        return@withContext ids
+    }
+
     suspend fun report(request: ReportRequest) {
         if (request.targetAccountId.connection.origin != origin) throw SourceError.ForeignOrigin("moderation.report")
         if (request.postId != null) throw SourceError.Unsupported("moderation.report.post")
@@ -155,7 +183,12 @@ class MisskeyModerationService(
     private fun encodeCursor(kind: ModerationListKind, variant: String, value: String): ModerationCursor =
         ModerationCursor(accountId, me.foxtails.palustris.domain.ModerationListQuery(kind), variant, value)
 
-    private companion object { const val PAGE_LIMIT = 40 }
+    private companion object {
+        const val PAGE_LIMIT = 40
+
+        /** Large renote-mute lists stop here; later pages stay unmatched until a toggle in this session. */
+        const val MAX_BOOST_MUTE_PAGES = 25
+    }
 }
 
 private fun String.toEpochMillisOrNull(): Long? = runCatching { java.time.Instant.parse(this).toEpochMilli() }.getOrNull()

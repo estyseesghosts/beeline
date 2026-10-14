@@ -203,6 +203,10 @@ class MisskeySource(
         moderationService?.setMuted(id, muted) ?: unsupported("profile.mute")
     }
 
+    override suspend fun setBoostsHidden(id: AccountId, hidden: Boolean): ProfileRelationship = request("profile.boosts") {
+        moderationService?.setBoostsHidden(id, hidden) ?: unsupported("profile.boosts")
+    }
+
     override suspend fun pinnedPosts(id: AccountId): List<Post> = request("profile.pinned") { profileService.pinnedPosts(id) }
 
     override suspend fun trendingHashtags(limit: Int): List<TrendingHashtag> =
@@ -661,6 +665,10 @@ class MisskeySource(
 
     override suspend fun mutedAccounts(cursor: ModerationCursor?): ModerationPage<ModerationAccount> = request("moderation.muted") {
         moderationService?.muted(cursor) ?: unsupported("moderation.muted")
+    }
+
+    override suspend fun boostMutedAccounts(): Set<AccountId> = request("moderation.boostmutes") {
+        moderationService?.boostMuted() ?: unsupported("moderation.boostmutes")
     }
 
     override suspend fun mutedHashtags(cursor: ModerationCursor?): ModerationPage<MutedHashtag> = request("moderation.hashtags") {

@@ -264,6 +264,33 @@ private fun ShareActionCard(
                             },
                         )
                     }
+                    // Hiding boosts needs a reported flag; without one the server takes no toggle.
+                    if (current?.boostsHidden != null) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            RelationshipAction(
+                                tag = "post_share_hide_boosts",
+                                label = if (current.boostsHidden == true) {
+                                    stringResource(R.string.post_share_show_boosts_with_handle, handle)
+                                } else {
+                                    stringResource(R.string.post_share_hide_boosts_with_handle, handle)
+                                },
+                                handle = handle,
+                                modifier = Modifier.weight(1f),
+                                enabled = !self && !relationshipLoading,
+                                loading = relationship.mutation == RelationshipMutation.HideBoosts ||
+                                    relationship.mutation == RelationshipMutation.ShowBoosts,
+                                onClick = {
+                                    onRelationshipAction(
+                                        if (current.boostsHidden == true) {
+                                            RelationshipMutation.ShowBoosts
+                                        } else {
+                                            RelationshipMutation.HideBoosts
+                                        },
+                                    )
+                                },
+                            )
+                        }
+                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         RelationshipAction(
                             tag = "post_share_report",

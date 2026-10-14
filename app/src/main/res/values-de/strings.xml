@@ -472,4 +472,9 @@
     <string name="settings_blocked_account_posts">Beiträge blockierter Konten</string>
     <string name="post_filtered_muted_account">stummgeschaltetes Konto</string>
     <string name="post_filtered_blocked_account">blockiertes Konto</string>
+    <string name="post_share_hide_boosts_with_handle">Boosts von %1$s ausblenden?</string>
+    <string name="post_share_show_boosts_with_handle">Boosts von %1$s einblenden?</string>
+    <string name="profile_hide_boosts">Boosts ausblenden</string>
+    <string name="profile_show_boosts">Boosts einblenden</string>
+    <string name="post_filtered_hidden_boost">ausgeblendeter Boost</string>
 </resources>

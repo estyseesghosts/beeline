@@ -194,6 +194,12 @@ object MastodonMapper {
         requested = json.optBoolean("requested"),
         muting = json.optBoolean("muting"),
         blocking = json.optBoolean("blocking"),
+        // Hiding boosts needs a follow; without one the flag carries no meaning.
+        boostsHidden = if (json.optBoolean("following") && json.has("showing_reblogs")) {
+            !json.optBoolean("showing_reblogs", true)
+        } else {
+            null
+        },
     )
 
     /** Maps a `POST /statuses/:id/translate` body. The content is HTML and renders as the post does. */

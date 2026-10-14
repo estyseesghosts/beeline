@@ -135,6 +135,36 @@ class ClientFilterMatcherTest {
     }
 
     @Test
+    fun hiddenBoostsRemoveTheBoosterButNeverTheAuthor() {
+        val booster = Account(AccountId(connection, "booster"), "Booster", "@booster@example.org")
+        val accounts = AccountFilter(boostMuted = setOf(booster.id), boostMutedLabel = "hidden boost")
+        val m = matcher(filter("finale")).withAccounts(accounts)
+        val boosted = post("hello").copy(resharedBy = booster)
+
+        assertEquals(PostFilterVerdict("hidden boost", PostFilterAction.Remove), PostFilterPolicy.evaluate(boosted, FilterContext.Home, m))
+        // The author's own posts never match the boost list.
+        assertNull(PostFilterPolicy.evaluate(post("hello", by = booster), FilterContext.Home, m))
+        assertNull(PostFilterPolicy.evaluate(boosted, FilterContext.Account, m))
+    }
+
+    @Test
+    fun boostsOfMutedOrBlockedAuthorsKeepTheirVerdict() {
+        val muted = Account(AccountId(connection, "muted"), "Muted", "@muted@example.org")
+        val blocked = Account(AccountId(connection, "blocked"), "Blocked", "@blocked@example.org")
+        val accounts = AccountFilter(setOf(muted.id), setOf(blocked.id), PostFilterAction.Collapse, PostFilterAction.Remove, "muted account", "blocked account")
+        val m = matcher().withAccounts(accounts)
+
+        assertEquals(
+            PostFilterVerdict("muted account", PostFilterAction.Collapse),
+            PostFilterPolicy.evaluate(post("hello", by = muted).copy(resharedBy = author), FilterContext.Home, m),
+        )
+        assertEquals(
+            PostFilterVerdict("blocked account", PostFilterAction.Remove),
+            PostFilterPolicy.evaluate(post("hello", by = blocked).copy(resharedBy = author), FilterContext.Home, m),
+        )
+    }
+
+    @Test
     fun serverMatchedSetsNeedNoClientMatcher() {
         val filters = listOf(filter("finale"))
 

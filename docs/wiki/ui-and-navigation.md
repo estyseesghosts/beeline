@@ -731,6 +731,16 @@ Servers still send some posts of muted and blocked accounts: in threads, quotes,
 
 Sources: `domain/AccountFilter.kt`, `ui/filters/ContentFilterOwner.kt`, `ui/filters/ClientFiltersComposition.kt`, `ClientFilterMatcherTest`, `ContentFilterViewModelTest`.
 
+### Hidden boosts
+
+The post menu and the profile hide the boosts of one account without muting it. Status: source verified and test verified. No live check ran.
+
+- The problem section of the post menu has "Hide boosts from @account" or "Show boosts from @account". The row shows only when the server reports the flag. The profile has a "Hide boosts" or "Show boosts" pill beside Follow under the same rule.
+- On Misskey-family servers the toggle uses `renote-mute/create` and `renote-mute/delete`. The session loads the `renote-mute/list` at connect. On Mastodon-compatible servers the toggle posts a follow with `reblogs=false` or `reblogs=true`, which needs a follow. The server already drops hidden boosts from Home, so Beeline matches the session toggles on the other surfaces.
+- A hidden boost leaves the list with the notice "Filtered: hidden boost". A boost of a post by a muted or blocked author keeps the mute or block notice. A post that a screen opened collapses instead of leaving.
+
+Sources: `data/misskey/MisskeyModerationService.kt`, `data/mastodon/MastodonModerationService.kt`, `domain/ProfileModels.kt`, `ModerationServiceTest`, `PostShareSheetTest`, `ProfileViewModelTest`.
+
 ## Inline entity bubbles and hashtag bubble
 
 Inline link, username, and hashtag bubbles in `InlineEmojiText` lay out the logogram, a 4 dp icon-to-text gap, and the label in one row. The measured placeholder width reserves the icon, the gap, and 6 dp edge padding, so the icon never overlaps the text at any font scale. The label gets invisible direction isolates for display only (left-to-right for domains, first-strong for names and tags); the tap target and copied text keep the exact original string. Bubbles share the `springClickable` press response. The compact hashtag bubble shows at most five tags that fit the measured height; `See all` lists every tag and `See less` returns.

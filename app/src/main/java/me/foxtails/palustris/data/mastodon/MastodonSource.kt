@@ -216,6 +216,10 @@ class MastodonSource(
         moderationService.setMuted(id, muted)
     }
 
+    override suspend fun setBoostsHidden(id: AccountId, hidden: Boolean): ProfileRelationship = request("profile.boosts") {
+        moderationService.setBoostsHidden(id, hidden)
+    }
+
     override suspend fun pinnedPosts(id: AccountId): List<Post> = request("profile.pinned") { profileService.pinnedPosts(id) }
 
     override suspend fun create(post: CreatePostRequest): Post = request("create") {

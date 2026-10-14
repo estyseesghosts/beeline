@@ -15,6 +15,7 @@ import me.foxtails.palustris.domain.EditableProfilePatch
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.ui.filters.LocalContentFilterOwner
 import me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority
 import me.foxtails.palustris.ui.session.AccountManager
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
@@ -57,7 +58,8 @@ fun ProfileHost(
         onDispose { coordinator.unregister(sink) }
     }
     val state by model.state.collectAsStateWithLifecycle()
-    val actions = remember(model, accountManager) {
+    val contentFilters = LocalContentFilterOwner.current
+    val actions = remember(model, accountManager, contentFilters) {
         object : ProfileContract.Actions {
             override fun open(account: Account) { model.open(account) }
             override fun selectCategory(category: ProfileCategory) { model.selectCategory(category) }
@@ -65,6 +67,9 @@ fun ProfileHost(
             override fun loadMore() { model.loadMoreSelected() }
             override fun follow() { model.follow() }
             override fun unfollow() { model.unfollow() }
+            override fun setBoostsHidden(hidden: Boolean) {
+                model.setBoostsHidden(hidden) { relationship -> contentFilters?.applyRelationship(relationship) }
+            }
             override fun react(post: OwnedPost, choice: EmojiChoice) { model.react(post, choice) }
             override fun saveEditor(patch: EditableProfilePatch, onSuccess: () -> Unit) {
                 model.saveEditor(patch) { updated ->
