@@ -8,7 +8,7 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.Post
 import me.foxtails.palustris.domain.Protocol
-import me.foxtails.palustris.ui.posts.hasVisibleInteractionSelection
+import me.foxtails.palustris.ui.posts.isFavouriteSelected
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -31,10 +31,11 @@ class PostInteractionIndicatorTest {
     )
 
     @Test
-    fun indicatorUsesAnyNormalizedSelectedField() {
-        assertTrue(post(favourited = true).hasVisibleInteractionSelection())
-        assertTrue(post(myReaction = "👍").hasVisibleInteractionSelection())
-        assertTrue(post(selectedReactions = listOf(EmojiChoice("🎉", "🎉"))).hasVisibleInteractionSelection())
-        assertFalse(post().hasVisibleInteractionSelection())
+    fun indicatorUsesFavouriteFieldOnly() {
+        assertTrue(post(favourited = true).isFavouriteSelected())
+        assertTrue(post(favourited = true, myReaction = "👍").isFavouriteSelected())
+        assertFalse(post(myReaction = "👍").isFavouriteSelected())
+        assertFalse(post(selectedReactions = listOf(EmojiChoice("🎉", "🎉"))).isFavouriteSelected())
+        assertFalse(post().isFavouriteSelected())
     }
 }

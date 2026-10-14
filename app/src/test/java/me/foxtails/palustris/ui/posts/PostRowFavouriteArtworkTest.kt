@@ -32,14 +32,14 @@ class PostRowFavouriteArtworkTest {
     }
 
     @Test
-    fun reactionOnlySelectionsUseSelectedArtwork() {
+    fun reactionOnlySelectionsLeaveFavouriteUnselected() {
         val reaction = ownedPost(false, myReaction = "👍")
         val multipleReactions = ownedPost(false, selectedReactions = listOf(EmojiChoice("👍", "👍", null)))
 
-        assertEquals(AppIcons.FilledHeart, favouriteIconFor(reaction, FavouriteArtworkStyle.Heart))
-        assertEquals(AppIcons.FilledStar, favouriteIconFor(reaction, FavouriteArtworkStyle.Star))
-        assertEquals(AppIcons.FilledHeart, favouriteIconFor(multipleReactions, FavouriteArtworkStyle.Heart))
-        assertEquals(AppIcons.FilledStar, favouriteIconFor(multipleReactions, FavouriteArtworkStyle.Star))
+        assertEquals(AppIcons.HollowHeart, favouriteIconFor(reaction, FavouriteArtworkStyle.Heart))
+        assertEquals(AppIcons.HollowStar, favouriteIconFor(reaction, FavouriteArtworkStyle.Star))
+        assertEquals(AppIcons.HollowHeart, favouriteIconFor(multipleReactions, FavouriteArtworkStyle.Heart))
+        assertEquals(AppIcons.HollowStar, favouriteIconFor(multipleReactions, FavouriteArtworkStyle.Star))
         assertEquals(setOf(me.foxtails.palustris.domain.PostAction.Favorite, me.foxtails.palustris.domain.PostAction.React), actionsForPost(setOf(me.foxtails.palustris.domain.PostAction.Favorite, me.foxtails.palustris.domain.PostAction.React), reaction.post))
     }
 

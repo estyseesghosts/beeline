@@ -408,10 +408,10 @@ class PostThreadViewModel @AssistedInject constructor(
         val token = executionAuthority.acquire(accountId, sessionRevision, family, target) ?: return
         val launchKey = activeKey
         val previousOverlay = overlays[target]
-        val favoriteOwnsReaction = action == PostAction.Favorite &&
+        val reactionOwnsFavourite =
             source.capabilities.primaryFavourite.mode == PrimaryFavouriteMode.Reaction
         val after = before.copy(post = optimistic(before.post))
-        overlays[target] = overlays[target].orEmpty().with(action, after.post, favoriteOwnsReaction)
+        overlays[target] = overlays[target].orEmpty().with(action, after.post, reactionOwnsFavourite)
         updateMatching(target) { current -> optimistic(current) }
         val job = viewModelScope.launch {
             _state.value = _state.value.copy(pendingActions = _state.value.pendingActions + key.toString())
@@ -423,7 +423,7 @@ class PostThreadViewModel @AssistedInject constructor(
                 updateMatching(target) { current -> reconcile(action, current, result) }
                 val updatedPost = posts.values.firstOrNull { it.post.id == target || it.effectiveTargetId() == target }?.post
                     ?: before.post
-                overlays[target] = overlays[target].orEmpty().with(action, updatedPost, favoriteOwnsReaction)
+                overlays[target] = overlays[target].orEmpty().with(action, updatedPost, reactionOwnsFavourite)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
@@ -433,7 +433,7 @@ class PostThreadViewModel @AssistedInject constructor(
                 // would erase a previously confirmed mutation in the same family, and would
                 // leave a reaction favorite's optimistic snapshot behind.
                 overlays[target] = overlays[target].orEmpty()
-                    .restoredFamily(action, favoriteOwnsReaction, previousOverlay)
+                    .restoredFamily(action, reactionOwnsFavourite, previousOverlay)
             } finally {
                 // Cleanup releases only the slot of the current operation. A replaced
                 // job must not clear a newer pending entry with the same key.
@@ -464,7 +464,7 @@ class PostThreadViewModel @AssistedInject constructor(
         overlays[target] = overlays[target].orEmpty().with(
             action,
             post,
-            action == PostAction.Favorite && source.capabilities.primaryFavourite.mode == PrimaryFavouriteMode.Reaction,
+            source.capabilities.primaryFavourite.mode == PrimaryFavouriteMode.Reaction,
         )
     }
 
@@ -533,19 +533,34 @@ class PostThreadViewModel @AssistedInject constructor(
             ),
         )
         PostAction.Bookmark -> current.copy(saved = restored(current.saved, before.saved, optimistic.saved))
-        PostAction.React -> current.copy(
-            reactions = restored(current.reactions, before.reactions, optimistic.reactions),
-            myReaction = restored(current.myReaction, before.myReaction, optimistic.myReaction),
-            selectedReactions = restored(current.selectedReactions, before.selectedReactions, optimistic.selectedReactions),
-            favourited = restored(current.favourited, before.favourited, optimistic.favourited),
-            interactionCounts = current.interactionCounts.copy(
-                reactionCount = restored(
-                    current.interactionCounts.reactionCount,
-                    before.interactionCounts.reactionCount,
-                    optimistic.interactionCounts.reactionCount,
+        PostAction.React -> if (source.capabilities.primaryFavourite.mode == PrimaryFavouriteMode.Reaction) {
+            current.copy(
+                reactions = restored(current.reactions, before.reactions, optimistic.reactions),
+                myReaction = restored(current.myReaction, before.myReaction, optimistic.myReaction),
+                selectedReactions = restored(current.selectedReactions, before.selectedReactions, optimistic.selectedReactions),
+                favourited = restored(current.favourited, before.favourited, optimistic.favourited),
+                interactionCounts = current.interactionCounts.copy(
+                    reactionCount = restored(
+                        current.interactionCounts.reactionCount,
+                        before.interactionCounts.reactionCount,
+                        optimistic.interactionCounts.reactionCount,
+                    ),
                 ),
-            ),
-        )
+            )
+        } else {
+            current.copy(
+                reactions = restored(current.reactions, before.reactions, optimistic.reactions),
+                myReaction = restored(current.myReaction, before.myReaction, optimistic.myReaction),
+                selectedReactions = restored(current.selectedReactions, before.selectedReactions, optimistic.selectedReactions),
+                interactionCounts = current.interactionCounts.copy(
+                    reactionCount = restored(
+                        current.interactionCounts.reactionCount,
+                        before.interactionCounts.reactionCount,
+                        optimistic.interactionCounts.reactionCount,
+                    ),
+                ),
+            )
+        }
         PostAction.Reply -> current
     }
 
@@ -595,7 +610,7 @@ class PostThreadViewModel @AssistedInject constructor(
         val confirmedReply: Boolean = false,
     ) {
         fun with(action: PostAction, post: Post, favoriteOwnsReaction: Boolean = false) = when (action) {
-            PostAction.Favorite -> if (favoriteOwnsReaction) copy(reactionState = post.toReactionState())
+            PostAction.Favorite -> if (favoriteOwnsReaction) copy(reactionState = post.toReactionState(true))
                 else copy(
                     favourited = post.favourited,
                     favouriteCount = post.interactionCounts.favouriteCount,
@@ -607,7 +622,7 @@ class PostThreadViewModel @AssistedInject constructor(
                 ownRepostIdOverride = true,
             )
             PostAction.Bookmark -> copy(saved = post.saved)
-            PostAction.React -> copy(reactionState = post.toReactionState())
+            PostAction.React -> copy(reactionState = post.toReactionState(favoriteOwnsReaction))
             PostAction.Reply -> this
         }
 
@@ -647,11 +662,11 @@ class PostThreadViewModel @AssistedInject constructor(
             ),
         )
 
-        private fun Post.toReactionState() = ReactionState(
+        private fun Post.toReactionState(ownsFavourite: Boolean) = ReactionState(
             reactions = reactions,
             myReaction = myReaction,
             selectedReactions = selectedReactions,
-            favourited = favourited,
+            favourited = if (ownsFavourite) favourited else null,
             reactionCount = interactionCounts.reactionCount,
         )
     }
@@ -660,7 +675,7 @@ class PostThreadViewModel @AssistedInject constructor(
         val reactions: List<me.foxtails.palustris.domain.Reaction>,
         val myReaction: String?,
         val selectedReactions: List<EmojiChoice>,
-        val favourited: Boolean,
+        val favourited: Boolean?,
         val reactionCount: Int?,
     )
 

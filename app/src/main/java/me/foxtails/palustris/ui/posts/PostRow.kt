@@ -238,12 +238,12 @@ private fun PostRowContent(
 internal fun actionsForPost(availableActions: Set<PostAction>, post: Post): Set<PostAction> =
     if (post.availableActions.isEmpty()) availableActions else availableActions.intersect(post.availableActions)
 
-internal fun Post.hasVisibleInteractionSelection(): Boolean =
-    favourited || myReaction != null || selectedReactions.isNotEmpty()
+/** Favourites stay distinct from emoji reactions. A reaction never selects the favourite button. */
+internal fun Post.isFavouriteSelected(): Boolean = favourited
 
 /** The supplied style keeps artwork policy outside the generic post row. */
 internal fun favouriteIconFor(ownedPost: OwnedPost, style: FavouriteArtworkStyle): ImageVector {
-    val selected = ownedPost.post.hasVisibleInteractionSelection()
+    val selected = ownedPost.post.isFavouriteSelected()
     return when (style) {
         FavouriteArtworkStyle.Star -> if (selected) AppIcons.FilledStar else AppIcons.HollowStar
         FavouriteArtworkStyle.Heart -> if (selected) AppIcons.FilledHeart else AppIcons.HollowHeart

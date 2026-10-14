@@ -374,4 +374,41 @@ class MastodonMapperTest {
         assertTrue(post.mentions.isEmpty())
         assertEquals("@x hi", post.text)
     }
+
+    @Test
+    fun favouriteWithoutReactionMapsToFavouriteOnly() {
+        val post = MastodonMapper.post(
+            statusWithCounts("fav-only")
+                .put("favourited", true)
+                .put("favourites_count", 1),
+            "https://example.org",
+        )
+
+        assertTrue(post.favourited)
+        assertTrue(post.selectedReactions.isEmpty())
+        assertTrue(post.reactions.isEmpty())
+        assertEquals(1, post.interactionCounts.favouriteCount)
+    }
+
+    @Test
+    fun reactionsWithoutFavouritePreserveBothSelections() {
+        val post = MastodonMapper.post(
+            statusWithCounts("reactions-only")
+                .put("favourited", false)
+                .put("favourites_count", 0)
+                .put(
+                    "pleroma",
+                    JSONObject().put("emoji_reactions", JSONArray()
+                        .put(JSONObject().put("name", "☕").put("count", 2).put("me", true))
+                        .put(JSONObject().put("name", "👍").put("count", 1).put("me", true))),
+                ),
+            "https://example.org",
+        )
+
+        assertFalse(post.favourited)
+        assertEquals(2, post.selectedReactions.size)
+        assertEquals(2, post.reactions.size)
+        assertEquals(3, post.interactionCounts.reactionCount)
+        assertEquals(0, post.interactionCounts.favouriteCount)
+    }
 }

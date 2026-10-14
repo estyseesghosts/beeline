@@ -182,7 +182,7 @@ internal fun InteractionRow(
             InteractionButton(
                 Modifier.fillMaxWidth(), favouriteIconFor(ownedPost, favouriteArtworkStyle),
                 stringResource(if (ownedPost.post.favourited) R.string.post_action_unfavorite else R.string.post_action_favorite),
-                favouriteEnabled || reactionEnabled, ownedPost.post.hasVisibleInteractionSelection(),
+                favouriteEnabled || reactionEnabled, ownedPost.post.isFavouriteSelected(),
                 pending = pendingLookup.isPending(ownedPost, PostControlFamilies.Favourite),
                 onClick = { if (favouriteEnabled) onReact(ownedPost) },
                 onClickWithBounds = if (reactionEnabled) ({ bounds -> if (!favouriteEnabled) openReactionBubble(bounds) }) else null,

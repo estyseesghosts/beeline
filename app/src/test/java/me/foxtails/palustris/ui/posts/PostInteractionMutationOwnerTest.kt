@@ -667,4 +667,56 @@ class PostInteractionMutationOwnerTest {
         assertTrue(store.get("post").favourited)
         assertNull(store.get("post").interactionCounts.favouriteCount)
     }
+
+    @Test
+    fun nativeReactRefreshPreservesFavourite() = runTest {
+        val source = GatedMutationSource()
+        val store = RowStore()
+        store.seed(post(
+            favourited = true,
+            myReaction = ":a:",
+            selectedReactions = listOf(EmojiChoice(":a:", ":a:", null)),
+            reactions = listOf(Reaction(":a:", 3, selected = true)),
+            counts = PostInteractionCounts(favouriteCount = 4, reactionCount = 3),
+        ))
+        val mutations = owner(source, store, scope = this)
+        source.postResult = post(
+            favourited = false,
+            reactions = listOf(Reaction(":b:", 1, selected = true)),
+            selectedReactions = listOf(EmojiChoice(":b:", ":b:", null)),
+            counts = PostInteractionCounts(favouriteCount = 1, reactionCount = 1),
+        )
+
+        mutations.react(store.owned("post"), EmojiChoice(":b:", ":b:", null))
+        advanceUntilIdle()
+        source.completeRemove(0)
+        advanceUntilIdle()
+        source.failReact(0, java.io.IOException("add failed"))
+        advanceUntilIdle()
+
+        assertTrue(store.get("post").favourited)
+        assertEquals(listOf(":b:"), store.get("post").selectedReactions.map { it.submissionValue })
+        assertEquals(1, store.failures.size)
+    }
+
+    @Test
+    fun nativeFavoriteFailurePreservesReactions() = runTest {
+        val source = GatedMutationSource()
+        val store = RowStore()
+        store.seed(post(
+            myReaction = ":a:",
+            selectedReactions = listOf(EmojiChoice(":a:", ":a:", null)),
+            reactions = listOf(Reaction(":a:", 3, selected = true)),
+        ))
+        val mutations = owner(source, store, scope = this)
+
+        mutations.favorite(store.owned("post"))
+        advanceUntilIdle()
+        source.failFavourite(0, java.io.IOException("favorite down"))
+        advanceUntilIdle()
+
+        assertFalse(store.get("post").favourited)
+        assertEquals(listOf(":a:"), store.get("post").selectedReactions.map { it.submissionValue })
+        assertEquals(":a:", store.get("post").myReaction)
+    }
 }

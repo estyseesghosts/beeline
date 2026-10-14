@@ -277,20 +277,36 @@ class PostInteractionMutationOwner(
     private fun reconcileFromServer(action: PostAction, current: Post, fresh: Post, options: ActionOptions): Post {
         val counts = mergedCounts(action, current, fresh.interactionCounts, options)
         return when (action) {
-            PostAction.Favorite -> current.copy(
-                favourited = fresh.favourited,
-                myReaction = fresh.myReaction,
-                selectedReactions = fresh.selectedReactions,
-                reactions = fresh.reactions,
-                interactionCounts = counts,
-            )
-            PostAction.React -> current.copy(
-                favourited = fresh.favourited,
-                myReaction = fresh.myReaction,
-                selectedReactions = fresh.selectedReactions,
-                reactions = fresh.reactions,
-                interactionCounts = counts,
-            )
+            PostAction.Favorite -> if (options.reactionFavourite) {
+                current.copy(
+                    favourited = fresh.favourited,
+                    myReaction = fresh.myReaction,
+                    selectedReactions = fresh.selectedReactions,
+                    reactions = fresh.reactions,
+                    interactionCounts = counts,
+                )
+            } else {
+                current.copy(
+                    favourited = fresh.favourited,
+                    interactionCounts = counts,
+                )
+            }
+            PostAction.React -> if (options.reactionFavourite) {
+                current.copy(
+                    favourited = fresh.favourited,
+                    myReaction = fresh.myReaction,
+                    selectedReactions = fresh.selectedReactions,
+                    reactions = fresh.reactions,
+                    interactionCounts = counts,
+                )
+            } else {
+                current.copy(
+                    myReaction = fresh.myReaction,
+                    selectedReactions = fresh.selectedReactions,
+                    reactions = fresh.reactions,
+                    interactionCounts = counts,
+                )
+            }
             PostAction.Reshare -> current.copy(
                 reposted = fresh.reposted,
                 ownRepostId = fresh.ownRepostId,
