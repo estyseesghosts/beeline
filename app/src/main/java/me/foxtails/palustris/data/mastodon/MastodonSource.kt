@@ -848,9 +848,43 @@ class MastodonSource(
         } catch (e: SourceError) {
             throw e
         } catch (e: HttpStatusFailure) {
+            if (e.status == 404 || e.status == 405) {
+                demoteOnNotFound(operation, e)
+                // A missing optional route is Unsupported, not a transient failure, so the
+                // caller hides it instead of surfacing a retryable server error.
+                if (operation in DEMOTING_OPERATIONS) throw SourceError.Unsupported(operation)
+            }
             throw MastodonErrorMapper.map(e.status, e.body)
         } catch (e: Exception) {
             throw MastodonErrorMapper.map(e)
+        }
+    }
+
+    /**
+     * Session-only runtime demotion for optional routes. A 404 or 405 proves the route absent,
+     * so the matching session capability becomes Unsupported and later calls throw before the
+     * network through their capability gates. Failures that map to temporarily unavailable
+     * (500s, timeouts, rate limits) never demote: the next call retries. The update never
+     * reaches [onCapabilitiesUpdated], so demotion ends with the session and never persists.
+     * Trends sections have no session capability field, so a refused section hides through the
+     * existing empty-section path instead of demoting here.
+     */
+    private fun demoteOnNotFound(operation: String, failure: HttpStatusFailure) {
+        // capabilityStatus maps a 404 to Unsupported; a 405 maps to temporarily unavailable but
+        // still proves an absent optional route, so both demote while anything else returns here.
+        val mapped = capabilityStatus(MastodonErrorMapper.map(failure.status, failure.body))
+        if (mapped != CapabilityStatus.Unsupported && failure.status != 405) return
+        val current = _capabilities.value
+        _capabilities.value = when (operation) {
+            // A missing list collection proves list timelines unusable for the session. The list
+            // itself keeps reading through userLists() until that route answers too.
+            "list", "lists" -> current.copy(feedChips = current.feedChips.copy(lists = CapabilityStatus.Unsupported))
+            "notifications.unread" -> current.copy(
+                notifications = current.notifications.copy(unread = CapabilityStatus.Unsupported),
+            )
+            "notifications.push.query", "notifications.push.create", "notifications.push.update", "notifications.push.remove" ->
+                current.copy(notifications = current.notifications.copy(webPush = CapabilityStatus.Unsupported))
+            else -> return
         }
     }
 
@@ -859,6 +893,21 @@ class MastodonSource(
 
         /** Minimum delay before a failed capability probe retries. Bounds outage traffic. */
         const val CAPABILITIES_RETRY_MILLIS = 30 * 1000L
+
+        /**
+         * Operations whose 404/405 both demotes a session capability and throws Unsupported for
+         * the operation: list timelines, the unread count, and push. Trends sections hide through
+         * empty results instead; every other operation keeps its mapped error.
+         */
+        private val DEMOTING_OPERATIONS = setOf(
+            "list",
+            "lists",
+            "notifications.unread",
+            "notifications.push.query",
+            "notifications.push.create",
+            "notifications.push.update",
+            "notifications.push.remove",
+        )
 
         /** Body the server answers when it refuses a custom emoji reaction. Ends the optimistic custom allowance. */
         const val CUSTOM_REACTION_REJECTION = "Could not add reaction emoji"

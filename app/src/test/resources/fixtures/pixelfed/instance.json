@@ -1,0 +1,11 @@
+{
+  "_provenance": {
+    "source": "Hand-assembled from the Pixelfed /api/v2/instance shape for Planorma Slice 8.",
+    "capture_date": "2026-10-14 (synthetic; not a live capture).",
+    "coverage": "Compatibility version marker only."
+  },
+  "uri": "https://pixelfed.example",
+  "title": "Example Pixelfed",
+  "short_description": "A synthetic Pixelfed instance for paging and demotion fixture tests.",
+  "version": "3.5.3 (compatible; Pixelfed 0.12.5)"
+}

@@ -437,7 +437,8 @@ class MastodonIntegrationTest {
             "$origin/api/v1/timelines/home?max_id=x#fragment",
             "${origin.replace("http://", "https://")}/api/v1/timelines/home?max_id=x",
             "$origin/api/v1/elsewhere?max_id=x",
-            "$origin/api/v1/timelines/home?max_id=x&unknown=y",
+            // Slice 8 relax: an unknown extra param (such as Pleroma echoing limit) no longer
+            // rejects the cursor; MastodonPagingRelaxTest proves extras parse and replay.
             "$origin/api/v1/timelines/home?max_id=x&max_id=y",
             "$origin/api/v1/timelines/home?max_id=",
         )
@@ -784,7 +785,8 @@ class MastodonIntegrationTest {
         val badUrls = listOf(
             "$origin/api/v1/elsewhere?max_id=x",
             "$origin/api/v1/bookmarks?limit=41&max_id=x",
-            "$origin/api/v1/bookmarks?limit=40&max_id=x&local=true",
+            // Slice 8 relax: `local` is an unknown extra on the bookmarks route, so a single
+            // value no longer rejects the cursor; duplicated cursors and fragments still do.
             "$origin/api/v1/bookmarks?limit=40&max_id=x&max_id=y",
             "$origin/api/v1/bookmarks?limit=40&max_id=",
             "$origin/api/v1/bookmarks?limit=40&max_id=x&since_id=y",

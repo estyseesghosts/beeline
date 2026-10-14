@@ -84,14 +84,18 @@ internal class MastodonPageClient(
         ) {
             throw SourceError.Unsupported("pagination.cursor")
         }
-        val names = page.queryParameterNames
         val pagination = listOf("max_id", "since_id", "min_id").filter { page.queryParameterValues(it).size == 1 && !page.queryParameter(it).isNullOrBlank() }
         val allowedNames = when (route.name) {
             "bookmarks", "hashtag", "list", "followed_tags" -> setOf("max_id", "since_id", "min_id", "limit")
             else -> setOf("max_id", "since_id", "min_id", "local")
         }
-        if (names.any { it !in allowedNames } || pagination.size != 1 ||
-            page.queryParameterNames.any { page.queryParameterValues(it).size != 1 } ||
+        // Pleroma and Pixelfed repeat unrelated query params on their Link URLs (see the Slice 8
+        // representative fixtures). Unknown extras are ignored: only the single cursor, the
+        // route's page size, and the locality flag are validated. Origin, credentials, fragment,
+        // path, and the opaque cursor binding above stay strict.
+        if (pagination.size != 1 ||
+            allowedNames.any { page.queryParameterValues(it).size > 1 } ||
+            page.queryParameterValues("local").size > 1 ||
             route.name in setOf("bookmarks", "hashtag", "list") &&
                 (page.queryParameter("limit")?.let { it != "40" } == true) ||
             route.name == "followed_tags" && (page.queryParameter("limit")?.let { it != "200" } == true) ||

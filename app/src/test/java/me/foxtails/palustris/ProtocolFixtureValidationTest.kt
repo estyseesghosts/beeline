@@ -54,6 +54,13 @@ class ProtocolFixtureValidationTest {
             "fixtures/akkoma/instance.json",
             "fixtures/akkoma/status-emoji-reactions.json",
             "fixtures/akkoma/emoji-reaction-notification.json",
+            "fixtures/pleroma/instance.json",
+            "fixtures/pleroma/home.json",
+            "fixtures/pleroma/notifications.json",
+            "fixtures/pixelfed/instance.json",
+            "fixtures/pixelfed/home.json",
+            "fixtures/pixelfed/notifications.json",
+            "fixtures/pixelfed/media.json",
         )
         fixtures.forEach { path ->
             val parsed = JSONTokener(load(path)).nextValue()

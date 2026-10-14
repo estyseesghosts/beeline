@@ -1,0 +1,12 @@
+{
+  "_provenance": {
+    "source": "Hand-assembled from the Mastodon-compatible media attachment shape for Planorma Slice 8.",
+    "capture_date": "2026-10-14 (synthetic; not a live capture).",
+    "coverage": "One processed photo attachment for the upload contract test."
+  },
+  "id": "pixelfed-media-7",
+  "type": "image",
+  "url": "https://pixelfed.example/storage/attachments/photo.jpg",
+  "preview_url": "https://pixelfed.example/storage/attachments/photo-small.jpg",
+  "description": "A synthetic photo"
+}

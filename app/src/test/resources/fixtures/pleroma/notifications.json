@@ -1,0 +1,49 @@
+[
+  {
+    "id": "pleroma-notification-1",
+    "type": "mention",
+    "created_at": "2026-10-14T10:05:00.000Z",
+    "account": {
+      "id": "pleroma-user-2",
+      "username": "bramble",
+      "acct": "bramble",
+      "display_name": "Bramble",
+      "note": "",
+      "url": "https://pleroma.example/@bramble",
+      "avatar": "https://cdn.example.org/avatars/bramble.png"
+    },
+    "status": {
+      "id": "pleroma-home-older",
+      "created_at": "2026-10-14T09:00:00.000Z",
+      "account": {
+        "id": "pleroma-user-2",
+        "username": "bramble",
+        "acct": "bramble",
+        "display_name": "Bramble",
+        "note": "",
+        "url": "https://pleroma.example/@bramble",
+        "avatar": "https://cdn.example.org/avatars/bramble.png"
+      },
+      "content": "<p>Second synthetic Pleroma post</p>",
+      "visibility": "unlisted",
+      "media_attachments": [],
+      "mentions": [],
+      "tags": [],
+      "emojis": []
+    }
+  },
+  {
+    "id": "pleroma-notification-2",
+    "type": "follow",
+    "created_at": "2026-10-14T08:00:00.000Z",
+    "account": {
+      "id": "pleroma-user-1",
+      "username": "synthesia",
+      "acct": "synthesia@pleroma.example",
+      "display_name": "Synthesia",
+      "note": "",
+      "url": "https://pleroma.example/@synthesia",
+      "avatar": "https://cdn.example.org/avatars/synthesia.png"
+    }
+  }
+]

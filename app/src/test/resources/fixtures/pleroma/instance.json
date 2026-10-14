@@ -1,0 +1,24 @@
+{
+  "_provenance": {
+    "source": "Hand-assembled from the Pleroma /api/v2/instance shape for Planorma Slice 8.",
+    "capture_date": "2026-10-14 (synthetic; not a live capture).",
+    "coverage": "Compatibility version marker and feature advertisements only."
+  },
+  "uri": "https://pleroma.example",
+  "title": "Example Pleroma",
+  "short_description": "A synthetic Pleroma instance for paging and demotion fixture tests.",
+  "version": "2.8.0 (compatible; Pleroma 2.8.0)",
+  "urls": {
+    "streaming_api": "wss://pleroma.example"
+  },
+  "pleroma": {
+    "metadata": {
+      "features": [
+        "pleroma_api",
+        "pleroma_emoji_reactions",
+        "quote_posting",
+        "editing"
+      ]
+    }
+  }
+}

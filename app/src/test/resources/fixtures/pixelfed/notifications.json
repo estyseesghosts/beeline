@@ -1,0 +1,49 @@
+[
+  {
+    "id": "pixelfed-notification-1",
+    "type": "mention",
+    "created_at": "2026-10-14T11:05:00.000Z",
+    "account": {
+      "id": "pixelfed-user-2",
+      "username": "aperture",
+      "acct": "aperture",
+      "display_name": "Aperture",
+      "note": "",
+      "url": "https://pixelfed.example/@aperture",
+      "avatar": "https://cdn.example.org/avatars/aperture.png"
+    },
+    "status": {
+      "id": "pixelfed-home-older",
+      "created_at": "2026-10-14T10:30:00.000Z",
+      "account": {
+        "id": "pixelfed-user-2",
+        "username": "aperture",
+        "acct": "aperture",
+        "display_name": "Aperture",
+        "note": "",
+        "url": "https://pixelfed.example/@aperture",
+        "avatar": "https://cdn.example.org/avatars/aperture.png"
+      },
+      "content": "<p>Second synthetic Pixelfed photo</p>",
+      "visibility": "public",
+      "media_attachments": [],
+      "mentions": [],
+      "tags": [],
+      "emojis": []
+    }
+  },
+  {
+    "id": "pixelfed-notification-2",
+    "type": "follow",
+    "created_at": "2026-10-14T09:00:00.000Z",
+    "account": {
+      "id": "pixelfed-user-1",
+      "username": "shutter",
+      "acct": "shutter@pixelfed.example",
+      "display_name": "Shutter",
+      "note": "",
+      "url": "https://pixelfed.example/@shutter",
+      "avatar": "https://cdn.example.org/avatars/shutter.png"
+    }
+  }
+]

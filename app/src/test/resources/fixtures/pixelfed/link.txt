@@ -1,0 +1,5 @@
+# Representative-shape Pixelfed home-timeline Link header (not a live capture).
+# Source: hand-assembled for Planorma Slice 8. Capture date: 2026-10-14 (synthetic).
+# Pixelfed echoes limit and unrelated timeline params beside the cursor. Tests rewrite
+# the origin to the test server; only the path and query shape are significant.
+<https://pixelfed.example/api/v1/timelines/home?max_id=pixelfed-home-older&limit=10&only_media=false>; rel="next"
