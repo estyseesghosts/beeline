@@ -16,6 +16,7 @@ import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.AppNavigationAnchor
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.Timeline
 import me.foxtails.palustris.domain.effectiveTargetId
 import me.foxtails.palustris.ui.composer.ComposerOwnerContext
@@ -88,6 +89,7 @@ fun PalustrisApp(
     notificationSettings: NotificationSettingsContract,
     tabletNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Left,
     compactWideNavigationAnchor: AppNavigationAnchor = AppNavigationAnchor.Right,
+    onLoadReactionAccounts: (suspend (OwnedPost, Reaction) -> List<Account>)? = null,
 ) {
     val mediaTransitionRegistry = remember { MediaTransitionRegistry() }
     val repostConfirmationOwner = remember(account?.id, sessionGeneration, sessionRevision) { PostRepostConfirmationState() }
@@ -206,7 +208,7 @@ fun PalustrisApp(
                     screenStates = screenStates, homeListState = homeListState, searchListState = searchListState,
                     photoGridScrollState = photoGridScrollState, profileListState = profileListState, availableTimelines = availableTimelines,
                     displayedProfile = displayedProfile, savedTitle = savedTitle, notificationAccountIdentity = notificationAccountIdentity,
-                    postCallbacks = DestinationPostCallbacks(availableActions, quoteEnabled, onReact, ::handleReply, onReshare, onBookmark, onReaction, ::handleQuote),
+                    postCallbacks = DestinationPostCallbacks(availableActions, quoteEnabled, onReact, ::handleReply, onReshare, onBookmark, onReaction, ::handleQuote, onLoadReactionAccounts),
                     draftCallbacks = DestinationDraftCallbacks(composerOwner.drafts, { overlay.clearPostActionBubble(); composerOwner.requestDraft(it) }, composerOwner::deleteDraft),
                     navigationCallbacks = DestinationNavigationCallbacks(::openSinglePost, ::openNotificationTarget, ::openProfileEditor),
                     detailCallbacks = ShellDetailCallbacks({ navigator.clearSelectedPost() }, onReact, ::handleReply, onReshare, onBookmark, onReaction, navigator::openProfile, navigator::openHashtagSearch, overlay::openHashtagBubble, { post, bounds, handler -> overlay.openReactionBubble(post, bounds, handler) }, overlay::expandReactionPicker, overlay::openMedia, navigator::openAccountSearch, thread.actions::refresh, thread.actions::continueAcquisition, quoteEnabled, ::handleQuote),

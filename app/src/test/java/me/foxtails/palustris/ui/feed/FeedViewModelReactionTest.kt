@@ -84,6 +84,8 @@ class FeedViewModelReactionTest {
         val removed = mutableListOf<Pair<EntityId, EmojiChoice>>()
         var reactGate: CompletableDeferred<Unit>? = null
         var reactError: Exception? = null
+        var setReactionResult: me.foxtails.palustris.domain.PostActionResult? = null
+        var accountsResult: List<Account> = emptyList()
 
         override suspend fun timeline(timeline: Timeline, cursor: String?): Page<Post> = Page(listOf(base))
 
@@ -98,6 +100,15 @@ class FeedViewModelReactionTest {
         override suspend fun removeReaction(id: EntityId, choice: EmojiChoice) {
             removed += id to choice
         }
+
+        override suspend fun setReaction(
+            id: EntityId,
+            choice: EmojiChoice,
+            selected: Boolean,
+        ): me.foxtails.palustris.domain.PostActionResult =
+            setReactionResult ?: super.setReaction(id, choice, selected)
+
+        override suspend fun reactionAccounts(id: EntityId, choice: EmojiChoice): List<Account> = accountsResult
     }
 
     private fun current(model: FeedViewModel): Post = model.feed.value.ownedPosts.single { it.fetchedBy == accountId }.post
@@ -381,6 +392,65 @@ class FeedViewModelReactionTest {
 
             assertEquals("👍", model.feed.value.posts.single().myReaction)
             advanceUntilIdle()
+        } finally {
+            coordinator.close()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun serverStatusReplacesTheOptimisticReaction() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val coordinator = NotificationSyncOrchestrator()
+        try {
+            val source = ReactionSource(
+                post(reactions = listOf(Reaction("👍", 2, selected = false))),
+                ReactionSelectionMode.Independent,
+            )
+            source.setReactionResult = me.foxtails.palustris.domain.PostActionResult(
+                post = post(
+                    reactions = listOf(Reaction("👍", 10, selected = true)),
+                    selectedReactions = listOf(EmojiChoice("👍", "👍", null)),
+                    myReaction = "👍",
+                    interactionCounts = PostInteractionCounts(reactionCount = 10),
+                ),
+                selected = true,
+            )
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            advanceUntilIdle()
+
+            model.react(model.feed.value.ownedPosts.single(), EmojiChoice("👍", "👍", null))
+            assertEquals(3, current(model).reactions.single().count)
+            advanceUntilIdle()
+
+            val replaced = current(model)
+            assertEquals(10, replaced.reactions.single().count)
+            assertTrue(replaced.reactions.single().selected)
+            assertEquals(listOf("👍"), replaced.selectedReactions.map { it.submissionValue })
+            assertEquals(10, replaced.interactionCounts.reactionCount)
+        } finally {
+            coordinator.close()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun loadReactionAccountsDelegatesToTheSource() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val coordinator = NotificationSyncOrchestrator()
+        try {
+            val reactor = Account(AccountId(connection, "reactor"), "Reactor", "@reactor@example.org")
+            val source = ReactionSource(post(), ReactionSelectionMode.Independent)
+            source.accountsResult = listOf(reactor)
+             val model = FeedViewModel(accountId, source, coordinator, me.foxtails.palustris.data.preferences.InMemoryPostPreferencesRepository(), 0L, me.foxtails.palustris.ui.posts.PostInteractionExecutionAuthority())
+            advanceUntilIdle()
+
+            val accounts = model.loadReactionAccounts(
+                model.feed.value.ownedPosts.single(),
+                Reaction("👍", 1, selected = false),
+            )
+
+            assertEquals(listOf(reactor), accounts)
         } finally {
             coordinator.close()
             Dispatchers.resetMain()

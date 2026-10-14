@@ -307,6 +307,20 @@ class FeedViewModel @AssistedInject constructor(
         interactionMutations.react(ownedPost, choice)
     }
 
+    /**
+     * The accounts behind one reaction, oldest first where the server orders them. The row
+     * calls this on long-press and renders the result; transport stays here, outside Compose.
+     */
+    suspend fun loadReactionAccounts(ownedPost: OwnedPost, reaction: me.foxtails.palustris.domain.Reaction): List<me.foxtails.palustris.domain.Account> {
+        if (stopped || ownedPost.fetchedBy != accountId || ownedPost.sessionRevision != sessionRevision) {
+            throw me.foxtails.palustris.domain.SourceError.AccountMismatch
+        }
+        return source.reactionAccounts(
+            ownedPost.effectiveTargetId(),
+            EmojiChoice(reaction.emoji, reaction.emoji, reaction.emojiMetadata),
+        )
+    }
+
     fun bookmark(ownedPost: OwnedPost) {
         interactionMutations.bookmark(ownedPost)
     }

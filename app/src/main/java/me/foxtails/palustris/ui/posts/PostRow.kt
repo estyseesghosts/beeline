@@ -77,6 +77,7 @@ private fun PostRowContent(
     val onQuote = events.onQuote
     val onOpenReactionBubble = events.onOpenReactionBubble
     val onOpenReactionPicker = events.onOpenReactionPicker
+    val onLoadReactionAccounts = events.onLoadReactionAccounts
     val onOpenMedia = events.onOpenMedia
     val onOpenPost = events.onOpenPost
     val truncateBody = presentation.truncateBody
@@ -205,6 +206,8 @@ private fun PostRowContent(
                 enabled = PostAction.React in availableActions,
                 onReaction = onReaction,
                 showReactionNumbers = interactionPresentation.showReactionNumbers,
+                reactorsLoader = onLoadReactionAccounts,
+                onAddReaction = onOpenReactionPicker,
             )
         }
         InteractionRow(

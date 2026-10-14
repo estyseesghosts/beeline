@@ -453,6 +453,7 @@ fun ConnectedSessionHost(
             emojiPresentation = emojiPresentation,
             tabletNavigationAnchor = tabletNavigationAnchor,
             compactWideNavigationAnchor = compactWideNavigationAnchor,
+            onLoadReactionAccounts = feed.loadReactionAccounts,
         )
     }
 }

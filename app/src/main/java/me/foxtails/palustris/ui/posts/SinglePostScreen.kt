@@ -55,6 +55,7 @@ import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.domain.MediaKind
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.ui.ActionIcon
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.layout.detailScrollEndClearance
@@ -88,6 +89,7 @@ internal fun SinglePostScreen(
     onOpenHashtagBubble: ((OwnedPost, List<String>, androidx.compose.ui.geometry.Rect) -> Unit)? = null,
     onOpenReactionBubble: ((OwnedPost, androidx.compose.ui.geometry.Rect) -> Unit)? = null,
     onOpenReactionPicker: (OwnedPost) -> Unit = {},
+    onLoadReactionAccounts: (suspend (OwnedPost, Reaction) -> List<Account>)? = null,
     onOpenMedia: (MediaOpenRequest) -> Unit = {},
     onOpenUrl: ((String) -> Unit)? = null,
     onOpenUsername: ((String) -> Unit)? = null,
@@ -164,6 +166,7 @@ internal fun SinglePostScreen(
                                  onOpenHashtagBubble = onOpenHashtagBubble,
                                  onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
                                  onOpenReactionPicker = onOpenReactionPicker,
+                                 onLoadReactionAccounts = onLoadReactionAccounts,
                                  onOpenMedia = onOpenMedia,
                                  onQuote = onQuote,
                                  onOpenUrl = onOpenUrl,
@@ -196,6 +199,7 @@ internal fun SinglePostScreen(
                              onOpenHashtagBubble = onOpenHashtagBubble,
                              onOpenReactionBubble = onOpenReactionBubble ?: { _, _ -> },
                              onOpenReactionPicker = onOpenReactionPicker,
+                             onLoadReactionAccounts = onLoadReactionAccounts,
                              onOpenMedia = onOpenMedia,
                              onQuote = onQuote,
                              onOpenUrl = onOpenUrl,
@@ -278,6 +282,8 @@ internal fun SinglePostScreen(
                       enabled = PostAction.React in actionsForPost(availableActions, post),
                       onReaction = onReaction,
                       showReactionNumbers = true,
+                      reactorsLoader = onLoadReactionAccounts,
+                      onAddReaction = onOpenReactionPicker,
                   )
               }
              PostContentWarningToggle(ownedPost, expanded) { reveals.setWarningExpanded(ownedPost, !expanded) }
@@ -322,6 +328,8 @@ internal fun SinglePostScreen(
                             onSearchHashtag = onSearchHashtag ?: {},
                             onOpenHashtagBubble = onOpenHashtagBubble,
                          onOpenReactionBubble = onOpenReactionBubble,
+                         onOpenReactionPicker = onOpenReactionPicker,
+                         onLoadReactionAccounts = onLoadReactionAccounts,
                          onOpenMedia = onOpenMedia,
                             onOpenUrl = onOpenUrl,
                             onOpenUsername = onOpenUsername,
@@ -342,6 +350,8 @@ internal fun SinglePostScreen(
                             onSearchHashtag = onSearchHashtag ?: {},
                             onOpenHashtagBubble = onOpenHashtagBubble,
                             onOpenReactionBubble = onOpenReactionBubble,
+                            onOpenReactionPicker = onOpenReactionPicker,
+                            onLoadReactionAccounts = onLoadReactionAccounts,
                             onOpenMedia = onOpenMedia,
                             onOpenUrl = onOpenUrl,
                             onOpenUsername = onOpenUsername,

@@ -122,12 +122,11 @@ class PostInteractionMutationOwner(
             PostReactionReducer.apply(post, choice, !selected, mode, primary)
         }, {
             if (selected) {
-                source.removeReaction(target, choice)
+                source.setReaction(target, choice, false)
             } else {
                 removals.forEach { source.removeReaction(target, it) }
-                source.react(target, choice)
+                source.setReaction(target, choice, true)
             }
-            PostActionResult(selected = !selected)
         }, partialRisk = !selected && removals.isNotEmpty(), onAccepted)
     }
 
@@ -244,7 +243,20 @@ class PostInteractionMutationOwner(
                     interactionCounts = counts,
                 )
             }
-            PostAction.React -> current.copy(interactionCounts = counts)
+            PostAction.React -> current.copy(interactionCounts = counts).let { merged ->
+                // A mutation that returns the updated status replaces the optimistic reactions
+                // with the server's copy. A mutation without one keeps the optimistic state.
+                val server = result.post?.takeIf { it.id == current.id }
+                if (server != null) {
+                    merged.copy(
+                        reactions = server.reactions,
+                        selectedReactions = server.selectedReactions,
+                        myReaction = server.myReaction,
+                    )
+                } else {
+                    merged
+                }
+            }
             PostAction.Reshare -> current.copy(
                 reposted = result.selected ?: current.reposted,
                 ownRepostId = when {

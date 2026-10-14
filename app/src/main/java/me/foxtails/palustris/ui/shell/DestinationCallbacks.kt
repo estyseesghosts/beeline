@@ -1,9 +1,11 @@
 package me.foxtails.palustris.ui.shell
 
+import me.foxtails.palustris.domain.Account
 import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostDraft
+import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.ui.navigation.AppRoute
 import me.foxtails.palustris.ui.shell.LargePostOrigin
 
@@ -22,6 +24,8 @@ internal data class DestinationPostCallbacks(
     val onBookmark: (OwnedPost) -> Unit,
     val onReaction: (OwnedPost, EmojiChoice) -> Unit,
     val onQuote: (OwnedPost) -> Unit,
+    /** Loads the accounts behind one reaction for the row's long-press sheet. Null where no owner offers it. */
+    val onLoadReactionAccounts: (suspend (OwnedPost, Reaction) -> List<Account>)? = null,
 )
 
 /** Draft list with its load and delete callbacks for the local page branch. */

@@ -3,6 +3,7 @@ package me.foxtails.palustris.data.mastodon
 import me.foxtails.palustris.data.mastodon.MastodonEmojiMapper
 import me.foxtails.palustris.data.mastodon.MastodonMapper
 import me.foxtails.palustris.domain.MediaKind
+import me.foxtails.palustris.domain.PostAction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -320,6 +321,23 @@ class MastodonMapperTest {
         .put("account", JSONObject().put("id", "author").put("username", "author").put("acct", "author"))
         .put("content", id)
         .put("visibility", "public")
+
+    @Test
+    fun postIncludesReactActionOnlyWithTheReactionExtension() {
+        val withExtension = MastodonMapper.post(
+            statusWithCounts("extended").put(
+                "pleroma",
+                JSONObject().put("emoji_reactions", JSONArray().put(JSONObject().put("name", "👍").put("count", 1))),
+            ),
+            "https://example.org",
+        )
+
+        assertTrue(PostAction.React in withExtension.availableActions)
+
+        val withoutExtension = MastodonMapper.post(statusWithCounts("plain"), "https://example.org")
+
+        assertTrue(PostAction.React !in withoutExtension.availableActions)
+    }
 
     private fun status(content: String, mentions: JSONArray) = JSONObject()
         .put("id", "s1").put("created_at", "2026-10-10T12:00:00.000Z").put("visibility", "public")

@@ -8,6 +8,7 @@ import me.foxtails.palustris.domain.FavouriteArtworkStyle
 import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 
 /** Callbacks for events originating from one post row. This value owns no state or lifecycle. */
@@ -23,6 +24,8 @@ internal data class PostRowEvents(
     val onQuote: (OwnedPost) -> Unit = {},
     val onOpenReactionBubble: (OwnedPost, Rect) -> Unit = { _, _ -> },
     val onOpenReactionPicker: (OwnedPost) -> Unit = {},
+    /** Loads the accounts behind one reaction for the row's long-press sheet. Null disables loading. */
+    val onLoadReactionAccounts: (suspend (OwnedPost, Reaction) -> List<Account>)? = null,
     val onOpenMedia: (MediaOpenRequest) -> Unit = {},
     val onOpenPost: ((OwnedPost) -> Unit)? = null,
     val onOpenUrl: ((String) -> Unit)? = null,

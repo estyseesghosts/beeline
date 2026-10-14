@@ -60,13 +60,21 @@ data class Attachment(
 /**
  * `emoji` is the opaque identity the server accepts for submission and must not be
  * rewritten for display; `emojiMetadata` carries optional presentation data.
+ * `host` is the remote origin from a `name@host` reaction, null for unicode and
+ * own-server emoji; remote reactions display but never enter the picker. `accountIds`
+ * carries the opaque voter identifiers the server reported, empty when it sent none.
  */
 data class Reaction(
     val emoji: String,
     val count: Int,
     val selected: Boolean,
     val emojiMetadata: CustomEmoji? = null,
+    val host: String? = null,
+    val accountIds: List<String> = emptyList(),
 )
+
+/** True when this reaction names a remote custom emoji that no picker may offer. */
+fun Reaction.isRemote(): Boolean = host != null
 
 data class PostInteractionCounts(
     val favouriteCount: Int? = null,

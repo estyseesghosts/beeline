@@ -99,6 +99,7 @@ class EmojiPickerTest {
         onTogglePinnedEmoji: (String) -> Unit = {},
         onLoadCatalog: () -> Unit = {},
         onDismiss: () -> Unit = {},
+        customReactionsAllowed: Boolean = true,
     ) {
         compose.activity.runOnUiThread {
             compose.activity.setContent {
@@ -112,6 +113,7 @@ class EmojiPickerTest {
                     onDismiss = onDismiss,
                     onEmojiSelected = onEmojiSelected,
                     onTogglePinnedEmoji = onTogglePinnedEmoji,
+                    customReactionsAllowed = customReactionsAllowed,
                 )
             }
         }
@@ -134,6 +136,30 @@ class EmojiPickerTest {
         compose.onNodeWithTag("emoji_picker_scrollbar").assertIsDisplayed()
         compose.onNodeWithTag("emoji_picker_cell_:blob:", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("emoji_picker_cell_:wave:", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun reactionTargetHidesCustomWhenUnsupportedButKeepsUnicode() {
+        show(
+            target = EmojiPickerTarget.Reaction(OwnedPost(account.id, post)),
+            customReactionsAllowed = false,
+        )
+
+        compose.onNodeWithTag("emoji_picker_sheet").assertIsDisplayed()
+        compose.onNodeWithTag("emoji_picker_cell_👍", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("emoji_picker_cell_:blob:", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("emoji_picker_cell_:wave:", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun reactionTargetHidesRemoteEmoji() {
+        val remotePost = post.copy(
+            reactions = post.reactions + Reaction("dinosaur@other.example", 1, selected = false, host = "other.example"),
+        )
+        show(target = EmojiPickerTarget.Reaction(OwnedPost(account.id, remotePost)))
+
+        compose.onNodeWithTag("emoji_picker_cell_dinosaur@other.example", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("emoji_picker_cell_:blob:", useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test

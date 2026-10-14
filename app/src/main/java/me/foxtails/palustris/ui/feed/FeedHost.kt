@@ -54,6 +54,8 @@ data class Feed(
     val composerInputs: FeedComposerInputs,
     val publish: (ThreadPublication, ThreadPublishListener) -> Unit,
     val react: (OwnedPost, EmojiChoice) -> Unit,
+    /** Loads the accounts behind one reaction for the row's long-press sheet. */
+    val loadReactionAccounts: suspend (OwnedPost, me.foxtails.palustris.domain.Reaction) -> List<me.foxtails.palustris.domain.Account>,
 )
 
 @Composable
@@ -127,6 +129,10 @@ fun FeedHost(
     val postReaction = remember(feedModel) {
         { post: OwnedPost, choice: EmojiChoice -> feedModel.react(post, choice) }
     }
+    val loadReactionAccounts: suspend (OwnedPost, me.foxtails.palustris.domain.Reaction) -> List<me.foxtails.palustris.domain.Account> =
+        remember(feedModel) {
+            { post, reaction -> feedModel.loadReactionAccounts(post, reaction) }
+        }
     val feedSink = remember(feedModel) {
         object : PostProjectionCoordinator.Sink {
             override fun applyExternalPost(updated: OwnedPost) { feedModel.applyExternalPost(updated) }
@@ -151,13 +157,14 @@ fun FeedHost(
     val publish = remember(feedModel, feedSink, coordinator) {
         threadPublish(feedModel, feedSink, coordinator)
     }
-    return remember(home, postInteractions, composerInputs, publish, postReaction) {
+    return remember(home, postInteractions, composerInputs, publish, postReaction, loadReactionAccounts) {
         Feed(
             home = home,
             postInteractions = postInteractions,
             composerInputs = composerInputs,
             publish = publish,
             react = postReaction,
+            loadReactionAccounts = loadReactionAccounts,
         )
     }
 }

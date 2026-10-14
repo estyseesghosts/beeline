@@ -544,7 +544,9 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
         /**
          * Custom-emoji reactions need their own advertisement: `pleroma_custom_emoji_reactions`
          * in the instance feature list. A missing advertisement stays Unknown, never a guess
-         * from the server version.
+         * from the server version — and never Unsupported. ServerCapabilities
+         * .allowsCustomReactions() grants the Akkoma optimistic allowance separately and the
+         * source demotes it on a custom PUT rejection, so do not regress this to Unsupported.
          */
         private fun customReactionCapability(instance: JSONObject): CapabilityStatus {
             val features = instance.optJSONObject("pleroma")?.optJSONObject("metadata")?.optJSONArray("features") ?: return CapabilityStatus.Unknown

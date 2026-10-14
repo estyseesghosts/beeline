@@ -296,6 +296,19 @@ fun ServerCapabilities.effectiveMediaUpload(access: AccessGrant): CapabilityStat
     effectiveCapabilityStatus(posting.mediaUpload, access.mediaUploadStatus(), implemented = true)
 
 /**
+ * True when the reaction picker may offer server custom emoji. Supported means the probe
+ * found the custom-emoji advertisement. Akkoma without that advertisement stays optimistic:
+ * its API spec accepts custom reactions, so the picker offers them until a custom `PUT`
+ * rejection demotes [ServerCapabilities.supportsCustomReactions]. Every other flavor
+ * without the advertisement stays unicode-only.
+ */
+fun ServerCapabilities.allowsCustomReactions(): Boolean = when {
+    supportsCustomReactions == CapabilityStatus.Supported -> true
+    supportsCustomReactions == CapabilityStatus.Unknown && flavor == ServerFlavor.Akkoma -> true
+    else -> false
+}
+
+/**
  * Resolves a feature's usable state without treating a failed request as proof of server absence.
  */
 fun effectiveCapabilityStatus(

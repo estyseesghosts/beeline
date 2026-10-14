@@ -101,6 +101,7 @@ internal fun ShellHomeDestination(
         onReaction = postCallbacks.onReaction,
         onOpenReactionBubble = { ownedPost, bounds -> overlay.openReactionBubble(ownedPost, bounds, postCallbacks.onReaction) },
         onOpenReactionPicker = overlay::expandReactionPicker,
+        onLoadReactionAccounts = postCallbacks.onLoadReactionAccounts,
         onQuote = postCallbacks.onQuote,
         onOpenProfile = navigator::openProfile,
         onSearchHashtag = navigator::openHashtagSearch,

@@ -467,6 +467,50 @@ private fun show(
         assertTrue(!favoured)
     }
 
+    @Test fun longPressingAHomeChipLoadsItsReactorsThroughTheFeedLoader() {
+        val post = Post(
+            postId("home-reactors"),
+            account,
+            "Home reactors",
+            0,
+            Audience.Public,
+            reactions = listOf(Reaction("👍", 2, false)),
+        )
+        val reactor = Account(
+            AccountId(Connection("https://example.org", Protocol.MASTODON), "reactor"),
+            "Reactor",
+            "@reactor@example.org",
+        )
+        var loaded: me.foxtails.palustris.domain.Reaction? = null
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                HomeFeed(
+                    state = AppShellFixtures.homeFeed(
+                        FeedState(
+                            posts = listOf(post),
+                            ownedPosts = listOf(OwnedPost(account.id, post)),
+                            actions = setOf(PostAction.React),
+                        ),
+                    ),
+                    availableActions = setOf(PostAction.React),
+                    onRefresh = {}, onLoadMore = {}, onSignIn = {},
+                    onLoadReactionAccounts = { _, reaction ->
+                        loaded = reaction
+                        listOf(reactor)
+                    },
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("reaction_chip_👍", useUnmergedTree = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+
+        assertTrue(loaded?.emoji == "👍")
+        compose.onNodeWithTag("reaction_reactors_sheet").assertIsDisplayed()
+        compose.onNodeWithText("Reactor").assertIsDisplayed()
+    }
+
     @Test fun unselectableReactionChipsStayReadOnlyWhenMutationIsUnavailable() {
         val reactions = listOf(Reaction("🎉", 2, false))
         val post = Post(

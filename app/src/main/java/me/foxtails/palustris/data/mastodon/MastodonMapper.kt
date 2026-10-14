@@ -313,7 +313,7 @@ object MastodonMapper {
             replyTo = json.nullableString("in_reply_to_id")?.let { EntityId(origin, it) },
             replyToAuthorId = json.nullableString("in_reply_to_account_id")
                 ?.let { AccountId(Connection(origin, Protocol.MASTODON), it) },
-            availableActions = MASTODON_ACTIONS,
+            availableActions = if (extensionReactions != null) MASTODON_ACTIONS + PostAction.React else MASTODON_ACTIONS,
             url = json.nullableString("url") ?: json.nullableString("uri"),
             interactionCounts = interactionCounts,
             quote = quoted.status?.takeIf { depth < MAX_NESTING_DEPTH }?.let { post(it, origin, depth + 1) },

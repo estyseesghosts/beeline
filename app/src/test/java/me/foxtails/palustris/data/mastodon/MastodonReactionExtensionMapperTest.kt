@@ -3,9 +3,11 @@ package me.foxtails.palustris.data.mastodon
 import me.foxtails.palustris.data.mastodon.MastodonReactionExtensionMapper
 import me.foxtails.palustris.domain.CustomEmoji
 import me.foxtails.palustris.domain.ValidatedUrl
+import me.foxtails.palustris.domain.isRemote
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -120,6 +122,112 @@ class MastodonReactionExtensionMapperTest {
             MastodonReactionExtensionMapper.selectedChoices(nested, statusEmoji, true).orEmpty()
                 .map { it.submissionValue },
         )
+    }
+
+    @Test
+    fun pleromaCopyWinsOverTopLevelAndAkkomaCopies() {
+        val json = JSONObject()
+            .put("emoji_reactions", JSONArray().put(JSONObject().put("name", "stale").put("count", 9)))
+            .put("pleroma", JSONObject().put("emoji_reactions", JSONArray().put(JSONObject().put("name", "fresh").put("count", 1))))
+            .put("akkoma", JSONObject().put("emoji_reactions", JSONArray().put(JSONObject().put("name", "older").put("count", 5))))
+
+        val mapped = MastodonReactionExtensionMapper.reactions(json, statusEmoji).orEmpty()
+
+        assertEquals(listOf("fresh"), mapped.map { it.emoji })
+    }
+
+    @Test
+    fun topLevelCopyWinsOverAkkomaCopyWithoutPleroma() {
+        val json = JSONObject()
+            .put("emoji_reactions", JSONArray().put(JSONObject().put("name", "top").put("count", 1)))
+            .put("akkoma", JSONObject().put("emoji_reactions", JSONArray().put(JSONObject().put("name", "nested").put("count", 2))))
+
+        val mapped = MastodonReactionExtensionMapper.reactions(json, statusEmoji).orEmpty()
+
+        assertEquals(listOf("top"), mapped.map { it.emoji })
+    }
+
+    @Test
+    fun unicodeEntryKeepsANullUrl() {
+        val json = statusWith(JSONArray().put(JSONObject().put("name", "☕").put("count", 3).put("me", true)))
+
+        val mapped = MastodonReactionExtensionMapper.reactions(json, statusEmoji).orEmpty().single()
+
+        assertEquals("☕", mapped.emoji)
+        assertEquals(3, mapped.count)
+        assertTrue(mapped.selected)
+        assertNull(mapped.emojiMetadata)
+        assertNull(mapped.host)
+        assertFalse(mapped.isRemote())
+        assertTrue(mapped.accountIds.isEmpty())
+    }
+
+    @Test
+    fun localCustomEntryKeepsUrlAndAccountIds() {
+        val json = statusWith(JSONArray().put(JSONObject()
+            .put("name", "dinosaur")
+            .put("count", 2)
+            .put("me", false)
+            .put("url", "https://example.social/emoji/dinosaur.png")
+            .put("account_ids", JSONArray().put("9tKi3esbG7OQgZ2920").put("other-id"))
+            .put("unrelated_future_field", "ignored")))
+
+        val mapped = MastodonReactionExtensionMapper.reactions(json, statusEmoji).orEmpty().single()
+
+        assertEquals("dinosaur", mapped.emoji)
+        assertNull(mapped.host)
+        assertEquals(listOf("9tKi3esbG7OQgZ2920", "other-id"), mapped.accountIds)
+        assertEquals("dinosaur", mapped.emojiMetadata?.shortcode)
+        assertEquals("https://example.social/emoji/dinosaur.png", mapped.emojiMetadata?.staticUrl?.value)
+        assertEquals("dinosaur", mapped.emojiMetadata?.submissionValue)
+    }
+
+    @Test
+    fun colonWrappedCustomKeepsItsRawIdentity() {
+        val json = statusWith(JSONArray().put(JSONObject()
+            .put("name", ":dinosaur:")
+            .put("count", 1)
+            .put("me", false)
+            .put("url", "https://example.social/emoji/dinosaur.png")))
+
+        val mapped = MastodonReactionExtensionMapper.reactions(json, statusEmoji).orEmpty().single()
+
+        assertEquals(":dinosaur:", mapped.emoji)
+        assertNull(mapped.host)
+        assertEquals("dinosaur", mapped.emojiMetadata?.shortcode)
+        assertEquals(":dinosaur:", mapped.emojiMetadata?.submissionValue)
+    }
+
+    @Test
+    fun remoteEntryMarksItsHostForPickerExclusion() {
+        val json = statusWith(JSONArray().put(JSONObject()
+            .put("name", "dinosaur@other.example")
+            .put("count", 1)
+            .put("me", false)
+            .put("url", "https://other.example/emoji/dinosaur.png")))
+
+        val mapped = MastodonReactionExtensionMapper.reactions(json, statusEmoji).orEmpty().single()
+
+        assertEquals("dinosaur@other.example", mapped.emoji)
+        assertEquals("other.example", mapped.host)
+        assertTrue(mapped.isRemote())
+        assertEquals("dinosaur", mapped.emojiMetadata?.shortcode)
+        assertEquals("dinosaur@other.example", mapped.emojiMetadata?.submissionValue)
+    }
+
+    @Test
+    fun unknownFieldsAreIgnored() {
+        val json = statusWith(JSONArray().put(JSONObject()
+            .put("name", "👍")
+            .put("count", 1)
+            .put("future_count", 99)
+            .put("accounts", JSONArray().put(JSONObject().put("id", "someone")))))
+
+        val mapped = MastodonReactionExtensionMapper.reactions(json, statusEmoji).orEmpty().single()
+
+        assertEquals("👍", mapped.emoji)
+        assertEquals(1, mapped.count)
+        assertTrue(mapped.accountIds.isEmpty())
     }
 
     @Test

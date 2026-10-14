@@ -91,6 +91,7 @@ fun PostActionBubbleHost(
     target: PostActionBubbleTarget?,
     emojiCatalog: EmojiCatalogState,
     emojiCapabilities: EmojiCapabilities,
+    customReactionsAllowed: Boolean,
     onLoadEmojiCatalog: () -> Unit = {},
     onRetryEmojiCatalog: () -> Unit = {},
     onToggleEmojiGroupCollapsed: (String) -> Unit = {},
@@ -141,7 +142,7 @@ fun PostActionBubbleHost(
         dismiss()
     }
     if (current is PostActionBubbleTarget.Reaction && reactionSurface(current, localReactionMode) == ReactionPickerSurface.Sheet) {
-        ReactionPickerSheet(current.ownedPost.post, emojiCatalog, recents, actions, selectReaction, dismiss)
+        ReactionPickerSheet(current.ownedPost.post, emojiCatalog, customReactionsAllowed, recents, actions, selectReaction, dismiss)
         return
     }
     val hashtagSide = (current as? PostActionBubbleTarget.HashtagList)
@@ -168,6 +169,7 @@ fun PostActionBubbleHost(
             is PostActionBubbleTarget.Reaction -> ReactionBubble(
                 target = current.copy(mode = localReactionMode),
                 catalog = emojiCatalog,
+                customReactionsAllowed = customReactionsAllowed,
                 recents = recents,
                 actions = actions,
                 openedAtMillis = reactionOpenedAtMillis,
@@ -241,6 +243,7 @@ private fun AnimatedBubblePopup(
 private fun ReactionBubble(
     target: PostActionBubbleTarget.Reaction,
     catalog: EmojiCatalogState,
+    customReactionsAllowed: Boolean,
     recents: EmojiRecents,
     actions: EmojiPreferenceActions,
     openedAtMillis: Long,
@@ -271,8 +274,8 @@ private fun ReactionBubble(
         shadowElevation = FloatingControlElevation,
     ) {
         EmojiChoiceGrid(
-            catalogItems = catalog.items,
-            additionalChoices = post.reactionChoices(),
+            catalogItems = if (customReactionsAllowed) catalog.items else emptyList(),
+            additionalChoices = post.bubbleReactionChoices(customReactionsAllowed),
             selectedIdentities = selectedIdentities,
             preferences = catalog.preferences,
             compact = !expanded,

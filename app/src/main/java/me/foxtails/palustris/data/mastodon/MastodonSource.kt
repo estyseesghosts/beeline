@@ -414,21 +414,42 @@ class MastodonSource(
         MastodonEmojiMapper.parseCatalog(api.get(origin, "api/v1/custom_emojis", token, MASTODON_MAX_RESPONSE_BYTES).body, origin)
     }
 
-    override suspend fun react(id: EntityId, choice: EmojiChoice) = request("react") {
-        validatePostId(id, "react")
-        requireReactionMutation()
-        // A failed mutation returns its normalized error. A resource 404 is not proof that
-        // the extension is unsupported, so support stays until explicit server evidence says
-        // otherwise. Only the advertisement establishes reaction support.
-        mutateEmojiReaction(id, choice.submissionValue, selected = true)
-        Unit
+    override suspend fun react(id: EntityId, choice: EmojiChoice) {
+        setReaction(id, choice, true)
     }
 
-    override suspend fun removeReaction(id: EntityId, choice: EmojiChoice) = request("react") {
+    override suspend fun removeReaction(id: EntityId, choice: EmojiChoice) {
+        setReaction(id, choice, false)
+    }
+
+    /**
+     * Sets one Pleroma/Akkoma emoji reaction through the single `pleroma` mutation path and
+     * returns the updated status for state replacement; counts are never adjusted by hand.
+     * A custom `PUT` rejected with `Could not add reaction emoji` demotes only custom
+     * reactions for the session: the optimistic Akkoma allowance ends, while unicode
+     * reactions and the reaction advertisement itself stay untouched.
+     */
+    override suspend fun setReaction(id: EntityId, choice: EmojiChoice, selected: Boolean): PostActionResult = request("react") {
         validatePostId(id, "react")
         requireReactionMutation()
-        mutateEmojiReaction(id, choice.submissionValue, selected = false)
-        Unit
+        val pathValue = reactionPathValue(choice.submissionValue)
+        try {
+            mutateEmojiReaction(id, pathValue, selected)
+        } catch (e: HttpStatusFailure) {
+            demoteCustomReactionsOnRejection(pathValue, e.body)
+            throw e
+        }
+    }
+
+    /**
+     * The accounts that reacted with [choice], oldest first where the server orders them.
+     * Reads `GET .../reactions/:emoji`, which answers one entry carrying `accounts`.
+     * Malformed account entries are skipped; a body with no accounts yields an empty list.
+     */
+    override suspend fun reactionAccounts(id: EntityId, choice: EmojiChoice): List<Account> = request("react.accounts") {
+        validatePostId(id, "react.accounts")
+        val pathValue = reactionPathValue(choice.submissionValue)
+        parseReactionAccounts(api.get(origin, emojiReactionEndpoint(id, pathValue), token, MASTODON_MAX_RESPONSE_BYTES).body)
     }
 
     private fun requireReactionMutation() {
@@ -451,6 +472,47 @@ class MastodonSource(
             post = response.optionalPost(origin),
             selected = selected,
         )
+    }
+
+    /**
+     * The `:emoji` path value for one opaque submission identity, never rewritten beyond the
+     * documented shapes. Colon-wrapped input passes through untouched. A bare shortcode gains
+     * its `:shortcode:` colons. Anything else is unicode and passes through for the endpoint
+     * builder to percent-encode. A `@host` identity is remote and not reactable, so it fails
+     * before any network call.
+     */
+    internal fun reactionPathValue(submission: String): String {
+        val raw = submission.trim()
+        if (raw.isEmpty()) throw SourceError.Unsupported("react.emoji")
+        val core = raw.trim(':')
+        if (core.isEmpty()) throw SourceError.Unsupported("react.emoji")
+        if ('@' in core) throw SourceError.Unsupported("react.remote")
+        return if ((raw.startsWith(':') && raw.endsWith(':')) || CUSTOM_SHORTCODE.matches(core)) {
+            ":$core:"
+        } else {
+            raw
+        }
+    }
+
+    /**
+     * Ends the optimistic custom-reaction allowance after the server refuses a custom emoji.
+     * Only a custom path value refused with the documented body demotes, and only custom
+     * support: unicode reactions, the reaction advertisement, and unknown states stay as
+     * they were. A resource 404 is not proof against the extension, so support stays.
+     */
+    private fun demoteCustomReactionsOnRejection(pathValue: String, body: String) {
+        if (!pathValue.startsWith(':') || !pathValue.endsWith(':')) return
+        if (!body.contains(CUSTOM_REACTION_REJECTION)) return
+        _capabilities.value = capabilities.copy(supportsCustomReactions = CapabilityStatus.Unsupported)
+    }
+
+    internal fun parseReactionAccounts(body: String): List<Account> {
+        val accounts = runCatching { JSONObject(body) }.getOrNull()?.optJSONArray("accounts")
+            ?: runCatching { JSONArray(body) }.getOrNull()?.optJSONObject(0)?.optJSONArray("accounts")
+            ?: return emptyList()
+        return (0 until accounts.length()).mapNotNull { index ->
+            runCatching { MastodonMapper.account(accounts.getJSONObject(index), origin) }.getOrNull()
+        }
     }
 
     private fun emojiReactionEndpoint(id: EntityId, submission: String): String =
@@ -773,6 +835,16 @@ class MastodonSource(
 
         /** Minimum delay before a failed capability probe retries. Bounds outage traffic. */
         const val CAPABILITIES_RETRY_MILLIS = 30 * 1000L
+
+        /** Body the server answers when it refuses a custom emoji reaction. Ends the optimistic custom allowance. */
+        const val CUSTOM_REACTION_REJECTION = "Could not add reaction emoji"
+
+        /**
+         * Shortcode-shaped identities gain `:shortcode:` colons for the mutation path. Unicode
+         * emoji are symbols, marks, or punctuation outside this class and pass through for
+         * percent-encoding instead.
+         */
+        val CUSTOM_SHORTCODE = Regex("^[\\p{L}\\p{N}_][\\p{L}\\p{N}_+\\-.]*$")
 
         /**
          * Pre-probe optimistic state. It matches what the probe reports for an Unknown flavor,

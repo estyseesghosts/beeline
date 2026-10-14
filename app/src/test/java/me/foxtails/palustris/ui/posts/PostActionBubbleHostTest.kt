@@ -77,6 +77,7 @@ class PostActionBubbleHostTest {
         capabilities: EmojiCapabilities = supported,
         state: EmojiCatalogState = catalog,
         reducedMotion: Boolean = false,
+        customReactionsAllowed: Boolean = true,
         onDismiss: () -> Unit = {},
         onSelected: (OwnedPost, EmojiChoice) -> Unit = { _, _ -> },
         onModeChanged: (PostActionBubbleTarget.Reaction) -> Unit = {},
@@ -91,6 +92,7 @@ class PostActionBubbleHostTest {
                             target = target,
                             emojiCatalog = state,
                             emojiCapabilities = capabilities,
+                            customReactionsAllowed = customReactionsAllowed,
                             onDismiss = onDismiss,
                             onHashtagSelected = {},
                             onReactionSelected = onSelected,
@@ -206,6 +208,42 @@ class PostActionBubbleHostTest {
     }
 
     @Test
+    fun disallowedCustomReactionsHideCustomButKeepUnicode() {
+        show(
+            target = PostActionBubbleTarget.Reaction(owned, anchor),
+            customReactionsAllowed = false,
+        )
+
+        compose.onNodeWithTag("reaction_bubble_compact").assertIsDisplayed()
+        compose.onNodeWithTag("emoji_picker_cell_:blob:", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("emoji_picker_cell_👍", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun remoteReactionsAreNeverOffered() {
+        val remote = post.copy(
+            reactions = post.reactions + Reaction("dinosaur@other.example", 1, false, host = "other.example"),
+        )
+        show(target = PostActionBubbleTarget.Reaction(OwnedPost(owner, remote, 1L), anchor))
+
+        compose.onNodeWithTag("reaction_bubble_compact").assertIsDisplayed()
+        compose.onNodeWithTag("emoji_picker_cell_dinosaur@other.example", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("emoji_picker_cell_:blob:", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun sheetPickerHidesCustomWhenDisallowed() {
+        show(
+            target = PostActionBubbleTarget.Reaction(owned, Rect.Zero),
+            customReactionsAllowed = false,
+        )
+
+        compose.onNodeWithTag("reaction_picker_sheet").assertIsDisplayed()
+        compose.onNodeWithTag("emoji_picker_cell_:blob:", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("emoji_picker_cell_👍", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
     fun clearingTheTargetRemovesTheBubble() {
         var target by mutableStateOf<PostActionBubbleTarget?>(PostActionBubbleTarget.Reaction(owned, anchor))
         compose.activity.runOnUiThread {
@@ -215,6 +253,7 @@ class PostActionBubbleHostTest {
                         target = target,
                         emojiCatalog = catalog,
                         emojiCapabilities = supported,
+                        customReactionsAllowed = true,
                         onDismiss = {},
                         onHashtagSelected = {},
                         onReactionSelected = { _, _ -> },

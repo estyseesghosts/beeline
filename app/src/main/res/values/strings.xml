@@ -617,6 +617,8 @@
         <item quantity="one">%1$d reaction</item>
         <item quantity="other">%1$d reactions</item>
     </plurals>
+    <string name="reaction_reactors_title">Reactions to %1$s</string>
+    <string name="reaction_add_symbol">+</string>
     <string name="reply_sent">reply sent</string>
     <string name="saved_posts_empty_bookmarks">No bookmarks yet</string>
     <string name="saved_posts_empty_favourites">No favourites yet</string>

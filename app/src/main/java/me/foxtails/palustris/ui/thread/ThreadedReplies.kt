@@ -16,6 +16,7 @@ import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.FilterContext
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
+import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.ui.media.MediaOpenRequest
 import me.foxtails.palustris.ui.posts.PostRow
 import me.foxtails.palustris.ui.posts.PostRowEvents
@@ -35,6 +36,8 @@ internal fun ThreadedReplyRow(
     onSearchHashtag: (String) -> Unit,
     onOpenHashtagBubble: ((OwnedPost, List<String>, androidx.compose.ui.geometry.Rect) -> Unit)?,
     onOpenReactionBubble: ((OwnedPost, androidx.compose.ui.geometry.Rect) -> Unit)?,
+    onOpenReactionPicker: ((OwnedPost) -> Unit)? = null,
+    onLoadReactionAccounts: (suspend (OwnedPost, Reaction) -> List<Account>)? = null,
     onOpenMedia: (MediaOpenRequest) -> Unit,
     onOpenUrl: ((String) -> Unit)?,
     onOpenUsername: ((String) -> Unit)?,
@@ -86,6 +89,8 @@ internal fun ThreadedReplyRow(
                 onSearchHashtag = onSearchHashtag,
                 onOpenHashtagBubble = onOpenHashtagBubble,
                 onOpenReactionBubble = { target, bounds -> onOpenReactionBubble?.invoke(target, bounds) },
+                onOpenReactionPicker = onOpenReactionPicker ?: {},
+                onLoadReactionAccounts = onLoadReactionAccounts,
                 onOpenMedia = onOpenMedia,
                 onQuote = onQuote,
                 onOpenUrl = onOpenUrl,

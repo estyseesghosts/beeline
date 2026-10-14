@@ -8,6 +8,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.foxtails.palustris.domain.AccountId
 import me.foxtails.palustris.domain.SocialSource
+import me.foxtails.palustris.domain.allowsCustomReactions
 import me.foxtails.palustris.ui.session.ConnectedEntryStore
 import me.foxtails.palustris.ui.shell.EmojiPresentation
 
@@ -45,11 +46,12 @@ fun EmojiHost(
             override fun togglePinnedEmoji(identity: String) { model.togglePinnedEmoji(identity) }
         }
     }
-    return remember(state, capabilities.emoji, actions) {
+    return remember(state, capabilities.emoji, capabilities.allowsCustomReactions(), actions) {
         EmojiPresentation(
             catalog = state,
             capabilities = capabilities.emoji,
             actions = actions,
+            customReactionsAllowed = capabilities.allowsCustomReactions(),
         )
     }
 }

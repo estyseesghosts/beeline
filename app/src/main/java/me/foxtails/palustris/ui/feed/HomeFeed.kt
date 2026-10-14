@@ -50,6 +50,7 @@ import me.foxtails.palustris.domain.ContentWarningRules
 import me.foxtails.palustris.domain.OwnedPost
 import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostScriptClassifier
+import me.foxtails.palustris.domain.Reaction
 import me.foxtails.palustris.domain.filterContext
 import me.foxtails.palustris.ui.AppIcons
 import me.foxtails.palustris.ui.EmptyState
@@ -94,6 +95,7 @@ fun HomeFeed(
     onReaction: (OwnedPost, me.foxtails.palustris.domain.EmojiChoice) -> Unit = { _, _ -> },
     onOpenReactionBubble: ((OwnedPost, Rect) -> Unit)? = null,
     onOpenReactionPicker: (OwnedPost) -> Unit = {},
+    onLoadReactionAccounts: (suspend (OwnedPost, Reaction) -> List<Account>)? = null,
     onQuote: (OwnedPost) -> Unit = {},
     onOpenProfile: (Account) -> Unit = {},
     onSearchHashtag: (String) -> Unit = {},
@@ -187,6 +189,7 @@ fun HomeFeed(
             onReaction = onReaction,
             onOpenReactionBubble = openReactionBubble,
             onOpenReactionPicker = onOpenReactionPicker,
+            onLoadReactionAccounts = onLoadReactionAccounts,
             onQuote = onQuote,
             onOpenProfile = onOpenProfile,
             onSearchHashtag = onSearchHashtag,
@@ -203,7 +206,7 @@ fun HomeFeed(
             wideBottomClearance = wideBottomClearance,
         )
     }
-    if (onOpenHashtagBubble == null) PostActionBubbleHost(target = fallbackBubbleTarget, emojiCatalog = EmojiCatalogState(), emojiCapabilities = me.foxtails.palustris.domain.EmojiCapabilities(), onDismiss = { fallbackBubbleTarget = null }, onHashtagSelected = onSearchHashtag, onReactionSelected = { _, _ -> }, hashtagBottomClearance = if (compactLayout) compactHomeScrollEndClearance() else 0.dp)
+    if (onOpenHashtagBubble == null) PostActionBubbleHost(target = fallbackBubbleTarget, emojiCatalog = EmojiCatalogState(), emojiCapabilities = me.foxtails.palustris.domain.EmojiCapabilities(), customReactionsAllowed = true, onDismiss = { fallbackBubbleTarget = null }, onHashtagSelected = onSearchHashtag, onReactionSelected = { _, _ -> }, hashtagBottomClearance = if (compactLayout) compactHomeScrollEndClearance() else 0.dp)
 }
 
 /**
@@ -321,6 +324,7 @@ private fun HomeFeedContent(
     onReaction: (OwnedPost, me.foxtails.palustris.domain.EmojiChoice) -> Unit,
     onOpenReactionBubble: (OwnedPost, Rect) -> Unit,
     onOpenReactionPicker: (OwnedPost) -> Unit,
+    onLoadReactionAccounts: (suspend (OwnedPost, Reaction) -> List<Account>)?,
     onQuote: (OwnedPost) -> Unit,
     onOpenProfile: (Account) -> Unit,
     onSearchHashtag: (String) -> Unit,
@@ -391,6 +395,7 @@ private fun HomeFeedContent(
                                 onQuote = onQuote,
                                 onOpenReactionBubble = onOpenReactionBubble,
                                 onOpenReactionPicker = onOpenReactionPicker,
+                                onLoadReactionAccounts = onLoadReactionAccounts,
                                 onOpenMedia = onOpenMedia,
                                 onOpenPost = onOpenPost,
                                 onOpenUrl = onOpenUrl,

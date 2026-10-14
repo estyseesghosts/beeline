@@ -13,6 +13,12 @@ data class EmojiPresentation(
     val catalog: EmojiCatalogState,
     val capabilities: EmojiCapabilities,
     val actions: Actions,
+    /**
+     * False hides server custom emoji for reaction targets, leaving the unicode tab.
+     * The host derives it from the account's capability snapshot; the composer target
+     * always keeps its catalog.
+     */
+    val customReactionsAllowed: Boolean = true,
 ) {
     /** Catalog loading and picker-preference operations owned by the emoji catalog owner. */
     interface Actions {

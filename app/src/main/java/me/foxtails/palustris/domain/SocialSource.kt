@@ -58,6 +58,23 @@ interface SocialSource {
     suspend fun translate(id: EntityId, targetLanguage: String): Translation = unsupported("translate")
     suspend fun react(id: EntityId, emoji: String) = unsupported<Unit>("react")
     suspend fun react(id: EntityId, choice: EmojiChoice) { react(id, choice.submissionValue) }
+
+    /**
+     * Sets the account's reaction to [choice] and returns the server's verdict with the status
+     * as the server now holds it. The default delegates to [react] and [removeReaction], so an
+     * adapter without a response body keeps its existing behavior; an adapter whose mutation
+     * returns the updated status overrides this to surface it for state replacement.
+     */
+    suspend fun setReaction(id: EntityId, choice: EmojiChoice, selected: Boolean): PostActionResult {
+        if (selected) react(id, choice) else removeReaction(id, choice)
+        return PostActionResult(selected = selected)
+    }
+
+    /**
+     * The accounts that reacted with [choice] on [id], oldest first where the server orders
+     * them. The default knows no listing route.
+     */
+    suspend fun reactionAccounts(id: EntityId, choice: EmojiChoice): List<Account> = unsupported("react.accounts")
     suspend fun favorite(id: EntityId) = unsupported<Unit>("favorite")
     suspend fun favorite(id: EntityId, favouriteEmoji: String): Unit = favorite(id)
     suspend fun unfavorite(id: EntityId, favouriteEmoji: String? = null) = unsupported<Unit>("favorite")

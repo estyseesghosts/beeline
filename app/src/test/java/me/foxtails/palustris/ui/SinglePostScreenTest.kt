@@ -32,6 +32,7 @@ import me.foxtails.palustris.domain.Attachment
 import me.foxtails.palustris.domain.Audience
 import me.foxtails.palustris.domain.Connection
 import me.foxtails.palustris.domain.ContentWarningRules
+import me.foxtails.palustris.domain.EmojiChoice
 import me.foxtails.palustris.domain.EntityId
 import me.foxtails.palustris.domain.HiddenContentPresentation
 import me.foxtails.palustris.domain.MediaKind
@@ -41,9 +42,13 @@ import me.foxtails.palustris.domain.PostAction
 import me.foxtails.palustris.domain.PostInteractionCounts
 import me.foxtails.palustris.domain.Protocol
 import me.foxtails.palustris.domain.Reaction
+import me.foxtails.palustris.domain.ThreadConnectorInfo
+import me.foxtails.palustris.domain.ThreadRow
 import me.foxtails.palustris.ui.posts.LocalHiddenContentPresentation
 import me.foxtails.palustris.ui.posts.SinglePostPresentation
 import me.foxtails.palustris.ui.posts.SinglePostScreen
+import me.foxtails.palustris.ui.thread.PostThreadPhase
+import me.foxtails.palustris.ui.thread.PostThreadUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -1275,6 +1280,152 @@ class SinglePostScreenTest {
         val metadataBottom = compose.onNodeWithContentDescription("Post metadata", useUnmergedTree = true)
             .fetchSemanticsNode().boundsInRoot.bottom
         assertTrue(summaryTop >= metadataBottom)
+    }
+
+    @Test
+    fun focalRowWithMappedReactionActionEnablesTheToggle() {
+        val post = Post(
+            EntityId("https://example.org", "mapped-reactions"),
+            account,
+            "Mapped reactions",
+            0,
+            Audience.Public,
+            reactions = listOf(Reaction("👍", 2, false)),
+            availableActions = setOf(PostAction.Reply, PostAction.Reshare, PostAction.Favorite, PostAction.React, PostAction.Bookmark),
+        )
+        var toggled: EmojiChoice? = null
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(
+                    OwnedPost(account.id, post),
+                    onClose = {},
+                    availableActions = setOf(PostAction.Reply, PostAction.Reshare, PostAction.Favorite, PostAction.React, PostAction.Bookmark),
+                    onReaction = { _, choice -> toggled = choice },
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("reaction_chip_👍", useUnmergedTree = true).performClick()
+
+        assertEquals("👍", toggled?.submissionValue)
+    }
+
+    @Test
+    fun focalRowWithoutPerPostReactionActionStaysDisabled() {
+        val post = Post(
+            EntityId("https://example.org", "stripped-reactions"),
+            account,
+            "Stripped reactions",
+            0,
+            Audience.Public,
+            reactions = listOf(Reaction("👍", 2, false)),
+            availableActions = setOf(PostAction.Reply, PostAction.Favorite),
+        )
+        var toggled: EmojiChoice? = null
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(
+                    OwnedPost(account.id, post),
+                    onClose = {},
+                    availableActions = setOf(PostAction.Reply, PostAction.Reshare, PostAction.Favorite, PostAction.React, PostAction.Bookmark),
+                    onReaction = { _, choice -> toggled = choice },
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("reaction_chip_👍", useUnmergedTree = true).performClick()
+
+        assertEquals(null, toggled)
+    }
+
+    @Test
+    fun focalLongPressLoadsReactorsThroughTheScreenLoader() {
+        val post = Post(
+            EntityId("https://example.org", "focal-reactors"),
+            account,
+            "Focal reactors",
+            0,
+            Audience.Public,
+            reactions = listOf(Reaction("👍", 2, false)),
+        )
+        val reactor = Account(
+            AccountId(Connection("https://example.org", Protocol.MASTODON), "reactor"),
+            "Reactor",
+            "@reactor@example.org",
+        )
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(
+                    OwnedPost(account.id, post),
+                    onClose = {},
+                    availableActions = PostAction.entries.toSet(),
+                    onLoadReactionAccounts = { _, _ -> listOf(reactor) },
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("reaction_chip_👍", useUnmergedTree = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("reaction_reactors_sheet").assertIsDisplayed()
+        compose.onNodeWithText("Reactor").assertIsDisplayed()
+    }
+
+    @Test
+    fun replyRowOpensThePickerAndLoadsReactors() {
+        val reply = Post(
+            EntityId("https://example.org", "reply-reactions"),
+            account,
+            "Reply reactions",
+            0,
+            Audience.Public,
+            reactions = listOf(Reaction("👍", 2, false)),
+        )
+        val reactor = Account(
+            AccountId(Connection("https://example.org", Protocol.MASTODON), "reactor"),
+            "Reactor",
+            "@reactor@example.org",
+        )
+        val focal = Post(EntityId("https://example.org", "reply-focal"), account, "Reply focal", 0, Audience.Public)
+        var opened: OwnedPost? = null
+        compose.activity.runOnUiThread {
+            compose.activity.setContent {
+                SinglePostScreen(
+                    OwnedPost(account.id, focal),
+                    onClose = {},
+                    availableActions = PostAction.entries.toSet(),
+                    onOpenReactionPicker = { opened = it },
+                    onLoadReactionAccounts = { _, _ -> listOf(reactor) },
+                    threadState = PostThreadUiState(
+                        phase = PostThreadPhase.Content,
+                        rows = listOf(
+                            ThreadRow(
+                                ownedPost = OwnedPost(account.id, reply),
+                                parentId = focal.id,
+                                semanticDepth = 1,
+                                branchId = "reply-branch",
+                                connector = ThreadConnectorInfo(verifiedParent = true, hasFollowingSibling = false),
+                                parentMissing = false,
+                                stableKey = "reply-row",
+                            ),
+                        ),
+                    ),
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("reaction_add").performClick()
+        assertEquals("reply-reactions", opened?.post?.id?.value)
+
+        compose.onNodeWithTag("reaction_chip_👍", useUnmergedTree = true).performTouchInput { longClick() }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("reaction_reactors_sheet").assertIsDisplayed()
+        compose.onNodeWithText("Reactor").assertIsDisplayed()
     }
 
     @Test

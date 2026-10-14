@@ -161,10 +161,27 @@ fun EmojiPickerHost(
     onToggleGroupPinned: (String) -> Unit = {},
     onTogglePinnedEmoji: (String) -> Unit = {},
     onCloseRequest: () -> Unit = {},
+    /**
+     * False hides server custom emoji for a reaction target, leaving the unicode tab. Custom
+     * emoji come only from the account's own `/api/v1/custom_emojis` catalog; remote
+     * reactions never enter the picker. The composer target always keeps its catalog.
+     */
+    customReactionsAllowed: Boolean = true,
  ) {
     if (target == null) return
     LaunchedEffect(target) { onLoadCatalog() }
     val readOnlyReactions = target is EmojiPickerTarget.Reaction && !mutationSupported
+    // Remote reactions display on the post but are not reactable, so they stay out of the
+    // picker. Custom emoji stay out too when the server did not advertise them.
+    val reactionChoices = (target as? EmojiPickerTarget.Reaction)?.post?.post?.reactions
+        ?.filter { it.host == null && (customReactionsAllowed || it.emojiMetadata == null && !it.emoji.startsWith(":")) }
+        ?.map { reaction -> EmojiChoice(reaction.emoji, reaction.emoji, reaction.emojiMetadata) }
+        .orEmpty()
+    val pickerCatalog = if (target is EmojiPickerTarget.Reaction && !customReactionsAllowed) {
+        catalog.copy(items = emptyList())
+    } else {
+        catalog
+    }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -225,11 +242,9 @@ fun EmojiPickerHost(
                         }
                     }
                     EmojiChoiceGrid(
-                        catalogItems = catalog.items,
+                        catalogItems = pickerCatalog.items,
                         preferences = catalog.preferences,
-                        additionalChoices = (target as? EmojiPickerTarget.Reaction)?.post?.post?.reactions?.map { reaction ->
-                            EmojiChoice(reaction.emoji, reaction.emoji, reaction.emojiMetadata)
-                        }.orEmpty(),
+                        additionalChoices = reactionChoices,
                         selectedIdentities = (target as? EmojiPickerTarget.Reaction)?.post?.post?.let { post ->
                             buildSet {
                                 post.selectedReactions.forEach { add(it.submissionValue) }

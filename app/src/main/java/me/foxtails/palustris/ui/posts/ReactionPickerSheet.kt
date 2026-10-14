@@ -71,13 +71,20 @@ internal fun Post.selectedReactionIdentities(): Set<String> = buildSet {
     myReaction?.let(::add)
 }
 
-internal fun Post.reactionChoices(): List<EmojiChoice> = reactions.map { reaction ->
-    EmojiChoice(
-        submissionValue = reaction.emoji,
-        displayText = reaction.emoji,
-        emoji = reaction.emojiMetadata,
-    )
-}
+/**
+ * The post's reactions as picker choices. Remote reactions never enter the picker, and
+ * custom emoji stay out unless the server advertised them. This mirrors the
+ * EmojiPickerHost reaction-target gate; the bubble is always a reaction surface.
+ */
+internal fun Post.bubbleReactionChoices(customReactionsAllowed: Boolean): List<EmojiChoice> = reactions
+    .filter { it.host == null && (customReactionsAllowed || it.emojiMetadata == null && !it.emoji.startsWith(":")) }
+    .map { reaction ->
+        EmojiChoice(
+            submissionValue = reaction.emoji,
+            displayText = reaction.emoji,
+            emoji = reaction.emojiMetadata,
+        )
+    }
 
 /**
  * The full picker in a bottom sheet for one reaction target. It uses the same catalog, recents,
@@ -87,6 +94,7 @@ internal fun Post.reactionChoices(): List<EmojiChoice> = reactions.map { reactio
 internal fun ReactionPickerSheet(
     post: Post,
     catalog: EmojiCatalogState,
+    customReactionsAllowed: Boolean,
     recents: EmojiRecents,
     actions: EmojiPreferenceActions,
     onSelected: (EmojiChoice) -> Unit,
@@ -104,8 +112,8 @@ internal fun ReactionPickerSheet(
                 modifier = Modifier.padding(vertical = 4.dp),
             )
             EmojiChoiceGrid(
-                catalogItems = catalog.items,
-                additionalChoices = post.reactionChoices(),
+                catalogItems = if (customReactionsAllowed) catalog.items else emptyList(),
+                additionalChoices = post.bubbleReactionChoices(customReactionsAllowed),
                 selectedIdentities = post.selectedReactionIdentities(),
                 preferences = catalog.preferences,
                 pins = catalog.pinState(),
