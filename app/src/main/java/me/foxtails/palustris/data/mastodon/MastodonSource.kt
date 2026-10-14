@@ -278,6 +278,11 @@ class MastodonSource(
             post.quoteApprovalPolicy?.takeIf { capabilities.posting.quoteApprovalPolicy }?.let { policy ->
                 add("quote_approval_policy" to policy.wire)
             }
+            // Pleroma-family servers read `content_type`, but only when they list `post_formats`.
+            // Any other server, a missing choice, or a format the server did not list sends nothing.
+            post.contentType?.takeIf { it in (capabilities.posting.postFormats ?: emptyList()) }?.let { format ->
+                add("content_type" to format)
+            }
             post.poll?.let { poll ->
                 poll.cleaned().choices.forEach { add("poll[options][]" to it) }
                 // The server requires an expiry whenever options are sent.

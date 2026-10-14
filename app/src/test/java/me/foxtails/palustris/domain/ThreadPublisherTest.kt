@@ -273,4 +273,23 @@ class ThreadPublisherTest {
         assertTrue(source.uploads.single().sensitive)
         assertTrue(preparer.seenCompress.single())
     }
+
+    @Test
+    fun threadContentTypeReachesEveryRequestAndDefaultsToOmit() = runTest {
+        val source = FakeSource()
+        val publisher = ThreadPublisher(source, FakePreparer(), source.capabilities.posting, accountId)
+        val result = publisher.publish(
+            publication(entries = listOf(entry("e1", "one"), entry("e2", "two")))
+                .copy(options = PostOptions(contentType = "text/markdown")),
+        ) { _, _ -> }
+
+        assertTrue(result is ThreadPublishResult.Success)
+        assertEquals(listOf("text/markdown", "text/markdown"), source.creates.map { it.contentType })
+
+        val plain = FakeSource()
+        val plainPublisher = ThreadPublisher(plain, FakePreparer(), plain.capabilities.posting, accountId)
+        plainPublisher.publish(publication(entries = listOf(entry("e1", "one")))) { _, _ -> }
+
+        assertNull(plain.creates.single().contentType)
+    }
 }

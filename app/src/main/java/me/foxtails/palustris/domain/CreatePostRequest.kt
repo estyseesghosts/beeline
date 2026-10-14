@@ -47,4 +47,9 @@ data class CreatePostRequest(
     val scheduledAtEpochMillis: Long? = null,
     /** Lets a server drop a duplicate of the same publish. Only servers that support it use it. */
     val idempotencyKey: String? = null,
+    /**
+     * Post format such as `text/markdown`. Null omits it. Adapters send it only where the
+     * server lists it in its posting capabilities.
+     */
+    val contentType: String? = null,
 )

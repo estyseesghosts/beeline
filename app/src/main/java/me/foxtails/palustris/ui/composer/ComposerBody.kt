@@ -234,6 +234,7 @@ internal fun ComposerBody(
                     onLocalOnly = owner::setLocalOnly,
                     onQuotePolicy = owner::setQuotePolicy,
                     onScheduledAt = owner::setScheduledAt,
+                    onContentType = owner::setContentType,
                     audienceOptions = audienceOptions,
                     onAudience = owner::setAudience,
                 )

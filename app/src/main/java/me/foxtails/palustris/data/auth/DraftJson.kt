@@ -54,6 +54,7 @@ internal fun PostDraft.toJson() = JSONObject()
     .put("localOnly", options.localOnly)
     .put("quotePolicy", options.quotePolicy?.name)
     .put("scheduledAt", options.scheduledAtEpochMillis)
+    .put("contentType", options.contentType)
 
 internal fun JSONObject.toDraft(): PostDraft {
     val origin = optString("origin").takeIf { it.isNotBlank() }
@@ -100,6 +101,7 @@ private fun JSONObject.toPostOptions(): PostOptions = PostOptions(
     localOnly = optBoolean("localOnly"),
     quotePolicy = nullableString("quotePolicy")?.let { name -> QuoteApprovalPolicy.entries.firstOrNull { it.name == name } },
     scheduledAtEpochMillis = if (isNull("scheduledAt")) null else optLong("scheduledAt").takeIf { it > 0 },
+    contentType = nullableString("contentType"),
 )
 
 private fun JSONObject.nullableString(key: String): String? =

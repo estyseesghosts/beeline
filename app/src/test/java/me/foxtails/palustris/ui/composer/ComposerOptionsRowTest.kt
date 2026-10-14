@@ -56,6 +56,7 @@ class ComposerOptionsRowTest {
                         onLocalOnly = { state.value = state.value.copy(localOnly = it); onOptions(state.value) },
                         onQuotePolicy = { state.value = state.value.copy(quotePolicy = it); onOptions(state.value) },
                         onScheduledAt = { state.value = state.value.copy(scheduledAtEpochMillis = it); onOptions(state.value) },
+                        onContentType = { state.value = state.value.copy(contentType = it); onOptions(state.value) },
                     )
                 }
             }
@@ -69,6 +70,43 @@ class ComposerOptionsRowTest {
         compose.onNodeWithTag("composer_option_local_only").assertDoesNotExist()
         compose.onNodeWithTag("composer_option_quote_policy").assertDoesNotExist()
         compose.onNodeWithTag("composer_option_schedule").assertDoesNotExist()
+        compose.onNodeWithTag("composer_option_content_type").assertDoesNotExist()
+    }
+
+    @Test
+    fun theFormatSelectorStaysHiddenWithoutPostFormats() {
+        show(PostingCapabilities(scheduling = SchedulingCapability(ScheduleRoute.Mastodon, 300L)))
+
+        compose.onNodeWithTag("composer_option_schedule").assertIsDisplayed()
+        compose.onNodeWithTag("composer_option_content_type").assertDoesNotExist()
+    }
+
+    @Test
+    fun theFormatSelectorDefaultsToOmittingContentType() {
+        var latest = PostOptions()
+        show(
+            PostingCapabilities(postFormats = listOf("text/plain", "text/markdown")),
+            onOptions = { latest = it },
+        )
+
+        compose.onNodeWithTag("composer_option_content_type").assertIsDisplayed()
+        compose.onNodeWithText("Default").assertIsDisplayed()
+
+        assertEquals(null, latest.contentType)
+    }
+
+    @Test
+    fun theFormatMenuSetsAContentType() {
+        var latest = PostOptions()
+        show(
+            PostingCapabilities(postFormats = listOf("text/plain", "text/markdown")),
+            onOptions = { latest = it },
+        )
+
+        compose.onNodeWithTag("composer_option_content_type").performClick()
+        compose.onNodeWithText("text/markdown").performClick()
+
+        assertEquals("text/markdown", latest.contentType)
     }
 
     @Test

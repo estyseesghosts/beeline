@@ -145,6 +145,9 @@ class ComposerOwner internal constructor(
     fun setLocalOnly(localOnly: Boolean) { mutateEditor { it.copy(options = it.options.copy(localOnly = localOnly)) } }
     fun setQuotePolicy(policy: QuoteApprovalPolicy?) { mutateEditor { it.copy(options = it.options.copy(quotePolicy = policy)) } }
 
+    /** Sets the post format for the thread, or null to omit `content_type`. */
+    fun setContentType(contentType: String?) { mutateEditor { it.copy(options = it.options.copy(contentType = contentType)) } }
+
     /** Sets the time to publish, or null to publish now. A thread cannot be scheduled, because its later posts reply to a post that does not exist yet. */
     fun setScheduledAt(epochMillis: Long?) {
         if (epochMillis != null && editor.entries.size > 1) return

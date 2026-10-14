@@ -48,7 +48,8 @@ import me.foxtails.palustris.ui.AppIcons
 
 /**
  * Row 2 of the composer bubbles: the choices that belong to the whole thread. They are its audience, keeping it
- * on the author's server, who may quote it, and when to send it. Each pill shows only when the server offers it.
+ * on the author's server, who may quote it, when to send it, and which post format to send. Each pill shows only
+ * when the server offers it.
  * The row holds no state beyond its open menus and picker; the editor owns [options] and [audience].
  */
 @Composable
@@ -63,14 +64,16 @@ internal fun ComposerOptionsRow(
     modifier: Modifier = Modifier,
     audienceOptions: List<Audience> = emptyList(),
     onAudience: (Audience) -> Unit = {},
+    onContentType: (String?) -> Unit = {},
     nowMillis: () -> Long = System::currentTimeMillis,
 ) {
     val localOnlyShown = posting.localOnly != LocalOnlyRoute.None
     val scheduling = posting.scheduling
-    if (audienceOptions.isEmpty() && !localOnlyShown && !posting.quoteApprovalPolicy && scheduling == null) return
+    if (audienceOptions.isEmpty() && !localOnlyShown && !posting.quoteApprovalPolicy && scheduling == null && posting.postFormats == null) return
     var audienceOpen by remember { mutableStateOf(false) }
     var policyOpen by remember { mutableStateOf(false) }
     var pickerOpen by remember { mutableStateOf(false) }
+    var formatOpen by remember { mutableStateOf(false) }
     Row(
         modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -169,6 +172,38 @@ internal fun ComposerOptionsRow(
                         onScheduledAt(at)
                     },
                 )
+            }
+        }
+        if (posting.postFormats != null) {
+            Box {
+                // The pill names the chosen wire value, or Default when nothing is sent. The menu
+                // lists the server's own values, so no new product text is needed for each format.
+                ComposerPillBubble(
+                    label = options.contentType ?: stringResource(R.string.quote_policy_default),
+                    tone = if (options.contentType != null) ComposerBubbleTone.Selected else ComposerBubbleTone.Plain,
+                    onClick = { formatOpen = true },
+                    modifier = Modifier.testTag("composer_option_content_type"),
+                )
+                DropdownMenu(expanded = formatOpen, onDismissRequest = { formatOpen = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.quote_policy_default)) },
+                        trailingIcon = { if (options.contentType == null) Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                        onClick = {
+                            formatOpen = false
+                            onContentType(null)
+                        },
+                    )
+                    posting.postFormats.forEach { format ->
+                        DropdownMenuItem(
+                            text = { Text(format) },
+                            trailingIcon = { if (format == options.contentType) Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                            onClick = {
+                                formatOpen = false
+                                onContentType(format)
+                            },
+                        )
+                    }
+                }
             }
         }
     }

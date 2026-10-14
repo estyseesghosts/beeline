@@ -139,6 +139,7 @@ class ThreadPublisher(
                 localOnly = publication.options.localOnly,
                 scheduledAtEpochMillis = if (index == 0) publication.options.scheduledAtEpochMillis else null,
                 idempotencyKey = "${publication.draftId}-${entry.id}",
+                contentType = publication.options.contentType,
             )
             val scheduling = request.scheduledAtEpochMillis != null
             val post = try {

@@ -316,4 +316,21 @@ class LocalOnlyAndScheduleTest {
         assertNotNull(restored.options.scheduledAtEpochMillis)
         assertTrue(PostDraft(id = "e", accountId = null, text = "").toJson().toDraft().options.isDefault)
     }
+
+    @Test
+    fun draftsKeepContentType() {
+        val markdown = PostDraft(
+            id = "m",
+            accountId = AccountId(Connection(origin, Protocol.MISSKEY), "me"),
+            text = "x",
+            options = PostOptions(contentType = "text/markdown"),
+        )
+        assertEquals("text/markdown", markdown.toJson().toDraft().options.contentType)
+
+        val omit = PostDraft(id = "o", accountId = null, text = "x")
+        assertNull(omit.toJson().toDraft().options.contentType)
+
+        val legacy = PostDraft(id = "l", accountId = null, text = "x").toJson().apply { remove("contentType") }
+        assertNull(legacy.toDraft().options.contentType)
+    }
 }

@@ -426,10 +426,16 @@ class MastodonCapabilityProbe(private val api: AuthenticatedHttpClient) : Capabi
                 capabilities = PostingCapabilities(
                     lengthRule = PostLengthRule.MastodonCombined,
                     maxWarningLength = null,
-                    // Pleroma-family servers report the attachment cap at the top level.
+                    // Pleroma-family servers report the attachment cap at the top level, and that block
+                    // wins only when `configuration.statuses` says nothing: the nested value stays first.
                     maxAttachments = statuses.positiveInt("max_media_attachments")
                         ?: instance.positiveInt("max_media_attachments")
                         ?: DEFAULT_MAX_ATTACHMENTS,
+                    // Limits audit: the fixture-confirmed Pleroma-family top-level keys are
+                    // `max_toot_chars`, `max_media_attachments`, and `poll_limits`. No documented
+                    // top-level key exists for the alt-text, image-byte, image-pixel, or video-byte
+                    // limits in that shape, so `configuration.media_attachments` stays their only
+                    // source. No top-level fallback is added here; inventing one would guess.
                     maxAltTextLength = media.positiveInt("description_limit") ?: DEFAULT_ALT_TEXT_LENGTH,
                     maxImageBytes = media.positiveLong("image_size_limit") ?: DEFAULT_IMAGE_BYTES,
                     maxImagePixels = media.positiveLong("image_matrix_limit") ?: DEFAULT_IMAGE_PIXELS,

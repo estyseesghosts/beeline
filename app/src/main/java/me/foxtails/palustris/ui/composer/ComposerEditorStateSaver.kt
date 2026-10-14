@@ -62,6 +62,7 @@ internal val ComposerEditorStateSaver: Saver<ComposerEditorState, Any> = listSav
             it.options.localOnly,
             it.options.quotePolicy?.name,
             it.options.scheduledAtEpochMillis,
+            it.options.contentType,
         )
     },
     restore = {
@@ -117,6 +118,8 @@ private fun restoreOptions(row: List<Any?>): PostOptions = PostOptions(
     localOnly = row.getOrNull(OPTIONS_INDEX) as? Boolean ?: false,
     quotePolicy = (row.getOrNull(OPTIONS_INDEX + 1) as? String)?.let { name -> QuoteApprovalPolicy.entries.firstOrNull { it.name == name } },
     scheduledAtEpochMillis = (row.getOrNull(OPTIONS_INDEX + 2) as? Number)?.toLong(),
+    // Snapshots saved before the format choice carry no fourth field and restore to omit it.
+    contentType = row.getOrNull(OPTIONS_INDEX + 3) as? String,
 )
 
 private fun saveEntry(entry: ComposerEntryState): List<Any?> =
