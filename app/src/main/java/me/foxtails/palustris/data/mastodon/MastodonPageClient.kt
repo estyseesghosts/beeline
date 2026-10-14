@@ -101,7 +101,13 @@ internal class MastodonPageClient(
             route.name == "followed_tags" && (page.queryParameter("limit")?.let { it != "200" } == true) ||
             when (route.name) {
                 "timeline:Local" -> page.queryParameter("local") != "true"
-                "timeline:Federated", "timeline:Home" -> page.queryParameter("local") != null
+                // Pleroma echoes its OpenAPI defaults on every Link URL, so Home and Federated
+                // continuations carry a `local=false` the client never sent. Absent or that echoed
+                // `false` passes; blank, truthy, duplicated, or unexpected values still fail.
+                "timeline:Federated", "timeline:Home" -> when (page.queryParameter("local")?.lowercase()) {
+                    null, "false" -> false
+                    else -> true
+                }
                 else -> false
             }
         ) throw SourceError.Unsupported("pagination.cursor")

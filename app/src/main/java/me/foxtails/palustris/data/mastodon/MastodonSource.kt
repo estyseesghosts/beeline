@@ -848,7 +848,9 @@ class MastodonSource(
         } catch (e: SourceError) {
             throw e
         } catch (e: HttpStatusFailure) {
-            if (e.status == 404 || e.status == 405) {
+            // Pleroma answers 400 (not 404) when the v1 unread_count route is missing:
+            // the path collides with notifications/:id. Treat it as an absent route.
+            if (e.status == 404 || e.status == 405 || (operation == "notifications.unread" && e.status == 400)) {
                 demoteOnNotFound(operation, e)
                 // A missing optional route is Unsupported, not a transient failure, so the
                 // caller hides it instead of surfacing a retryable server error.
@@ -872,8 +874,12 @@ class MastodonSource(
     private fun demoteOnNotFound(operation: String, failure: HttpStatusFailure) {
         // capabilityStatus maps a 404 to Unsupported; a 405 maps to temporarily unavailable but
         // still proves an absent optional route, so both demote while anything else returns here.
+        // A 400 on the unread count proves the same absence on Pleroma, whose v1 path collides
+        // with notifications/:id, so it demotes there too.
         val mapped = capabilityStatus(MastodonErrorMapper.map(failure.status, failure.body))
-        if (mapped != CapabilityStatus.Unsupported && failure.status != 405) return
+        if (mapped != CapabilityStatus.Unsupported && failure.status != 405 &&
+            !(operation == "notifications.unread" && failure.status == 400)
+        ) return
         val current = _capabilities.value
         _capabilities.value = when (operation) {
             // A missing list collection proves list timelines unusable for the session. The list

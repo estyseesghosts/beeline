@@ -78,6 +78,40 @@ class MastodonPagingRelaxTest {
     }
 
     @Test
+    fun pleromaHomeLinkWithEchoedLocalFalseParses() = runBlocking {
+        // Pleroma echoes its OpenAPI defaults on every Link URL, so the continuation
+        // carries a `local=false` the client never sent. It must still page.
+        server.enqueue(MockResponse().setBody(load("fixtures/pleroma/home.json")).addHeader(
+            "Link", "<$origin/api/v1/timelines/home?limit=20&local=false&max_id=pleroma-home-older&only_media=false>; rel=\"next\"",
+        ))
+        server.enqueue(MockResponse().setBody(JSONArray().toString()))
+        val source = source()
+
+        val first = source.timeline(Timeline.Home)
+
+        assertEquals(listOf("pleroma-home-newest", "pleroma-home-older"), first.items.map { it.id.value })
+        assertNotNull(first.nextCursor)
+        source.timeline(Timeline.Home, first.nextCursor)
+        server.takeRequest()
+        assertEquals(
+            "/api/v1/timelines/home?limit=20&local=false&max_id=pleroma-home-older&only_media=false",
+            server.takeRequest().path,
+        )
+    }
+
+    @Test
+    fun homeLinkWithLocalTrueStillFails() = runBlocking {
+        // A truthy `local` changes the requested scope, so it still fails validation.
+        server.enqueue(MockResponse().setBody(load("fixtures/pleroma/home.json")).addHeader(
+            "Link", "<$origin/api/v1/timelines/home?local=true&max_id=pleroma-home-older>; rel=\"next\"",
+        ))
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source().timeline(Timeline.Home) }
+        }
+        assertEquals("pagination.link", error.feature)
+    }
+
+    @Test
     fun representativePixelfedLinkParsesAndReplaysExtrasInOrder() = runBlocking {
         server.enqueue(MockResponse().setBody(load("fixtures/pixelfed/home.json"))
             .addHeader("Link", fixtureLink("fixtures/pixelfed/link.txt", "https://pixelfed.example")))

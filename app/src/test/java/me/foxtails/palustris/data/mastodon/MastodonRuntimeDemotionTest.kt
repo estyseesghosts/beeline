@@ -112,6 +112,23 @@ class MastodonRuntimeDemotionTest {
     }
 
     @Test
+    fun unreadCount400DemotesUnreadForTheSession() = runBlocking {
+        // Pleroma answers 400 (not 404): the v1 path collides with notifications/:id.
+        server.enqueue(MockResponse().setResponseCode(400).setBody(NOT_FOUND_BODY))
+        val source = source()
+
+        val error = assertThrows(SourceError.Unsupported::class.java) {
+            runBlocking { source.notificationUnreadState() }
+        }
+
+        assertEquals("notifications.unread", error.feature)
+        assertEquals(CapabilityStatus.Unsupported, source.capabilities.notifications.unread)
+        // Without an unread route the state reads Unknown without the network.
+        assertEquals(NotificationUnreadState.Unknown, source.notificationUnreadState())
+        assertEquals(1, server.requestCount)
+    }
+
+    @Test
     fun trends404OnEverySectionHidesTheSections() = runBlocking {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse =

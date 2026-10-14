@@ -18,11 +18,21 @@ Fix Pleroma home timeline load failure. The timeline page must return good statu
 
 # Completed
 
-- Slice 1 — per-item tolerance in MastodonTimelineService plus MastodonTimelineToleranceTest (3 tests). Commit hash in handoff entry.
+- Slice 1 — per-item tolerance in MastodonTimelineService plus MastodonTimelineToleranceTest (3 tests). Commit 155fa32b.
+- Slice 2 — live Pleroma 2.7.2 fixes on social.paladyn.org: accept echoed local=false on Home/Federated Link continuations (MastodonPageClient) + demote unread_count 400 as absent route (MastodonSource). Tests: local=false parses+replays and local=true still fails (MastodonPagingRelaxTest), unread 400 demotes (MastodonRuntimeDemotionTest). Commit hash in handoff entry.
 
 # Current slice
 
-- None. Slice 1 committed. Next: user live test on Pleroma server with testsigned APK.
+- None. Slice 2 committed. Next: user live test on Pleroma server with testsigned APK.
+
+# Files involved
+
+- app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonPageClient.kt
+- app/src/main/java/me/foxtails/palustris/data/mastodon/MastodonSource.kt
+- app/src/test/java/me/foxtails/palustris/data/mastodon/MastodonPagingRelaxTest.kt
+- app/src/test/java/me/foxtails/palustris/data/mastodon/MastodonRuntimeDemotionTest.kt
+- docs/agents/tasks/pleroma-home-timeline.md
+- logs/261014-120000-pleroma-home.txt
 
 # Files involved
 
@@ -33,16 +43,17 @@ Fix Pleroma home timeline load failure. The timeline page must return good statu
 
 # Verification
 
-- Full :app:testDebugUnitTest green, including 3 new MastodonTimelineToleranceTest tests (0 failures).
-- tools/tests 52 pass.
-- Arch audit exits 1 on pre-existing findings (recorded, baseline untouched). One new finding on touched file: function-complexity-growth MastodonTimelineService.kt:timeline. Reviewer: dismiss, function stays cohesive.
+- Slice 2: full :app:testDebugUnitTest green (incl. pleromaHomeLinkWithEchoedLocalFalseParses, homeLinkWithLocalTrueStillFails, unreadCount400DemotesUnreadForTheSession).
 - :app:lintDebug, :app:ktlintCheck, :app:assembleDebug, :app:assembleRelease green.
-- problem_solver review: contract satisfied, scope clean, no code repairs. REQUIRED records item (confirm slice file isolation) satisfied by owner.
-- Docs: no wiki update. No documented timeline error behavior changes; tolerance matches the documented mapper-skip precedent.
+- tools/tests 52 pass (slice 1; unchanged since).
+- Arch audit exits 1 on pre-existing findings (baseline untouched).
+- problem_solver review: no blocking findings; R1 comment + R2 records repaired by owner. O1 skipped (shared branch already covered); O2 bare-?local presence check recorded as follow-up.
+- Docs: no wiki update (bug fixes only, no documented behavior change).
+- Live verification on social.paladyn.org pending new testsigned APK.
 
 # Next
 
-- User live test on Pleroma server with testsigned APK. Follow-up slices (separate): list/bookmark/hashtag/profile strictness, search offset/resolve gaps.
+- User live test on Pleroma server with testsigned APK. Follow-ups (separate): list/bookmark/hashtag/profile strictness, search offset/resolve gaps, bare-?local presence hardening.
 
 # Blockers
 
@@ -51,4 +62,5 @@ Fix Pleroma home timeline load failure. The timeline page must return good statu
 
 # Last safe commit
 
-- c45d62e4 Add-recommendation-feedback-D4
+- 155fa32b Skip malformed entries in Mastodon home timeline pages (slice commit; preceding safe: c45d62e4).
+- Testsigned APK: app/build/outputs/apk/release/app-release-testsigned.apk (release build, debug-key signed, apksigner verified). Not pushed.
