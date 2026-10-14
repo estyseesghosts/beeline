@@ -234,6 +234,15 @@ when the revision differs. A stale source therefore cannot overwrite a replaced 
 `capabilitiesRetryNotBefore = now + 30 seconds`. A request inside that window reuses the existing
 capability evidence instead of re-probing. A successful probe clears the window.
 
+## OAuth Scope Handling
+
+`data/auth/MastodonAuth` requests `read write follow push` and derives `AccessGrant` from the
+`/oauth/token` scope field. The field accepts a string or an array and accepts spaces or commas.
+A missing field falls back to the approved `PendingLogin.scope`. The fallback only enables the
+upload button; the server still enforces the grant. A missing `MediaUpload` record stays `Denied`; only an explicit `write` or `write:media`
+grant enables the composer photo button. `MediaUploadAccessTest` covers string, array, comma,
+and missing-field shapes.
+
 ## Persistence Contracts
 
 | Data | Location | Protection |

@@ -138,8 +138,7 @@ class MastodonAuth(
             canPublish = true,
             access = AccessGrant(
                 requested = pending.requestedAccess,
-                known = tokenJson.optString("scope").takeIf { it.isNotBlank() }
-                    ?.let(::accessFromScope).orEmpty(),
+                known = accessFromScopes(scopesFromToken(tokenJson, pending.scope)),
             ),
             capabilities = capabilities,
         )
@@ -168,9 +167,36 @@ class MastodonAuth(
         )
     }
 
-    private fun accessFromScope(scope: String): Map<AccessScope, AccessStatus> {
-        val scopes = scope.split(Regex("\\s+")).filter(String::isNotBlank).toSet()
-        return mapOf(
+    /**
+     * Splits one OAuth scope value on whitespace or commas.
+     * Some servers return the scope as an array or use commas.
+     */
+    private fun splitScopeValue(value: String): Set<String> =
+        value.split(Regex("[\\s,]+")).filter(String::isNotBlank).toSet()
+
+    /**
+     * Reads granted scopes from the token response.
+     * Accepts a space-separated string, a comma-separated string, or a JSON
+     * array of such strings. Falls back to the approved [PendingLogin.scope]
+     * when the server omits the field or returns it empty. The fallback assumes the token carries
+     * the scopes the user just approved. It only enables the upload button.
+     * The server still rejects an upload the token does not allow. A
+     * read-only fallback still records `Denied`.
+     */
+    private fun scopesFromToken(tokenJson: JSONObject, fallbackScope: String): Set<String> {
+        tokenJson.optJSONArray("scope")?.let { array ->
+            val collected = (0 until array.length()).flatMap { index ->
+                splitScopeValue(array.optString(index))
+            }.toSet()
+            if (collected.isNotEmpty()) return collected
+            return splitScopeValue(fallbackScope)
+        }
+        val raw = tokenJson.optString("scope").takeIf { it.isNotBlank() } ?: fallbackScope
+        return splitScopeValue(raw)
+    }
+
+    private fun accessFromScopes(scopes: Set<String>): Map<AccessScope, AccessStatus> =
+        mapOf(
             AccessScope.NotificationsRead to if ("read" in scopes) AccessStatus.Granted else AccessStatus.Denied,
             AccessScope.NotificationsWrite to if ("write" in scopes) AccessStatus.Granted else AccessStatus.Denied,
             AccessScope.FollowRequests to if ("read" in scopes && "write" in scopes) AccessStatus.Granted else AccessStatus.Denied,
@@ -184,7 +210,6 @@ class MastodonAuth(
               AccessScope.MediaUpload to if ("write" in scopes || "write:media" in scopes) AccessStatus.Granted else AccessStatus.Denied,
               AccessScope.PollVote to if ("write" in scopes || "write:statuses" in scopes) AccessStatus.Granted else AccessStatus.Denied,
         )
-    }
 
     private suspend fun detectPkceSupport(origin: String, api: AuthenticatedHttpClient): Boolean {
         Log.i(TAG, "oauth_stage capability-start")
@@ -219,8 +244,8 @@ class MastodonAuth(
 
     private companion object {
         const val TAG = "BeelineAuth"
-        const val MASTODON_SCOPE = "read write push"
-        val REQUIRED_APP_SCOPES = setOf("read", "write", "push")
+        const val MASTODON_SCOPE = "read write follow push"
+        val REQUIRED_APP_SCOPES = setOf("read", "write", "follow", "push")
         val REQUESTED_ACCESS = setOf(
             AccessScope.NotificationsRead,
             AccessScope.NotificationsWrite,

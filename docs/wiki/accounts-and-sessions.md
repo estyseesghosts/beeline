@@ -45,8 +45,11 @@ persists the new account index before activating the next account.
 ## Media upload access
 
 `AccessScope.MediaUpload` records whether the token can upload media. A new Misskey sign-in requests
-`write:drive` and records it as `Granted`. A Mastodon sign-in records `Granted` for the `write` or
-`write:media` scope. `AccessGrant.mediaUploadStatus` reads a missing record as `Denied`, so every
+`write:drive` and records it as `Granted`. A new Mastodon sign-in requests `read write follow push`
+and records `Granted` for the `write` or `write:media` scope. The sign-in accepts the scope as a
+string or an array and accepts spaces or commas as separators. It falls back to the approved scopes
+when the server omits the field. The fallback only enables the upload button; the server still
+rejects an upload the token does not allow. `AccessGrant.mediaUploadStatus` reads a missing record as `Denied`, so every
 Misskey account saved before this scope must sign in again before it can attach media. A Mastodon
 session saved earlier that holds the `write` scope gains the record when it loads. `effectiveMediaUpload`
 combines this access with `posting.mediaUpload` from the server capabilities.

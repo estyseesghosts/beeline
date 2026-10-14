@@ -34,6 +34,7 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 - Hashtag timelines load on Pleroma servers. Before, the search showed "Hashtag search failed."
 - Notifications open on Pleroma servers without an unread-count route. The unread badge stays hidden there.
 - One broken post no longer empties a Mastodon-compatible timeline. The feed skips it and shows the rest.
+- On Pixelfed servers, attaching a photo to a post no longer returns to the sign-in screen.
 
 ## 0.3.1
 

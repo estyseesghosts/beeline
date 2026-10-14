@@ -16,7 +16,9 @@ import me.foxtails.palustris.domain.Protocol as AppProtocol
 import me.foxtails.palustris.domain.ServerCapabilities
 import me.foxtails.palustris.domain.Session
 import me.foxtails.palustris.domain.effectiveMediaUpload
+import okhttp3.FormBody
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Response
@@ -79,6 +81,110 @@ class MediaUploadAccessTest {
     }
 
     @Test
+    fun pixelfedScopeShapesGrantUpload() = runBlocking {
+        val cases = listOf(
+            """{"access_token":"tok","scope":["read","write","push"]}""" to AccessStatus.Granted,
+            """{"access_token":"tok","scope":"read,write,push"}""" to AccessStatus.Granted,
+            """{"access_token":"tok","scope":"read write follow push"}""" to AccessStatus.Granted,
+            """{"access_token":"tok","scope":["read write follow push"]}""" to AccessStatus.Granted,
+            """{"access_token":"tok","scope":[]}""" to AccessStatus.Granted,
+            """{"access_token":"tok","scope":""}""" to AccessStatus.Granted,
+        )
+        cases.forEach { (tokenBody, expected) ->
+            MockWebServer().use { server ->
+                server.enqueue(MockResponse().setBody(tokenBody))
+                server.enqueue(
+                    MockResponse().setBody(
+                        """{"id":"m","username":"alice","acct":"alice","display_name":"Alice","avatar":"https://example.org/a.png","note":""}""",
+                    ),
+                )
+                val origin = server.url("/").toString().removeSuffix("/")
+                val pending = PendingLogin(
+                    origin, "state", System.currentTimeMillis(), AppProtocol.MASTODON,
+                    clientId = "id", clientSecret = "secret", codeVerifier = "v", codeChallenge = "c", authorizationCode = "code",
+                    scope = "read write follow push",
+                )
+
+                val session = MastodonAuth(AuthenticatedHttpClient(OkHttpClient()), AppRegistrationCache()).complete(pending)
+
+                assertEquals(tokenBody, expected, session.access.status(AccessScope.MediaUpload))
+            }
+        }
+    }
+
+    @Test
+    fun missingTokenScopeFallsBackToAuthorizedScope() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("""{"access_token":"tok"}"""))
+            server.enqueue(
+                MockResponse().setBody(
+                    """{"id":"m","username":"alice","acct":"alice","display_name":"Alice","avatar":"https://example.org/a.png","note":""}""",
+                ),
+            )
+            val origin = server.url("/").toString().removeSuffix("/")
+            val pending = PendingLogin(
+                origin, "state", System.currentTimeMillis(), AppProtocol.MASTODON,
+                clientId = "id", clientSecret = "secret", codeVerifier = "v", codeChallenge = "c", authorizationCode = "code",
+                scope = "read write follow push",
+            )
+
+            val session = MastodonAuth(AuthenticatedHttpClient(OkHttpClient()), AppRegistrationCache()).complete(pending)
+
+            assertEquals(AccessStatus.Granted, session.access.status(AccessScope.MediaUpload))
+        }
+    }
+
+    @Test
+    fun prepareRequestsFollowScopeForRegistrationAndAuthorize() = runBlocking {
+        val appFormScopes = mutableListOf<String>()
+        val client = OkHttpClient.Builder().addInterceptor { chain ->
+            when (chain.request().url.encodedPath) {
+                "/api/v1/apps" -> {
+                    val body = chain.request().body as? FormBody
+                    if (body != null) {
+                        for (index in 0 until body.size) {
+                            if (body.name(index) == "scopes") appFormScopes.add(body.value(index))
+                        }
+                    }
+                    jsonResponse(chain, """{"client_id":"id","client_secret":"secret"}""")
+                }
+                "/api/v2/instance" -> jsonResponse(chain, """{"version":"4.3.0"}""")
+                else -> error("unexpected path ${chain.request().url.encodedPath}")
+            }
+        }.build()
+        val auth = MastodonAuth({ AuthenticatedHttpClient(client) }, AppRegistrationCache())
+
+        val pending = auth.prepare("https://mastodon.test")
+
+        assertEquals("read write follow push", pending.scope)
+        assertEquals(listOf("read write follow push"), appFormScopes)
+        val authorizeScope = auth.browserUrl(pending).toHttpUrl().queryParameter("scope")
+        assertEquals("read write follow push", authorizeScope)
+    }
+
+    @Test
+    fun missingTokenScopeWithReadOnlyFallbackStaysDenied() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("""{"access_token":"tok"}"""))
+            server.enqueue(
+                MockResponse().setBody(
+                    """{"id":"m","username":"alice","acct":"alice","display_name":"Alice","avatar":"https://example.org/a.png","note":""}""",
+                ),
+            )
+            val origin = server.url("/").toString().removeSuffix("/")
+            val pending = PendingLogin(
+                origin, "state", System.currentTimeMillis(), AppProtocol.MASTODON,
+                clientId = "id", clientSecret = "secret", codeVerifier = "v", codeChallenge = "c", authorizationCode = "code",
+                scope = "read",
+            )
+
+            val session = MastodonAuth(AuthenticatedHttpClient(OkHttpClient()), AppRegistrationCache()).complete(pending)
+
+            assertEquals(AccessStatus.Denied, session.access.status(AccessScope.MediaUpload))
+        }
+    }
+
+    @Test
     fun grantWithoutARecordResolvesToDenied() {
         val supported = ServerCapabilities(posting = PostingCapabilities(mediaUpload = CapabilityStatus.Supported))
 
@@ -123,6 +229,11 @@ class MediaUploadAccessTest {
     }
 
     private fun supported() = ServerCapabilities(posting = PostingCapabilities(mediaUpload = CapabilityStatus.Supported))
+
+    private fun jsonResponse(chain: Interceptor.Chain, body: String): Response =
+        Response.Builder().request(chain.request()).protocol(okhttp3.Protocol.HTTP_1_1)
+            .code(200).message("OK")
+            .body(body.toResponseBody("application/json".toMediaType())).build()
 
     private fun store(seed: Int): AccountFileStore {
         val context = ApplicationProvider.getApplicationContext<Context>()
