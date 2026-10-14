@@ -20,8 +20,13 @@ internal class MastodonTimelineService(
         val route = route(timeline)
         val response = pageClient.getPage(route, cursor)
         val statuses = JSONArray(response.body)
+        // One malformed Pleroma status must not fail the page; skip null and unmappable entries.
+        val items = (0 until statuses.length()).mapNotNull { index ->
+            val entry = statuses.optJSONObject(index) ?: return@mapNotNull null
+            runCatching { MastodonMapper.post(entry, origin) }.getOrNull()
+        }
         return Page(
-            items = (0 until statuses.length()).map { MastodonMapper.post(statuses.getJSONObject(it), origin) },
+            items = items,
             nextCursor = pageClient.nextCursor(response, route, pageClient.currentUrl(route, cursor)),
         )
     }
