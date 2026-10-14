@@ -10,14 +10,6 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 
 ## Unreleased
 
-### New
-
-- Posts that match a Mastodon filter now follow the filter. A warning filter collapses the post behind "Filtered: title" with a "Show anyway" button. A hiding filter removes the post. Before, every filtered post showed only a short notice and could not be opened.
-- Settings > Blocks and mutes > Filters lists, adds, edits, and deletes the filters of a Mastodon-compatible account. On Pleroma and Akkoma, Beeline matches the filters on the device.
-- On Misskey-family servers the same page edits word mutes. A word mute can collapse or remove posts. A simple word mute can ignore capitalization. An advanced word mute is a regular expression.
-- Posts of muted and blocked accounts that the server still sends, such as replies in threads, quotes, and search results, now collapse or leave the list. Settings > Blocks and mutes chooses which. A new mute or block applies to the loaded feeds at once.
-- The post menu and the profile hide the boosts of one account without muting it. A hidden boost leaves the list.
-
 ## 0.3.2
 
 ### New
@@ -25,6 +17,18 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 - The Media tab of a profile opens as a grid of square tiles. One post gives one tile. A tap on a tile opens the post.
 - A floating control on the Media tab switches between the grid and the list. The grid is the default.
 - A tile for a post with several images or videos shows dots over the photo: two dots for two, three dots for three or more. Swipe the tile sideways to see the next one. This applies to Photo Grid and to the profile grid.
+- Posts that match a Mastodon filter now follow the filter. A warning filter collapses the post behind "Filtered: title" with a "Show anyway" button. A hiding filter removes the post. Before, every filtered post showed only a short notice and could not be opened.
+- Settings > Blocks and mutes > Filters lists, adds, edits, and deletes the filters of a Mastodon-compatible account. On Pleroma and Akkoma, Beeline matches the filters on the device.
+- On Misskey-family servers the same page edits word mutes. A word mute can collapse or remove posts. A simple word mute can ignore capitalization. An advanced word mute is a regular expression.
+- Posts of muted and blocked accounts that the server still sends, such as replies in threads, quotes, and search results, now collapse or leave the list. Settings > Blocks and mutes chooses which. A new mute or block applies to the loaded feeds at once.
+- The post menu and the profile hide the boosts of one account without muting it. A hidden boost leaves the list.
+
+### Fixed
+
+- Home, Local, and Federated timelines load on Pleroma servers. Before, the feed showed "This instance doesn't support this feature."
+- Hashtag timelines load on Pleroma servers. Before, the search showed "Hashtag search failed."
+- Notifications open on Pleroma servers without an unread-count route. The unread badge stays hidden there.
+- One broken post no longer empties a Mastodon-compatible timeline. The feed skips it and shows the rest.
 
 ## 0.3.1
 
