@@ -1,7 +1,7 @@
 ---
 description: Read-only codebase explorer for Beeline. Locates code, traces symbols and callers, and maps file ownership with file:line evidence.
 mode: subagent
-model: anthropic/claude-haiku-4-5
+model: opencode-go/muse-spark-1.3-contributor#low
 permissions:
 
   - action: "*"

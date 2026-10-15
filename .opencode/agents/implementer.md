@@ -1,7 +1,7 @@
 ---
 description: Implements bite-sized, narrowly scoped Beeline changes from an explicit work package (files, deliverable, non-goals).
 mode: subagent
-model: anthropic/claude-haiku-4-5
+model: opencode-go/muse-spark-1.3-contributor#medium
 permissions:
 
   - action: "*"

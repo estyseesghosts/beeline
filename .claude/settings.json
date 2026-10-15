@@ -1,5 +1,14 @@
 {
   "worktree": {
     "bgIsolation": "none"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git tag *)",
+      "Bash(git push origin main)",
+      "Bash(git push origin v0.2.16)"
+    ]
   }
 }

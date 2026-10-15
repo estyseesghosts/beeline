@@ -1,7 +1,7 @@
 ---
 description: Investigates Beeline architecture and root causes, plans bounded work, and independently reviews actual diffs and validation evidence without edits.
 mode: subagent
-model: opencode/fledge-alpha-free#max
+model: opencode-go/muse-spark-1.3-contributor#xhigh
 permissions:
 
   - action: "*"

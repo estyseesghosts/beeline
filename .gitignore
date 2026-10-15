@@ -17,6 +17,7 @@ local.properties
 /.kotlin/
 /logs/*.txt
 /*.jpg
+/logs/*
 /app/release/
 /docs/*
 !/docs/wiki/
