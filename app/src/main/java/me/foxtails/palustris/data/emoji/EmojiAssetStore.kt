@@ -14,6 +14,7 @@ import java.time.Clock
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import me.foxtails.palustris.data.media.ImageNetworkLimits
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -366,6 +367,7 @@ class EmojiAssetStore(
         internal const val DEFAULT_MAX_INACTIVE_URL_MAPPINGS = 4_096
         internal const val DEFAULT_MAX_TOTAL_ASSET_BYTES = 128L * 1024L * 1024L
         private val REDIRECT_CODES = 300..399
+
         @Volatile private var instance: EmojiAssetStore? = null
 
         fun get(context: Context): EmojiAssetStore = instance ?: synchronized(this) {
@@ -373,6 +375,7 @@ class EmojiAssetStore(
                 noBackupDirectory = context.applicationContext.noBackupFilesDir,
                 dao = EmojiCacheDatabase.get(context).emojiCacheDao(),
                 client = OkHttpClient.Builder()
+                    .dispatcher(ImageNetworkLimits.newDispatcher())
                     .followRedirects(false)
                     .followSslRedirects(false)
                     .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)

@@ -28,8 +28,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,6 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.delay
 import me.foxtails.palustris.R
 import me.foxtails.palustris.data.media.MediaImageLoader
 import me.foxtails.palustris.domain.Attachment
@@ -197,7 +200,17 @@ private fun PhotoGridTilePage(
         stringResource(R.string.a11y_sensitive_media, page.index + 1)
     }
     // A tap on a failed tile raises this counter, which makes the tile ask for its image again.
+    // Taps inside the debounce window are ignored, so a tap storm does not burst the server.
     var attempt by remember(attachment) { mutableIntStateOf(0) }
+    var lastRetryMillis by remember(attachment) { mutableLongStateOf(0L) }
+    var retryEnabled by remember(attachment) { mutableStateOf(true) }
+    LaunchedEffect(attachment, lastRetryMillis) {
+        if (lastRetryMillis > 0L) {
+            retryEnabled = false
+            delay(TILE_RETRY_DEBOUNCE_MILLIS)
+            retryEnabled = true
+        }
+    }
     val haptics = LocalHapticFeedback.current
     val quickViewLabel = stringResource(R.string.photo_quick_view_open)
     val isVideo = attachment.kind == MediaKind.Video
@@ -276,7 +289,16 @@ private fun PhotoGridTilePage(
         }
         // Over the neutral surface: a quiet indicator while loading, a retry control after a failure.
         if (revealed && painter != null) {
-            PhotoGridTileStateLayer(phase = tilePhase(painter.state), onRetry = { attempt++ })
+            PhotoGridTileStateLayer(
+                phase = tilePhase(painter.state),
+                onRetry = {
+                    val now = System.currentTimeMillis()
+                    if (!mayRetryTile(lastRetryMillis, now)) return@PhotoGridTileStateLayer
+                    lastRetryMillis = now
+                    attempt++
+                },
+                retryEnabled = retryEnabled,
+            )
         }
     }
 }

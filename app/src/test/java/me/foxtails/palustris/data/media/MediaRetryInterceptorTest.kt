@@ -22,7 +22,7 @@ class MediaRetryInterceptorTest {
 
     private fun client(maxWait: Long = 3_000L) = OkHttpClient.Builder()
         .readTimeout(300, TimeUnit.MILLISECONDS)
-        .addInterceptor(MediaRetryInterceptor(maxWait) { waits += it })
+        .addInterceptor(MediaRetryInterceptor(maxWait, sleep = { waits += it }))
         .build()
 
     private fun get() = client().newCall(Request.Builder().url(server.url("/media")).build()).execute()
@@ -71,12 +71,51 @@ class MediaRetryInterceptorTest {
 
     @Test
     fun aRateLimitWithoutAUsableHeaderWaitsOneSecond() {
-        server.enqueue(MockResponse().setResponseCode(429).setHeader("Retry-After", "Wed, 21 Oct 2026 07:28:00 GMT"))
+        server.enqueue(MockResponse().setResponseCode(429).setHeader("Retry-After", "Wed, 21 Oct 2015 07:28:00 GMT"))
         server.enqueue(MockResponse().setResponseCode(200))
 
         get().use { assertEquals(200, it.code) }
 
         assertEquals(listOf(1_000L), waits)
+    }
+
+    @Test
+    fun aRateLimitWithAFutureDateWaitsUntilCapped() {
+        val future = java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.withZone(java.time.ZoneOffset.UTC)
+            .format(java.time.Instant.now().plusSeconds(120))
+        server.enqueue(MockResponse().setResponseCode(429).setHeader("Retry-After", future))
+        server.enqueue(MockResponse().setResponseCode(200))
+
+        get().use { assertEquals(200, it.code) }
+
+        assertEquals(listOf(3_000L), waits)
+    }
+
+    @Test
+    fun aNegativeRetryAfterWaitsOneSecond() {
+        server.enqueue(MockResponse().setResponseCode(429).setHeader("Retry-After", "-5"))
+        server.enqueue(MockResponse().setResponseCode(200))
+
+        get().use { assertEquals(200, it.code) }
+
+        assertEquals(listOf(1_000L), waits)
+    }
+
+    @Test
+    fun aRetryAddsJitterToTheWait() {
+        val jitteredWaits = mutableListOf<Long>()
+        val jittered = OkHttpClient.Builder()
+            .readTimeout(300, TimeUnit.MILLISECONDS)
+            .addInterceptor(MediaRetryInterceptor(3_000L, sleep = { jitteredWaits += it }, jitterMillis = { 150L }))
+            .build()
+        server.enqueue(MockResponse().setResponseCode(429).setHeader("Retry-After", "2"))
+        server.enqueue(MockResponse().setResponseCode(200))
+
+        jittered.newCall(Request.Builder().url(server.url("/media")).build()).execute().use {
+            assertEquals(200, it.code)
+        }
+
+        assertEquals(listOf(2_150L), jitteredWaits)
     }
 
     @Test

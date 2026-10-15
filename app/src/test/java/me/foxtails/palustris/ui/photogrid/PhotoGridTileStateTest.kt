@@ -112,4 +112,19 @@ class PhotoGridTileStateTest {
         compose.onAllNodesWithTag(TILE_LOADING_TAG).assertCountEquals(0)
         compose.onAllNodesWithTag(TILE_FAILED_TAG).assertCountEquals(0)
     }
+
+    @Test
+    fun theFirstRetryAlwaysRuns() {
+        assertEquals(true, mayRetryTile(0L, 1_000L))
+    }
+
+    @Test
+    fun retriesInsideTheDebounceWindowAreIgnored() {
+        assertEquals(false, mayRetryTile(1_000L, 1_000L + TILE_RETRY_DEBOUNCE_MILLIS - 1))
+    }
+
+    @Test
+    fun retriesAfterTheDebounceWindowRun() {
+        assertEquals(true, mayRetryTile(1_000L, 1_000L + TILE_RETRY_DEBOUNCE_MILLIS))
+    }
 }

@@ -27,6 +27,15 @@ import me.foxtails.palustris.ui.components.PillAction
 /** What a Photo Grid tile shows over its neutral surface while its image request runs. */
 internal enum class TilePhase { Loaded, Loading, Failed }
 
+/** Minimum gap between two manual tile retries, so a tap storm does not burst the server. */
+internal const val TILE_RETRY_DEBOUNCE_MILLIS = 2_000L
+
+/** True when a retry tap at [nowMillis] may run after [lastRetryMillis]. The first retry always runs. */
+internal fun mayRetryTile(lastRetryMillis: Long, nowMillis: Long): Boolean {
+    if (lastRetryMillis <= 0L) return true
+    return nowMillis - lastRetryMillis >= TILE_RETRY_DEBOUNCE_MILLIS
+}
+
 /** Maps the painter state of a tile request. A request that has not started counts as loading. */
 internal fun tilePhase(state: AsyncImagePainter.State): TilePhase = when (state) {
     is AsyncImagePainter.State.Success -> TilePhase.Loaded
@@ -41,7 +50,12 @@ internal fun tilePhase(state: AsyncImagePainter.State): TilePhase = when (state)
  * The layer holds no state; the tile owns the attempt counter.
  */
 @Composable
-internal fun PhotoGridTileStateLayer(phase: TilePhase, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+internal fun PhotoGridTileStateLayer(
+    phase: TilePhase,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+    retryEnabled: Boolean = true,
+) {
     when (phase) {
         TilePhase.Loaded -> Unit
         TilePhase.Loading -> {
@@ -77,6 +91,7 @@ internal fun PhotoGridTileStateLayer(phase: TilePhase, onRetry: () -> Unit, modi
                 PillAction(
                     label = stringResource(R.string.photo_grid_tile_retry),
                     onClick = onRetry,
+                    enabled = retryEnabled,
                     modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp).testTag(TILE_RETRY_TAG),
                 )
             }

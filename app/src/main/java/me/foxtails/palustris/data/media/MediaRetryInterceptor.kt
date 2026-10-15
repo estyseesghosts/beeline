@@ -2,20 +2,27 @@ package me.foxtails.palustris.data.media
 
 import java.io.IOException
 import java.net.SocketTimeoutException
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import okhttp3.Interceptor
 import okhttp3.Response
 
 /**
  * Retries a media request once after a timeout, a 5xx answer or a 429 answer. A 429 answer waits for its
- * `Retry-After` time, up to [maxWaitMillis]. Every other answer, including every other 4xx, passes through
+ * `Retry-After` time, up to [maxWaitMillis]. Seconds and HTTP-dates are honored. Any unparseable, missing,
+ * negative, or past value waits one second. Every other answer, including every other 4xx, passes through
  * untouched, so a missing file is never asked for twice. The retry lives in the loader, not in a composable.
  *
  * The wait blocks one OkHttp dispatcher thread. The cap keeps that short, and the call timeout of the client
- * still bounds the whole call.
+ * still bounds the whole call. [jitterMillis] adds a small production skew, up to
+ * [ImageNetworkLimits.MAX_JITTER_MILLIS], so a grid of failed tiles does not retry as one burst.
+ * Tests use the zero default for deterministic waits.
  */
 internal class MediaRetryInterceptor(
     private val maxWaitMillis: Long = DEFAULT_MAX_WAIT_MILLIS,
     private val sleep: (Long) -> Unit = Thread::sleep,
+    private val nowMillis: () -> Long = System::currentTimeMillis,
+    private val jitterMillis: (Long) -> Long = { 0L },
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val first = try {
@@ -44,12 +51,30 @@ internal class MediaRetryInterceptor(
 
     private fun shouldRetry(code: Int): Boolean = code == TOO_MANY_REQUESTS || code in SERVER_ERRORS
 
-    /** Reads `Retry-After` as seconds. A date, a bad value or no header waits one second. The cap applies to all. */
+    /** Reads `Retry-After` as seconds or as an HTTP-date. A bad value or no header waits one second. The cap applies to all. */
     private fun retryAfterMillis(response: Response): Long {
-        val seconds = response.header("Retry-After")?.trim()?.toLongOrNull()
-        val requested = if (seconds != null && seconds >= 0L) seconds * 1_000L else DEFAULT_WAIT_MILLIS
-        return requested.coerceAtMost(maxWaitMillis)
+        val raw = response.header("Retry-After")?.trim() ?: return withJitter(DEFAULT_WAIT_MILLIS)
+        raw.toLongOrNull()?.let { seconds ->
+            if (seconds < 0L) return withJitter(DEFAULT_WAIT_MILLIS)
+            return withJitter((seconds * 1_000L).coerceAtMost(maxWaitMillis))
+        }
+        parseHttpDateMillis(raw)?.let { target ->
+            val delta = target - nowMillis()
+            if (delta <= 0L) return withJitter(DEFAULT_WAIT_MILLIS)
+            return withJitter(delta.coerceAtMost(maxWaitMillis))
+        }
+        return withJitter(DEFAULT_WAIT_MILLIS)
     }
+
+    private fun withJitter(baseMillis: Long): Long {
+        if (baseMillis <= 0L) return 0L
+        val jitter = jitterMillis(baseMillis).coerceIn(0L, ImageNetworkLimits.MAX_JITTER_MILLIS)
+        return baseMillis + jitter
+    }
+
+    private fun parseHttpDateMillis(raw: String): Long? = runCatching {
+        DateTimeFormatter.RFC_1123_DATE_TIME.parse(raw, Instant::from).toEpochMilli()
+    }.getOrNull()
 
     private companion object {
         const val TOO_MANY_REQUESTS = 429

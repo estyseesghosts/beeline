@@ -10,6 +10,11 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 
 ## Unreleased
 
+### Fixed
+
+- Photo Grid and image tiles no longer burst a server with parallel requests. Image fetching caps parallel work per host and in total.
+- A rate-limited image waits for the server Retry-After time with a small skew before one retry. Failed tiles keep a Retry control that ignores rapid taps.
+
 ## 0.3.2
 
 ### New
