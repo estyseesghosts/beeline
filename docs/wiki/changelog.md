@@ -32,6 +32,7 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 - The composer offers the post format on servers that list formats, such as Pleroma.
 - A Recommended feed appears on Home for servers that offer recommendations. The post menu marks one as not interested and gives a reason.
 - Pixelfed servers get an adapted app. The composer has no polls, no scheduled posts, and no post editing. The lists feed chip and push notification settings stay hidden. Without live updates, a notice asks to pull to refresh.
+- Beeline works on Catodon servers. With the Pleroma, Akkoma, and Pixelfed support in this release, accounts on all four server families get a working app. Before 0.3.2, the app was not functional for accounts on these servers.
 
 ### Fixed
 
@@ -40,6 +41,7 @@ The GitHub release notes do not repeat this list. Source: [release workflow](../
 - Notifications open on Pleroma servers without an unread-count route. The unread badge stays hidden there.
 - One broken post no longer empties a Mastodon-compatible timeline. The feed skips it and shows the rest.
 - On Pixelfed servers, attaching a photo to a post no longer returns to the sign-in screen.
+- Home, Local, Social, and Federated timelines load on Catodon servers. Before, Home showed "INTERNAL_ERROR." Home shows all posts instead of only posts with attachments.
 
 ## 0.3.1
 
