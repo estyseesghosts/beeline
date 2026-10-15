@@ -716,6 +716,48 @@ class MisskeyIntegrationTest : MisskeySourceContractTest() {
         assertNull(post.resharedBy)
     }
 
+    @Test fun timelineSendsUnfilteredHomeForForkClients() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("""{"version":"2026.1.0"}"""))
+            server.enqueue(MockResponse().setBody("[${note("n1")}]"))
+            val source = MisskeySource(server.url("/").toString().removeSuffix("/"), "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
+            val page = source.timeline(Timeline.Home)
+            assertEquals("n1", page.items.single().id.value)
+            server.takeRequest()
+            val body = JSONObject(server.takeRequest().body.readUtf8())
+            assertEquals("test-token", body.getString("i"))
+            assertEquals(30, body.getInt("limit"))
+            // Catodon only sends withFiles for an explicit media filter; Home stays unfiltered.
+            assertTrue(body.has("withFiles"))
+            assertFalse(body.getBoolean("withFiles"))
+        }
+    }
+
+    @Test fun timelineSkipsPoisonNotesKeepsOuterCursor() = runBlocking {
+        MockWebServer().use { server ->
+            val poison = """{"id":"poison-id","createdAt":"2026-09-06T10:00:00Z","text":"Hello","visibility":"public"}"""
+            server.enqueue(MockResponse().setBody("""{"version":"2026.1.0"}"""))
+            server.enqueue(MockResponse().setBody("[$poison,${note("good-id")}]"))
+            val source = MisskeySource(server.url("/").toString().removeSuffix("/"), "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
+            val page = source.timeline(Timeline.Home)
+            assertEquals(listOf("good-id"), page.items.map { it.id.value })
+            assertEquals("good-id", page.nextCursor)
+        }
+    }
+
+    @Test fun timelineSkipsTrailingPoisonKeepsRawCursor() = runBlocking {
+        MockWebServer().use { server ->
+            val poison = """{"id":"poison-id","createdAt":"2026-09-06T10:00:00Z","text":"Hello","visibility":"public"}"""
+            server.enqueue(MockResponse().setBody("""{"version":"2026.1.0"}"""))
+            server.enqueue(MockResponse().setBody("[${note("good-id")},$poison]"))
+            val source = MisskeySource(server.url("/").toString().removeSuffix("/"), "test-token", MisskeyApi(), capabilityCache = CapabilityCache())
+            val page = source.timeline(Timeline.Home)
+            assertEquals(listOf("good-id"), page.items.map { it.id.value })
+            // The cursor reads the last wire item so the next page moves past the poison note.
+            assertEquals("poison-id", page.nextCursor)
+        }
+    }
+
     @Test fun capabilityProbeUsesMisskeyDisableFlagsForTimelines() = runBlocking {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody(

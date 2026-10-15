@@ -35,12 +35,24 @@ internal class MisskeyTimelineService(
             Timeline.Bubble -> "notes/bubble-timeline"
             Timeline.Federated -> "notes/global-timeline"
         }
-        params.put("withFiles", true)
+        // Generic timelines stay unfiltered. Upstream Misskey and Catodon both default
+        // withFiles to false, and Catodon's own client only sends it for an explicit
+        // media filter, so false keeps the wire shape stable across servers.
+        params.put("withFiles", false)
         val notes = JSONArray(api.post(origin, endpoint, params, maxResponseBytes).body)
+        val raw = (0 until notes.length()).mapNotNull { notes.optJSONObject(it) }
         return Page(
-            (0 until notes.length()).map { MisskeyMapper.post(notes.getJSONObject(it), origin) },
+            // One malformed note must not fail the whole page. The cursor still reads
+            // the last wire item so paging advances past poison notes instead of refetching them.
+            raw.mapNotNull {
+                try {
+                    MisskeyMapper.post(it, origin)
+                } catch (_: Exception) {
+                    null
+                }
+            },
             // Misskey paginates by the outer renote ID, not the displayed original note.
-            if (notes.length() > 0) notes.getJSONObject(notes.length() - 1).getString("id") else null,
+            raw.lastOrNull()?.optString("id")?.takeIf { it.isNotBlank() },
         )
     }
 }
