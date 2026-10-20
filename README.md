@@ -4,7 +4,7 @@ archival notice
 
 i likely won't continue working on this - beeline was a fun experiment, and i'd like to leave the code up if anyone can learn from it
 
-i do not think a fully native client is worth the extra time and effort to maintain - not just that web is easier, but i genuinely think the end result is consistently better and actually matches my expectations. i'm currently rewriting keystone one last time into react and expo, so i can maintain one client that targets both mobile and web. i'm basically just doing what bluesky did, because their client is decent, it's a sensible decision and i'm fine with the "trade-offs"
+i do not think a fully native client is worth the extra time and effort to maintain - not just that web is easier, but i genuinely think the end result is consistently better and actually matches my expectations. i'm currently rewriting keystone one last time into react and expo, so i can maintain one client that targets both mobile and web. i'm basically just doing what bluesky did, because their client is decent, it's a sensible decision and i'm fine with the "trade-offs". keystone won't be 1:1 with beeline, but i'm in the middle of bringing over most of the niceties. 
 
 go check out [keystone](https://github.com/estyseesghosts/keystone) 
 
